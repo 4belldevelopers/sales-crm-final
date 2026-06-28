@@ -1,0 +1,44 @@
+name: Deploy to Staging (testing.jero.works)
+
+# Auto-deploys every push to the `staging` branch.
+# You can also trigger it manually from the Actions tab (Run workflow).
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.STAGING_PATH }}
+            echo ">> Pulling latest staging code"
+            git fetch origin staging
+            git reset --hard origin/staging
+            echo ">> Installing PHP deps"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            echo ">> Building frontend assets"
+            npm ci
+            npm run build
+            echo ">> Running migrations"
+            php artisan migrate --force
+            echo ">> Caching config/routes/views"
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            echo ">> Reloading Octane workers (zero-downtime)"
+            php artisan octane:reload
+            echo ">> Staging deploy complete"
