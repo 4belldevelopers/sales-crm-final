@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ApplicantNote extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+	public function job_application()
+    {
+        return $this->belongsTo(JobApplication::class);
+    }
+	
+	
+}

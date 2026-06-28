@@ -1,0 +1,108 @@
+:root {
+    --blue:        #2563EB;
+    --blue-light:  #EFF4FF;
+    --blue-mid:    #DBEAFE;
+    --green:       #16A34A;
+    --green-light: #DCFCE7;
+    --green-bar:   #22C55E;
+    --orange:      #F59E0B;
+    --orange-bar:  #F59E0B;
+    --red:         #EF4444;
+    --text-dark:   #111827;
+    --text-mid:    #374151;
+    --text-gray:   #6B7280;
+    --text-light:  #9CA3AF;
+    --border:      #E5E7EB;
+    --bg:          #F3F4F6;
+    --white:       #FFFFFF;
+    --sidebar-w:   192px;
+}
+
+/* ──────── HERO SECTION ──────── */
+.hero-section {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+}
+.hero-left { flex: 1; }
+.hero-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+.hero-title .shield-icon {
+    width: 22px; height: 22px;
+    color: #16A34A;
+}
+.hero-sub {
+    font-size: 12.5px;
+    color: var(--text-gray);
+    margin-bottom: 22px;
+}
+.stats-row {
+    display: flex;
+    gap: 16px;
+}
+.stat-card {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 130px;
+}
+.stat-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+}
+.stat-icon.blue   { background: #DBEAFE; color: var(--blue); }
+.stat-icon.green  { background: var(--green-light); color: var(--green); }
+.stat-icon.yellow { background: #FEF9C3; color: #CA8A04; }
+.stat-icon.purple { background: #EDE9FE; color: #7C3AED; }
+.stat-icon svg { width: 18px; height: 18px; }
+.stat-info .stat-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.1;
+}
+.stat-info .stat-label {
+    font-size: 11.5px;
+    color: var(--text-gray);
+    margin-top: 1px;
+}
+.stat-card.with-badge { position: relative; }
+.new-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--blue);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+}
+.hero-illustration {
+    width: 230px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    margin-top: -10px;
+}
+/* SVG Illustration */
+.illus-wrap { position: relative; width: 220px; height: 150px; }
+

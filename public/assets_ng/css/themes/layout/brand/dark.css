@@ -1,0 +1,94 @@
+@media (min-width: 992px) {
+    .brand {
+/*        background-color: #fff!important;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        border-bottom: 1px solid #e9eaf1;*/
+        background-color: #000!important;
+        /*background: linear-gradient(to right, #5a5a5a, #5a5a5a, #909090);*/
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        /*border-bottom: 1px solid #545454;*/
+        border-bottom: 1px solid #adadad;
+    }
+    .brand .btn i {
+        color: #494b74;
+    }
+    .brand .btn .svg-icon svg g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+        fill: #d4d4d4;
+    }
+    .brand .btn .svg-icon svg:hover g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+    }
+    .brand .btn.active .svg-icon svg g [fill],
+    .brand .btn:hover .svg-icon svg g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+        fill: #fff;
+    }
+    .brand .btn.active .svg-icon svg:hover g [fill],
+    .brand .btn:hover .svg-icon svg:hover g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+    }
+    .brand .btn.active i,
+    .brand .btn:hover i {
+        color: #3699ff;
+    }
+}
+@media (max-width: 991.98px) {
+    .header-mobile {
+        background-color: #000;
+    }
+    .header-mobile .burger-icon span {
+        background-color: #484f66;
+    }
+    .header-mobile .burger-icon span::after,
+    .header-mobile .burger-icon span::before {
+        background-color: #484f66;
+    }
+    .header-mobile .burger-icon:hover span {
+        background-color: #3699ff;
+    }
+    .header-mobile .burger-icon:hover span::after,
+    .header-mobile .burger-icon:hover span::before {
+        background-color: #3699ff;
+    }
+    .header-mobile .burger-icon-active span {
+        background-color: #3699ff;
+    }
+    .header-mobile .burger-icon-active span::after,
+    .header-mobile .burger-icon-active span::before {
+        background-color: #3699ff;
+    }
+    .header-mobile .btn i {
+        color: #484f66;
+    }
+    .header-mobile .btn .svg-icon svg g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+        fill: #484f66;
+    }
+    .header-mobile .btn .svg-icon svg:hover g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+    }
+    .header-mobile .btn.active .svg-icon svg g [fill],
+    .header-mobile .btn:hover .svg-icon svg g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+        fill: #3699ff;
+    }
+    .header-mobile .btn.active .svg-icon svg:hover g [fill],
+    .header-mobile .btn:hover .svg-icon svg:hover g [fill] {
+        -webkit-transition: fill 0.3s ease;
+        transition: fill 0.3s ease;
+    }
+    .header-mobile .btn.active i,
+    .header-mobile .btn:hover i {
+        color: #3699ff;
+    }
+}

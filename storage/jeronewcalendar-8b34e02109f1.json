@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "jeronewcalendar",
+  "private_key_id": "8b34e02109f1b87e02224da370401e13b74d6fae",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCkQrQPmnaIaFLf\nIl3PY9rZdC1RE5R2bIgnunYsNGOvRuaLhlg133dartmsXhmhSNYJ6vcFK7++CdIn\nzE1Zr2/qgcqH2WvXT1Chlw4qsLf2/+4dTMy/jLV8ltVMHqPhLNE544talDbL/xg5\n4FubdFTJPznDzaE7CwBT7KJJ+c7UH66Wg+J/cHvVHrNJccOdIcSNmitxVpdyKARJ\nCd0F5glELvKb86d7aFs5tzwI1vxlU2FXvJLmhslvvqJNSIsZTslPLUsJlzmrLQoh\nCvyGgtxxQ8iBdi/oL5K9nZYk7awcVsHSkHi0DpfKISYDZBrJVfQ0+89GMT3hpiZ7\nuLyKJ0J3AgMBAAECggEAGoZm+0oPMBHgqAWtrmrKkWjwVHJb/A+koP28TYEcQ9ao\nLgnAvtpaNLudjPcZHnFblvhpcV1SNkbxt9mG+B+ba/wPj4ZtorQ9Kgrxj7U/z9Qe\nSH75ZUk8mWTmBse/4QHSu41iGHtsqd6Es/vl7yGG+4SJOHRBP/6Ty/mfb2C2pIxC\n7KlZeOYNhQByI+gUrYbyqqcEzIk0hV+cdi6v4rZwCHiq87uVzWL1AqY2utnWIXHl\ntj79NVNrhlEdBCmqUdHobeLIK3VkzeVVoYxPf0Fw4IvxT1Lv1mRhMuepIfnQHQSv\nOpsRdZ5FVVblqlBmqSa+G4t3NPejsWcuD2+68PRS0QKBgQDTChL+hMlpaO2VJUTT\n52VcmjdADldhHzH7YPr+wfRRobvACgbJe/6MgcZC7stakSSTHSp5BmNmfC8pymJt\n+IAt1aWF1DJQMjWaXJnkvI5wiaH646ngDSorcEe85ixC8LJdWiy69uHQFi6HRa8H\nzukhtkS+0lETbd2qbXS/zZGzHwKBgQDHQVlyjCQloMHLCoE/Zn/avZ7HNapOCkq6\nICBU4djVDS6ulMRDjAKIKqTEJho4EILo1YNh+j95dEhkq0d9cKCwbZNU6fssG7Y1\nU+ma6GMP6VqXkfBsXgcIvM4YStoIqFIqYjmBGlYMiDs2n5C3sm06Kk2gkItRAntC\nflFIUCKdqQKBgH+1SfdBjcy/FX661eLR1ZHrNOILi68XPJzdfCYsYtf/Yml858yH\nv2txoPOiI+cDjDmGXcxtJDvBjJzifxwDVDXoYskQtv221J87yFkWDbBmaWI04PjX\nnpw4zwCt3T0JATbiuczOV6ofsjpj3d6AxK2E6ib7iNqUEp7uq8bh9HiLAoGAALuT\nyaEMTPsfW1DJkuMcm0BRQihHXQwapD6T/9vowTfQMSIo6pqsM7X8byA4vnYJFTQb\nzJNwAlFUJtKea66rWJq+jPRjURE1BVMuq7wpCRjxlVcbDDr4SabwFxTHYnrD+pXr\n4janlFo35YaGsLY+QpV/PZTqfjzFGUR/pgVtaykCgYEAtle0KwuMwPDyi5hrhbND\nDO8ijqqZiXeJ/U/gJ2dfb+pUthIuWiVocRerNFlZN1lHY8XN09OiJw1oPgj5VYZm\nV65k9p2QfyoSpPtwdVlywqIDD+Bktnyq+ktwv/l7ha0+w4NrwbhfUNlyVwRK2apa\nNdlw1DaNJV+jg7kTV7OvteM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "atsmeetingjero@jeronewcalendar.iam.gserviceaccount.com",
+  "client_id": "103600082214211972082",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/atsmeetingjero%40jeronewcalendar.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

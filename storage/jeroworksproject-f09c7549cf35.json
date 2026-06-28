@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "jeroworksproject",
+  "private_key_id": "f09c7549cf3586fef944e22efbb95762ef0d3732",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+H7j/C5dnNSSG\nf4gs0SyFoXRq5/aUfkksDTPuzbO/OLSaJuFuZNs2I9xj0aQBsnWGtOk/95jEcqeS\nDkILgar9IZPKZ7pizMet1Jjj08i7o6S/karfrLAQlRvqennZthcnaNRvvHHAV0zZ\nOIhxKjt6oAZOvbR3LT1KZAcUmYYHmqiHY5HR/W8DHcV/rIRyHZOxplEjtWgZvMTi\nhJFtbXu0j1Ev6doUaiSjzAh9Aaa4W9dCqR/uaDstumN9xVr7/x/c4vwT7RDOF2sR\ndaIPaaHCM1pv/LDk8kYPX62kRzZl/4ewotASHdVz2w/za2mP16CkJjQk0rZc/KRG\nZDips5HjAgMBAAECggEAMoqgVTyxnQAlm5OfkbpxiXyoRBsyE7uWnB1OZvdMB1N9\nv1UCrKQnGjdiSS7b2I+mao8BSr35YI/SOCOOLxzjZbNdZHs6szUZB/7yPe54+FjC\nXSLON/PiQiZBa43vgo7DjPhzMNj5rFYI2d4Ld3nwoeKUiq4noV7nYjVBJJrDZJWl\nArZJyiO4SoZZk+kUQpHUa0njUeD0ZhjxHMRGvaWnDgq2dBemcubBEite3getF+zc\ne1gnDHintUnjs5Mq+fXs0xidUiXOBEAlX8Pgp3lgFCaBkEOZB4KdaFKuOAtFzGJs\nn8wRLJdlfbyoT4eDXc0/C2OGDgVbkNBGFD906arWQQKBgQDt1X/kjKevlmLADVd9\nEY2qsbFMF/Fcuj8ig6CmPsSco/yAspp7WWYNCd2ll7R+oCSDlL2aI+9RkSj2MEsw\nybuQAHgbiMJqqDHEb/eUkPMcRPGnI/htTNjvxkhNakaeEZGZAj2yoEfZp1Mlxd8t\nfcl0Ib4VbvnhGbyZbWwvRikicQKBgQDMpVJQ1sEvNq0mCMKk35OKLWL7LMtFE2oh\n1M3xj4Rj7tbeuxyb2YhW1Lr4oxT6uaVSFuKVNePpfq+uo+yfnV7SliEbVouZGVEK\nZ6NeldsBiyYM49kabzmuDdfyxkeCyxhtbdGwnFokC0W7Y6dnz2Tiw+eOGRlvKnLt\n84rmyFD7kwKBgHqAKWuy9vv93cdGF/YXgHyXIdcrzeoRFEvWuHxogCSeYoR3ehJm\nraWxmzSbuyAtpCESD8bBE5dTyWFk5pWukqlNVI/6FQmSsG+ZrFAdiNrauA16/Y5u\nsp5t5vfY8Z6hNfk1qknDPL7i7HTcQmPQEl96scmga5yCAR6Vuc9vt+hBAoGBAI0S\nok4r3PypGm+Ptm5l2ZV1eDhiRrYVjiJISrftEXy6VtEv96bQLJZ/C2z/LyUv+PE/\n6W6mubhqpr0jL6lQmN9esu/fl1gxBZbAnvRDJbhIrjBQmYcJiZ+c13L6kK1vSCWX\ngOfYwKL8SlPFfM+pPoi8N9HTJ59kidnS+7vf90OVAoGAGSAXkprwAluWD9kPNjyM\nQ+WDICjaPl8JWAO26sXWivVMn3e4xjFJCPNAXgBX6LesnSq4jVAu5MCF7rzB/P8h\npoCaPicIRCTt/7WAh19feftaN5nQTTj6y0QBJciu3SzHffVG3I1xB0/a09MnyZn9\ngzZXvBy5g06DjKESgA69GZQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "jeroworksproject@jeroworksproject.iam.gserviceaccount.com",
+  "client_id": "109841915521867214815",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/jeroworksproject%40jeroworksproject.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

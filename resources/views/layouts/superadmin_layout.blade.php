@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--begin::Head-->
+
+<head>
+    <base href="javascript:void(0);">
+    <title>
+        @if (auth()->user()->is_superadmin === 1)
+            @lang('app.superAdminPanel')
+        @else
+            @lang('Meecruit')
+        @endif | {{ __($pageTitle) }}
+    </title>
+    <meta name="description" content="{{ __($pageTitle) }}" />
+    <meta name="keywords" content="{{ __($pageTitle) }}" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Jobmilli-ATS" />
+    <meta property="og:url" content="https://keenthemes.com/metronic" />
+    <meta property="og:site_name" content="Keenthemes | Metronic" />
+    <link rel="canonical" href="Https://preview.keenthemes.com/metronic8" />
+    <!-- <link rel="shortcut icon" href="assets/media/logos/favicon.ico" /> -->
+
+    <!--begin::Favicon-->
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('img/favicon.svg')}}">
+    <!--end::Favicon-->
+
+    <!--begin::Fonts-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
+    <!--end::Fonts-->
+    <!--begin::Page Vendor Stylesheets(used by this page)-->
+    <link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}<?php echo TM_VERSION; ?>"
+        rel="stylesheet" type="text/css" />
+    <!--end::Page Vendor Stylesheets-->
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
+    <!--begin::Page Vendor Stylesheets(used by this page)-->
+    <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
+    <!--end::Page Vendor Stylesheets-->
+    <!--begin::Global Stylesheets Bundle(used by all pages)-->
+    <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet"
+        type="text/css" />
+    <link href="{{ asset('demo/css/style.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!--end::Global Stylesheets Bundle-->
+    @stack('head-script')
+
+    <style>
+        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
+            #kt_activitiesApplication {
+                width: 1025px;
+            }
+
+            #kt_activitiesIntTeam {
+                width: 1025;
+            }
+        }
+
+        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
+            #kt_activitiesApplication {
+                width: 1200px;
+            }
+
+            #kt_activitiesIntTeam {
+                width: 1200px;
+            }
+        }
+
+        #kt_activitiesIntTeam {
+            z-index: 9999;
+        }
+
+
+        .loadingMessage{
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        position: fixed;
+        top: 70%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .iti--separate-dial-code{
+        width:100%
+      }
+
+      
+    </style>
+
+</head>
+<!--end::Head-->
+<!--begin::Body-->
+
+<body id="kt_body"
+    class="header-fixed header-tablet-and-mobile-fixed toolbar-enabled toolbar-fixed aside-enabled aside-fixed"
+    style="--kt-toolbar-height:55px;--kt-toolbar-height-tablet-and-mobile:55px">
+    <!--begin::Main-->
+    <!--begin::Root-->
+    <div class="d-flex flex-column flex-root">
+        <!--begin::Page-->
+        <div class="page d-flex flex-row flex-column-fluid">
+            <!--begin::Aside-->
+
+            @if ($user->is_superadmin)
+                @include('sections.superadmin-left-sidebar')
+            @else
+                @include('sections.left-sidebar')
+            @endif
+
+            <!--end::Aside-->
+            <!--begin::Wrapper-->
+            <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
+                <!--begin::Header-->
+                @include('sections.super-admin.header-base')
+                <!--end::Header-->
+                <!--begin::Content-->
+                @yield('content')
+                <!--end::Content-->
+                <!--begin::Footer-->
+                @include('sections.super-admin.footer')
+                <!--end::Footer-->
+            </div>
+            <!--end::Wrapper-->
+        </div>
+        <!--end::Page-->
+    </div>
+    <!--end::Root-->
+    <!--begin::Drawers-->
+    <!--begin::Activities drawer-->
+    @include('sections.super-admin.activities-drawer')
+    <!--end::Activities drawer-->
+    <!--begin::Chat drawer-->
+    <div id="kt_drawer_chat" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="chat"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'300px', 'md': '500px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_drawer_chat_toggle" data-kt-drawer-close="#kt_drawer_chat_close">
+        <!--begin::Messenger-->
+        <div class="card w-100 rounded-0" id="kt_drawer_chat_messenger">
+            <!--begin::Card header-->
+            <div class="card-header pe-5" id="kt_drawer_chat_messenger_header">
+                <!--begin::Title-->
+                <div class="card-title">
+                    <!--begin::User-->
+                    <div class="d-flex justify-content-center flex-column me-3">
+                        <a href="javascript:void(0);"
+                            class="fs-4 fw-bolder text-gray-900 text-hover-primary me-1 mb-2 lh-1">Brian Cox</a>
+                        <!--begin::Info-->
+                        <div class="mb-0 lh-1">
+                            <span class="badge badge-success badge-circle w-10px h-10px me-1"></span>
+                            <span class="fs-7 fw-bold text-muted">Active</span>
+                        </div>
+                        <!--end::Info-->
+                    </div>
+                    <!--end::User-->
+                </div>
+                <!--end::Title-->
+                <!--begin::Card toolbar-->
+                <div class="card-toolbar">
+                    <!--begin::Menu-->
+                    <div class="me-2">
+                        <button class="btn btn-sm btn-icon btn-active-light-primary" data-kt-menu-trigger="click"
+                            data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                            <i class="bi bi-three-dots fs-3"></i>
+                        </button>
+                        <!--begin::Menu 3-->
+                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-bold w-200px py-3"
+                            data-kt-menu="true">
+                            <!--begin::Heading-->
+                            <div class="menu-item px-3">
+                                <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Contacts</div>
+                            </div>
+                            <!--end::Heading-->
+                            <!--begin::Menu item-->
+                            <div class="menu-item px-3">
+                                <a href="javascript:void(0);" class="menu-link px-3" data-bs-toggle="modal"
+                                    data-bs-target="#kt_modal_users_search">Add Contact</a>
+                            </div>
+                            <!--end::Menu item-->
+                            <!--begin::Menu item-->
+                            <div class="menu-item px-3">
+                                <a href="javascript:void(0);" class="menu-link flex-stack px-3" data-bs-toggle="modal"
+                                    data-bs-target="#kt_modal_invite_friends">Invite Contacts
+                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                        title="Specify a contact email to send an invitation"></i></a>
+                            </div>
+                            <!--end::Menu item-->
+                            <!--begin::Menu item-->
+                            <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                data-kt-menu-placement="right-start" data-kt-menu-flip="left, center, top">
+                                <a href="javascript:void(0);" class="menu-link px-3">
+                                    <span class="menu-title">Groups</span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <!--begin::Menu sub-->
+                                <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                    <!--begin::Menu item-->
+                                    <div class="menu-item px-3">
+                                        <a href="javascript:void(0);" class="menu-link px-3" data-bs-toggle="tooltip"
+                                            title="Coming soon">Create Group</a>
+                                    </div>
+                                    <!--end::Menu item-->
+                                    <!--begin::Menu item-->
+                                    <div class="menu-item px-3">
+                                        <a href="javascript:void(0);" class="menu-link px-3" data-bs-toggle="tooltip"
+                                            title="Coming soon">Invite Members</a>
+                                    </div>
+                                    <!--end::Menu item-->
+                                    <!--begin::Menu item-->
+                                    <div class="menu-item px-3">
+                                        <a href="javascript:void(0);" class="menu-link px-3" data-bs-toggle="tooltip"
+                                            title="Coming soon">Settings</a>
+                                    </div>
+                                    <!--end::Menu item-->
+                                </div>
+                                <!--end::Menu sub-->
+                            </div>
+                            <!--end::Menu item-->
+                            <!--begin::Menu item-->
+                            <div class="menu-item px-3 my-1">
+                                <a href="javascript:void(0);" class="menu-link px-3" data-bs-toggle="tooltip"
+                                    title="Coming soon">Settings</a>
+                            </div>
+                            <!--end::Menu item-->
+                        </div>
+                        <!--end::Menu 3-->
+                    </div>
+                    <!--end::Menu-->
+                    <!--begin::Close-->
+                    <div class="btn btn-sm btn-icon btn-active-light-primary" id="kt_drawer_chat_close">
+                        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
+                        <span class="svg-icon svg-icon-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="#000000">
+                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
+                                    <rect fill="#000000" opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1" />
+                                </g>
+                            </svg>
+                        </span>
+                        <!--end::Svg Icon-->
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <!--end::Card toolbar-->
+            </div>
+            <!--end::Card header-->
+            <!--begin::Card body-->
+            <div class="card-body" id="kt_drawer_chat_messenger_body">
+                <!--begin::Messages-->
+                <div class="scroll-y me-n5 pe-5" data-kt-element="messages" data-kt-scroll="true"
+                    data-kt-scroll-activate="true" data-kt-scroll-height="auto"
+                    data-kt-scroll-dependencies="#kt_drawer_chat_messenger_header, #kt_drawer_chat_messenger_footer"
+                    data-kt-scroll-wrappers="#kt_drawer_chat_messenger_body" data-kt-scroll-offset="0px">
+                    <!--begin::Message(in)-->
+                    <div class="d-flex justify-content-start mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-start">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-15.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                                <!--begin::Details-->
+                                <div class="ms-3">
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary me-1">Brian Cox</a>
+                                    <span class="text-muted fs-7 mb-1">2 mins</span>
+                                </div>
+                                <!--end::Details-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-info text-dark fw-bold mw-lg-400px text-start"
+                                data-kt-element="message-text">How likely are you to recommend our company to your
+                                friends and family ?</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(in)-->
+                    <!--begin::Message(out)-->
+                    <div class="d-flex justify-content-end mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-end">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Details-->
+                                <div class="me-3">
+                                    <span class="text-muted fs-7 mb-1">5 mins</span>
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary ms-1">You</a>
+                                </div>
+                                <!--end::Details-->
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-26.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-primary text-dark fw-bold mw-lg-400px text-end"
+                                data-kt-element="message-text">Hey there, we’re just writing to let you know that
+                                you’ve been subscribed to a repository on GitHub.</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(out)-->
+                    <!--begin::Message(in)-->
+                    <div class="d-flex justify-content-start mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-start">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-15.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                                <!--begin::Details-->
+                                <div class="ms-3">
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary me-1">Brian Cox</a>
+                                    <span class="text-muted fs-7 mb-1">1 Hour</span>
+                                </div>
+                                <!--end::Details-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-info text-dark fw-bold mw-lg-400px text-start"
+                                data-kt-element="message-text">Ok, Understood!</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(in)-->
+                    <!--begin::Message(out)-->
+                    <div class="d-flex justify-content-end mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-end">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Details-->
+                                <div class="me-3">
+                                    <span class="text-muted fs-7 mb-1">2 Hours</span>
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary ms-1">You</a>
+                                </div>
+                                <!--end::Details-->
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-26.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-primary text-dark fw-bold mw-lg-400px text-end"
+                                data-kt-element="message-text">You’ll receive notifications for all issues, pull
+                                requests!</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(out)-->
+                    <!--begin::Message(in)-->
+                    <div class="d-flex justify-content-start mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-start">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-15.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                                <!--begin::Details-->
+                                <div class="ms-3">
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary me-1">Brian Cox</a>
+                                    <span class="text-muted fs-7 mb-1">3 Hours</span>
+                                </div>
+                                <!--end::Details-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-info text-dark fw-bold mw-lg-400px text-start"
+                                data-kt-element="message-text">You can unwatch this repository immediately by clicking
+                                here:
+                                <a href="javascript:void(0);">Meecruit.com</a>
+                            </div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(in)-->
+                    <!--begin::Message(out)-->
+                    <div class="d-flex justify-content-end mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-end">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Details-->
+                                <div class="me-3">
+                                    <span class="text-muted fs-7 mb-1">4 Hours</span>
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary ms-1">You</a>
+                                </div>
+                                <!--end::Details-->
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-26.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-primary text-dark fw-bold mw-lg-400px text-end"
+                                data-kt-element="message-text">Most purchased Business courses during this sale!</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(out)-->
+                    <!--begin::Message(in)-->
+                    <div class="d-flex justify-content-start mb-10">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-start">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-15.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                                <!--begin::Details-->
+                                <div class="ms-3">
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary me-1">Brian Cox</a>
+                                    <span class="text-muted fs-7 mb-1">5 Hours</span>
+                                </div>
+                                <!--end::Details-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-info text-dark fw-bold mw-lg-400px text-start"
+                                data-kt-element="message-text">Company BBQ to celebrate the last quater achievements
+                                and goals. Food and drinks provided</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(in)-->
+                    <!--begin::Message(template for out)-->
+                    <div class="d-flex justify-content-end mb-10 d-none" data-kt-element="template-out">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-end">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Details-->
+                                <div class="me-3">
+                                    <span class="text-muted fs-7 mb-1">Just now</span>
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary ms-1">You</a>
+                                </div>
+                                <!--end::Details-->
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-26.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-primary text-dark fw-bold mw-lg-400px text-end"
+                                data-kt-element="message-text"></div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(template for out)-->
+                    <!--begin::Message(template for in)-->
+                    <div class="d-flex justify-content-start mb-10 d-none" data-kt-element="template-in">
+                        <!--begin::Wrapper-->
+                        <div class="d-flex flex-column align-items-start">
+                            <!--begin::User-->
+                            <div class="d-flex align-items-center mb-2">
+                                <!--begin::Avatar-->
+                                <div class="symbol symbol-35px symbol-circle">
+                                    <img alt="Pic" src="assets/media/avatars/150-15.jpg" />
+                                </div>
+                                <!--end::Avatar-->
+                                <!--begin::Details-->
+                                <div class="ms-3">
+                                    <a href="javascript:void(0);"
+                                        class="fs-5 fw-bolder text-gray-900 text-hover-primary me-1">Brian Cox</a>
+                                    <span class="text-muted fs-7 mb-1">Just now</span>
+                                </div>
+                                <!--end::Details-->
+                            </div>
+                            <!--end::User-->
+                            <!--begin::Text-->
+                            <div class="p-5 rounded bg-light-info text-dark fw-bold mw-lg-400px text-start"
+                                data-kt-element="message-text">Right before vacation season we have the next Big Deal
+                                for you.</div>
+                            <!--end::Text-->
+                        </div>
+                        <!--end::Wrapper-->
+                    </div>
+                    <!--end::Message(template for in)-->
+                </div>
+                <!--end::Messages-->
+            </div>
+            <!--end::Card body-->
+            <!--begin::Card footer-->
+            <div class="card-footer pt-4" id="kt_drawer_chat_messenger_footer">
+                <!--begin::Input-->
+                <textarea class="form-control form-control-flush mb-3" rows="1" data-kt-element="input"
+                    placeholder="Type a message"></textarea>
+                <!--end::Input-->
+                <!--begin:Toolbar-->
+                <div class="d-flex flex-stack">
+                    <!--begin::Actions-->
+                    <div class="d-flex align-items-center me-2">
+                        <button class="btn btn-sm btn-icon btn-active-light-primary me-1" type="button"
+                            data-bs-toggle="tooltip" title="Coming soon">
+                            <i class="bi bi-paperclip fs-3"></i>
+                        </button>
+                        <button class="btn btn-sm btn-icon btn-active-light-primary me-1" type="button"
+                            data-bs-toggle="tooltip" title="Coming soon">
+                            <i class="bi bi-upload fs-3"></i>
+                        </button>
+                    </div>
+                    <!--end::Actions-->
+                    <!--begin::Send-->
+                    <button class="btn btn-primary" type="button" data-kt-element="send">Send</button>
+                    <!--end::Send-->
+                </div>
+                <!--end::Toolbar-->
+            </div>
+            <!--end::Card footer-->
+        </div>
+        <!--end::Messenger-->
+    </div>
+    <!--end::Chat drawer-->
+
+    <!--end::Drawers-->
+    <!--begin::Modals-->
+    <!--begin::Modal - Invite Friends-->
+    <div class="modal fade" id="kt_modal_meeting_comment" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog mw-650px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <!--begin::Modal header-->
+                <div class="modal-header pb-0 border-0 justify-content-end">
+                    <!--begin::Close-->
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
+                        <span class="svg-icon svg-icon-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="#000000">
+                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
+                                    <rect fill="#000000" opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1" />
+                                </g>
+                            </svg>
+                        </span>
+                        <!--end::Svg Icon-->
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <!--begin::Modal header-->
+                <!--begin::Modal body-->
+                <div class="modal-body scroll-y mx-5 mx-xl-18 pt-0 pb-15">
+                    <!--begin::Heading-->
+                    <div class="text-center mb-13">
+                        <!--begin::Title-->
+                        <h1 class="mb-3">Meeting Comments</h1>
+                        <!--end::Title-->
+                        <!--end::Description-->
+                    </div>
+                    <!--end::Heading-->
+
+                    <!--end::Separator-->
+                    <!--begin::Textarea-->
+                    <textarea class="form-control form-control-solid mb-8" rows="3" id="comments" name="comments"
+                        placeholder="Type or paste new comment here"></textarea>
+
+                    <input type="hidden" id="meet_id" name="meet_id" value="">
+
+                    <center><button type="button" id="comments-form"
+                            class="btn btn-success waves-effect waves-light">New Comment</button></center>
+                    <!--end::Textarea-->
+                    <!--begin::Users-->
+                    <div class="mb-10">
+                        <!--begin::Heading-->
+                        <div class="fs-6 fw-bold mb-2">Comments</div>
+                        <!--end::Heading-->
+                        <!--begin::List-->
+                        <div class="mh-300px scroll-y me-n7 pe-7" id="app_meeting_schedule_commnet">
+
+
+                            <!--end::User-->
+                        </div>
+                        <!--end::List-->
+                    </div>
+                    <!--end::Users-->
+                </div>
+                <!--end::Modal body-->
+            </div>
+            <!--end::Modal content-->
+        </div>
+        <!--end::Modal dialog-->
+    </div>
+    <!--end::Modal - Invite Friend-->
+    <!--begin::Modal - Create App-->
+    <div class="modal fade" id="kt_modal_create_app" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-dialog-centered mw-900px">
+            <!--begin::Modal content-->
+            <div class="modal-content">
+                <!--begin::Modal header-->
+                <div class="modal-header">
+                    <!--begin::Modal title-->
+                    <h2>Create App</h2>
+                    <!--end::Modal title-->
+                    <!--begin::Close-->
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
+                        <span class="svg-icon svg-icon-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="#000000">
+                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
+                                    <rect fill="#000000" opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1" />
+                                </g>
+                            </svg>
+                        </span>
+                        <!--end::Svg Icon-->
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <!--end::Modal header-->
+                <!--begin::Modal body-->
+                <div class="modal-body py-lg-10 px-lg-10">
+                    <!--begin::Stepper-->
+                    <div class="stepper stepper-pills stepper-column d-flex flex-column flex-xl-row flex-row-fluid"
+                        id="kt_modal_create_app_stepper">
+                        <!--begin::Aside-->
+                        <div
+                            class="d-flex justify-content-center justify-content-xl-start flex-row-auto w-100 w-xl-300px">
+                            <!--begin::Nav-->
+                            <div class="stepper-nav ps-lg-10">
+                                <!--begin::Step 1-->
+                                <div class="stepper-item current" data-kt-stepper-element="nav">
+                                    <!--begin::Line-->
+                                    <div class="stepper-line w-40px"></div>
+                                    <!--end::Line-->
+                                    <!--begin::Icon-->
+                                    <div class="stepper-icon w-40px h-40px">
+                                        <i class="stepper-check fas fa-check"></i>
+                                        <span class="stepper-number">1</span>
+                                    </div>
+                                    <!--end::Icon-->
+                                    <!--begin::Label-->
+                                    <div class="stepper-label">
+                                        <h3 class="stepper-title">Details</h3>
+                                        <div class="stepper-desc">Name your App</div>
+                                    </div>
+                                    <!--end::Label-->
+                                </div>
+                                <!--end::Step 1-->
+                                <!--begin::Step 2-->
+                                <div class="stepper-item" data-kt-stepper-element="nav">
+                                    <!--begin::Line-->
+                                    <div class="stepper-line w-40px"></div>
+                                    <!--end::Line-->
+                                    <!--begin::Icon-->
+                                    <div class="stepper-icon w-40px h-40px">
+                                        <i class="stepper-check fas fa-check"></i>
+                                        <span class="stepper-number">2</span>
+                                    </div>
+                                    <!--begin::Icon-->
+                                    <!--begin::Label-->
+                                    <div class="stepper-label">
+                                        <h3 class="stepper-title">Frameworks</h3>
+                                        <div class="stepper-desc">Define your app framework</div>
+                                    </div>
+                                    <!--begin::Label-->
+                                </div>
+                                <!--end::Step 2-->
+                                <!--begin::Step 3-->
+                                <div class="stepper-item" data-kt-stepper-element="nav">
+                                    <!--begin::Line-->
+                                    <div class="stepper-line w-40px"></div>
+                                    <!--end::Line-->
+                                    <!--begin::Icon-->
+                                    <div class="stepper-icon w-40px h-40px">
+                                        <i class="stepper-check fas fa-check"></i>
+                                        <span class="stepper-number">3</span>
+                                    </div>
+                                    <!--end::Icon-->
+                                    <!--begin::Label-->
+                                    <div class="stepper-label">
+                                        <h3 class="stepper-title">Database</h3>
+                                        <div class="stepper-desc">Select the app database type</div>
+                                    </div>
+                                    <!--end::Label-->
+                                </div>
+                                <!--end::Step 3-->
+                                <!--begin::Step 4-->
+                                <div class="stepper-item" data-kt-stepper-element="nav">
+                                    <!--begin::Line-->
+                                    <div class="stepper-line w-40px"></div>
+                                    <!--end::Line-->
+                                    <!--begin::Icon-->
+                                    <div class="stepper-icon w-40px h-40px">
+                                        <i class="stepper-check fas fa-check"></i>
+                                        <span class="stepper-number">4</span>
+                                    </div>
+                                    <!--end::Icon-->
+                                    <!--begin::Label-->
+                                    <div class="stepper-label">
+                                        <h3 class="stepper-title">Billing</h3>
+                                        <div class="stepper-desc">Provide payment details</div>
+                                    </div>
+                                    <!--end::Label-->
+                                </div>
+                                <!--end::Step 4-->
+                                <!--begin::Step 5-->
+                                <div class="stepper-item" data-kt-stepper-element="nav">
+                                    <!--begin::Line-->
+                                    <div class="stepper-line w-40px"></div>
+                                    <!--end::Line-->
+                                    <!--begin::Icon-->
+                                    <div class="stepper-icon w-40px h-40px">
+                                        <i class="stepper-check fas fa-check"></i>
+                                        <span class="stepper-number">5</span>
+                                    </div>
+                                    <!--end::Icon-->
+                                    <!--begin::Label-->
+                                    <div class="stepper-label">
+                                        <h3 class="stepper-title">Release</h3>
+                                        <div class="stepper-desc">Review and Submit</div>
+                                    </div>
+                                    <!--end::Label-->
+                                </div>
+                                <!--end::Step 5-->
+                            </div>
+                            <!--end::Nav-->
+                        </div>
+                        <!--begin::Aside-->
+                        <!--begin::Content-->
+                        <div class="flex-row-fluid py-lg-5 px-lg-15">
+                            <!--begin::Form-->
+                            <form class="form" novalidate="novalidate" id="kt_modal_create_app_form">
+                                <!--begin::Step 1-->
+                                <div class="current" data-kt-stepper-element="content">
+                                    <div class="w-100">
+                                        <!--begin::Input group-->
+                                        <div class="fv-row mb-10">
+                                            <!--begin::Label-->
+                                            <label class="d-flex align-items-center fs-5 fw-bold mb-2">
+                                                <span class="required">App Name</span>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                    data-bs-toggle="tooltip" title="Specify your unique app name"></i>
+                                            </label>
+                                            <!--end::Label-->
+                                            <!--begin::Input-->
+                                            <input type="text"
+                                                class="form-control form-control-lg form-control-solid" name="name"
+                                                placeholder="" value="" />
+                                            <!--end::Input-->
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="fv-row">
+                                            <!--begin::Label-->
+                                            <label class="d-flex align-items-center fs-5 fw-bold mb-4">
+                                                <span class="required">Category</span>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                    data-bs-toggle="tooltip" title="Select your app category"></i>
+                                            </label>
+                                            <!--end::Label-->
+                                            <!--begin:Options-->
+                                            <div class="fv-row">
+                                                <!--begin:Option-->
+                                                <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                    <!--begin:Label-->
+                                                    <span class="d-flex align-items-center me-2">
+                                                        <!--begin:Icon-->
+                                                        <span class="symbol symbol-50px me-6">
+                                                            <span class="symbol-label bg-light-primary">
+                                                                <!--begin::Svg Icon | path: icons/duotone/Home/Globe.svg-->
+                                                                <span class="svg-icon svg-icon-1 svg-icon-primary">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                        width="24px" height="24px"
+                                                                        viewBox="0 0 24 24" version="1.1">
+                                                                        <g stroke="none" stroke-width="1"
+                                                                            fill="none" fill-rule="evenodd">
+                                                                            <rect x="0" y="0" width="24"
+                                                                                height="24" />
+                                                                            <path
+                                                                                d="M13,18.9450712 L13,20 L14,20 C15.1045695,20 16,20.8954305 16,22 L8,22 C8,20.8954305 8.8954305,20 10,20 L11,20 L11,18.9448245 C9.02872877,18.7261967 7.20827378,17.866394 5.79372555,16.5182701 L4.73856106,17.6741866 C4.36621808,18.0820826 3.73370941,18.110904 3.32581341,17.7385611 C2.9179174,17.3662181 2.88909597,16.7337094 3.26143894,16.3258134 L5.04940685,14.367122 C5.46150313,13.9156769 6.17860937,13.9363085 6.56406875,14.4106998 C7.88623094,16.037907 9.86320756,17 12,17 C15.8659932,17 19,13.8659932 19,10 C19,7.73468744 17.9175842,5.65198725 16.1214335,4.34123851 C15.6753081,4.01567657 15.5775721,3.39010038 15.903134,2.94397499 C16.228696,2.49784959 16.8542722,2.4001136 17.3003976,2.72567554 C19.6071362,4.40902808 21,7.08906798 21,10 C21,14.6325537 17.4999505,18.4476269 13,18.9450712 Z"
+                                                                                fill="#000000" fill-rule="nonzero" />
+                                                                            <circle fill="#000000" opacity="0.3"
+                                                                                cx="12" cy="10" r="6" />
+                                                                        </g>
+                                                                    </svg>
+                                                                </span>
+                                                                <!--end::Svg Icon-->
+                                                            </span>
+                                                        </span>
+                                                        <!--end:Icon-->
+                                                        <!--begin:Info-->
+                                                        <span class="d-flex flex-column">
+                                                            <span class="fw-bolder fs-6">Quick Online Courses</span>
+                                                            <span class="fs-7 text-muted">Creating a clear text
+                                                                structure is just one SEO</span>
+                                                        </span>
+                                                        <!--end:Info-->
+                                                    </span>
+                                                    <!--end:Label-->
+                                                    <!--begin:Input-->
+                                                    <span class="form-check form-check-custom form-check-solid">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="category" value="1" />
+                                                    </span>
+                                                    <!--end:Input-->
+                                                </label>
+                                                <!--end::Option-->
+                                                <!--begin:Option-->
+                                                <label class="d-flex flex-stack mb-5 cursor-pointer">
+                                                    <!--begin:Label-->
+                                                    <span class="d-flex align-items-center me-2">
+                                                        <!--begin:Icon-->
+                                                        <span class="symbol symbol-50px me-6">
+                                                            <span class="symbol-label bg-light-danger">
+                                                                <!--begin::Svg Icon | path: icons/duotone/Layout/Layout-4-blocks-2.svg-->
+                                                                <span class="svg-icon svg-icon-1 svg-icon-danger">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                        width="24px" height="24px"
+                                                                        viewBox="0 0 24 24" version="1.1">
+                                                                        <g stroke="none" stroke-width="1"
+                                                                            fill="none" fill-rule="evenodd">
+                                                                            <rect x="5" y="5" width="5"
+                                                                                height="5" rx="1"
+                                                                                fill="#000000" />
+                                                                            <rect x="14" y="5" width="5"
+                                                                                height="5" rx="1"
+                                                                                fill="#000000" opacity="0.3" />
+                                                                            <rect x="5" y="14" width="5"
+                                                                                height="5" rx="1"
+                                                                                fill="#000000" opacity="0.3" />
+                                                                            <rect x="14" y="14" width="5"
+                                                                                height="5" rx="1"
+                                                                                fill="#000000" opacity="0.3" />
+                                                                        </g>
+                                                                    </svg>
+                                                                </span>
+                                                                <!--end::Svg Icon-->
+                                                            </span>
+                                                        </span>
+                                                        <!--end:Icon-->
+                                                        <!--begin:Info-->
+                                                        <span class="d-flex flex-column">
+                                                            <span class="fw-bolder fs-6">Face to Face
+                                                                Discussions</span>
+                                                            <span class="fs-7 text-muted">Creating a clear text
+                                                                structure is just one aspect</span>
+                                                        </span>
+                                                        <!--end:Info-->
+                                                    </span>
+                                                    <!--end:Label-->
+                                                    <!--begin:Input-->
+                                                    <span class="form-check form-check-custom form-check-solid">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="category" value="2" />
+                                                    </span>
+                                                    <!--end:Input-->
+                                                </label>
+                                                <!--end::Option-->
+                                                <!--begin:Option-->
+                                                <label class="d-flex flex-stack cursor-pointer">
+                                                    <!--begin:Label-->
+                                                    <span class="d-flex align-items-center me-2">
+                                                        <!--begin:Icon-->
+                                                        <span class="symbol symbol-50px me-6">
+                                                            <span class="symbol-label bg-light-success">
+                                                                <!--begin::Svg Icon | path: icons/duotone/Devices/Watch1.svg-->
+                                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        width="24px" height="24px"
+                                                                        viewBox="0 0 24 24" version="1.1">
+                                                                        <path
+                                                                            d="M9,8 C8.44771525,8 8,8.44771525 8,9 L8,15 C8,15.5522847 8.44771525,16 9,16 L15,16 C15.5522847,16 16,15.5522847 16,15 L16,9 C16,8.44771525 15.5522847,8 15,8 L9,8 Z M9,6 L15,6 C16.6568542,6 18,7.34314575 18,9 L18,15 C18,16.6568542 16.6568542,18 15,18 L9,18 C7.34314575,18 6,16.6568542 6,15 L6,9 C6,7.34314575 7.34314575,6 9,6 Z"
+                                                                            fill="#000000" fill-rule="nonzero" />
+                                                                        <path
+                                                                            d="M9,8 C8.44771525,8 8,8.44771525 8,9 L8,15 C8,15.5522847 8.44771525,16 9,16 L15,16 C15.5522847,16 16,15.5522847 16,15 L16,9 C16,8.44771525 15.5522847,8 15,8 L9,8 Z"
+                                                                            fill="#000000" opacity="0.3" />
+                                                                        <path
+                                                                            d="M9,18 L15,18 L15,20.5 C15,21.3284271 14.3284271,22 13.5,22 L10.5,22 C9.67157288,22 9,21.3284271 9,20.5 L9,18 Z"
+                                                                            fill="#000000" opacity="0.3" />
+                                                                        <path
+                                                                            d="M10.5,2 L13.5,2 C14.3284271,2 15,2.67157288 15,3.5 L15,6 L9,6 L9,3.5 C9,2.67157288 9.67157288,2 10.5,2 Z"
+                                                                            fill="#000000" opacity="0.3" />
+                                                                    </svg>
+                                                                </span>
+                                                                <!--end::Svg Icon-->
+                                                            </span>
+                                                        </span>
+                                                        <!--end:Icon-->
+                                                        <!--begin:Info-->
+                                                        <span class="d-flex flex-column">
+                                                            <span class="fw-bolder fs-6">Full Intro Training</span>
+                                                            <span class="fs-7 text-muted">Creating a clear text
+                                                                structure copywriting</span>
+                                                        </span>
+                                                        <!--end:Info-->
+                                                    </span>
+                                                    <!--end:Label-->
+                                                    <!--begin:Input-->
+                                                    <span class="form-check form-check-custom form-check-solid">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="category" value="3" />
+                                                    </span>
+                                                    <!--end:Input-->
+                                                </label>
+                                                <!--end::Option-->
+                                            </div>
+                                            <!--end:Options-->
+                                        </div>
+                                        <!--end::Input group-->
+                                    </div>
+                                </div>
+                                <!--end::Step 1-->
+                                <!--begin::Step 2-->
+                                <div data-kt-stepper-element="content">
+                                    <div class="w-100">
+                                        <!--begin::Input group-->
+                                        <div class="fv-row">
+                                            <!--begin::Label-->
+                                            <label class="d-flex align-items-center fs-5 fw-bold mb-4">
+                                                <span class="required">Select Framework</span>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                    data-bs-toggle="tooltip" title="Specify your apps framework"></i>
+                                            </label>
+                                            <!--end::Label-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer mb-5">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin:Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-warning">
+                                                            <i class="fab fa-html5 text-warning fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Icon-->
+                                                    <!--begin:Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">HTML5</span>
+                                                        <span class="fs-7 text-muted">Base Web Projec</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <!--end:Label-->
+                                                <!--begin:Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" checked="checked"
+                                                        name="framework" value="1" />
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer mb-5">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin:Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-success">
+                                                            <i class="fab fa-react text-success fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Icon-->
+                                                    <!--begin:Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">ReactJS</span>
+                                                        <span class="fs-7 text-muted">Robust and flexible app
+                                                            framework</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <!--end:Label-->
+                                                <!--begin:Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="framework"
+                                                        value="2" />
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer mb-5">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin:Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-danger">
+                                                            <i class="fab fa-angular text-danger fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Icon-->
+                                                    <!--begin:Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">Angular</span>
+                                                        <span class="fs-7 text-muted">Powerful data mangement</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <!--end:Label-->
+                                                <!--begin:Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="framework"
+                                                        value="3" />
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer">
+                                                <!--begin:Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin:Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-primary">
+                                                            <i class="fab fa-vuejs text-primary fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end:Icon-->
+                                                    <!--begin:Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">Vue</span>
+                                                        <span class="fs-7 text-muted">Lightweight and responsive
+                                                            framework</span>
+                                                    </span>
+                                                    <!--end:Info-->
+                                                </span>
+                                                <!--end:Label-->
+                                                <!--begin:Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="framework"
+                                                        value="4" />
+                                                </span>
+                                                <!--end:Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                        </div>
+                                        <!--end::Input group-->
+                                    </div>
+                                </div>
+                                <!--end::Step 2-->
+                                <!--begin::Step 3-->
+                                <div data-kt-stepper-element="content">
+                                    <div class="w-100">
+                                        <!--begin::Input group-->
+                                        <div class="fv-row mb-10">
+                                            <!--begin::Label-->
+                                            <label class="required fs-5 fw-bold mb-2">Database Name</label>
+                                            <!--end::Label-->
+                                            <!--begin::Input-->
+                                            <input type="text"
+                                                class="form-control form-control-lg form-control-solid" name="dbname"
+                                                placeholder="" value="master_db" />
+                                            <!--end::Input-->
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="fv-row">
+                                            <!--begin::Label-->
+                                            <label class="d-flex align-items-center fs-5 fw-bold mb-4">
+                                                <span class="required">Select Database Engine</span>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Select your app database engine"></i>
+                                            </label>
+                                            <!--end::Label-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer mb-5">
+                                                <!--begin::Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin::Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-success">
+                                                            <i class="fas fa-database text-success fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end::Icon-->
+                                                    <!--begin::Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">MySQL</span>
+                                                        <span class="fs-7 text-muted">Basic MySQL database</span>
+                                                    </span>
+                                                    <!--end::Info-->
+                                                </span>
+                                                <!--end::Label-->
+                                                <!--begin::Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="dbengine"
+                                                        checked="checked" value="1" />
+                                                </span>
+                                                <!--end::Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer mb-5">
+                                                <!--begin::Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin::Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-danger">
+                                                            <i class="fab fa-google text-danger fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end::Icon-->
+                                                    <!--begin::Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">Firebase</span>
+                                                        <span class="fs-7 text-muted">Google based app data
+                                                            management</span>
+                                                    </span>
+                                                    <!--end::Info-->
+                                                </span>
+                                                <!--end::Label-->
+                                                <!--begin::Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="dbengine"
+                                                        value="2" />
+                                                </span>
+                                                <!--end::Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                            <!--begin:Option-->
+                                            <label class="d-flex flex-stack cursor-pointer">
+                                                <!--begin::Label-->
+                                                <span class="d-flex align-items-center me-2">
+                                                    <!--begin::Icon-->
+                                                    <span class="symbol symbol-50px me-6">
+                                                        <span class="symbol-label bg-light-warning">
+                                                            <i class="fab fa-amazon text-warning fs-2x"></i>
+                                                        </span>
+                                                    </span>
+                                                    <!--end::Icon-->
+                                                    <!--begin::Info-->
+                                                    <span class="d-flex flex-column">
+                                                        <span class="fw-bolder fs-6">DynamoDB</span>
+                                                        <span class="fs-7 text-muted">Amazon Fast NoSQL Database</span>
+                                                    </span>
+                                                    <!--end::Info-->
+                                                </span>
+                                                <!--end::Label-->
+                                                <!--begin::Input-->
+                                                <span class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" type="radio" name="dbengine"
+                                                        value="3" />
+                                                </span>
+                                                <!--end::Input-->
+                                            </label>
+                                            <!--end::Option-->
+                                        </div>
+                                        <!--end::Input group-->
+                                    </div>
+                                </div>
+                                <!--end::Step 3-->
+                                <!--begin::Step 4-->
+                                <div data-kt-stepper-element="content">
+                                    <div class="w-100">
+                                        <!--begin::Input group-->
+                                        <div class="d-flex flex-column mb-7 fv-row">
+                                            <!--begin::Label-->
+                                            <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                                                <span class="required">Name On Card</span>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                    data-bs-toggle="tooltip" title="Specify a card holder's name"></i>
+                                            </label>
+                                            <!--end::Label-->
+                                            <input type="text" class="form-control form-control-solid"
+                                                placeholder="" name="card_name" value="Max Doe" />
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="d-flex flex-column mb-7 fv-row">
+                                            <!--begin::Label-->
+                                            <label class="required fs-6 fw-bold form-label mb-2">Card Number</label>
+                                            <!--end::Label-->
+                                            <!--begin::Input wrapper-->
+                                            <div class="position-relative">
+                                                <!--begin::Input-->
+                                                <input type="text" class="form-control form-control-solid"
+                                                    placeholder="Enter card number" name="card_number"
+                                                    value="4111 1111 1111 1111" />
+                                                <!--end::Input-->
+                                                <!--begin::Card logos-->
+                                                <div class="position-absolute translate-middle-y top-50 end-0 me-5">
+                                                    <img src="assets/media/svg/card-logos/visa.svg" alt=""
+                                                        class="h-25px" />
+                                                    <img src="assets/media/svg/card-logos/mastercard.svg"
+                                                        alt="" class="h-25px" />
+                                                    <img src="assets/media/svg/card-logos/american-express.svg"
+                                                        alt="" class="h-25px" />
+                                                </div>
+                                                <!--end::Card logos-->
+                                            </div>
+                                            <!--end::Input wrapper-->
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="row mb-10">
+                                            <!--begin::Col-->
+                                            <div class="col-md-8 fv-row">
+                                                <!--begin::Label-->
+                                                <label class="required fs-6 fw-bold form-label mb-2">Expiration
+                                                    Date</label>
+                                                <!--end::Label-->
+                                                <!--begin::Row-->
+                                                <div class="row fv-row">
+                                                    <!--begin::Col-->
+                                                    <div class="col-6">
+                                                        <select name="card_expiry_month"
+                                                            class="form-select form-select-solid"
+                                                            data-control="select2" data-hide-search="true"
+                                                            data-placeholder="Month">
+                                                            <option></option>
+                                                            <option value="1">1</option>
+                                                            <option value="2">2</option>
+                                                            <option value="3">3</option>
+                                                            <option value="4">4</option>
+                                                            <option value="5">5</option>
+                                                            <option value="6">6</option>
+                                                            <option value="7">7</option>
+                                                            <option value="8">8</option>
+                                                            <option value="9">9</option>
+                                                            <option value="10">10</option>
+                                                            <option value="11">11</option>
+                                                            <option value="12">12</option>
+                                                        </select>
+                                                    </div>
+                                                    <!--end::Col-->
+                                                    <!--begin::Col-->
+                                                    <div class="col-6">
+                                                        <select name="card_expiry_year"
+                                                            class="form-select form-select-solid"
+                                                            data-control="select2" data-hide-search="true"
+                                                            data-placeholder="Year">
+                                                            <option></option>
+                                                            <option value="2021">2021</option>
+                                                            <option value="2022">2022</option>
+                                                            <option value="2023">2023</option>
+                                                            <option value="2024">2024</option>
+                                                            <option value="2025">2025</option>
+                                                            <option value="2026">2026</option>
+                                                            <option value="2027">2027</option>
+                                                            <option value="2028">2028</option>
+                                                            <option value="2029">2029</option>
+                                                            <option value="2030">2030</option>
+                                                            <option value="2031">2031</option>
+                                                        </select>
+                                                    </div>
+                                                    <!--end::Col-->
+                                                </div>
+                                                <!--end::Row-->
+                                            </div>
+                                            <!--end::Col-->
+                                            <!--begin::Col-->
+                                            <div class="col-md-4 fv-row">
+                                                <!--begin::Label-->
+                                                <label class="d-flex align-items-center fs-6 fw-bold form-label mb-2">
+                                                    <span class="required">CVV</span>
+                                                    <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                        data-bs-toggle="tooltip" title="Enter a card CVV code"></i>
+                                                </label>
+                                                <!--end::Label-->
+                                                <!--begin::Input wrapper-->
+                                                <div class="position-relative">
+                                                    <!--begin::Input-->
+                                                    <input type="text" class="form-control form-control-solid"
+                                                        minlength="3" maxlength="4" placeholder="CVV"
+                                                        name="card_cvv" />
+                                                    <!--end::Input-->
+                                                    <!--begin::CVV icon-->
+                                                    <div
+                                                        class="position-absolute translate-middle-y top-50 end-0 me-3">
+                                                        <!--begin::Svg Icon | path: icons/duotone/Shopping/Credit-card.svg-->
+                                                        <span class="svg-icon svg-icon-2hx">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                width="24px" height="24px" viewBox="0 0 24 24"
+                                                                version="1.1">
+                                                                <g stroke="none" stroke-width="1" fill="none"
+                                                                    fill-rule="evenodd">
+                                                                    <rect x="0" y="0" width="24" height="24" />
+                                                                    <rect fill="#000000" opacity="0.3" x="2" y="5"
+                                                                        width="20" height="14"
+                                                                        rx="2" />
+                                                                    <rect fill="#000000" x="2" y="8" width="20"
+                                                                        height="3" />
+                                                                    <rect fill="#000000" opacity="0.3" x="16" y="14"
+                                                                        width="4" height="2"
+                                                                        rx="1" />
+                                                                </g>
+                                                            </svg>
+                                                        </span>
+                                                        <!--end::Svg Icon-->
+                                                    </div>
+                                                    <!--end::CVV icon-->
+                                                </div>
+                                                <!--end::Input wrapper-->
+                                            </div>
+                                            <!--end::Col-->
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="d-flex flex-stack">
+                                            <!--begin::Label-->
+                                            <div class="me-5">
+                                                <label class="fs-6 fw-bold form-label">Save Card for further
+                                                    billing?</label>
+                                                <div class="fs-7 fw-bold text-muted">If you need more info, please
+                                                    check budget planning</div>
+                                            </div>
+                                            <!--end::Label-->
+                                            <!--begin::Switch-->
+                                            <label class="form-check form-switch form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="checkbox" value="1"
+                                                    checked="checked" />
+                                                <span class="form-check-label fw-bold text-muted">Save Card</span>
+                                            </label>
+                                            <!--end::Switch-->
+                                        </div>
+                                        <!--end::Input group-->
+                                    </div>
+                                </div>
+                                <!--end::Step 4-->
+                                <!--begin::Step 5-->
+                                <div data-kt-stepper-element="content">
+                                    <div class="w-100 text-center">
+                                        <!--begin::Heading-->
+                                        <h1 class="fw-bolder text-dark mb-3">Release!</h1>
+                                        <!--end::Heading-->
+                                        <!--begin::Description-->
+                                        <div class="text-muted fw-bold fs-3">Submit your app to kickstart your
+                                            project.</div>
+                                        <!--end::Description-->
+                                        <!--begin::Illustration-->
+                                        <div class="text-center px-4 py-15">
+                                            <img src="assets/media/illustrations/todo.png" alt=""
+                                                class="mw-100 mh-150px" />
+                                        </div>
+                                        <!--end::Illustration-->
+                                    </div>
+                                </div>
+                                <!--end::Step 5-->
+                                <!--begin::Actions-->
+                                <div class="d-flex flex-stack pt-10">
+                                    <!--begin::Wrapper-->
+                                    <div class="me-2">
+                                        <button type="button" class="btn btn-lg btn-light-primary me-3"
+                                            data-kt-stepper-action="previous">
+                                            <!--begin::Svg Icon | path: icons/duotone/Navigation/Left-2.svg-->
+                                            <span class="svg-icon svg-icon-3 me-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                    height="24px" viewBox="0 0 24 24" version="1.1">
+                                                    <g stroke="none" stroke-width="1" fill="none"
+                                                        fill-rule="evenodd">
+                                                        <polygon points="0 0 24 0 24 24 0 24" />
+                                                        <rect fill="#000000" opacity="0.3"
+                                                            transform="translate(15.000000, 12.000000) scale(-1, 1) rotate(-90.000000) translate(-15.000000, -12.000000)"
+                                                            x="14" y="7" width="2" height="10"
+                                                            rx="1" />
+                                                        <path
+                                                            d="M3.7071045,15.7071045 C3.3165802,16.0976288 2.68341522,16.0976288 2.29289093,15.7071045 C1.90236664,15.3165802 1.90236664,14.6834152 2.29289093,14.2928909 L8.29289093,8.29289093 C8.67146987,7.914312 9.28105631,7.90106637 9.67572234,8.26284357 L15.6757223,13.7628436 C16.0828413,14.136036 16.1103443,14.7686034 15.7371519,15.1757223 C15.3639594,15.5828413 14.7313921,15.6103443 14.3242731,15.2371519 L9.03007346,10.3841355 L3.7071045,15.7071045 Z"
+                                                            fill="#000000" fill-rule="nonzero"
+                                                            transform="translate(9.000001, 11.999997) scale(-1, -1) rotate(90.000000) translate(-9.000001, -11.999997)" />
+                                                    </g>
+                                                </svg>
+                                            </span>
+                                            <!--end::Svg Icon-->Back
+                                        </button>
+                                    </div>
+                                    <!--end::Wrapper-->
+                                    <!--begin::Wrapper-->
+                                    <div>
+                                        <button type="button" class="btn btn-lg btn-primary"
+                                            data-kt-stepper-action="submit">
+                                            <span class="indicator-label">
+                                                Submit
+                                                <!--begin::Svg Icon | path: icons/duotone/Navigation/Right-2.svg-->
+                                                <span class="svg-icon svg-icon-3 ms-2 me-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                        xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <g stroke="none" stroke-width="1" fill="none"
+                                                            fill-rule="evenodd">
+                                                            <polygon points="0 0 24 0 24 24 0 24" />
+                                                            <rect fill="#000000" opacity="0.5"
+                                                                transform="translate(8.500000, 12.000000) rotate(-90.000000) translate(-8.500000, -12.000000)"
+                                                                x="7.5" y="7.5" width="2" height="9"
+                                                                rx="1" />
+                                                            <path
+                                                                d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z"
+                                                                fill="#000000" fill-rule="nonzero"
+                                                                transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)" />
+                                                        </g>
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </span>
+                                            <span class="indicator-progress">Please wait...
+                                                <span
+                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                        </button>
+                                        <button type="button" class="btn btn-lg btn-primary"
+                                            data-kt-stepper-action="next">
+                                            Continue
+                                            <!--begin::Svg Icon | path: icons/duotone/Navigation/Right-2.svg-->
+                                            <span class="svg-icon svg-icon-3 ms-1 me-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                    height="24px" viewBox="0 0 24 24" version="1.1">
+                                                    <g stroke="none" stroke-width="1" fill="none"
+                                                        fill-rule="evenodd">
+                                                        <polygon points="0 0 24 0 24 24 0 24" />
+                                                        <rect fill="#000000" opacity="0.5"
+                                                            transform="translate(8.500000, 12.000000) rotate(-90.000000) translate(-8.500000, -12.000000)"
+                                                            x="7.5" y="7.5" width="2" height="9"
+                                                            rx="1" />
+                                                        <path
+                                                            d="M9.70710318,15.7071045 C9.31657888,16.0976288 8.68341391,16.0976288 8.29288961,15.7071045 C7.90236532,15.3165802 7.90236532,14.6834152 8.29288961,14.2928909 L14.2928896,8.29289093 C14.6714686,7.914312 15.281055,7.90106637 15.675721,8.26284357 L21.675721,13.7628436 C22.08284,14.136036 22.1103429,14.7686034 21.7371505,15.1757223 C21.3639581,15.5828413 20.7313908,15.6103443 20.3242718,15.2371519 L15.0300721,10.3841355 L9.70710318,15.7071045 Z"
+                                                            fill="#000000" fill-rule="nonzero"
+                                                            transform="translate(14.999999, 11.999997) scale(1, -1) rotate(90.000000) translate(-14.999999, -11.999997)" />
+                                                    </g>
+                                                </svg>
+                                            </span>
+                                            <!--end::Svg Icon-->
+                                        </button>
+                                    </div>
+                                    <!--end::Wrapper-->
+                                </div>
+                                <!--end::Actions-->
+                            </form>
+                            <!--end::Form-->
+                        </div>
+                        <!--end::Content-->
+                    </div>
+                    <!--end::Stepper-->
+                </div>
+                <!--end::Modal body-->
+            </div>
+            <!--end::Modal content-->
+        </div>
+        <!--end::Modal dialog-->
+    </div>
+    <!--end::Modal - Create App-->
+    <!--begin::Modal - Upgrade plan-->
+    <div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
+        <!--begin::Modal dialog-->
+        <div class="modal-dialog modal-xl">
+            <!--begin::Modal content-->
+            <div class="modal-content rounded">
+                <!--begin::Modal header-->
+                <div class="modal-header justify-content-end border-0 pb-0">
+                    <!--begin::Close-->
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                        <!--begin::Svg Icon | path: icons/duotone/Navigation/Close.svg-->
+                        <span class="svg-icon svg-icon-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="#000000">
+                                    <rect fill="#000000" x="0" y="7" width="16" height="2"
+                                        rx="1" />
+                                    <rect fill="#000000" opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1" />
+                                </g>
+                            </svg>
+                        </span>
+                        <!--end::Svg Icon-->
+                    </div>
+                    <!--end::Close-->
+                </div>
+                <!--end::Modal header-->
+                <!--begin::Modal body-->
+                <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
+                    <!--begin::Heading-->
+                    <div class="mb-13 text-center">
+                        <h1 class="mb-3">Upgrade a Plan</h1>
+                        <div class="text-muted fw-bold fs-5">If you need more info, please check
+                            <a href="javascript:void(0);" class="link-primary fw-bolder">Pricing Guidelines</a>.
+                        </div>
+                    </div>
+                    <!--end::Heading-->
+                    <!--begin::Plans-->
+                    <div class="d-flex flex-column">
+                        <!--begin::Nav group-->
+                        <div class="nav-group nav-group-outline mx-auto" data-kt-buttons="true">
+                            <a href="javascript:void(0);"
+                                class="btn btn-color-gray-400 btn-active btn-active-secondary px-6 py-3 me-2 active"
+                                data-kt-plan="month">Monthly</a>
+                            <a href="javascript:void(0);"
+                                class="btn btn-color-gray-400 btn-active btn-active-secondary px-6 py-3"
+                                data-kt-plan="annual">Annual</a>
+                        </div>
+                        <!--end::Nav group-->
+                        <!--begin::Row-->
+                        <div class="row mt-10">
+                            <!--begin::Col-->
+                            <div class="col-lg-6 mb-10 mb-lg-0">
+                                <!--begin::Tabs-->
+                                <div class="nav flex-column">
+                                    <!--begin::Tab link-->
+                                    <div class="nav-link btn btn-outline btn-outline-dashed btn-color-dark btn-active btn-active-primary d-flex flex-stack text-start p-6 active mb-6"
+                                        data-bs-toggle="tab" data-bs-target="#kt_upgrade_plan_startup">
+                                        <!--end::Description-->
+                                        <div class="d-flex align-items-center me-2">
+                                            <!--begin::Radio-->
+                                            <div
+                                                class="form-check form-check-custom form-check-solid form-check-success me-6">
+                                                <input class="form-check-input" type="radio" name="plan"
+                                                    checked="checked" value="startup" />
+                                            </div>
+                                            <!--end::Radio-->
+                                            <!--begin::Info-->
+                                            <div class="flex-grow-1">
+                                                <h2 class="d-flex align-items-center fs-2 fw-bolder flex-wrap">Startup
+                                                </h2>
+                                                <div class="fw-bold opacity-50">Best for startups</div>
+                                            </div>
+                                            <!--end::Info-->
+                                        </div>
+                                        <!--end::Description-->
+                                        <!--begin::Price-->
+                                        <div class="ms-5">
+                                            <span class="mb-2">$</span>
+                                            <span class="fs-3x fw-bolder" data-kt-plan-price-month="39"
+                                                data-kt-plan-price-annual="399">39</span>
+                                            <span class="fs-7 opacity-50">/
+                                                <span data-kt-element="period">Mon</span></span>
+                                        </div>
+                                        <!--end::Price-->
+                                    </div>
+                                    <!--end::Tab link-->
+                                    <!--begin::Tab link-->
+                                    <div class="nav-link btn btn-outline btn-outline-dashed btn-color-dark btn-active btn-active-primary d-flex flex-stack text-start p-6 mb-6"
+                                        data-bs-toggle="tab" data-bs-target="#kt_upgrade_plan_advanced">
+                                        <!--end::Description-->
+                                        <div class="d-flex align-items-center me-2">
+                                            <!--begin::Radio-->
+                                            <div
+                                                class="form-check form-check-custom form-check-solid form-check-success me-6">
+                                                <input class="form-check-input" type="radio" name="plan"
+                                                    value="advanced" />
+                                            </div>
+                                            <!--end::Radio-->
+                                            <!--begin::Info-->
+                                            <div class="flex-grow-1">
+                                                <h2 class="d-flex align-items-center fs-2 fw-bolder flex-wrap">
+                                                    Advanced</h2>
+                                                <div class="fw-bold opacity-50">Best for 100+ team size</div>
+                                            </div>
+                                            <!--end::Info-->
+                                        </div>
+                                        <!--end::Description-->
+                                        <!--begin::Price-->
+                                        <div class="ms-5">
+                                            <span class="mb-2">$</span>
+                                            <span class="fs-3x fw-bolder" data-kt-plan-price-month="339"
+                                                data-kt-plan-price-annual="3399">339</span>
+                                            <span class="fs-7 opacity-50">/
+                                                <span data-kt-element="period">Mon</span></span>
+                                        </div>
+                                        <!--end::Price-->
+                                    </div>
+                                    <!--end::Tab link-->
+                                    <!--begin::Tab link-->
+                                    <div class="nav-link btn btn-outline btn-outline-dashed btn-color-dark btn-active btn-active-primary d-flex flex-stack text-start p-6 mb-6"
+                                        data-bs-toggle="tab" data-bs-target="#kt_upgrade_plan_enterprise">
+                                        <!--end::Description-->
+                                        <div class="d-flex align-items-center me-2">
+                                            <!--begin::Radio-->
+                                            <div
+                                                class="form-check form-check-custom form-check-solid form-check-success me-6">
+                                                <input class="form-check-input" type="radio" name="plan"
+                                                    value="enterprise" />
+                                            </div>
+                                            <!--end::Radio-->
+                                            <!--begin::Info-->
+                                            <div class="flex-grow-1">
+                                                <h2 class="d-flex align-items-center fs-2 fw-bolder flex-wrap">
+                                                    Enterprise
+                                                    <span class="badge badge-light-success ms-2 fs-7">Most
+                                                        popular</span>
+                                                </h2>
+                                                <div class="fw-bold opacity-50">Best value for 1000+ team</div>
+                                            </div>
+                                            <!--end::Info-->
+                                        </div>
+                                        <!--end::Description-->
+                                        <!--begin::Price-->
+                                        <div class="ms-5">
+                                            <span class="mb-2">$</span>
+                                            <span class="fs-3x fw-bolder" data-kt-plan-price-month="999"
+                                                data-kt-plan-price-annual="9999">999</span>
+                                            <span class="fs-7 opacity-50">/
+                                                <span data-kt-element="period">Mon</span></span>
+                                        </div>
+                                        <!--end::Price-->
+                                    </div>
+                                    <!--end::Tab link-->
+                                    <!--begin::Tab link-->
+                                    <div
+                                        class="nav-link btn btn-outline btn-outline-dashed btn-color-dark d-flex flex-stack text-start p-6">
+                                        <!--end::Description-->
+                                        <div class="d-flex align-items-center me-2">
+                                            <!--begin::Radio-->
+                                            <div
+                                                class="form-check form-check-custom form-check-solid form-check-success me-6">
+                                                <input class="form-check-input" type="radio" name="plan"
+                                                    value="custom" />
+                                            </div>
+                                            <!--end::Radio-->
+                                            <!--begin::Info-->
+                                            <div class="flex-grow-1">
+                                                <h2 class="d-flex align-items-center fs-2 fw-bolder flex-wrap">Custom
+                                                </h2>
+                                                <div class="fw-bold opacity-50">Requet a custom license</div>
+                                            </div>
+                                            <!--end::Info-->
+                                        </div>
+                                        <!--end::Description-->
+                                        <!--begin::Price-->
+                                        <div class="ms-5">
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-primary">Contact
+                                                Us</a>
+                                        </div>
+                                        <!--end::Price-->
+                                    </div>
+                                    <!--end::Tab link-->
+                                </div>
+                                <!--end::Tabs-->
+                            </div>
+                            <!--end::Col-->
+                            <!--begin::Col-->
+                            <div class="col-lg-6">
+                                <!--begin::Tab content-->
+                                <div class="tab-content rounded h-100 bg-light p-10">
+                                    <!--begin::Tab Pane-->
+                                    <div class="tab-pane fade show active" id="kt_upgrade_plan_startup">
+                                        <!--begin::Heading-->
+                                        <div class="pb-5">
+                                            <h2 class="fw-bolder text-dark">What’s in Startup Plan?</h2>
+                                            <div class="text-muted fw-bold">Optimal for 10+ team size and new startup
+                                            </div>
+                                        </div>
+                                        <!--end::Heading-->
+                                        <!--begin::Body-->
+                                        <div class="pt-1">
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 10 Active
+                                                    Users</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 30 Project
+                                                    Integrations</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Analytics
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Finance
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Accounting
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Network
+                                                    Platform</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Unlimited Cloud
+                                                    Space</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                        </div>
+                                        <!--end::Body-->
+                                    </div>
+                                    <!--end::Tab Pane-->
+                                    <!--begin::Tab Pane-->
+                                    <div class="tab-pane fade" id="kt_upgrade_plan_advanced">
+                                        <!--begin::Heading-->
+                                        <div class="pb-5">
+                                            <h2 class="fw-bolder text-dark">What’s in Startup Plan?</h2>
+                                            <div class="text-muted fw-bold">Optimal for 100+ team size and grown
+                                                company</div>
+                                        </div>
+                                        <!--end::Heading-->
+                                        <!--begin::Body-->
+                                        <div class="pt-1">
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 10 Active
+                                                    Users</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 30 Project
+                                                    Integrations</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Analytics
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Finance
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Accounting
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Network
+                                                    Platform</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold fs-5 text-muted flex-grow-1">Unlimited Cloud
+                                                    Space</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Error-circle.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M12.0355339,10.6213203 L14.863961,7.79289322 C15.2544853,7.40236893 15.8876503,7.40236893 16.2781746,7.79289322 C16.6686989,8.18341751 16.6686989,8.81658249 16.2781746,9.20710678 L13.4497475,12.0355339 L16.2781746,14.863961 C16.6686989,15.2544853 16.6686989,15.8876503 16.2781746,16.2781746 C15.8876503,16.6686989 15.2544853,16.6686989 14.863961,16.2781746 L12.0355339,13.4497475 L9.20710678,16.2781746 C8.81658249,16.6686989 8.18341751,16.6686989 7.79289322,16.2781746 C7.40236893,15.8876503 7.40236893,15.2544853 7.79289322,14.863961 L10.6213203,12.0355339 L7.79289322,9.20710678 C7.40236893,8.81658249 7.40236893,8.18341751 7.79289322,7.79289322 C8.18341751,7.40236893 8.81658249,7.40236893 9.20710678,7.79289322 L12.0355339,10.6213203 Z"
+                                                            fill="#000000" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                        </div>
+                                        <!--end::Body-->
+                                    </div>
+                                    <!--end::Tab Pane-->
+                                    <!--begin::Tab Pane-->
+                                    <div class="tab-pane fade" id="kt_upgrade_plan_enterprise">
+                                        <!--begin::Heading-->
+                                        <div class="pb-5">
+                                            <h2 class="fw-bolder text-dark">What’s in Startup Plan?</h2>
+                                            <div class="text-muted fw-bold">Optimal for 1000+ team and enterpise</div>
+                                        </div>
+                                        <!--end::Heading-->
+                                        <!--begin::Body-->
+                                        <div class="pt-1">
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 10 Active
+                                                    Users</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Up to 30 Project
+                                                    Integrations</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Analytics
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Finance
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Accounting
+                                                    Module</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center mb-7">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Network
+                                                    Platform</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                            <!--begin::Item-->
+                                            <div class="d-flex align-items-center">
+                                                <span class="fw-bold fs-5 text-gray-700 flex-grow-1">Unlimited Cloud
+                                                    Space</span>
+                                                <!--begin::Svg Icon | path: icons/duotone/Code/Done-circle.svg-->
+                                                <span class="svg-icon svg-icon-1 svg-icon-success">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                        height="24px" viewBox="0 0 24 24" version="1.1">
+                                                        <circle fill="#000000" opacity="0.3" cx="12"
+                                                            cy="12" r="10" />
+                                                        <path
+                                                            d="M16.7689447,7.81768175 C17.1457787,7.41393107 17.7785676,7.39211077 18.1823183,7.76894473 C18.5860689,8.1457787 18.6078892,8.77856757 18.2310553,9.18231825 L11.2310553,16.6823183 C10.8654446,17.0740439 10.2560456,17.107974 9.84920863,16.7592566 L6.34920863,13.7592566 C5.92988278,13.3998345 5.88132125,12.7685345 6.2407434,12.3492086 C6.60016555,11.9298828 7.23146553,11.8813212 7.65079137,12.2407434 L10.4229928,14.616916 L16.7689447,7.81768175 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Item-->
+                                        </div>
+                                        <!--end::Body-->
+                                    </div>
+                                    <!--end::Tab Pane-->
+                                </div>
+                                <!--end::Tab content-->
+                            </div>
+                            <!--end::Col-->
+                        </div>
+                        <!--end::Row-->
+                    </div>
+                    <!--end::Plans-->
+                    <!--begin::Actions-->
+                    <div class="d-flex flex-center flex-row-fluid pt-12">
+                        <button type="reset" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upgrade Plan</button>
+                    </div>
+                    <!--end::Actions-->
+                </div>
+                <!--end::Modal body-->
+            </div>
+            <!--end::Modal content-->
+        </div>
+        <!--end::Modal dialog-->
+    </div>
+    <!--end::Modal - Upgrade plan-->
+    <!--end::Modals-->
+    <!--begin::Scrolltop-->
+    <div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">
+        <!--begin::Svg Icon | path: icons/duotone/Navigation/Up-2.svg-->
+        <span class="svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                height="24px" viewBox="0 0 24 24" version="1.1">
+                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <polygon points="0 0 24 0 24 24 0 24" />
+                    <rect fill="#000000" opacity="0.5" x="11" y="10" width="2" height="10"
+                        rx="1" />
+                    <path
+                        d="M6.70710678,12.7071068 C6.31658249,13.0976311 5.68341751,13.0976311 5.29289322,12.7071068 C4.90236893,12.3165825 4.90236893,11.6834175 5.29289322,11.2928932 L11.2928932,5.29289322 C11.6714722,4.91431428 12.2810586,4.90106866 12.6757246,5.26284586 L18.6757246,10.7628459 C19.0828436,11.1360383 19.1103465,11.7686056 18.7371541,12.1757246 C18.3639617,12.5828436 17.7313944,12.6103465 17.3242754,12.2371541 L12.0300757,7.38413782 L6.70710678,12.7071068 Z"
+                        fill="#000000" fill-rule="nonzero" />
+                </g>
+            </svg>
+        </span>
+        <!--end::Svg Icon-->
+    </div>
+    <!--end::Scrolltop-->
+    <!--end::Main-->
+    <!--begin::Javascript-->
+    <!--begin::Global Javascript Bundle(used by all pages)-->
+    <div id="kt_activitiesApplication_toggle"></div>
+    <div id="kt_activitiesApplication" class="bg-body" data-kt-drawer="true"
+        data-kt-drawer-name="activitiesApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_activitiesApplication_toggle"
+        data-kt-drawer-close="#kt_activitiesApplication_close">
+        <div class="card shadow-none rounded-0 w-100" id="application_show_right_bar"></div>
+    </div>
+    <div class="modal fade" id="interview_schedule" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content" id="app_interview_schedule_content"></div>
+        </div>
+    </div>
+
+    <div id="kt_activitiesIntTeam_toggle"></div>
+    <div id="kt_activitiesIntTeam" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+        data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle"
+        data-kt-drawer-close="#kt_activitiesIntTeam_close">
+        <div class="card shadow-none rounded-0 w-100" id="kt_activitiesIntTeam_body"></div>
+    </div>
+    <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('demo/js/scripts.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
+    <!--end::Global Javascript Bundle-->
+
+    <!--begin::Page Vendors Javascript(used by this page)-->
+    <script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
+    <!--end::Page Vendors Javascript-->
+
+    <!--begin::Page Custom Javascript(used by this page)-->
+    <script src="{{ asset('demo/js/custom/widgets.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('demo/js/custom/modals/create-app.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('demo/js/custom/modals/upgrade-plan.js') }}<?php echo TM_VERSION; ?>"></script>
+    <!--end::Page Custom Javascript-->
+
+    <script src="{{ asset('demo/js/intlTelInput.min.js') }}{{ TM_VERSION }}"></script>
+    <!--end::Javascript-->
+    <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}<?php echo TM_VERSION; ?>"></script>
+    <script>
+        $('form input').keydown(function(e) {
+            if (e.keyCode == 13) {
+                e.preventDefault();
+                $("#save-form").click();
+                return false;
+            }
+        });
+
+        $('body').on('click', '.right-side-toggle', function() {
+            $("body").removeClass("control-sidebar-slide-open");
+        })
+
+        $(function() {
+            $('.selectpicker').selectpicker({
+                style: 'btn-info',
+                size: 4
+            });
+        });
+
+        function languageOptions() {
+            return {
+                processing: "@lang('modules.datatables.processing')",
+                search: "@lang('modules.datatables.search')",
+                lengthMenu: "@lang('modules.datatables.lengthMenu')",
+                info: "@lang('modules.datatables.info')",
+                infoEmpty: "@lang('modules.datatables.infoEmpty')",
+                infoFiltered: "@lang('modules.datatables.infoFiltered')",
+                infoPostFix: "@lang('modules.datatables.infoPostFix')",
+                loadingRecords: "@lang('modules.datatables.loadingRecords')",
+                zeroRecords: "@lang('modules.datatables.zeroRecords')",
+                emptyTable: "@lang('modules.datatables.emptyTable')",
+
+                paginate: {
+                    first: "@lang('modules.datatables.paginate.first')",
+                    previous: "@lang('modules.datatables.paginate.previous')",
+                    next: "@lang('modules.datatables.paginate.next')",
+                    last: "@lang('modules.datatables.paginate.last')",
+                },
+
+                aria: {
+                    sortAscending: "@lang('modules.datatables.aria.sortAscending')",
+                    sortDescending: "@lang('modules.datatables.aria.sortDescending')",
+                },
+            }
+        }
+
+        $('.language-switcher').change(function() {
+            var lang = $(this).val();
+
+            $.ajax({
+
+                url: '{{ route('superadmin.language-settings.change-language') }}',
+                data: {
+                    'lang': lang
+                },
+                success: function(data) {
+                    if (data.status == 'success') {
+                        window.location.reload();
+                    }
+                }
+            });
+        });
+
+        $('#mark-notification-read').click(function() {
+            var token = '{{ csrf_token() }}';
+            $.ajax({
+                type: 'POST',
+                url: '{{ route('mark-notification-read') }}',
+                data: {
+                    '_token': token
+                },
+                success: function(data) {
+                    if (data.status == 'success') {
+                        $('.top-notifications').remove();
+                        $('#top-notification-dropdown .notify').remove();
+                        window.location.reload();
+                    }
+                }
+            });
+        });
+
+        @if ($user->hasRole('admin'))
+
+            function addOrEditStickyNote(id) {
+                var url = '';
+                var method = 'POST';
+                if (id === undefined || id == "" || id == null) {
+                    url = '{{ route('product_company.sticky-note.store') }}'
+                } else {
+                    url = "{{ route('product_company.sticky-note.update', ':id') }}";
+                    url = url.replace(':id', id);
+                    var stickyID = $('#stickyID').val();
+                    method = 'PUT'
+                }
+
+                var noteText = $('#notetext').val();
+                var stickyColor = $('#stickyColor').val();
+                $.ajax({
+                    url: url,
+                    container: '#responsive-modal',
+                    type: method,
+                    data: {
+                        'notetext': noteText,
+                        'stickyColor': stickyColor,
+                        '_token': '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        $("#responsive-modal").modal('hide');
+                        getNoteData();
+                    }
+                })
+            }
+            // FOR SHOWING FEEDBACK DETAIL IN MODEL
+            function showCreateNoteModal() {
+
+                var url = '{{ route('product_company.sticky-note.create') }}';
+
+                $.ajaxModal('#responsive-modal', url);
+
+
+
+                return false;
+
+            }
+            // FOR SHOWING FEEDBACK DETAIL IN MODEL
+            function showEditNoteModal(id) {
+
+                var url = '{{ route('product_company.sticky-note.edit', ':id') }}';
+
+                url = url.replace(':id', id);
+
+                $.ajaxModal('#responsive-modal', url);
+
+                return false;
+
+            }
+
+            function selectColor(id) {
+
+                $('.icolors li.active ').removeClass('active');
+
+                $('#' + id).addClass('active');
+
+                $('#stickyColor').val(id);
+
+
+
+            }
+
+            function deleteSticky(id) {
+
+
+
+                swal({
+
+                        title: "Are you sure?",
+                        text: "You will not be able to recover the deleted Sticky Note!",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Yes, delete it!",
+                        cancelButtonText: "No, cancel please!",
+                        closeOnConfirm: true,
+                        closeOnCancel: true
+                    },
+                    function(isConfirm) {
+                        if (isConfirm) {
+                            var url = "{{ route('product_company.sticky-note.destroy', ':id') }}";
+                            url = url.replace(':id', id);
+
+
+
+                            var token = "{{ csrf_token() }}";
+
+
+
+                            $.ajax({
+
+                                type: 'POST',
+
+                                url: url,
+
+                                data: {
+                                    '_token': token,
+                                    '_method': 'DELETE'
+                                },
+
+                                success: function(response) {
+
+                                    $('#stickyBox_' + id).hide('slow');
+
+                                    $("#responsive-modal").modal('hide');
+
+                                    getNoteData();
+
+                                }
+
+                            });
+
+                        }
+
+                    });
+
+            }
+            //getting all chat data according to user
+            function getNoteData() {
+
+
+
+                var url = "{{ route('product_company.sticky-note.index') }}";
+
+
+
+                $.ajax({
+
+
+                    type: 'GET',
+
+                    url: url,
+
+                    messagePosition: '',
+
+                    data: {},
+
+                    container: ".noteBox",
+
+                    success: function(response) {
+
+                        //set notes in box
+
+                        $('#sticky-note-list').html(response.stickyNotes);
+
+                        $('#sticky-note-header span.badge').html(response.count);
+
+                    }
+
+                });
+
+            }
+            // search input implementation
+            function search($input, doneTypingInterval, type) {
+
+                var $anchor = $input.siblings('a');
+
+                var typingTimer, fn;
+
+
+
+                if (type == 'data') {
+
+                    fn = loadData;
+
+                }
+
+                if (type == 'table') {
+
+                    fn = redrawTable;
+
+                }
+
+
+
+                $input.on('keyup', function(e) {
+
+                    if ($(this).val() !== '' || ($(this).val().length >= 0 && e.key === 'Backspace')) {
+
+                        clearTimeout(typingTimer);
+
+                        typingTimer = setTimeout(() => {
+
+                            fn();
+
+                        }, doneTypingInterval);
+
+                    }
+
+
+
+                    $(this).val() !== '' ? $anchor.removeClass('d-none') : $anchor.addClass('d-none');
+
+                })
+
+
+
+                $input.on('keydown', function() {
+
+                    clearTimeout(typingTimer);
+
+                });
+
+
+
+                $anchor.click(function(e) {
+
+                    $(this).siblings('input').val('');
+
+                    fn();
+
+                    $anchor.addClass('d-none');
+
+                    $(this).siblings('input').focus();
+
+                })
+
+            }
+            //    sticky notes script
+            var stickyNoteOpen = $('#open-sticky-bar');
+            var stickyNoteClose = $('#close-sticky-bar');
+            var stickyNotes = $('#footer-sticky-notes');
+            var viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+            var stickyNoteHeaderHeight = stickyNotes.height();
+
+            $('#sticky-note-list').css('max-height', viewportHeight - 150);
+
+            stickyNoteOpen.click(function() {
+
+                $('#sticky-note-list').toggle(function() {
+                    $(this).animate({
+                        height: (viewportHeight - 150)
+                    })
+                });
+                stickyNoteClose.toggle();
+                stickyNoteOpen.toggle();
+            })
+
+            stickyNoteClose.click(function() {
+                $('#sticky-note-list').toggle(function() {
+                    $(this).animate({
+                        height: 0
+                    })
+                });
+                stickyNoteOpen.toggle();
+                stickyNoteClose.toggle();
+            })
+        @endif
+    </script>
+    <script>
+        function comment_modal(id) {
+            var url = "{{ route('superadmin.company.meeting-comment', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                beforeSend: function() {
+                    $('#app_interview_schedule_content').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    console.log(response);
+                    setTimeout(() => {
+                        $('#app_meeting_schedule_commnet').html(response.html);
+                    }, 500);
+
+                }
+            });
+
+        }
+        $(document).ready(function() {
+
+
+            $(document).on('click', '.modal_show', function() {
+                var id = $(this).attr('id');
+                $('#meet_id').val(id);
+                comment_modal(id);
+                $('#kt_modal_meeting_comment').modal('show');
+
+
+            })
+
+
+            $(document).on('click', '#comments-form	', function() {
+
+
+                var meet_id = $('#meet_id').val();
+                var comments = $('#comments').val();
+                var token = "{{ csrf_token() }}";
+
+                var id = 1;
+                var url = "{{ route('superadmin.company.meeting-comment-new', ':id') }}";
+                url = url.replace(':id', id);
+                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+                if (comments != '' && meet_id != '') {
+                    $.ajax({
+                        type: 'POST',
+                        data: {
+                            '_token': token,
+                            'comments': comments,
+                            'meet_id': meet_id
+                        },
+                        url: url,
+                        beforeSend: function() {
+                            $('#comments-form').html('<img src="' + baseurl +
+                                '" height="35px" width="100%">');
+                        },
+                        success: function(response) {
+                            if (response.status) {
+                                comment_modal(meet_id);
+                                $('#comments').val('');
+                                $('#comments-form').text('New Comment');
+                            }
+                        }
+                    });
+                }
+
+            });
+
+
+
+
+
+            var currentControllerName = $('#currentControllerName').val();
+            //alert(currentControllerName); 
+            if (currentControllerName == 'AdminAdvancedSearchController') {
+                $('#btnFiterSubmitSearch').hide();
+                $('#common_search').keyup(function() {
+                    tableLoad('filter');
+                });
+            } else {
+                $('#btnFiterSubmitSearch').click(function() {
+                    var common_search = $('#common_search').val();
+                    var url = '<?php echo url('product_company/advsearch?common_search='); ?>' + common_search;
+                    //alert(url); 
+                    //return false;         
+                    window.location.href = url;
+                });
+            }
+            /* $('#common_search').keyup(function()
+    		 {
+                alert('Handler for .keyup() called.');         
+            	//http://talentmily.vibhanshujaiswal.com/product_company/advsearch?common_search=dfdfffd
+            });
+            */
+        });
+    </script>
+    @stack('footer-script')
+    <script>
+        $(document).on('click', '.show-application-detail', function() {
+            //alert("call");	
+            $('#kt_activitiesApplication_toggle').trigger('click');
+            var id = $(this).data('row-id');
+            var url = "{{ url('super-admin/candidatedatashow') }}/"+id;
+            url = url.replace(':id', id);
+            //var url    = "http://bajaj.vibhanshujaiswal.com/product_company/job-applications/:id";
+            // url      = url.replace(':id', id);		   
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                beforeSend: function() {
+                    $('#application_show_right_bar').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    //$('#kt_activitiesApplication_body').html(response.view);
+                    $('#application_show_right_bar').html(response.view);
+
+
+                    /*setTimeout(
+                    ()=>
+                    {
+                    		if (response.status == "success")
+                    		{
+                    			$('#kt_activitiesApplication_body').html(response.view);
+                    		}
+                    }, 500);*/
+                }
+            });
+        });
+
+
+        $(document).on('click', '#app_interview_schedule', function() {
+
+            var id = $(this).attr('rel');
+            var url = "{{ route('product_company.job-applications.create-schedule', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                beforeSend: function() {
+                    $('#app_interview_schedule_content').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    $('#app_interview_schedule_content').html(response.view);
+                }
+            });
+        });
+
+        $(document).on('click', '#app_meeting_schedule', function() {
+
+            var id = $(this).attr('rel');
+            var url = "{{ route('superadmin.company.meeting-schedule', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                beforeSend: function() {
+                    $('#app_interview_schedule_content').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    $('#app_interview_schedule_content').html(response.view);
+                }
+            });
+        });
+
+        $(document).on('click', '.add_meeting_panel', function() {
+
+            $('#kt_activitiesIntTeam_toggle').trigger('click');
+
+            var company_id = $('#meeting_company_id').val();
+            var panellist = $('#panellist').val();
+            var token = "{{ csrf_token() }}";
+
+            var id = 1;
+            var url = "{{ route('superadmin.company.recruiter', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'POST',
+                data: {
+                    '_token': token,
+                    'panellist': panellist,
+                    'company_id': company_id
+                },
+                url: url,
+                beforeSend: function() {
+                    $('#kt_activitiesIntTeam_body').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    $('#kt_activitiesIntTeam_body').html(response.view);
+                }
+            });
+
+        });
+
+        $(document).on('click', '.add_meeting_our_panel', function() {
+
+            $('#kt_activitiesIntTeam_toggle').trigger('click');
+
+            var panellist = $('#ourpanellist').val();
+            var company_id = '';
+            var token = "{{ csrf_token() }}";
+
+            var id = 1;
+            var url = "{{ route('superadmin.company.recruiter', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'POST',
+                data: {
+                    '_token': token,
+                    'panellist': panellist,
+                    'company_id': company_id
+                },
+                url: url,
+                beforeSend: function() {
+                    $('#kt_activitiesIntTeam_body').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    $('#kt_activitiesIntTeam_body').html(response.view);
+                }
+            });
+
+        });
+
+
+
+
+        $(document).on('click', '.add_panel', function() {
+
+            $('#kt_activitiesIntTeam_toggle').trigger('click');
+
+            var panellist = $('#panellist').val();
+            var token = "{{ csrf_token() }}";
+
+            var id = 1;
+            var url = "{{ route('product_company.job-applications.recruiter', ':id') }}";
+            url = url.replace(':id', id);
+            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            $.ajax({
+                type: 'POST',
+                data: {
+                    '_token': token,
+                    'panellist': panellist
+                },
+                url: url,
+                beforeSend: function() {
+                    $('#kt_activitiesIntTeam_body').html('<img src="' + baseurl +
+                        '" height="35px" width="100%">');
+                },
+                success: function(response) {
+                    $('#kt_activitiesIntTeam_body').html(response.view);
+                }
+            });
+
+        });
+    </script>
+</body>
+<!--end::Body-->
+//
+
+</html>

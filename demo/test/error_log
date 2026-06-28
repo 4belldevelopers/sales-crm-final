@@ -1,0 +1,14 @@
+[13-Dec-2022 07:52:42 UTC] PHP Warning:  move_uploaded_file(user-uploads/eagle.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:52:42 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpL0WaeM' to 'user-uploads/eagle.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:53:38 UTC] PHP Warning:  move_uploaded_file(user-uploads/eagle.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:53:38 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpJJLV2Q' to 'user-uploads/eagle.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:54:53 UTC] PHP Warning:  move_uploaded_file(user-uploads/B.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:54:53 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/php42jYfD' to 'user-uploads/B.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:55:48 UTC] PHP Warning:  move_uploaded_file(test/eagle.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:55:48 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpgamzND' to 'test/eagle.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:56:26 UTC] PHP Warning:  move_uploaded_file(test/eagle.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:56:26 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpkMEzQ2' to 'test/eagle.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:56:31 UTC] PHP Warning:  move_uploaded_file(test/A.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:56:31 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpWr6Vke' to 'test/A.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:57:14 UTC] PHP Warning:  move_uploaded_file(test/B1.jpg): failed to open stream: No such file or directory in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20
+[13-Dec-2022 07:57:14 UTC] PHP Warning:  move_uploaded_file(): Unable to move '/tmp/phpTYD9AP' to 'test/B1.jpg' in /home4/a4belc4t/bot.4bell.com/test/test.php on line 20

@@ -1,0 +1,22 @@
+<?php namespace App\Models;
+
+use Spatie\Permission\Models\Permission as SpatiePermission;
+
+class Permission extends SpatiePermission
+{
+    protected $guarded = ['id'];
+    protected $fillable = [
+        'name', //
+        'guard_name',
+        'group_name',
+        'display_name',
+        'description',
+        'module_id',//
+        'priority',//
+        'status',//
+        'product_based', 
+    ];
+
+    
+
+}
