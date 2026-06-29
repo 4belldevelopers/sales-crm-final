@@ -966,31 +966,7 @@
             </div>
         </div>
 
-        {{-- Company Global Ranking --}}
-        @if ($jwTopCompanies->count())
-            <div class="jw-card-soft mb-3">
-                <div class="jw-cg">
-                    <div class="jw-cg-cap">
-                        <span>Company Global Ranking ▾</span>
-                        <small>How we rank against top companies</small>
-                    </div>
-                    @foreach ($jwTopCompanies as $idx => $jwC)
-                        @php
-                            $jwName  = @$jwC->name ?? @$jwC->company_name ?? ('Company #' . (@$jwC->id ?? ''));
-                            $jwIsYou = (@$jwC->id == $jwOwnCompanyId);
-                            $jwScore = (float) (@$jwC->score ?? 0);
-                            $jwPct   = max(6, round(($jwScore / $jwMaxScore) * 100));
-                            $cgc     = $jwCgColors[$idx % count($jwCgColors)];
-                        @endphp
-                        <div class="jw-cg-item">
-                            <div class="nm">{{ @$jwC->rank }} {{ \Illuminate\Support\Str::limit($jwName, 14) }}<span class="yu">{{ $jwIsYou ? ' (You)' : '' }}</span></div>
-                            <div class="pts">{{ number_format($jwScore) }} pts</div>
-                            <div class="jw-cg-bar"><i style="width:{{ $jwPct }}%;background:{{ $cgc }}"></i></div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        {{-- Company Global Ranking removed per product decision (2026-06-29) — block intentionally deleted. --}}
         {{-- ===================== END REDESIGNED HERO ===================== --}}
 
         <!--begin::Row OLD ranking (replaced by hero above)-->

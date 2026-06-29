@@ -883,10 +883,93 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 
 				 }
-				 $this->labelsCommjoin = $labelsCommjoin ; 
+				 $this->labelsCommjoin = $labelsCommjoin ;
 				 $this->candidateValuesCommjoin = $candidateValuesCommjoin;
 				//  dd($this->candidateValuesCommjoin,$this->labelsCommjoin);
 				 $this->candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
+
+				/*
+				 * Candidates Added Trend wiring (intent): the dashboard "Candidates Added Trend"
+				 * chart reads $addedMonthLabels / $addedMonthValues (last 6 months) which were
+				 * never built (blank chart). This runs the SAME company-scoped candidate query
+				 * used by the 7-day "candidates added" widget, but as a monthly date_histogram
+				 * on created_at across the last 6 months. Tenancy: scoped by company_id /
+				 * ClientComID in the should-clauses below.
+				 */
+				$addedStartMonth = Carbon::now()->startOfMonth()->subMonths(5);
+				$addedEndMonth   = Carbon::now()->endOfMonth();
+				$paramsAdded = [
+					'index' => ELASTIC_CANDIDATES,
+					'request_cache' => true,
+					'body' => [
+						'track_total_hits' => true,
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									[
+										'bool' => [
+											'should' => [
+												// candidate added directly by this company (no client routing)
+												['bool' => ['must' => [
+													['term' => ['company_id' => (int) $company_id]],
+													['term' => ['ClientComID' => 0]],
+												]]],
+												// candidate added by this company against a client requirement
+												['bool' => [
+													'must' => [
+														['term' => ['company_id' => (int) $company_id]],
+														['range' => ['ClientComID' => ['gt' => 0]]],
+													],
+													'must_not' => [
+														['terms' => ['job_master_status_id' => [8, 9]]],
+													],
+												]],
+												// candidate routed to this company as the client
+												['bool' => ['must' => [
+													['term' => ['ClientComID' => (int) $company_id]],
+												]]],
+											],
+											'minimum_should_match' => 1,
+										],
+									],
+								],
+								'filter' => [
+									['range' => ['created_at' => [
+										'gte' => $addedStartMonth->toDateString(),
+										'lte' => $addedEndMonth->toDateString(),
+									]]],
+								],
+							],
+						],
+						'aggs' => [
+							'added_over_time' => [
+								'date_histogram' => [
+									'field' => 'created_at',
+									'calendar_interval' => 'month',
+									'format' => 'yyyy-MM',
+									'min_doc_count' => 0,
+									'extended_bounds' => [
+										'min' => $addedStartMonth->format('Y-m'),
+										'max' => $addedEndMonth->format('Y-m'),
+									],
+								],
+							],
+						],
+					],
+				];
+				$responseAdded = $this->elasticService->getClient()->search($paramsAdded);
+				$addedBuckets  = $responseAdded['aggregations']['added_over_time']['buckets'] ?? [];
+				$addedMonthLabels = [];
+				$addedMonthValues = [];
+				for ($i = 5; $i >= 0; $i--) {
+					$addedMonthPoint   = Carbon::now()->startOfMonth()->subMonths($i);
+					$addedMonthLabels[] = $addedMonthPoint->format('M Y');
+					$addedMonthBucket   = collect($addedBuckets)->firstWhere('key_as_string', $addedMonthPoint->format('Y-m'));
+					$addedMonthValues[] = $addedMonthBucket['doc_count'] ?? 0;
+				}
+				$this->addedMonthLabels = $addedMonthLabels;
+				$this->addedMonthValues = $addedMonthValues;
 
 
 
@@ -1067,7 +1150,23 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
 				    // $this->total_candidates = collect($this->result)->sum();
 				   $this->total_candidates =$this->inreview_count+$this->sourcing_count+$this->screening_count+$this->evaluation_count+$this->negotiation_count+$this->offer_count+$this->joined_count;
-				   
+
+				   /*
+				    * Candidates Funnel wiring (intent): the dashboard "Candidates Funnel" card
+				    * reads $funnel6m[inreview|sourcing|screening|evaluation|offer|joined]. Those
+				    * per-stage counts are already computed above from the company's candidate
+				    * status buckets (job_master_status_id 1..8); here we only expose them in the
+				    * shape the view expects so the card stops rendering all-zeros. No new query.
+				    */
+				   $this->funnel6m = [
+						'inreview'   => (int) $this->inreview_count,
+						'sourcing'   => (int) $this->sourcing_count,
+						'screening'  => (int) $this->screening_count,
+						'evaluation' => (int) $this->evaluation_count,
+						'offer'      => (int) $this->offer_count,
+						'joined'     => (int) $this->joined_count,
+				   ];
+
 				$counts = collect([
 					'Joined' => $this->result->get('6', 0),
 					'Sourcing' => $this->result->get('1', 0),
