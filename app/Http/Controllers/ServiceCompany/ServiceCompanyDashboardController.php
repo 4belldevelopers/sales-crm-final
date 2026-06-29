@@ -3547,6 +3547,74 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 	    // End Bench Talent Request
 
 
+			/*
+			 * Daily Leaderboards wiring (intent): the dashboard "Daily Leaderboards" block
+			 * (Teams / Captains / Agencies) reads $teamDailyReport, $captainDailyReport,
+			 * $agencyDailyReport (+ matching *Meta). The daily ranks themselves are already
+			 * computed above ($rankedUsers_daily_internal_rank, $this->topUsersCaptainDaily,
+			 * $rankedstaffing_daily); this block only reshapes them into the
+			 * {name, value, rank, is_me} rows the view expects — no ranking/business logic
+			 * is changed. Tenancy: every source list is already company-scoped (built from
+			 * this company's ES users / staffing partners), so no extra filter is needed.
+			 */
+			$dashLoggedInUserId = (int) auth()->user()->id;
+
+			// Teams Daily Report — top 4 team members by daily score (+ the logged-in user if outside the top 4).
+			$teamDailySource = isset($rankedUsers_daily_internal_rank) ? collect($rankedUsers_daily_internal_rank) : collect();
+			$teamDailyTop    = $teamDailySource->take(4);
+			$teamDailyMe     = $teamDailySource->firstWhere('id', $dashLoggedInUserId);
+			if ($teamDailyMe && !$teamDailyTop->contains('id', $dashLoggedInUserId)) {
+				$teamDailyTop = $teamDailyTop->push($teamDailyMe);
+			}
+			$this->teamDailyReport = $teamDailyTop->values()->map(function ($u) use ($dashLoggedInUserId) {
+				$u = (array) $u;
+				return [
+					'name'  => $u['name'] ?? '',
+					'value' => (int) ($u['score'] ?? 0),
+					'rank'  => (int) ($u['rank'] ?? 0),
+					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
+				];
+			})->values();
+			$this->teamDailyMeta = [
+				'count' => $teamDailySource->count(),
+				'total' => (int) $teamDailySource->sum(fn ($u) => (int) (((array) $u)['score'] ?? 0)),
+			];
+
+			// Captains Daily Report — re-rank the already-built captain list by captain score.
+			$captainDailySource = isset($this->topUsersCaptainDaily) ? collect($this->topUsersCaptainDaily) : collect();
+			$captainDailyRanked = $captainDailySource
+				->sortByDesc(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0))
+				->values();
+			$this->captainDailyReport = $captainDailyRanked->map(function ($u, $i) use ($dashLoggedInUserId) {
+				$u = (array) $u;
+				return [
+					'name'  => $u['name'] ?? '',
+					'value' => (int) ($u['captainScore'] ?? 0),
+					'rank'  => $i + 1,
+					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
+				];
+			})->values();
+			$this->captainDailyMeta = [
+				'count' => $captainDailyRanked->count(),
+				'total' => (int) $captainDailyRanked->sum(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0)),
+			];
+
+			// Agency Daily Report — top staffing partners by today's profile uploads.
+			$agencyDailySource = isset($rankedstaffing_daily) ? collect($rankedstaffing_daily) : collect();
+			$this->agencyDailyReport = $agencyDailySource->take(4)->map(function ($a) {
+				$a = (array) $a;
+				return [
+					'name'  => $a['company_name'] ?? '',
+					'value' => (int) ($a['upload_count'] ?? 0),
+					'rank'  => (int) ($a['rank'] ?? 0),
+					'is_me' => false,
+				];
+			})->values();
+			$this->agencyDailyMeta = [
+				'count' => $agencyDailySource->count(),
+				'total' => (int) $agencyDailySource->sum(fn ($a) => (int) (((array) $a)['upload_count'] ?? 0)),
+			];
+
 			$responseData = view('service_company.dashboard.index', $this->data)->render();
 
 		
