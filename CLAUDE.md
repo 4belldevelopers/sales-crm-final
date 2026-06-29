@@ -18,8 +18,10 @@ gateways. Goal: scale to **10,000 companies / 100M+ records per year** without f
 Full concept: [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 
 ## Where the code lives ⚠️
-**All work happens in `testing.jero.works`** (this folder), **never `hire.jero.works`**
-(that folder is effectively empty).
+**All work happens in this folder — `JWMaincode28June2026` (the `testing.jero.works`
+codebase)** and **only** here. **Never make changes in any other folder** (e.g.
+`hire.jero.works`, which is effectively empty). Every change — code, docs, config — must
+be made inside this folder.
 
 ---
 
