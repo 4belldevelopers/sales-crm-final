@@ -1240,18 +1240,24 @@
                     $labels = array_values($labels);
                     $n = count($vals);
                     if ($n < 2) { return ''; }
-                    $W = 360; $H = 230; $mL = 30; $mR = 12; $mT = 18; $mB = 26;
+                    $W = 360; $H = 230; $mL = 34; $mR = 30; $mT = 18; $mB = 26;
                     $pW = $W - $mL - $mR; $pH = $H - $mT - $mB;
-                    $mx = max($vals);
-                    $niceMax = $mx <= 30 ? max(10, (int) (ceil($mx / 10) * 10)) : (int) (ceil($mx / 20) * 20);
-                    $step = $niceMax <= 30 ? 10 : 20;
-                    $steps = max(2, (int) round($niceMax / $step));
+                    $mx = max($vals); if ($mx <= 0) { $mx = 1; }
+                    // Adaptive "nice" Y scale → ~4 gridlines regardless of magnitude (10s, 100s or 1000s).
+                    // The old fixed step of 20 produced ~400 overlapping gridlines/labels for values in the thousands.
+                    $rawStep = $mx / 4;
+                    $mag = pow(10, floor(log10($rawStep)));
+                    $norm = $rawStep / $mag;
+                    $niceStep = ($norm <= 1 ? 1 : ($norm <= 2 ? 2 : ($norm <= 5 ? 5 : 10))) * $mag;
+                    $niceMax = (int) (ceil($mx / $niceStep) * $niceStep);
+                    $steps = max(2, (int) round($niceMax / $niceStep));
+                    $fmtY = fn ($v) => $v >= 1000 ? rtrim(rtrim(number_format($v / 1000, 1), '0'), '.') . 'k' : (string) (int) round($v);
                     $grid = ''; $yl = '';
                     for ($s = 0; $s <= $steps; $s++) {
                         $yv = $niceMax / $steps * $s;
                         $y = $mT + $pH - ($yv / $niceMax) * $pH;
                         $grid .= '<line x1="' . $mL . '" y1="' . round($y, 1) . '" x2="' . ($W - $mR) . '" y2="' . round($y, 1) . '" stroke="#eef1f6" stroke-width="1"/>';
-                        $yl .= '<text x="' . ($mL - 6) . '" y="' . round($y + 3, 1) . '" text-anchor="end" font-size="9" fill="#9aa3b2">' . (int) $yv . '</text>';
+                        $yl .= '<text x="' . ($mL - 6) . '" y="' . round($y + 3, 1) . '" text-anchor="end" font-size="9" fill="#9aa3b2">' . $fmtY($yv) . '</text>';
                     }
                     $co = [];
                     for ($i = 0; $i < $n; $i++) {
