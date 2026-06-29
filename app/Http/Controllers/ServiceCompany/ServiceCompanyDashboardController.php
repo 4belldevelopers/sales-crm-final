@@ -3302,6 +3302,9 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 			$this->topUsers_rank_global_company = $topUsers_global_company;
 			$this->ownUser_global_company = $currentUser_global_company;
+			// For the Company Score Board modal: total ranked companies (percentile) + a fuller top-7 leaderboard.
+			$this->companyRankTotal = $rankedUsers_global_company->count();
+			$this->companyLeaders   = $rankedUsers_global_company->take(7)->values();
 
 			// dd($this->ownUser_global_company);
 	
