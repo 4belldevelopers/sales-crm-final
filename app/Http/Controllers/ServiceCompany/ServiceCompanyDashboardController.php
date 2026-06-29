@@ -2214,6 +2214,40 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				'active' => $rankedUsers->filter(fn ($u) => strtolower($u['status'] ?? 'inactive') === 'active')->count(),
 			];
 
+			/*
+			 * Actual monthly joinings & offers per recruiter for the JOIN / O→J% columns of
+			 * "Monthly Performers". These must reflect REAL recruitment outcomes, not gamification
+			 * points — the points pipeline only credits an 'Onboarded' joining (and deducts for
+			 * non-onboarded ones), so it under-reports real joinings (e.g. shows 1 where 2 joined).
+			 * Source of truth = offer_job_applications.submitted_by (the recruiter who owns the
+			 * candidate). Window = the report month (previous completed month, matching the rest of
+			 * this section). Tenancy: raw DB::table is NOT auto-scoped, so company_id is filtered
+			 * explicitly (Rule #3). Join = reached "Joined" (master_status_id 6) with joined_date in
+			 * the month; Offer = reached offer/joined stage (master_status_id 5 or 6) in the month.
+			 */
+			$repMonthStart = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d H:i:s');
+			$repMonthEnd   = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d H:i:s');
+
+			$this->recruiterActualJoins = DB::table('offer_job_applications')
+				->select('submitted_by', DB::raw('COUNT(*) as cnt'))
+				->where('company_id', $this->company_id)
+				->whereNull('deleted_at')
+				->where('master_status_id', 6)
+				->whereBetween('joined_date', [$repMonthStart, $repMonthEnd])
+				->groupBy('submitted_by')
+				->pluck('cnt', 'submitted_by')
+				->toArray();
+
+			$this->recruiterActualOffers = DB::table('offer_job_applications')
+				->select('submitted_by', DB::raw('COUNT(*) as cnt'))
+				->where('company_id', $this->company_id)
+				->whereNull('deleted_at')
+				->whereIn('master_status_id', [5, 6])
+				->whereBetween('created_at', [$repMonthStart, $repMonthEnd])
+				->groupBy('submitted_by')
+				->pluck('cnt', 'submitted_by')
+				->toArray();
+
 			// Top performing captains — reuse the already-built $rankedUsers (no extra query).
 			// Captain-only score (not recruiter score) = sum of their team-captain contributions.
 			// Only users who are acting captains (captain activity >= 1) are included.
