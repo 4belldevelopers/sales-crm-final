@@ -7,273 +7,131 @@
     $feedback_status = GeneralMethod::feedback_status();
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
-
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
-    
-    $targetJobId = $row->id;
-    $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
-    $from_company_id = $relationget->from_company_id ?? null;
-    $recommendation_id = $relationget->to_company_id ?? null;
-    $final_status = $relationget->final_status ?? null;
 
-    $match = collect($row->staffing_company_relation)->first(function ($item) use ($company_id) {
-        return ($item['from_company_id'] ?? null) == $company_id
-            || ($item['to_company_id'] ?? null) == $company_id;
-    });
-    $from_company_id = ($match['from_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-    $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
+    // Custom clients are internal; the client id is the row id.
+    $client_id = $row->id;
 
-    $final_status = collect($row->staffing_company_relation)->first(function ($item) use ($company_id) {
-        return $item['to_company_id'] == $company_id;
-    })['final_status'] ?? null;
-
-    $from_created_at = collect($row->staffing_company_relation)->first(function ($item) use ($company_id) {
-        return $item['to_company_id'] == $company_id;
-    })['from_created_at'] ?? null;
-
-    $row->final_status = $final_status;
-    $row->staffing_company_relation_id =$recommendation_id;
-    $row->to_company_id = $recommendation_id;
-    $row->from_company_id = $from_company_id;
-    $row->from_created_at = $from_created_at;
-
-
+    /* ── logo / avatar ── */
     $background_image = '';
-    
-
-    if (!empty(@$row->website) && empty(@$row->logo_logical_path)){
-            $domainGet = GeneralMethod::getDomain($row->website);
-            $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";    
-            $google = GeneralMethod::getDomainIcon($googleIcon,$row->id,false);
-            $background_image  = ($google) ? $googleIcon : '';
+    if (!empty(@$row->website) && empty(@$row->logo_logical_path)) {
+        $domainGet = GeneralMethod::getDomain($row->website);
+        $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";
+        $google = GeneralMethod::getDomainIcon($googleIcon, $row->id, false);
+        $background_image = ($google) ? $googleIcon : '';
     }
     if (!empty(@$row->logo_logical_path) && strlen(@$row->logo_logical_path) > 10) {
         $background_image = @$row->logo_logical_path;
     }
 
-        
+    // avatar colour class (Metronic light backgrounds, keyed off first letter)
+    $strVal = strtolower(trim(@$row->name)[0] ?? '');
+    $ascii = ord($strVal);
+    if ($ascii >= 97 && $ascii <= 101) {
+        $bgTextDecore = 'bg-light-danger text-danger';
+    } elseif ($ascii >= 102 && $ascii <= 106) {
+        $bgTextDecore = 'bg-light-warning text-warning';
+    } elseif ($ascii >= 107 && $ascii <= 111) {
+        $bgTextDecore = 'bg-light-primary text-primary';
+    } elseif ($ascii >= 112 && $ascii <= 116) {
+        $bgTextDecore = 'bg-light-success text-success';
+    } elseif ($ascii >= 117 && $ascii <= 121) {
+        $bgTextDecore = 'bg-dark text-white';
+    } else {
+        $bgTextDecore = 'bg-light-secondary text-dark';
+    }
+    $initials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1),
+                    array_slice(explode(' ', trim(@$row->name)), 0, 2))));
 
+    $departmentArr = '------';
+    if ($row->industry >= 0) {
+        $departmentArr = $department[@$row->industry] ?? '------';
+    }
 
+    /* ── location ── */
+    $country_name = $stateName = $city = '';
+    if (count($row->client_location) > 0) {
+        $country_name = ($row->client_location[0]['country_name']);
+        $stateName = ($row->client_location[0]['state_name']);
+        $city = ($row->client_location[0]['city_name']);
+    }
+
+    /* ── jobs (active / closed / hold) ── */
+    $jobsCount = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $client_id);
+    $job_active = $jobsCount->job_active ?? 0;
+    $job_closed = $jobsCount->job_inactive ?? 0;
+    $job_hold   = $jobsCount->job_hold ?? 0;
+
+    /* ── performance funnel ── */
+    $perf = GeneralMethod::InternalClientCandidatesCountList($client_id);
+    $sourced    = $perf->sourced ?? 0;
+    $evaluated  = $perf->evaluated ?? 0;
+    $interviews = $perf->all_interview ?? 0;
+    $offers     = $perf->offers ?? 0;
+    $joined     = $perf->Joined ?? 0;
+
+    /* ── connected on ── */
+    $newDate = date('d M, Y', strtotime($row->created_at));
+    $daysAgo = GeneralMethod::timeAgo($row->created_at);
     @endphp
 
-        <tr style="">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-								<input class="form-check-input" type="checkbox" value="1">
-							  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
+    <div class="tbl-r">
+        <input type="checkbox" class="tbl-cb" onclick="event.stopPropagation()">
 
-                    $image =
-                        '<a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="show-detail border-radius-5" id="kt_activities3_toggle" >
-												<div class="symbol-label fs-3 ' .
-                        @$bgTextDecore .
-                        '  border-radius-5">' .
-                        ucwords(@$strVal) .
-                        '</div>
-											</a>';
-                    if (!empty(@$background_image) && strlen(@$background_image) > 10) {
-                        $image =
-                            '<img   data-row-id="' .
-                            $row->id .
-                            '"    src="' .
-                            @$background_image .
-                            '" height="100px" width="100px" class="show-detail border-radius-5"  />';
-                    }
+        <div class="tbl-a">
+            @if (!empty($background_image) && strlen($background_image) > 10)
+                <div class="tbl-av show-detail" data-row-id="{{ $row->id }}">
+                    <img src="{{ $background_image }}" data-row-id="{{ $row->id }}" class="show-detail">
+                </div>
+            @else
+                <div class="tbl-av show-detail {{ $bgTextDecore }}" data-row-id="{{ $row->id }}">{{ $initials }}</div>
+            @endif
+            <div class="tbl-ai show-detail" data-row-id="{{ $row->id }}" data-toggle="tooltip1" data-html="true" title="{{ ucwords(@$row->name) }}">
+                <div class="tbl-n">{{ ucwords(mb_substr(@$row->name, 0, 22)) }}</div>
+                <div class="tbl-t">{{ @$departmentArr }}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+            </div>
+        </div>
 
-                    $departmentArr = '------';
-                    if ($row->industry >= 0) {
-                        $departmentArr = $department[@$row->industry];
-                    }
+        <div class="tbl-l">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div>
+                <div class="tbl-lc">{{ ucwords(mb_substr(@$city, 0, 20)) }}</div>
+                <div class="tbl-ls">{{ ucwords(@$stateName) }}{{ $country_name ? ' | ' . ucwords($country_name) : '' }}</div>
+            </div>
+        </div>
 
-                    echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left" >
-										' .
-                        $image .
-                        '		 
-										</div>                 
-								<div class="d-flex flex-column">
-									<a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 show-detail"  data-toggle="tooltip1" data-html="true" title="' .
-                        ucwords(@$row->name) .
-                        '">' .
-                        ucwords(mb_substr(@$row->name, 0, 15)) .
-                        '</a>
-									<a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-detail">' .
-                        @$departmentArr .
-                        '</a>
-								</div>
-								';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $client_id = $row->id;
-                    $country_name = '';
-                    $stateName = '';
-                    $city = '';
-                    if(count($row->client_location)>0){
-                            
-                        $country_name = ' | '.($row->client_location[0]['country_name']);
-                        $stateName = ($row->client_location[0]['state_name']);
-                        $city = ($row->client_location[0]['city_name']);
-                        
-                    }
+        <div class="tbl-j">
+            <div class="tbl-jr"><span class="tbl-jn">{{ $job_active }}</span><span class="tbl-js a">Active</span></div>
+            <div class="tbl-jr"><span class="tbl-jn">{{ $job_closed }}</span><span class="tbl-js c">Closed</span></div>
+            <div class="tbl-jr"><span class="tbl-jn">{{ $job_hold }}</span><span class="tbl-js d">Hold</span></div>
+        </div>
 
-                    // $address			=	@$locInfo->address;
+        <div class="tbl-p">
+            <div class="tbl-pi"><div class="tbl-pv">{{ $sourced }}</div><div class="tbl-pl">Sourced</div></div>
+            <div class="tbl-pi"><div class="tbl-pv">{{ $evaluated }}</div><div class="tbl-pl">Evaluated</div></div>
+            <div class="tbl-pi"><div class="tbl-pv">{{ $interviews }}</div><div class="tbl-pl">Interviews</div></div>
+            <div class="tbl-pi"><div class="tbl-pv">{{ $offers }}</div><div class="tbl-pl">Offers</div></div>
+            <div class="tbl-pi"><div class="tbl-pv">{{ $joined }}</div><div class="tbl-pl">Joined</div></div>
+        </div>
 
-                    echo '<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        ucwords($city ).
-                        '</a>
-                        <div class="d-flex align-items-center">
-                            <span class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        ucwords(@$stateName) .
-                        '</span> &nbsp;
-                            <span class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        ucwords($country_name) .
-                        '</span>
-                        <div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $client_id = '';
-                    $client_id = $row->id;
-                    $applicationCounter = DB::table('jobs')
-                        // ->join('job_applications', 'job_applications.job_id', '=', 'jobs.id')
-                        ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_id', 'jobs.id')
-                        ->select(
-                            DB::raw('count(add_job_wise_condidates.id) as allCandidate'),
-                            DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6  THEN 1 ELSE 0 END) AS appJoin'),
-                        )
-                        ->where('jobs.client_id', $client_id)
-                        ->first();
+        <div>
+            <div class="tbl-co">{{ @$newDate }}</div>
+            <div class="tbl-cv show-detail" data-row-id="{{ $row->id }}">view client</div>
+        </div>
 
-                    echo '<div class="d-flex flex-column">
-							<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        number_format(@$applicationCounter->allCandidate) .
-                        ' Profiles</a>                    
-							<span class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        number_format(@$applicationCounter->appJoin) .
-                        ' Joins</span>
-						</div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-                    $client_id = '';
-                    $client_id = $row->id;
-                    $jobCounter = DB::table('jobs')
-                        ->select(
-                            DB::raw("SUM(CASE WHEN jobs.status = 'active' THEN 1 ELSE 0 END) AS active"),
-                            DB::raw("SUM(CASE WHEN jobs.status = 'inactive' THEN 1 ELSE 0 END) AS inactive"),
-                            DB::raw("SUM(CASE WHEN jobs.status = 'hold' THEN 1 ELSE 0 END) AS hold"),
-                        )
-                        ->where('client_id', $client_id)
-                        ->first();
-
-                    $active_counter = $inactive_counter = $hold_counter = 0;
-
-                    $active_counter = $jobCounter->active;
-                    if (empty($active_counter)) {
-                        $active_counter = 0;
-                    }
-
-                    $inactive_counter = $jobCounter->inactive;
-                    if (empty($inactive_counter)) {
-                        $inactive_counter = 0;
-                    }
-
-                    $hold_counter = $jobCounter->hold;
-                    if (empty($hold_counter)) {
-                        $hold_counter = 0;
-                    }
-                    echo '<div class="d-flex flex-column">
-                      <span class="fw-bolder text-success fs-6">(' .
-                        @$active_counter .
-                        ') Active</span>
-                      <div class="d-flex align-items-center d-none">
-                        <span class="fw-bold d-block fs-7 text-warning">' .
-                        @$hold_counter .
-                        ' Hold</span>
-                          &nbsp;|&nbsp;
-                        <span class="fw-bold d-block fs-7 text-danger">' .
-                        @$inactive_counter .
-                        ' Closed</span>
-                      <div>
-                    </div>
-                </div></div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $daysAgo = $created_at='';
-                    $from_created_at = $row->created_at;
-                    $created_at = date('d M, Y', strtotime($from_created_at));
-                    $daysAgo = GeneralMethod::timeAgo($created_at);
-                    // if($row->created_at!= '0000-00-00 00:00:00' &&!empty($row->created_at)){
-                    //     $created_at = $row->created_at->format('d M, Y');
-                    //     $daysAgo = GeneralMethod::timeAgo($row->created_at);
-                    //   }
-                    
-
-                    echo '<div class="d-flex flex-column">
-								<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        @$created_at .
-                        '</a>
-								<a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        @$daysAgo .
-                        '</a>
-							  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo '<div class="d-flex flex-column">
-								<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">'.__('messages.internal_client_tag').'</a>
-								<span class="text-muted fw-bold text-muted d-block fs-7"></span>
-							  </div>';
-                @endphp
-            </td>
-        </tr>
+        <div>
+            <span class="tbl-badge">{{ __('messages.internal_client_tag') }}</span>
+        </div>
+    </div>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="7" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="tbl-r" style="grid-template-columns: 1fr;">
+        <div class="tbl-empty">No data available in table</div>
+    </div>
 @endif

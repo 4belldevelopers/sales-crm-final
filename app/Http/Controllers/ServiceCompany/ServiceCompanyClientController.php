@@ -49,15 +49,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 	}
 	public function index()
 	{
-			
+
 		$company_id = auth()->user()->company_id;
 		$this->clientDataCnt = $this->commonclient();
+		// Countries feed the Location filter dropdown on the Clients list (Agencies-style design).
+		$this->countries = DB::table('countries')->get();
 		return view('service_company.client.index', $this->data);
 	}
 	public function direct_client($id)
 	{
 		$this->pageTitle = __('Direct Client');
 		$this->clientDataCnt = $this->commonclient();
+		// Countries feed the Location filter dropdown (Agencies-style design).
+		$this->countries = DB::table('countries')->get();
 		return view('service_company.client.direct_client', $this->data);
 	}
 	public function all_clients_data_ajax(Request $request)
@@ -86,6 +90,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'country' => request('country'),
 			'company' => $company_id,
 			'cus_search' => $custom_search,
 			'user_id' => $this->user->id,
@@ -278,6 +283,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'country' => request('country'),
 			'company' => $company_id,
 			'cus_search' => $custom_search,
 			'user_id' => $this->user->id,
@@ -439,6 +445,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 	{
 		$this->pageTitle = __('Custom Client');
 		$this->clientDataCnt = $this->commonclient();
+		// Countries feed the Location filter dropdown (Agencies-style design).
+		$this->countries = DB::table('countries')->get();
 		return view('service_company.client.custom_client', $this->data);
 	}
 	public function custom_client_data_ajax(Request $request)
@@ -469,6 +477,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'country' => request('country'),
 			'company' => $company_id,
 			'cus_search' => $custom_search,
 			'user_id' => $this->user->id,
