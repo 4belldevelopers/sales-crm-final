@@ -1206,6 +1206,16 @@
                 [$dOffer, $dirOffer] = $jwDelta($jwOffer);
                 [$dJoin, $dirJoin]   = $jwDelta($jwJoin);
 
+                // Monthly KPI strip — the NUMBER and the % delta must come from the SAME monthly series,
+                // otherwise the headline and "vs last month" disagree. Candidates Added = candidates CREATED
+                // this month ($addedMonthValues last bucket); Offers/Joinings = events this month
+                // (of_created_date / of_joined_date series, same as the trend charts). vs the old code which
+                // showed a pipeline status-sum with a daily "vs yesterday" delta.
+                $jwAddedM  = is_array($addedMonthValues ?? null) ? array_values($addedMonthValues) : [];
+                $kpiCandM  = (int) $jwLastOf($jwAddedM);  [$dCandM, $dirCandM] = $jwDelta($jwAddedM);
+                $kpiOfferM = (int) $jwLastOf($jwOffer);
+                $kpiJoinM  = (int) $jwLastOf($jwJoin);
+
                 // candidate pipeline funnel — last 6 months stage counts (no "Added" row)
                 $f6 = $funnel6m ?? [];
                 $jwFunnel = [
@@ -1317,16 +1327,16 @@
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/></svg></span>
-                            <div><div class="jw-sc-label">Candidates Added</div><div class="jw-sc-num">{{ number_format($total_candidates ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
+                            <div><div class="jw-sc-label">Candidates Added</div><div class="jw-sc-num">{{ number_format($kpiCandM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
-                        <div class="jw-sc-delta {{ $dirCand }}"><span>{{ $dirCand === 'up' ? '↑' : ($dirCand === 'down' ? '↓' : '—') }}</span>{{ abs($dCand) }}% vs yesterday</div>
+                        <div class="jw-sc-delta {{ $dirCandM }}"><span>{{ $dirCandM === 'up' ? '↑' : ($dirCandM === 'down' ? '↓' : '—') }}</span>{{ abs($dCandM) }}% vs last month</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl">
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
-                            <div><div class="jw-sc-label">Offers <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($offer_count ?? 0) }}</div><div class="jw-sc-meta">Total Offers</div></div>
+                            <div><div class="jw-sc-label">Offers <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($kpiOfferM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
                         <div class="jw-sc-delta {{ $dirOffer }}"><span>{{ $dirOffer === 'up' ? '↑' : ($dirOffer === 'down' ? '↓' : '—') }}</span>{{ abs($dOffer) }}% vs last month</div>
                     </div>
@@ -1335,7 +1345,7 @@
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
-                            <div><div class="jw-sc-label">Joinings <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($joined_count ?? 0) }}</div><div class="jw-sc-meta">Total Joinings</div></div>
+                            <div><div class="jw-sc-label">Joinings <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($kpiJoinM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
                         <div class="jw-sc-delta {{ $dirJoin }}"><span>{{ $dirJoin === 'up' ? '↑' : ($dirJoin === 'down' ? '↓' : '—') }}</span>{{ abs($dJoin) }}% vs last month</div>
                     </div>
@@ -1357,6 +1367,11 @@
                     <div class="jw-card-soft jw-ch h-100">
                         <div class="jw-ch-head">
                             <div class="jw-ch-title">Candidates Funnel <small>(Last 6 Months)</small></div>
+                        </div>
+                        {{-- Total candidates added in the last 6 months — styled like the Interviews card total (number on top). --}}
+                        <div>
+                            <div class="jw-iv-total">{{ number_format($candidatesAdded6mTotal ?? 0) }}</div>
+                            <div class="jw-iv-sub">Candidates Added <small>(Last 6 Months)</small></div>
                         </div>
                         <div class="jw-ch-body">
                             <div class="jw-fn">
@@ -1806,6 +1821,10 @@
                             $tableRows = $rows->slice(3)->values();
                             $p1 = $podium[0] ?? null; $p2 = $podium[1] ?? null; $p3 = $podium[2] ?? null;
                             $podOrdered = [['p2', $p2], ['p1', $p1], ['p3', $p3]];
+                            // Summary header (Score + Top Performer) — the rank-1 row of this group; matches the Daily Leaderboards style.
+                            $mpTop = $p1 ? (array) $p1 : null;
+                            $mpTopScore = (int) ($mpTop['big'] ?? 0);
+                            $mpHasLeader = $mpTop && $mpTopScore > 0;
                         @endphp
                         <div class="col-xl-4 mb-3 mb-xl-0">
                             <div class="jw-mp-card h-100 {{ $lock_unlock ? '' : 'card-xxl-stretch-lock' }}">
@@ -1813,6 +1832,18 @@
                                     <span class="ic" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}">{!! $mpIcon($lb['icon']) !!}</span>
                                     <span class="ttl" style="color:{{ $lb['color'] }}">{{ $lb['title'] }}</span>
                                     <a href="javascript:void(0)" class="arr">→</a>
+                                </div>
+                                {{-- Score + Top Performer summary (same design as Daily Leaderboards) --}}
+                                <div class="jw-lb-sum">
+                                    <div class="s-score"><div class="l">Score</div><div class="v" style="color:{{ $lb['color'] }}">{{ number_format($mpHasLeader ? $mpTopScore : 0) }}</div></div>
+                                    <div class="s-top">
+                                        @if ($mpHasLeader)
+                                            <div class="l">Top Performer</div>
+                                            <div class="tp"><span class="medal">🏅</span><span class="tpn">{{ \Illuminate\Support\Str::limit($mpTop['name'] ?? '', 14) }}</span></div>
+                                        @else
+                                            <div class="noleader" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 19l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg> No Leader Yet</div>
+                                        @endif
+                                    </div>
                                 </div>
                                 <table class="jw-mp-tbl">
                                     <thead><tr><th>{{ $lb['nmcol'] }}</th><th>{{ $lb['jlbl'] }}</th><th>{{ $lb['clbl'] }}</th>@if ($lb['hasScore'])<th>{{ $lb['blbl'] }}</th>@endif<th>Rank</th></tr></thead>
@@ -2040,17 +2071,6 @@
                                     <span class="ic" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}">{!! $lbIcon($lb['icon']) !!}</span>
                                     <span class="ttl" style="color:{{ $lb['color'] }}">{{ $lb['title'] }}</span>
                                     <span class="cnt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/></svg> {{ $count }} {{ $lb['unit'] }}</span>
-                                </div>
-                                <div class="jw-lb-sum">
-                                    <div class="s-score"><div class="l">Score</div><div class="v" style="color:{{ $lb['color'] }}">{{ number_format($top ? (int) ($top['value'] ?? 0) : 0) }}</div></div>
-                                    <div class="s-top">
-                                        @if ($top)
-                                            <div class="l">Top Performer</div>
-                                            <div class="tp"><span class="medal">🥇</span><span class="tpn">{{ \Illuminate\Support\Str::limit($top['name'] ?? '', 14) }}</span></div>
-                                        @else
-                                            <div class="noleader" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 19l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg> No Leader Yet</div>
-                                        @endif
-                                    </div>
                                 </div>
                                 <div class="jw-lb-th"><span class="c-nm">{{ $lb['col'] }}</span><span class="c-sc">Score</span><span class="c-rank">Rank</span></div>
                                 @forelse ($rows as $r)

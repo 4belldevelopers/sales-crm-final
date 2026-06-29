@@ -1190,20 +1190,72 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				   $this->total_candidates =$this->inreview_count+$this->sourcing_count+$this->screening_count+$this->evaluation_count+$this->negotiation_count+$this->offer_count+$this->joined_count;
 
 				   /*
-				    * Candidates Funnel wiring (intent): the dashboard "Candidates Funnel" card
-				    * reads $funnel6m[inreview|sourcing|screening|evaluation|offer|joined]. Those
-				    * per-stage counts are already computed above from the company's candidate
-				    * status buckets (job_master_status_id 1..8); here we only expose them in the
-				    * shape the view expects so the card stops rendering all-zeros. No new query.
+				    * Candidates Funnel (Last 6 Months) — TRUE 6-month cohort.
+				    * The $this->result counts above are filtered by updated_at within the CURRENT
+				    * month, so they do NOT match this card's "Last 6 Months" label. Here we run a
+				    * status_counts aggregation over candidates CREATED in the last 6 months (the same
+				    * company scope as the Added Trend) and break that cohort down by current status.
+				    * $candidatesAdded6mTotal is the headline total of candidates added in those 6 months
+				    * (shown above the funnel). Tenancy: company_id / ClientComID in the should-clauses.
 				    */
-				   $this->funnel6m = [
-						'inreview'   => (int) $this->inreview_count,
-						'sourcing'   => (int) $this->sourcing_count,
-						'screening'  => (int) $this->screening_count,
-						'evaluation' => (int) $this->evaluation_count,
-						'offer'      => (int) $this->offer_count,
-						'joined'     => (int) $this->joined_count,
+				   $funnelScope = [
+						'bool' => [
+							'must' => [[
+								'bool' => [
+									'should' => [
+										['bool' => ['must' => [
+											['term' => ['company_id' => (int) $company_id]],
+											['term' => ['ClientComID' => 0]],
+										]]],
+										['bool' => [
+											'must' => [
+												['term' => ['company_id' => (int) $company_id]],
+												['range' => ['ClientComID' => ['gt' => 0]]],
+											],
+											'must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]],
+										]],
+										['bool' => ['must' => [
+											['term' => ['ClientComID' => (int) $company_id]],
+										]]],
+									],
+									'minimum_should_match' => 1,
+								],
+							]],
+							'filter' => [
+								['range' => ['created_at' => [
+									'gte' => $addedStartMonth->toDateString(),
+									'lte' => $addedEndMonth->toDateString(),
+								]]],
+							],
+						],
 				   ];
+				   $funnelResponse = $this->elasticService->getClient()->search([
+						'index' => ELASTIC_CANDIDATES,
+						'request_cache' => true,
+						'body' => [
+							'track_total_hits' => true,
+							'size' => 0,
+							'query' => $funnelScope,
+							'aggs' => [
+								'status_counts' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+							],
+						],
+				   ]);
+				   $funnel6mResult = collect($funnelResponse['aggregations']['status_counts']['buckets'] ?? [])
+						->mapWithKeys(fn ($b) => [(string) $b['key'] => $b['doc_count']]);
+				   $this->funnel6m = [
+						'inreview'   => (int) $funnel6mResult->get('8', 0),
+						'sourcing'   => (int) $funnel6mResult->get('1', 0),
+						'screening'  => (int) $funnel6mResult->get('2', 0),
+						'evaluation' => (int) $funnel6mResult->get('3', 0),
+						// 'offer' & 'joined' below are placeholders — they are overridden further down with the
+						// actual offers/joinings that OCCURRED in the last 6 months (by offer/joined date), to match
+						// the Offers/Joinings Trend charts. Current-status counts under-report these events.
+						'offer'      => (int) $funnel6mResult->get('5', 0),
+						'joined'     => (int) $funnel6mResult->get('6', 0),
+				   ];
+				   // Total candidates added in the last 6 months (matches the Added Trend chart total).
+				   $this->candidatesAdded6mTotal = (int) array_sum($addedMonthValues);
 
 				$counts = collect([
 					'Joined' => $this->result->get('6', 0),
@@ -1520,10 +1572,21 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 
 				 }
-				 $this->labelsCommoffer = $labelsCommoffer ; 
+				 $this->labelsCommoffer = $labelsCommoffer ;
 				 $this->candidateValuesCommoffer = $candidateValuesCommoffer;
 				//  dd($this->candidateValuesCommoffer,$this->labelsCommoffer);
 				 $this->candidateValuesTotaloffer = array_sum($candidateValuesCommoffer);
+
+				 /*
+				  * Funnel Offers & Joined fix: show offers RELEASED and candidates JOINED within the last
+				  * 6 months (by offer date / joined date) — the same totals as the Offers/Joinings Trend
+				  * charts and the Offer Acceptance section — instead of "created-in-6-months candidates
+				  * currently in that status", which under-reported them. Both 6-month series exist by now.
+				  */
+				 $f6 = $this->funnel6m;
+				 $f6['offer']  = (int) array_sum($candidateValuesCommoffer);
+				 $f6['joined'] = (int) array_sum($candidateValuesCommjoin);
+				 $this->funnel6m = $f6;
 				 //  dd($labelsCommoffer,$candidateValuesCommoffer);
 					
         
@@ -3740,7 +3803,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			$this->teamDailyReport = $teamDailyTop->values()->map(function ($u) use ($dashLoggedInUserId) {
 				$u = (array) $u;
 				return [
-					'name'  => $u['name'] ?? '',
+					'name'  => ucwords(strtolower($u['name'] ?? '')),
 					'value' => (int) ($u['score'] ?? 0),
 					'rank'  => (int) ($u['rank'] ?? 0),
 					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
@@ -3759,7 +3822,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			$this->captainDailyReport = $captainDailyRanked->map(function ($u, $i) use ($dashLoggedInUserId) {
 				$u = (array) $u;
 				return [
-					'name'  => $u['name'] ?? '',
+					'name'  => ucwords(strtolower($u['name'] ?? '')),
 					'value' => (int) ($u['captainScore'] ?? 0),
 					'rank'  => $i + 1,
 					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
@@ -3775,7 +3838,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			$this->agencyDailyReport = $agencyDailySource->take(4)->map(function ($a) {
 				$a = (array) $a;
 				return [
-					'name'  => $a['company_name'] ?? '',
+					'name'  => ucwords(strtolower($a['company_name'] ?? '')),
 					'value' => (int) ($a['upload_count'] ?? 0),
 					'rank'  => (int) ($a['rank'] ?? 0),
 					'is_me' => false,
