@@ -3817,23 +3817,40 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				'total' => (int) $teamDailySource->sum(fn ($u) => (int) (((array) $u)['score'] ?? 0)),
 			];
 
-			// Captains Daily Report — re-rank the already-built captain list by captain score.
-			$captainDailySource = isset($this->topUsersCaptainDaily) ? collect($this->topUsersCaptainDaily) : collect();
-			$captainDailyRanked = $captainDailySource
-				->sortByDesc(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0))
-				->values();
-			$this->captainDailyReport = $captainDailyRanked->map(function ($u, $i) use ($dashLoggedInUserId) {
+			// Captains Daily Report — top 5 captains by today's captain score, plus the logged-in user's
+			// own position when they are an active captain (have captain points today) but fall outside
+			// the top 5. An "active captain" = captainScore > 0 (the same definition the captain leaderboard
+			// uses); captain identity isn't a flag, it's earned via team-captain activity.
+			$captainAllRanked = collect($rankedUsers_daily_internal_rank ?? [])
+				->map(function ($u) {
+					$u = (array) $u;
+					$u['captainScore'] = (int) ($u['teamCaptainInterviewScheduled'] ?? 0)
+						+ (int) ($u['teamCaptainOfferReleased'] ?? 0)
+						+ (int) ($u['teamCaptainCandidateJoined'] ?? 0);
+					return $u;
+				})
+				->filter(fn ($u) => ($u['captainScore'] ?? 0) > 0)
+				->sortByDesc('captainScore')
+				->values()
+				->map(function ($u, $i) { $u['captainRank'] = $i + 1; return $u; });
+
+			$captainTop = $captainAllRanked->take(5);
+			$captainMe  = $captainAllRanked->firstWhere('id', $dashLoggedInUserId);
+			if ($captainMe && !$captainTop->contains('id', $dashLoggedInUserId)) {
+				$captainTop = $captainTop->push($captainMe);   // append "YOU" row with the real rank
+			}
+			$this->captainDailyReport = $captainTop->values()->map(function ($u) use ($dashLoggedInUserId) {
 				$u = (array) $u;
 				return [
 					'name'  => ucwords(strtolower($u['name'] ?? '')),
 					'value' => (int) ($u['captainScore'] ?? 0),
-					'rank'  => $i + 1,
+					'rank'  => (int) ($u['captainRank'] ?? 0),
 					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
 				];
 			})->values();
 			$this->captainDailyMeta = [
-				'count' => $captainDailyRanked->count(),
-				'total' => (int) $captainDailyRanked->sum(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0)),
+				'count' => $captainAllRanked->count(),
+				'total' => (int) $captainAllRanked->sum(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0)),
 			];
 
 			// Agency Daily Report — top staffing partners by today's profile uploads.
