@@ -3818,10 +3818,21 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			];
 
 			// Captains Daily Report — top 5 captains by today's captain score, plus the logged-in user's
-			// own position when they are an active captain (have captain points today) but fall outside
-			// the top 5. An "active captain" = captainScore > 0 (the same definition the captain leaderboard
-			// uses); captain identity isn't a flag, it's earned via team-captain activity.
+			// own position if they're a captain outside the top 5. A "captain" = a user assigned as the
+			// spoke (spok_user_id) on at least one of this company's ACTIVE jobs, so captains are listed
+			// even with zero captain points today. Tenancy: raw DB::table, scoped by jobs.company_id (Rule #3).
+			$captainUserIds = DB::table('job_assign')
+				->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+				->where('jobs.company_id', $this->company_id)
+				->where('jobs.status', 'active')
+				->whereNotNull('job_assign.spok_user_id')
+				->distinct()
+				->pluck('job_assign.spok_user_id')
+				->map(fn ($v) => (int) $v)
+				->all();
+
 			$captainAllRanked = collect($rankedUsers_daily_internal_rank ?? [])
+				->filter(fn ($u) => in_array((int) (((array) $u)['id'] ?? 0), $captainUserIds, true))
 				->map(function ($u) {
 					$u = (array) $u;
 					$u['captainScore'] = (int) ($u['teamCaptainInterviewScheduled'] ?? 0)
@@ -3829,7 +3840,6 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						+ (int) ($u['teamCaptainCandidateJoined'] ?? 0);
 					return $u;
 				})
-				->filter(fn ($u) => ($u['captainScore'] ?? 0) > 0)
 				->sortByDesc('captainScore')
 				->values()
 				->map(function ($u, $i) { $u['captainRank'] = $i + 1; return $u; });
