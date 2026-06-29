@@ -15,21 +15,21 @@ class ElasticService
     public function __construct()
     {
 
-        $host = env('ELASTICSEARCH_HOST', 'localhost');
-        $port = env('ELASTICSEARCH_PORT', 9200);
-        $user = env('ELASTICSEARCH_USER');
-        $pass = env('ELASTICSEARCH_PASS');
-
-        // $this->client = ClientBuilder::create()
-        //     ->setHosts(["http://{$host}:{$port}"])
-        //     ->build();
+        // Read from config(), never env() directly: env() returns null under
+        // config:cache / Octane, which strips the ES credentials and causes a 401
+        // ("missing authentication credentials"). See CLAUDE.md Rule #5 / BUG-02.
+        $host   = config('elasticsearch.host', 'localhost');
+        $port   = config('elasticsearch.port', 9200);
+        $scheme = config('elasticsearch.scheme', 'http');
+        $user   = config('elasticsearch.user');
+        $pass   = config('elasticsearch.pass');
 
         $this->client = ClientBuilder::create()
         ->setHosts([
             [
                 'host' => $host,
                 'port' => $port,
-                'scheme' => 'http',
+                'scheme' => $scheme,
                 'user' => $user,
                 'pass' => $pass,
             ]
