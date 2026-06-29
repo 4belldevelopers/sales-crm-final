@@ -206,6 +206,14 @@
           .cd-info-value { font-size:12px; color:#3f4254; font-weight:600; text-align:right; display:flex; align-items:center; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
           .cd-info-value a { color:#009ef7; text-decoration:none; }
           .cd-info-value a:hover { text-decoration:underline; }
+          /* data-tab card chrome (Jobs / Interview Tracker / Dashboard) */
+          .cd-tabcard { background:#fff; border-radius:12px; border:1px solid #eff2f5; overflow:hidden; margin-top:4px; }
+          .cd-tabcard-head { padding:18px 24px; border-bottom:1px solid #eff2f5; }
+          .cd-tabcard-title { font-size:16px; font-weight:700; color:#181c32; }
+          .cd-tabcard-sub { font-size:12px; color:#a1a5b7; margin-top:2px; }
+          .cd-tabwrap { overflow-x:auto; padding:8px 24px 22px; }
+          .cd-tabwrap > .card-body { padding-left:0 !important; padding-right:0 !important; }
+          .cd-tabwrap table { margin-bottom:0; }
         </style>
         <!--begin::Tabs-->
         <div class="card card-custom mx-2">
@@ -411,6 +419,7 @@
 
                     <!--begin::interview_tracker Candidate List-->
                     <div class="tab-pane" id="interview_tracker" role="tabpanel">
+                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Interview Tracker</div><div class="cd-tabcard-sub">Interviews scheduled with this client's candidates.</div></div><div class="cd-tabwrap">
 
                       <div class="card-body px-0 py-7">
                           <!--begin::Table-->
@@ -445,6 +454,7 @@
                           </div>
                       </div>
                       <!--end::Contacts Content-->
+                        </div></div>
                     </div>
                     <!--end::interview_tracker Candidate List-->
 
@@ -490,6 +500,7 @@
 
                 <!--begin::candidateDashboard Content-->
                     <div class="tab-pane" id="candidateDashboard" role="tabpanel">
+                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Client Dashboard</div><div class="cd-tabcard-sub">Hiring analytics for this client.</div></div><div class="cd-tabwrap">
                             <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0">
                             <div class="card-body px-0 pt-0 pb-0">
                                 <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
@@ -935,11 +946,13 @@
                                 </div>
                             </div>
                             </div>
+                        </div></div>
                     </div>
                 <!--end begin::candidateDashboard Content-->
                 
 
                     <div class="tab-pane" id="requisitions1" role="tabpanel">
+                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Jobs</div><div class="cd-tabcard-sub">Roles open with this client.</div></div><div class="cd-tabwrap">
                         <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0 d-none">
                             <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab"
                                     href="#all-requisitions">&nbsp;</a> </li>
@@ -1275,6 +1288,7 @@
                             <div class="tab-pane fade" id="jobs" role="tabpanel">Jobs - Content</div>
                         </div>
                         <!--end::Requisitions Content-->
+                        </div></div>
                     </div>
                 </div>
             </div>
