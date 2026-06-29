@@ -1,0 +1,175 @@
+/* Intent: Shared Clients-list styling (All / Internal / Requests pages adopt the
+   verified-Agencies card/table design). Purely presentational; AJAX wiring,
+   ids and click hooks live in the blades and are unchanged.
+   Depends on the CSS variables defined in filterStyle.css / topCard.css. */
+
+.border-radius-5 { border-radius: 5px !important; }
+.ml-2 { margin-left: 2em; }
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+  #kt_activitiesClient, #kt_activitiesDirectClient { width: 1025px; }
+}
+@media only screen and (min-width: 1440px) and (max-width: 2560px) {
+  #kt_activitiesClient, #kt_activitiesDirectClient { width: 1200px; }
+}
+#kt_activitiesClient_close svg { color: red; }
+
+/* ── table card ── */
+.tbl { padding: 0; }
+.tbl-w {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(76, 87, 125, 0.04);
+}
+.tbl-h, .tbl-r {
+  display: grid;
+  grid-template-columns: 40px 1.7fr 1.2fr 0.85fr 2.5fr 1fr 0.85fr;
+  align-items: center;
+  padding: 12px 16px;
+}
+/* 4-column variant for the Client Requests page (Name / Location / Request Date / Action) */
+.tbl-req .tbl-h, .tbl-req .tbl-r {
+  grid-template-columns: 2.2fr 1.5fr 1.3fr 1.6fr;
+}
+.tbl-h {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.tbl-h span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-gray);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tbl-h span svg { width: 12px; height: 12px; color: var(--text-light); }
+.tbl-r {
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+  cursor: pointer;
+}
+.tbl-r:hover { background: var(--bg); }
+.tbl-r:last-child { border-bottom: none; }
+.tbl-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue); }
+
+/* agency / name cell */
+.tbl-a { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tbl-av {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 15px; font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform .15s;
+}
+.tbl-av:hover { transform: scale(1.08); }
+.tbl-av img { width: 100%; height: 100%; object-fit: cover; }
+.tbl-ai { min-width: 0; }
+.tbl-n {
+  font-size: 13px; font-weight: 600; color: var(--text-dark);
+  margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tbl-t {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--text-gray); font-weight: 400;
+}
+.tbl-t svg { width: 14px; height: 14px; color: var(--green); flex-shrink: 0; }
+
+/* location cell */
+.tbl-l { display: flex; align-items: center; gap: 6px; }
+.tbl-l > svg { width: 15px; height: 15px; color: var(--text-light); flex-shrink: 0; }
+.tbl-lc { font-size: 12.5px; color: var(--text-dark); font-weight: 600; }
+.tbl-ls { font-size: 11px; color: var(--text-gray); font-weight: 400; }
+
+/* jobs (active / closed / hold) */
+.tbl-j { display: flex; flex-direction: column; gap: 3px; }
+.tbl-jr { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.tbl-jn { font-weight: 700; color: var(--text-dark); min-width: 10px; }
+.tbl-js { font-weight: 500; }
+.tbl-js.a { color: var(--blue); }
+.tbl-js.c { color: var(--text-mid); }
+.tbl-js.d { color: var(--text-light); }
+
+/* performance funnel */
+.tbl-p { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tbl-pi { text-align: center; flex: 1; min-width: 0; }
+.tbl-pv { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+.tbl-pl { font-size: 11px; color: var(--text-gray); font-weight: 400; }
+
+/* connected on / request date */
+.tbl-co { font-size: 12.5px; color: var(--text-dark); font-weight: 500; }
+.tbl-cs { font-size: 11px; color: var(--text-gray); font-weight: 400; }
+.tbl-cv { color: var(--blue); font-weight: 600; cursor: pointer; font-size: 11.5px; }
+.tbl-cv:hover { text-decoration: underline; }
+
+/* action buttons (requests) */
+.tbl-act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tbl-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid transparent;
+  white-space: nowrap; transition: all .15s;
+}
+.tbl-btn.accept { background: var(--blue); color: #fff; }
+.tbl-btn.accept:hover { background: #1d4ed8; }
+.tbl-btn.ignore { background: var(--white); color: var(--text-mid); border-color: var(--border); }
+.tbl-btn.ignore:hover { background: var(--bg); }
+.tbl-btn.done { background: var(--green-light); color: var(--green); cursor: default; }
+.tbl-btn.rejected { background: #FEE2E2; color: var(--red); cursor: default; }
+
+/* client type badge */
+.tbl-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  background: var(--blue-light); color: var(--blue);
+  white-space: nowrap;
+}
+.tbl-badge.direct { background: var(--green-light); color: var(--green); }
+
+.tbl-empty {
+  text-align: center;
+  color: var(--text-gray);
+  padding: 40px 16px;
+  font-size: 13px;
+}
+
+/* hero illustration */
+.illus-svg-wrap { flex-shrink: 0; align-self: center; margin-left: 16px; }
+@media (max-width: 1200px) {
+  .illus-svg-wrap { display: none; }
+  .stats-row { flex-wrap: wrap; }
+}
+
+/* hero stat cards act as the client tab navigation */
+a.stat-card {
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+a.stat-card:hover {
+  border-color: var(--blue-mid);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+a.stat-card.active {
+  background: var(--blue-light);
+  border-color: var(--blue);
+}
+a.stat-card.active .stat-label { color: var(--blue); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .tbl-h, .tbl-r { grid-template-columns: 40px 1fr; gap: 8px; }
+  .tbl-h span:nth-child(n+3),
+  .tbl-r > *:nth-child(n+3) { display: none; }
+  .tbl-req .tbl-h, .tbl-req .tbl-r { grid-template-columns: 1.5fr 1fr; }
+  .tbl-req .tbl-h span:nth-child(n+3),
+  .tbl-req .tbl-r > *:nth-child(n+3) { display: none; }
+}

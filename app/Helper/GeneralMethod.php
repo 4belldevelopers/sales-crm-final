@@ -12509,6 +12509,230 @@ END:VCALENDAR";
 
 	}
 
+	/**
+	 * Internal-client job counts broken down by status (active/inactive/hold).
+	 * Read-only ES aggregation for the Clients list "Jobs" column; mirrors the
+	 * Agencies design. Tenancy: scoped by comId (current company) + client_id.
+	 */
+	public static function InternalClientJobsCountAllStatus($company_id,$client_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['comId' => (int) $company_id]],
+									['term' => ['client_id' => (int) $client_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_jobs'     => ['value_count' => ['field' => 'id']],
+							'job_active'   => ['filter' => ['term' => ['status' => 'active']]],
+							'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+							'job_hold'     => ['filter' => ['term' => ['status' => 'hold']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_jobs'     => $response['aggregations']['all_jobs']['value'] ?? 0,
+					'job_active'   => $response['aggregations']['job_active']['doc_count'] ?? 0,
+					'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+					'job_hold'     => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+				];
+	}
+
+	/**
+	 * Internal-client candidate funnel for the Clients list "Performance" column
+	 * (sourced/evaluated/interviews/offers/joined). Read-only ES aggregations.
+	 * Tenancy: scoped by client_id (already company-bound). Interview count is a
+	 * best-effort term match on client_id in the interview tracker; degrades to 0.
+	 */
+	public static function InternalClientCandidatesCountList($client_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_CANDIDATES,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['client_id' => $client_id]],
+								],
+								'must_not' => [
+									['terms' => ['job_master_status_id' => [8,9]]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_candidates' => ['value_count' => ['field' => 'id']],
+							'joined'    => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+							'sourced'   => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+							'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+							'offers'    => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				$params = [
+					'index' => ELASTIC_INERTVIEW_TRACKER,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['client_id' => $client_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_interview' => ['value_count' => ['field' => 'id']],
+						]
+					]
+				];
+				$responseInterview = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
+					'Joined'         => $response['aggregations']['joined']['doc_count'] ?? 0,
+					'sourced'        => $response['aggregations']['sourced']['doc_count'] ?? 0,
+					'evaluated'      => $response['aggregations']['evaluated']['doc_count'] ?? 0,
+					'offers'         => $response['aggregations']['offers']['doc_count'] ?? 0,
+					'all_interview'  => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
+				];
+	}
+
+	/**
+	 * Direct-client job counts broken down by status (active/inactive/hold) for the
+	 * Clients list "Jobs" column. Read-only ES aggregation over the recommendation
+	 * relation (from_company_id -> to_company_id, final_status = 1).
+	 */
+	public static function DirectClientJobsCountAllStatus($from_company_id,$toCompanyId){
+
+	            $elasticService = app(ElasticService::class);
+
+				$must = [];
+				$must[] = [
+					'nested' => [
+						'path' => 'recommendation_relation',
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['recommendation_relation.to_company_id' => (int)$toCompanyId]],
+									['term' => ['recommendation_relation.from_company_id' => (int)$from_company_id]],
+									['term' => ['recommendation_relation.final_status' => (int)1]],
+								]
+							]
+						]
+					]
+				];
+
+				$params = [
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => $must
+							]
+						],
+						'aggs' => [
+							'all_jobs'     => ['value_count' => ['field' => 'id']],
+							'job_active'   => ['filter' => ['term' => ['status' => 'active']]],
+							'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+							'job_hold'     => ['filter' => ['term' => ['status' => 'hold']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_jobs'     => $response['aggregations']['all_jobs']['value'] ?? 0,
+					'job_active'   => $response['aggregations']['job_active']['doc_count'] ?? 0,
+					'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+					'job_hold'     => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+				];
+	}
+
+	/**
+	 * Direct-client candidate funnel for the Clients list "Performance" column
+	 * (sourced/evaluated/interviews/offers/joined). Read-only ES aggregations,
+	 * scoped by from_company_id/to_company_id + ClientComID + final_status = 1.
+	 */
+	public static function DirectClientCandidatesCountList($from_company_id,$to_company_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_CANDIDATES,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['from_company_id' => $from_company_id]],
+									['term' => ['to_company_id' => $to_company_id]],
+									['term' => ['ClientComID' => $to_company_id]],
+									['term' => ['final_status' => 1]],
+								],
+								'must_not' => [
+									['terms' => ['job_master_status_id' => [8,9]]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_candidates' => ['value_count' => ['field' => 'id']],
+							'joined'    => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+							'sourced'   => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+							'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+							'offers'    => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				$params = [
+					'index' => ELASTIC_INERTVIEW_TRACKER,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['from_company_id' => $from_company_id]],
+									['term' => ['ClientComID' => $to_company_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_interview' => ['value_count' => ['field' => 'id']],
+						]
+					]
+				];
+				$responseInterview = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
+					'Joined'         => $response['aggregations']['joined']['doc_count'] ?? 0,
+					'sourced'        => $response['aggregations']['sourced']['doc_count'] ?? 0,
+					'evaluated'      => $response['aggregations']['evaluated']['doc_count'] ?? 0,
+					'offers'         => $response['aggregations']['offers']['doc_count'] ?? 0,
+					'all_interview'  => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
+				];
+	}
+
 	public static function agencyJobsCount($company_id){
 
 	            $elasticService = app(ElasticService::class);
