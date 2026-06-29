@@ -761,11 +761,49 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
 					$candidateValues[] = $candidateBucket['doc_count'] ?? 0;
 				}
-				$this->labels = $labels ; 
+				$this->labels = $labels ;
 				$this->candidateValues = $candidateValues;
 				$this->candidateValuesTotal = array_sum($candidateValues);
 
-				/** End Candidate last 7 days */	
+				/*
+				 * Daily Performance — last-7-days Offers & Joinings series for the KPI cards.
+				 * $offerDailyValues / $joinDailyValues were never built, so the Offers and Joinings
+				 * cards always showed 0 regardless of real data. Source = offer_job_applications
+				 * (same authoritative source as the Monthly Performers joinings fix): a Joining is
+				 * master_status_id 6 dated by joined_date; an Offer is master_status_id 5/6 dated by
+				 * created_at. The last element of each array is "today". Reuses the 7-day window
+				 * ($startDate..$endDate) already set above. Tenancy: raw DB::table is not auto-scoped,
+				 * so company_id is filtered explicitly (Rule #3).
+				 */
+				$joinDailyMap = DB::table('offer_job_applications')
+					->select(DB::raw('DATE(joined_date) as d'), DB::raw('COUNT(*) as cnt'))
+					->where('company_id', $this->company_id)
+					->whereNull('deleted_at')
+					->where('master_status_id', 6)
+					->whereBetween('joined_date', [$startDate->toDateTimeString(), $endDate->toDateTimeString()])
+					->groupBy(DB::raw('DATE(joined_date)'))
+					->pluck('cnt', 'd')->toArray();
+
+				$offerDailyMap = DB::table('offer_job_applications')
+					->select(DB::raw('DATE(created_at) as d'), DB::raw('COUNT(*) as cnt'))
+					->where('company_id', $this->company_id)
+					->whereNull('deleted_at')
+					->whereIn('master_status_id', [5, 6])
+					->whereBetween('created_at', [$startDate->toDateTimeString(), $endDate->toDateTimeString()])
+					->groupBy(DB::raw('DATE(created_at)'))
+					->pluck('cnt', 'd')->toArray();
+
+				$offerDailyValues = [];
+				$joinDailyValues  = [];
+				for ($i = 0; $i < 7; $i++) {
+					$day = $startDate->copy()->addDays($i)->format('Y-m-d');
+					$offerDailyValues[] = (int) ($offerDailyMap[$day] ?? 0);
+					$joinDailyValues[]  = (int) ($joinDailyMap[$day] ?? 0);
+				}
+				$this->offerDailyValues = $offerDailyValues;
+				$this->joinDailyValues  = $joinDailyValues;
+
+				/** End Candidate last 7 days */
 
 
 				$startOfMonth = Carbon::now()->startOfMonth();
