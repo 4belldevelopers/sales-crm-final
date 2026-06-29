@@ -1,0 +1,35 @@
+# PHPStan configuration (static analysis). See docs/ENFORCEMENT.md.
+# Requires (dev only, never shipped to prod):
+#   composer require --dev phpstan/phpstan larastan/larastan
+# Run:        vendor/bin/phpstan analyse
+# Baseline:   vendor/bin/phpstan analyse --generate-baseline   (freeze existing issues)
+#
+# Larastan teaches PHPStan about Laravel (Eloquent, facades, request(), relations).
+# If larastan isn't installed yet, comment the `includes` line to run plain PHPStan.
+
+includes:
+    - vendor/larastan/larastan/extension.neon
+    # - phpstan-baseline.neon   # uncomment after generating a baseline
+
+parameters:
+    # Start LOW on a large legacy codebase, then raise gradually (0 → 9).
+    # Level 2 catches real bugs (unknown methods/props, bad arg counts) with low noise.
+    level: 2
+
+    paths:
+        - app
+
+    # Don't analyse dead/legacy/stray code (see docs/BAD_PATTERNS.md).
+    excludePaths:
+        - app/Http/Controllers/**/OLD_*.php
+        - app/Http/Controllers/**/old_*.php
+        - app/Http/Controllers/**/OLD_2_*.php
+        - app/Http/Controllers/**/*.blade.php
+        - app/Models/error_log
+        - app/Models/constants.php
+
+    # Reduce noise from Laravel dynamic magic until the codebase is cleaner.
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
+
+    reportUnmatchedIgnoredErrors: false

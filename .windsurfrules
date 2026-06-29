@@ -1,0 +1,32 @@
+# Windsurf Rules — JERO ATS + Talent Marketplace
+
+Authoritative memory: CLAUDE.md + docs/ + .ai/. Read them before editing. Mirror of the
+core rules below; full detail in docs/AI_RULES.md and docs/README.md.
+
+## Context
+- Multi-tenant Laravel 11 B2B hiring SaaS: GOD-level ATS + marketplace where companies
+  trade talent. MySQL = write store, Elasticsearch = read store (60+ indices), Redis/Horizon
+  queues, Octane/FrankenPHP, Reverb. Concept: docs/PRODUCT_VISION.md.
+- Work ONLY in testing.jero.works (never hire.jero.works).
+- Read first: CLAUDE.md → docs/AI_BOOTSTRAP.md → docs/ARCHITECTURE.md → docs/AI_RULES.md →
+  docs/GLOSSARY.md, plus relevant .ai/tasks/*.md and .ai/summaries/*.
+
+## Rules
+1. Never read huge controllers (up to ~813KB) or full route files whole — grep the method.
+2. DB truth = database/schema/mysql-schema.sql (217 tables) — read it before any DB work; not in migrations; never invent migrations.
+3. Eloquent scoped by company_id; raw DB::table() is not — filter company_id manually.
+4. Keep MySQL ↔ Elasticsearch in sync (Observer/Job) on writes to indexed entities.
+5. Use config(), never env() outside config/ (null under config:cache/Octane).
+6. Queue heavy work; match existing patterns; no unprompted refactors/business-logic changes.
+7. Preserve baked-in name typos (map to real tables/indices); rename only via NAMING_CONVENTIONS.
+8. UI: Metronic theme, Poppins font, max font 14px, clean icon-based design (NO 3D/WebGL; 2D
+   charts only), fit 1366x768 → 4K, dense virtualized tables (UI_UX_STANDARDS).
+9. Features = tested vertical slices extracted from god controllers (strangler pattern).
+10. Verify (docs/VERIFY.md), measure before/after, mark uncertainty.
+11. Document the purpose of every new code: intent comment/docblock (the WHY) on each new
+    file/class/method; intent + company_id tenancy note on complex/raw queries; explain
+    business logic + ES-sync. No dead/debug code. Undocumented new code = incomplete change.
+    See docs/CODE_DOCUMENTATION_STANDARD.md.
+
+## Known issues (don't replicate): active dd() + debug routes, commented-out tenant scope
+(leak risk), 1227 unescaped {!! !!} (XSS), secrets in .env. See docs/BUG_REPORT.md & docs/SECURITY.md.
