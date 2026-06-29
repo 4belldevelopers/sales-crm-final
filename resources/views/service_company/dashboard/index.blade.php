@@ -1745,18 +1745,20 @@
 
             {{-- ===================== MONTHLY PERFORMERS ===================== --}}
             @php
-                // JOIN / O→J% are derived from the gamification points stored in ELASTIC_TEAM_RANK by
-                // dividing each points field by its per-event weight (set in ServiceCompanyJobApplicationController).
-                // Per product rule: an 'Onboarded' joining ADDS points and a Backout SUBTRACTS the same points,
-                // so JOIN = net joinings = (join points + backout points) / weight (backout points are negative).
-                // Recruiter weights: candidateJoined = 1500 pts/join (backout field), offerReleased = 300 pts/offer.
-                $recRows = collect($jwRecruiters)->map(function ($u) use ($jwOwnUserId) {
-                    $u = (array) $u; $jn = (int) max(0, round((((float) ($u['candidateJoined'] ?? 0)) + ((float) ($u['backout'] ?? 0))) / 1500)); $of = ((float) ($u['offerReleased'] ?? 0)) / 300;
+                // Recruiter JOIN / O→J% = ACTUAL monthly joinings/offers from offer_job_applications
+                // (keyed by recruiter user id in the controller), NOT gamification points — points only
+                // count 'Onboarded' joinings and under-report real ones. O→J% = joins / offers.
+                $recActualJoins  = $recruiterActualJoins ?? [];
+                $recActualOffers = $recruiterActualOffers ?? [];
+                $recRows = collect($jwRecruiters)->map(function ($u) use ($jwOwnUserId, $recActualJoins, $recActualOffers) {
+                    $u = (array) $u; $uid = (int) ($u['id'] ?? 0);
+                    $jn = (int) ($recActualJoins[$uid] ?? 0); $of = (int) ($recActualOffers[$uid] ?? 0);
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => (int) ($u['rank'] ?? 0), 'big' => (int) ($u['score'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->sortBy('rank')->values();
-                // Captain weights: teamCaptainCandidateJoined = 30 pts/join (backoutTeam field), teamCaptainOfferReleased = 20 pts/offer.
+                // Captain JOIN / O→J% still derived from team-captain points (weight: 30 pts/join, 20 pts/offer)
+                // pending an actual-count source for captain attribution.
                 $capRows = collect($jwCaptains)->map(function ($u, $i) use ($jwOwnUserId) {
-                    $u = (array) $u; $jn = (int) max(0, round((((float) ($u['teamCaptainCandidateJoined'] ?? 0)) + ((float) ($u['backoutTeam'] ?? 0))) / 30)); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 20;
+                    $u = (array) $u; $jn = (int) round(((float) ($u['teamCaptainCandidateJoined'] ?? 0)) / 30); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 20;
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => $i + 1, 'big' => (int) ($u['captainScore'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->values();
                 $venTopJ = collect($jwVendors)->max(fn ($v) => (int) (((array) $v)['joinings'] ?? 0)) ?: 0;
