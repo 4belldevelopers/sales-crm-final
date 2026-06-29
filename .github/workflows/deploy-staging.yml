@@ -21,7 +21,7 @@ jobs:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          port: ${{ secrets.STAGING_PORT || 22 }}
+          port: 22
           script: |
             set -e
             cd ${{ secrets.STAGING_PATH }}
