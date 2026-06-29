@@ -1745,12 +1745,16 @@
 
             {{-- ===================== MONTHLY PERFORMERS ===================== --}}
             @php
+                // JOIN / O→J% are derived from the gamification points stored in ELASTIC_TEAM_RANK by
+                // dividing each points field by its per-event weight (set in ServiceCompanyJobApplicationController).
+                // Recruiter weights: candidateJoined = 1500 pts/join, offerReleased = 300 pts/offer.
                 $recRows = collect($jwRecruiters)->map(function ($u) use ($jwOwnUserId) {
                     $u = (array) $u; $jn = (int) round(((float) ($u['candidateJoined'] ?? 0)) / 1500); $of = ((float) ($u['offerReleased'] ?? 0)) / 300;
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => (int) ($u['rank'] ?? 0), 'big' => (int) ($u['score'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->sortBy('rank')->values();
+                // Captain weights: teamCaptainCandidateJoined = 30 pts/join, teamCaptainOfferReleased = 20 pts/offer.
                 $capRows = collect($jwCaptains)->map(function ($u, $i) use ($jwOwnUserId) {
-                    $u = (array) $u; $jn = (int) round(((float) ($u['teamCaptainCandidateJoined'] ?? 0)) / 20); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 10;
+                    $u = (array) $u; $jn = (int) round(((float) ($u['teamCaptainCandidateJoined'] ?? 0)) / 30); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 20;
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => $i + 1, 'big' => (int) ($u['captainScore'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->values();
                 $venTopJ = collect($jwVendors)->max(fn ($v) => (int) (((array) $v)['joinings'] ?? 0)) ?: 0;
