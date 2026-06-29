@@ -107,13 +107,14 @@
     $medalPath = '<path d="M12 2.6l2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.9l-5.2 2.73.99-5.8L3.58 9.72l5.82-.85L12 2.6Z"/>';
 
     // Achievements (company)
+    // [name, what it means, unlocked?, color, bg, icon]
     $ach = [
-        ['Hiring Engine', $joins > 0, '#16a34a', '#e6f9ee', 'gift'],
-        ['Offer Closer', $offers > 0, '#f08c00', '#fff3e2', 'check'],
-        ['Vendor Network', $g('postJobToVendorMarket') > 0, '#f5a623', '#fff7e6', 'star'],
-        ['Bench Builder', $g('listBenchCandidates') > 0, '#2b59ff', '#e9f0ff', 'person'],
+        ['Hiring Engine', 'Candidates joined this period', $joins > 0, '#16a34a', '#e6f9ee', 'gift'],
+        ['Offer Closer', 'Offers released to candidates', $offers > 0, '#f08c00', '#fff3e2', 'check'],
+        ['Vendor Network', 'Jobs posted to the vendor market', $g('postJobToVendorMarket') > 0, '#f5a623', '#fff7e6', 'star'],
+        ['Bench Builder', 'Bench candidates listed', $g('listBenchCandidates') > 0, '#2b59ff', '#e9f0ff', 'person'],
     ];
-    $achCount = count(array_filter($ach, fn($a) => $a[1]));
+    $achCount = count(array_filter($ach, fn($a) => $a[2]));
 
     // AI insight
     $conv = $interviews > 0 ? (int) round($joins / $interviews * 100) : null;
@@ -201,13 +202,14 @@
                 <div class="csb-ch"><span class="t">🏅 Achievements Unlocked</span><span class="chip">{{ $achCount }}</span></div>
                 <div class="csb-ach-row">
                     @foreach($ach as $a)
-                        <div class="it {{ $a[1] ? 'on' : 'off' }}">
-                            <span class="ic" style="@if($a[1])background:{{ $a[3] }};color:{{ $a[2] }}@endif">
-                                @if($a[4]==='gift')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M3 12h18M12 8v13M12 8S10 3 7.5 4.5 9 8 12 8s3.5-2 2-3.5S12 8 12 8Z"/></svg>
-                                @elseif($a[4]==='check')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>
-                                @elseif($a[4]==='star')<svg viewBox="0 0 24 24" fill="currentColor">{!! $medalPath !!}</svg>
+                        <div class="it {{ $a[2] ? 'on' : 'off' }}" title="{{ $a[0] }} — {{ $a[1] }}{{ $a[2] ? '' : ' (locked)' }}">
+                            <span class="ic" style="@if($a[2])background:{{ $a[4] }};color:{{ $a[3] }}@endif">
+                                @if($a[5]==='gift')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M3 12h18M12 8v13M12 8S10 3 7.5 4.5 9 8 12 8s3.5-2 2-3.5S12 8 12 8Z"/></svg>
+                                @elseif($a[5]==='check')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>
+                                @elseif($a[5]==='star')<svg viewBox="0 0 24 24" fill="currentColor">{!! $medalPath !!}</svg>
                                 @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>@endif
                             </span>
+                            <span class="nm">{{ $a[0] }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -223,7 +225,7 @@
                     <div class="csb-mile-bd">
                         <div class="lbl">{{ $next ? $next[0] . ' Company' : $tier . ' Company' }}</div>
                         <div class="bar"><i style="width:{{ $prog }}%;background:{{ $next ? $tierColor[$next[0]] : '#22c55e' }}"></i></div>
-                        <div class="num">{{ number_format($score) }} / {{ $next ? number_format($next[1]) : number_format($score) }}</div>
+                        <div class="num">@if($next){{ $prog }}% · {{ number_format($toGo) }} pts to go @else 100% · Top tier reached @endif</div>
                     </div>
                 </div>
             </div>
@@ -311,7 +313,6 @@
     <div class="csb-foot">
         <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>Score is updated every 24 hours</div>
         <div class="r">
-            <span class="el">Bonus Eligibility <b class="{{ $eligible ? 'yes' : 'no' }}">{{ $eligible ? 'Eligible' : 'Not Eligible' }}</b></span>
             <a href="javascript:void(0)" class="csb-cta" onclick="sbExportPdf && sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-5Z"/></svg>View Detailed Report</a>
         </div>
     </div>
@@ -358,10 +359,13 @@
     .csb-ch{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
     .csb-ch .t{ font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
     .csb-ch .chip{ font-size:10px; font-weight:700; color:#5b3df5; background:#efeaff; padding:2px 8px; border-radius:20px; }
-    .csb-ach-row{ display:flex; gap:14px; justify-content:space-around; }
-    .csb-ach-row .it .ic{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; background:#f1f3f8; color:#c2c9d6; }
+    .csb-ach-row{ display:flex; gap:6px; justify-content:space-between; }
+    .csb-ach-row .it{ display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; min-width:0; }
+    .csb-ach-row .it .ic{ width:36px; height:36px; border-radius:11px; display:grid; place-items:center; background:#f1f3f8; color:#c2c9d6; }
     .csb-ach-row .it.off .ic{ filter:grayscale(1); opacity:.5; }
-    .csb-ach-row .it .ic svg{ width:19px; height:19px; }
+    .csb-ach-row .it .ic svg{ width:18px; height:18px; }
+    .csb-ach-row .it .nm{ font-size:8.5px; font-weight:600; color:#3b4a66; text-align:center; line-height:1.2; }
+    .csb-ach-row .it.off .nm{ color:#aeb6c4; }
     .csb-ai .ai-ic{ background:linear-gradient(135deg,#5b3df5,#7c5cff); color:#fff; font-size:9px; font-weight:800; padding:2px 6px; border-radius:6px; }
     .csb-ai .bd p{ margin:0 0 4px; font-size:11px; color:#4a5568; line-height:1.45; }
     .csb-mile-row{ display:flex; align-items:center; gap:11px; }
