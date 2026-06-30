@@ -62,9 +62,12 @@
     $sbPen = [
         ['Interview No Show','Candidate no show', -5, (int) round(abs($g('interviewNoShow'))/5), $g('interviewNoShow'), 'noshow'],
     ];
+    // Each field stores POINTS (jobs +2, vendor +2, outsource +5, bench +3, respond +4 — see the write
+    // side in ServiceCompanyJobsController / GeneralMethod). Occurrences = points / weight so every row
+    // reconciles: occurrences × weight = total score.
     $sbOther = [
-        ['Jobs Posted','New jobs posted', 2, $g('jobsPosted'), $g('jobsPosted'), 'jobs'],
-        ['Post Job to Vendor Market','Jobs posted to vendor market', 2, $g('postJobToVendorMarket'), $g('postJobToVendorMarket'), 'vendor'],
+        ['Jobs Posted','New jobs posted', 2, (int) round($g('jobsPosted')/2), $g('jobsPosted'), 'jobs'],
+        ['Post Job to Vendor Market','Jobs posted to vendor market', 2, (int) round($g('postJobToVendorMarket')/2), $g('postJobToVendorMarket'), 'vendor'],
         ['Outsource Jobs to Vendors','Jobs outsourced to vendors', 5, (int) round($g('outsourceJobsToVendors')/5), $g('outsourceJobsToVendors'), 'outsource'],
         ['List Bench Candidates','Bench candidates listed', 3, (int) round($g('listBenchCandidates')/3), $g('listBenchCandidates'), 'bench'],
         ['Respond to Bench Requests','Responses to bench requests', 4, (int) round($g('respondToBenchRequests')/4), $g('respondToBenchRequests'), 'respond'],
