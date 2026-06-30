@@ -230,26 +230,8 @@
             appearance: none;
             cursor: pointer;
         }
-        .team-clear {
-            font-size: var(--fs-section);
-            font-weight: 600;
-            color: var(--team-primary);
-            cursor: pointer;
-            white-space: nowrap;
-        }
         .team-sort-label { font-size: var(--fs-section); color: var(--team-muted); white-space: nowrap; }
         .team-sort-label b { color: var(--team-text); font-weight: 600; }
-        .team-cols-btn {
-            height: 40px;
-            width: 40px;
-            border: 1px solid var(--team-border);
-            border-radius: 9px;
-            background: var(--bs-body-bg, #fff);
-            color: var(--team-muted);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
 
         /* ---------- Bulk actions ---------- */
         .team-bulk-row {
@@ -279,6 +261,9 @@
             border-bottom: 1px solid var(--team-border);
             padding: 12px 10px;
             background: var(--bs-gray-100, #fbfbfd);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .team-table tbody td {
             padding: 14px 10px;
@@ -332,6 +317,18 @@
         .role-admin { background: var(--team-info-soft); color: var(--team-info); }
         .role-lead  { background: var(--team-blue-soft); color: var(--team-blue); }
         .role-default { background: var(--team-gray-soft); color: var(--team-muted); }
+        .team-role-edit-btn {
+            width: 26px; height: 26px;
+            border-radius: 6px;
+            border: 1px solid var(--team-border);
+            background: var(--bs-body-bg, #fff);
+            color: var(--team-muted);
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .team-role-edit-btn i { font-size: var(--fs-meta); }
+        .team-role-edit-btn:hover { background: var(--team-primary-soft); color: var(--team-primary); border-color: var(--team-primary); }
 
         .team-status-cell { display: flex; align-items: center; gap: 9px; }
         .team-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
@@ -422,6 +419,8 @@
             border-radius: 8px; font-size: var(--fs-label); padding: 0 8px; background: var(--bs-body-bg, #fff);
         }
 
+        #team_rank_user .modal-dialog { max-width: 1180px; }
+
         @media (max-width: 1200px) {
             .team-stats-row { grid-template-columns: repeat(2, 1fr); }
             .team-workload { gap: 14px; }
@@ -446,17 +445,9 @@
                     data-target="#add_team_member">
                     <i class="ki-outline ki-sms"></i> <span>Invite Member</span>
                 </a>
-                @if (in_array('add_team', $userPermissions))
-                    <a href="javascript:void(0);" class="team-btn team-btn-primary add_team_member" data-toggle="modal"
-                        data-target="#add_team_member">
-                        <i class="ki-outline ki-plus"></i> <span>Add Member</span>
-                    </a>
-                @endif
                 <a href="javascript:void(0);" class="team-btn team-btn-light" onclick="exportTeam()">
                     <i class="ki-outline ki-exit-up"></i> <span>Export</span>
                 </a>
-                <button type="button" class="btn btn-danger teamdelete d-none ms-2"
-                    data-kt-user-table-select="delete_selected">Inactive</button>
             </div>
         </div>
     </div>
@@ -538,7 +529,6 @@
                         <a class="team-tab" data-status="active">Active ({{ $teamCounts['active'] }})</a>
                         <a class="team-tab" data-status="inactive">Inactive ({{ $teamCounts['inactive'] }})</a>
                         <a class="team-tab" data-status="invited">Invited ({{ $teamCounts['invited'] }})</a>
-                        <a class="team-tab" data-status="suspended">Suspended ({{ $teamCounts['suspended'] }})</a>
                     </div>
 
                     <div class="card-body pt-3 px-5">
@@ -549,21 +539,6 @@
                                     onkeyup="filtersdataget()" />
                                 <i class="ki-outline ki-magnifier"></i>
                             </div>
-                            <select class="team-select" id="roleFilter" onchange="filtersdataget()">
-                                <option value="">Role</option>
-                            </select>
-                            <select class="team-select" id="statusFilter" onchange="filtersdataget()">
-                                <option value="">Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <select class="team-select" id="departmentFilter" onchange="filtersdataget()">
-                                <option value="">Department</option>
-                            </select>
-                            <select class="team-select" id="workloadFilter" onchange="filtersdataget()">
-                                <option value="">Workload</option>
-                            </select>
-                            <span class="team-clear" onclick="clearTeamFilters()">Clear Filters</span>
                             <div class="ms-auto d-flex align-items-center gap-3">
                                 <span class="team-sort-label">Sort by:
                                     <select class="team-select" id="sortingfilter" onchange="filtersdataget()"
@@ -573,7 +548,6 @@
                                         <option value="2">Oldest to Newest</option>
                                     </select>
                                 </span>
-                                <button type="button" class="team-cols-btn"><i class="ki-outline ki-setting-4"></i></button>
                             </div>
                         </div>
 
@@ -694,262 +668,12 @@
         </div>
 
 
-        <div class="modal fade" id="team_rank_user" tabindex="-1" aria-hidden="true" >
+        <div class="modal fade" id="team_rank_user" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content custmbg">
-                <div class="modal-header flex-stack" style="position: relative;">
-                    <h2>Score Board <span id="rankMonth"> </span></h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger data-bs-dismiss" data-bs-dismiss="modal"> <span class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-                    </svg>
-                    </span> </div>
-                </div>
-                <div class="modal-body scroll-y mx-5 mx-xl-18 pt-0 pb-15">
-                                <div class="table-responsive">
-                                    <!--begin::Table-->
-                                    <table class="table table-row-dashed table-row-gray-200 align-middle gs-0 gy-4">
-                                        <!--begin::Table head-->
-                                        <thead>
-                                            <tr class="border-0">
-                                                <th class="p-0 min-w-150px">Events</th>
-                                                <th class="p-0 min-w-150px">Points</th>
-                                                <th class="p-0 min-w-150px">Activity</th>
-                                                <th class="p-0 min-w-140px">Earned</th>
-                                            </tr>
-                                        </thead>
-                                        <!--end::Table head-->
-
-                                        <!--begin::Table body-->
-                                        <tbody>
-                                                <tr style="background: #f8f3f396;">
-                                                    <td colspan="4">
-                                                        <a href="#" class="text-gray-900 fw-bold text-hover-primary mb-1 fs-6">As a individual performance</a>
-                                                    </td>
-                                                    <td class=
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">InReview</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +1                                    
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="profileUploadAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="profileUpload">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6"> Sourcing</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +1                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="SourcingAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="Sourcing">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Screening</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +1                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="ScreeningAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="Screening">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Evaluation</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +1                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="EvaluationAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="Evaluation">+0</span>
-                                                    </td>
-                                                </tr>  
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Negotiation</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +1                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="NegotiationAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="Negotiation">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Offers Released</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +300                                  
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="offerReleasedAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="offerReleased">+0</span>
-                                                    </td>
-                                                </tr>  
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined & OnBoarded</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +500                                   
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="candidateJoinedAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="candidateJoined">+0</span>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined & Backed Out</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        -500                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="backoutAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-danger" id="backout">+0</span>
-                                                    </td>
-                                                </tr>   
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Interviews Conducted</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +10                                   
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="interviewScheduledAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="interviewScheduled">+0</span>
-                                                    </td>
-                                                </tr>  
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Interview NoShow</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        -5                                    
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="interviewNoShowAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-danger" id="interviewNoShow">-0</span>
-                                                    </td>
-                                                </tr> 
-
-
-                                                <tr style="background: #f8f3f396;">
-                                                    <td colspan="4">
-                                                        <a href="#" class="text-gray-900 fw-bold text-hover-primary mb-1 fs-6">As a Team Captain performance</a>
-                                                    </td>
-                                                    <td class=
-                                                </tr>
-                                                
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6"> Offer Released</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +20                               
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="teamCaptainOfferReleasedAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="teamCaptainOfferReleased">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined & OnBoarded</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +30                               
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="teamCaptainCandidateJoinedAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="teamCaptainCandidateJoined">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined & Backed Out</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        -30                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="backoutTeamAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-danger" id="backoutteam">+0</span>
-                                                    </td>
-                                                </tr> 
-                                            
-                                                <tr>
-                                                    <td>
-                                                        <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6"> Interviews Conducted</a>
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        +2                             
-                                                    </td>
-                                                    <td class="text-muted fw-bold">
-                                                        <span class="" id="teamCaptainInterviewScheduledAc">0</span>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="text-success" id="teamCaptainInterviewScheduled">+0</span>
-                                                    </td>
-                                                </tr> 
-                                                <tr style="background: #d1ccd3;">
-                                                <td colspan="3">
-                                                        <a href="#" class="text-gray-900 fw-bold text-hover-primary mb-1 fs-3">Final Score</a>
-                                                    </td>
-                                                    <td class="">
-                                                        <span class="fs-3" id="score">00</span>
-                                                    </td>
-                                                </tr> 
-                                                                            
-                                        </tbody>
-                                        <!--end::Table body-->
-                                    </table>
-                                </div>
-                </div>
+                <div class="modal-content custmbg" style="border-radius:18px;">
+                    <div class="modal-body sb-wrap" style="padding:20px 24px 24px;" id="team_scoreboard_body">
+                        <div style="text-align:center; padding:40px; color:#8a93a8;">Loading scoreboard...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -983,57 +707,23 @@
             }
 
              $(document).on('click', '.teamViewScore', function() {
-                var profileUpload = '+'+$(this).data('profileupload');
-                var interviewScheduled = '+'+$(this).data('interviewscheduled');
-                var interviewNoShow = $(this).data('interviewnoshow');
-                var offerReleased = '+'+$(this).data('offerreleased');
-                var candidateJoined = '+'+$(this).data('candidatejoined');
-                var teamCaptainInterviewScheduled = '+'+$(this).data('teamcaptaininterviewscheduled');
-                var teamCaptainOfferReleased = '+'+$(this).data('teamcaptainofferreleased');
-                var teamCaptainCandidateJoined = '+'+$(this).data('teamcaptaincandidatejoined');
-                var sourcing = '+'+$(this).data('sourcing');
-                var screening = '+'+$(this).data('screening');
-                var evaluation = '+'+$(this).data('evaluation');
-                var negotiation = '+'+$(this).data('negotiation');
-                var backout = $(this).data('backout');
-                var backoutTeam = $(this).data('backoutteam');
-                var rankMonth = $(this).data('rankmonth');
-                var score = $(this).data('score');
-                $('#profileUpload').text(profileUpload);
-                $('#profileUploadAc').text(profileUpload/1);
-                $('#interviewScheduled').text(interviewScheduled);
-                $('#interviewScheduledAc').text(interviewScheduled/10);
-                $('#interviewNoShow').text(interviewNoShow);
-                $('#interviewNoShowAc').text(interviewNoShow/5);
-                $('#offerReleased').text(offerReleased);
-                $('#offerReleasedAc').text(offerReleased/300);
-                $('#candidateJoined').text(candidateJoined);
-                $('#candidateJoinedAc').text(candidateJoined/500);
-                $('#teamCaptainInterviewScheduled').text(teamCaptainInterviewScheduled);
-                $('#teamCaptainInterviewScheduledAc').text(teamCaptainInterviewScheduled/2);
-                $('#teamCaptainOfferReleased').text(teamCaptainOfferReleased);
-                $('#teamCaptainOfferReleasedAc').text(teamCaptainOfferReleased/20);
-                $('#teamCaptainCandidateJoined').text(teamCaptainCandidateJoined);
-                $('#teamCaptainCandidateJoinedAc').text(teamCaptainCandidateJoined/30);                
-                $('#Sourcing').text(sourcing);
-                $('#SourcingAc').text(sourcing/1);
-                $('#Screening').text(screening);
-                $('#ScreeningAc').text(screening/1);
-                $('#Evaluation').text(evaluation);
-                $('#EvaluationAc').text(evaluation/1);
-                $('#Negotiation').text(negotiation);
-                $('#NegotiationAc').text(negotiation/1);
-                $('#backout').text(backout);
-                $('#backoutAc').text(backout/500);
-                $('#backoutTeam').text(backoutTeam);
-                $('#backoutTeamAc').text(backoutTeam/30);
-                $('#rankMonth').text(rankMonth);
-                $('#score').text(score);
-                
+                var userId = $(this).data('user-id');
+                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+                var url = "{{ route('service_company.team.scoreboard') }}";
 
-
-                // alert("ji");
+                $('#team_scoreboard_body').html('<div style="text-align:center; padding:40px;"><img src="' + baseurl + '" height="35px" width="100%"></div>');
                 $("#team_rank_user").modal("show");
+
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    data: { user_id: userId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#team_scoreboard_body').html(response.view);
+                        }
+                    }
+                });
             });
 
             $(document).on('click', '.update_role_close', function() {
@@ -1968,10 +1658,9 @@
 				fetchTeams(1);
 			}
 
-			// Reset all filters and reload
 			function clearTeamFilters() {
 				$('#kt_tagify_2').val('');
-				$('#roleFilter, #statusFilter, #departmentFilter, #workloadFilter, #sortingfilter').val('');
+				$('#sortingfilter').val('');
 				fetchTeams(1);
 			}
 

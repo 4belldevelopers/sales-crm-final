@@ -431,9 +431,10 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::post('team/teamDelete', [ServiceCompanyTeamController::class,'teamDelete'])->name('team.teamDelete');
 						Route::post('team/reSendmail', [ServiceCompanyTeamController::class,'reSendmail'])->name('team.reSendmail');
 						Route::any('team/roleupdate', [ServiceCompanyTeamController::class,'roleupdate'])->name('team.roleupdate');
-						Route::post('team/WorkingStatus', [ServiceCompanyTeamController::class,'WorkingStatus'])->name('team.WorkingStatus');			
+						Route::post('team/WorkingStatus', [ServiceCompanyTeamController::class,'WorkingStatus'])->name('team.WorkingStatus');
+						Route::get('team/scoreboard', [ServiceCompanyTeamController::class,'teamScoreboard'])->name('team.scoreboard');
 
-						//END	
+						//END
 						//#############       	START ROLES AND PERMISSION  
 						Route::get('role-permission/show-role/{id?}', [ServiceCompanyRolesPermissionController::class,'showRole'])->name('settings.showRole');
 						// Route::get('role-permission/teamdata', [ServiceCompanyRolesPermissionController::class,'teamdata')->name('settings.teamdata');	
