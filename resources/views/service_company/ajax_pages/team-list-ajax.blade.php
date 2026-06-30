@@ -125,15 +125,15 @@
             <td>
                 <div class="team-workload">
                     <div class="team-wl-item wl-blue">
-                        <span class="team-wl-num"><i class="fas fa-briefcase"></i>{{ $activeJobs }}</span>
+                        <span class="team-wl-num"><i class="ki-outline ki-briefcase"></i>{{ $activeJobs }}</span>
                         <span class="team-wl-label">Active Jobs</span>
                     </div>
                     <div class="team-wl-item wl-purple">
-                        <span class="team-wl-num"><i class="fas fa-chess-king"></i>{{ $captainJobs }}</span>
+                        <span class="team-wl-num"><i class="ki-outline ki-crown-2"></i>{{ $captainJobs }}</span>
                         <span class="team-wl-label">Captain Jobs</span>
                     </div>
                     <div class="team-wl-item wl-green">
-                        <span class="team-wl-num"><i class="fas fa-user-friends"></i>{{ $trmTalents }}</span>
+                        <span class="team-wl-num"><i class="ki-outline ki-people"></i>{{ $trmTalents }}</span>
                         <span class="team-wl-label">TRM Talents</span>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                     </div>
                 @else
                     <a href="javascript:;" class="text-primary fw-bold fs-7"
-                        onclick="reSendhandleClick(this, {{ $row->id }});">Resend Mail <i class="fa fa-repeat"></i></a>
+                        onclick="reSendhandleClick(this, {{ $row->id }});">Resend Mail <i class="ki-outline ki-arrows-circle"></i></a>
                     <span class="team-status-text status_text text-danger fw-bold d-block">Invited</span>
                 @endif
             </td>
@@ -176,7 +176,7 @@
             {{-- Actions --}}
             <td style="text-align:right;">
                 <div class="team-action-wrap">
-                    <button class="team-action-btn" onclick="toggleTeamMenu(this)"><i class="fas fa-ellipsis-v"></i></button>
+                    <button class="team-action-btn" onclick="toggleTeamMenu(this)"><i class="ki-outline ki-dots-vertical"></i></button>
                     <div class="team-action-menu">
                         <a class="team-action-item show-detail-team" data-row-id="{{ $row->id }}">View Profile</a>
                         @if ($row->root_user != 1)
