@@ -372,10 +372,11 @@
     .csb-mile .mico{ width:40px; height:40px; border-radius:50%; background:#f3f1ff; display:grid; place-items:center; flex:none; }
     .csb-mile .mico svg{ width:22px; height:22px; }
     .csb-mile-bd{ flex:1; min-width:0; }
-    .csb-mile-bd .lbl{ font-size:12px; font-weight:700; }
-    .csb-mile-bd .bar{ height:7px; border-radius:5px; background:#eef1f7; overflow:hidden; margin:5px 0 3px; }
+    .csb-mile-bd .lbl{ font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .csb-mile-bd .bar{ height:7px; border-radius:5px; background:#eef1f7; overflow:hidden; margin:6px 0 4px; }
     .csb-mile-bd .bar i{ display:block; height:100%; border-radius:5px; }
-    .csb-mile-bd .num{ font-size:10px; color:#9aa3b2; text-align:right; }
+    .csb-mile-bd .num{ font-size:9.5px; color:#9aa3b2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .csb-mile .mico{ width:38px; height:38px; }
 
     .csb-bottom{ display:grid; grid-template-columns:230px 1fr 280px; gap:14px; }
     .csb-card{ border:1px solid #eef1f7; border-radius:14px; background:#fff; padding:14px; }
