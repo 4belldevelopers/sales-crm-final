@@ -61,7 +61,7 @@ Rules:
 /* Load Poppins once (self-host or Google Fonts), weights 400/500/600. */
 :root{
   --font-sans: 'Poppins', system-ui, -apple-system, "Segoe UI", sans-serif;
-  --fs-page-title:14px; --fs-section:13px; --fs-body:13px;
+  --fs-page-title:14px-16px; --fs-section:13px; --fs-body:13px;
   --fs-label:12px; --fs-meta:11px; --fs-micro:10.5px;
   /* density */
   --space-1:4px; --space-2:8px; --space-3:12px; --row-h:32px; --control-h:30px;
@@ -158,3 +158,302 @@ DataTables/Metronic tables must show maximum useful data on any screen:
 > Net effect: one Metronic-consistent, ≤14px, ultra-dense design system that fluidly
 > fits 1366×768 through 4K — data auto-fits via fluid root font, sticky chrome, scrolling
 > virtualized tables, and responsive column priority.
+
+# 9. Performance Engineering (Mandatory)
+
+> Goal: Every screen and feature must deliver **maximum speed with minimum server load**, while maintaining a smooth UX across all supported devices.
+> Performance is a **core product requirement**, not a post-development optimization.
+> Any feature that increases unnecessary CPU, RAM, DB, network, browser, or queue load is considered **incomplete**.
+
+---
+
+## 9.1 Core Principle
+
+All engineering decisions must optimize for:
+
+* Minimum server CPU usage
+* Minimum database load
+* Minimum browser memory consumption
+* Minimum network payload
+* Minimum frontend rendering cost
+* Maximum responsiveness under high concurrency
+
+Every feature must be evaluated not only for UX but also for infrastructure impact.
+
+---
+
+## 9.2 Performance Budgets (Hard Limits)
+
+Every screen must satisfy the following limits:
+
+| Metric              |     Target | Hard Limit |
+| ------------------- | ---------: | ---------: |
+| Initial Page Load   |       < 2s |         3s |
+| Time To Interactive |     < 1.5s |       2.5s |
+| API Response        |    < 300ms |      800ms |
+| SQL Query           |     < 50ms |      200ms |
+| Initial API Calls   |        ≤ 3 |          5 |
+| Browser RAM / Tab   |    < 250MB |      500MB |
+| Initial JS Bundle   | < 250KB gz |      400KB |
+
+Any screen exceeding hard limits must be optimized before release.
+
+---
+
+## 9.3 API Standards
+
+Mandatory rules:
+
+* Never return unused fields
+* Always paginate large datasets
+* Minimize payload size
+* Use compression (gzip / brotli)
+* Batch requests where possible
+
+Forbidden:
+
+* Over-fetching data
+* Large nested payloads
+* Excessive API chaining
+
+---
+
+## 9.4 Database Standards
+
+Database efficiency is mandatory.
+
+Rules:
+
+* No N+1 queries
+* Mandatory eager loading
+* Mandatory indexing for searchable columns
+* No full table scan on production tables
+* All slow queries must be analyzed with EXPLAIN
+
+Searchable fields must be indexed, including:
+
+* candidate_id
+* email
+* phone
+* skills
+* location
+* vendor_id
+* created_at
+* status
+
+Heavy wildcard LIKE queries on large tables are forbidden.
+
+---
+
+## 9.5 Caching Standards
+
+Cache must be used before hitting database whenever possible.
+
+Mandatory cache for:
+
+* roles
+* permissions
+* configuration
+* dropdowns
+* dashboard stats
+* location data
+* repeated filters
+
+Rules:
+
+* Cache read-heavy data
+* Event-driven cache invalidation
+* Prevent repetitive database reads
+
+---
+
+## 9.6 Search Standards
+
+Large-scale ATS search must not rely entirely on SQL.
+
+Required architecture:
+
+* Structured filtering → Database
+* Full-text search → Search engine
+* Semantic / AI search → Vector DB
+
+Forbidden on large datasets:
+
+* `%keyword%` wildcard scans
+* client-side filtering on huge payloads
+
+Search latency target:
+**< 500ms**
+
+---
+
+## 9.7 Frontend Rendering Standards
+
+UI must remain lightweight.
+
+Rules:
+
+* Minimize DOM nodes
+* Minimize re-renders
+* Lazy load heavy modules
+* Virtualize large lists
+* Render only visible rows
+
+Forbidden:
+
+* Rendering thousands of rows
+* Massive nested DOM trees
+* Large synchronous computations in browser
+
+---
+
+## 9.8 Large Dataset UI Rules
+
+Large dropdowns must never load full datasets.
+
+Examples:
+
+* locations
+* skills
+* companies
+* vendors
+
+Required:
+
+* AJAX search
+* Debounced requests (300–500ms)
+* Minimum 2–3 characters before querying
+* Load only top relevant results
+
+Forbidden:
+
+Loading 10,000+ options into selects.
+
+---
+
+## 9.9 Realtime & Notifications
+
+Realtime systems are expensive and must be carefully controlled.
+
+Allowed realtime use cases:
+
+* critical notifications
+* interview reminders
+* chat
+* live alerts
+
+Rules:
+
+* No polling below 30 seconds
+* Prefer event-driven architecture
+* Queue notifications instead of continuous polling
+
+Preferred flow:
+
+Event → Queue → Worker → Notification Delivery
+
+---
+
+## 9.10 Background Jobs
+
+Heavy operations must never block user requests.
+
+Queue mandatory for:
+
+* resume parsing
+* AI scoring
+* indexing
+* report generation
+* email sending
+* file processing
+* bulk imports
+
+All CPU-heavy tasks must run asynchronously.
+
+---
+
+## 9.11 Asset Optimization
+
+Frontend assets must remain lean.
+
+Rules:
+
+* Tree-shake unused code
+* Split large bundles
+* Lazy load non-critical modules
+* Minify JS/CSS
+* Optimize images
+
+Forbidden:
+
+* Unused libraries
+* Huge icon packs
+* Large PNG assets
+* Heavy animation libraries
+
+---
+
+## 9.12 Monitoring & Observability
+
+Production must expose performance metrics.
+
+Track:
+
+* API latency
+* DB latency
+* cache hit ratio
+* CPU usage
+* memory usage
+* queue delay
+* websocket connections
+* error rate
+
+Alert thresholds:
+
+* CPU > 80%
+* DB latency spike
+* queue delay > 30s
+* cache hit ratio drop
+
+---
+
+## 9.13 CI/CD Performance Guardrails
+
+No deployment without performance checks.
+
+Mandatory automated checks:
+
+* bundle size
+* slow query detection
+* Lighthouse
+* memory regression
+* latency regression
+
+Deployment must fail if performance budgets are violated.
+
+---
+
+## 9.14 Scale Targets
+
+System must support:
+
+| Metric                |  Target |
+| --------------------- | ------: |
+| Concurrent Users      | 10,000+ |
+| Candidates            |   100M+ |
+| Search Latency        | < 500ms |
+| Notification Delay    | < 3 sec |
+| Resume Upload Success |  99.99% |
+
+---
+
+## Final Rule
+
+Every feature must pass both:
+
+* UI / UX Review
+* Performance Engineering Review
+
+A beautiful feature that increases unnecessary server load is considered incomplete.
+
+
