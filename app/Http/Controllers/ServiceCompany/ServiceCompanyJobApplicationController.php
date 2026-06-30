@@ -8246,6 +8246,20 @@ protected $elasticService;
 							$candidateJoineddTeam = 0;
 							$candidateJoineddUserbackout = -1500;
 							$candidateJoineddTeambackout = -30;
+
+							// Route the join/backout points into full-time keys or contract keys based on the job type.
+							$sstEmpType = DB::table('jobs')->where('id', $AddJobWiseCondidate->job_id)->value('employment_type');
+							$sstIsContract = ((int) $sstEmpType !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
+							// Full-time keeps the base weights (join 1500 / team 30); contract uses higher weights (join 5000 / team 500).
+							$cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
+							$boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
+							$cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
+							$boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
+							$cjUserCT = ($sstIsContract && $candidateJoineddUser != 0)        ? 5000  : 0;
+							$boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
+							$cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0)        ? 500   : 0;
+							$boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500  : 0;
+
 							$teamCaptainId = array_map(function ($arr) {
 								return array_values(array_filter($arr, function ($value) {
 									return $value != 0;
@@ -8275,8 +8289,10 @@ protected $elasticService;
 										'teamCaptainInterviewScheduled'=>0,
 										'teamCaptainInterviewNoShow'=>0,
 										'teamCaptainOfferReleased'=>0,
-										'teamCaptainCandidateJoined'=>$candidateJoineddTeam,
-										'backoutTeam'=>$candidateJoineddTeambackout,
+										'teamCaptainCandidateJoined'=>$cjTeamFT,
+										'backoutTeam'=>$boTeamFT,
+										'teamCaptainCandidateJoinedContract'=>$cjTeamCT,
+										'backoutTeamContract'=>$boTeamCT,
 									];
 									GeneralMethod::teamRankElastic($teamRankElastic);
 								}
@@ -8292,8 +8308,10 @@ protected $elasticService;
 								'interviewScheduled'=>0,
 								'interviewNoShow'=>0,
 								'offerReleased'=>0,
-								'candidateJoined'=>$candidateJoineddUser,
-								'backout'=>$candidateJoineddUserbackout,
+								'candidateJoined'=>$cjUserFT,
+								'backout'=>$boUserFT,
+								'candidateJoinedContract'=>$cjUserCT,
+								'backoutContract'=>$boUserCT,
 								'jobsPosted'=>0,
 								'feedbackGivenOnCVs'=>0,
 								'postJobToVendorMarket'=>0,
@@ -9128,6 +9146,17 @@ protected $elasticService;
 						    $candidateJoineddTeam = 30;
 						}
 
+						// Route the join/backout points into full-time keys or contract keys based on the job type.
+						$sstIsContract = ((int) @$wise_c->employment_type !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
+						$cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
+						$cjUserCT = ($sstIsContract && $candidateJoineddUser != 0)        ? 5000  : 0;
+						$boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
+						$boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
+						$cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
+						$cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0)        ? 500   : 0;
+						$boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
+						$boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500  : 0;
+
 						$teamCaptainId = array_map(function ($arr) {
 							return array_values(array_filter($arr, function ($value) {
 								return $value != 0;
@@ -9157,8 +9186,10 @@ protected $elasticService;
 									'teamCaptainInterviewScheduled'=>0,
 									'teamCaptainInterviewNoShow'=>0,
 									'teamCaptainOfferReleased'=>0,
-									'teamCaptainCandidateJoined'=>$candidateJoineddTeam,
-									'backoutTeam'=>$candidateJoineddTeambackout,
+									'teamCaptainCandidateJoined'=>$cjTeamFT,
+									'backoutTeam'=>$boTeamFT,
+									'teamCaptainCandidateJoinedContract'=>$cjTeamCT,
+									'backoutTeamContract'=>$boTeamCT,
 								];
 								GeneralMethod::teamRankElastic($teamRankElastic);
 							}
@@ -9174,8 +9205,10 @@ protected $elasticService;
 					'interviewScheduled'=>0,
 					'interviewNoShow'=>0,
 					'offerReleased'=>0,
-					'candidateJoined'=>$candidateJoineddUser,
-					'backout'=>$candidateJoineddUserbackout,
+					'candidateJoined'=>$cjUserFT,
+					'backout'=>$boUserFT,
+					'candidateJoinedContract'=>$cjUserCT,
+					'backoutContract'=>$boUserCT,
 					'jobsPosted'=>0,
 					'feedbackGivenOnCVs'=>0,
 					'postJobToVendorMarket'=>0,

@@ -27,6 +27,7 @@
 
     // counts
     $joins = (int) round($g('candidateJoined') / 1500);
+    $joinsCT = (int) round($g('candidateJoinedContract') / 5000);   // contract/freelance/part-time joins (+5000)
     $offers = (int) round($g('offerReleased') / 300);
     $interviews = (int) round($g('interviewScheduled') / 10);
 
@@ -48,8 +49,10 @@
     // Breakdown groups: [label, desc, ppa, occurrences, earned, iconKey]
     $sbInd = [
         ['Offer Released','Offers released to candidates', 300, $offers, $g('offerReleased'), 'offer'],
-        ['Joined & Onboarded','Candidates joined and onboarded', 1500, $joins, $g('candidateJoined'), 'join'],
+        ['Joined & Onboarded','Candidates joined and onboarded (full-time)', 1500, $joins, $g('candidateJoined'), 'join'],
         ['Joined Backed Out','Candidates backed out after joining', -1500, (int) round(abs($g('backout'))/1500), $g('backout'), 'backout'],
+        ['Joined & Onboarded (Contract)','Candidates joined on contract / freelance / part-time', 5000, $joinsCT, $g('candidateJoinedContract'), 'join'],
+        ['Joined Backed Out (Contract)','Contract candidates backed out', -5000, (int) round(abs($g('backoutContract'))/5000), $g('backoutContract'), 'backout'],
         ['Interviews Conducted','Interviews conducted', 10, $interviews, $g('interviewScheduled'), 'interview'],
     ];
     $sbPipe = [

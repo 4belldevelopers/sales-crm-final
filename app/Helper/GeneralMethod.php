@@ -9472,7 +9472,13 @@ END:VCALENDAR";
 		$negotiation = $teamRankElastic['negotiation'] ?? 0;
 		$backout = $teamRankElastic['backout'] ?? 0;
 		$backoutTeam = $teamRankElastic['backoutTeam'] ?? 0;
-		
+
+		// Contract-hiring variants of the "joined"/backout events (full-time stays in the base keys).
+		$candidateJoinedContract = $teamRankElastic['candidateJoinedContract'] ?? 0;
+		$backoutContract = $teamRankElastic['backoutContract'] ?? 0;
+		$teamCaptainCandidateJoinedContract = $teamRankElastic['teamCaptainCandidateJoinedContract'] ?? 0;
+		$backoutTeamContract = $teamRankElastic['backoutTeamContract'] ?? 0;
+
 
 		$updateTime = now()->toIso8601String();
 
@@ -9497,12 +9503,16 @@ END:VCALENDAR";
 							'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
 							'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
 							'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+							'candidateJoinedContract' => $candidateJoinedContract,
+							'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
 							'sourcing' => $sourcing,
 							'screening' => $screening,
 							'evaluation' => $evaluation,
 							'negotiation' => $negotiation,
 							'backout' => $backout,
 							'backoutTeam' => $backoutTeam,
+							'backoutContract' => $backoutContract,
+							'backoutTeamContract' => $backoutTeamContract,
 							'total_points' => 0,
 							'created_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
 							'updated_at' => isset($updateTime)? date('Y-m-d H:i:s', strtotime($updateTime)) : null
@@ -9534,12 +9544,16 @@ END:VCALENDAR";
 									'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow, // -1 pts per response
 									'teamCaptainOfferReleased' => $teamCaptainOfferReleased, // +10 pts per response
 									'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined, // +20 pts per response
+									'candidateJoinedContract' => $candidateJoinedContract, // joined on a contract job
+									'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract, // team captain, contract job
 									'sourcing' => $sourcing, // +1 pts per response
 									'screening' => $screening, // +1 pts per response
 									'evaluation' => $evaluation, // +1 pts per response
 									'negotiation' => $negotiation, // +1 pts per response
-									'backout' => $backout, // join pts per response								
+									'backout' => $backout, // join pts per response
 									'backoutTeam' => $backoutTeam, // join pts per response
+									'backoutContract' => $backoutContract, // backout on a contract job
+									'backoutTeamContract' => $backoutTeamContract, // team captain backout, contract job
 									'created_at' => $updateTime,
 									'updated_at' => $updateTime
 								],
@@ -9976,6 +9990,10 @@ END:VCALENDAR";
 							'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 							'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 							'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+							'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+							'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+							'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+							'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 						]
 					]
 				]
@@ -10001,7 +10019,11 @@ END:VCALENDAR";
 			    + ($item['evaluation_sum']['value'] ?? 0)
 			    + ($item['negotiation_sum']['value'] ?? 0)
 			    + ($item['backout_sum']['value'] ?? 0)
-			    + ($item['backoutTeam_sum']['value'] ?? 0);
+			    + ($item['backoutTeam_sum']['value'] ?? 0)
+			    + ($item['candidateJoinedContract_sum']['value'] ?? 0)
+			    + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0)
+			    + ($item['backoutContract_sum']['value'] ?? 0)
+			    + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 			return [$item['key'] => [
 				'user_id' => $item['key'],
@@ -10019,6 +10041,10 @@ END:VCALENDAR";
 				'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 				'backout' => ($item['backout_sum']['value'] ?? 0),
 				'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+				'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+				'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+				'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+				'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 				'score' => $score
 			]];
 		});
