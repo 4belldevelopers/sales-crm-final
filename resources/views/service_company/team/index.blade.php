@@ -450,7 +450,7 @@
                     // is company-scoped; raw DB queries are filtered by company_id explicitly.
                     if (!isset($teamCounts)) {
                         $teamCid = auth()->user()->company_id;
-                        $teamStatus = \App\Models\User::company()
+                        $teamStatus = \App\Models\User::query()->company()
                             ->selectRaw('COUNT(*) as total')
                             ->selectRaw("SUM(status = 'active') as active")
                             ->selectRaw("SUM(status = 'inactive') as inactive")
