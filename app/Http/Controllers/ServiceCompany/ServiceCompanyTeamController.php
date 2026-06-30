@@ -326,6 +326,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 									'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 									'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 									'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+									'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+									'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+									'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+									'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 								]
 							]
 						]
@@ -353,7 +357,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'score' => $score,
@@ -374,6 +378,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 					]];
 				});
 
@@ -395,6 +403,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'teamCaptainInterviewNoShow' => $scoreMap[$user_id]['teamCaptainInterviewNoShow'] ?? 0,
 						'teamCaptainOfferReleased' => $scoreMap[$user_id]['teamCaptainOfferReleased'] ?? 0,
 						'teamCaptainCandidateJoined' => $scoreMap[$user_id]['teamCaptainCandidateJoined'] ?? 0,
+						'candidateJoinedContract' => $scoreMap[$user_id]['candidateJoinedContract'] ?? 0,
+						'teamCaptainCandidateJoinedContract' => $scoreMap[$user_id]['teamCaptainCandidateJoinedContract'] ?? 0,
+						'backoutContract' => $scoreMap[$user_id]['backoutContract'] ?? 0,
+						'backoutTeamContract' => $scoreMap[$user_id]['backoutTeamContract'] ?? 0,
 						'sourcing' => ($scoreMap['sourcing']['value'] ?? 0),
 						'screening' => ($scoreMap['screening']['value'] ?? 0),
 						'evaluation' => ($scoreMap['evaluation']['value'] ?? 0),
@@ -1562,6 +1574,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 							'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 							'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 							'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+							'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+							'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+							'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+							'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							'attachments_sum' => ['sum' => ['field' => 'doc.attachmentCount']],
 						]
 					]
@@ -1588,7 +1604,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				+ ($item['evaluation_sum']['value'] ?? 0)
 				+ ($item['negotiation_sum']['value'] ?? 0)
 				+ ($item['backout_sum']['value'] ?? 0)
-				+ ($item['backoutTeam_sum']['value'] ?? 0);
+				+ ($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 			return [$item['key'] => [
 				'user_id' => $item['key'],
