@@ -1582,62 +1582,48 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			// $jobApplications = $jobApplications->where('job_applications.job_id', $request->jobs);
 		}
 
+		// Avatar colour palette (matches the Agencies-style contacts table).
+		$avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
+
 		return DataTables::of($shedule)
 			->editColumn('chkbox', function ($row) {
-				return '<div class="form-check form-check-sm form-check-custom form-check-solid">
-								  <input class="form-check-input form-check-input2" type="checkbox" value="1" />
-								</div>';
+				return '<input type="checkbox" class="table-checkbox" />';
 			})
-			->editColumn('Name', function ($row) {
-				$bgTextDecore = $strVal = '';
-				$str = trim(@$row->contact_person_name);
-				$str = $strVal = strtolower($str[0]);
-				$str = ord($str);
-				if ($str >= 97 && $str <= 101) {
-					$bgTextDecore = 'fs-3 bg-light-danger text-danger';
-				} else if ($str >= 102 && $str <= 106) {
-					$bgTextDecore = 'fs-3 bg-light-warning text-warning';
-				} else if ($str >= 107 && $str <= 111) {
-					$bgTextDecore = 'fs-3 bg-light-primary text-primary';
-				} else if ($str >= 112 && $str <= 116) {
-					$bgTextDecore = 'fs-3 bg-light-success text-success';
-				} else if ($str >= 117 && $str <= 121) {
-					$bgTextDecore = 'fs-3 bg-light-danger text-danger';
-				} else {
-					$bgTextDecore = 'fs-3 bg-light-secondary';
-				}
-
-				return '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"  style="float:left"  >
-								  <a href="javascript:void(0);">
-									<div class="symbol-label fs-3 ' . $bgTextDecore . ' border-radius-5">' . ucwords($strVal) . '</div>
-								  </a>
-								</div>
-								<div class="d-flex flex-column">
-								  <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' . ucwords(@$row->contact_person_name) . '</a> 
-								  <a href="javascript:void(0);" data-row-id="3" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-detail-team">' . @$row->contact_person_designation . '</a>
-								</div>';
-
+			->editColumn('Contact', function ($row) use ($avatarColors) {
+				$name = trim((string) @$row->contact_person_name);
+				$initials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1),
+					array_slice(array_filter(explode(' ', $name)), 0, 2))));
+				$color = $avatarColors[(ord(strtolower(substr($name, 0, 1) ?: 'a'))) % count($avatarColors)];
+				return '<div class="contact-cell">
+							<div class="contact-avatar-table" style="background:' . $color . '">' . $initials . '</div>
+							<div class="contact-info-table">
+								<div class="contact-name-table">' . ucwords($name) . '</div>
+							</div>
+						</div>';
 			})
-			->editColumn('Role', function ($row) {
-				return '<div class="d-flex flex-column">
-								  <span class="text-dark fw-bolder fs-6">' . @$row->contact_person_designation . '</span> 
-								</div>';
+			->editColumn('Designation', function ($row) {
+				return ucwords((string) @$row->contact_person_designation);
 			})
-			->editColumn('Contacts', function ($row) {
-				return '<div class="d-flex flex-column">
-								  <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' . @$row->contact_person_email . '</a>
-								  <div style="position: relative;display: flex;">
-								    <div class="iti__flag-container" data-code="'.$row->calling_code.'" data-row="'.$row->id.'" id="phoneDisplay_'.$row->id.'" style="display: flex;position: relative;"> <!-- Flag and dial code will be appended here --></div>
-										<div style="margin-left: 6px;margin-top: 2px;">
-											<a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary">'.@$row->contact_person_number .'</a>
-										</div>
-								  </div>
-								</div>';
+			->editColumn('Email', function ($row) {
+				return '<span class="email-cell">' . @$row->contact_person_email . '</span>';
+			})
+			->editColumn('Phone', function ($row) {
+				return '<div class="phone-cell">
+							<div class="iti__flag-container" data-code="' . $row->calling_code . '" data-row="' . $row->id . '" id="phoneDisplay_' . $row->id . '" style="display:flex;position:relative;"></div>
+							<span class="phone-digits">' . @$row->contact_person_number . '</span>
+						</div>';
 			})
 			->editColumn('Status', function ($row) {
-				return '<span class="bg-light-success text-success fw-bolder fs-6">Active</span>';
+				return '<span class="status-badge-table active"><i class="fas fa-circle"></i>Active</span>';
 			})
-			->rawColumns(['chkbox', 'Name', 'Role', 'Contacts', 'Status'])
+			->editColumn('Actions', function ($row) {
+				$call = $row->calling_code . ' ' . $row->contact_person_number;
+				return '<div class="action-btns">
+							<a href="tel:' . trim($call) . '" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
+							<a href="mailto:' . $row->contact_person_email . '" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
+						</div>';
+			})
+			->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
 			->make(true);
 
 	}
@@ -2424,78 +2410,53 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 		// $directContactList = $directContactList->where('roles.display_name', '=', 'Administrator');
 
 
+		// Avatar colour palette (matches the Agencies-style contacts table).
+		$avatarColors = ['#c084fc', '#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#38bdf8', '#fb923c'];
+
 		return DataTables::of($directContactList)
 
 			->editColumn('chkbox', function ($row) {
-				return '<div class="form-check form-check-sm form-check-custom form-check-solid">
-								<input class="form-check-input form-check-input2" type="checkbox" value="1" />
-							  </div>';
+				return '<input type="checkbox" class="table-checkbox" />';
 			})
-			->editColumn('Name', function ($row) {
-
-				$bgTextDecore = $strVal = '';
-				$str = trim(@$row->name);
-				$str = $strVal = strtolower($str[0]);
-				$str = ord($str);
-				if ($str >= 97 && $str <= 101) {
-					$bgTextDecore = 'fs-3 bg-light-danger text-danger';
-				} else if ($str >= 102 && $str <= 106) {
-					$bgTextDecore = 'fs-3 bg-light-warning text-warning';
-				} else if ($str >= 107 && $str <= 111) {
-					$bgTextDecore = 'fs-3 bg-light-primary text-primary';
-				} else if ($str >= 112 && $str <= 116) {
-					$bgTextDecore = 'fs-3 bg-light-success text-success';
-				} else if ($str >= 117 && $str <= 121) {
-					$bgTextDecore = 'fs-3 bg-dark text-secondary';
-				} else {
-					$bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-				}
-
-				$icon = '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-							<a href="javascript:void(0);"  class="show-detail">
-							  <div class="symbol-label ' . $bgTextDecore . ' border-radius-5">' . ucwords($strVal) . '</div>
-							</a>
-						  </div>';
-
-				return ' <div class="d-flex align-items-center border-0">
-									  ' . $icon . '                   
-									  <div class="d-flex flex-column"> 
-											<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' . ucwords($row->name) . '</a> 
-											<a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary">' . ucwords($row->display_name) . '</a> 
-									  </div>
-							  </div>';
+			->editColumn('Contact', function ($row) use ($avatarColors) {
+				$name = trim((string) @$row->name);
+				$initials = strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1),
+					array_slice(array_filter(explode(' ', $name)), 0, 2))));
+				$color = $avatarColors[(ord(strtolower(substr($name, 0, 1) ?: 'a')) ) % count($avatarColors)];
+				// "Primary" marks the linked point-of-contact (the spoc tied to the relation).
+				$primary = !empty($row->from_user_id)
+					? '<div class="contact-primary-badge"><i class="fas fa-check"></i>Primary</div>' : '';
+				return '<div class="contact-cell">
+							<div class="contact-avatar-table" style="background:' . $color . '">' . $initials . '</div>
+							<div class="contact-info-table">
+								<div class="contact-name-table">' . ucwords($name) . '</div>' . $primary . '
+							</div>
+						</div>';
 			})
-			->editColumn('Role', function ($row) {
-				return '<div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">' . ucwords($row->display_name) . '</span> </div>';
+			->editColumn('Designation', function ($row) {
+				return ucwords((string) @$row->display_name);
 			})
-			->editColumn('Contacts', function ($row) {
-				    $email = $row->email;
-					$mobile = $row->mobile;
-					// if($row->from_user_id==NULL){
-					// 	$email = "XXXXXXXXXXX";
-					// 	$mobile = "XXXXXXXXXXX";
-					// }
-				return '<div class="d-flex flex-column"> 
-								<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .$email . '</a> 
-								 <div style="position: relative;display: flex;">
-								    <div class="iti__flag-container" data-code="'.$row->calling_code.'" data-row="'.$row->userId.'" id="phoneDisplay_'.$row->userId.'" style="display: flex;position: relative;"> <!-- Flag and dial code will be appended here --></div>
-										<div style="margin-left: 6px;margin-top: 2px;">
-											<a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary">'.@$mobile .'</a>
-										</div>
-								  </div>
-							</div>';
+			->editColumn('Email', function ($row) {
+				return '<span class="email-cell">' . @$row->email . '</span>';
+			})
+			->editColumn('Phone', function ($row) {
+				return '<div class="phone-cell">
+							<div class="iti__flag-container" data-code="' . $row->calling_code . '" data-row="' . $row->userId . '" id="phoneDisplay_' . $row->userId . '" style="display:flex;position:relative;"></div>
+							<span class="phone-digits">' . @$row->mobile . '</span>
+						</div>';
 			})
 			->editColumn('Status', function ($row) {
-				$classname = '';
-				if ($row->status == 'active') {
-					$classname = 'bg-light-success text-success';
-				} else {
-					$classname = 'bg-light-danger text-danger';
-				}
-
-				return '<span class=" ' . $classname . ' fw-bolder fs-6 px-1">' . ucwords($row->status) . '</span>';
+				$cls = ($row->status == 'active') ? 'active' : 'inactive';
+				return '<span class="status-badge-table ' . $cls . '"><i class="fas fa-circle"></i>' . ucwords($row->status) . '</span>';
 			})
-			->rawColumns(['chkbox', 'Name', 'Role', 'Contacts', 'Status'])
+			->editColumn('Actions', function ($row) {
+				$call = $row->calling_code . ' ' . $row->mobile;
+				return '<div class="action-btns">
+							<a href="tel:' . trim($call) . '" class="action-btn-table" title="Call"><i class="fas fa-phone"></i></a>
+							<a href="mailto:' . $row->email . '" class="action-btn-table" title="Email"><i class="fas fa-envelope"></i></a>
+						</div>';
+			})
+			->rawColumns(['chkbox', 'Contact', 'Email', 'Phone', 'Status', 'Actions'])
 			->addIndexColumn()->make(true);
 
 

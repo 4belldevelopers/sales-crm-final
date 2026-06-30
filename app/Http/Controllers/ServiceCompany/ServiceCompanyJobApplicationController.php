@@ -8120,6 +8120,33 @@ protected $elasticService;
 		$currency = GeneralMethod::currency();
 		$salaryModeOffer = GeneralMethod::salaryModeOffer();
 
+
+		$userId = auth()->id(); 
+		$isValid = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $addJobWiseCondidate_id) // Candidate row id
+			->where(function ($query) use ($userId) {
+				$query->where('ja.spok_user_id', $userId)
+					->orWhere('ajwc.submitted_by', $userId);
+			})
+			->exists();
+
+		if (!$isValid) {
+
+			$validations = (object)[
+				'message' => "You are not authorized to update this candidate's status. Only the assigned Captain or the submitting user can update this candidate's status."
+			];
+
+			return Reply::dataOnly([
+				'status'  => 'candidatevalidation',
+				'message' => $validations->message
+			]);
+		}
+
+
         		                    // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         							// if($chkAdminRole){
         							    
@@ -10787,6 +10814,31 @@ protected $elasticService;
 		$master_status = @$request->master_status;
 		$sub_stages = @$request->sub_stages;
 		$comment = @$request->comment;
+
+		$userId = auth()->id(); 
+		$isValid = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $addJobWiseCondidate_id) // Candidate row id
+			->where(function ($query) use ($userId) {
+				$query->where('ja.spok_user_id', $userId)
+					->orWhere('ajwc.submitted_by', $userId);
+			})
+			->exists();
+
+		if (!$isValid) {
+			
+			$validations = (object)[
+				'message' => "You are not authorized to update this candidate's status. Only the assigned Captain or the submitting user can update this candidate's status."
+			];
+
+			return Reply::dataOnly([
+				'status'  => 'candidatevalidation',
+				'message' => $validations->message
+			]);
+		}
 
 
 		$addJobWiseCondidate = AddJobWiseCondidate::find($addJobWiseCondidate_id);
