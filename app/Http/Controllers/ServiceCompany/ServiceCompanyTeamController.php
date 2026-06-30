@@ -71,7 +71,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					'ats:teamcounts:' . $companyId,
 					now()->addMinutes(ALL_TEAM_TIME),
 					function () use ($companyId) {
-						$status = User::company()
+						$status = User::query()->company()
 							->selectRaw('COUNT(*) as total')
 							->selectRaw("SUM(status = 'active') as active")
 							->selectRaw("SUM(status = 'inactive') as inactive")
