@@ -1377,542 +1377,299 @@ input[type="radio"]:checked {
 
 <!--begin::Offer components Content-->
 <div class="tab-pane" id="offercomponent" role="tabpanel">
-  <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0">
-    <!--begin::Card title-->
-    <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Salary Structure</h3>
+  @php
+    $sstMain  = collect($offer_points ?? []);
+    $sstAdd   = collect($offer_point_other ?? []);
+    $sstMainTotal = round($sstMain->sum('percentage'), 2);
+    $sstAddTotal  = round($sstAdd->sum('percentage'), 2);
+    $sstOverall   = round($sstMainTotal + $sstAddTotal, 2);
+    $sstViewLabel = [0 => 'Annually', 1 => 'Monthly', 2 => 'Both'];
+    $sstCondLabel = [0 => 'Amount', 1 => 'Basic'];
+    $sstMainValid = abs($sstMainTotal - 100) < 0.01;
+  @endphp
+  <style>
+    .sst-wrap { --b:#e4e6ef; --bg:#f5f8fa; --t:#181c32; --tm:#7e8299; --tl:#a1a5b7; --p:#7239ea; --g:#50cd89; }
+    .sst-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+    .sst-title { font-size:18px; font-weight:700; color:var(--t); display:flex; align-items:center; gap:10px; }
+    .sst-badge { display:inline-flex; align-items:center; gap:5px; background:#e8fff3; color:#47be7d; font-size:11px; font-weight:600; padding:3px 10px; border-radius:50px; }
+    .sst-sub { font-size:12.5px; color:var(--tm); margin-top:2px; }
+    .sst-meta { display:flex; align-items:center; gap:24px; flex-wrap:wrap; font-size:12px; color:var(--tm); padding:10px 0 16px; border-bottom:1px solid var(--b); margin-bottom:18px; }
+    .sst-meta .mi { display:flex; align-items:center; gap:7px; } .sst-meta .mi i { color:var(--tl); }
+    .sst-meta .mi b { color:var(--t); font-weight:600; }
+    .sst-layout { display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:start; }
+    @media (max-width:1400px){ .sst-layout { grid-template-columns:1fr; } }
+    .sst-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px; }
+    @media (max-width:600px){ .sst-cards { grid-template-columns:1fr; } }
+    .sst-card { background:#fff; border:1px solid var(--b); border-radius:12px; padding:16px; }
+    .sst-card-l { font-size:12px; color:var(--tm); font-weight:600; margin-bottom:8px; }
+    .sst-card-v { font-size:24px; font-weight:700; color:var(--t); line-height:1; margin-bottom:8px; }
+    .sst-card-v.p { color:var(--p); }
+    .sst-card-note { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; }
+    .sst-card-note.ok { color:var(--g); } .sst-card-note.add { color:var(--p); } .sst-card-note.neutral { color:var(--tm); }
+    .sst-card.valid { background:#f8fff9; border-color:#cdf3df; }
+    .sst-valid-row { display:flex; align-items:center; gap:10px; }
+    .sst-valid-ic { width:34px; height:34px; border-radius:8px; background:#e8fff3; color:var(--g); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sst-section { background:#fff; border:1px solid var(--b); border-radius:12px; padding:20px 22px; margin-bottom:18px; }
+    .sst-section-t { font-size:15px; font-weight:700; color:var(--t); }
+    .sst-section-s { font-size:12px; color:var(--tm); margin-bottom:14px; }
+    .sst-table { width:100%; border-collapse:collapse; }
+    .sst-table thead th { font-size:11px; font-weight:600; color:var(--tm); text-transform:uppercase; letter-spacing:.3px; text-align:left; padding:10px 12px; border-bottom:1px solid var(--b); white-space:nowrap; }
+    .sst-table tbody td { padding:13px 12px; font-size:13px; color:var(--t); border-bottom:1px solid #f4f6f9; vertical-align:middle; }
+    .sst-table tbody tr:last-child td { border-bottom:none; }
+    .sst-name { font-weight:600; color:var(--t); }
+    .sst-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:6px; font-size:10.5px; font-weight:600; margin-left:8px; }
+    .sst-pill.main { background:#eef2ff; color:#5b4dff; } .sst-pill.add { background:#f8f5ff; color:var(--p); }
+    .sst-vchip { display:inline-flex; align-items:center; padding:4px 10px; border-radius:6px; background:var(--bg); color:#5e6278; font-size:12px; font-weight:500; }
+    .sst-pct { font-weight:700; color:var(--t); } .sst-muted { color:var(--tl); }
+    .sst-foot-ok { background:#f8fff9; border:1px solid #cdf3df; border-radius:10px; padding:12px 16px; font-size:13px; font-weight:600; color:#2d8a5a; display:flex; align-items:center; gap:8px; margin-top:6px; }
+    .sst-help { display:grid; grid-template-columns:1fr 1.4fr; gap:20px; background:var(--bg); border:1px solid var(--b); border-radius:12px; padding:18px 22px; }
+    @media (max-width:992px){ .sst-help { grid-template-columns:1fr; } }
+    .sst-help h4 { font-size:13.5px; font-weight:700; color:var(--t); margin:0 0 6px; }
+    .sst-help p { font-size:12.5px; color:var(--tm); line-height:1.6; margin:0; }
+    .sst-ex { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .sst-ex .chip { background:#fff; border:1px solid var(--b); border-radius:8px; padding:8px 12px; font-size:12px; font-weight:600; color:var(--t); }
+    .sst-ex .chip.add { background:#fff8f0; border-color:#ffe0c2; color:#c2671a; } .sst-ex .op { color:var(--tm); font-weight:600; }
+    /* preview */
+    .sst-preview { background:#fff; border:1px solid var(--b); border-radius:12px; padding:18px; position:sticky; top:80px; }
+    .sst-pv-title { font-size:14px; font-weight:700; color:var(--p); display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+    .sst-pv-sub { font-size:11.5px; color:var(--tm); margin-bottom:14px; }
+    .sst-pv-lbl { font-size:11.5px; font-weight:600; color:var(--t); margin:10px 0 5px; }
+    .sst-pv-amt { display:flex; gap:8px; }
+    .sst-pv-amt input { flex:1; border:1px solid var(--b); border-radius:8px; padding:8px 10px; font-size:13px; outline:none; }
+    .sst-pv-calc { background:var(--p); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer; }
+    .sst-pv-toggle { display:flex; gap:6px; margin-top:4px; }
+    .sst-pv-toggle button { flex:1; border:1px solid var(--b); background:#fff; color:var(--tm); border-radius:7px; padding:6px; font-size:11.5px; font-weight:600; cursor:pointer; }
+    .sst-pv-toggle button.on { background:#5b4dff; color:#fff; border-color:#5b4dff; }
+    .sst-pv-box { background:#fafbfc; border:1px solid var(--b); border-radius:10px; padding:12px; margin-top:12px; }
+    .sst-pv-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--tm); padding:5px 0; }
+    .sst-pv-row .v { font-weight:600; color:var(--t); }
+    .sst-pv-row.total { border-top:1px solid var(--b); margin-top:6px; padding-top:9px; font-weight:700; color:var(--t); }
+    .sst-donut-wrap { display:flex; align-items:center; gap:14px; margin-top:14px; }
+    .sst-leg { font-size:11.5px; color:var(--tm); flex:1; }
+    .sst-leg .li { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+    .sst-leg .dot { width:9px; height:9px; border-radius:50%; }
+    .sst-vchecks { margin-top:16px; } .sst-vchecks h5 { font-size:12.5px; font-weight:700; color:var(--t); margin:0 0 8px; }
+    .sst-vchecks .ck { display:flex; align-items:flex-start; gap:7px; font-size:11.5px; color:var(--tm); margin-bottom:7px; }
+    .sst-vchecks .ck i { font-size:12px; margin-top:1px; } .sst-vchecks .ck.ok i { color:var(--g); } .sst-vchecks .ck.warn i { color:#f6a723; }
+    /* edit drawer */
+    .sst-drawer-ov { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1090; opacity:0; visibility:hidden; transition:opacity .2s; }
+    .sst-drawer-ov.show { opacity:1; visibility:visible; }
+    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1400px,96vw); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
+    .sst-drawer.show { transform:translateX(0); }
+    .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--b); }
+    .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
+    .sst-drawer-x { width:34px; height:34px; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-size:15px; color:var(--tm); }
+    .sst-drawer iframe { flex:1; width:100%; border:none; }
+  </style>
+
+  <div class="sst-wrap">
+    <div class="sst-head">
+      <div>
+        <div class="sst-title">Standard Payroll Structure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
+        <div class="sst-sub">Primary template for the candidate offer letter.</div>
+      </div>
+      <button type="button" class="btn btn-primary align-self-center" onclick="openSalaryEditDrawer()"><i class="fas fa-pen me-1" style="font-size:11px;"></i> Edit</button>
     </div>
-    <!--end::Card title-->
-    <!--begin::Action-->
-    <a href="{{ route('service_company.account.offerAmountChange',[encrypt(0)]) }}" class="btn btn-primary align-self-center" id="">Edit</a>
-    <!--ensd::Action-->
+
+    <div class="sst-meta">
+      <span class="mi"><i class="fas fa-hashtag"></i>Template ID: <b>TMPL-{{ str_pad(auth()->user()->company_id, 4, '0', STR_PAD_LEFT) }}</b></span>
+      <span class="mi"><i class="far fa-calendar"></i>Created By: <b>{{ ucwords(auth()->user()->name) }}</b></span>
+      <span class="mi"><i class="far fa-clock"></i>Last Updated: <b>{{ now()->format('d M Y') }}</b></span>
+    </div>
+
+    <div class="sst-layout">
+      <div class="sst-mainside">
+        <!-- Summary cards -->
+        <div class="sst-cards">
+          <div class="sst-card">
+            <div class="sst-card-l">Main Components (Must Total 100%)</div>
+            <div class="sst-card-v">{{ number_format($sstMainTotal, 2) }}%</div>
+            @if ($sstMainValid)
+              <span class="sst-card-note ok"><i class="fas fa-check-circle"></i>Total is exactly 100%</span>
+            @else
+              <span class="sst-card-note neutral"><i class="fas fa-info-circle"></i>Must be exactly 100%</span>
+            @endif
+          </div>
+          <div class="sst-card">
+            <div class="sst-card-l">Additional Components (Above 100%)</div>
+            <div class="sst-card-v p">{{ number_format($sstAddTotal, 2) }}%</div>
+            <span class="sst-card-note add"><i class="fas fa-plus"></i>Allowed above 100%</span>
+          </div>
+          <div class="sst-card">
+            <div class="sst-card-l">Overall Structure</div>
+            <div class="sst-card-v p">{{ number_format($sstOverall, 2) }}%</div>
+            <span class="sst-card-note neutral"><i class="fas fa-chart-bar"></i>Main + Additional</span>
+          </div>
+          <div class="sst-card valid">
+            <div class="sst-valid-row">
+              <div class="sst-valid-ic"><i class="fas fa-shield-alt"></i></div>
+              <div>
+                <div class="sst-card-l" style="color:#47be7d;margin-bottom:2px;">Validation Status</div>
+                <div class="sst-sub">{{ $sstMainValid ? 'Structure is valid and ready to use.' : 'Main components must total 100%.' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Components -->
+        <div class="sst-section">
+          <div class="sst-section-t">Main Components (Must Total 100%)</div>
+          <div class="sst-section-s">These are core components. Total percentage must be exactly 100%.</div>
+          <div style="overflow-x:auto;">
+            <table class="sst-table">
+              <thead><tr><th style="width:40px;">#</th><th>Component Name</th><th>View</th><th>Percentage (%)</th><th>Conditions</th><th>Monthly (Preview)</th><th>Annually (Preview)</th></tr></thead>
+              <tbody>
+                @forelse ($sstMain as $i => $c)
+                  <tr>
+                    <td class="sst-muted">{{ $i + 1 }}</td>
+                    <td><span class="sst-name">{{ $c->points }}</span><span class="sst-pill main">Main</span></td>
+                    <td><span class="sst-vchip">{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</span></td>
+                    <td><span class="sst-pct">{{ number_format($c->percentage, 2) }}</span> %</td>
+                    <td><span class="sst-vchip">{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</span></td>
+                    <td class="sst-muted">—</td><td class="sst-muted">—</td>
+                  </tr>
+                @empty
+                  <tr><td colspan="7" class="sst-muted" style="text-align:center;padding:24px;">No main components configured.</td></tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+          @if ($sstMain->count())
+            <div class="sst-foot-ok"><i class="fas {{ $sstMainValid ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>{{ $sstMainValid ? 'Total of main components is exactly 100.00%' : 'Total of main components is '.number_format($sstMainTotal,2).'%' }}</div>
+          @endif
+        </div>
+
+        <!-- Additional Components -->
+        <div class="sst-section">
+          <div class="sst-section-t">Additional Components (Above 100%) <span style="font-weight:500;color:var(--tm);font-size:12px;">- Optional</span></div>
+          <div class="sst-section-s">These components are additional and will be added on top of the main 100%.</div>
+          <div style="overflow-x:auto;">
+            <table class="sst-table">
+              <thead><tr><th style="width:40px;">#</th><th>Component Name</th><th>View</th><th>Percentage (%)</th><th>Conditions</th><th>Monthly (Preview)</th><th>Annually (Preview)</th></tr></thead>
+              <tbody>
+                @forelse ($sstAdd as $i => $c)
+                  <tr>
+                    <td class="sst-muted">{{ $i + 1 }}</td>
+                    <td><span class="sst-name">{{ $c->points }}</span><span class="sst-pill add">Additional</span></td>
+                    <td><span class="sst-vchip">{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</span></td>
+                    <td><span class="sst-pct">{{ number_format($c->percentage, 2) }}</span> %</td>
+                    <td><span class="sst-vchip">{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</span></td>
+                    <td class="sst-muted">—</td><td class="sst-muted">—</td>
+                  </tr>
+                @empty
+                  <tr><td colspan="7" class="sst-muted" style="text-align:center;padding:24px;">No additional components configured.</td></tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+          @if ($sstAdd->count())
+            <div class="sst-foot-ok" style="color:#7239ea;background:#f8f5ff;border-color:#e7defb;"><i class="fas fa-plus-circle"></i>Total additional components: {{ number_format($sstAddTotal, 2) }}% (Allowed above 100%)</div>
+          @endif
+        </div>
+
+        <!-- How it works -->
+        <div class="sst-help">
+          <div>
+            <h4><i class="fas fa-lightbulb" style="color:#f6a723;"></i> How it works?</h4>
+            <p>Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</p>
+          </div>
+          <div>
+            <h4>Examples</h4>
+            <div class="sst-ex">
+              <span class="chip">CTC Amount</span><span class="op">=</span>
+              <span class="chip">Main {{ number_format($sstMainTotal, 2) }}%</span><span class="op">+</span>
+              <span class="chip add">Additional {{ number_format($sstAddTotal, 2) }}%</span><span class="op">=</span>
+              <span class="chip">Total Cost to Company</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview sidebar -->
+      <div class="sst-preview">
+        <div class="sst-pv-title"><i class="fas fa-eye"></i>Preview Salary Structure</div>
+        <div class="sst-pv-sub">See how this structure calculates for a given amount.</div>
+        <div class="sst-pv-lbl">Enter Amount</div>
+        <div class="sst-pv-amt"><input type="text" id="sstvAmount" placeholder="Enter amount"><button type="button" class="sst-pv-calc" id="sstvCalc">Calculate</button></div>
+        <div class="sst-pv-lbl">View As</div>
+        <div class="sst-pv-toggle"><button type="button" class="on" data-vmode="monthly">Monthly View</button><button type="button" data-vmode="annual">Annual View</button></div>
+        <div class="sst-pv-box">
+          <div style="font-size:12.5px;font-weight:700;color:var(--p);margin-bottom:8px;" id="sstvHead">Breakup Preview (Monthly)</div>
+          <div class="sst-pv-row"><span>Main Components ({{ number_format($sstMainTotal,0) }}%)</span><span class="v" id="sstvMain">—</span></div>
+          <div class="sst-pv-row"><span>Additional Components ({{ number_format($sstAddTotal,2) }}%)</span><span class="v" id="sstvAdd">—</span></div>
+          <div class="sst-pv-row total"><span>Total Cost to Company</span><span class="v" id="sstvTotal">—</span></div>
+          <div class="sst-donut-wrap">
+            <svg width="80" height="80" viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eef2f5" stroke-width="6"></circle>
+              <circle id="sstvDonutMain" cx="21" cy="21" r="15.9155" fill="none" stroke="#16a34a" stroke-width="6" stroke-dasharray="80 20" stroke-dashoffset="25" transform="rotate(-90 21 21)"></circle>
+              <circle id="sstvDonutAdd" cx="21" cy="21" r="15.9155" fill="none" stroke="#7239ea" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="-55" transform="rotate(-90 21 21)"></circle>
+            </svg>
+            <div class="sst-leg">
+              <div class="li"><span class="dot" style="background:#16a34a"></span>Main ({{ number_format($sstMainTotal,0) }}%)<span style="margin-left:auto;font-weight:600;color:var(--t)" id="sstvLegMain">—</span></div>
+              <div class="li"><span class="dot" style="background:#7239ea"></span>Additional ({{ number_format($sstAddTotal,2) }}%)<span style="margin-left:auto;font-weight:600;color:var(--t)" id="sstvLegAdd">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sst-vchecks">
+          <h5>Validation Checks</h5>
+          <div class="ck {{ $sstMainValid ? 'ok' : 'warn' }}"><i class="fas {{ $sstMainValid ? 'fa-check-circle' : 'fa-exclamation-triangle' }}"></i><span>Main components total is exactly 100%</span></div>
+          <div class="ck ok"><i class="fas fa-check-circle"></i><span>All formulas are valid</span></div>
+          <div class="ck ok"><i class="fas fa-check-circle"></i><span>All required components have conditions</span></div>
+          <div class="ck warn"><i class="fas fa-exclamation-triangle"></i><span>Additional components exceed 100% (Allowed)</span></div>
+        </div>
+      </div>
+    </div>
   </div>
-  <!--end::Terms & Canditions header-->
-  <div class="card-body px-0 py-7"> 
-    <div class="row"  id="editoffercomponent">
-        <div class="col-lg-12 mb-7 view-terms"> </div>
+
+  <!-- Edit drawer (opens the redesigned edit page embedded, same page) -->
+  <div class="sst-drawer-ov" id="sstDrawerOv" onclick="closeSalaryEditDrawer()"></div>
+  <div class="sst-drawer" id="sstDrawer">
+    <div class="sst-drawer-h">
+      <span class="t">Edit Salary Template</span>
+      <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
-    <div class="row"  id="viewoffercomponent">
-      <div class="row">
-        <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
-            role="grid" aria-describedby="myTable_info"
-            style="width: 1270px;">
-            <thead>
-                <tr class="fw-bolder text-muted other_section {{ $section_other }}"
-                    role="row">
-                    <th class="sorting_disabled" style="width: 25%!important">Components
-                    </th>
-                    <th class="sorting_disabled"
-                        style="width:10% !important">View</th>
-                    <th class="sorting_disabled"
-                        style="width: 7% !important;">Percentage</th>
-                    <th class="sorting_disabled"
-                        style="width: 3% !important;">&nbsp;</th>
-                    <th class="sorting_disabled"
-                        style="width: 10% !important;">Condition</th>
-                    <th class="sorting_disabled change_text_first"
-                        style="width: 17% !important;">{{ $textShow }}</th>
-                    <th class="sorting_disabled"
-                        style="width:15% !important">Annually</th>
-                </tr>
-                <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}"
-                    role="row">
-                    <th class="sorting_disabled"
-                        style="width: 47% !important;">Components</th>
-                    <th class="sorting_disabled"
-                        style="width: 12% !important;">Percentage</th>
-                    <th class="sorting_disabled"
-                        style="width: 3% !important;">&nbsp;</th>
-                    <th class="sorting_disabled"
-                        style="width: 10% !important;">Condition</th>
-                    <th class="sorting_disabled change_text"
-                        style="width:15% !important">{{ $textShow }}</th>
-                </tr>
-            </thead>
-            <tbody>
-
-
-                @if (isset($OfferJobApplication) && count($OfferJobApplication) > 0)
-                    @foreach ($OfferJobApplication as $key=> $offer)
-                        @foreach ($offer['Basic_offer_points'] as $key => $basic)
-                            <tr class="other_section other_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_other }}"
-                                role="row">
-                                <td class="">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_points"
-                                        name="offer_point[]"
-                                        id="offer_point_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_poins }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class="">
-                                    <select &nbsp="" class="form-select form-select-solid basic_view" arial-label="Select  View" name="basic_view[]" id="basic_view_{{ $basic->id }}" data-id="{{ $basic->id }}"
-                                    data-offerid="{{ $basic->id }}"
-                                    style="width: 100px;display: initial; ">
-                                    <option value="0" {{ $basic->view_type == 0 ? 'selected' : '' }}> Annually </option>
-                                    <option value="1" {{ $basic->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                    <option value="2" {{ $basic->view_type == 2 ? 'selected' : '' }}> Both</option>
-                                    </select>
-                                </td>
-
-                                <td class="">
-
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid option_percentage"
-                                        name="option_percentage[]"
-                                        id="option_percentage_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_percentage }}"
-                                        placeholder="%">
-
-
-                                </td>
-                                <td class="" style="position: relative;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> </td>
-                                <td class="">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid option_salarymode"
-                                        arial-label="Select Annual Salary"
-                                        name="option_salarymode[]"
-                                        id="option_salarymode_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        style="width: 100px;display: initial; ">
-                                        <option value="0"
-                                            {{ $basic->basic_condition_s == 0 ? 'selected' : '' }}>
-                                            Amount </option>
-                                            @if($key>0)
-                                            <option value="1"
-                                            {{ $basic->basic_condition_s == 1 ? 'selected' : '' }}>
-                                            Basic</option>
-                                            @endif
-                                    </select>
-                                </td>
-                                <td class="">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_monthly"
-                                        name="offer_monthly[]"
-                                        id="offer_monthly_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_monthly }}"
-                                        placeholder="0.00">
-                                </td>
-                                <td class="">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_yearly {{ $key > 0 ? 'other_salary_get' : 'basic_salary_get' }}"
-                                        name="offer_yearly[]"
-                                        id="offer_yearly_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_yearly }}"
-                                        placeholder="0.00">
-                                </td>
-                                <td style="float:right">
-                                    <button type="button"
-                                        class="btn btn-light-danger font-weight-bolder remove_points"
-                                        {{ $key > 0 ? '' : 'disabled' }}>
-                                        <span
-                                            class="svg-icon svg-icon svg-icon-2x">
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                width="24px"
-                                                height="24px"
-                                                viewBox="0 0 24 24"
-                                                version="1.1">
-                                                <g stroke="none"
-                                                    stroke-width="1"
-                                                    fill="none"
-                                                    fill-rule="evenodd">
-                                                    <rect fill="#000000"
-                                                        x="4" y="11"
-                                                        width="16"
-                                                        height="2"
-                                                        rx="1">
-                                                    </rect>
-                                                </g>
-                                            </svg>
-                                        </span> Delete </button>
-                                </td>
-                            </tr>
-
-                            <tr class="hourly_section hourly_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_hourly }}"
-                                role="row">
-                                <td class="">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_point_hourly"
-                                        name="offer_point_hourly[]"
-                                        id="offer_point_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_poins }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class="">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid option_percentage_hourly"
-                                        name="option_percentage_hourly[]"
-                                        id="option_percentage_hourly{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_percentage }}"
-                                        placeholder="%">
-
-                                   
-                                </td>
-                                <td class="">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid option_salarymode_hourly"
-                                        arial-label="Select Annual Salary"
-                                        name="option_salarymode_hourly[]"
-                                        id="option_salarymode_hourly{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        style="width: 100px;display: initial; ">
-                                        <option value="0"
-                                            {{ $basic->basic_condition_s == 0 ? 'selected' : '' }}>
-                                            Amount </option>
-                                        <option value="1"
-                                            {{ $basic->basic_condition_s == 1 ? 'selected' : '' }}>
-                                            Basic</option>
-                                    </select>
-                                </td>
-                                <td class="hourly_section">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_hourly {{ $key > 0 ? 'other_salary_get_hourly' : 'basic_salary_get_hourly' }}"
-                                        name="offer_hourly[]"
-                                        id="offer_hourly_{{ $basic->id }}"
-                                        data-id="{{ $basic->id }}"
-                                        data-offerid="{{ $basic->id }}"
-                                        value="{{ $basic->basic_yearly }}"
-                                        placeholder="0.00">
-                                </td>
-                                
-                            </tr>
-                        @endforeach
-                    @endforeach
-                @else
-                    @if ($offer_points)
-                        @foreach ($offer_points as $key => $value)
-                            <tr class="other_section other_section_row row-template {{ $key > 1 ? 'remove_row' : '' }} {{ $section_other }}"
-                                role="row">
-                                <td class="" style="width: 25%!important">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_points"
-                                        name="offer_point[]"
-                                        id="offer_point_{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="{{ $value->points }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class="" style="width:10% !important">
-                                    <select &nbsp="" class="form-select form-select-solid basic_view" arial-label="Select  View" name="basic_view[]" id="basic_view_{{ $value->id }}" data-id="{{ $value->id }}"
-                                    data-offerid="{{ $value->id }}"
-                                    style="width: 100%;display: initial; ">
-                                    <option value="0" {{ $value->view_type == 0 ? 'selected' : '' }}> Annually </option>
-                                    <option value="1" {{ $value->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                    <option value="2" {{ $value->view_type == 2 ? 'selected' : '' }}> Both</option>
-                                    </select>
-                                </td>
-
-                                <td class="" style="width:7% !important">
-
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid option_percentage"
-                                        name="option_percentage[]"
-                                        id="option_percentage_{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="{{ $value->percentage }}"
-                                        placeholder="%">
-                                </td>
-                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> </td>
-                                <td class="" style="width:10% !important">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid option_salarymode"
-                                        arial-label="Select Annual Salary"
-                                        name="option_salarymode[]"
-                                        id="option_salarymode_{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        style="width: 100%;display: initial; ">
-                                        <option value="0"
-                                            selected="selected">Amount
-                                        </option>
-                                         @if($key>0)
-                                           <option value="1">Basic</option>
-                                         @endif
-                                    </select>
-                                </td>
-                                <td class="" style="width:17% !important">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_monthly"
-                                        name="offer_monthly[]"
-                                        id="offer_monthly_{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="" placeholder="0.00">
-                                </td>
-                                <td class="" style="width:15% !important">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_yearly {{ $key > 1 ? 'other_salary_get' : 'basic_salary_get' }}"
-                                        name="offer_yearly[]"
-                                        id="offer_yearly_{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="" placeholder="0.00">
-                                </td>
-                               
-                                
-                            </tr>
-                         @endforeach
-                    @endif
-                    @if ($offer_point_hourly)
-                        @foreach ($offer_point_hourly as $key=> $value)
-                            <tr class="hourly_section hourly_section_row row-template {{ $key > 1 ? 'remove_row' : '' }} {{ $section_hourly }}"
-                                role="row">
-                                <td class=""
-                                    style="width: 47% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_point_hourly"
-                                        name="offer_point_hourly[]"
-                                        id="offer_point_hourly{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="{{ $value->points }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class=""
-                                    style="width: 12% !important;">
-
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid option_percentage_hourly"
-                                        name="option_percentage_hourly[]"
-                                        id="option_percentage_hourly{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="{{ $value->percentage }}"
-                                        placeholder="%">
-                                </td>
-                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
-                                </td>
-                                <td class=""
-                                    style="width: 10% !important;">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid option_salarymode_hourly"
-                                        arial-label="Select Annual Salary"
-                                        name="option_salarymode_hourly[]"
-                                        id="option_salarymode_hourly{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        style="width: 100%;display: initial; ">
-                                        <option value="0"
-                                            selected="selected">Amount
-                                        </option>
-                                        @if($key>0)
-                                        <option value="1">Basic
-                                        </option>
-                                        @endif
-                                    </select>
-                                </td>
-                                <td class=""
-                                    style="width: 15% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid offer_hourly {{ $key > 1 ? 'other_salary_get_hourly' : 'basic_salary_get_hourly' }}"
-                                        name="offer_hourly[]"
-                                        id="offer_hourly{{ $value->id }}"
-                                        data-id="{{ $value->id }}"
-                                        data-offerid="{{ $value->id }}"
-                                        value="" placeholder="0.00">
-                                </td>
-                               
-                                
-                            </tr>
-                        @endforeach
-                    @endif
-
-                @endif
-
-
-            </tbody>
-
-
-
-        </table>
-    </div>
-
-    <div class="row">
-        <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
-            role="grid" aria-describedby="bonusList_info"
-            style="width: 1270px;">
-            <thead>
-                <tr class="other_section other_section_row row-template {{ $section_other }}">
-                    <th colspan="8" class="sorting_disabled"
-                        style="width: 102px;">Other Component</th>
-                  
-                </tr>
-                <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}">
-                    <th colspan="7" class="sorting_disabled other_text"
-                        style="width: 102px;">Other Component</th>
-                </tr>
-            </thead>
-
-
-            <tbody>
-                @if(isset($offer_point_other) && count($offer_point_other) > 0)
-                        @foreach ($offer_point_other as $offer)
-                            <tr class="other_section other_section_row row-template remove_row {{ $section_other }}"
-                                role="row">
-                                <td class="" style="width: 25% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid bonus_points"
-                                        name="bonus_points[]"
-                                        id="bonus_points_{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value="{{ $offer->points }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class="" style="width: 10% !important;">
-                                    <select &nbsp="" class="form-select form-select-solid bonus_view" arial-label="Select  View" name="bonus_view[]" id="bonus_view_{{ $offer->id }}" data-id="{{ $offer->id }}"
-                                    data-offerid="{{ $offer->id }}"
-                                    style="width: 100%;display: initial; ">
-                                    <option value="0" {{ @$offer->view_type == 0 ? 'selected' : '' }}> Annually </option>
-                                    <option value="1" {{ @$offer->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                    <option value="2" {{ @$offer->view_type == 2 ? 'selected' : '' }}> Both</option>
-                                    </select>
-                                </td>
-
-
-                                <td class="" style="width: 7% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid bonus_option_percentage"
-                                        name="bonus_option_percentage[]"
-                                        id="bonus_option_percentage{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value="{{ $offer->percentage }}"
-                                        placeholder="%">
-
-                                </td>
-                                <td class="" style="position: relative; width: 3% !important;">
-                                     <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
-                                </td>
-                                <td class="" style="width: 10% !important;">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid bonus_option_salarymode"
-                                        arial-label="Select Annual Salary"
-                                        name="bonus_option_salarymode[]"
-                                        id="bonus_option_salarymode_{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        style="width: 100%;display: initial; ">
-                                        <option value="0"
-                                            {{ $offer->condition_check == 0 ? 'selected' : '' }}>
-                                            Amount </option>
-                                        <option value="1"
-                                            {{ $offer->condition_check == 1 ? 'selected' : '' }}>
-                                            Basic</option>
-                                    </select>
-                                </td>
-                                <td class="" style="width: 17% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid bonus_offer_monthly"
-                                        name="bonus_offer_monthly[]"
-                                        id="bonus_offer_monthly_{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value=""
-                                        placeholder="0.00">
-                                </td>
-                                <td class="" style="width: 15% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid bonus_offer_yearly"
-                                        name="bonus_offer_yearly[]"
-                                        id="bonus_offer_yearly{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value=""
-                                        placeholder="0.00">
-                                </td>
-                               
-                            </tr>
-                        @endforeach
-                @endif
-                @if(isset($offer_point_other_hourly) && count($offer_point_other_hourly) > 0)
-                        @foreach ($offer_point_other_hourly as $offer)
-                            <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}"
-                                role="row">
-                                <td class=""
-                                    style="width: 47% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid bonus_point_hourly"
-                                        name="bonus_point_hourly[]"
-                                        id="bonus_points_hourly{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value="{{ $offer->points }}"
-                                        placeholder="Enter Point">
-                                </td>
-                                <td class=""
-                                    style="width: 12% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-select-solid bonus_option_percentage_hourly"
-                                        name="bonus_option_percentage_hourly[]"
-                                        id="bonus_option_percentage_hourly{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value="{{ $offer->percentage }}"
-                                        placeholder="%">
-                                </td>
-                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
-                                </td>
-                                <td class=""
-                                    style="width: 10% !important;">
-                                    <select &nbsp=""
-                                        class="form-select form-select-solid bonus_option_salarymode_hourly"
-                                        arial-label="Select Annual Salary"
-                                        name="bonus_option_salarymode_hourly[]"
-                                        id="bonus_option_salarymode_hourly{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        style="width: 100px;display: initial; ">
-                                        <option value="0"
-                                            {{ $offer->condition_check == 0 ? 'selected' : '' }}>
-                                            CTC </option>
-                                        <option value="1"
-                                            {{ $offer->condition_check == 1 ? 'selected' : '' }}>
-                                            Basic</option>
-                                    </select>
-                                </td>
-                                <td class=""
-                                    style="width: 15% !important;">
-                                    <input &nbsp="" type="text"
-                                        class="form-control form-control-solid bonus_offer_hourly"
-                                        name="bonus_offer_hourly[]"
-                                        id="bonus_offer_hourly{{ $offer->id }}"
-                                        data-id="{{ $offer->id }}"
-                                        data-offerid="{{ $offer->id }}"
-                                        value=""
-                                        placeholder="0.00">
-                                </td>
-                                
-                            </tr>
-                        @endforeach
-                @endif
-
-            </tbody>
-           
-        </table>
-    </div>
-
-       </div>
-
+    <iframe id="sstDrawerFrame" src="about:blank" title="Edit Salary Template"></iframe>
   </div>
+
+  <script>
+    (function () {
+      function num(v){ v = parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(v) ? 0 : v; }
+      function inr(n){ try { return '₹ ' + Math.round(n).toLocaleString('en-IN'); } catch(e){ return '₹ ' + Math.round(n); } }
+      function setT(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+      var mainPct = {{ $sstMainTotal }}, addPct = {{ $sstAddTotal }}, vmode='monthly';
+      function pv(){
+        var amt = num((document.getElementById('sstvAmount')||{}).value);
+        var base = (vmode==='monthly') ? amt/12 : amt;
+        var m = base*mainPct/100, a = base*addPct/100, tot = m+a;
+        setT('sstvHead','Breakup Preview ('+(vmode==='monthly'?'Monthly':'Annual')+')');
+        if (amt>0){ setT('sstvMain',inr(m)); setT('sstvAdd',inr(a)); setT('sstvTotal',inr(tot)); setT('sstvLegMain',inr(m)); setT('sstvLegAdd',inr(a)); }
+        else { ['sstvMain','sstvAdd','sstvTotal','sstvLegMain','sstvLegAdd'].forEach(function(id){ setT(id,'—'); }); }
+        var t=mainPct+addPct, mf=t>0?(mainPct/t)*100:100, af=100-mf;
+        var dm=document.getElementById('sstvDonutMain'), da=document.getElementById('sstvDonutAdd');
+        if(dm){ dm.setAttribute('stroke-dasharray', mf.toFixed(2)+' '+(100-mf).toFixed(2)); dm.setAttribute('stroke-dashoffset','25'); }
+        if(da){ da.setAttribute('stroke-dasharray', af.toFixed(2)+' '+(100-af).toFixed(2)); da.setAttribute('stroke-dashoffset',(25-mf).toFixed(2)); }
+      }
+      document.addEventListener('input', function(e){ if(e.target && e.target.id==='sstvAmount') pv(); });
+      document.addEventListener('click', function(e){
+        var t = e.target.closest ? e.target.closest('[data-vmode]') : null;
+        if(t){ vmode=t.getAttribute('data-vmode'); document.querySelectorAll('.sst-pv-toggle button').forEach(function(b){ b.classList.toggle('on', b===t); }); pv(); }
+        if(e.target.id==='sstvCalc') pv();
+      });
+      pv();
+    })();
+    function openSalaryEditDrawer(){
+      var f = document.getElementById('sstDrawerFrame');
+      if (f && (!f.src || f.src === 'about:blank')) f.src = "{{ route('service_company.account.offerAmountChange', [encrypt(0)]) }}?embed=1";
+      document.getElementById('sstDrawer').classList.add('show');
+      document.getElementById('sstDrawerOv').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSalaryEditDrawer(){
+      document.getElementById('sstDrawer').classList.remove('show');
+      document.getElementById('sstDrawerOv').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  </script>
 </div>
 <!--end::Offer components-->
 

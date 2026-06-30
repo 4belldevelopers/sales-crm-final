@@ -1239,7 +1239,7 @@
                                 </label>
                             </div>
                             <div class="radio-card">
-                                <input type="radio" name="interview_result" value="feedback_pending" id="result_pending" {{ ($myResult == 'feedback_pending') ? 'checked' : '' }}>
+                                <input type="radio" name="interview_result" value="feedback_pending" id="result_pending" {{ (empty($myResult) || $myResult == 'feedback_pending') ? 'checked' : '' }}>
                                 <label for="result_pending">
                                     <span class="radio-icon" style="color: #64748b;"><i class="fas fa-clock"></i></span>
                                     <span class="radio-circle"></span>

@@ -204,6 +204,34 @@ use Carbon\Carbon;
           .cd-tabwrap { overflow-x:auto; padding:8px 24px 22px; }
           .cd-tabwrap > .card-body { padding-left:0 !important; padding-right:0 !important; }
           .cd-tabwrap table { margin-bottom:0; }
+          /* Contacts tab (consultancy data-table look) */
+          .cd-tabcard-actions { display:flex; align-items:center; gap:10px; }
+          .cd-search { position:relative; }
+          .cd-search i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#b5b5c3; font-size:12px; }
+          .cd-search input { padding:8px 14px 8px 34px; border:1px solid #e4e6ef; border-radius:8px; font-size:13px; outline:none; width:200px; font-family:inherit; }
+          .cd-contacts .data-table { width:100%; border-collapse:collapse; min-width:760px; }
+          .cd-contacts .data-table thead tr { background:#f8f9fa; }
+          .cd-contacts .data-table th { padding:12px 16px; text-align:left; font-size:11px; font-weight:600; color:#7e8299; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; border:none !important; }
+          .cd-contacts .data-table th i { font-size:9px; margin-left:4px; color:#b5b5c3; }
+          .cd-contacts .data-table td { padding:14px 16px; font-size:13px; color:#3f4254; border-bottom:1px solid #f5f8fa; vertical-align:middle; }
+          .cd-contacts .data-table tr:hover td { background:#fafbfc; }
+          .cd-contacts .table-checkbox { width:16px; height:16px; accent-color:#009ef7; cursor:pointer; }
+          .cd-contacts .contact-cell { display:flex; align-items:center; gap:12px; }
+          .cd-contacts .contact-avatar-table { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; color:#fff; flex-shrink:0; }
+          .cd-contacts .contact-name-table { font-size:14px; font-weight:600; color:#181c32; }
+          .cd-contacts .contact-primary-badge { display:inline-flex; align-items:center; gap:3px; background:#e8fff3; color:#47be7d; font-size:10px; font-weight:600; padding:2px 8px; border-radius:50px; margin-top:2px; }
+          .cd-contacts .contact-primary-badge i { font-size:8px; }
+          .cd-contacts .email-cell { color:#3f4254; font-size:13px; }
+          .cd-contacts .email-cell:hover { color:#009ef7; }
+          .cd-contacts .phone-cell { display:flex; align-items:center; gap:8px; font-size:13px; color:#3f4254; }
+          .cd-contacts .phone-digits { font-size:13px; color:#3f4254; font-weight:500; }
+          .cd-contacts .status-badge-table { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 12px; border-radius:50px; }
+          .cd-contacts .status-badge-table.active { background:#e8fff3; color:#47be7d; }
+          .cd-contacts .status-badge-table.inactive { background:#f5f8fa; color:#a1a5b7; }
+          .cd-contacts .status-badge-table i { font-size:6px; }
+          .cd-contacts .action-btns { display:flex; align-items:center; gap:6px; }
+          .cd-contacts .action-btn-table { width:32px; height:32px; border-radius:6px; border:1px solid #e4e6ef; background:#fff; color:#7e8299; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; font-size:12px; text-decoration:none; }
+          .cd-contacts .action-btn-table:hover { border-color:#009ef7; color:#009ef7; background:#f1faff; }
         </style>
         <!--begin::Tabs-->
         <div class="card card-custom mx-2">
@@ -313,47 +341,33 @@ use Carbon\Carbon;
                         </div>
                     </div>
                     <div class="tab-pane" id="contacts" role="tabpanel">
-                        <!--begin::Contacts header-->
-                        {{-- <div class="card-header cursor-pointer px-0">
-                          <!--begin::Card title-->
-                          <div class="card-title m-0">
-                            <h3 class="fw-bolder m-0">Contact List</h3>
-                          </div>
-                          <!--end::Card title-->
-                          <!--begin::Action-->
-                          <!--<a href="javascript:void(0);" class="btn btn-primary align-self-center">Add Contact</a>-->
-                          <!--end::Action-->
-                        </div> --}}
-                        <!--end::Contacts header-->
-                        <!--begin::Contacts Content-->
-                        <div class="card-body px-0 py-7">
-                            <!--begin::Table-->
-                            <table class="table align-middle table-row-dashed fs-6 gy-5" id="contactList">
-                                <!--begin::Table head-->
-                                <thead>
-                                    <!--begin::Table row-->
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="w-10px pe-0">
-                                            <div
-                                                class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                                    data-kt-check-target="#kt_table_users .form-check-input2"
-                                                    value="1" />
-                                            </div>
-                                        </th>
-                                        <th class="min-w-150px">Name</th>
-                                        {{-- <th class="min-w-150px">Designation</th> --}}
-                                        <th class="min-w-150px">Contacts</th>
-                                        <th class="min-w-15px">Status</th>
-                                    </tr>
-                                    <!--end::Table row-->
-                                </thead>
-                                <!--end::Table head-->
-
-                            </table>
-                            <!--end::Table-->
+                        <div class="cd-tabcard cd-contacts">
+                            <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                                <div>
+                                    <div class="cd-tabcard-title">Contacts</div>
+                                    <div class="cd-tabcard-sub">Manage and view all contacts associated with this client.</div>
+                                </div>
+                                <div class="cd-tabcard-actions">
+                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" placeholder="Search contacts..." /></div>
+                                </div>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="data-table" id="contactList">
+                                    <thead>
+                                        <tr>
+                                            <th><input type="checkbox" class="table-checkbox" /></th>
+                                            <th>Contact <i class="fas fa-sort"></i></th>
+                                            <th>Designation <i class="fas fa-sort"></i></th>
+                                            <th>Email <i class="fas fa-sort"></i></th>
+                                            <th>Phone <i class="fas fa-sort"></i></th>
+                                            <th>Status <i class="fas fa-sort"></i></th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <!--end::Contacts Content-->
                     </div>
                     <!--end::Contacts Content-->
 
@@ -2007,31 +2021,14 @@ use Carbon\Carbon;
             $('[data-toggle="tooltip1"]').tooltip();
             $('[data-toggle="tooltip2"]').tooltip();
         },
-        columns: [{
-                data: 'chkbox',
-                name: 'chkbox',
-                searchable: false,
-                orderable: false
-            },
-            {
-                data: 'Name',
-                name: 'Name',
-                searchable: false,
-                orderable: false
-            },
-            // { data: 'Role', name: 'Role', searchable : false, orderable : false},
-            {
-                data: 'Contacts',
-                name: 'Contacts',
-                searchable: false,
-                orderable: false
-            },
-            {
-                data: 'Status',
-                name: 'Status',
-                searchable: false,
-                orderable: false
-            }
+        columns: [
+            { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false },
+            { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
+            { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
+            { data: 'Email', name: 'Email', searchable: false, orderable: false },
+            { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
+            { data: 'Status', name: 'Status', searchable: false, orderable: false },
+            { data: 'Actions', name: 'Actions', searchable: false, orderable: false }
         ]
     });
     new $.fn.dataTable.FixedHeader(table);
