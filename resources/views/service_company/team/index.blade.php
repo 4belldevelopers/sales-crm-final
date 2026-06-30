@@ -6,100 +6,38 @@
         }
     </style>
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-    {{-- Icons: Metronic Keenicons (ki-outline) — loaded globally by the layout's
-         plugins.bundle.css. No external icon pack on this page (UI_UX_STANDARDS §9.11). --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
         @media only screen and (min-width: 900px) and (max-width: 2560px) {
-
-            .table td,
-            .table th,
-            .table tr {
-                width: max-content !important;
-            }
-
-            .table> :not(caption)>*>* {
-                padding: 0rem;
-            }
-
-            td:nth-child(n+2),
-            th:nth-child(n+2) {
-                width: revert !important;
-            }
+            .table td, .table th, .table tr { width: max-content !important; }
+            .table> :not(caption)>*>* { padding: 0rem; }
+            td:nth-child(n+2), th:nth-child(n+2) { width: revert !important; }
         }
-
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesJob {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesJob {
-                width: 1200px;
-            }
-        }
-
-
-        #load_jobs tbody tr {
-            height: 82px;
-            /* Adjust the height as per your requirement */
-            position: relative;
-        }
+        @media only screen and (min-width: 1024px) and (max-width: 1440px) { #kt_activitiesJob { width: 1025px; } }
+        @media only screen and (min-width: 1440px) and (max-width: 2560px) { #kt_activitiesJob { width: 1200px; } }
+        #load_jobs tbody tr { height: 82px; position: relative; }
     </style>
 
-    {{-- Redesigned team list — matches the new Team management mockup.
-         Font capped at 14px, Poppins, flat icon-based design per UI_UX_STANDARDS. --}}
     <style>
-        :root {
-            /* Colours map to Metronic theme tokens (--bs-*) with hex fallbacks, per UI_UX_STANDARDS §1/§8. */
-            --team-primary: var(--bs-primary, #009ef7);
-            --team-primary-active: var(--bs-primary-active, #0095e8);
-            --team-primary-soft: var(--bs-primary-light, #eef2ff);
-            --team-border: var(--bs-border-color, #eef0f4);
-            --team-text: var(--bs-gray-900, #1e2129);
-            --team-muted: var(--bs-gray-600, #7c8398);
-            --team-bg: var(--bs-gray-100, #f7f8fb);
-            /* Semantic accents */
-            --team-blue: var(--bs-primary, #3b82f6);
-            --team-blue-soft: var(--bs-primary-light, #eaf1ff);
-            --team-success: var(--bs-success, #12b76a);
-            --team-success-soft: var(--bs-success-light, #e7f8f0);
-            --team-warning: var(--bs-warning, #f79009);
-            --team-warning-soft: var(--bs-warning-light, #fff4e5);
-            --team-danger: var(--bs-danger, #f04438);
-            --team-danger-soft: var(--bs-danger-light, #fdecec);
-            --team-info: var(--bs-info, #7c5cfc);
-            --team-info-soft: var(--bs-info-light, #f1ecff);
-            --team-gray-soft: var(--bs-gray-200, #f1f3f7);
-            --team-gray-dot: var(--bs-gray-400, #c2c7d2);
-            /* Type scale — 14px ceiling (UI_UX_STANDARDS §2) */
-            --fs-page-title: 14px;
-            --fs-section: 13px;
-            --fs-body: 13px;
-            --fs-label: 12px;
-            --fs-meta: 11px;
-            --fs-micro: 10.5px;
-        }
-
         #kt_content_container,
         #kt_toolbar_container {
             font-family: 'Poppins', sans-serif;
-            color: var(--team-text);
+            color: #1e2129;
         }
 
         /* ---------- Header ---------- */
         #kt_toolbar { background: transparent; }
         .team-page-title {
-            font-size: var(--fs-page-title);
+            font-size: 22px;
             font-weight: 700;
-            color: var(--team-text);
+            color: #1e2129;
             margin: 0;
             line-height: 1.2;
         }
         .team-page-subtitle {
-            font-size: var(--fs-label);
-            color: var(--team-muted);
+            font-size: 13px;
+            color: #7c8398;
             margin-top: 2px;
         }
         .team-header-actions { gap: 10px; }
@@ -107,24 +45,24 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            font-size: var(--fs-section);
+            font-size: 13px;
             font-weight: 600;
-            padding: 9px 16px;
+            padding: 9px 18px;
             border-radius: 9px;
-            border: 1px solid var(--team-border);
-            background: var(--bs-body-bg, #fff);
-            color: var(--team-text);
+            border: 1px solid #eef0f4;
+            background: #fff;
+            color: #1e2129;
             transition: all .15s ease;
             white-space: nowrap;
         }
-        .team-btn i { font-size: var(--fs-section); }
-        .team-btn-light:hover { background: var(--team-gray-soft); color: var(--team-text); }
+        .team-btn i { font-size: 14px; }
+        .team-btn-light:hover { background: #f1f3f7; color: #1e2129; }
         .team-btn-primary {
-            background: var(--team-primary);
-            border-color: var(--team-primary);
-            color: var(--bs-primary-inverse, #fff);
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
         }
-        .team-btn-primary:hover { background: var(--team-primary-active); color: var(--bs-primary-inverse, #fff); }
+        .team-btn-primary:hover { background: #4f46e5; color: #fff; }
 
         /* ---------- Stat cards ---------- */
         .team-stats-row {
@@ -134,8 +72,8 @@
             margin-bottom: 18px;
         }
         .team-stat-card {
-            background: var(--bs-card-bg, #fff);
-            border: 1px solid var(--team-border);
+            background: #fff;
+            border: 1px solid #eef0f4;
             border-radius: 14px;
             padding: 18px 20px;
             display: flex;
@@ -149,21 +87,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: var(--fs-page-title);
+            font-size: 20px;
             flex-shrink: 0;
         }
-        .ico-blue   { background: var(--team-blue-soft); color: var(--team-blue); }
-        .ico-green  { background: var(--team-success-soft); color: var(--team-success); }
-        .ico-amber  { background: var(--team-warning-soft); color: var(--team-warning); }
-        .ico-purple { background: var(--team-info-soft); color: var(--team-info); }
-        .team-stat-label { font-size: var(--fs-label); color: var(--team-muted); margin-bottom: 2px; }
-        .team-stat-value { font-size: var(--fs-page-title); font-weight: 700; color: var(--team-text); line-height: 1; }
-        .team-stat-sub { font-size: var(--fs-meta); color: var(--team-muted); margin-top: 5px; }
+        .ico-blue   { background: #eaf1ff; color: #3b82f6; }
+        .ico-green  { background: #e7f8f0; color: #12b76a; }
+        .ico-amber  { background: #fff4e5; color: #f79009; }
+        .ico-purple { background: #f1ecff; color: #7c5cfc; }
+        .team-stat-label { font-size: 12px; color: #7c8398; margin-bottom: 2px; }
+        .team-stat-value { font-size: 24px; font-weight: 700; color: #1e2129; line-height: 1; }
+        .team-stat-sub { font-size: 11px; color: #7c8398; margin-top: 5px; }
 
         /* ---------- Main card ---------- */
         .team-main-card {
-            background: var(--bs-card-bg, #fff);
-            border: 1px solid var(--team-border);
+            background: #fff;
+            border: 1px solid #eef0f4;
             border-radius: 14px;
             overflow: hidden;
         }
@@ -173,19 +111,19 @@
             display: flex;
             gap: 26px;
             padding: 0 22px;
-            border-bottom: 1px solid var(--team-border);
+            border-bottom: 1px solid #eef0f4;
         }
         .team-tab {
-            font-size: var(--fs-section);
+            font-size: 14px;
             font-weight: 600;
-            color: var(--team-muted);
+            color: #7c8398;
             padding: 16px 2px;
             border-bottom: 2px solid transparent;
             cursor: pointer;
             white-space: nowrap;
         }
-        .team-tab:hover { color: var(--team-text); }
-        .team-tab.active { color: var(--team-primary); border-bottom-color: var(--team-primary); }
+        .team-tab:hover { color: #1e2129; }
+        .team-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
 
         /* ---------- Filter bar ---------- */
         .team-filter-bar {
@@ -205,33 +143,33 @@
             right: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--team-muted);
-            font-size: var(--fs-section);
+            color: #7c8398;
+            font-size: 14px;
         }
         .team-search input {
             width: 100%;
             height: 40px;
-            border: 1px solid var(--team-border);
+            border: 1px solid #eef0f4;
             border-radius: 9px;
             padding: 0 38px 0 14px;
-            font-size: var(--fs-section);
-            background: var(--bs-body-bg, #fff);
-            color: var(--team-text);
+            font-size: 13px;
+            background: #fff;
+            color: #1e2129;
         }
         .team-select {
             height: 40px;
-            border: 1px solid var(--team-border);
+            border: 1px solid #eef0f4;
             border-radius: 9px;
             padding: 0 32px 0 13px;
-            font-size: var(--fs-section);
-            color: var(--team-text);
-            background: var(--bs-body-bg, #fff) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 11px center;
+            font-size: 13px;
+            color: #1e2129;
+            background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 11px center;
             -webkit-appearance: none;
             appearance: none;
             cursor: pointer;
         }
-        .team-sort-label { font-size: var(--fs-section); color: var(--team-muted); white-space: nowrap; }
-        .team-sort-label b { color: var(--team-text); font-weight: 600; }
+        .team-sort-label { font-size: 13px; color: #7c8398; white-space: nowrap; }
+        .team-sort-label b { color: #1e2129; font-weight: 600; }
 
         /* ---------- Bulk actions ---------- */
         .team-bulk-row {
@@ -240,59 +178,59 @@
             gap: 14px;
             padding: 10px 0;
         }
-        .team-bulk-count { font-size: var(--fs-section); color: var(--team-muted); }
+        .team-bulk-count { font-size: 13px; color: #7c8398; }
         .team-bulk-btn {
-            font-size: var(--fs-section);
+            font-size: 13px;
             font-weight: 600;
-            color: var(--team-muted);
-            border: 1px solid var(--team-border);
+            color: #7c8398;
+            border: 1px solid #eef0f4;
             border-radius: 8px;
             padding: 7px 13px;
-            background: var(--bs-body-bg, #fff);
+            background: #fff;
         }
 
         /* ---------- Table ---------- */
         .team-table { width: 100%; margin: 0; }
         .team-table thead th {
-            font-size: var(--fs-label);
+            font-size: 12px;
             font-weight: 600;
             text-transform: none;
-            color: var(--team-muted);
-            border-bottom: 1px solid var(--team-border);
+            color: #7c8398;
+            border-bottom: 1px solid #eef0f4;
             padding: 12px 10px;
-            background: var(--bs-gray-100, #fbfbfd);
+            background: #fbfbfd;
             position: sticky;
             top: 0;
             z-index: 10;
         }
         .team-table tbody td {
             padding: 14px 10px;
-            border-bottom: 1px solid var(--team-border);
+            border-bottom: 1px solid #eef0f4;
             vertical-align: middle;
-            font-size: var(--fs-body);
+            font-size: 13px;
         }
-        .team-table tbody tr:hover { background: var(--bs-gray-100, #fafbff); }
+        .team-table tbody tr:hover { background: #fafbff; }
         .team-avatar {
             width: 40px; height: 40px;
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 600; font-size: var(--fs-page-title);
+            font-weight: 600; font-size: 14px;
             overflow: hidden; flex-shrink: 0;
         }
         .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .team-member-name { font-size: var(--fs-body); font-weight: 600; color: var(--team-text); }
-        .team-member-role { font-size: var(--fs-label); color: var(--team-muted); }
-        .team-member-mail { font-size: var(--fs-label); color: var(--team-muted); }
+        .team-member-name { font-size: 13px; font-weight: 600; color: #1e2129; }
+        .team-member-role { font-size: 12px; color: #7c8398; }
+        .team-member-mail { font-size: 12px; color: #7c8398; }
 
-        .team-rank-badge { font-size: var(--fs-page-title); font-weight: 700; color: var(--team-text); }
-        .team-rank-month { font-size: var(--fs-meta); color: var(--team-muted); }
+        .team-rank-badge { font-size: 14px; font-weight: 700; color: #1e2129; }
+        .team-rank-month { font-size: 11px; color: #7c8398; }
         .team-score-link {
             display: inline-block;
             margin-top: 4px;
-            font-size: var(--fs-meta);
+            font-size: 11px;
             font-weight: 600;
-            color: var(--team-success);
-            background: var(--team-success-soft);
+            color: #12b76a;
+            background: #e7f8f0;
             border-radius: 6px;
             padding: 2px 8px;
             cursor: pointer;
@@ -300,76 +238,76 @@
 
         .team-workload { display: flex; gap: 22px; }
         .team-wl-item { display: flex; flex-direction: column; gap: 2px; }
-        .team-wl-num { font-size: var(--fs-body); font-weight: 700; color: var(--team-text); display: flex; align-items: center; gap: 5px; }
-        .team-wl-num i { font-size: var(--fs-label); }
-        .team-wl-label { font-size: var(--fs-meta); color: var(--team-muted); }
-        .wl-blue i { color: var(--team-blue); }
-        .wl-purple i { color: var(--team-info); }
-        .wl-green i { color: var(--team-success); }
+        .team-wl-num { font-size: 13px; font-weight: 700; color: #1e2129; display: flex; align-items: center; gap: 5px; }
+        .team-wl-num i { font-size: 12px; }
+        .team-wl-label { font-size: 11px; color: #7c8398; }
+        .wl-blue i { color: #3b82f6; }
+        .wl-purple i { color: #7c5cfc; }
+        .wl-green i { color: #12b76a; }
 
         .team-role-pill {
             display: inline-block;
-            font-size: var(--fs-meta);
+            font-size: 11px;
             font-weight: 600;
             border-radius: 7px;
             padding: 4px 11px;
         }
-        .role-admin { background: var(--team-info-soft); color: var(--team-info); }
-        .role-lead  { background: var(--team-blue-soft); color: var(--team-blue); }
-        .role-default { background: var(--team-gray-soft); color: var(--team-muted); }
+        .role-admin { background: #f1ecff; color: #7c5cfc; }
+        .role-lead  { background: #eaf1ff; color: #3b82f6; }
+        .role-default { background: #f1f3f7; color: #7c8398; }
         .team-role-edit-btn {
             width: 26px; height: 26px;
             border-radius: 6px;
-            border: 1px solid var(--team-border);
-            background: var(--bs-body-bg, #fff);
-            color: var(--team-muted);
+            border: 1px solid #eef0f4;
+            background: #fff;
+            color: #7c8398;
             display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: all .15s ease;
         }
-        .team-role-edit-btn i { font-size: var(--fs-meta); }
-        .team-role-edit-btn:hover { background: var(--team-primary-soft); color: var(--team-primary); border-color: var(--team-primary); }
+        .team-role-edit-btn i { font-size: 11px; }
+        .team-role-edit-btn:hover { background: #eef2ff; color: #6366f1; border-color: #6366f1; }
 
         .team-status-cell { display: flex; align-items: center; gap: 9px; }
         .team-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
         .team-switch input { opacity: 0; width: 0; height: 0; }
         .team-switch .slider {
             position: absolute; cursor: pointer; inset: 0;
-            background: var(--bs-gray-300, #d5d8e0); border-radius: 20px; transition: .2s;
+            background: #d5d8e0; border-radius: 20px; transition: .2s;
         }
         .team-switch .slider:before {
             content: ""; position: absolute; height: 14px; width: 14px;
-            left: 3px; bottom: 3px; background: var(--bs-body-bg, #fff); border-radius: 50%; transition: .2s;
+            left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
         }
-        .team-switch input:checked + .slider { background: var(--team-primary); }
+        .team-switch input:checked + .slider { background: #6366f1; }
         .team-switch input:checked + .slider:before { transform: translateX(16px); }
         .team-switch input:disabled + .slider { opacity: .6; cursor: not-allowed; }
-        .team-status-text { font-size: var(--fs-label); font-weight: 600; }
-        .team-status-text.is-active { color: var(--team-success); }
-        .team-status-text.is-inactive { color: var(--team-danger); }
+        .team-status-text { font-size: 12px; font-weight: 600; }
+        .team-status-text.is-active { color: #12b76a; }
+        .team-status-text.is-inactive { color: #f04438; }
 
-        .team-lastactive { display: flex; align-items: center; gap: 7px; font-size: var(--fs-label); color: var(--team-muted); }
+        .team-lastactive { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7c8398; }
         .team-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-green { background: var(--team-success); }
-        .dot-amber { background: var(--team-warning); }
-        .dot-gray  { background: var(--team-gray-dot); }
+        .dot-green { background: #12b76a; }
+        .dot-amber { background: #f79009; }
+        .dot-gray  { background: #c2c7d2; }
 
         .team-action-btn {
             width: 30px; height: 30px;
             border-radius: 8px;
             border: none; background: transparent;
-            color: var(--team-muted);
+            color: #7c8398;
             display: inline-flex; align-items: center; justify-content: center;
         }
-        .team-action-btn:hover { background: var(--team-gray-soft); color: var(--team-text); }
+        .team-action-btn:hover { background: #f1f3f7; color: #1e2129; }
         .team-action-wrap { position: relative; display: inline-block; }
         .team-action-menu {
             position: absolute;
             right: 0;
             top: 34px;
             min-width: 160px;
-            background: var(--bs-body-bg, #fff);
-            border: 1px solid var(--team-border);
+            background: #fff;
+            border: 1px solid #eef0f4;
             border-radius: 10px;
             box-shadow: 0 8px 24px rgba(20, 25, 40, .12);
             padding: 6px;
@@ -379,13 +317,13 @@
         .team-action-menu.show { display: block; }
         .team-action-item {
             display: block;
-            font-size: var(--fs-label);
-            color: var(--team-text);
+            font-size: 12px;
+            color: #1e2129;
             padding: 8px 12px;
             border-radius: 7px;
             cursor: pointer;
         }
-        .team-action-item:hover { background: var(--team-primary-soft); color: var(--team-primary); }
+        .team-action-item:hover { background: #eef2ff; color: #6366f1; }
 
         /* ---------- Footer / pagination ---------- */
         .team-pagination-bar {
@@ -393,30 +331,30 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 4px 4px;
-            border-top: 1px solid var(--team-border);
+            border-top: 1px solid #eef0f4;
             margin-top: 4px;
             gap: 14px;
             flex-wrap: wrap;
         }
-        .team-pagination-info { font-size: var(--fs-label); color: var(--team-muted); }
+        .team-pagination-info { font-size: 12px; color: #7c8398; }
         .team-pagination-pages { display: flex; align-items: center; gap: 6px; }
         .team-page-link {
             min-width: 32px; height: 32px;
-            border: 1px solid var(--team-border);
-            background: var(--bs-body-bg, #fff);
+            border: 1px solid #eef0f4;
+            background: #fff;
             border-radius: 8px;
-            font-size: var(--fs-label); font-weight: 600;
-            color: var(--team-text);
+            font-size: 12px; font-weight: 600;
+            color: #1e2129;
             display: inline-flex; align-items: center; justify-content: center;
             cursor: pointer; padding: 0 8px;
         }
-        .team-page-link.is-active { background: var(--team-primary); border-color: var(--team-primary); color: var(--bs-primary-inverse, #fff); }
+        .team-page-link.is-active { background: #6366f1; border-color: #6366f1; color: #fff; }
         .team-page-link.is-disabled { opacity: .45; pointer-events: none; }
-        .team-page-dots { color: var(--team-muted); padding: 0 2px; }
-        .team-pagination-rows { display: flex; align-items: center; gap: 8px; font-size: var(--fs-label); color: var(--team-muted); }
+        .team-page-dots { color: #7c8398; padding: 0 2px; }
+        .team-pagination-rows { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #7c8398; }
         .team-pagination-rows select {
-            height: 32px; border: 1px solid var(--team-border);
-            border-radius: 8px; font-size: var(--fs-label); padding: 0 8px; background: var(--bs-body-bg, #fff);
+            height: 32px; border: 1px solid #eef0f4;
+            border-radius: 8px; font-size: 12px; padding: 0 8px; background: #fff;
         }
 
         #team_rank_user .modal-dialog { max-width: 1180px; }
@@ -443,10 +381,10 @@
                 <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" placeholder="Search..." />
                 <a href="javascript:void(0);" class="team-btn team-btn-light add_team_member" data-toggle="modal"
                     data-target="#add_team_member">
-                    <i class="ki-outline ki-sms"></i> <span>Invite Member</span>
+                    <i class="fa-regular fa-envelope"></i> <span>Invite Member</span>
                 </a>
                 <a href="javascript:void(0);" class="team-btn team-btn-light" onclick="exportTeam()">
-                    <i class="ki-outline ki-exit-up"></i> <span>Export</span>
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> <span>Export</span>
                 </a>
             </div>
         </div>
@@ -491,28 +429,28 @@
                 {{-- Stat cards --}}
                 <div class="team-stats-row">
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-blue"><i class="ki-outline ki-people"></i></div>
+                        <div class="team-stat-ico ico-blue"><i class="fa-solid fa-users"></i></div>
                         <div>
                             <div class="team-stat-label">Total Members</div>
                             <div class="team-stat-value">{{ $teamCounts['total'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-green"><i class="ki-outline ki-user-tick"></i></div>
+                        <div class="team-stat-ico ico-green"><i class="fa-solid fa-user-check"></i></div>
                         <div>
                             <div class="team-stat-label">Active Members</div>
                             <div class="team-stat-value">{{ $teamCounts['active'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-amber"><i class="ki-outline ki-user"></i></div>
+                        <div class="team-stat-ico ico-amber"><i class="fa-regular fa-user"></i></div>
                         <div>
                             <div class="team-stat-label">Inactive Members</div>
                             <div class="team-stat-value">{{ $teamCounts['inactive'] }}</div>
                         </div>
                     </div>
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-purple"><i class="ki-outline ki-crown"></i></div>
+                        <div class="team-stat-ico ico-purple"><i class="fa-solid fa-crown"></i></div>
                         <div>
                             <div class="team-stat-label">Captain / TRM</div>
                             <div class="team-stat-value">{{ $teamCounts['captain'] + $teamCounts['trm'] }}</div>
@@ -537,7 +475,7 @@
                             <div class="team-search">
                                 <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..."
                                     onkeyup="filtersdataget()" />
-                                <i class="ki-outline ki-magnifier"></i>
+                                <i class="fa-solid fa-magnifying-glass"></i>
                             </div>
                             <div class="ms-auto d-flex align-items-center gap-3">
                                 <span class="team-sort-label">Sort by:
@@ -558,7 +496,7 @@
                             </div>
                             <span class="team-bulk-count"><span id="teamSelectedCount">0</span> selected</span>
                             <button type="button" class="team-bulk-btn">Bulk Actions <i
-                                    class="ki-outline ki-down ms-1" style="font-size:10px;"></i></button>
+                                    class="fa-solid fa-chevron-down ms-1" style="font-size:10px;"></i></button>
                         </div>
 
                         @if (in_array('view_team', $userPermissions))

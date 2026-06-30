@@ -113,15 +113,15 @@
             <td>
                 <div class="team-workload">
                     <div class="team-wl-item wl-blue">
-                        <span class="team-wl-num"><i class="ki-outline ki-briefcase"></i>{{ $activeJobs }}</span>
+                        <span class="team-wl-num"><i class="fa-solid fa-briefcase"></i>{{ $activeJobs }}</span>
                         <span class="team-wl-label">Active Jobs</span>
                     </div>
                     <div class="team-wl-item wl-purple">
-                        <span class="team-wl-num"><i class="ki-outline ki-crown-2"></i>{{ $captainJobs }}</span>
+                        <span class="team-wl-num"><i class="fa-solid fa-crown"></i>{{ $captainJobs }}</span>
                         <span class="team-wl-label">Captain Jobs</span>
                     </div>
                     <div class="team-wl-item wl-green">
-                        <span class="team-wl-num"><i class="ki-outline ki-people"></i>{{ $trmTalents }}</span>
+                        <span class="team-wl-num"><i class="fa-solid fa-users"></i>{{ $trmTalents }}</span>
                         <span class="team-wl-label">TRM Talents</span>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                     </span>
                     @if ($row->root_user != 1)
                         <button class="team-role-edit-btn update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
-                            <i class="ki-outline ki-pencil"></i>
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                     @endif
                 </div>
@@ -157,7 +157,7 @@
                     </div>
                 @else
                     <a href="javascript:;" class="text-primary fw-bold fs-7"
-                        onclick="reSendhandleClick(this, {{ $row->id }});">Resend Mail <i class="ki-outline ki-arrows-circle"></i></a>
+                        onclick="reSendhandleClick(this, {{ $row->id }});">Resend Mail <i class="fa-solid fa-arrows-rotate"></i></a>
                     <span class="team-status-text status_text text-danger fw-bold d-block">Invited</span>
                 @endif
             </td>
@@ -170,7 +170,7 @@
             {{-- Actions --}}
             <td style="text-align:right;">
                 <div class="team-action-wrap">
-                    <button class="team-action-btn" onclick="toggleTeamMenu(this)"><i class="ki-outline ki-dots-vertical"></i></button>
+                    <button class="team-action-btn" onclick="toggleTeamMenu(this)"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                     <div class="team-action-menu">
                         <a class="team-action-item show-detail-team" data-row-id="{{ $row->id }}">View Profile</a>
                         @if ($row->root_user != 1)

@@ -19,7 +19,7 @@
         <div class="team-pagination-pages">
             <button class="team-page-link team-page-arrow {{ $currentPage > 1 ? '' : 'is-disabled' }}"
                 data-page="{{ $currentPage - 1 }}" data-listType="{{ $listType }}" aria-label="Previous">
-                <i class="ki-outline ki-left"></i>
+                <i class="fa-solid fa-chevron-left"></i>
             </button>
 
             @for ($i = 1; $i <= $totalPages; $i++)
@@ -33,7 +33,7 @@
 
             <button class="team-page-link team-page-arrow {{ $currentPage < $totalPages ? '' : 'is-disabled' }}"
                 data-page="{{ $currentPage + 1 }}" data-listType="{{ $listType }}" aria-label="Next">
-                <i class="ki-outline ki-right"></i>
+                <i class="fa-solid fa-chevron-right"></i>
             </button>
         </div>
 
