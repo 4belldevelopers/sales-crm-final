@@ -2203,6 +2203,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2227,7 +2231,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2245,6 +2249,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2268,6 +2276,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 					$userteam['negotiation'] = $scoreMap[$user_id]['negotiation'] ?? 0;
 					$userteam['backout'] = $scoreMap[$user_id]['backout'] ?? 0;
 					$userteam['backoutTeam'] = $scoreMap[$user_id]['backoutTeam'] ?? 0;
+					$userteam['candidateJoinedContract'] = $scoreMap[$user_id]['candidateJoinedContract'] ?? 0;
+					$userteam['teamCaptainCandidateJoinedContract'] = $scoreMap[$user_id]['teamCaptainCandidateJoinedContract'] ?? 0;
+					$userteam['backoutContract'] = $scoreMap[$user_id]['backoutContract'] ?? 0;
+					$userteam['backoutTeamContract'] = $scoreMap[$user_id]['backoutTeamContract'] ?? 0;
 					$userteam['score'] = $scoreMap[$user_id]['score'] ?? 0;
 					return $userteam;
 			})->sort(function ($a, $b) {
@@ -2437,6 +2449,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2461,7 +2477,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2479,6 +2495,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2615,6 +2635,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2643,7 +2667,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2661,6 +2685,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2810,6 +2838,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2834,7 +2866,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2852,6 +2884,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2990,6 +3026,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -3014,7 +3054,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -3032,6 +3072,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -3177,6 +3221,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -3207,7 +3255,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'company_id' => $item['key'],
@@ -3231,6 +3279,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
