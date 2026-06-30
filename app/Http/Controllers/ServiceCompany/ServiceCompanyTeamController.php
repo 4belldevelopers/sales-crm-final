@@ -60,7 +60,51 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$this->elasticService = $elasticService;
     }
    	public function index(){
-				$this->usersCount 	= User::with('company')->company()->count();
+				// Why: the redesigned team list shows summary stat cards (Total / Active /
+				// Inactive / Captain·TRM) and status tabs. These aggregate counts are cached
+				// briefly so the landing load stays cheap — the row data itself is fetched and
+				// cached separately via data_ajax(). Tenancy: User::company() is company-scoped;
+				// the raw DB::table() counts are filtered by company_id explicitly.
+				$companyId = $this->user->company_id;
+
+				$this->teamCounts = cache()->remember(
+					'ats:teamcounts:' . $companyId,
+					now()->addMinutes(ALL_TEAM_TIME),
+					function () use ($companyId) {
+						$status = User::company()
+							->selectRaw('COUNT(*) as total')
+							->selectRaw("SUM(status = 'active') as active")
+							->selectRaw("SUM(status = 'inactive') as inactive")
+							->selectRaw("SUM(password = '') as invited")
+							->first();
+
+						// Captain = members acting as SPOC/captain on at least one assigned job.
+						$captain = DB::table('job_assign')
+							->where('company_id', $companyId)
+							->where('spok_user_id', '>', 0)
+							->distinct()
+							->count('spok_user_id');
+
+						// TRM = members who relate/manage at least one talent (submitted_by).
+						$trm = DB::table('job_applications')
+							->where('company_id', $companyId)
+							->where('submitted_by', '>', 0)
+							->distinct()
+							->count('submitted_by');
+
+						return [
+							'total'     => (int) ($status->total ?? 0),
+							'active'    => (int) ($status->active ?? 0),
+							'inactive'  => (int) ($status->inactive ?? 0),
+							'invited'   => (int) ($status->invited ?? 0),
+							'suspended' => 0, // users.status enum has no "suspended" state yet
+							'captain'   => (int) $captain,
+							'trm'       => (int) $trm,
+						];
+					}
+				);
+
+				$this->usersCount 	= $this->teamCounts['total'];
 				$this->users 		= User::with('company')->company()->get();
 				return view('service_company.team.index', $this->data);
     }
@@ -105,6 +149,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$company_id		= 	$this->user->company_id;	
 				$searchTerms = request('cus_search');
 				$custom_search =  $searchTerms; //json_decode($searchTerms, true);
+				// Status tab on the redesigned list: all|active|inactive|invited|suspended
+				$statusTab = request('statusTab');
 
 				$reportMonth = Carbon::now()->startOfMonth()->subMonth();
 				$rankstartOfMonthForReport = $reportMonth->copy()->startOfMonth()->toDateTimeString();      // 2025-06-01
@@ -127,7 +173,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					'company' => $company_id,
 					'custom_search' => $custom_search,
 			        'user_id' => $this->user->id,
-					'sortingfilter' => request('sortingfilter')
+					'sortingfilter' => request('sortingfilter'),
+					'statusTab' => $statusTab
 				];
 
 				$versionKey = 'allteam_version_user_'.$this->user->id;
@@ -173,6 +220,19 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'minimum_should_match' => 1,
 					],
 				];
+
+				// Status tab filter. "invited" = members who have not set a password yet
+				// (empty/absent password). "suspended" has no backing status today, so it
+				// resolves to an empty set. "all" applies no extra constraint.
+				if (!empty($statusTab) && $statusTab !== 'all') {
+					if ($statusTab === 'invited') {
+						$must[] = ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]];
+					} elseif ($statusTab === 'suspended') {
+						$must[] = ['term' => ['status' => 'suspended']];
+					} else {
+						$must[] = ['term' => ['status' => $statusTab]];
+					}
+				}
 
 				// handle sorting filter request
 				if (request('sortingfilter') != "") {
@@ -395,7 +455,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$responseData = [
 					'html' => view('service_company.ajax_pages.team-list-ajax', compact('data','userPermissions','company_id'))->render(),
 					'total' => $total,
-					'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+					'pagination' => view('service_company.ajax_pages.team-pagination', compact('pagination'))->render(),
 				];
 
 

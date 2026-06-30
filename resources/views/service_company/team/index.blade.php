@@ -47,35 +47,393 @@
             position: relative;
         }
     </style>
+
+    {{-- Redesigned team list — matches the new Team management mockup.
+         Font capped at 14px, Poppins, flat icon-based design per UI_UX_STANDARDS. --}}
+    <style>
+        :root {
+            --team-primary: #4338ca;
+            --team-primary-soft: #eef2ff;
+            --team-border: #eef0f4;
+            --team-text: #1e2129;
+            --team-muted: #7c8398;
+            --team-bg: #f7f8fb;
+        }
+
+        #kt_content_container,
+        #kt_toolbar_container {
+            font-family: 'Poppins', sans-serif;
+            color: var(--team-text);
+        }
+
+        /* ---------- Header ---------- */
+        #kt_toolbar { background: transparent; }
+        .team-page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--team-text);
+            margin: 0;
+            line-height: 1.2;
+        }
+        .team-page-subtitle {
+            font-size: 13px;
+            color: var(--team-muted);
+            margin-top: 2px;
+        }
+        .team-header-actions { gap: 10px; }
+        .team-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 9px 16px;
+            border-radius: 9px;
+            border: 1px solid var(--team-border);
+            background: #fff;
+            color: var(--team-text);
+            transition: all .15s ease;
+            white-space: nowrap;
+        }
+        .team-btn i { font-size: 13px; }
+        .team-btn-light:hover { background: #f3f4f8; color: var(--team-text); }
+        .team-btn-primary {
+            background: var(--team-primary);
+            border-color: var(--team-primary);
+            color: #fff;
+        }
+        .team-btn-primary:hover { background: #3730a3; color: #fff; }
+
+        /* ---------- Stat cards ---------- */
+        .team-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .team-stat-card {
+            background: #fff;
+            border: 1px solid var(--team-border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .team-stat-ico {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .ico-blue   { background: #eaf1ff; color: #3b82f6; }
+        .ico-green  { background: #e7f8f0; color: #12b76a; }
+        .ico-amber  { background: #fff4e5; color: #f79009; }
+        .ico-purple { background: #f1ecff; color: #7c5cfc; }
+        .team-stat-label { font-size: 12.5px; color: var(--team-muted); margin-bottom: 2px; }
+        .team-stat-value { font-size: 24px; font-weight: 700; color: var(--team-text); line-height: 1; }
+        .team-stat-sub { font-size: 11.5px; color: var(--team-muted); margin-top: 5px; }
+
+        /* ---------- Main card ---------- */
+        .team-main-card {
+            background: #fff;
+            border: 1px solid var(--team-border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        /* ---------- Tabs ---------- */
+        .team-tabs {
+            display: flex;
+            gap: 26px;
+            padding: 0 22px;
+            border-bottom: 1px solid var(--team-border);
+        }
+        .team-tab {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--team-muted);
+            padding: 16px 2px;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .team-tab:hover { color: var(--team-text); }
+        .team-tab.active { color: var(--team-primary); border-bottom-color: var(--team-primary); }
+
+        /* ---------- Filter bar ---------- */
+        .team-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0 8px;
+            flex-wrap: wrap;
+        }
+        .team-search {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+        .team-search i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--team-muted);
+            font-size: 13px;
+        }
+        .team-search input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--team-border);
+            border-radius: 9px;
+            padding: 0 38px 0 14px;
+            font-size: 13px;
+            background: #fff;
+        }
+        .team-select {
+            height: 40px;
+            border: 1px solid var(--team-border);
+            border-radius: 9px;
+            padding: 0 32px 0 13px;
+            font-size: 13px;
+            color: var(--team-text);
+            background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 11px center;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .team-clear {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--team-primary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .team-sort-label { font-size: 13px; color: var(--team-muted); white-space: nowrap; }
+        .team-sort-label b { color: var(--team-text); font-weight: 600; }
+        .team-cols-btn {
+            height: 40px;
+            width: 40px;
+            border: 1px solid var(--team-border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--team-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ---------- Bulk actions ---------- */
+        .team-bulk-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+        }
+        .team-bulk-count { font-size: 13px; color: var(--team-muted); }
+        .team-bulk-btn {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--team-muted);
+            border: 1px solid var(--team-border);
+            border-radius: 8px;
+            padding: 7px 13px;
+            background: #fff;
+        }
+
+        /* ---------- Table ---------- */
+        .team-table { width: 100%; margin: 0; }
+        .team-table thead th {
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: none;
+            color: var(--team-muted);
+            border-bottom: 1px solid var(--team-border);
+            padding: 12px 10px;
+            background: #fbfbfd;
+        }
+        .team-table tbody td {
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--team-border);
+            vertical-align: middle;
+            font-size: 13px;
+        }
+        .team-table tbody tr:hover { background: #fafbff; }
+        .team-avatar {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 14px;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .team-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .team-member-name { font-size: 13.5px; font-weight: 600; color: var(--team-text); }
+        .team-member-role { font-size: 12px; color: var(--team-muted); }
+        .team-member-mail { font-size: 12px; color: var(--team-muted); }
+
+        .team-rank-badge { font-size: 14px; font-weight: 700; color: var(--team-text); }
+        .team-rank-month { font-size: 11.5px; color: var(--team-muted); }
+        .team-score-link {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #12b76a;
+            background: #e7f8f0;
+            border-radius: 6px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+
+        .team-workload { display: flex; gap: 22px; }
+        .team-wl-item { display: flex; flex-direction: column; gap: 2px; }
+        .team-wl-num { font-size: 13.5px; font-weight: 700; color: var(--team-text); display: flex; align-items: center; gap: 5px; }
+        .team-wl-num i { font-size: 12px; }
+        .team-wl-label { font-size: 11px; color: var(--team-muted); }
+        .wl-blue i { color: #3b82f6; }
+        .wl-purple i { color: #7c5cfc; }
+        .wl-green i { color: #12b76a; }
+
+        .team-role-pill {
+            display: inline-block;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 7px;
+            padding: 4px 11px;
+        }
+        .role-admin { background: #f1ecff; color: #6d4ff0; }
+        .role-lead  { background: #eaf1ff; color: #3b82f6; }
+        .role-default { background: #f1f3f7; color: #5b6276; }
+
+        .team-status-cell { display: flex; align-items: center; gap: 9px; }
+        .team-switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .team-switch input { opacity: 0; width: 0; height: 0; }
+        .team-switch .slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: #d5d8e0; border-radius: 20px; transition: .2s;
+        }
+        .team-switch .slider:before {
+            content: ""; position: absolute; height: 14px; width: 14px;
+            left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s;
+        }
+        .team-switch input:checked + .slider { background: var(--team-primary); }
+        .team-switch input:checked + .slider:before { transform: translateX(16px); }
+        .team-switch input:disabled + .slider { opacity: .6; cursor: not-allowed; }
+        .team-status-text { font-size: 12.5px; font-weight: 600; }
+        .team-status-text.is-active { color: #12b76a; }
+        .team-status-text.is-inactive { color: #f04438; }
+
+        .team-lastactive { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--team-muted); }
+        .team-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .dot-green { background: #12b76a; }
+        .dot-amber { background: #f79009; }
+        .dot-gray  { background: #c2c7d2; }
+
+        .team-action-btn {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            border: none; background: transparent;
+            color: var(--team-muted);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .team-action-btn:hover { background: #f1f3f7; color: var(--team-text); }
+        .team-action-wrap { position: relative; display: inline-block; }
+        .team-action-menu {
+            position: absolute;
+            right: 0;
+            top: 34px;
+            min-width: 160px;
+            background: #fff;
+            border: 1px solid var(--team-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(20, 25, 40, .12);
+            padding: 6px;
+            z-index: 50;
+            display: none;
+        }
+        .team-action-menu.show { display: block; }
+        .team-action-item {
+            display: block;
+            font-size: 12.5px;
+            color: var(--team-text);
+            padding: 8px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .team-action-item:hover { background: var(--team-primary-soft); color: var(--team-primary); }
+
+        /* ---------- Footer / pagination ---------- */
+        .team-pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 4px 4px;
+            border-top: 1px solid var(--team-border);
+            margin-top: 4px;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .team-pagination-info { font-size: 12.5px; color: var(--team-muted); }
+        .team-pagination-pages { display: flex; align-items: center; gap: 6px; }
+        .team-page-link {
+            min-width: 32px; height: 32px;
+            border: 1px solid var(--team-border);
+            background: #fff;
+            border-radius: 8px;
+            font-size: 12.5px; font-weight: 600;
+            color: var(--team-text);
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; padding: 0 8px;
+        }
+        .team-page-link.is-active { background: var(--team-primary); border-color: var(--team-primary); color: #fff; }
+        .team-page-link.is-disabled { opacity: .45; pointer-events: none; }
+        .team-page-dots { color: var(--team-muted); padding: 0 2px; }
+        .team-pagination-rows { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--team-muted); }
+        .team-pagination-rows select {
+            height: 32px; border: 1px solid var(--team-border);
+            border-radius: 8px; font-size: 12.5px; padding: 0 8px; background: #fff;
+        }
+
+        @media (max-width: 1200px) {
+            .team-stats-row { grid-template-columns: repeat(2, 1fr); }
+            .team-workload { gap: 14px; }
+        }
+        @media (max-width: 768px) {
+            .team-stats-row { grid-template-columns: 1fr; }
+        }
+    </style>
 @endpush
 
 @section('content')
     <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
         <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1"> <span
-                            class="text-gray-800 mb-1">Team</span> </h5>
-                    <!--<span class="text-gray-600" id="">{{ $usersCount }}</span> -->
-                </div>
-                <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
+            <div class="page-title d-flex flex-column">
+                <h1 class="team-page-title">Team</h1>
+                <span class="team-page-subtitle">Manage your team members, workloads and performance.</span>
             </div>
-            <div class="d-flex align-items-center py-1">
-
-                <div class="d-flex align-items-center position-relative my-1 me-3">
-
-                    <input type="hidden" id="inputSearch" data-kt-user-table-filter="search"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
-                </div>
-
-                <button type="button" class="btn btn-danger teamdelete d-none" data-kt-user-table-select="delete_selected">
-                    Inactive
-                </button>
-
+            <div class="d-flex align-items-center team-header-actions">
+                <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" placeholder="Search..." />
+                <a href="javascript:void(0);" class="team-btn team-btn-light add_team_member" data-toggle="modal"
+                    data-target="#add_team_member">
+                    <i class="fas fa-user-plus"></i> <span>Invite Member</span>
+                </a>
+                @if (in_array('add_team', $userPermissions))
+                    <a href="javascript:void(0);" class="team-btn team-btn-primary add_team_member" data-toggle="modal"
+                        data-target="#add_team_member">
+                        <i class="fas fa-plus"></i> <span>Add Member</span>
+                    </a>
+                @endif
+                <a href="javascript:void(0);" class="team-btn team-btn-light" onclick="exportTeam()">
+                    <i class="fas fa-file-export"></i> <span>Export</span>
+                </a>
+                <button type="button" class="btn btn-danger teamdelete d-none ms-2"
+                    data-kt-user-table-select="delete_selected">Inactive</button>
             </div>
         </div>
     </div>
@@ -85,84 +443,117 @@
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-4 d-flex align-items-center px-2" style="width:63%">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
+                {{-- Stat cards --}}
+                <div class="team-stats-row">
+                    <div class="team-stat-card">
+                        <div class="team-stat-ico ico-blue"><i class="fas fa-users"></i></div>
+                        <div>
+                            <div class="team-stat-label">Total Members</div>
+                            <div class="team-stat-value">{{ $teamCounts['total'] }}</div>
+                        </div>
                     </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 16%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Added Date)</option>
-                            <option value="2">Oldest to Newest (Added Date)</option>
-                        </select>
+                    <div class="team-stat-card">
+                        <div class="team-stat-ico ico-green"><i class="fas fa-user-check"></i></div>
+                        <div>
+                            <div class="team-stat-label">Active Members</div>
+                            <div class="team-stat-value">{{ $teamCounts['active'] }}</div>
+                        </div>
                     </div>
-                    {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 10%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-control="select2" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                        <option value="110" selected="selected">----------</option>
-                     </select>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 10%;">
-                     <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                        <span class="svg-icon svg-icon-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                           </svg>
-                        </span>
-                        Filter
-                     </button>
-                  </div> --}}
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                        @if (in_array('add_team', $userPermissions))
-                            <a href="javascript:void(0);" class="btn btn-primary align-self-center add_team_member me-3 d-flex"
-                                data-toggle="modal" data-target="#add_team_member"> <span
-                                    class="svg-icon svg-icon-primary svg-icon-1x">
-                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                        width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                            <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                                            <path
-                                                d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                fill="#000000" fill-rule="nonzero" opacity="0.3"></path>
-                                            <path
-                                                d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                fill="#000000" fill-rule="nonzero"></path>
-                                        </g>
-                                    </svg>
-                                </span>
-                                 <span>Add Member </span> 
-                            </a>
-                        @endif
-
+                    <div class="team-stat-card">
+                        <div class="team-stat-ico ico-amber"><i class="fas fa-user-clock"></i></div>
+                        <div>
+                            <div class="team-stat-label">Inactive Members</div>
+                            <div class="team-stat-value">{{ $teamCounts['inactive'] }}</div>
+                        </div>
                     </div>
-
-
-
-
+                    <div class="team-stat-card">
+                        <div class="team-stat-ico ico-purple"><i class="fas fa-crown"></i></div>
+                        <div>
+                            <div class="team-stat-label">Captain / TRM</div>
+                            <div class="team-stat-value">{{ $teamCounts['captain'] + $teamCounts['trm'] }}</div>
+                            <div class="team-stat-sub">Captain {{ $teamCounts['captain'] }} &nbsp;•&nbsp; TRM
+                                {{ $teamCounts['trm'] }}</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card">
+                <div class="card team-main-card">
+                    {{-- Status tabs --}}
+                    <div class="team-tabs">
+                        <a class="team-tab active" data-status="all">All Members ({{ $teamCounts['total'] }})</a>
+                        <a class="team-tab" data-status="active">Active ({{ $teamCounts['active'] }})</a>
+                        <a class="team-tab" data-status="inactive">Inactive ({{ $teamCounts['inactive'] }})</a>
+                        <a class="team-tab" data-status="invited">Invited ({{ $teamCounts['invited'] }})</a>
+                        <a class="team-tab" data-status="suspended">Suspended ({{ $teamCounts['suspended'] }})</a>
+                    </div>
+
                     <div class="card-body pt-3 px-5">
+                        {{-- Filter bar --}}
+                        <div class="team-filter-bar">
+                            <div class="team-search">
+                                <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..."
+                                    onkeyup="filtersdataget()" />
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <select class="team-select" id="roleFilter" onchange="filtersdataget()">
+                                <option value="">Role</option>
+                            </select>
+                            <select class="team-select" id="statusFilter" onchange="filtersdataget()">
+                                <option value="">Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select class="team-select" id="departmentFilter" onchange="filtersdataget()">
+                                <option value="">Department</option>
+                            </select>
+                            <select class="team-select" id="workloadFilter" onchange="filtersdataget()">
+                                <option value="">Workload</option>
+                            </select>
+                            <span class="team-clear" onclick="clearTeamFilters()">Clear Filters</span>
+                            <div class="ms-auto d-flex align-items-center gap-3">
+                                <span class="team-sort-label">Sort by:
+                                    <select class="team-select" id="sortingfilter" onchange="filtersdataget()"
+                                        style="height:34px; border:none; padding-right:24px; font-weight:600;">
+                                        <option value="">Last Active</option>
+                                        <option value="1">Newest to Oldest</option>
+                                        <option value="2">Oldest to Newest</option>
+                                    </select>
+                                </span>
+                                <button type="button" class="team-cols-btn"><i class="fas fa-sliders-h"></i></button>
+                            </div>
+                        </div>
+
+                        {{-- Bulk actions --}}
+                        <div class="team-bulk-row">
+                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                <input class="form-check-input chk_list" type="checkbox" value="1">
+                            </div>
+                            <span class="team-bulk-count"><span id="teamSelectedCount">0</span> selected</span>
+                            <button type="button" class="team-bulk-btn">Bulk Actions <i
+                                    class="fas fa-chevron-down ms-1" style="font-size:10px;"></i></button>
+                        </div>
+
                         @if (in_array('view_team', $userPermissions))
-						<div class="loadingMessage loadingMessageteamsListajax" style="display: none; position: absolute;">Processing...</div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5" id="myTable">
-                                <thead>
-                                    <tr class="fw-bolder text-muted">
-                                        <th class="min-w-250px">Name</th>
-                                        <th class="min-w-100px">Rank</th>
-                                        <th class="min-w-100px">Jobs</th>
-                                        <th class="min-w-100px">Role</th>
-                                        <th class="min-w-90px">Status</th>
-                                        <th class="min-w-150px">Whatsapp Status</th>
-                                        <th class="min-w-150px">Added Date</th>
-                                    </tr>
-                                </thead>
-								<tbody id="teamsListajax"> </tbody>
-                            </table>
-							<div id="paginationTeams"></div>
+                            <div class="loadingMessage loadingMessageteamsListajax"
+                                style="display: none; position: absolute;">Processing...</div>
+                            <div class="table-responsive">
+                                <table class="team-table" id="myTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:34px;"></th>
+                                            <th>Member</th>
+                                            <th>Rank</th>
+                                            <th>Workload</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Last Active</th>
+                                            <th style="text-align:right;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="teamsListajax"> </tbody>
+                                </table>
+                            </div>
+                            <div id="paginationTeams"></div>
                         @endif
                     </div>
                 </div>
@@ -1457,24 +1848,24 @@
 
 			$(document).ready(function() {
 				fetchTeams();
-				$(document).on('click', '#paginationTeams .page-link', function(e) {
+				$(document).on('click', '#paginationTeams .team-page-link', function(e) {
 						e.preventDefault();
 
 						const page = $(this).data('page');
-						if (!page || $(this).hasClass('disabled')) return;
+						if (!page || $(this).hasClass('is-disabled') || $(this).hasClass('is-active')) return;
 
 						// Disable the clicked pagination link
-						$(this).addClass('disabled');
+						$(this).addClass('is-disabled');
 
 						// Fetch data
 						fetchTeams(page, $('#search').val()).then(() => {
 							// Re-enable the links after successful data fetch
-							$('#paginationTeams .page-link').removeClass('disabled');
+							$('#paginationTeams .team-page-link').removeClass('is-disabled');
 						}).catch(() => {
 							// Re-enable the links even if there's an error
-							$('#paginationTeams .page-link').removeClass('disabled');
+							$('#paginationTeams .team-page-link').removeClass('is-disabled');
 						});
-						
+
 				});
 			});
             
@@ -1484,25 +1875,77 @@
                 }
 			
 
+			// Active status tab + rows-per-page for the redesigned list.
+			var teamStatusTab = 'all';
+			var teamPageSize = 10;
+
 			function fetchTeams(page = page_no, search = '') {
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
-				$.ajax({
+				return $.ajax({
 					url: `{!! route('service_company.team.data_ajax') !!}?page=${page}`,
 					type: 'GET',
 					data: {
 						search: $('#inputSearch').val(),
 						cus_search: $('#kt_tagify_2').val(),
 						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
+						sortingfilter: $('#sortingfilter').val(),
+						statusTab: teamStatusTab,
+						size: teamPageSize
 					},
 					success: function(response) {
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
                         localStorage.setItem('currentPageTeam', 1);
 						$('#teamsListajax').html(response.html);
 						$('#paginationTeams').html(response.pagination);
+						updateTeamSelectedCount();
 					}
 				});
 			}
+
+			// Switch status tabs (All / Active / Inactive / Invited / Suspended)
+			$(document).on('click', '.team-tab', function() {
+				$('.team-tab').removeClass('active');
+				$(this).addClass('active');
+				teamStatusTab = $(this).data('status');
+				fetchTeams(1);
+			});
+
+			// Rows-per-page selector in the footer
+			function changeTeamPageSize(val) {
+				teamPageSize = parseInt(val) || 10;
+				fetchTeams(1);
+			}
+
+			// Reset all filters and reload
+			function clearTeamFilters() {
+				$('#kt_tagify_2').val('');
+				$('#roleFilter, #statusFilter, #departmentFilter, #workloadFilter, #sortingfilter').val('');
+				fetchTeams(1);
+			}
+
+			// Keep the "N selected" bulk counter in sync
+			function updateTeamSelectedCount() {
+				$('#teamSelectedCount').text($('.chk_list_item:checked').length);
+			}
+			$(document).on('change', '.chk_list_item', updateTeamSelectedCount);
+
+			// Export hook — reuses the existing add/export plumbing
+			function exportTeam() {
+				window.print();
+			}
+
+			// Row actions dropdown
+			function toggleTeamMenu(btn) {
+				var menu = btn.nextElementSibling;
+				var isOpen = menu.classList.contains('show');
+				document.querySelectorAll('.team-action-menu.show').forEach(function(m) { m.classList.remove('show'); });
+				if (!isOpen) menu.classList.add('show');
+			}
+			$(document).on('click', function(e) {
+				if (!$(e.target).closest('.team-action-wrap').length) {
+					$('.team-action-menu.show').removeClass('show');
+				}
+			});
 
 
 
