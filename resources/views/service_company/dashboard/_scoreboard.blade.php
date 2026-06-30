@@ -39,6 +39,12 @@
     $cBackout = (int) round(abs($pBackout) / 1500);
     $cNoShow  = (int) round(abs($pNoShow) / 5);
 
+    // ---- Contract / Freelance / Part-time joins (higher weight: +5000 / -5000) ----
+    $pJoinsCT   = $g('candidateJoinedContract');
+    $pBackoutCT = $g('backoutContract');
+    $cJoinsCT   = (int) round($pJoinsCT / 5000);
+    $cBackoutCT = (int) round(abs($pBackoutCT) / 5000);
+
     // ---- Rank / percentile / tier ----
     $rank  = $U['rank'] ?? '-';
     $pctile = ($totalCount > 0 && is_numeric($rank)) ? min(100, max(1, (int) ceil($rank / $totalCount * 100))) : null;
@@ -82,8 +88,10 @@
         ['Evaluation','Candidates evaluated', 1, $pEval, $pEval],
         ['Negotiation','Candidates moved to negotiation', 1, $pNeg, $pNeg],
         ['Offer Released','Offer released to candidate', 300, $cOffers, $pOffers],
-        ['Joined & Onboarded','Candidate joined and onboarded', 1500, $cJoins, $pJoins],
+        ['Joined & Onboarded','Candidate joined and onboarded (full-time)', 1500, $cJoins, $pJoins],
         ['Joined & Backed Out','Candidate backed out after joining', -1500, $cBackout, $pBackout],
+        ['Joined & Onboarded (Contract)','Candidate joined on a contract / freelance / part-time role', 5000, $cJoinsCT, $pJoinsCT],
+        ['Joined & Backed Out (Contract)','Contract candidate backed out after joining', -5000, $cBackoutCT, $pBackoutCT],
         ['Interviews Conducted','Interviews conducted', 10, $cInt, $pInt],
         ['Interview No Show','Candidate no show', -5, $cNoShow, $pNoShow],
     ];
@@ -93,8 +101,10 @@
     // ---- Team captain performance ----
     $cap = [
         ['Offer Released','Offers released by your team', 20, (int) round($g('teamCaptainOfferReleased') / 20), $g('teamCaptainOfferReleased')],
-        ['Joined & Onboarded','Team members joined and onboarded', 30, (int) round($g('teamCaptainCandidateJoined') / 30), $g('teamCaptainCandidateJoined')],
+        ['Joined & Onboarded','Team members joined and onboarded (full-time)', 30, (int) round($g('teamCaptainCandidateJoined') / 30), $g('teamCaptainCandidateJoined')],
         ['Joined & Backed Out','Team members backed out', -30, (int) round(abs($g('backoutTeam')) / 30), $g('backoutTeam')],
+        ['Joined & Onboarded (Contract)','Team contract / freelance / part-time joins', 500, (int) round($g('teamCaptainCandidateJoinedContract') / 500), $g('teamCaptainCandidateJoinedContract')],
+        ['Joined & Backed Out (Contract)','Team contract backouts', -500, (int) round(abs($g('backoutTeamContract')) / 500), $g('backoutTeamContract')],
         ['Interviews Conducted','Team interviews conducted', 2, (int) round($g('teamCaptainInterviewScheduled') / 2), $g('teamCaptainInterviewScheduled')],
     ];
     $capTotal = array_sum(array_map(fn($e) => (int) $e[4], $cap));
@@ -112,6 +122,8 @@
             'Offer Released'       => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
             'Joined & Onboarded'   => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 11.5l2 2 4-4"/>',
             'Joined & Backed Out'  => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+            'Joined & Onboarded (Contract)'  => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 11.5l2 2 4-4"/>',
+            'Joined & Backed Out (Contract)' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
             'Interviews Conducted' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 6a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/>',
             'Interview No Show'    => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
         ];

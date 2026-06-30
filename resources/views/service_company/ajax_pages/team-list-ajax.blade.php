@@ -105,7 +105,26 @@
                     <span class="team-rank-badge">{!! $medal !!} #{{ @$teamRanks->rank }}</span>
                     <span class="team-rank-month">({{ @$teamRanks->rankMonth }})</span>
                     <span class="team-score-link teamViewScore"
+<<<<<<< HEAD
                         data-user-id="{{ $row->id }}">View Score</span>
+=======
+                        data-profileUpload="{{ @$teamRanks->profileUpload }}"
+                        data-interviewScheduled="{{ @$teamRanks->interviewScheduled }}"
+                        data-interviewNoShow="{{ @$teamRanks->interviewNoShow }}"
+                        data-offerReleased="{{ @$teamRanks->offerReleased }}"
+                        data-candidateJoined="{{ @$teamRanks->candidateJoined }}"
+                        data-candidateJoinedContract="{{ @$teamRanks->candidateJoinedContract }}"
+                        data-teamCaptainInterviewScheduled="{{ @$teamRanks->teamCaptainInterviewScheduled }}"
+                        data-teamCaptainOfferReleased="{{ @$teamRanks->teamCaptainOfferReleased }}"
+                        data-teamCaptainCandidateJoined="{{ @$teamRanks->teamCaptainCandidateJoined }}"
+                        data-teamCaptainCandidateJoinedContract="{{ @$teamRanks->teamCaptainCandidateJoinedContract }}"
+                        data-sourcing="{{ @$teamRanks->sourcing }}" data-screening="{{ @$teamRanks->screening }}"
+                        data-evaluation="{{ @$teamRanks->evaluation }}" data-negotiation="{{ @$teamRanks->negotiation }}"
+                        data-backout="{{ @$teamRanks->backout }}" data-backoutteam="{{ @$teamRanks->backoutTeam }}"
+                        data-backoutContract="{{ @$teamRanks->backoutContract }}" data-backoutTeamContract="{{ @$teamRanks->backoutTeamContract }}"
+                        data-rankMonth="{{ @$teamRanks->rankMonth }}" data-score="{{ @$teamRanks->score }}"
+                        data-rank="{{ @$teamRanks->rank }}">View Score</span>
+>>>>>>> d574a512a2137cc7039f2fdb297ff3624b7fcc5d
                 </div>
             </td>
 
