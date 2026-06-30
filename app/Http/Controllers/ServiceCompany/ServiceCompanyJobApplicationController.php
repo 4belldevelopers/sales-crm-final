@@ -4786,13 +4786,10 @@ protected $elasticService;
 						$today = Carbon::today();
 						$diffInDays = abs($today->diffInDays($join_update_date_check));
 
-						$offerReleasedUser = 0;
-						$offerReleasedTeam = 0;
-
-						if($diffInDays<=30){
-							$offerReleasedUser = 300;
-						    $offerReleasedTeam = 20;
-						}
+						// Every offer release counts (no 30-day window), so offers always reconcile with joins
+						// (which are ungated). Product decision 2026-06-30 — fix applies going forward.
+						$offerReleasedUser = 300;
+						$offerReleasedTeam = 20;
 
 						$teamCaptainId = array_map(function ($arr) {
 							return array_values(array_filter($arr, function ($value) {
