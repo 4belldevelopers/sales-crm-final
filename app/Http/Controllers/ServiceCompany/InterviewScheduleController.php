@@ -2081,6 +2081,8 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 		// Salary View permission: roles without it cannot view/edit the Compensation Assessment.
 		$this->canViewSalary = $this->userHasSalaryView();
 
+		// dd($this->canViewSalary);
+
 		// Pass the current captain (name + designation + current company) so the summary lists the
 		// right feedback-giver (captain + interviewers), not the recruiter who scheduled the interview.
 		$this->captainUserId = $this->jobCaptainId($this->interviewSchedule);
@@ -2561,6 +2563,11 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         // of the app gates salary. To hide salary from someone, remove salary_view from all their roles.
         try {
             $roleIds = DB::table('model_has_roles')->where('model_id', (int) auth()->id())->pluck('role_id')->all();
+			if(in_array('salary_view', (array) ($this->userPermissions ?? []))){
+				return true;
+			}
+			return false;
+			return in_array('salary_view', (array) ($this->userPermissions ?? []), true);
             if (!empty($roleIds)) {
                 return DB::table('role_has_permissions as rp')
                     ->join('permissions as p', 'p.id', '=', 'rp.permission_id')
