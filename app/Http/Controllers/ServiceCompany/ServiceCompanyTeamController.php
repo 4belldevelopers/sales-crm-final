@@ -2421,6 +2421,32 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						   
     }
 
+	public function teamScoreboard(Request $request)
+	{
+		$userId = (int) $request->get('user_id');
+		$companyId = $this->user->company_id;
+
+		$reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
+		$start = $reportMonth->copy()->startOfMonth()->toIso8601String();
+		$end = $reportMonth->copy()->endOfMonth()->toIso8601String();
+
+		$rankData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true);
+		$totalCount = \App\Models\User::query()->company()->where('status', 'active')->count();
+
+		$globalRankData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, false);
+
+		$view = view('service_company.dashboard._scoreboard', [
+			'U' => is_array($rankData) ? $rankData : (array) $rankData,
+			'totalCount' => $totalCount,
+			'mode' => 'internal',
+			'otherRank' => $globalRankData['rank'] ?? '-',
+			'month' => date('M Y', strtotime($start)),
+			'leaders' => collect(),
+		])->render();
+
+		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+	}
+
 	public function create()
 	{
 		//abort_if(! $this->user->can('add_team'), 403);

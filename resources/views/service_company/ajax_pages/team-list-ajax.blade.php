@@ -105,19 +105,7 @@
                     <span class="team-rank-badge">{!! $medal !!} #{{ @$teamRanks->rank }}</span>
                     <span class="team-rank-month">({{ @$teamRanks->rankMonth }})</span>
                     <span class="team-score-link teamViewScore"
-                        data-profileUpload="{{ @$teamRanks->profileUpload }}"
-                        data-interviewScheduled="{{ @$teamRanks->interviewScheduled }}"
-                        data-interviewNoShow="{{ @$teamRanks->interviewNoShow }}"
-                        data-offerReleased="{{ @$teamRanks->offerReleased }}"
-                        data-candidateJoined="{{ @$teamRanks->candidateJoined }}"
-                        data-teamCaptainInterviewScheduled="{{ @$teamRanks->teamCaptainInterviewScheduled }}"
-                        data-teamCaptainOfferReleased="{{ @$teamRanks->teamCaptainOfferReleased }}"
-                        data-teamCaptainCandidateJoined="{{ @$teamRanks->teamCaptainCandidateJoined }}"
-                        data-sourcing="{{ @$teamRanks->sourcing }}" data-screening="{{ @$teamRanks->screening }}"
-                        data-evaluation="{{ @$teamRanks->evaluation }}" data-negotiation="{{ @$teamRanks->negotiation }}"
-                        data-backout="{{ @$teamRanks->backout }}" data-backoutteam="{{ @$teamRanks->backoutTeam }}"
-                        data-rankMonth="{{ @$teamRanks->rankMonth }}" data-score="{{ @$teamRanks->score }}"
-                        data-rank="{{ @$teamRanks->rank }}">View Score</span>
+                        data-user-id="{{ $row->id }}">View Score</span>
                 </div>
             </td>
 
@@ -141,10 +129,16 @@
 
             {{-- Role --}}
             <td>
-                <span class="team-role-pill {{ $rolePill }} {{ $row->root_user == 1 ? '' : 'update-user-role' }}"
-                    data-row-id="{{ $row->id }}" style="{{ $row->root_user == 1 ? '' : 'cursor:pointer;' }}">
-                    {{ $roleName }}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="team-role-pill {{ $rolePill }}">
+                        {{ $roleName }}
+                    </span>
+                    @if ($row->root_user != 1)
+                        <button class="team-role-edit-btn update-user-role" data-row-id="{{ $row->id }}" title="Edit Role">
+                            <i class="ki-outline ki-pencil"></i>
+                        </button>
+                    @endif
+                </div>
             </td>
 
             {{-- Status --}}
