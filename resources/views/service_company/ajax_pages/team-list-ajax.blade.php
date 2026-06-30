@@ -39,7 +39,8 @@
                 ->count();
 
             // ---- Role pill colour ----
-            $roleName = ucwords(@$row->display_name);
+            // Title Case for display (data is stored lowercase/inconsistently) — see memory.
+            $roleName = ucwords(strtolower(@$row->display_name));
             $roleLower = strtolower($roleName);
             if (str_contains($roleLower, 'admin'))     { $rolePill = 'role-admin'; }
             elseif (str_contains($roleLower, 'lead'))  { $rolePill = 'role-lead'; }
@@ -87,11 +88,11 @@
                     </div>
                     <div class="d-flex flex-column">
                         <a href="javascript:void(0);" class="team-member-name show-detail-team"
-                            data-row-id="{{ $row->id }}" title="{{ ucwords(@$row->name) }}">
-                            {{ ucwords(mb_substr(@$row->name, 0, 30)) }}
+                            data-row-id="{{ $row->id }}" title="{{ ucwords(strtolower(@$row->name)) }}">
+                            {{ ucwords(strtolower(mb_substr(@$row->name, 0, 30))) }}
                         </a>
                         @if (!empty($row->designation))
-                            <span class="team-member-role">{{ ucwords($row->designation) }}</span>
+                            <span class="team-member-role">{{ ucwords(strtolower($row->designation)) }}</span>
                         @endif
                         <span class="team-member-mail">{{ $row->email }}</span>
                     </div>
