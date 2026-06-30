@@ -443,6 +443,37 @@
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
+                @php
+                    // Fallback: derive the stat-card / tab counts here if the controller did not
+                    // supply them (e.g. while a long-running worker still holds an older index()).
+                    // Same logic as ServiceCompanyTeamController@index. Tenancy: User::company()
+                    // is company-scoped; raw DB queries are filtered by company_id explicitly.
+                    if (!isset($teamCounts)) {
+                        $teamCid = auth()->user()->company_id;
+                        $teamStatus = \App\Models\User::company()
+                            ->selectRaw('COUNT(*) as total')
+                            ->selectRaw("SUM(status = 'active') as active")
+                            ->selectRaw("SUM(status = 'inactive') as inactive")
+                            ->selectRaw("SUM(password = '') as invited")
+                            ->first();
+                        $teamCaptain = \Illuminate\Support\Facades\DB::table('job_assign')
+                            ->where('company_id', $teamCid)->where('spok_user_id', '>', 0)
+                            ->distinct()->count('spok_user_id');
+                        $teamTrm = \Illuminate\Support\Facades\DB::table('job_applications')
+                            ->where('company_id', $teamCid)->where('submitted_by', '>', 0)
+                            ->distinct()->count('submitted_by');
+                        $teamCounts = [
+                            'total'     => (int) ($teamStatus->total ?? 0),
+                            'active'    => (int) ($teamStatus->active ?? 0),
+                            'inactive'  => (int) ($teamStatus->inactive ?? 0),
+                            'invited'   => (int) ($teamStatus->invited ?? 0),
+                            'suspended' => 0,
+                            'captain'   => (int) $teamCaptain,
+                            'trm'       => (int) $teamTrm,
+                        ];
+                    }
+                @endphp
+
                 {{-- Stat cards --}}
                 <div class="team-stats-row">
                     <div class="team-stat-card">
@@ -1848,22 +1879,20 @@
 
 			$(document).ready(function() {
 				fetchTeams();
-				$(document).on('click', '#paginationTeams .team-page-link', function(e) {
+				$(document).on('click', '#paginationTeams [data-page]', function(e) {
 						e.preventDefault();
 
-						const page = $(this).data('page');
-						if (!page || $(this).hasClass('is-disabled') || $(this).hasClass('is-active')) return;
+						const $btn = $(this);
+						const page = $btn.data('page');
+						if (!page || $btn.hasClass('is-disabled') || $btn.hasClass('is-active')
+							|| $btn.hasClass('disabled') || $btn.hasClass('active')) return;
 
-						// Disable the clicked pagination link
-						$(this).addClass('is-disabled');
+						$btn.addClass('is-disabled');
 
-						// Fetch data
 						fetchTeams(page, $('#search').val()).then(() => {
-							// Re-enable the links after successful data fetch
-							$('#paginationTeams .team-page-link').removeClass('is-disabled');
+							$('#paginationTeams [data-page]').removeClass('is-disabled');
 						}).catch(() => {
-							// Re-enable the links even if there's an error
-							$('#paginationTeams .team-page-link').removeClass('is-disabled');
+							$('#paginationTeams [data-page]').removeClass('is-disabled');
 						});
 
 				});
