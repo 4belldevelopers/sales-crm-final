@@ -9,8 +9,14 @@
 <style>
 body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 
+/* ── Override Metronic wrapper defaults ── */
+#kt_wrapper { background: #f1f3f8 !important; }
+#kt_content, .content { padding: 0 !important; margin: 0 !important; }
+.toolbar { display: none !important; }
+.post { padding: 0 !important; }
+
 /* ── Page wrapper ── */
-.rp-page { padding: 20px; background: #f1f3f8; min-height: 100vh; }
+.rp-page { padding: 24px 28px; background: #f1f3f8; min-height: calc(100vh - 65px); }
 
 /* ── Page header ── */
 .rp-page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
@@ -329,6 +335,7 @@ function rpCardIcon($name, $stroke) {
 }
 ?>
 
+<div style="background:#e74c3c;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;" id="rp-test-marker">✓ NEW DESIGN LOADED — v2</div>
 <div class="rp-page">
 
     {{-- ── Page Header ── --}}
