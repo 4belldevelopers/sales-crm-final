@@ -6,7 +6,7 @@
         }
     </style>
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <style>
         @media only screen and (min-width: 900px) and (max-width: 2560px) {
@@ -26,14 +26,11 @@
             color: #1e2129;
         }
 
-        /* ---------- Fixed Header ---------- */
+        /* ---------- Toolbar (Metronic toolbar-fixed handles position:fixed via body class) ---------- */
         #kt_toolbar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
+            background: #fff !important;
             border-bottom: 1px solid #eef0f4;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
         }
         .team-page-title {
             font-size: 22px;
@@ -137,73 +134,85 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 16px 0 8px;
+            padding: 16px 0 12px;
             flex-wrap: wrap;
         }
-        .team-search {
-            position: relative;
+        /* Search with icon using input-group so FA CSS icon is inside naturally */
+        .team-search-wrap {
             flex: 1;
             min-width: 240px;
+            position: relative;
+            display: flex;
+            align-items: center;
         }
-        .team-search i {
+        .team-search-wrap .team-search-icon {
             position: absolute;
-            right: 14px;
+            left: 13px;
             top: 50%;
             transform: translateY(-50%);
-            color: #7c8398;
-            font-size: 14px;
+            color: #a3aabf;
+            font-size: 13px;
+            pointer-events: none;
+            line-height: 1;
         }
-        .team-search input {
+        .team-search-wrap input {
             width: 100%;
             height: 40px;
-            border: 1px solid #eef0f4;
-            border-radius: 9px;
-            padding: 0 38px 0 14px;
+            border: 1.5px solid #e4e7f0;
+            border-radius: 10px;
+            padding: 0 14px 0 38px;
             font-size: 13px;
+            font-family: 'Poppins', sans-serif;
             background: #fff;
             color: #1e2129;
+            outline: none;
+            transition: border-color .15s;
         }
-        .team-select {
-            height: 40px;
-            border: 1px solid #eef0f4;
-            border-radius: 9px;
-            padding: 0 32px 0 13px;
-            font-size: 13px;
-            color: #1e2129;
-            background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 11px center;
-            -webkit-appearance: none;
-            appearance: none;
-            cursor: pointer;
-        }
+        .team-search-wrap input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+        .team-search-wrap input::placeholder { color: #b0b7c9; }
+
         /* ---------- Sort By card ---------- */
         .team-sort-card {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 0;
             background: #fff;
-            border: 1px solid #eef0f4;
+            border: 1.5px solid #e4e7f0;
             border-radius: 10px;
-            padding: 7px 14px;
-            box-shadow: 0 1px 4px rgba(0,0,0,.05);
+            padding: 0 14px;
+            height: 40px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+            white-space: nowrap;
         }
         .team-sort-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 12px;
             font-weight: 600;
             color: #7c8398;
-            white-space: nowrap;
-            letter-spacing: .3px;
+            letter-spacing: .2px;
+            padding-right: 10px;
+            border-right: 1.5px solid #e4e7f0;
+            height: 22px;
         }
-        .team-sort-card .team-select {
+        .team-sort-label i { font-size: 12px; color: #6366f1; }
+        .team-select {
             border: none;
-            border-radius: 0;
-            box-shadow: none;
-            padding-left: 0;
+            background: transparent;
             font-size: 13px;
             font-weight: 600;
+            font-family: 'Poppins', sans-serif;
             color: #1e2129;
-            background-color: transparent;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
-            height: 28px;
+            padding: 0 28px 0 10px;
+            height: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 0 center;
+            outline: none;
         }
 
         /* ---------- Table ---------- */
@@ -489,20 +498,20 @@
                     <div class="card-body pt-3 px-5">
                         {{-- Filter bar --}}
                         <div class="team-filter-bar">
-                            <div class="team-search">
+                            <div class="team-search-wrap">
+                                <span class="team-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                                 <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..."
                                     onkeyup="filtersdataget()" />
-                                <i class="fa-solid fa-magnifying-glass"></i>
                             </div>
-                            <div class="ms-auto d-flex align-items-center gap-3">
-                                <div class="team-sort-card">
-                                    <span class="team-sort-label"><i class="fa-solid fa-arrow-up-wide-short me-1"></i>Sort by</span>
-                                    <select class="team-select" id="sortingfilter" onchange="filtersdataget()">
-                                        <option value="">Last Active</option>
-                                        <option value="1">Newest to Oldest</option>
-                                        <option value="2">Oldest to Newest</option>
-                                    </select>
-                                </div>
+                            <div class="team-sort-card">
+                                <span class="team-sort-label">
+                                    <i class="fa-solid fa-arrow-up-wide-short"></i> Sort by
+                                </span>
+                                <select class="team-select" id="sortingfilter" onchange="filtersdataget()">
+                                    <option value="">Last Active</option>
+                                    <option value="1">Newest to Oldest</option>
+                                    <option value="2">Oldest to Newest</option>
+                                </select>
                             </div>
                         </div>
 
