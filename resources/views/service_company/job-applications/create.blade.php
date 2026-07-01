@@ -2093,7 +2093,14 @@ var cities = @json($cities);
                                 if(response.status == 'mailcheck'){
                                    $("#update-form").html(`Update`);
    																	Swal.fire("Success", response.message , "warning").then(function(){
-																	});	
+																	});
+                                   return false;
+                                }
+                                if(response.status == 'notauthorized'){
+                                   $("#update-form").html(`Update`);
+                                   submitButton.removeAttribute('data-kt-indicator');
+                                   submitButton.disabled = false;
+                                   Swal.fire("Not Authorized", response.message, "warning");
                                    return false;
                                 }
 

@@ -2113,7 +2113,20 @@ $(document).ready(function(){
 																confirmButton: "btn btn-primary"
 														  }
                     });
-                @endif 
+                @endif
+
+                @if (session('candidate_edit_denied'))
+                 Swal.fire({
+									title				: "Not Authorized",
+									text				: @json(session('candidate_edit_denied')),
+									icon				: "warning",
+									buttonsStyling		: false,
+									confirmButtonText	: "Ok, got it!",
+									customClass			: {
+																confirmButton: "btn btn-primary"
+														  }
+                    });
+                @endif
 
 				
                   $(document).on('click','.lock_unlock', function(){
