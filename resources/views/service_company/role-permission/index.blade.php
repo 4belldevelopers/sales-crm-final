@@ -35,14 +35,6 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     text-decoration: none;
 }
 .btn-rp-primary:hover { background: #4c5fd5; color: #fff; text-decoration: none; }
-.btn-rp-outline {
-    background: #fff; color: #5a6080; border: 1px solid #dde2f0; border-radius: 8px;
-    padding: 8px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: 'Poppins', sans-serif; transition: border-color .15s;
-    text-decoration: none;
-}
-.btn-rp-outline:hover { border-color: #5e72e4; color: #5e72e4; text-decoration: none; }
 
 /* ── Stat cards ── */
 .rp-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -385,13 +377,6 @@ if (!function_exists('rpCardIcon')) {
                 Add New Role
             </button>
             @endif
-            <a href="{{ url('/service_company/settings/show-role/') }}" class="btn-rp-outline">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                </svg>
-                Permission Matrix View
-            </a>
         </div>
     </div>
 
