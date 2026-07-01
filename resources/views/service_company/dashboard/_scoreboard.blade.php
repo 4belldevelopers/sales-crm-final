@@ -184,7 +184,7 @@
         </div>
         <div class="r">
             <a href="javascript:void(0)" class="sb2-btn" onclick="sbExportPdf && sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg> Export Report</a>
-            <div class="sb2-x" onclick="sbCloseModal(this)" title="Close">✕</div>
+            <div class="sb2-x" data-bs-dismiss="modal" title="Close">✕</div>
         </div>
     </div>
 
