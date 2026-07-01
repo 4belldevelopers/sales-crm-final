@@ -6,13 +6,13 @@
     $U = $U ?? null;
     $mode = $mode ?? 'internal';
     $totalCount = (int) ($totalCount ?? 0);
-    $otherRank = $otherRank ?? '-';
+    $otherRank = $otherRank ?? null;
     $month = $month ?? date('M Y');
     $leaders = $leaders ?? collect();
 @endphp
 @if (empty($U))
     <div class="sb2" style="padding:46px 24px;text-align:center;color:#8a93a8;position:relative;">
-        <div class="sb2-x" data-bs-dismiss="modal" style="position:absolute;top:14px;right:14px;cursor:pointer;">✕</div>
+        <div class="sb2-x" onclick="sbCloseModal(this)" style="position:absolute;top:14px;right:14px;cursor:pointer;">✕</div>
         <p style="font-size:13px;margin:0;">No ranking data available yet for this period.</p>
     </div>
 @else
@@ -184,7 +184,7 @@
         </div>
         <div class="r">
             <a href="javascript:void(0)" class="sb2-btn" onclick="sbExportPdf && sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg> Export Report</a>
-            <div class="sb2-x" data-bs-dismiss="modal" title="Close">✕</div>
+            <div class="sb2-x" onclick="sbCloseModal(this)" title="Close">✕</div>
         </div>
     </div>
 
@@ -206,7 +206,9 @@
             <div class="sb2-hero-ranks">
                 <div><span>{{ $primaryRankLbl }}</span><b>#{{ $rank }}</b>@if($totalCount)<i>/ {{ number_format($totalCount) }}</i>@endif</div>
                 <div><span>Top Percentile</span><b>@if($pctile)Top {{ $pctile }}%@else—@endif</b></div>
+                @if (!is_null($otherRank))
                 <div><span>{{ $secondRankLbl }}</span><b>#{{ $otherRank }}</b></div>
+                @endif
             </div>
             <div class="sb2-hero-foot">
                 <div class="t">@if($next)You're <b>{{ number_format($toGo) }}</b> points away from <b>{{ $next[0] }} Recruiter</b>@else 🎉 You've reached the top tier — legendary work! @endif</div>
@@ -497,6 +499,23 @@
 <script>
     window.sb2Toggle = window.sb2Toggle || function (h) {
         var card = h.closest('.sb2-perf'); if (card) card.classList.toggle('closed');
+    };
+    // Close the nearest .modal ancestor — force via direct DOM, bypasses Bootstrap state issues
+    window.sbCloseModal = function (el) {
+        var m = el.closest('.modal');
+        if (!m) return;
+        m.style.display = 'none';
+        m.classList.remove('show');
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '';
+        document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        // Sync Bootstrap 5 internal flag so next open works
+        try {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var inst = bootstrap.Modal.getInstance(m);
+                if (inst) inst._isShown = false;
+            }
+        } catch (e) {}
     };
 </script>
 @endif

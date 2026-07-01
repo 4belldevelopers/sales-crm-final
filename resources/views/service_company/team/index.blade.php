@@ -922,32 +922,76 @@
 
                 $('#team_scoreboard_body').html('<div style="text-align:center; padding:40px;"><img src="' + baseurl + '" height="35px" width="100%"></div>');
 
-                // Show modal — support both Bootstrap 4 (jQuery .modal) and Bootstrap 5 (native API)
+                // Show modal — wrapped in try/catch so a Bootstrap transition-state error
+                // doesn't abort the function before the $.ajax call below fires.
                 var modalEl = document.getElementById('team_rank_user');
-                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                    var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    bsModal.show();
-                } else {
-                    $(modalEl).modal('show');
+                try {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    } else if (typeof $ !== 'undefined' && $.fn.modal) {
+                        $(modalEl).modal('show');
+                    }
+                } catch (e) {
+                    // fallback: force-show via display style if Bootstrap API fails
+                    if (modalEl) {
+                        modalEl.style.display = 'block';
+                        modalEl.classList.add('show');
+                        document.body.classList.add('modal-open');
+                    }
                 }
 
                 $.ajax({
                     type: 'GET',
                     url: url,
+                    dataType: 'json',
                     data: { user_id: userId },
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     success: function(response) {
-                        if (response.status === 'success') {
+                        if (response && response.status === 'success') {
                             $('#team_scoreboard_body').html(response.view);
                         } else {
-                            $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">Could not load scoreboard.</div>');
+                            var msg = (response && response.message) ? response.message : 'Could not load scoreboard.';
+                            $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">' + msg + '</div>');
                         }
                     },
                     error: function(xhr) {
-                        $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">Error ' + xhr.status + ': ' + xhr.statusText + '</div>');
+                        var errMsg = 'Error loading scoreboard.';
+                        try { var r = JSON.parse(xhr.responseText); if (r && r.message) errMsg = r.message; } catch(e) {}
+                        $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">' + errMsg + '</div>');
                     }
                 });
             });
+
+            // --- Team Score Board modal close ---
+            function closeTeamScoreModal() {
+                var el = document.getElementById('team_rank_user');
+                if (!el) return;
+                // Force visual close via direct DOM — works regardless of Bootstrap version/state
+                el.style.display = 'none';
+                el.classList.remove('show');
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                // Sync Bootstrap 5 internal flag so the next .show() works correctly
+                try {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var inst = bootstrap.Modal.getInstance(el);
+                        if (inst) inst._isShown = false;
+                    }
+                } catch (e) {}
+            }
+
+            // Expose globally — onclick="sbCloseModal(this)" in the injected scoreboard HTML
+            // calls this. Defined here (static script) so it is always available.
+            window.sbCloseModal = closeTeamScoreModal;
+
+            // Close on outside click: any click not inside .modal-dialog
+            $('#team_rank_user').on('click', function(e) {
+                if (!$(e.target).closest('.modal-dialog').length) {
+                    closeTeamScoreModal();
+                }
+            });
+            // --- end score board close ---
 
             $(document).on('click', '.update_role_close', function() {
                 closeEditRoleDrawer();
