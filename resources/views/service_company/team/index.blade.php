@@ -380,19 +380,31 @@
 
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
-        /* ========== Fixed Toolbar ========== */
-        #kt_toolbar {
-            position: fixed !important;
-            top: 65px !important;        /* Metronic header default; refined by JS */
-            left: 265px !important;      /* Metronic aside expanded default; refined by JS */
-            right: 0 !important;
-            z-index: 98 !important;
-            background: #fff !important;
-            border-bottom: 1px solid #eef0f4 !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
+        /* ========== Fixed Team Toolbar ========== */
+        /* Uses a custom ID (#team-toolbar) to avoid ALL Metronic .toolbar class conflicts.
+           The element is moved to <body> by JS so no parent transform/overflow can clip it. */
+        #team-toolbar {
+            position: fixed;
+            top: 65px;        /* fallback — overridden by positionToolbar() */
+            left: 265px;      /* fallback — overridden by positionToolbar() */
+            right: 0;
+            z-index: 200;
+            background: #fff;
+            border-bottom: 1px solid #eef0f4;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            padding: 0 20px;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
         }
-        /* When aside collapses to icon-only */
-        .aside-minimize:not(.aside-minimize-hover) #kt_toolbar { left: 75px !important; }
+        #team-toolbar .team-toolbar-inner {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        /* Spacer so content below doesn't hide behind the fixed bar */
+        #team-toolbar-spacer { display: block; }
 
         /* ========== Invite Drawer ========== */
         .invite-overlay {
@@ -585,9 +597,9 @@
 @endpush
 
 @section('content')
-    <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
+    <!--begin::Team Fixed Toolbar (moved to <body> by JS to avoid wrapper clipping) -->
+    <div id="team-toolbar">
+        <div class="team-toolbar-inner">
             <div class="page-title d-flex flex-column">
                 <h1 class="team-page-title">Team</h1>
                 <span class="team-page-subtitle">Manage your team members, workloads and performance.</span>
@@ -603,7 +615,9 @@
             </div>
         </div>
     </div>
-    <!--end::Toolbar-->
+    <!-- Spacer — height matched by positionToolbar() JS -->
+    <div id="team-toolbar-spacer" style="height:65px;"></div>
+    <!--end::Team Fixed Toolbar-->
     <!--begin::Content-->
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
@@ -1992,12 +2006,20 @@
 			}
 
             // ---- Recalculate toolbar fixed position from live DOM ----
+            // Move toolbar to <body> so no Metronic wrapper transform/overflow can clip it
+            (function() {
+                var tb = document.getElementById('team-toolbar');
+                if (tb && tb.parentElement && tb.parentElement.id !== 'team-toolbar-body-anchor') {
+                    document.body.appendChild(tb);
+                }
+            })();
+
             function positionToolbar() {
-                var headerH  = ($('#kt_header').length  ? $('#kt_header').outerHeight(true)  : 0) || 65;
-                var asideW   = ($('#kt_aside').length   ? $('#kt_aside').outerWidth(true)    : 0) || 265;
-                var toolbarH = ($('#kt_toolbar').length ? $('#kt_toolbar').outerHeight(true) : 0) || 70;
-                $('#kt_toolbar').css({ top: headerH + 'px', left: asideW + 'px', right: '0' });
-                $('#kt_content').css({ 'padding-top': (toolbarH + 16) + 'px' });
+                var headerH  = ($('#kt_header').length ? $('#kt_header').outerHeight(true)  : 0) || 65;
+                var asideW   = ($('#kt_aside').length  ? $('#kt_aside').outerWidth(true)    : 0) || 265;
+                var toolbarH = ($('#team-toolbar').length ? $('#team-toolbar').outerHeight(true) : 0) || 65;
+                $('#team-toolbar').css({ top: headerH + 'px', left: asideW + 'px', right: '0' });
+                $('#team-toolbar-spacer').css({ height: toolbarH + 'px' });
             }
 
             $(document).ready(function() {
@@ -2006,7 +2028,7 @@
             });
             $(window).on('resize', positionToolbar);
 
-            // Re-position when aside sidebar collapses/expands
+            // Re-position when aside collapses/expands
             var _asideObserver = new MutationObserver(function() { positionToolbar(); });
             var _bodyEl = document.querySelector('body');
             if (_bodyEl) { _asideObserver.observe(_bodyEl, { attributes: true, attributeFilter: ['class'] }); }
