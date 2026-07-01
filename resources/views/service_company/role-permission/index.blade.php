@@ -18,13 +18,22 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 /* ── Page wrapper ── */
 .rp-page { padding: 24px 28px; background: #f1f3f8; min-height: calc(100vh - 65px); }
 
-/* ── Page header ── */
-.rp-page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+/* ── Page header card ── */
+.rp-header-card {
+    background: #fff; border: 1px solid #eaf0fb; border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 20px;
+}
 .rp-page-title { display: flex; align-items: center; gap: 8px; }
 .rp-page-title h1 { font-size: 20px; font-weight: 700; color: #1e2640; margin: 0; line-height: 1.2; }
 .rp-page-title .shield-icon { color: #5e72e4; }
 .rp-page-subtitle { font-size: 12px; color: #8b93b8; margin: 4px 0 0; font-weight: 400; }
-.rp-header-actions { display: flex; gap: 8px; align-items: center; }
+.rp-header-actions { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+
+/* ── Filter card ── */
+.rp-filter-card {
+    background: #fff; border: 1px solid #eaf0fb; border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 20px;
+}
 
 /* ── Buttons ── */
 .btn-rp-primary {
@@ -51,22 +60,8 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-stat-lbl { font-size: 11px; color: #5a6080; font-weight: 500; margin-top: 2px; }
 .rp-stat-sub { font-size: 10px; font-weight: 500; margin-top: 2px; }
 
-/* ── Tabs ── */
-.rp-tabs-bar {
-    display: flex; align-items: center; gap: 2px;
-    background: #fff; border-radius: 10px; padding: 5px;
-    border: 1px solid #eaf0fb; width: fit-content; margin-bottom: 16px;
-}
-.rp-tab {
-    padding: 7px 16px; border-radius: 7px; font-size: 12px;
-    font-weight: 500; color: #8b93b8; cursor: pointer;
-    transition: all .15s; user-select: none; white-space: nowrap;
-}
-.rp-tab.active { background: #5e72e4; color: #fff; font-weight: 600; }
-.rp-tab:not(.active):hover { background: #f1f3f8; color: #5a6080; }
-
 /* ── Filter row ── */
-.rp-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.rp-filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rp-search-box {
     display: flex; align-items: center; gap: 8px;
     background: #fff; border: 1px solid #dde2f0; border-radius: 8px;
@@ -362,17 +357,15 @@ if (!function_exists('rpCardIcon')) {
 
 <div class="rp-page">
 
-    {{-- ── Page Header ── --}}
-    <div class="rp-page-header">
-        <div>
-            <div class="rp-page-title">
-                <h1>Roles &amp; Permissions</h1>
-                <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-            </div>
-            <p class="rp-page-subtitle">Create, manage and control access for different roles in your organization.</p>
+    {{-- ── Page Header Card ── --}}
+    <div class="rp-header-card">
+        <div class="rp-page-title">
+            <h1>Roles &amp; Permissions</h1>
+            <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
         </div>
+        <p class="rp-page-subtitle">Create, manage and control access for different roles in your organization.</p>
         <div class="rp-header-actions">
             @if(in_array("add_roles_permission", $userPermissions))
             <button class="btn-rp-primary" data-toggle="modal" data-target="#kt_modal_add_role" id="addNewRoleBtn">
@@ -453,39 +446,34 @@ if (!function_exists('rpCardIcon')) {
         </div>
     </div>
 
-    {{-- ── Tab Bar ── --}}
-    <div class="rp-tabs-bar">
-        <div class="rp-tab active" data-tab="all">All Roles ({{ $totalRolesCount }})</div>
-        <div class="rp-tab" data-tab="system">System Roles ({{ $systemRolesCount }})</div>
-        <div class="rp-tab" data-tab="custom">Custom Roles ({{ $customRolesCount }})</div>
-    </div>
-
-    {{-- ── Filter Row ── --}}
-    <div class="rp-filter-row">
-        <div class="rp-search-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" id="roleSearch" placeholder="Search roles by name...">
+    {{-- ── Filter Card ── --}}
+    <div class="rp-filter-card">
+        <div class="rp-filter-row">
+            <div class="rp-search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="roleSearch" placeholder="Search roles by name...">
+            </div>
+            <select class="rp-filter-select" id="filterRoleType">
+                <option value="">Role Type</option>
+                <option value="system">System Role</option>
+                <option value="custom">Custom Role</option>
+            </select>
+            <select class="rp-filter-select" id="filterAccessLevel">
+                <option value="">Access Level</option>
+                <option value="badge-high">High Access</option>
+                <option value="badge-medium">Medium Access</option>
+                <option value="badge-low">Low Access</option>
+            </select>
+            <span class="rp-filter-clear" id="clearFilters">Clear Filters</span>
+            <span class="rp-sort-label">Sort by:</span>
+            <select class="rp-sort-select" id="sortRoles">
+                <option value="users">Most Users</option>
+                <option value="name">Name A–Z</option>
+                <option value="perms">Permissions</option>
+            </select>
         </div>
-        <select class="rp-filter-select" id="filterRoleType">
-            <option value="">Role Type</option>
-            <option value="system">System Role</option>
-            <option value="custom">Custom Role</option>
-        </select>
-        <select class="rp-filter-select" id="filterAccessLevel">
-            <option value="">Access Level</option>
-            <option value="badge-high">High Access</option>
-            <option value="badge-medium">Medium Access</option>
-            <option value="badge-low">Low Access</option>
-        </select>
-        <span class="rp-filter-clear" id="clearFilters">Clear Filters</span>
-        <span class="rp-sort-label">Sort by:</span>
-        <select class="rp-sort-select" id="sortRoles">
-            <option value="users">Most Users</option>
-            <option value="name">Name A–Z</option>
-            <option value="perms">Permissions</option>
-        </select>
     </div>
 
     {{-- ── Grid + Detail Panel ── --}}
@@ -858,13 +846,6 @@ $(document).ready(function () {
         });
     });
 
-    /* ── Tab filtering ── */
-    $('.rp-tab').on('click', function () {
-        $('.rp-tab').removeClass('active');
-        $(this).addClass('active');
-        filterCards();
-    });
-
     /* ── Search ── */
     $('#roleSearch').on('input', function () { filterCards(); });
 
@@ -878,7 +859,6 @@ $(document).ready(function () {
     $('#clearFilters').on('click', function () {
         $('#roleSearch').val('');
         $('#filterRoleType, #filterAccessLevel').val('').removeClass('is-active');
-        $('.rp-tab').removeClass('active').filter('[data-tab="all"]').addClass('active');
         filterCards();
     });
 
@@ -902,18 +882,16 @@ $(document).ready(function () {
     });
 
     function filterCards() {
-        var tab         = $('.rp-tab.active').data('tab');
         var search      = $('#roleSearch').val().toLowerCase().trim();
         var typeFilter  = $('#filterRoleType').val();
         var accessFilter = $('#filterAccessLevel').val();
         var visibleCount = 0;
 
         $('.rp-role-card').each(function () {
-            var tabMatch    = (tab === 'all') || ($(this).data('role-type') === tab);
             var typeMatch   = !typeFilter || ($(this).data('role-type') === typeFilter);
             var accessMatch = !accessFilter || ($(this).data('access-level') === accessFilter);
             var searchMatch = !search || $(this).data('role-name').includes(search);
-            var isMatch     = tabMatch && typeMatch && accessMatch && searchMatch;
+            var isMatch     = typeMatch && accessMatch && searchMatch;
             $(this).toggleClass('tab-hidden', !isMatch);
             if (isMatch) visibleCount++;
         });
