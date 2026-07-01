@@ -94,6 +94,16 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-filter-btn:hover { border-color: #5e72e4; color: #5e72e4; }
 .rp-filter-btn svg { width: 12px; height: 12px; }
+.rp-filter-select {
+    appearance: none; -webkit-appearance: none;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6080' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 8px center;
+    background-size: 11px; border: 1px solid #dde2f0; border-radius: 8px;
+    padding: 7px 26px 7px 12px; font-size: 12px; color: #5a6080; font-weight: 500;
+    font-family: 'Poppins', sans-serif; cursor: pointer; outline: none;
+    transition: border-color .15s;
+}
+.rp-filter-select:hover, .rp-filter-select:focus { border-color: #5e72e4; }
+.rp-filter-select.is-active { border-color: #5e72e4; color: #5e72e4; background-color: #f6f8ff; }
 .rp-filter-clear { font-size: 12px; color: #5e72e4; font-weight: 500; cursor: pointer; }
 .rp-sort-label { font-size: 12px; color: #8b93b8; margin-left: auto; }
 .rp-sort-select {
@@ -101,6 +111,20 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     font-size: 12px; color: #5a6080; background: #fff;
     font-family: 'Poppins', sans-serif; cursor: pointer; outline: none;
 }
+
+/* ── Empty state ── */
+.rp-empty-state {
+    display: none; grid-column: 1 / -1; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 48px 16px; text-align: center;
+}
+.rp-empty-state.show { display: flex; }
+.rp-empty-icon {
+    width: 48px; height: 48px; border-radius: 50%; background: #f1f3f8;
+    display: flex; align-items: center; justify-content: center; color: #b0bbd8;
+}
+.rp-empty-icon svg { width: 22px; height: 22px; }
+.rp-empty-title { font-size: 13px; font-weight: 600; color: #5a6080; }
+.rp-empty-sub { font-size: 11px; color: #b0bbd8; }
 
 /* ── Grid layout ── */
 .rp-grid-wrapper { display: flex; gap: 0; align-items: flex-start; }
@@ -162,7 +186,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-more-users { font-size: 10px; color: #8b93b8; }
 
 .rp-card-actions {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-start;
     border-top: 1px solid #f1f3f8; padding-top: 10px; margin-top: 4px;
 }
 .rp-action-group { display: flex; gap: 6px; }
@@ -454,18 +478,17 @@ if (!function_exists('rpCardIcon')) {
             </svg>
             <input type="text" id="roleSearch" placeholder="Search roles by name...">
         </div>
-        <div class="rp-filter-btn">
-            Role Type
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <polyline points="6 9 12 15 18 9"/>
-            </svg>
-        </div>
-        <div class="rp-filter-btn">
-            Access Level
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <polyline points="6 9 12 15 18 9"/>
-            </svg>
-        </div>
+        <select class="rp-filter-select" id="filterRoleType">
+            <option value="">Role Type</option>
+            <option value="system">System Role</option>
+            <option value="custom">Custom Role</option>
+        </select>
+        <select class="rp-filter-select" id="filterAccessLevel">
+            <option value="">Access Level</option>
+            <option value="badge-high">High Access</option>
+            <option value="badge-medium">Medium Access</option>
+            <option value="badge-low">Low Access</option>
+        </select>
         <span class="rp-filter-clear" id="clearFilters">Clear Filters</span>
         <span class="rp-sort-label">Sort by:</span>
         <select class="rp-sort-select" id="sortRoles">
@@ -516,6 +539,7 @@ if (!function_exists('rpCardIcon')) {
                          data-role-name="{{ strtolower(ucwords($rlist->display_name)) }}"
                          data-user-count="{{ $uCount }}"
                          data-grp-count="{{ $grpCount }}"
+                         data-access-level="{{ $access['class'] }}"
                          data-role-detail='{{ $detailJson }}'
                          onclick="openRoleDetail(this)">
 
@@ -596,12 +620,6 @@ if (!function_exists('rpCardIcon')) {
                                 </button>
                                 @endif
                                 @endif
-                                <button class="rp-action-btn" title="Copy Role" onclick="event.stopPropagation()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                                    </svg>
-                                </button>
                                 @if($rlist->manual_add)
                                 <button class="rp-action-btn danger role_delete" title="Delete Role"
                                         data-id="{{ $roleId }}" onclick="event.stopPropagation()">
@@ -614,11 +632,6 @@ if (!function_exists('rpCardIcon')) {
                                 </button>
                                 @endif
                             </div>
-                            <button class="rp-action-btn" onclick="event.stopPropagation()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     @endforeach
@@ -636,6 +649,16 @@ if (!function_exists('rpCardIcon')) {
                     <div class="rp-add-sub">Create a custom role with specific<br>permissions for your team.</div>
                 </div>
                 @endif
+
+                <div class="rp-empty-state" id="rolesEmptyState">
+                    <div class="rp-empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                    </div>
+                    <div class="rp-empty-title">No roles found</div>
+                    <div class="rp-empty-sub">Try adjusting your search or filters.</div>
+                </div>
 
             </div>
         </div>
@@ -792,7 +815,7 @@ $(document).ready(function () {
         });
     });
 
-    $('.editRole, .rp-role-card').on('click', '.editRole', function () {
+    $(document).on('click', '.editRole', function () {
         var id = $(this).data('id');
         var url = "{{ route('service_company.settings.loadEditRole',':id') }}".replace(':id', id);
         $.ajax({ type: 'GET', url: url,
@@ -829,16 +852,22 @@ $(document).ready(function () {
     $('.rp-tab').on('click', function () {
         $('.rp-tab').removeClass('active');
         $(this).addClass('active');
-        var tab = $(this).data('tab');
         filterCards();
     });
 
     /* ── Search ── */
     $('#roleSearch').on('input', function () { filterCards(); });
 
+    /* ── Role Type / Access Level dropdown filters ── */
+    $('#filterRoleType, #filterAccessLevel').on('change', function () {
+        $(this).toggleClass('is-active', $(this).val() !== '');
+        filterCards();
+    });
+
     /* ── Clear filters ── */
     $('#clearFilters').on('click', function () {
         $('#roleSearch').val('');
+        $('#filterRoleType, #filterAccessLevel').val('').removeClass('is-active');
         $('.rp-tab').removeClass('active').filter('[data-tab="all"]').addClass('active');
         filterCards();
     });
@@ -856,19 +885,34 @@ $(document).ready(function () {
         });
         var addCard = grid.find('.rp-add-card').detach();
         grid.find('.rp-role-card').detach();
-        cards.forEach(function (c) { grid.prepend(c); });
-        grid.append(addCard);
+        var frag = document.createDocumentFragment();
+        cards.forEach(function (c) { frag.appendChild(c); });
+        grid.prepend(frag);
+        grid.find('.rp-empty-state').before(addCard);
     });
 
     function filterCards() {
-        var tab    = $('.rp-tab.active').data('tab');
-        var search = $('#roleSearch').val().toLowerCase().trim();
+        var tab         = $('.rp-tab.active').data('tab');
+        var search      = $('#roleSearch').val().toLowerCase().trim();
+        var typeFilter  = $('#filterRoleType').val();
+        var accessFilter = $('#filterAccessLevel').val();
+        var visibleCount = 0;
+
         $('.rp-role-card').each(function () {
-            var typeMatch   = (tab === 'all') || ($(this).data('role-type') === tab);
+            var tabMatch    = (tab === 'all') || ($(this).data('role-type') === tab);
+            var typeMatch   = !typeFilter || ($(this).data('role-type') === typeFilter);
+            var accessMatch = !accessFilter || ($(this).data('access-level') === accessFilter);
             var searchMatch = !search || $(this).data('role-name').includes(search);
-            $(this).toggleClass('tab-hidden', !(typeMatch && searchMatch));
+            var isMatch     = tabMatch && typeMatch && accessMatch && searchMatch;
+            $(this).toggleClass('tab-hidden', !isMatch);
+            if (isMatch) visibleCount++;
         });
+
+        $('#rolesEmptyState').toggleClass('show', visibleCount === 0);
     }
+
+    /* Apply default sort ("Most Users") on load so the dropdown reflects reality */
+    $('#sortRoles').trigger('change');
 });
 
 /* ── Right detail panel ── */
@@ -955,7 +999,7 @@ function openRoleDetail(el) {
         '<div class="rp-dsection">' +
             '<div class="rp-dsection-title">Assigned Users ('+data.userCount+')</div>' +
             (data.userCount > 0
-                ? '<div class="rp-user-item"><div class="rp-user-left"><div class="rp-user-av">U</div><div><div class="rp-user-name">Team Members</div><div class="rp-user-email">'+data.userCount+' user'+(data.userCount===1?'':'s')+' assigned</div></div></div><div class="rp-status-indicator"><div class="rp-status-dot"></div><span class="rp-status-txt">Active</span></div></div>'
+                ? '<div class="rp-user-item"><div class="rp-user-left">'+avHtml+'<div><div class="rp-user-name">'+data.userCount+' user'+(data.userCount===1?'':'s')+' assigned</div><div class="rp-user-email">Click "View Role" for full member list</div></div></div><div class="rp-status-indicator"><div class="rp-status-dot"></div><span class="rp-status-txt">Active</span></div></div>'
                 : '<div style="font-size:11px;color:#b0bbd8;padding:6px 0;">No users assigned to this role.</div>'
             ) +
         '</div>' +
