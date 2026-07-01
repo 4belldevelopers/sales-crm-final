@@ -923,8 +923,6 @@ var assignRollPermission = function () {
     $.easyAjax({ url: url, type: "POST", data: { 'roleId': roleId, 'permissionId': permissionId, 'assignPermission': assignPermission, '_token': '{{ csrf_token() }}' } });
 };
 
-$('.assign-role-permission').change(assignRollPermission());
-
 $('.select_all_permission').change(function () {
     var roleId = $(this).val();
     if ($(this).is(':checked')) {
