@@ -1821,21 +1821,23 @@ body
             <!--begin::candidateDashboard Content-->
                 <div class="tab-pane" id="candidateDashboard" role="tabpanel">
                   @php
-                    $sdbActive   = (int)($active_count ?? 0);
+                    // Dashboard cards show OVERALL (all-time) figures — same source as the profile header
+                    // stat cards ($scp_*), so they match. No date-range window.
+                    $sdbActive   = (int)($scp_active ?? $active_count ?? 0);
                     $sdbHold     = (int)($hold_count ?? 0);
                     $sdbClosed   = (int)($inactive_count ?? 0);
-                    $sdbAdded    = (int)($total_candidates ?? 0);
+                    $sdbAdded    = (int)($scp_cand ?? $total_candidates ?? 0);
                     $sdbInReview = (int)($inreview_count ?? 0);
                     $sdbSourcing = (int)($sourcing_count ?? 0);
                     $sdbScreen   = (int)($screening_count ?? 0);
                     $sdbEval     = (int)($evaluation_count ?? 0);
                     $sdbNego     = (int)($negotiation_count ?? 0);
-                    $sdbOffer    = (int)($offer_count ?? 0);
-                    $sdbJoined   = (int)($joined_count ?? 0);
+                    $sdbOffer    = (int)($scpOffersTotal ?? $offer_count ?? 0);
+                    $sdbJoined   = (int)($scp_join ?? $joined_count ?? 0);
                     $sdbReject   = (int)($Rejected_count ?? 0);
-                    $sdbInterviews = (int)($scpInterviewsTotal ?? 0);
+                    $sdbInterviews = (int)($scp_intv ?? $scpInterviewsTotal ?? 0);
                     $sdbConv     = $sdbAdded>0 ? round($sdbJoined/$sdbAdded*100,1) : 0;
-                    $sdbWin = (isset($startOfMonth) && isset($endOfMonth)) ? (date('d M y', strtotime($startOfMonth)).' – '.date('d M y', strtotime($endOfMonth))) : '';
+                    $sdbWin = '';   // date-range window removed — cards show overall data
                     $sdbStages = [
                       ['In Review',$sdbInReview,'#bdbd26'],
                       ['Sourcing',$sdbSourcing,'#000000'],
