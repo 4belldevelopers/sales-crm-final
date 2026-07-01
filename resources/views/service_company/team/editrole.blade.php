@@ -14,12 +14,14 @@
         'default'      => ['icon' => 'fa-gear',       'bg' => '#ffedd5', 'color' => '#ea580c'],
     ];
 
-    function getRoleIcon($roleName, $roleIcons) {
-        $lower = strtolower($roleName);
-        foreach ($roleIcons as $key => $cfg) {
-            if (str_contains($lower, $key)) return $cfg;
+    if (!function_exists('getRoleIcon')) {
+        function getRoleIcon($roleName, $roleIcons) {
+            $lower = strtolower($roleName);
+            foreach ($roleIcons as $key => $cfg) {
+                if (str_contains($lower, $key)) return $cfg;
+            }
+            return ['icon' => 'fa-shield-halved', 'bg' => '#f1f5f9', 'color' => '#64748b'];
         }
-        return ['icon' => 'fa-shield-halved', 'bg' => '#f1f5f9', 'color' => '#64748b'];
     }
 
     // Split roles: first one full-width (if only 1 or odd), rest in pairs
