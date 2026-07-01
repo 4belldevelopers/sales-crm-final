@@ -808,28 +808,42 @@
         </div>
         {{-- End Invite Drawer --}}
 
-        <!--begin::Update role-->
-        <div class="modal fade show" id="update_role" tabindex="-1" aria-modal="true" role="dialog">
-            <div class="modal-dialog modal-dialog-centered mw-650px">
-                <div class="modal-content">
-                    <div class="modal-header" id="update_role_header" data-dismiss="modal">
-                        <h2 class="fw-bolder">Update role</h2>
-                        <div class="btn btn-icon btn-sm btn-active-light-danger update_role_close"> <span
-                                class="svg-icon svg-icon-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="currentColor">
-                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                        transform="rotate(-45 6 17.3137)"></rect>
-                                    <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                        transform="rotate(45 7.41422 6)"></rect>
-                                </svg>
-                            </span> </div>
-                    </div>
-                    <div class="modal-body scroll-y mx-5" id="update_role_body"> </div>
+        <!--begin::Edit Role Drawer-->
+        <div id="editRoleOverlay" onclick="closeEditRoleDrawer()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px); z-index:1050;"></div>
+
+        <div id="editRoleDrawer" style="
+            position:fixed; top:0; right:0; width:520px; max-width:100vw; height:100vh;
+            background:#fff; z-index:1055; display:flex; flex-direction:column;
+            transform:translateX(100%); transition:transform .3s cubic-bezier(.4,0,.2,1);
+            box-shadow:-8px 0 32px rgba(0,0,0,.14);">
+
+            {{-- Drawer Head --}}
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:22px 24px 18px; border-bottom:1px solid #e5e7eb; flex-shrink:0;">
+                <div>
+                    <div style="font-size:17px; font-weight:700; color:#111827; font-family:'Poppins',sans-serif; margin-bottom:4px;">Change User Role</div>
+                    <div style="font-size:13px; color:#6b7280; font-family:'Poppins',sans-serif;">Update role and access permissions for this user.</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-left:16px;">
+                    <button type="button" onclick="closeEditRoleDrawer()" style="width:34px; height:34px; border-radius:8px; border:1px solid #e5e7eb; background:#f9fafb; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#6b7280;" title="Close">
+                        <i class="fa-solid fa-xmark" style="font-size:14px;"></i>
+                    </button>
                 </div>
             </div>
+
+            {{-- Drawer Body (AJAX loaded) --}}
+            <div id="editRoleDrawerBody" style="flex:1; overflow-y:auto; padding:24px;">
+                {{-- content injected by AJAX --}}
+            </div>
+
+            {{-- Drawer Footer --}}
+            <div id="editRoleDrawerFooter" style="display:flex; gap:12px; justify-content:flex-end; padding:16px 24px; border-top:1px solid #e5e7eb; flex-shrink:0; background:#fff;">
+                <button type="button" onclick="closeEditRoleDrawer()" style="padding:10px 22px; border-radius:9px; border:1.5px solid #d1d5db; background:#fff; font-size:13px; font-weight:600; color:#374151; font-family:'Poppins',sans-serif; cursor:pointer;">Cancel</button>
+                <button type="button" id="updateRoleSubmitBtn" onclick="submitEditRole()" style="padding:10px 22px; border-radius:9px; border:none; background:#6366f1; font-size:13px; font-weight:600; color:#fff; font-family:'Poppins',sans-serif; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-check"></i> Update Role
+                </button>
+            </div>
         </div>
-        <!--end::Update role-->
+        <!--end::Edit Role Drawer-->
 
 
         <div class="modal fade" id="status_stage" tabindex="-1" aria-hidden="true">
@@ -927,10 +941,7 @@
             });
 
             $(document).on('click', '.update_role_close', function() {
-
-
-                // alert("ji");
-                $("#update_role").removeAttr("style");
+                closeEditRoleDrawer();
             });
             $(document).on('click', '#kt_activitiesClient_close', function() {
                 $(".closeclass").removeAttr("style");
@@ -1136,36 +1147,82 @@
 
 
             $(document).on('click', '.update-user-role', function() {
-
-                $('.update_role').trigger('click');
-
                 var id = $(this).data('row-id');
-                var url = "{{ route('service_company.team.editrole', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                // alert(url);
+                openEditRoleDrawer(id);
+            });
+
+            // ---- Edit Role Drawer ----
+            function openEditRoleDrawer(userId) {
+                var url    = "{{ route('service_company.team.editrole', ':id') }}".replace(':id', userId);
+                var loader = '<div style="text-align:center;padding:48px 0;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="36"></div>';
+                $('#editRoleDrawerBody').html(loader);
+                $('#editRoleDrawerFooter').hide();
+                $('#editRoleOverlay').fadeIn(200);
+                $('#editRoleDrawer').css('transform', 'translateX(0)');
+                $('body').addClass('overflow-hidden');
+
                 $.ajax({
                     type: 'GET',
                     url: url,
-                    beforeSend: function() {
-                        $('#update_role_body').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
                     success: function(response) {
-                        $("#update_role").attr("style", "display: block;");
-                        $('#update_role_body').html(response.view);
-
-                        /*setTimeout(
-                        ()=>
-                        {
-                        		if (response.status == "success")
-                        		{
-                        			$('#kt_activitiesClient_body').html(response.view);
-                        		}
-                        }, 500);*/
+                        if (response.status === 'success' || response.view) {
+                            $('#editRoleDrawerBody').html(response.view);
+                            $('#editRoleDrawerFooter').show();
+                        } else {
+                            $('#editRoleDrawerBody').html('<div style="color:#e53935;padding:24px;">Could not load role data.</div>');
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#editRoleDrawerBody').html('<div style="color:#e53935;padding:24px;">Error ' + xhr.status + '</div>');
                     }
                 });
+            }
 
+            function closeEditRoleDrawer() {
+                $('#editRoleDrawer').css('transform', 'translateX(100%)');
+                $('#editRoleOverlay').fadeOut(200);
+                $('body').removeClass('overflow-hidden');
+            }
+
+            function submitEditRole() {
+                var roleId = $('input[name="user_role"]:checked').val();
+                var userId = $('#cuser_id').val();
+                if (!roleId) {
+                    Swal.fire({ icon: 'warning', title: 'Select a role', text: 'Please choose a role before updating.', confirmButtonColor: '#6366f1' });
+                    return;
+                }
+                var url   = "{{ route('service_company.team.roleupdate') }}";
+                var token = "{{ csrf_token() }}";
+                var btn   = document.getElementById('updateRoleSubmitBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: { _token: token, cuser_id: userId, user_role: roleId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            closeEditRoleDrawer();
+                            Swal.fire({ icon: 'success', title: 'Role Updated', text: response.message || 'User role has been updated successfully.', confirmButtonColor: '#6366f1' })
+                                .then(function() { location.reload(); });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Could not update role.', confirmButtonColor: '#6366f1' });
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-check"></i> Update Role';
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({ icon: 'error', title: 'Server Error', text: xhr.status + ' ' + xhr.statusText, confirmButtonColor: '#6366f1' });
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> Update Role';
+                    }
+                });
+            }
+
+            // Close drawer on ESC
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') closeEditRoleDrawer();
             });
 
             // ---- Invite Drawer ----

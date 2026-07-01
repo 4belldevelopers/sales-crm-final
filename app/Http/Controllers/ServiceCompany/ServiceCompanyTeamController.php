@@ -2364,33 +2364,39 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 	
 	}
 
-	public function editrole($id)  
+	public function editrole($id)
 	{
-		// dd($id);
-			
-			$company_id					=	'';
-			$company_id					=	auth()->user()->company_id; 
-			$this->roleslist 			=	DB::table('roles')
-											->select('roles.id', 'roles.display_name', 'roles.name', 'roles.priority', 'roles.description')
-											->where('roles.company_id', '=', $company_id)
-											//->where('roles.id', '=', $id)
-											->orderBy('roles.name', 'ASC')
-											->get();
-			
-			$this->selrole 				=	DB::table('role_user')
-											->select('role_user.role_id')
-											->where('role_user.user_id', '=', $id)
-											//->where('roles.id', '=', $id)
-											//->orderBy('roles.name', 'ASC')
-											->first();
-			
-			$this->id					=	$id;	
-			// dd($this->data);
-														
-			$view = view('service_company.team.editrole', $this->data)->render();
-			// dd($view);
-			return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+		$company_id = auth()->user()->company_id;
 
+		$this->roleslist = DB::table('roles')
+			->select('roles.id', 'roles.display_name', 'roles.name', 'roles.priority', 'roles.description')
+			->where('roles.company_id', '=', $company_id)
+			->orderBy('roles.name', 'ASC')
+			->get();
+
+		$this->selrole = DB::table('role_user')
+			->select('role_user.role_id')
+			->where('role_user.user_id', '=', $id)
+			->first();
+
+		// Current role name for the badge
+		$currentRoleName = '';
+		if ($this->selrole) {
+			$cr = DB::table('roles')->where('id', $this->selrole->role_id)->value('display_name');
+			$currentRoleName = $cr ? ucwords($cr) : '';
+		}
+		$this->currentRoleName = $currentRoleName;
+
+		// User details for the drawer header
+		$this->editUser = DB::table('users')
+			->select('id', 'name', 'email', 'image', 'created_at', 'status')
+			->where('id', $id)
+			->first();
+
+		$this->id = $id;
+
+		$view = view('service_company.team.editrole', $this->data)->render();
+		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
 
 	public function roleupdate(Request $request)
