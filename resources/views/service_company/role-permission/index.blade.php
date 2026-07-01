@@ -309,19 +309,22 @@ $cardPalette = [
 ];
 
 /* Access level based on permission group count */
-function rpAccessLevel($grpCount, $roleName = '') {
-    $name = strtolower($roleName);
-    if (str_contains($name, 'admin') || $grpCount >= 5) return ['label' => 'High Access',   'class' => 'badge-high'];
-    if ($grpCount >= 3)                                   return ['label' => 'Medium Access', 'class' => 'badge-medium'];
-    return                                                       ['label' => 'Low Access',    'class' => 'badge-low'];
+if (!function_exists('rpAccessLevel')) {
+    function rpAccessLevel($grpCount, $roleName = '') {
+        $name = strtolower($roleName);
+        if (str_contains($name, 'admin') || $grpCount >= 5) return ['label' => 'High Access',   'class' => 'badge-high'];
+        if ($grpCount >= 3)                                   return ['label' => 'Medium Access', 'class' => 'badge-medium'];
+        return                                                       ['label' => 'Low Access',    'class' => 'badge-low'];
+    }
 }
 
 /* Avatar bg colors for stack */
 $avColors = ['#5e72e4','#1a73e8','#27ae60','#e74c3c','#f39c12','#9b59b6','#1abc9c','#e91e8c'];
 
 /* Card SVG icons (inline, keyed by name) */
-function rpCardIcon($name, $stroke) {
-    $icons = [
+if (!function_exists('rpCardIcon')) {
+    function rpCardIcon($name, $stroke) {
+        $icons = [
         'shield-check' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
         'users'        => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         'user'         => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -330,12 +333,12 @@ function rpCardIcon($name, $stroke) {
         'shield'       => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
         'settings'     => '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>',
     ];
-    $d = $icons[$name] ?? $icons['settings'];
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="'.$stroke.'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'.$d.'</svg>';
+        $d = $icons[$name] ?? $icons['settings'];
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="'.$stroke.'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'.$d.'</svg>';
+    }
 }
 ?>
 
-<div style="background:#e74c3c;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;" id="rp-test-marker">✓ NEW DESIGN LOADED — v2</div>
 <div class="rp-page">
 
     {{-- ── Page Header ── --}}
