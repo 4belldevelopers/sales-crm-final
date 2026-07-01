@@ -4,6 +4,13 @@
         body {
             overflow-x: hidden;
         }
+        /* Team's toolbar is in-flow (not fixed) — cancel the wrapper's reserved
+           top padding that Metronic adds for a fixed toolbar, else it leaves a
+           blank gap above the "Team" header. */
+        body#kt_body {
+            --kt-toolbar-height: 0px !important;
+            --kt-toolbar-height-tablet-and-mobile: 0px !important;
+        }
     </style>
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -232,7 +239,7 @@
             background: #fbfbfd;
             position: sticky;
             top: 0;
-            z-index: 10;
+            /* z-index: 10; */
         }
         .team-table tbody td {
             padding: 14px 10px;
@@ -390,22 +397,17 @@
 
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
-        /* ========== Fixed Team Toolbar ========== */
-        /* Uses a custom ID (#team-toolbar) to avoid ALL Metronic .toolbar class conflicts.
-           The element is moved to <body> by JS so no parent transform/overflow can clip it. */
+        /* ========== Team Toolbar (in-flow, not fixed) ========== */
+        /* Custom ID (#team-toolbar) to avoid Metronic .toolbar class conflicts. */
         #team-toolbar {
-            position: fixed;
-            top: 65px;        /* fallback — overridden by positionToolbar() */
-            left: 265px;      /* fallback — overridden by positionToolbar() */
-            right: 0;
-            z-index: 200;
+            position: static;
             background: #fff;
             border-bottom: 1px solid #eef0f4;
             box-shadow: none;
-            padding: 0 20px;
-            min-height: 65px;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
+            margin-bottom: 8px;
         }
         #team-toolbar .team-toolbar-inner {
             width: 100%;
@@ -413,8 +415,6 @@
             align-items: center;
             justify-content: space-between;
         }
-        /* Spacer so content below doesn't hide behind the fixed bar */
-        #team-toolbar-spacer { display: block; }
 
         /* ========== Invite Drawer ========== */
         .invite-overlay {
@@ -438,7 +438,6 @@
             flex-direction: column;
             transform: translateX(100%);
             transition: transform .3s cubic-bezier(.4,0,.2,1);
-            box-shadow: -8px 0 40px rgba(15,20,40,.13);
         }
         .invite-drawer.open { transform: translateX(0); }
 
@@ -607,7 +606,7 @@
 @endpush
 
 @section('content')
-    <!--begin::Team Fixed Toolbar (moved to <body> by JS to avoid wrapper clipping) -->
+    <!--begin::Team Toolbar (in-flow, not fixed) -->
     <div id="team-toolbar">
         <div class="team-toolbar-inner">
             <div class="page-title d-flex flex-column">
@@ -625,9 +624,7 @@
             </div>
         </div>
     </div>
-    <!-- Spacer — height matched by positionToolbar() JS -->
-    <div id="team-toolbar-spacer" style="height:65px;"></div>
-    <!--end::Team Fixed Toolbar-->
+    <!--end::Team Toolbar-->
     <!--begin::Content-->
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
@@ -827,8 +824,7 @@
         <div id="editRoleDrawer" style="
             position:fixed; top:0; right:0; width:520px; max-width:100vw; height:100vh;
             background:#fff; z-index:1055; display:flex; flex-direction:column;
-            transform:translateX(100%); transition:transform .3s cubic-bezier(.4,0,.2,1);
-            box-shadow:-8px 0 32px rgba(0,0,0,.14);">
+            transform:translateX(100%); transition:transform .3s cubic-bezier(.4,0,.2,1);">
 
             {{-- Drawer Head --}}
             <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:22px 24px 18px; border-bottom:1px solid #e5e7eb; flex-shrink:0;">
@@ -2014,34 +2010,6 @@
 			function exportTeam() {
 				window.print();
 			}
-
-            // ---- Recalculate toolbar fixed position from live DOM ----
-            // Move toolbar to <body> so no Metronic wrapper transform/overflow can clip it
-            (function() {
-                var tb = document.getElementById('team-toolbar');
-                if (tb && tb.parentElement && tb.parentElement.id !== 'team-toolbar-body-anchor') {
-                    document.body.appendChild(tb);
-                }
-            })();
-
-            function positionToolbar() {
-                var headerH  = ($('#kt_header').length ? $('#kt_header').outerHeight(true)  : 0) || 65;
-                var asideW   = ($('#kt_aside').length  ? $('#kt_aside').outerWidth(true)    : 0) || 265;
-                var toolbarH = ($('#team-toolbar').length ? $('#team-toolbar').outerHeight(true) : 0) || 65;
-                $('#team-toolbar').css({ top: headerH + 'px', left: asideW + 'px', right: '0' });
-                $('#team-toolbar-spacer').css({ height: toolbarH + 'px' });
-            }
-
-            $(document).ready(function() {
-                positionToolbar();
-                setTimeout(positionToolbar, 400);
-            });
-            $(window).on('resize', positionToolbar);
-
-            // Re-position when aside collapses/expands
-            var _asideObserver = new MutationObserver(function() { positionToolbar(); });
-            var _bodyEl = document.querySelector('body');
-            if (_bodyEl) { _asideObserver.observe(_bodyEl, { attributes: true, attributeFilter: ['class'] }); }
 
 			// Row actions dropdown
 			function toggleTeamMenu(btn) {
