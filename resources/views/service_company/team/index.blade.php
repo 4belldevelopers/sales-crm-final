@@ -26,12 +26,7 @@
             color: #1e2129;
         }
 
-        /* ---------- Toolbar (Metronic toolbar-fixed handles position:fixed via body class) ---------- */
-        #kt_toolbar {
-            background: #fff !important;
-            border-bottom: 1px solid #eef0f4;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
-        }
+        /* Toolbar appearance — positioning is handled by the fixed-toolbar CSS block below */
         .team-page-title {
             font-size: 22px;
             font-weight: 700;
@@ -386,23 +381,17 @@
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
         /* ========== Fixed Toolbar ========== */
+        /* top/left are set precisely by positionToolbar() JS — no hardcoded values here */
         #kt_toolbar {
             position: fixed !important;
-            top: 65px !important;        /* Metronic header height */
-            left: 265px !important;      /* Metronic aside width (expanded) */
+            top: 0 !important;           /* overridden by JS immediately */
+            left: 0 !important;          /* overridden by JS immediately */
             right: 0 !important;
             z-index: 98 !important;
             background: #fff !important;
             border-bottom: 1px solid #eef0f4 !important;
             box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
-        }
-        /* Push content down so it doesn't hide behind the fixed toolbar */
-        #kt_content {
-            padding-top: calc(var(--kt-toolbar-height, 55px) + 10px) !important;
-        }
-        /* When aside is minimized (collapsed to icon-only ~75px) */
-        .aside-minimize:not(.aside-minimize-hover) #kt_toolbar {
-            left: 75px !important;
+            visibility: hidden;          /* hide until JS sets correct position */
         }
 
         /* ========== Invite Drawer ========== */
@@ -2004,14 +1993,36 @@
 
             // ---- Recalculate toolbar fixed position from live DOM ----
             function positionToolbar() {
-                var headerH  = $('#kt_header').outerHeight(true) || 65;
-                var asideW   = $('#kt_aside').outerWidth(true)   || 265;
-                var toolbarH = $('#kt_toolbar').outerHeight(true) || 55;
-                $('#kt_toolbar').css({ top: headerH, left: asideW });
-                $('#kt_content').css({ 'padding-top': toolbarH + 10 });
+                var $header  = $('#kt_header');
+                var $aside   = $('#kt_aside');
+                var $toolbar = $('#kt_toolbar');
+                var $content = $('#kt_content');
+
+                // Measure live DOM — fall back to known Metronic defaults if not rendered yet
+                var headerH = ($header.length ? $header.outerHeight(true) : 0) || 65;
+                var asideW  = ($aside.length  ? $aside.outerWidth(true)  : 0) || 265;
+                var toolbarH = ($toolbar.length ? $toolbar.outerHeight(true) : 0) || 55;
+
+                $toolbar.css({ top: headerH + 'px', left: asideW + 'px', right: '0', visibility: 'visible' });
+                $content.css({ 'padding-top': (toolbarH + 12) + 'px' });
             }
-            $(document).ready(positionToolbar);
+
+            // Run immediately (inline script executes after DOM renders in blade)
+            positionToolbar();
+            // Re-run on ready (fonts/images may shift heights)
+            $(document).ready(function() {
+                positionToolbar();
+                // Re-run after a short delay to catch Metronic's own JS initialization
+                setTimeout(positionToolbar, 300);
+            });
             $(window).on('resize', positionToolbar);
+
+            // Hook onto Metronic's aside toggle (fires custom event on body class change)
+            var _asideObserver = new MutationObserver(function() { positionToolbar(); });
+            var _bodyEl = document.querySelector('body');
+            if (_bodyEl) {
+                _asideObserver.observe(_bodyEl, { attributes: true, attributeFilter: ['class'] });
+            }
 
 			// Row actions dropdown
 			function toggleTeamMenu(btn) {
