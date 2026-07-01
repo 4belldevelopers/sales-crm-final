@@ -21,13 +21,14 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 /* ── Page header card ── */
 .rp-header-card {
     background: #fff; border: 1px solid #eaf0fb; border-radius: 12px;
-    padding: 20px 22px; margin-bottom: 20px;
+    padding: 20px 22px; margin-bottom: 0;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
 }
 .rp-page-title { display: flex; align-items: center; gap: 8px; }
 .rp-page-title h1 { font-size: 20px; font-weight: 700; color: #1e2640; margin: 0; line-height: 1.2; }
 .rp-page-title .shield-icon { color: #5e72e4; }
 .rp-page-subtitle { font-size: 12px; color: #8b93b8; margin: 4px 0 0; font-weight: 400; }
-.rp-header-actions { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+.rp-header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
 /* ── Filter card ── */
 .rp-filter-card {
@@ -359,13 +360,15 @@ if (!function_exists('rpCardIcon')) {
 
     {{-- ── Page Header Card ── --}}
     <div class="rp-header-card">
-        <div class="rp-page-title">
-            <h1>Roles &amp; Permissions</h1>
-            <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
+        <div>
+            <div class="rp-page-title">
+                <h1>Roles &amp; Permissions</h1>
+                <svg class="shield-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <p class="rp-page-subtitle">Create, manage and control access for different roles in your organization.</p>
         </div>
-        <p class="rp-page-subtitle">Create, manage and control access for different roles in your organization.</p>
         <div class="rp-header-actions">
             @if(in_array("add_roles_permission", $userPermissions))
             <button class="btn-rp-primary" data-toggle="modal" data-target="#kt_modal_add_role" id="addNewRoleBtn">
