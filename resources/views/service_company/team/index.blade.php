@@ -381,18 +381,18 @@
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
         /* ========== Fixed Toolbar ========== */
-        /* top/left are set precisely by positionToolbar() JS — no hardcoded values here */
         #kt_toolbar {
             position: fixed !important;
-            top: 0 !important;           /* overridden by JS immediately */
-            left: 0 !important;          /* overridden by JS immediately */
+            top: 65px !important;        /* Metronic header default; refined by JS */
+            left: 265px !important;      /* Metronic aside expanded default; refined by JS */
             right: 0 !important;
             z-index: 98 !important;
             background: #fff !important;
             border-bottom: 1px solid #eef0f4 !important;
             box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
-            visibility: hidden;          /* hide until JS sets correct position */
         }
+        /* When aside collapses to icon-only */
+        .aside-minimize:not(.aside-minimize-hover) #kt_toolbar { left: 75px !important; }
 
         /* ========== Invite Drawer ========== */
         .invite-overlay {
@@ -1993,36 +1993,23 @@
 
             // ---- Recalculate toolbar fixed position from live DOM ----
             function positionToolbar() {
-                var $header  = $('#kt_header');
-                var $aside   = $('#kt_aside');
-                var $toolbar = $('#kt_toolbar');
-                var $content = $('#kt_content');
-
-                // Measure live DOM — fall back to known Metronic defaults if not rendered yet
-                var headerH = ($header.length ? $header.outerHeight(true) : 0) || 65;
-                var asideW  = ($aside.length  ? $aside.outerWidth(true)  : 0) || 265;
-                var toolbarH = ($toolbar.length ? $toolbar.outerHeight(true) : 0) || 55;
-
-                $toolbar.css({ top: headerH + 'px', left: asideW + 'px', right: '0', visibility: 'visible' });
-                $content.css({ 'padding-top': (toolbarH + 12) + 'px' });
+                var headerH  = ($('#kt_header').length  ? $('#kt_header').outerHeight(true)  : 0) || 65;
+                var asideW   = ($('#kt_aside').length   ? $('#kt_aside').outerWidth(true)    : 0) || 265;
+                var toolbarH = ($('#kt_toolbar').length ? $('#kt_toolbar').outerHeight(true) : 0) || 70;
+                $('#kt_toolbar').css({ top: headerH + 'px', left: asideW + 'px', right: '0' });
+                $('#kt_content').css({ 'padding-top': (toolbarH + 16) + 'px' });
             }
 
-            // Run immediately (inline script executes after DOM renders in blade)
-            positionToolbar();
-            // Re-run on ready (fonts/images may shift heights)
             $(document).ready(function() {
                 positionToolbar();
-                // Re-run after a short delay to catch Metronic's own JS initialization
-                setTimeout(positionToolbar, 300);
+                setTimeout(positionToolbar, 400);
             });
             $(window).on('resize', positionToolbar);
 
-            // Hook onto Metronic's aside toggle (fires custom event on body class change)
+            // Re-position when aside sidebar collapses/expands
             var _asideObserver = new MutationObserver(function() { positionToolbar(); });
             var _bodyEl = document.querySelector('body');
-            if (_bodyEl) {
-                _asideObserver.observe(_bodyEl, { attributes: true, attributeFilter: ['class'] });
-            }
+            if (_bodyEl) { _asideObserver.observe(_bodyEl, { attributes: true, attributeFilter: ['class'] }); }
 
 			// Row actions dropdown
 			function toggleTeamMenu(btn) {
