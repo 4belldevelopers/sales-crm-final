@@ -26,8 +26,15 @@
             color: #1e2129;
         }
 
-        /* ---------- Header ---------- */
-        #kt_toolbar { background: transparent; }
+        /* ---------- Fixed Header ---------- */
+        #kt_toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,.07);
+            border-bottom: 1px solid #eef0f4;
+        }
         .team-page-title {
             font-size: 22px;
             font-weight: 700;
@@ -168,25 +175,35 @@
             appearance: none;
             cursor: pointer;
         }
-        .team-sort-label { font-size: 13px; color: #7c8398; white-space: nowrap; }
-        .team-sort-label b { color: #1e2129; font-weight: 600; }
-
-        /* ---------- Bulk actions ---------- */
-        .team-bulk-row {
-            display: flex;
+        /* ---------- Sort By card ---------- */
+        .team-sort-card {
+            display: inline-flex;
             align-items: center;
-            gap: 14px;
-            padding: 10px 0;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 10px;
+            padding: 7px 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05);
         }
-        .team-bulk-count { font-size: 13px; color: #7c8398; }
-        .team-bulk-btn {
-            font-size: 13px;
+        .team-sort-label {
+            font-size: 12px;
             font-weight: 600;
             color: #7c8398;
-            border: 1px solid #eef0f4;
-            border-radius: 8px;
-            padding: 7px 13px;
-            background: #fff;
+            white-space: nowrap;
+            letter-spacing: .3px;
+        }
+        .team-sort-card .team-select {
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            padding-left: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e2129;
+            background-color: transparent;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c8398' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
+            height: 28px;
         }
 
         /* ---------- Table ---------- */
@@ -478,25 +495,15 @@
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </div>
                             <div class="ms-auto d-flex align-items-center gap-3">
-                                <span class="team-sort-label">Sort by:
-                                    <select class="team-select" id="sortingfilter" onchange="filtersdataget()"
-                                        style="height:34px; border:none; padding-right:24px; font-weight:600;">
+                                <div class="team-sort-card">
+                                    <span class="team-sort-label"><i class="fa-solid fa-arrow-up-wide-short me-1"></i>Sort by</span>
+                                    <select class="team-select" id="sortingfilter" onchange="filtersdataget()">
                                         <option value="">Last Active</option>
                                         <option value="1">Newest to Oldest</option>
                                         <option value="2">Oldest to Newest</option>
                                     </select>
-                                </span>
+                                </div>
                             </div>
-                        </div>
-
-                        {{-- Bulk actions --}}
-                        <div class="team-bulk-row">
-                            <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                <input class="form-check-input chk_list" type="checkbox" value="1">
-                            </div>
-                            <span class="team-bulk-count"><span id="teamSelectedCount">0</span> selected</span>
-                            <button type="button" class="team-bulk-btn">Bulk Actions <i
-                                    class="fa-solid fa-chevron-down ms-1" style="font-size:10px;"></i></button>
                         </div>
 
                         @if (in_array('view_team', $userPermissions))
@@ -506,7 +513,6 @@
                                 <table class="team-table" id="myTable">
                                     <thead>
                                         <tr>
-                                            <th style="width:34px;"></th>
                                             <th>Member</th>
                                             <th>Rank</th>
                                             <th>Workload</th>
@@ -644,22 +650,36 @@
 				fetchTeams();
             }
 
-             $(document).on('click', '.teamViewScore', function() {
+            $(document).on('click', '.teamViewScore', function() {
                 var userId = $(this).data('user-id');
                 var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                 var url = "{{ route('service_company.team.scoreboard') }}";
 
                 $('#team_scoreboard_body').html('<div style="text-align:center; padding:40px;"><img src="' + baseurl + '" height="35px" width="100%"></div>');
-                $("#team_rank_user").modal("show");
+
+                // Show modal — support both Bootstrap 4 (jQuery .modal) and Bootstrap 5 (native API)
+                var modalEl = document.getElementById('team_rank_user');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    bsModal.show();
+                } else {
+                    $(modalEl).modal('show');
+                }
 
                 $.ajax({
                     type: 'GET',
                     url: url,
                     data: { user_id: userId },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     success: function(response) {
                         if (response.status === 'success') {
                             $('#team_scoreboard_body').html(response.view);
+                        } else {
+                            $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">Could not load scoreboard.</div>');
                         }
+                    },
+                    error: function(xhr) {
+                        $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">Error ' + xhr.status + ': ' + xhr.statusText + '</div>');
                     }
                 });
             });
