@@ -63,18 +63,6 @@
             $status_disabled = ($row->root_user == 1 || $row->status != 'active') ? 'disabled' : '';
         @endphp
         <tr>
-            {{-- Select --}}
-            <td>
-                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                    @if ($row->root_user == 1)
-                        <input class="form-check-input" type="checkbox" disabled>
-                    @else
-                        <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox"
-                            value="{{ $row->id }}" {{ $status_disabled }}>
-                    @endif
-                </div>
-            </td>
-
             {{-- Member --}}
             <td>
                 <div class="d-flex align-items-center">
