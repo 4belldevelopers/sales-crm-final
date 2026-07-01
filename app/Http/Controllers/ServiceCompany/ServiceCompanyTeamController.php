@@ -1129,6 +1129,34 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					$this->interviewsTrackerTotal = $ivCntResp['hits']['total']['value'] ?? 0;
 				}
 
+				// Overall offers for this member = all candidates submitted by them that have an
+				// offer created (of_created_date not null). Powers the My Dashboard "Offers" card
+				// with an all-time figure, matching the other overall header cards.
+				$this->scpOffersTotal = 0;
+				if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+					try {
+						$ofCntResp = $this->elasticService->getClient()->search([
+							'index' => ELASTIC_CANDIDATES,
+							'request_cache' => true,
+							'body' => [
+								'size' => 0,
+								'track_total_hits' => true,
+								'query' => [
+									'bool' => [
+										'must' => [
+											['term' => ['submitted_by' => $id]],
+											['exists' => ['field' => 'of_created_date']],
+										]
+									]
+								]
+							]
+						]);
+						$this->scpOffersTotal = $ofCntResp['hits']['total']['value'] ?? 0;
+					} catch (\Throwable $e) {
+						$this->scpOffersTotal = (int) ($this->offer_count ?? 0);
+					}
+				}
+
 
 				/*
 				|--------------------------------------------------------------------------
