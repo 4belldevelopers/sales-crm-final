@@ -115,8 +115,6 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-empty-sub { font-size: 11px; color: #b0bbd8; }
 
 /* ── Grid layout ── */
-.rp-grid-wrapper { display: flex; gap: 0; align-items: flex-start; }
-.rp-cards-area { flex: 1; min-width: 0; }
 .rp-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
 /* ── Role card ── */
@@ -206,74 +204,185 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-add-title { font-size: 13px; font-weight: 600; color: #5a6080; }
 .rp-add-sub { font-size: 11px; color: #b0bbd8; text-align: center; line-height: 1.5; }
 
-/* ── Right detail panel ── */
-.rp-detail-panel {
-    width: 0; overflow: hidden; transition: width .25s ease;
-    background: #fff; border-left: 1px solid #eaf0fb; flex-shrink: 0;
-    display: flex; flex-direction: column;
-}
-.rp-detail-panel.open { width: 280px; overflow-y: auto; }
-.rp-detail-inner { padding: 16px; min-width: 280px; }
-
-.rp-detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-.rp-detail-name { font-size: 15px; font-weight: 700; color: #1e2640; margin: 0 0 6px; }
-.rp-detail-badges { display: flex; gap: 5px; flex-wrap: wrap; }
-.rp-detail-ctrl { display: flex; gap: 4px; }
-.rp-detail-ctrl-btn {
-    width: 26px; height: 26px; border-radius: 6px; display: flex;
-    align-items: center; justify-content: center; color: #b0bbd8;
-    cursor: pointer; background: #f1f3f8; border: none; flex-shrink: 0;
-}
-.rp-detail-ctrl-btn:hover { background: #eaf0fb; color: #5a6080; }
-.rp-detail-ctrl-btn svg { width: 13px; height: 13px; }
-
-.rp-detail-stat-tabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #eaf0fb; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
-.rp-dtab { padding: 10px 6px; text-align: center; font-size: 10px; color: #8b93b8; cursor: pointer; border-right: 1px solid #eaf0fb; }
-.rp-dtab:last-child { border-right: none; }
-.rp-dtab.active { background: #f6f8ff; color: #5e72e4; }
-.rp-dtab-val { font-size: 16px; font-weight: 700; color: #1e2640; display: block; line-height: 1.2; margin-bottom: 2px; }
-.rp-dtab.active .rp-dtab-val { color: #5e72e4; }
-
-.rp-dsection { margin-bottom: 16px; }
-.rp-dsection-title { font-size: 11px; font-weight: 600; color: #5a6080; margin: 0 0 10px; }
-.rp-ddesc { font-size: 11px; color: #8b93b8; line-height: 1.6; }
-
-.rp-pgroup-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f3f8; }
-.rp-pgroup-item:last-child { border-bottom: none; }
-.rp-pgroup-left { display: flex; align-items: center; gap: 8px; }
-.rp-pgroup-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
-.rp-pgroup-icon svg { width: 14px; height: 14px; }
-.rp-pgroup-name { font-size: 11px; font-weight: 500; color: #1e2640; }
-.rp-pgroup-right { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #8b93b8; }
-.rp-pgroup-right svg { width: 10px; height: 10px; }
-
-.rp-user-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
-.rp-user-left { display: flex; align-items: center; gap: 8px; }
-.rp-user-av {
-    width: 32px; height: 32px; border-radius: 8px;
-    background: #5e72e4; display: flex; align-items: center;
-    justify-content: center; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
-}
-.rp-user-name { font-size: 11px; font-weight: 600; color: #1e2640; }
-.rp-user-email { font-size: 10px; color: #b0bbd8; }
-.rp-status-indicator { display: flex; align-items: center; gap: 4px; }
-.rp-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #2ecc71; }
-.rp-status-txt { font-size: 10px; color: #27ae60; }
-
-.rp-security-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f3f8; }
-.rp-security-row:last-child { border-bottom: none; }
-.rp-security-lbl { font-size: 11px; color: #8b93b8; }
-.rp-security-val { font-size: 11px; font-weight: 600; color: #5a6080; text-align: right; max-width: 60%; }
-
 /* ── Hidden tab filter ── */
-.rp-role-card[data-role-type] { }
 .rp-role-card.tab-hidden { display: none; }
+
+/* ══════════════ Role Detail Drawer ══════════════ */
+.rp-drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(20,26,46,.45);
+    z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .25s ease;
+}
+.rp-drawer-backdrop.open { opacity: 1; visibility: visible; }
+
+.rp-drawer {
+    position: fixed; top: 0; right: -440px; width: 420px; max-width: 92vw; height: 100vh;
+    background: #fff; z-index: 1060; box-shadow: -10px 0 32px rgba(20,26,46,.16);
+    transition: right .3s ease; display: flex; flex-direction: column;
+    font-family: 'Poppins', sans-serif;
+}
+.rp-drawer.open { right: 0; }
+
+.rp-drawer-head { padding: 18px 20px 0; flex-shrink: 0; }
+.rp-drawer-head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.rp-drawer-title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rp-drawer-icon {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.rp-drawer-icon svg { width: 20px; height: 20px; }
+.rp-drawer-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rp-drawer-title { font-size: 15px; font-weight: 700; color: #1e2640; margin: 0; }
+.rp-drawer-meta { font-size: 11px; color: #8b93b8; margin-top: 3px; }
+.rp-drawer-head-actions { display: flex; gap: 4px; flex-shrink: 0; position: relative; }
+.rp-drawer-icon-btn {
+    width: 28px; height: 28px; border-radius: 7px; display: flex;
+    align-items: center; justify-content: center; color: #8b93b8;
+    cursor: pointer; background: transparent; border: none; flex-shrink: 0;
+}
+.rp-drawer-icon-btn:hover { background: #f1f3f8; color: #5a6080; }
+.rp-drawer-icon-btn svg { width: 15px; height: 15px; }
+
+.rp-drawer-menu {
+    position: absolute; top: 34px; right: 0; background: #fff; border: 1px solid #eaf0fb;
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(20,26,46,.12); min-width: 150px;
+    padding: 6px; display: none; z-index: 5;
+}
+.rp-drawer-menu.open { display: block; }
+.rp-drawer-menu-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px;
+    font-size: 12px; color: #5a6080; cursor: pointer; white-space: nowrap;
+}
+.rp-drawer-menu-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+.rp-drawer-menu-item:hover { background: #f1f3f8; }
+.rp-drawer-menu-item.danger { color: #c0392b; }
+.rp-drawer-menu-item.danger:hover { background: #fde8e8; }
+
+.rp-drawer-tabs { display: flex; gap: 16px; padding: 14px 20px 0; border-bottom: 1px solid #f1f3f8; flex-shrink: 0; }
+.rp-drawer-tab {
+    padding: 0 0 10px; font-size: 12px; font-weight: 500; color: #8b93b8; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none;
+}
+.rp-drawer-tab.active { color: #5e72e4; font-weight: 600; border-bottom-color: #5e72e4; }
+
+.rp-drawer-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+.rp-drawer-pane { display: none; }
+.rp-drawer-pane.active { display: block; }
+
+.rp-drawer-footer {
+    padding: 14px 20px; border-top: 1px solid #f1f3f8; display: flex; gap: 8px; flex-shrink: 0;
+}
+.rp-drawer-footer .rp-dbtn { flex: 1; justify-content: center; }
+
+.rp-dbtn {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;
+    padding: 9px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1px solid #dde2f0; background: #fff; color: #5a6080;
+    font-family: 'Poppins', sans-serif; transition: border-color .15s, background .15s;
+}
+.rp-dbtn svg { width: 13px; height: 13px; }
+.rp-dbtn:hover { border-color: #c5ccee; background: #f8f9fc; }
+.rp-dbtn.danger { color: #c0392b; border-color: #f5d5d0; }
+.rp-dbtn.danger:hover { background: #fde8e8; border-color: #c0392b; }
+
+/* metric mini-cards */
+.rp-dmetrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.rp-dmetric { background: #f8f9fc; border-radius: 10px; padding: 12px 8px; text-align: center; }
+.rp-dmetric-icon {
+    width: 26px; height: 26px; border-radius: 7px; margin: 0 auto 6px;
+    display: flex; align-items: center; justify-content: center;
+}
+.rp-dmetric-icon svg { width: 14px; height: 14px; }
+.rp-dmetric-val { font-size: 15px; font-weight: 700; color: #1e2640; line-height: 1.2; }
+.rp-dmetric-lbl { font-size: 9.5px; color: #8b93b8; margin-top: 2px; }
+
+/* Info / coverage cards */
+.rp-dcard { background: #f8f9fc; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.rp-dcard-title { font-size: 12px; font-weight: 600; color: #1e2640; margin: 0 0 12px; }
+.rp-dinfo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.rp-dinfo-lbl { font-size: 10px; color: #8b93b8; }
+.rp-dinfo-val { font-size: 11.5px; font-weight: 600; color: #1e2640; margin-top: 3px; }
+
+.rp-dcov-row { margin-bottom: 12px; }
+.rp-dcov-row:last-child { margin-bottom: 0; }
+.rp-dcov-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.rp-dcov-name { font-size: 11px; color: #5a6080; font-weight: 500; }
+.rp-dcov-frac { font-size: 10.5px; color: #8b93b8; font-weight: 600; }
+.rp-dcov-track { height: 6px; border-radius: 4px; background: #e8eaf2; overflow: hidden; }
+.rp-dcov-fill { height: 100%; border-radius: 4px; }
+
+.rp-view-all-link {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;
+    color: #5e72e4; font-weight: 600; cursor: pointer; margin-bottom: 14px;
+}
+.rp-view-all-link svg { width: 12px; height: 12px; }
+
+.rp-dwarning {
+    background: #fff8ec; border: 1px solid #ffe3ad; border-radius: 10px;
+    padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;
+}
+.rp-dwarning svg { color: #f39c12; flex-shrink: 0; margin-top: 1px; width: 16px; height: 16px; }
+.rp-dwarning-title { font-size: 12px; font-weight: 700; color: #8a5a00; margin: 0 0 3px; }
+.rp-dwarning-text { font-size: 11px; color: #a3762b; line-height: 1.5; margin: 0; }
+
+/* Permissions tab */
+.rp-dperm-group { margin-bottom: 16px; }
+.rp-dperm-group:last-child { margin-bottom: 0; }
+.rp-dperm-group-title {
+    font-size: 10.5px; font-weight: 600; color: #8b93b8; text-transform: uppercase;
+    letter-spacing: .3px; margin: 0 0 8px;
+}
+.rp-dperm-item {
+    display: flex; align-items: center; gap: 8px; padding: 7px 0;
+    border-bottom: 1px solid #f5f6fa; font-size: 12px; color: #1e2640;
+}
+.rp-dperm-item:last-child { border-bottom: none; }
+.rp-dperm-item svg { width: 13px; height: 13px; color: #27ae60; flex-shrink: 0; }
+
+/* Users tab */
+.rp-duser-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f5f6fa; }
+.rp-duser-item:last-child { border-bottom: none; }
+.rp-duser-av {
+    width: 32px; height: 32px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; color: #fff; font-weight: 700;
+    font-size: 12px; flex-shrink: 0;
+}
+.rp-duser-name { font-size: 12px; font-weight: 600; color: #1e2640; }
+.rp-duser-email { font-size: 10.5px; color: #8b93b8; }
+
+.rp-dempty { font-size: 11.5px; color: #b0bbd8; text-align: center; padding: 24px 8px; }
 </style>
 @endpush
 
 @section('content')
 
 <?php
+/* ── Real permission display names (name -> display_name), fetched once for the drawer's Permissions tab ── */
+$permDisplayMap = DB::table('permissions')->pluck('display_name', 'name');
+
+/* ── Permission Coverage buckets: maps the 19 real permission group_names onto 4 display
+   categories (approximation agreed with product owner — DB has no such grouping natively) ── */
+$coverageBuckets = [
+    'Recruitment'        => ['Jobs', 'Job Applications', 'Offer', 'Joining', 'Schedule', 'Requisition', 'Team On Requisition'],
+    'Talent Marketplace' => ['Bench', 'Staffing Partners'],
+    'Sales & CRM'        => ['Clients', 'Team', 'Reports'],
+    'Admin & Security'   => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Website', 'Subscription', 'Salary', 'Salary Break'],
+];
+$bucketColors = [
+    'Recruitment'        => '#27ae60',
+    'Talent Marketplace' => '#1a73e8',
+    'Sales & CRM'        => '#5e72e4',
+    'Admin & Security'   => '#c0392b',
+];
+
+/* ── Total assignable permissions per group_name, company-wide (permissions table is global, not tenant-scoped) ── */
+$excludedPermIds = [58, 59, 14, 15, 16, 17];
+$groupTotals = DB::table('permissions')
+    ->where('status', 1)
+    ->whereNotIn('id', $excludedPermIds)
+    ->select('group_name', DB::raw('count(*) as cnt'))
+    ->groupBy('group_name')
+    ->pluck('cnt', 'group_name');
+
 /* ── Pre-compute stats ── */
 $totalRolesCount    = !empty($roles) ? count($roles) : 0;
 $customRolesCount   = 0;
@@ -286,15 +395,39 @@ if (!empty($roles)) {
     foreach ($roles as $rlist) {
         $roleId = $rlist->id;
 
-        $uCount = DB::table('role_user')
+        $roleUsers = DB::table('role_user')
             ->join('users', 'users.id', '=', 'role_user.user_id')
             ->where('role_user.role_id', $roleId)
             ->where('users.type', 0)
-            ->count();
+            ->select('users.id', 'users.name', 'users.email')
+            ->get();
+        $uCount = $roleUsers->count();
 
         $totalAssignedUsers += $uCount;
-        $grpCount = count($rlist->grouped_permissions ?? []);
+        $grpAllForStats = $rlist->grouped_permissions ?? [];
+        $grpCount = count($grpAllForStats);
         $totalPermGroups += $grpCount;
+
+        $totalAssignedPerms = 0;
+        foreach ($grpAllForStats as $permNames) {
+            $totalAssignedPerms += count($permNames);
+        }
+
+        $coverage = [];
+        foreach ($coverageBuckets as $bucketName => $groupNames) {
+            $assigned = 0;
+            $total = 0;
+            foreach ($groupNames as $gn) {
+                $assigned += isset($grpAllForStats[$gn]) ? count($grpAllForStats[$gn]) : 0;
+                $total += $groupTotals[$gn] ?? 0;
+            }
+            $coverage[$bucketName] = [
+                'assigned' => $assigned,
+                'total'    => $total,
+                'pct'      => $total > 0 ? round(($assigned / $total) * 100) : 0,
+                'color'    => $bucketColors[$bucketName],
+            ];
+        }
 
         if ($rlist->manual_add) {
             $customRolesCount++;
@@ -303,8 +436,11 @@ if (!empty($roles)) {
         }
 
         $allRoleStats[$roleId] = [
-            'userCount' => $uCount,
-            'grpCount'  => $grpCount,
+            'userCount'          => $uCount,
+            'users'              => $roleUsers,
+            'grpCount'           => $grpCount,
+            'totalAssignedPerms' => $totalAssignedPerms,
+            'coverage'           => $coverage,
         ];
     }
 }
@@ -479,12 +615,8 @@ if (!function_exists('rpCardIcon')) {
         </div>
     </div>
 
-    {{-- ── Grid + Detail Panel ── --}}
-    <div class="rp-grid-wrapper">
-
-        {{-- Cards ── --}}
-        <div class="rp-cards-area">
-            <div class="rp-cards-grid" id="rolesGrid">
+    {{-- ── Role Cards ── --}}
+    <div class="rp-cards-grid" id="rolesGrid">
 
                 @if(!empty($roles))
                     <?php $cardIndex = 0; ?>
@@ -492,7 +624,10 @@ if (!function_exists('rpCardIcon')) {
                     <?php
                         $roleId      = $rlist->id;
                         $uCount      = $allRoleStats[$roleId]['userCount'] ?? 0;
+                        $roleUsers   = $allRoleStats[$roleId]['users'] ?? collect();
                         $grpCount    = $allRoleStats[$roleId]['grpCount']  ?? 0;
+                        $totalAssignedPerms = $allRoleStats[$roleId]['totalAssignedPerms'] ?? 0;
+                        $coverage    = $allRoleStats[$roleId]['coverage'] ?? [];
                         $palette     = $cardPalette[$cardIndex % count($cardPalette)];
                         $access      = rpAccessLevel($grpCount, $rlist->name ?? '');
                         $isCustom    = $rlist->manual_add;
@@ -501,17 +636,38 @@ if (!function_exists('rpCardIcon')) {
                         $grpKeys     = array_keys((array)$grpAll);
                         $grpShown    = array_slice($grpKeys, 0, 3);
                         $grpExtra    = count($grpKeys) > 3 ? count($grpKeys) - 3 : 0;
+                        $canEdit     = in_array("edit_roles_permission", $userPermissions) && ($rlist->priority != 0) && ($rlist->name != 'admin');
+                        $canDelete   = (bool) $rlist->manual_add;
+                        $roleCode    = ($isCustom ? 'CUS-' : 'SYS-') . str_pad($roleId, 2, '0', STR_PAD_LEFT);
 
-                        /* Build JSON for detail panel */
+                        /* Flatten assigned permissions grouped by real group_name, with display names, for the drawer's Permissions tab */
+                        $permissionsFlat = [];
+                        foreach ($grpAll as $gn => $permNames) {
+                            $items = [];
+                            foreach ($permNames as $permName) {
+                                $items[] = $permDisplayMap[$permName] ?? ucwords(str_replace(['_', '-'], ' ', $permName));
+                            }
+                            $permissionsFlat[] = ['group' => $gn, 'items' => $items];
+                        }
+
+                        /* Build JSON for the detail drawer (all data embedded up-front — no AJAX needed to open it) */
                         $detailJson = json_encode([
                             'id'          => $roleId,
                             'name'        => ucwords($rlist->display_name),
+                            'roleCode'    => $roleCode,
                             'isCustom'    => $isCustom,
                             'grpCount'    => $grpCount,
+                            'totalPerms'  => $totalAssignedPerms,
                             'userCount'   => $uCount,
                             'access'      => $access,
-                            'groups'      => $grpKeys,
+                            'coverage'    => $coverage,
+                            'permissions' => $permissionsFlat,
+                            'users'       => $roleUsers->map(fn($u) => ['name' => $u->name, 'email' => $u->email])->values(),
+                            'createdOn'   => $rlist->created_at ? \Carbon\Carbon::parse($rlist->created_at)->format('d M, Y') : null,
+                            'updatedOn'   => $rlist->updated_at ? \Carbon\Carbon::parse($rlist->updated_at)->format('d M, Y') : null,
                             'palette'     => $palette,
+                            'canEdit'     => $canEdit,
+                            'canDelete'   => $canDelete,
                         ]);
                         $cardIndex++;
                     ?>
@@ -522,7 +678,7 @@ if (!function_exists('rpCardIcon')) {
                          data-grp-count="{{ $grpCount }}"
                          data-access-level="{{ $access['class'] }}"
                          data-role-detail='{{ $detailJson }}'
-                         onclick="openRoleDetail(this)">
+                         onclick="openRoleDrawer(this)">
 
                         <div class="rp-card-top">
                             <div class="rp-card-icon-wrap">
@@ -582,13 +738,12 @@ if (!function_exists('rpCardIcon')) {
 
                         <div class="rp-card-actions" onclick="event.stopPropagation()">
                             <div class="rp-action-group">
-                                <a href="{{ url('/service_company/settings/show-role/'.$roleId) }}"
-                                   class="rp-action-btn" title="View Role" onclick="event.stopPropagation()">
+                                <button type="button" class="rp-action-btn" title="View Role" onclick="event.stopPropagation(); openRoleDrawer(this.closest('.rp-role-card'));">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
                                     </svg>
-                                </a>
+                                </button>
                                 @if(in_array("edit_roles_permission", $userPermissions))
                                 @if(($rlist->priority != 0) && ($rlist->name != 'admin'))
                                 <button class="rp-action-btn editRole" title="Edit Role"
@@ -641,17 +796,48 @@ if (!function_exists('rpCardIcon')) {
                     <div class="rp-empty-sub">Try adjusting your search or filters.</div>
                 </div>
 
-            </div>
-        </div>
-
-        {{-- ── Right Detail Panel ── --}}
-        <div class="rp-detail-panel" id="roleDetailPanel">
-            <div class="rp-detail-inner" id="roleDetailInner">
-                {{-- Populated by JS --}}
-            </div>
-        </div>
-
     </div>
+</div>
+
+{{-- ── Role Detail Drawer ── --}}
+<div class="rp-drawer-backdrop" id="roleDrawerBackdrop" onclick="closeRoleDrawer()"></div>
+<div class="rp-drawer" id="roleDrawer">
+    <div class="rp-drawer-head">
+        <div class="rp-drawer-head-top">
+            <div class="rp-drawer-title-wrap">
+                <div class="rp-drawer-icon" id="drawerIcon"></div>
+                <div>
+                    <div class="rp-drawer-title-row">
+                        <h3 class="rp-drawer-title" id="drawerTitle"></h3>
+                        <span class="access-badge" id="drawerAccessBadge"></span>
+                    </div>
+                    <div class="rp-drawer-meta" id="drawerMeta"></div>
+                </div>
+            </div>
+            <div class="rp-drawer-head-actions">
+                <button type="button" class="rp-drawer-icon-btn" id="drawerMenuBtn" onclick="toggleDrawerMenu(event)" aria-label="More actions">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                </button>
+                <div class="rp-drawer-menu" id="drawerMenu"></div>
+                <button type="button" class="rp-drawer-icon-btn" onclick="closeRoleDrawer()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="rp-drawer-tabs">
+            <div class="rp-drawer-tab active" data-pane="overview" onclick="switchDrawerTab('overview')">Overview</div>
+            <div class="rp-drawer-tab" data-pane="permissions" onclick="switchDrawerTab('permissions')" id="drawerTabPermissions">Permissions</div>
+            <div class="rp-drawer-tab" data-pane="users" onclick="switchDrawerTab('users')" id="drawerTabUsers">Users</div>
+        </div>
+    </div>
+
+    <div class="rp-drawer-body">
+        <div class="rp-drawer-pane active" id="drawerPaneOverview"></div>
+        <div class="rp-drawer-pane" id="drawerPanePermissions"></div>
+        <div class="rp-drawer-pane" id="drawerPaneUsers"></div>
+    </div>
+
+    <div class="rp-drawer-footer" id="drawerFooter"></div>
 </div>
 
 {{-- ── Add Role Modal ── --}}
@@ -808,6 +994,7 @@ $(document).ready(function () {
 
     $(document).on('click', '.editRole', function (e) {
         e.preventDefault();
+        if (typeof closeRoleDrawer === 'function') closeRoleDrawer();
         var id = $(this).data('id');
         var url = "{{ route('service_company.settings.loadEditRole',':id') }}".replace(':id', id);
         $('#edit_body_content').html('<div class="text-center py-10"><span class="spinner-border spinner-border-sm align-middle me-2"></span>Loading...</div>');
@@ -906,112 +1093,198 @@ $(document).ready(function () {
     $('#sortRoles').trigger('change');
 });
 
-/* ── Right detail panel ── */
+/* ── Role Detail Drawer ── */
 var avColors = ['#5e72e4','#1a73e8','#27ae60','#e74c3c','#f39c12','#9b59b6','#1abc9c','#e91e8c'];
-
-function openRoleDetail(el) {
-    var data = JSON.parse(el.getAttribute('data-role-detail'));
-    var panel = document.getElementById('roleDetailPanel');
-    var inner = document.getElementById('roleDetailInner');
-
-    /* Deselect previous */
-    document.querySelectorAll('.rp-role-card').forEach(function (c) { c.classList.remove('selected'); });
-    el.classList.add('selected');
-
-    /* Build avatar stack */
-    var avHtml = '';
-    if (data.userCount > 0) {
-        var shown = Math.min(data.userCount, 4);
-        for (var i = 0; i < shown; i++) {
-            avHtml += '<div class="rp-mini-av" style="background:'+avColors[i % avColors.length]+';">'+String.fromCharCode(65+i)+'</div>';
-        }
-        avHtml = '<div class="rp-avatars-stack">'+avHtml+'</div>';
-        if (data.userCount > 4) avHtml += '<span class="rp-more-users">+' + (data.userCount - 4) + ' more</span>';
-    }
-
-    /* Build permission group list */
-    var groupIcons = [
-        {bg:'#fde8e8', stroke:'#c0392b'},
-        {bg:'#e3f1ff', stroke:'#1a73e8'},
-        {bg:'#e8f8f0', stroke:'#27ae60'},
-        {bg:'#fff8e6', stroke:'#f39c12'},
-        {bg:'#eef0fb', stroke:'#5e72e4'},
-    ];
-    var grpHtml = '';
-    data.groups.slice(0, 8).forEach(function (g, idx) {
-        var gi = groupIcons[idx % groupIcons.length];
-        grpHtml += '<div class="rp-pgroup-item">' +
-            '<div class="rp-pgroup-left">' +
-                '<div class="rp-pgroup-icon" style="background:'+gi.bg+';">' +
-                    '<svg viewBox="0 0 24 24" fill="none" stroke="'+gi.stroke+'" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="3"/></svg>' +
-                '</div>' +
-                '<span class="rp-pgroup-name">'+ucwords(g)+'</span>' +
-            '</div>' +
-            '<div class="rp-pgroup-right">Permissions' +
-                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>' +
-            '</div>' +
-        '</div>';
-    });
-
-    /* Access badge */
-    var badgeClass = data.access.class;
-    var badgeLabel = data.access.label;
-    var typeLabel  = data.isCustom ? 'Custom Role' : 'System Role';
-
-    inner.innerHTML =
-        '<div class="rp-detail-header">' +
-            '<div>' +
-                '<div class="rp-detail-name">'+data.name+'</div>' +
-                '<div class="rp-detail-badges">' +
-                    '<span style="background:#eef0fb;color:#5e72e4;font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;">'+typeLabel+'</span>' +
-                    '<span class="access-badge '+badgeClass+'">'+badgeLabel+'</span>' +
-                '</div>' +
-            '</div>' +
-            '<div class="rp-detail-ctrl">' +
-                '<button class="rp-detail-ctrl-btn" onclick="closeRoleDetail()">' +
-                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-                '</button>' +
-            '</div>' +
-        '</div>' +
-
-        '<div class="rp-detail-stat-tabs">' +
-            '<div class="rp-dtab active"><span class="rp-dtab-val">'+data.grpCount+'</span>Perm Groups</div>' +
-            '<div class="rp-dtab"><span class="rp-dtab-val">'+data.userCount+'</span>Users</div>' +
-            '<div class="rp-dtab"><span class="rp-dtab-val">'+(data.isCustom ? 'Custom' : '100%')+'</span>Access</div>' +
-        '</div>' +
-
-        '<div class="rp-dsection">' +
-            '<div class="rp-dsection-title">Description</div>' +
-            '<div class="rp-ddesc">'+data.name+' role with '+badgeLabel.toLowerCase()+' to system features and '+data.grpCount+' permission group'+(data.grpCount===1?'':'s')+'.</div>' +
-        '</div>' +
-
-        (grpHtml ? '<div class="rp-dsection"><div class="rp-dsection-title">Permission Groups ('+data.groups.length+')</div>'+grpHtml+'</div>' : '') +
-
-        '<div class="rp-dsection">' +
-            '<div class="rp-dsection-title">Assigned Users ('+data.userCount+')</div>' +
-            (data.userCount > 0
-                ? '<div class="rp-user-item"><div class="rp-user-left">'+avHtml+'<div><div class="rp-user-name">'+data.userCount+' user'+(data.userCount===1?'':'s')+' assigned</div><div class="rp-user-email">Click "View Role" for full member list</div></div></div><div class="rp-status-indicator"><div class="rp-status-dot"></div><span class="rp-status-txt">Active</span></div></div>'
-                : '<div style="font-size:11px;color:#b0bbd8;padding:6px 0;">No users assigned to this role.</div>'
-            ) +
-        '</div>' +
-
-        '<div class="rp-dsection">' +
-            '<div class="rp-dsection-title">Security &amp; Risk</div>' +
-            '<div class="rp-security-row"><span class="rp-security-lbl">Access Level</span><span class="access-badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
-            '<div class="rp-security-row"><span class="rp-security-lbl">Role Type</span><span class="rp-security-val">'+typeLabel+'</span></div>' +
-        '</div>';
-
-    panel.classList.add('open');
-}
-
-function closeRoleDetail() {
-    document.getElementById('roleDetailPanel').classList.remove('open');
-    document.querySelectorAll('.rp-role-card').forEach(function (c) { c.classList.remove('selected'); });
-}
+var currentDrawerRole = null;
 
 function ucwords(str) {
     return str.replace(/\b\w/g, function (l) { return l.toUpperCase(); });
 }
+
+function esc(str) {
+    return $('<div>').text(str == null ? '' : str).html();
+}
+
+function svgIcon(path, stroke) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(stroke||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+}
+
+var ICON_SHIELD_CHECK = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>';
+var ICON_USERS        = '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>';
+var ICON_SHIELD       = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
+var ICON_CHECK        = '<polyline points="20 6 9 17 4 12"/>';
+var ICON_ALERT        = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+var ICON_EDIT         = '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>';
+var ICON_COPY         = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+var ICON_TRASH        = '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>';
+var ICON_ARROW_RIGHT  = '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>';
+
+function openRoleDrawer(el) {
+    var data = JSON.parse(el.getAttribute('data-role-detail'));
+    currentDrawerRole = data;
+
+    document.querySelectorAll('.rp-role-card').forEach(function (c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+
+    var badgeClass = data.access.class;
+    var badgeLabel = data.access.label;
+    var typeLabel  = data.isCustom ? 'Custom Role' : 'System Role';
+
+    /* Header */
+    document.getElementById('drawerIcon').style.background = data.palette.bg;
+    document.getElementById('drawerIcon').innerHTML = svgIcon(ICON_SHIELD_CHECK, data.palette.stroke);
+    document.getElementById('drawerTitle').textContent = data.name;
+    document.getElementById('drawerAccessBadge').className = 'access-badge ' + badgeClass;
+    document.getElementById('drawerAccessBadge').textContent = badgeLabel;
+    document.getElementById('drawerMeta').textContent = typeLabel + ' • ID: ' + data.roleCode;
+    document.getElementById('drawerTabPermissions').textContent = 'Permissions (' + data.totalPerms + ')';
+    document.getElementById('drawerTabUsers').textContent = 'Users (' + data.userCount + ')';
+
+    /* Head menu (Edit / Duplicate / Delete shortcuts) */
+    var menuHtml = '';
+    if (data.canEdit) {
+        menuHtml += '<div class="rp-drawer-menu-item editRole" data-id="'+data.id+'" onclick="closeDrawerMenu()">'+svgIcon(ICON_EDIT)+' Edit Role</div>';
+    }
+    menuHtml += '<div class="rp-drawer-menu-item" onclick="duplicateRoleNotice(); closeDrawerMenu();">'+svgIcon(ICON_COPY)+' Duplicate Role</div>';
+    if (data.canDelete) {
+        menuHtml += '<div class="rp-drawer-menu-item danger role_delete" data-id="'+data.id+'" onclick="closeDrawerMenu()">'+svgIcon(ICON_TRASH)+' Delete Role</div>';
+    }
+    document.getElementById('drawerMenu').innerHTML = menuHtml;
+    closeDrawerMenu();
+
+    /* Overview pane */
+    var coverageHtml = '';
+    Object.keys(data.coverage).forEach(function (bucketName) {
+        var b = data.coverage[bucketName];
+        coverageHtml +=
+            '<div class="rp-dcov-row">' +
+                '<div class="rp-dcov-top"><span class="rp-dcov-name">'+esc(bucketName)+'</span><span class="rp-dcov-frac">'+b.assigned+'/'+b.total+'</span></div>' +
+                '<div class="rp-dcov-track"><div class="rp-dcov-fill" style="width:'+b.pct+'%;background:'+b.color+';"></div></div>' +
+            '</div>';
+    });
+
+    var warningHtml = '';
+    if (badgeClass === 'badge-high') {
+        warningHtml =
+            '<div class="rp-dwarning">' +
+                svgIcon(ICON_ALERT, '#f39c12') +
+                '<div>' +
+                    '<p class="rp-dwarning-title">High Access Role</p>' +
+                    '<p class="rp-dwarning-text">This role has access to sensitive modules. Changes will affect ' + data.userCount + ' user' + (data.userCount === 1 ? '' : 's') + '.</p>' +
+                '</div>' +
+            '</div>';
+    }
+
+    document.getElementById('drawerPaneOverview').innerHTML =
+        '<div class="rp-dmetrics">' +
+            '<div class="rp-dmetric"><div class="rp-dmetric-icon" style="background:#eef0fb;">'+svgIcon(ICON_USERS,'#5e72e4')+'</div><div class="rp-dmetric-val">'+data.grpCount+'</div><div class="rp-dmetric-lbl">Permission Groups</div></div>' +
+            '<div class="rp-dmetric"><div class="rp-dmetric-icon" style="background:#e3f1ff;">'+svgIcon(ICON_USERS,'#1a73e8')+'</div><div class="rp-dmetric-val">'+data.userCount+'</div><div class="rp-dmetric-lbl">Assigned Users</div></div>' +
+            '<div class="rp-dmetric"><div class="rp-dmetric-icon" style="background:#fff8e6;">'+svgIcon(ICON_SHIELD,'#f39c12')+'</div><div class="rp-dmetric-val">'+badgeLabel.replace(' Access','')+'</div><div class="rp-dmetric-lbl">Access Level</div></div>' +
+        '</div>' +
+
+        '<div class="rp-dcard">' +
+            '<p class="rp-dcard-title">Role Information</p>' +
+            '<div class="rp-dinfo-grid">' +
+                '<div><div class="rp-dinfo-lbl">Role Type</div><div class="rp-dinfo-val">'+typeLabel+'</div></div>' +
+                '<div><div class="rp-dinfo-lbl">Created On</div><div class="rp-dinfo-val">'+(data.createdOn || '—')+'</div></div>' +
+                '<div><div class="rp-dinfo-lbl">Last Updated</div><div class="rp-dinfo-val">'+(data.updatedOn || '—')+'</div></div>' +
+            '</div>' +
+        '</div>' +
+
+        '<div class="rp-dcard">' +
+            '<p class="rp-dcard-title">Permission Coverage</p>' +
+            coverageHtml +
+        '</div>' +
+
+        '<div class="rp-view-all-link" onclick="switchDrawerTab(\'permissions\')">View all permissions '+svgIcon(ICON_ARROW_RIGHT)+'</div>' +
+
+        warningHtml;
+
+    /* Permissions pane */
+    var permsHtml = '';
+    if (data.permissions.length > 0) {
+        data.permissions.forEach(function (grp) {
+            permsHtml += '<div class="rp-dperm-group"><p class="rp-dperm-group-title">'+esc(grp.group)+'</p>';
+            grp.items.forEach(function (item) {
+                permsHtml += '<div class="rp-dperm-item">'+svgIcon(ICON_CHECK)+' '+esc(item)+'</div>';
+            });
+            permsHtml += '</div>';
+        });
+    } else {
+        permsHtml = '<div class="rp-dempty">No permissions assigned to this role.</div>';
+    }
+    document.getElementById('drawerPanePermissions').innerHTML = permsHtml;
+
+    /* Users pane */
+    var usersHtml = '';
+    if (data.users.length > 0) {
+        data.users.forEach(function (u, idx) {
+            var initial = u.name ? u.name.charAt(0).toUpperCase() : '?';
+            usersHtml +=
+                '<div class="rp-duser-item">' +
+                    '<div class="rp-duser-av" style="background:'+avColors[idx % avColors.length]+';">'+initial+'</div>' +
+                    '<div><div class="rp-duser-name">'+esc(u.name)+'</div><div class="rp-duser-email">'+esc(u.email)+'</div></div>' +
+                '</div>';
+        });
+    } else {
+        usersHtml = '<div class="rp-dempty">No users assigned to this role.</div>';
+    }
+    document.getElementById('drawerPaneUsers').innerHTML = usersHtml;
+
+    /* Footer actions */
+    var footerHtml = '';
+    if (data.canEdit) {
+        footerHtml += '<button type="button" class="rp-dbtn editRole" data-id="'+data.id+'">'+svgIcon(ICON_EDIT)+' Edit Role</button>';
+    }
+    footerHtml += '<button type="button" class="rp-dbtn" onclick="duplicateRoleNotice()">'+svgIcon(ICON_COPY)+' Duplicate Role</button>';
+    if (data.canDelete) {
+        footerHtml += '<button type="button" class="rp-dbtn danger role_delete" data-id="'+data.id+'">'+svgIcon(ICON_TRASH)+' Delete Role</button>';
+    }
+    document.getElementById('drawerFooter').innerHTML = footerHtml;
+
+    switchDrawerTab('overview');
+    document.getElementById('roleDrawer').classList.add('open');
+    document.getElementById('roleDrawerBackdrop').classList.add('open');
+}
+
+function closeRoleDrawer() {
+    document.getElementById('roleDrawer').classList.remove('open');
+    document.getElementById('roleDrawerBackdrop').classList.remove('open');
+    document.querySelectorAll('.rp-role-card').forEach(function (c) { c.classList.remove('selected'); });
+    closeDrawerMenu();
+}
+
+function switchDrawerTab(pane) {
+    document.querySelectorAll('.rp-drawer-tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-pane') === pane); });
+    document.querySelectorAll('.rp-drawer-pane').forEach(function (p) { p.classList.remove('active'); });
+    var map = { overview: 'drawerPaneOverview', permissions: 'drawerPanePermissions', users: 'drawerPaneUsers' };
+    document.getElementById(map[pane]).classList.add('active');
+}
+
+function toggleDrawerMenu(e) {
+    e.stopPropagation();
+    document.getElementById('drawerMenu').classList.toggle('open');
+}
+
+function closeDrawerMenu() {
+    document.getElementById('drawerMenu').classList.remove('open');
+}
+
+function duplicateRoleNotice() {
+    Swal.fire({ icon: 'info', title: 'Coming soon', text: 'Duplicating roles isn\'t available yet.', confirmButtonColor: '#5e72e4' });
+}
+
+document.addEventListener('click', function (e) {
+    var menu = document.getElementById('drawerMenu');
+    var btn = document.getElementById('drawerMenuBtn');
+    if (menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn) {
+        closeDrawerMenu();
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeRoleDrawer();
+});
 
 /* ── Switchery init ── */
 $('.js-switch').each(function () { new Switchery($(this)[0], $(this).data()); });
