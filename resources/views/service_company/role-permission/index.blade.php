@@ -791,21 +791,41 @@ $('.show-members').click(function () {
 /* ── Load role form into add modal ── */
 $(document).ready(function () {
 
-    $('#addNewRole, #addNewRoleBtn').click(function () {
+    $('#addNewRole, #addNewRoleBtn').on('click', function (e) {
+        e.preventDefault();
         var url = "{{ route('service_company.settings.loadRole',':id') }}".replace(':id', 0);
+        $('#stage_body_content').html('<div class="text-center py-10"><span class="spinner-border spinner-border-sm align-middle me-2"></span>Loading...</div>');
+        $('#kt_modal_add_role').modal('show');
         $.ajax({ type: 'GET', url: url,
             success: function (response) {
-                if (response.status === "success") $('#stage_body_content').html(response.view);
+                if (response.status === "success") {
+                    $('#stage_body_content').html(response.view);
+                } else {
+                    $('#stage_body_content').html('<div class="text-center text-danger py-10">Unable to load the form. Please try again.</div>');
+                }
+            },
+            error: function () {
+                $('#stage_body_content').html('<div class="text-center text-danger py-10">Something went wrong while loading the form.</div>');
             }
         });
     });
 
-    $(document).on('click', '.editRole', function () {
+    $(document).on('click', '.editRole', function (e) {
+        e.preventDefault();
         var id = $(this).data('id');
         var url = "{{ route('service_company.settings.loadEditRole',':id') }}".replace(':id', id);
+        $('#edit_body_content').html('<div class="text-center py-10"><span class="spinner-border spinner-border-sm align-middle me-2"></span>Loading...</div>');
+        $('#kt_modal_edit_role').modal('show');
         $.ajax({ type: 'GET', url: url,
             success: function (response) {
-                if (response.status === "success") $('#edit_body_content').html(response.view);
+                if (response.status === "success") {
+                    $('#edit_body_content').html(response.view);
+                } else {
+                    $('#edit_body_content').html('<div class="text-center text-danger py-10">Unable to load the form. Please try again.</div>');
+                }
+            },
+            error: function () {
+                $('#edit_body_content').html('<div class="text-center text-danger py-10">Something went wrong while loading the form.</div>');
             }
         });
     });
