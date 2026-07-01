@@ -355,6 +355,11 @@ if (!function_exists('rpCardIcon')) {
 }
 ?>
 
+{{-- Kept empty/hidden: Metronic's shared layout bundle expects #kt_toolbar to exist on every page and reads its offsetWidth during init --}}
+<div class="toolbar" id="kt_toolbar">
+    <div id="kt_toolbar_container" class="container-fluid"></div>
+</div>
+
 <div class="rp-page">
 
     {{-- ── Page Header ── --}}
