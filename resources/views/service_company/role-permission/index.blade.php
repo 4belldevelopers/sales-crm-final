@@ -16,7 +16,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .post { padding: 0 !important; }
 
 /* ── Page wrapper ── */
-.rp-page { padding: 14px 28px 24px; background: #f1f3f8; min-height: calc(100vh - 65px); }
+.rp-page { padding: 18px 28px 24px; background: #f1f3f8; min-height: calc(100vh - 65px); }
 
 /* ── Page header card ── */
 .rp-header-card {
