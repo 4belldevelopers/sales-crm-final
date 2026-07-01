@@ -3973,6 +3973,28 @@ protected $elasticService;
 		$id = GeneralMethod::value_decrypt($id);
 		$company_id = '';
 		$company_id = auth()->user()->company_id;
+
+		// Authorization: only the assigned Captain (job_assign.spok_user_id) or the submitting user
+		// (add_job_wise_condidates.submitted_by), within the same company, may open this edit form.
+		// Here $id is the add_job_wise_condidates.id.
+		$authUserId = auth()->id();
+		$canEditCandidate = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $id)
+			->where('ajwc.company_id', $company_id)
+			->where(function ($query) use ($authUserId) {
+				$query->where('ja.spok_user_id', $authUserId)
+					->orWhere('ajwc.submitted_by', $authUserId);
+			})
+			->exists();
+
+		if (!$canEditCandidate) {
+			return redirect()->back()->with('candidate_edit_denied', "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it");
+		}
+
 		$AddJobWiseCondidate = AddJobWiseCondidate::find($id);
 		$this->AddJobWiseCondidateRankRow = $id;
 		// dd($AddJobWiseCondidate->job_id);
@@ -5243,12 +5265,38 @@ protected $elasticService;
 	// Function to convert currency to INR
 	public function update(Request $request, $id)
 	{
-		// echo '<pre>'; print_r($_FILES); exit; 
+		// echo '<pre>'; print_r($_FILES); exit;
 		// die;
 
 		// dd(auth()->user()->company_id);
 
 		// dd($request->all());
+
+		// Authorization: a candidate profile may only be edited by the assigned Captain
+		// (job_assign.spok_user_id) or the submitting user (add_job_wise_condidates.submitted_by),
+		// and only within the same company (tenancy).
+		$authUserId = auth()->id();
+		$authCompanyId = auth()->user()->company_id;
+		$canEditCandidate = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.job_application_id', $id)
+			->where('ajwc.company_id', $authCompanyId)
+			->where(function ($query) use ($authUserId) {
+				$query->where('ja.spok_user_id', $authUserId)
+					->orWhere('ajwc.submitted_by', $authUserId);
+			})
+			->exists();
+
+		if (!$canEditCandidate) {
+			return Reply::dataOnly([
+				'status'  => 'notauthorized',
+				'msgType' => 'warning',
+				'message' => "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it"
+			]);
+		}
 
 		 $validator = Validator::make($request->all(), [
 			'email' => [
