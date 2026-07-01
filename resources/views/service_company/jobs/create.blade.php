@@ -2599,11 +2599,16 @@
                 success: function(data) {
                     if (data.status == 'success') {
                         var ed = document.getElementById('jobDescription');
-                        if (ed) { ed.innerHTML = data.jd || ''; syncDescription(); }
+                        // Only auto-fill description when it is empty (new job); skip on edit to preserve existing JD
+                        var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
+                        if (ed && currentDesc === '') {
+                            ed.innerHTML = data.jd || '';
+                            syncDescription();
+                        }
                         $("#min_exp").val(data.minimum_exp).change();
                         $("#max_exp").val(data.maxmum_exp).change();
-                        if (data.skills) {
-                            skills = [];
+                        // Only auto-fill skills when none are already added
+                        if (data.skills && skills.length === 0) {
                             (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
                             renderSkills();
                         }
@@ -2638,26 +2643,11 @@
                         if (data.status == 'success') {
                             let html = '';
                             if (data.skills) {
-
-                            skills = [];
-                        
+                            // Do NOT reset skills here — preserve already-added Key Skills
                             data.skills.forEach(function(item) {
-
-                                html += `
-                                    <span class="chip"
-                                        onclick="addSuggestedSkill(this,'${item.skill}')">
-                                        ${item.skill}
-                                        <span class="remove">+</span>
-                                    </span>
-                                `;
-
-
-                                //skills.push(item.skill);
-
-                            // console.log(item.skill, item.confidence);
+                                html += `<span class="chip" onclick="addSuggestedSkill(this,'${item.skill}')">${item.skill} <span class="remove">+</span></span>`;
                             });
-
-                        $('.skillsWrapperSkill').html(html);
+                            $('.skillsWrapperSkill').html(html);
                         }
 
                             // if (data.skills) {
