@@ -1121,6 +1121,21 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 				$this->scpInterviewsTotal = $iR['hits']['total']['value'] ?? 0;
 			} catch (\Throwable $e) { $this->scpInterviewsTotal = 0; }
 
+			// Overall offers = all candidates by this user that have an offer created (of_created_date not null).
+			$this->scpOffersTotal = 0;
+			try {
+				$oR = $this->elasticService->getClient()->search([
+					'index' => ELASTIC_CANDIDATES,
+					'body' => ['track_total_hits' => true, 'size' => 0,
+						'query' => ['bool' => ['must' => [
+							['term' => ['submitted_by' => $id]],
+							['exists' => ['field' => 'of_created_date']],
+						]]],
+					],
+				]);
+				$this->scpOffersTotal = $oR['hits']['total']['value'] ?? 0;
+			} catch (\Throwable $e) { $this->scpOffersTotal = (int) ($this->offer_count ?? 0); }
+
 			$this->countries = DB::table('countries')->get();
         	$this->calling_codes = $this->getCallingCodes();
         	return view('service_company.profile.index', $this->data);
