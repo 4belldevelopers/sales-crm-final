@@ -80,19 +80,19 @@
             gap: 16px;
         }
         .team-stat-ico {
-            width: 52px;
-            height: 52px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             flex-shrink: 0;
         }
-        .ico-blue   { background: #eaf1ff; color: #3b82f6; }
-        .ico-green  { background: #e7f8f0; color: #12b76a; }
-        .ico-amber  { background: #fff4e5; color: #f79009; }
-        .ico-purple { background: #f1ecff; color: #7c5cfc; }
+        .ico-blue   { background: #e8eeff; color: #4f80f0; }
+        .ico-green  { background: #e6f9f0; color: #2ebd85; }
+        .ico-amber  { background: #fff3e0; color: #f79009; }
+        .ico-purple { background: #f0ebff; color: #7c5cfc; }
         .team-stat-label { font-size: 12px; color: #7c8398; margin-bottom: 2px; }
         .team-stat-value { font-size: 24px; font-weight: 700; color: #1e2129; line-height: 1; }
         .team-stat-sub { font-size: 11px; color: #7c8398; margin-top: 5px; }
@@ -643,7 +643,7 @@
                 {{-- Stat cards --}}
                 <div class="team-stats-row">
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-blue"><i class="fa-solid fa-users"></i></div>
+                        <div class="team-stat-ico ico-blue"><i class="fa-solid fa-user-group"></i></div>
                         <div>
                             <div class="team-stat-label">Total Members</div>
                             <div class="team-stat-value">{{ $teamCounts['total'] }}</div>
@@ -657,7 +657,7 @@
                         </div>
                     </div>
                     <div class="team-stat-card">
-                        <div class="team-stat-ico ico-amber"><i class="fa-regular fa-user"></i></div>
+                        <div class="team-stat-ico ico-amber"><i class="fa-solid fa-user-xmark"></i></div>
                         <div>
                             <div class="team-stat-label">Inactive Members</div>
                             <div class="team-stat-value">{{ $teamCounts['inactive'] }}</div>
