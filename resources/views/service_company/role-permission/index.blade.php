@@ -16,12 +16,12 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .post { padding: 0 !important; }
 
 /* ── Page wrapper ── */
-.rp-page { padding: 24px 28px; background: #f1f3f8; min-height: calc(100vh - 65px); }
+.rp-page { padding: 14px 28px 24px; background: #f1f3f8; min-height: calc(100vh - 65px); }
 
 /* ── Page header card ── */
 .rp-header-card {
     background: #fff; border: 1px solid #eaf0fb; border-radius: 12px;
-    padding: 20px 22px; margin-bottom: 0;
+    padding: 20px 22px; margin-bottom: 18px;
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
 }
 .rp-page-title { display: flex; align-items: center; gap: 8px; }
