@@ -385,6 +385,186 @@
 
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
+        /* ========== Invite Drawer ========== */
+        .invite-overlay {
+            position: fixed; inset: 0;
+            background: rgba(15,20,40,.45);
+            backdrop-filter: blur(2px);
+            z-index: 1040;
+            opacity: 0; pointer-events: none;
+            transition: opacity .28s ease;
+        }
+        .invite-overlay.open { opacity: 1; pointer-events: all; }
+
+        .invite-drawer {
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 520px;
+            max-width: 100vw;
+            background: #fff;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+            box-shadow: -8px 0 40px rgba(15,20,40,.13);
+        }
+        .invite-drawer.open { transform: translateX(0); }
+
+        /* Header */
+        .invite-drawer-head {
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid #f0f1f6;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .invite-drawer-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+            margin: 0 0 4px;
+        }
+        .invite-drawer-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 0;
+        }
+        .invite-drawer-close {
+            width: 34px; height: 34px;
+            border-radius: 8px;
+            border: none;
+            background: #f3f4f6;
+            color: #374151;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background .15s;
+            flex-shrink: 0;
+            margin-left: 16px;
+            margin-top: 2px;
+        }
+        .invite-drawer-close:hover { background: #e5e7eb; color: #111; }
+
+        /* Body */
+        .invite-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 32px;
+        }
+
+        /* Field */
+        .invite-field { margin-bottom: 22px; }
+        .invite-field-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .invite-field-label .req { color: #ef4444; margin-left: 1px; }
+        .invite-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .invite-input-icon {
+            position: absolute;
+            left: 14px;
+            color: #9ca3af;
+            font-size: 15px;
+            pointer-events: none;
+            line-height: 1;
+        }
+        .invite-input-wrap input,
+        .invite-input-wrap select {
+            width: 100%;
+            height: 48px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0 16px 0 44px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            color: #111827;
+            background: #fff;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .invite-input-wrap input::placeholder,
+        .invite-input-wrap select.placeholder-active { color: #9ca3af; }
+        .invite-input-wrap input:focus,
+        .invite-input-wrap select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+        }
+        /* chevron for select */
+        .invite-select-wrap { position: relative; }
+        .invite-select-wrap::after {
+            content: '';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            width: 14px; height: 14px;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>") center/contain no-repeat;
+        }
+        .invite-field-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 7px;
+        }
+
+        /* Footer */
+        .invite-drawer-foot {
+            padding: 20px 32px 28px;
+            border-top: 1px solid #f0f1f6;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .invite-btn-cancel {
+            height: 44px;
+            padding: 0 24px;
+            border-radius: 10px;
+            border: 1.5px solid #e5e7eb;
+            background: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #374151;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .invite-btn-cancel:hover { background: #f3f4f6; }
+        .invite-btn-send {
+            height: 44px;
+            padding: 0 24px;
+            border-radius: 10px;
+            border: none;
+            background: #6366f1;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: background .15s;
+        }
+        .invite-btn-send:hover { background: #4f46e5; }
+        .invite-btn-send:disabled { opacity: .65; cursor: not-allowed; }
+        .invite-spinner { display: none; }
+        .invite-btn-send.loading .invite-label { display: none; }
+        .invite-btn-send.loading .invite-spinner { display: inline-block; }
+
         @media (max-width: 1200px) {
             .team-stats-row { grid-template-columns: repeat(2, 1fr); }
             .team-workload { gap: 14px; }
@@ -405,8 +585,7 @@
             </div>
             <div class="d-flex align-items-center team-header-actions">
                 <input type="hidden" id="inputSearch" data-kt-user-table-filter="search" placeholder="Search..." />
-                <a href="javascript:void(0);" class="team-btn team-btn-light add_team_member" data-toggle="modal"
-                    data-target="#add_team_member">
+                <a href="javascript:void(0);" class="team-btn team-btn-light" id="openInviteDrawer">
                     <i class="fa-regular fa-envelope"></i> <span>Invite Member</span>
                 </a>
                 <a href="javascript:void(0);" class="team-btn team-btn-light" onclick="exportTeam()">
@@ -542,38 +721,72 @@
         </div>
         <!--end::Content-->
 
-        <!--begin::Add Team Member Modal-->
-        <div class="modal fade" id="add_team_member" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered mw-650px">
-                <div class="modal-content">
-                    <div class="modal-header" id="add_team_member_header">
-                        <h2 class="fw-bolder">Add Team Member</h2>
-                        <div class="btn btn-icon btn-sm btn-active-light-danger" data-dismiss="modal"> <span
-                                class="svg-icon svg-icon-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="currentColor">
-                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                        transform="rotate(-45 6 17.3137)" />
-                                    <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                        transform="rotate(45 7.41422 6)" />
-                                </svg>
-                            </span> </div>
-
-
-                    </div>
-                    <div class="modal-body scroll-y mx-5">
-                        <form id="add_team_member_form" name="add_team_member_form" class="form" action="#"
-                            method="post">
-                            <meta name="csrf-token" content="{{ csrf_token() }}" />
-                            @csrf
-                            @method('POST')
-                            <div id="load_add_team_invitation_content"></div>
-                        </form>
-                    </div>
+        {{-- Invite Member Drawer --}}
+        <div class="invite-overlay" id="inviteOverlay"></div>
+        <div class="invite-drawer" id="inviteDrawer" role="dialog" aria-modal="true" aria-label="Invite Team Member">
+            {{-- Header --}}
+            <div class="invite-drawer-head">
+                <div>
+                    <p class="invite-drawer-title">Invite Team Member</p>
+                    <p class="invite-drawer-subtitle">Add a new team member and set their role &amp; permissions</p>
                 </div>
+                <button class="invite-drawer-close" id="inviteDrawerClose" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="invite-drawer-body">
+                <form id="inviteForm" enctype="multipart/form-data">
+                    @csrf
+
+                    {{-- Name --}}
+                    <div class="invite-field">
+                        <label class="invite-field-label">Name <span class="req">*</span></label>
+                        <div class="invite-input-wrap">
+                            <span class="invite-input-icon"><i class="fa-regular fa-user"></i></span>
+                            <input type="text" name="name" id="inviteName" placeholder="Enter full name" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="invite-field">
+                        <label class="invite-field-label">Email <span class="req">*</span></label>
+                        <div class="invite-input-wrap">
+                            <span class="invite-input-icon"><i class="fa-regular fa-envelope"></i></span>
+                            <input type="email" name="email" id="inviteEmail" placeholder="Enter email address" autocomplete="off" />
+                        </div>
+                    </div>
+
+                    {{-- Role --}}
+                    <div class="invite-field">
+                        <label class="invite-field-label">Role &amp; Permissions <span class="req">*</span></label>
+                        <div class="invite-input-wrap invite-select-wrap">
+                            <span class="invite-input-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                            <select name="role_id" id="inviteRole">
+                                <option value="" disabled selected>Select role</option>
+                                {{-- Populated by AJAX --}}
+                                <div id="inviteRoleOptions"></div>
+                            </select>
+                        </div>
+                        <p class="invite-field-hint">Role will define the permissions the user will have in the system.</p>
+                    </div>
+
+                    {{-- Message area --}}
+                    <div id="inviteMsg" style="display:none; font-size:13px; padding:10px 14px; border-radius:8px; margin-top:4px;"></div>
+                </form>
+            </div>
+
+            {{-- Footer --}}
+            <div class="invite-drawer-foot">
+                <button class="invite-btn-cancel" id="inviteCancelBtn">Cancel</button>
+                <button class="invite-btn-send" id="inviteSubmitBtn">
+                    <span class="invite-label"><i class="fa-solid fa-paper-plane me-1"></i> Send Invitation</span>
+                    <span class="invite-spinner"><span class="spinner-border spinner-border-sm"></span> Sending...</span>
+                </button>
             </div>
         </div>
-        <!--end::Add team member popup-->
+        {{-- End Invite Drawer --}}
 
         <!--begin::Update role-->
         <div class="modal fade show" id="update_role" tabindex="-1" aria-modal="true" role="dialog">
@@ -935,33 +1148,103 @@
 
             });
 
-            $(document).on('click', '.add_team_member', function() {
-                var id = 123;
-                var url = "{{ route('service_company.team.add_team_member_form', ':id') }}";
-                url = url.replace(':id', id);
-                var token = "{{ csrf_token() }}";
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    beforeSend: function() {
-                        $('#load_add_team_invitation_content').html('<img src="' + baseurl +
-                            '" height="60%" width="100%">');
-                    },
-                    success: function(response) {
-                        if (response.status == 'coinCheck') {
-                            Swal.fire("Failed", ` ${response.message}`, "warning").then(function() {
-                                $(".btn-active-icon-primary").click();
-                            });
-                            return false;
-                        }
-                        if (response.status == "success") {
-                            $('#load_add_team_invitation_content').html(response.view);
-                        }
+            // ---- Invite Drawer ----
+            function openInviteDrawer() {
+                var rolesUrl = "{{ route('service_company.team.add_team_member_form', '123') }}";
+                // Load roles into select
+                $.get(rolesUrl, function(response) {
+                    if (response.status === 'coinCheck') {
+                        Swal.fire("Insufficient Coins", response.message, "warning");
+                        return;
+                    }
+                    if (response.status === 'success') {
+                        // Parse roles from the returned HTML and populate select
+                        var $html = $(response.view);
+                        var $select = $('#inviteRole');
+                        $select.find('option:not([disabled])').remove();
+                        $html.find('input[type="radio"][name="role_id"]').each(function() {
+                            var val = $(this).val();
+                            var label = $(this).siblings('label').find('.fw-bolder').text().trim()
+                                     || $(this).closest('.d-flex').find('.fw-bolder').text().trim();
+                            if (val && label) {
+                                $select.append('<option value="' + val + '">' + label + '</option>');
+                            }
+                        });
+                    }
+                });
+                // Reset form
+                $('#inviteForm')[0].reset();
+                $('#inviteMsg').hide().text('');
+                $('#inviteSubmitBtn').removeClass('loading').prop('disabled', false);
+                // Open
+                $('#inviteOverlay, #inviteDrawer').addClass('open');
+                document.body.style.overflow = 'hidden';
+            }
 
+            function closeInviteDrawer() {
+                $('#inviteOverlay, #inviteDrawer').removeClass('open');
+                document.body.style.overflow = '';
+            }
+
+            $('#openInviteDrawer').on('click', openInviteDrawer);
+            $('#inviteDrawerClose, #inviteCancelBtn').on('click', closeInviteDrawer);
+            $('#inviteOverlay').on('click', closeInviteDrawer);
+            $(document).on('keydown', function(e) { if (e.key === 'Escape') closeInviteDrawer(); });
+
+            $('#inviteSubmitBtn').on('click', function() {
+                var name  = $.trim($('#inviteName').val());
+                var email = $.trim($('#inviteEmail').val());
+                var role  = $('#inviteRole').val();
+
+                if (!name) {
+                    showInviteMsg('Please enter the full name.', 'error'); return;
+                }
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showInviteMsg('Please enter a valid email address.', 'error'); return;
+                }
+                if (!role) {
+                    showInviteMsg('Please select a role.', 'error'); return;
+                }
+
+                var $btn = $(this);
+                $btn.addClass('loading').prop('disabled', true);
+                $('#inviteMsg').hide();
+
+                var formData = new FormData($('#inviteForm')[0]);
+
+                $.ajax({
+                    url: '{{ route("service_company.team.store") }}?_token={{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $btn.removeClass('loading').prop('disabled', false);
+                        if (response.msgType === 'success') {
+                            closeInviteDrawer();
+                            fetchTeams();
+                            Swal.fire('Invitation Sent!', response.message, 'success');
+                        } else {
+                            showInviteMsg(response.message || 'Something went wrong.', 'error');
+                        }
+                    },
+                    error: function() {
+                        $btn.removeClass('loading').prop('disabled', false);
+                        showInviteMsg('Server error. Please try again.', 'error');
                     }
                 });
             });
+
+            function showInviteMsg(msg, type) {
+                var $m = $('#inviteMsg');
+                $m.text(msg)
+                  .css({
+                      background: type === 'error' ? '#fef2f2' : '#f0fdf4',
+                      color:      type === 'error' ? '#dc2626'  : '#16a34a',
+                      border:     type === 'error' ? '1px solid #fecaca' : '1px solid #bbf7d0'
+                  })
+                  .show();
+            }
         </script>
 
         <script>
