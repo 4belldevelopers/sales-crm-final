@@ -9921,7 +9921,7 @@ END:VCALENDAR";
 				}
          return  $allow;
 	}
-	public static function getTeamRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true)
+	public static function getTeamRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true, $returnFull = false)
 	{
 		$elasticService = app(ElasticService::class);
 		$userQuery = [
@@ -10052,22 +10052,29 @@ END:VCALENDAR";
 		$ranked = $users->map(function ($user) use ($scoreMap,$startDate) {
 			$id = $user['id'];
 			return [
-				'id' => $id,
-				'profileUpload' => $scoreMap[$id]['profileUpload'] ?? 0,
+				'id'      => $id,
+				'name'    => $user['name'] ?? '',
+				'email'   => $user['email'] ?? '',
+				'designation' => $user['designation'] ?? '',
+				'profileUpload'   => $scoreMap[$id]['profileUpload'] ?? 0,
 				'interviewScheduled' => $scoreMap[$id]['interviewScheduled'] ?? 0,
-				'interviewNoShow' => $scoreMap[$id]['interviewNoShow'] ?? 0,
-				'offerReleased' => $scoreMap[$id]['offerReleased'] ?? 0,
-				'candidateJoined' => $scoreMap[$id]['candidateJoined'] ?? 0,
+				'interviewNoShow'    => $scoreMap[$id]['interviewNoShow'] ?? 0,
+				'offerReleased'      => $scoreMap[$id]['offerReleased'] ?? 0,
+				'candidateJoined'    => $scoreMap[$id]['candidateJoined'] ?? 0,
 				'teamCaptainInterviewScheduled' => $scoreMap[$id]['teamCaptainInterviewScheduled'] ?? 0,
-				'teamCaptainOfferReleased' => $scoreMap[$id]['teamCaptainOfferReleased'] ?? 0,
-				'teamCaptainCandidateJoined' => $scoreMap[$id]['teamCaptainCandidateJoined'] ?? 0,
-				'rankMonth' => date("M Y",strtotime($startDate)),
-				'sourcing' => $scoreMap[$id]['sourcing'] ?? 0,
-				'screening' => $scoreMap[$id]['screening'] ?? 0,
-				'evaluation' => $scoreMap[$id]['evaluation'] ?? 0,
+				'teamCaptainOfferReleased'      => $scoreMap[$id]['teamCaptainOfferReleased'] ?? 0,
+				'teamCaptainCandidateJoined'    => $scoreMap[$id]['teamCaptainCandidateJoined'] ?? 0,
+				'rankMonth' => date("M Y", strtotime($startDate)),
+				'sourcing'    => $scoreMap[$id]['sourcing'] ?? 0,
+				'screening'   => $scoreMap[$id]['screening'] ?? 0,
+				'evaluation'  => $scoreMap[$id]['evaluation'] ?? 0,
 				'negotiation' => $scoreMap[$id]['negotiation'] ?? 0,
-				'backout' => $scoreMap[$id]['backout'] ?? 0,
+				'backout'     => $scoreMap[$id]['backout'] ?? 0,
 				'backoutTeam' => $scoreMap[$id]['backoutTeam'] ?? 0,
+				'candidateJoinedContract'          => $scoreMap[$id]['candidateJoinedContract'] ?? 0,
+				'teamCaptainCandidateJoinedContract' => $scoreMap[$id]['teamCaptainCandidateJoinedContract'] ?? 0,
+				'backoutContract'     => $scoreMap[$id]['backoutContract'] ?? 0,
+				'backoutTeamContract' => $scoreMap[$id]['backoutTeamContract'] ?? 0,
 				'score' => $scoreMap[$id]['score'] ?? 0,
 			];
 		})->sortByDesc('score')->values();
@@ -10077,6 +10084,18 @@ END:VCALENDAR";
 			return $user;
 		});
 
+		if ($returnFull) {
+			$currentUser = $ranked->firstWhere('id', $loggedInUserId) ?? ['score' => 0, 'rank' => 'N/A'];
+			$leaders = $ranked->take(4);
+			if ($currentUser && !$leaders->contains('id', $loggedInUserId)) {
+				$leaders->push($currentUser);
+			}
+			return [
+				'user'    => $currentUser,
+				'leaders' => $leaders,
+				'total'   => $ranked->count(),
+			];
+		}
 
 		return $ranked->firstWhere('id', $loggedInUserId) ?? ['score' => 0, 'rank' => 'N/A'];
 	}
