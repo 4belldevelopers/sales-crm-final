@@ -2480,26 +2480,27 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 		$start = $reportMonth->copy()->startOfMonth()->toIso8601String();
 		$end   = $reportMonth->copy()->endOfMonth()->toIso8601String();
 
-		// Internal rank (within company) — full result includes leaders + total
-		$internal  = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
-		$userData  = $internal['user']    ?? ['score' => 0, 'rank' => 'N/A'];
-		$leaders   = $internal['leaders'] ?? collect();
-		$total     = $internal['total']   ?? 0;
+		try {
+			// Internal rank (within company) — full result includes leaders + total
+			$internal  = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
+			$userData  = $internal['user']    ?? ['score' => 0, 'rank' => 'N/A'];
+			$leaders   = $internal['leaders'] ?? collect();
+			$total     = $internal['total']   ?? 0;
 
-		// Global rank — secondary badge only
-		$globalData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, false);
-		$globalRank = is_array($globalData) ? ($globalData['rank'] ?? '-') : '-';
+			// Team page shows internal ranks only — no cross-company global rank
+			$view = view('service_company.dashboard._scoreboard', [
+				'U'          => is_array($userData) ? $userData : (array) $userData,
+				'totalCount' => $total,
+				'mode'       => 'internal',
+				'otherRank'  => null,
+				'month'      => date('M Y', strtotime($start)),
+				'leaders'    => $leaders,
+			])->render();
 
-		$view = view('service_company.dashboard._scoreboard', [
-			'U'          => is_array($userData) ? $userData : (array) $userData,
-			'totalCount' => $total,
-			'mode'       => 'internal',
-			'otherRank'  => $globalRank,
-			'month'      => date('M Y', strtotime($start)),
-			'leaders'    => $leaders,
-		])->render();
-
-		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+			return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+		} catch (\Throwable $e) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Scoreboard data could not be loaded.']);
+		}
 	}
 
 	public function create()

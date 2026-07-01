@@ -425,14 +425,14 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('team/jobdata', [ServiceCompanyTeamController::class,'jobdata'])->name('team.jobdata');
 						Route::get('team_ajax/jobdata', [ServiceCompanyTeamController::class,'jobdata_ajax'])->name('team.jobdata_ajax');
 						Route::get('team/assigndata', [ServiceCompanyTeamController::class,'assigndata'])->name('team.assigndata');
-						Route::resource('team', ServiceCompanyTeamController::class);
-						Route::post('team/resetpassword', [ServiceCompanyTeamController::class,'resetpassword'])->name('team.resetpassword'); 
+						Route::get('team/scoreboard', [ServiceCompanyTeamController::class,'teamScoreboard'])->name('team.scoreboard');
+						Route::resource('team', ServiceCompanyTeamController::class)->except(['show']);
+						Route::post('team/resetpassword', [ServiceCompanyTeamController::class,'resetpassword'])->name('team.resetpassword');
 						Route::post('team/statusUpdate', [ServiceCompanyTeamController::class,'statusUpdate'])->name('team.statusUpdate');
 						Route::post('team/teamDelete', [ServiceCompanyTeamController::class,'teamDelete'])->name('team.teamDelete');
 						Route::post('team/reSendmail', [ServiceCompanyTeamController::class,'reSendmail'])->name('team.reSendmail');
 						Route::any('team/roleupdate', [ServiceCompanyTeamController::class,'roleupdate'])->name('team.roleupdate');
 						Route::post('team/WorkingStatus', [ServiceCompanyTeamController::class,'WorkingStatus'])->name('team.WorkingStatus');
-						Route::get('team/scoreboard', [ServiceCompanyTeamController::class,'teamScoreboard'])->name('team.scoreboard');
 
 						//END
 						//#############       	START ROLES AND PERMISSION  
