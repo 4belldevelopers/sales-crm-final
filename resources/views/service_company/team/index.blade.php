@@ -385,6 +385,26 @@
 
         #team_rank_user .modal-dialog { max-width: 1180px; }
 
+        /* ========== Fixed Toolbar ========== */
+        #kt_toolbar {
+            position: fixed !important;
+            top: 65px !important;        /* Metronic header height */
+            left: 265px !important;      /* Metronic aside width (expanded) */
+            right: 0 !important;
+            z-index: 98 !important;
+            background: #fff !important;
+            border-bottom: 1px solid #eef0f4 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
+        }
+        /* Push content down so it doesn't hide behind the fixed toolbar */
+        #kt_content {
+            padding-top: calc(var(--kt-toolbar-height, 55px) + 10px) !important;
+        }
+        /* When aside is minimized (collapsed to icon-only ~75px) */
+        .aside-minimize:not(.aside-minimize-hover) #kt_toolbar {
+            left: 75px !important;
+        }
+
         /* ========== Invite Drawer ========== */
         .invite-overlay {
             position: fixed; inset: 0;
@@ -1924,6 +1944,17 @@
 			function exportTeam() {
 				window.print();
 			}
+
+            // ---- Recalculate toolbar fixed position from live DOM ----
+            function positionToolbar() {
+                var headerH  = $('#kt_header').outerHeight(true) || 65;
+                var asideW   = $('#kt_aside').outerWidth(true)   || 265;
+                var toolbarH = $('#kt_toolbar').outerHeight(true) || 55;
+                $('#kt_toolbar').css({ top: headerH, left: asideW });
+                $('#kt_content').css({ 'padding-top': toolbarH + 10 });
+            }
+            $(document).ready(positionToolbar);
+            $(window).on('resize', positionToolbar);
 
 			// Row actions dropdown
 			function toggleTeamMenu(btn) {
