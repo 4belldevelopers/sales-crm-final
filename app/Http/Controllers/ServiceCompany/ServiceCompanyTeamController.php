@@ -2439,25 +2439,30 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
 	public function teamScoreboard(Request $request)
 	{
-		$userId = (int) $request->get('user_id');
+		$userId    = (int) $request->get('user_id');
 		$companyId = $this->user->company_id;
 
 		$reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
 		$start = $reportMonth->copy()->startOfMonth()->toIso8601String();
-		$end = $reportMonth->copy()->endOfMonth()->toIso8601String();
+		$end   = $reportMonth->copy()->endOfMonth()->toIso8601String();
 
-		$rankData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true);
-		$totalCount = \App\Models\User::query()->company()->where('status', 'active')->count();
+		// Internal rank (within company) — full result includes leaders + total
+		$internal  = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
+		$userData  = $internal['user']    ?? ['score' => 0, 'rank' => 'N/A'];
+		$leaders   = $internal['leaders'] ?? collect();
+		$total     = $internal['total']   ?? 0;
 
-		$globalRankData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, false);
+		// Global rank — secondary badge only
+		$globalData = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, false);
+		$globalRank = is_array($globalData) ? ($globalData['rank'] ?? '-') : '-';
 
 		$view = view('service_company.dashboard._scoreboard', [
-			'U' => is_array($rankData) ? $rankData : (array) $rankData,
-			'totalCount' => $totalCount,
-			'mode' => 'internal',
-			'otherRank' => $globalRankData['rank'] ?? '-',
-			'month' => date('M Y', strtotime($start)),
-			'leaders' => collect(),
+			'U'          => is_array($userData) ? $userData : (array) $userData,
+			'totalCount' => $total,
+			'mode'       => 'internal',
+			'otherRank'  => $globalRank,
+			'month'      => date('M Y', strtotime($start)),
+			'leaders'    => $leaders,
 		])->render();
 
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
