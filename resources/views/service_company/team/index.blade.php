@@ -26,6 +26,16 @@
             color: #1e2129;
         }
 
+        /* Remove any shadow bleeding near the scrollbar from Metronic wrappers */
+        #kt_wrapper,
+        #kt_content,
+        #kt_post,
+        #kt_content_container,
+        .wrapper,
+        .content {
+            box-shadow: none !important;
+        }
+
         /* Toolbar appearance — positioning is handled by the fixed-toolbar CSS block below */
         .team-page-title {
             font-size: 22px;
@@ -391,9 +401,8 @@
             z-index: 200;
             background: #fff;
             border-bottom: 1px solid #eef0f4;
-            box-shadow: 0 2px 6px rgba(0,0,0,.05);
+            box-shadow: none;
             padding: 0 20px;
-            overflow: hidden;
             min-height: 65px;
             display: flex;
             align-items: center;
