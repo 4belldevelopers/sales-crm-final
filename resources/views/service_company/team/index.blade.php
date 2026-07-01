@@ -391,8 +391,9 @@
             z-index: 200;
             background: #fff;
             border-bottom: 1px solid #eef0f4;
-            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            box-shadow: 0 2px 6px rgba(0,0,0,.05);
             padding: 0 20px;
+            overflow: hidden;
             min-height: 65px;
             display: flex;
             align-items: center;
