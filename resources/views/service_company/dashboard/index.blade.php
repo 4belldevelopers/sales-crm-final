@@ -1831,6 +1831,7 @@
                             $mpTop = $p1 ? (array) $p1 : null;
                             $mpTopScore = (int) ($mpTop['big'] ?? 0);
                             $mpHasLeader = $mpTop && $mpTopScore > 0;
+                            
                         @endphp
                         <div class="col-xl-4 mb-3 mb-xl-0">
                             <div class="jw-mp-card h-100 {{ $lock_unlock ? '' : 'card-xxl-stretch-lock' }}">
