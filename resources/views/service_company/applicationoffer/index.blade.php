@@ -650,7 +650,35 @@ body { overflow-x: hidden; }
 
     document.getElementById('ot_sort').addEventListener('change', function () {
         state.sort = this.value;
+        clearHeaderSort();          /* dropdown wins → drop any column indicator */
         fetchTable(true);
+    });
+
+    /* ── Column-header sorting (kept in sync with the Sort-by dropdown) ──
+       Each sortable <th> carries the backend sort codes for asc/desc; clicking
+       toggles direction, mirrors the value into #ot_sort, and refetches. */
+    function clearHeaderSort() {
+        document.querySelectorAll('.ot-th-sort').forEach(function (th) {
+            th.classList.remove('active');
+            var ico = th.querySelector('.ot-sort-ico');
+            if (ico) ico.textContent = '⇵';
+        });
+    }
+    document.querySelectorAll('.ot-th-sort').forEach(function (th) {
+        th.addEventListener('click', function () {
+            var asc  = this.dataset.asc;
+            var desc = this.dataset.desc;
+            var goAsc = this.dataset.dir !== 'asc';   /* toggle; default → asc first */
+            clearHeaderSort();
+            this.dataset.dir = goAsc ? 'asc' : 'desc';
+            this.classList.add('active');
+            var ico = this.querySelector('.ot-sort-ico');
+            if (ico) ico.textContent = goAsc ? '↑' : '↓';
+            state.sort = goAsc ? asc : desc;
+            var sel = document.getElementById('ot_sort');
+            if (sel) sel.value = state.sort;          /* keep dropdown reflecting the header */
+            fetchTable(true);
+        });
     });
 
     document.getElementById('ot_size').addEventListener('change', function () {
