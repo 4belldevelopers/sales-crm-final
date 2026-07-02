@@ -355,7 +355,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'activity' => $app_int_activity,
 			'status_filter' => $app_int_status,
 			'user_id' => $this->user->id,
-			'segmentTwo' => $segmentTwo
+			'segmentTwo' => $segmentTwo,
+			// Offer Tracker tab must vary the cache key, otherwise switching tabs
+			// returns a stale cached result set (the tab filter wasn't part of the key).
+			'offer_tab' => request('offer_tab_filter'),
 		];
 		
 		$versionKey = 'allcvtracker_version_user_'.$this->user->id;
@@ -994,23 +997,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 		// Offer tracker tab filter (pending / sent / accepted / joining_soon / expired)
 		$offer_tab_filter = request('offer_tab_filter');
+		// Capture the active tab's filter clause (applied only to the paginated hits,
+		// NOT to the count aggregation — the badges/KPI/pipeline must show totals across
+		// all tabs for the current search/location, so they use the base query below).
+		$offerTabFilterClause = null;
 		if ($status_cus == 5 && !empty($offer_tab_filter) && $offer_tab_filter !== 'all') {
 			switch ($offer_tab_filter) {
-				case 'pending':
-					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 0]];
-					break;
-				case 'sent':
-					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 1]];
-					break;
-				case 'accepted':
-					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 2]];
-					break;
-				case 'joining_soon':
-					$boolQuery['bool']['filter'][] = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]];
-					break;
-				case 'expired':
-					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 4]];
-					break;
+				case 'pending':      $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 0]]; break;
+				case 'sent':         $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 1]]; break;
+				case 'accepted':     $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 2]]; break;
+				case 'joining_soon': $offerTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]]; break;
+				case 'expired':      $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 4]]; break;
 			}
 		}
 
@@ -1051,6 +1048,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// 	];
 		// }
 
+		// Snapshot the base query (all filters EXCEPT the active tab) for the count
+		// aggregation, then apply the tab filter to the paginated hits query only.
+		$offerCountsBase = $boolQuery;
+		if ($offerTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $offerTabFilterClause;
+		}
+
 		// Build the final query
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
@@ -1086,11 +1090,48 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// $page_view = 'all_candidates';
 
 		$userPermissions = $this->userPermissions;
-		
+
+		// Offer Tracker tab/KPI/pipeline counts — one size:0 aggregation over the base
+		// query (all offer-stage candidates for the current search/location, ignoring the
+		// active tab) so every number matches THIS result set (fixes the MySQL-vs-ES
+		// mismatch where offer_job_applications counted a different population).
+		$offerCounts = null;
+		if ($status_cus == 5 && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$countsResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'by_acceptance' => ['terms'  => ['field' => 'of_offer_acceptance', 'size' => 10]],
+						'joined'        => ['filter' => ['term'  => ['of_joined' => 1]]],
+						'joining_soon'  => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]]],
+					],
+				],
+			]);
+			$acc = [];
+			foreach (($countsResp['aggregations']['by_acceptance']['buckets'] ?? []) as $b) {
+				$acc[(int) $b['key']] = (int) $b['doc_count'];
+			}
+			$offerCounts = [
+				'total'        => (int) ($countsResp['hits']['total']['value'] ?? 0),
+				'pending'      => $acc[0] ?? 0,
+				'sent'         => $acc[1] ?? 0,
+				'accepted'     => $acc[2] ?? 0,
+				'rejected'     => $acc[3] ?? 0,
+				'expired'      => $acc[4] ?? 0,
+				'joined'       => (int) ($countsResp['aggregations']['joined']['doc_count'] ?? 0),
+				'joining_soon' => (int) ($countsResp['aggregations']['joining_soon']['doc_count'] ?? 0),
+			];
+		}
+
 		$responseData = [
 			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+			'counts' => $offerCounts,
 		];
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CV_TRACKER_TIME));
