@@ -3,7 +3,7 @@
 @push('head-script')
 <style>
 /* ──────────────────────────────────────────────
-   Offer Tracker — redesigned layout
+   Offer Tracker — redesigned layout v2
    Font: Poppins (inherited), max 14px per UI spec
 ────────────────────────────────────────────── */
 body { overflow-x: hidden; }
@@ -28,48 +28,93 @@ body { overflow-x: hidden; }
 }
 .ot-stat-card {
     background: #fff; border-radius: 14px; padding: 18px 20px;
-    border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 14px;
+    border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 .ot-stat-icon {
-    width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
 }
 .ot-stat-icon svg { width: 22px; height: 22px; }
 .ot-stat-body { flex: 1; min-width: 0; }
-.ot-stat-label { font-size: 11px; color: #94a3b8; font-weight: 500; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .4px; }
-.ot-stat-value { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1; }
-.ot-stat-delta { font-size: 11px; margin-top: 5px; display: flex; align-items: center; gap: 3px; }
-.ot-stat-delta.up { color: #22c55e; }
-.ot-stat-delta.down { color: #ef4444; }
-.ot-stat-delta.neutral { color: #64748b; }
+.ot-stat-label { font-size: 11px; color: #94a3b8; font-weight: 500; margin: 0 0 3px; text-transform: uppercase; letter-spacing: .4px; }
+.ot-stat-value { font-size: 26px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1; }
+.ot-stat-delta {
+    font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 3px; font-weight: 500;
+}
+.ot-stat-delta.up   { color: #16a34a; }
+.ot-stat-delta.down { color: #dc2626; }
+.ot-stat-delta.warn { color: #d97706; }
+.ot-stat-delta.info { color: #0891b2; }
+.ot-delta-ico { width: 13px; height: 13px; flex-shrink: 0; }
 
 /* ── Pipeline section ── */
 .ot-pipeline-wrap {
     background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
-    margin: 18px 24px 0; padding: 18px 22px 20px;
+    margin: 18px 24px 0; padding: 18px 22px 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 .ot-pipeline-head {
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
 }
 .ot-pipeline-head h5 { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
 .ot-pipeline-range {
-    border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; cursor: pointer;
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px;
 }
-.ot-pipeline-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
-.ot-pipe-card {
-    text-align: center; padding: 14px 10px 16px;
-    border: 1px solid #f1f5f9; border-radius: 12px; position: relative;
+/* ── Arrow/breadcrumb pipeline cards ── */
+.ot-pipeline-flow {
+    display: flex; align-items: stretch; gap: 0;
 }
-.ot-pipe-label { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .3px; }
-.ot-pipe-count { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 2px; line-height: 1.1; }
-.ot-pipe-sub   { font-size: 11px; color: #94a3b8; }
-.ot-pipe-bar   { height: 4px; border-radius: 99px; background: #f1f5f9; margin-top: 10px; overflow: hidden; }
-.ot-pipe-fill  { height: 100%; border-radius: 99px; transition: width .5s; }
-.ot-pipe-pct   { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+.ot-pipe-card-v2 {
+    flex: 1; min-width: 0; position: relative;
+    padding: 14px 28px 16px 24px;
+    margin-right: -18px;
+}
+/* First card — rounded left corners + arrow right */
+.ot-pipe-card-v2:first-child {
+    padding-left: 16px; z-index: 6;
+    clip-path: polygon(0 8px, 8px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 8px 100%, 0 calc(100% - 8px));
+}
+/* Middle cards — notch left + arrow right */
+.ot-pipe-card-v2:not(:first-child):not(:last-child) {
+    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%);
+}
+/* Decrease z-index left → right so left card arrow shows on top */
+.ot-pipeline-flow .ot-pipe-card-v2:nth-child(2) { z-index: 5; }
+.ot-pipeline-flow .ot-pipe-card-v2:nth-child(3) { z-index: 4; }
+.ot-pipeline-flow .ot-pipe-card-v2:nth-child(4) { z-index: 3; }
+.ot-pipeline-flow .ot-pipe-card-v2:nth-child(5) { z-index: 2; }
+/* Last card — notch left + rounded right corners */
+.ot-pipe-card-v2:last-child {
+    padding-left: 32px; padding-right: 16px;
+    margin-right: 0; z-index: 1;
+    clip-path: polygon(18px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 18px 50%);
+}
+.ot-pipe-head-row {
+    display: flex; align-items: center; gap: 7px; margin-bottom: 12px;
+}
+.ot-pipe-icon-sm { width: 24px; height: 24px; flex-shrink: 0; }
+.ot-pipe-icon-sm svg { width: 22px; height: 22px; }
+.ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ot-pipe-big { font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 4px; }
+.ot-pipe-pct-v2 { font-size: 12px; color: #64748b; font-weight: 500; }
+.ot-pipe-sub-v2 { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+/* colored line + dot at percentage */
+.ot-pipe-line {
+    height: 4px; border-radius: 99px; margin-top: 16px; position: relative; opacity: .75;
+}
+.ot-pipe-marker {
+    width: 14px; height: 14px; border-radius: 50%; position: absolute;
+    top: 50%; transform: translateY(-50%);
+    border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    opacity: 1;
+}
 
 /* ── Table card ── */
 .ot-card {
     background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
     margin: 18px 24px 24px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 
 /* Search + filter bar */
@@ -77,9 +122,7 @@ body { overflow-x: hidden; }
     display: flex; align-items: center; gap: 12px; padding: 16px 20px;
     border-bottom: 1px solid #f1f5f9;
 }
-.ot-search-wrap {
-    flex: 1; position: relative;
-}
+.ot-search-wrap { flex: 1; position: relative; }
 .ot-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 16px; height: 16px; pointer-events: none; }
 .ot-search-input {
     width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px 8px 36px;
@@ -100,16 +143,28 @@ body { overflow-x: hidden; }
 .ot-tab {
     padding: 11px 16px; font-size: 12px; font-weight: 500; color: #64748b;
     cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; user-select: none;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 6px; transition: color .15s;
 }
 .ot-tab:hover { color: #374151; }
-.ot-tab.active { color: #6366f1; border-bottom-color: #6366f1; font-weight: 600; }
 .ot-tab-badge {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 20px; height: 18px; border-radius: 99px; font-size: 10px; font-weight: 700;
-    background: #f1f5f9; color: #64748b; padding: 0 5px;
+    background: #f1f5f9; color: #64748b; padding: 0 5px; transition: all .15s;
 }
-.ot-tab.active .ot-tab-badge { background: #e0e7ff; color: #6366f1; }
+
+/* Per-tab active colors */
+.ot-tab[data-filter="all"].active        { color: #0f172a;  border-bottom-color: #0f172a;  font-weight: 700; }
+.ot-tab[data-filter="all"].active .ot-tab-badge        { background: #e2e8f0; color: #0f172a; }
+.ot-tab[data-filter="pending"].active    { color: #d97706;  border-bottom-color: #d97706;  font-weight: 700; }
+.ot-tab[data-filter="pending"].active .ot-tab-badge    { background: #fef3c7; color: #d97706; }
+.ot-tab[data-filter="sent"].active       { color: #2563eb;  border-bottom-color: #2563eb;  font-weight: 700; }
+.ot-tab[data-filter="sent"].active .ot-tab-badge       { background: #dbeafe; color: #2563eb; }
+.ot-tab[data-filter="accepted"].active   { color: #16a34a;  border-bottom-color: #16a34a;  font-weight: 700; }
+.ot-tab[data-filter="accepted"].active .ot-tab-badge   { background: #dcfce7; color: #16a34a; }
+.ot-tab[data-filter="joining_soon"].active { color: #0891b2; border-bottom-color: #0891b2; font-weight: 700; }
+.ot-tab[data-filter="joining_soon"].active .ot-tab-badge { background: #cffafe; color: #0891b2; }
+.ot-tab[data-filter="expired"].active    { color: #dc2626;  border-bottom-color: #dc2626;  font-weight: 700; }
+.ot-tab[data-filter="expired"].active .ot-tab-badge    { background: #fee2e2; color: #dc2626; }
 
 .ot-sort-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
 .ot-sort-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
@@ -167,13 +222,15 @@ body { overflow-x: hidden; }
 .ot-comp-amount { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
 .ot-comp-type   { font-size: 11px; color: #94a3b8; display: block; margin-top: 1px; }
 .ot-pending-badge { font-size: 11px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-.ot-create-btn { font-size: 12px; color: #6366f1; font-weight: 600; text-decoration: none; }
-.ot-create-btn:hover { text-decoration: underline; }
+.ot-create-btn { font-size: 12px; color: #f59e0b; font-weight: 700; text-decoration: none; }
+.ot-create-btn:hover { color: #d97706; text-decoration: underline; }
 
-/* Offer Status */
+/* Offer Status badge with icon */
 .ot-offer-badge {
-    display: inline-block; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 3px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 3px;
 }
+.ot-offer-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 .ot-offer-sub { font-size: 11px; color: #64748b; display: block; }
 
 /* Joining */
@@ -183,15 +240,18 @@ body { overflow-x: hidden; }
 .ot-na             { font-size: 14px; color: #cbd5e1; }
 .ot-na-sub         { font-size: 11px; color: #94a3b8; display: block; }
 
-/* Stage */
+/* Stage — outlined button */
 .ot-td-stage { text-align: center; }
 .ot-stage-btn {
-    display: inline-block; padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-    background: #ede9fe; color: #7c3aed; cursor: pointer; text-decoration: none;
-    transition: background .12s;
+    display: inline-block; padding: 5px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    background: transparent; color: #7c3aed; border: 1.5px solid #c4b5fd;
+    cursor: pointer; text-decoration: none; transition: all .15s;
 }
-.ot-stage-btn:hover { background: #ddd6fe; }
-.ot-stage-disabled { background: #f1f5f9; color: #94a3b8; cursor: default; }
+.ot-stage-btn:hover { background: #ede9fe; border-color: #7c3aed; color: #7c3aed; }
+.ot-stage-disabled {
+    background: transparent; color: #94a3b8; border: 1.5px solid #e2e8f0; cursor: default;
+}
+.ot-stage-disabled:hover { background: transparent; border-color: #e2e8f0; }
 
 /* Empty state */
 .ot-empty td { padding: 60px 14px; text-align: center; }
@@ -199,16 +259,13 @@ body { overflow-x: hidden; }
 
 /* Table footer */
 .ot-table-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 20px; border-top: 1px solid #f1f5f9; background: #fafafa;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 12px 20px; border-top: none; background: transparent;
 }
-.ot-showing { font-size: 12px; color: #64748b; }
 .ot-rows-per { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
 .ot-rows-select {
     border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 12px; background: #fff; cursor: pointer;
 }
-.ot-pagination-wrap { display: flex; align-items: center; }
-.ot-pagination-wrap .pagination { margin: 0; }
 
 /* loading shimmer cards */
 .ot-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; height: 16px; }
@@ -216,11 +273,13 @@ body { overflow-x: hidden; }
 
 @media (max-width: 1200px) {
     .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
-    .ot-pipeline-grid { grid-template-columns: repeat(3, 1fr); }
+    .ot-pipeline-flow { flex-wrap: wrap; }
+    .ot-pipe-card-v2 { min-width: calc(33% - 14px); }
+    .ot-pipe-chevron { display: none; }
 }
 @media (max-width: 768px) {
     .ot-stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .ot-pipeline-grid { grid-template-columns: repeat(2, 1fr); }
+    .ot-pipe-card-v2 { min-width: calc(50% - 8px); }
     .ot-page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 </style>
@@ -228,8 +287,10 @@ body { overflow-x: hidden; }
 
 @section('content')
 
-{{-- ── Page header ── --}}
-<div class="ot-page-head">
+{{-- ── Toolbar (page header, matches Metronic layout pattern) ── --}}
+<div class="toolbar" id="kt_toolbar">
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+<div class="ot-page-head" style="padding:0;width:100%">
     <div>
         <h4>Offer Tracker</h4>
         <p>Track and manage all your offers in one place</p>
@@ -245,15 +306,56 @@ body { overflow-x: hidden; }
         </button>
     </div>
 </div>
+    </div>{{-- /kt_toolbar_container --}}
+</div>{{-- /kt_toolbar --}}
+
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="post d-flex flex-column-fluid" id="kt_post">
+<div class="container-fluid px-0">
 
 {{-- ── KPI Stats (server-rendered) ── --}}
 @php
     $statCards = [
-        ['label'=>'Total Offers',      'key'=>'total',        'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z', 'bg'=>'#ede9fe','ic'=>'#7c3aed','delta'=>null],
-        ['label'=>'Pending Offers',    'key'=>'pending',      'icon'=>'M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Zm0-7v2m0-6v2',                                               'bg'=>'#fef3c7','ic'=>'#d97706','delta'=>null],
-        ['label'=>'Sent for Approval', 'key'=>'sent',         'icon'=>'M6 12l4 4 8-8',                                                                                                                          'bg'=>'#dbeafe','ic'=>'#2563eb','delta'=>null],
-        ['label'=>'Expired',           'key'=>'expired',      'icon'=>'M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Zm0-7V8m0 7v2',                                                'bg'=>'#fee2e2','ic'=>'#dc2626','delta'=>null],
-        ['label'=>'Joining Soon',      'key'=>'joining_soon', 'icon'=>'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z',                                       'bg'=>'#dcfce7','ic'=>'#16a34a','delta'=>'Next 7 days'],
+        [
+            'label'  => 'Total Offers',
+            'key'    => 'total',
+            'icon'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z',
+            'bg'     => '#ede9fe', 'ic' => '#7c3aed',
+            'delta'  => 'All offers tracked', 'delta_type' => 'info',
+            'delta_ico' => null,
+        ],
+        [
+            'label'  => 'Pending Offers',
+            'key'    => 'pending',
+            'icon'   => 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+            'bg'     => '#fef3c7', 'ic' => '#d97706',
+            'delta'  => 'Awaiting action', 'delta_type' => 'warn',
+            'delta_ico' => 'up',
+        ],
+        [
+            'label'  => 'Sent for Approval',
+            'key'    => 'sent',
+            'icon'   => 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5',
+            'bg'     => '#dbeafe', 'ic' => '#2563eb',
+            'delta'  => 'Offers dispatched', 'delta_type' => 'up',
+            'delta_ico' => 'up',
+        ],
+        [
+            'label'  => 'Expired',
+            'key'    => 'expired',
+            'icon'   => 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z',
+            'bg'     => '#fee2e2', 'ic' => '#dc2626',
+            'delta'  => 'Need renewal', 'delta_type' => 'down',
+            'delta_ico' => 'down',
+        ],
+        [
+            'label'  => 'Joining Soon',
+            'key'    => 'joining_soon',
+            'icon'   => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5',
+            'bg'     => '#cffafe', 'ic' => '#0891b2',
+            'delta'  => 'Next 7 days', 'delta_type' => 'info',
+            'delta_ico' => null,
+        ],
     ];
 @endphp
 <div class="ot-stats-grid">
@@ -265,9 +367,14 @@ body { overflow-x: hidden; }
         <div class="ot-stat-body">
             <p class="ot-stat-label">{{ $card['label'] }}</p>
             <p class="ot-stat-value">{{ $offerStats[$card['key']] ?? 0 }}</p>
-            @if($card['delta'])
-            <div class="ot-stat-delta neutral"><span>{{ $card['delta'] }}</span></div>
-            @endif
+            <div class="ot-stat-delta {{ $card['delta_type'] }}">
+                @if($card['delta_ico'] === 'up')
+                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+                @elseif($card['delta_ico'] === 'down')
+                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l8-8h-5V4H9v8H4z"/></svg>
+                @endif
+                <span>{{ $card['delta'] }}</span>
+            </div>
         </div>
     </div>
     @endforeach
@@ -278,18 +385,37 @@ body { overflow-x: hidden; }
     <div class="ot-pipeline-head">
         <h5>Offers Pipeline</h5>
         <select class="ot-pipeline-range">
-            <option>This Month</option>
+            <option>This Month ⌄</option>
+            <option>Last Month</option>
+            <option>All Time</option>
         </select>
     </div>
-    <div class="ot-pipeline-grid">
+    <div class="ot-pipeline-flow">
         @foreach($offerPipeline as $p)
-        <div class="ot-pipe-card">
-            <div class="ot-pipe-label">{{ $p['label'] }}</div>
-            <div class="ot-pipe-count" style="color:{{ $p['color'] }}">{{ $p['count'] }}</div>
-            @if(isset($p['sub'])) <div class="ot-pipe-sub">{{ $p['sub'] }}</div> @endif
-            <div class="ot-pipe-bar"><div class="ot-pipe-fill" style="width:{{ $p['pct'] }}%;background:{{ $p['color'] }}"></div></div>
-            <div class="ot-pipe-pct">{{ $p['pct'] }}%</div>
+        @php $dotLeft = max(4, min(90, (int)$p['pct'])); @endphp
+        <div class="ot-pipe-card-v2" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
+            <div class="ot-pipe-head-row">
+                <span class="ot-pipe-icon-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="{{ $p['icon'] ?? '' }}"/>
+                    </svg>
+                </span>
+                <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
+            </div>
+            <div class="ot-pipe-big">{{ $p['count'] }}</div>
+            <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
+            @if(isset($p['sub'])) <div class="ot-pipe-sub-v2">{{ $p['sub'] }}</div> @endif
+            <div class="ot-pipe-line" style="background:{{ $p['color'] }}">
+                <div class="ot-pipe-marker" style="left:{{ $dotLeft }}%;background:{{ $p['color'] }}"></div>
+            </div>
         </div>
+        @if(!$loop->last)
+        <div class="ot-pipe-chevron">
+            <svg width="10" height="18" viewBox="0 0 10 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1L9 9L1 17" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        @endif
         @endforeach
     </div>
 </div>
@@ -424,6 +550,10 @@ body { overflow-x: hidden; }
         </div>
     </div>
 </div>
+
+</div>{{-- /container-fluid --}}
+</div>{{-- /kt_post --}}
+</div>{{-- /kt_content --}}
 
 @endsection
 

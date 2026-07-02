@@ -1,4 +1,4 @@
-@php
+﻿@php
     use App\Helper\GeneralMethod;
 @endphp
 <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar">
@@ -30,10 +30,9 @@
         text-align: left !important;
         } */
 
-        /* Basic styling for the step container */
+        /* Step container fills the full drawer width */
         .tab-container {
-            max-width: 600px;
-            margin: auto;
+            width: 100%;
         }
 
         /* Hide all tabs by default */
@@ -528,7 +527,7 @@
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
                                                             role="grid" aria-describedby="myTable_info"
-                                                            style="width: 1270px;">
+                                                            style="width: 100%;">
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}"
                                                                     role="row">
@@ -1121,7 +1120,7 @@
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
-                                                            style="width: 1270px;">
+                                                            style="width: 100%;">
                                                             <thead>
                                                                 <tr class="other_section other_section_row row-template {{ $section_other }}">
                                                                     <th colspan="7" class="sorting_disabled"
@@ -1679,7 +1678,7 @@
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer"
                                                             id="final_pay" role="grid"
-                                                            aria-describedby="final_pay_info" style="width: 1270px;">
+                                                            aria-describedby="final_pay_info" style="width: 100%;">
 
 
                                                             <tfoot class="other_section_final other_section {{ $section_other }}">
