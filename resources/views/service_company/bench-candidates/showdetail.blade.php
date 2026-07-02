@@ -744,11 +744,15 @@
                 $__l = $__c->logo ?? '';
                 if(!empty($__l) && strlen($__l) > 5){ $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy'); }
             }
+            // candidate skills — merge comma-string field + bench_candidate_skill_experience rows
             $rcvSkills = [];
             if(!empty(@$benchApplication->skills)){
                 foreach(explode(',', $benchApplication->skills) as $s){ $s=trim($s); if($s!=='') $rcvSkills[]=$s; }
-                $rcvSkills = array_values(array_unique($rcvSkills));
             }
+            if(!empty($skillExperiences)){
+                foreach($skillExperiences as $__se){ $__sk=trim((string)(@$__se->skill_key)); if($__sk!=='') $rcvSkills[]=$__sk; }
+            }
+            $rcvSkills = array_values(array_unique($rcvSkills));
             $__te = trim((string) @$benchApplication->total_exp);
             $rcvBExp = $__te !== '' ? $__te.' Years' : '--';
             if((@$benchApplication->serving_notice_period_mode == 0) || (@$benchApplication->serving_notice_period_mode == 1)){

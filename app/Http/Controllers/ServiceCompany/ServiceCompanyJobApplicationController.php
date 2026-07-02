@@ -3958,6 +3958,20 @@ protected $elasticService;
 
 		$this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
+		// Populate job skills for skill-highlight panel — mirrors show() but uses local $jobId
+		$this->jobSkill = collect();
+		$_wsJobId = $jobId ?? @$this->application->job_id;
+		if (!empty($_wsJobId)) {
+			$this->jobSkill = DB::table('job_metronics_skills')
+				->leftJoin('candidate_job_skill_exp', function ($join) {
+					$join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+						->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
+				})
+				->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+				->where('job_metronics_skills.job_id', '=', $_wsJobId)
+				->get();
+		}
+
 		// $view = view('service_company.job-applications.show', $this->data)->render();
 		// dd("jd");
 		$view = view('service_company.job-applications.showdetail', $this->data)->render();

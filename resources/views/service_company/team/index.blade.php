@@ -603,8 +603,8 @@
             .team-stats-row { grid-template-columns: 1fr; }
         }
     </style>
-@endpush
-
+@endpush 
+ 
 @section('content')
     <!--begin::Team Toolbar (in-flow, not fixed) -->
     <div id="team-toolbar">
