@@ -53,19 +53,33 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 		$this->appCounter = $this->appCounter->count();
 		$this->countries  = DB::table('countries')->get();
 
-		// KPI stats & pipeline for the redesigned index page
-		$offerStats = DB::table('offer_job_applications')
-			->whereNull('deleted_at')
-			->where('company_id', $company_id)
+		// KPI stats & pipeline for the redesigned index page.
+		//
+		// WHY this reads offer_create_main_tds and not offer_job_applications.offer_acceptance:
+		// the offer lifecycle's source of truth is offer_create_main_tds.candidate_status
+		// (0-created, 1-sent/released, 2-accepted, 3-rejected, 4-expired). The "sent" and
+		// "expired" transitions are only ever written there (+ Elasticsearch); the legacy
+		// offer_job_applications.offer_acceptance column only receives accept/reject, so
+		// aggregating it made Sent/Expired permanently read 0. We read the active offer doc
+		// (status IN (1,3); 2 = superseded version) and mirror the exact buckets the
+		// Elasticsearch tab filters use, so the tab badges match the pipeline/KPI counts.
+		// Tenancy: scoped by offer_job_applications.company_id — raw DB::table() is NOT
+		// auto-scoped, so the company_id filter is applied explicitly (project Rule 3).
+		$offerStats = DB::table('offer_job_applications as o')
+			->leftJoin('offer_create_main_tds as t', function ($j) {
+				$j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+			})
+			->whereNull('o.deleted_at')
+			->where('o.company_id', $company_id)
 			->selectRaw("
-				COUNT(*) as total,
-				SUM(CASE WHEN offer_acceptance = 0 THEN 1 ELSE 0 END) as pending,
-				SUM(CASE WHEN offer_acceptance = 1 THEN 1 ELSE 0 END) as sent,
-				SUM(CASE WHEN offer_acceptance = 2 THEN 1 ELSE 0 END) as accepted,
-				SUM(CASE WHEN offer_acceptance = 3 THEN 1 ELSE 0 END) as rejected,
-				SUM(CASE WHEN offer_acceptance = 4 THEN 1 ELSE 0 END) as expired,
-				SUM(CASE WHEN joined = 1 THEN 1 ELSE 0 END) as joined_count,
-				SUM(CASE WHEN joined_date >= NOW() AND joined_date <= DATE_ADD(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as joining_soon
+				COUNT(DISTINCT o.id) as total,
+				SUM(CASE WHEN COALESCE(t.candidate_status, 0) = 0 THEN 1 ELSE 0 END) as pending,
+				SUM(CASE WHEN t.candidate_status = 1 THEN 1 ELSE 0 END) as sent,
+				SUM(CASE WHEN t.candidate_status = 2 THEN 1 ELSE 0 END) as accepted,
+				SUM(CASE WHEN t.candidate_status = 3 THEN 1 ELSE 0 END) as rejected,
+				SUM(CASE WHEN t.candidate_status = 4 THEN 1 ELSE 0 END) as expired,
+				SUM(CASE WHEN o.joined = 1 THEN 1 ELSE 0 END) as joined_count,
+				SUM(CASE WHEN o.joined_date >= NOW() AND o.joined_date <= DATE_ADD(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as joining_soon
 			")
 			->first();
 
