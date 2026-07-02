@@ -95,7 +95,123 @@
             }
         }
 
-        
+        /* ──────────────────────────────────────────────
+           Compensation drawer — Poppins + 16px hard cap
+           Scoped to this drawer's root (#offer_create_show_right_bar) so it
+           never leaks to the CKEditor toolbar or Swal popups (rendered outside
+           this subtree). Non-blanket selector list to avoid shrinking icon glyphs.
+        ────────────────────────────────────────────── */
+        #offer_create_show_right_bar,
+        #offer_create_show_right_bar .form-control,
+        #offer_create_show_right_bar .form-select,
+        #offer_create_show_right_bar .btn,
+        #offer_create_show_right_bar input,
+        #offer_create_show_right_bar select,
+        #offer_create_show_right_bar textarea,
+        #offer_create_show_right_bar p,
+        #offer_create_show_right_bar span,
+        #offer_create_show_right_bar td,
+        #offer_create_show_right_bar a {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+        }
+        #offer_create_show_right_bar h1,
+        #offer_create_show_right_bar h2,
+        #offer_create_show_right_bar h3 { font-size: 16px !important; font-weight: 700; }
+        #offer_create_show_right_bar h4,
+        #offer_create_show_right_bar h5 { font-size: 14px !important; font-weight: 600; }
+        #offer_create_show_right_bar .form-label,
+        #offer_create_show_right_bar label,
+        #offer_create_show_right_bar th { font-size: 12px !important; }
+        #offer_create_show_right_bar .badge { font-size: 11px; }
+        /* Cap Metronic font-size utility classes that would otherwise exceed 16px */
+        #offer_create_show_right_bar .fs-1,
+        #offer_create_show_right_bar .fs-2,
+        #offer_create_show_right_bar .fs-2x,
+        #offer_create_show_right_bar .fs-3x,
+        #offer_create_show_right_bar .fs-4x { font-size: 16px !important; }
+
+        /* ── 5-step timeline stepper ── */
+        .co-stepper { display: flex; align-items: flex-start; padding: 16px 24px; background: #fff; border-bottom: 1px solid #eff2f5; }
+        .co-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; text-align: center; min-width: 0; }
+        /* connector line between nodes */
+        .co-step:not(:last-child)::after {
+            content: ''; position: absolute; top: 15px; height: 2px; background: #e4e6ef; z-index: 1;
+            left: calc(50% + 18px); right: calc(-50% + 18px);
+        }
+        .co-step--done:not(:last-child)::after { background: #50cd89; }
+        .co-step-node {
+            width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 12px; z-index: 2; background: #fff; border: 2px solid #e4e6ef; color: #b5b5c3;
+            transition: all .2s;
+        }
+        .co-step-check { display: none; }
+        .co-step-num { display: inline; }
+        .co-step--current .co-step-node { background: #3699ff; border-color: #3699ff; color: #fff; }
+        .co-step--done .co-step-node { background: #50cd89; border-color: #50cd89; color: #fff; }
+        .co-step--done .co-step-check { display: inline; }
+        .co-step--done .co-step-num { display: none; }
+        .co-step-label { margin-top: 6px; }
+        .co-step-title { font-size: 12px; font-weight: 600; color: #b5b5c3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .co-step-status { font-size: 10px; color: #b5b5c3; margin-top: 1px; }
+        .co-step--current .co-step-title { color: #181c32; }
+        .co-step--current .co-step-status { color: #3699ff; }
+        .co-step--done .co-step-title { color: #181c32; }
+        .co-step--done .co-step-status { color: #50cd89; }
+        @media (max-width: 640px) {
+            .co-stepper { padding: 12px 10px; }
+            .co-step-status { display: none; }
+            .co-step-title { font-size: 11px; }
+        }
+
+        /* ── Components card section headings + validation banner ── */
+        .co-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .co-section-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
+        .co-section-note { font-size: 12px; font-weight: 500; color: #a1a5b7; }
+        .co-section-sub { font-size: 11px; color: #a1a5b7; margin-top: 2px; }
+        .co-valid-banner {
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; margin: 8px 0 12px;
+        }
+        .co-valid-banner .co-valid-ico { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        .co-valid-banner--warn { background: #fff8dd; color: #b78103; }
+        .co-valid-banner--warn .co-valid-ico { background: #f6c000; }
+        .co-valid-banner--ok { background: #e8fff3; color: #1bc5bd; }
+        .co-valid-banner--ok .co-valid-ico { background: #50cd89; }
+        /* Row numbering via CSS counter — no markup column added (keeps the
+           salary-component array order + calc selectors untouched) */
+        #pointList tbody, #bonusList tbody { counter-reset: co-rownum; }
+        #pointList tbody tr.row-template:not(.d-none), #bonusList tbody tr.row-template:not(.d-none) { counter-increment: co-rownum; }
+
+        /* ── Preview Salary Structure panel ── */
+        .co-preview-card { background: #f9fafd !important; border: 1px solid #eef1f7; }
+        .co-preview-eye { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #7239ea; vertical-align: -2px; }
+        .co-view-toggle { display: inline-flex; background: #eef1f7; border-radius: 8px; padding: 3px; gap: 2px; }
+        .co-view-btn { border: none; background: transparent; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #7e8299; cursor: pointer; margin: 0; }
+        .co-view-btn--active { background: #7239ea; color: #fff; }
+        .co-preview-topbar { display: flex; align-items: flex-end; gap: 12px; margin: 12px 0 16px; flex-wrap: wrap; }
+        .co-preview-amt { flex: 1; min-width: 160px; }
+        .co-fmt-badge { background: #fff; border: 1px solid #e4e6ef; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; color: #3f4254; }
+        .co-calc-btn { height: 40px; }
+        .co-preview-grid { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 18px; }
+        .co-preview-h { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: 8px; }
+        .co-breakup-table { width: 100%; font-size: 12px; }
+        .co-breakup-table th { color: #a1a5b7; font-weight: 600; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #eef1f7; }
+        .co-breakup-table td { padding: 5px 0; border-bottom: 1px dashed #eef1f7; color: #3f4254; }
+        .co-breakup-total td { font-weight: 700; color: #181c32; border-top: 2px solid #e4e6ef; border-bottom: none; padding-top: 8px; }
+        .co-preview-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .co-chart-legend { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #3f4254; margin-top: 8px; }
+        .co-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 0; margin-right: 4px; }
+        .co-dot--main { background: #7239ea; }
+        .co-dot--add { background: #50cd89; }
+        .co-checks { list-style: none; padding: 0; margin: 0; }
+        .co-checks li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: #3f4254; padding: 4px 0; }
+        .co-checks .co-chk { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; background: #a1a5b7; position: relative; }
+        .co-checks .co-chk--ok, .co-checks li.co-chk--pass .co-chk { background: #50cd89; }
+        .co-checks li.co-chk--fail .co-chk { background: #f1416c; }
+        .co-checks .co-chk::after { content: '\2713'; color: #fff; font-size: 9px; position: absolute; top: -1px; left: 3px; }
+        .co-checks li.co-chk--fail .co-chk::after { content: '\21'; }
+        @media (max-width: 900px) { .co-preview-grid { grid-template-columns: 1fr; } }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -244,7 +360,7 @@
 
     <div class="card-header px-5 py-0" id="kt_activities_header">
         <div class="d-flex align-items-center py-1">
-            <h3 class="card-title fw-bolder text-dark">Create Offer </h3>
+            <h3 class="card-title fw-bolder text-dark">Compensation</h3>
             <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
         </div>
 
@@ -294,6 +410,49 @@
                 </span> </button>
         </div>
     </div>
+
+    {{-- ── 5-step timeline stepper (Compensation → Templates → Preview Offer → Approvals → Offer Sent) ──
+         Purely reflects which .tab-content-section is .active; painted by syncStepHeader().
+         Backward nav is free; forward nav is gated to the furthest step actually reached
+         (via the real Save/Preview AJAX flow), so the header can't skip those steps. --}}
+    <div class="co-stepper" id="co_offer_stepper">
+        <div class="co-step co-step--current" data-step="1" onclick="goToStepNav(1)">
+            <div class="co-step-node"><span class="co-step-num">1</span><span class="co-step-check">&#10003;</span></div>
+            <div class="co-step-label">
+                <div class="co-step-title">Compensation</div>
+                <div class="co-step-status">In progress</div>
+            </div>
+        </div>
+        <div class="co-step co-step--pending" data-step="2" onclick="goToStepNav(2)">
+            <div class="co-step-node"><span class="co-step-num">2</span><span class="co-step-check">&#10003;</span></div>
+            <div class="co-step-label">
+                <div class="co-step-title">Template</div>
+                <div class="co-step-status">Upcoming</div>
+            </div>
+        </div>
+        <div class="co-step co-step--pending" data-step="3" onclick="goToStepNav(3)">
+            <div class="co-step-node"><span class="co-step-num">3</span><span class="co-step-check">&#10003;</span></div>
+            <div class="co-step-label">
+                <div class="co-step-title">Preview Offer</div>
+                <div class="co-step-status">Upcoming</div>
+            </div>
+        </div>
+        <div class="co-step co-step--pending" data-step="4" onclick="goToStepNav(4)">
+            <div class="co-step-node"><span class="co-step-num">4</span><span class="co-step-check">&#10003;</span></div>
+            <div class="co-step-label">
+                <div class="co-step-title">Approval</div>
+                <div class="co-step-status">Upcoming</div>
+            </div>
+        </div>
+        <div class="co-step co-step--pending" data-step="5" onclick="goToStepNav(5)">
+            <div class="co-step-node"><span class="co-step-num">5</span><span class="co-step-check">&#10003;</span></div>
+            <div class="co-step-label">
+                <div class="co-step-title">Offer Sent</div>
+                <div class="co-step-status">Upcoming</div>
+            </div>
+        </div>
+    </div>
+
     <div class="card-body position-relative px-0 py-0" id="kt_offercreate_body">
         <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
             data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
@@ -522,16 +681,83 @@
                                                 </div>
                                             </div>
 
+                                            {{-- ── Preview Salary Structure panel (100% client-side; reads existing fields, writes nothing) ── --}}
                                             <div class="col-lg-12">
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
-                                                    <div class="row">
+                                                <div class="card card-body py-5 mb-5 mb-xl-5 mx-2 co-preview-card">
+                                                    <div class="co-section-head">
+                                                        <div>
+                                                            <h5 class="co-section-title"><i class="co-preview-eye"></i> Preview Salary Structure</h5>
+                                                            <div class="co-section-sub">See how this structure calculates for the entered amount.</div>
+                                                        </div>
+                                                        <div class="co-view-toggle" id="co_view_toggle">
+                                                            <button type="button" class="co-view-btn co-view-btn--active" data-view="monthly">Monthly View</button>
+                                                            <button type="button" class="co-view-btn" data-view="annual">Annual View</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-preview-topbar">
+                                                        <div class="co-preview-amt">
+                                                            <label class="form-label">Amount</label>
+                                                            <input type="text" class="form-control form-control-solid" id="co_preview_amount" readonly>
+                                                        </div>
+                                                        <div class="co-preview-fmt">
+                                                            <label class="form-label">Salary Format</label>
+                                                            <div id="co_preview_format" class="co-fmt-badge">—</div>
+                                                        </div>
+                                                        <button type="button" class="btn btn-primary co-calc-btn" id="co_calc_btn">Calculate</button>
+                                                    </div>
+                                                    <div class="co-preview-grid">
+                                                        <div class="co-preview-breakup">
+                                                            <div class="co-preview-h">Breakup Preview (<span id="co_breakup_mode">Monthly</span>)</div>
+                                                            <table class="co-breakup-table" id="co_breakup_preview">
+                                                                <thead><tr><th>Components</th><th class="text-end">Amount</th></tr></thead>
+                                                                <tbody></tbody>
+                                                                <tfoot>
+                                                                    <tr class="co-breakup-total"><td>Total Cost to Company</td><td class="text-end" id="co_tcc">—</td></tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                        <div class="co-preview-chart">
+                                                            <div id="co_breakup_chart"></div>
+                                                            <div class="co-chart-legend">
+                                                                <span><i class="co-dot co-dot--main"></i> Main (<span id="co_legend_main">100%</span>)</span>
+                                                                <span><i class="co-dot co-dot--add"></i> Additional (<span id="co_legend_add">0%</span>)</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="co-preview-checks">
+                                                            <div class="co-preview-h">Validation Checks</div>
+                                                            <ul class="co-checks" id="co_checks">
+                                                                <li data-check="main100"><i class="co-chk"></i> Main components total exactly 100%</li>
+                                                                {{-- static/presentational: no backing validation source in this form (per product decision) --}}
+                                                                <li class="co-chk--static"><i class="co-chk co-chk--ok"></i> No circular dependencies found</li>
+                                                                <li class="co-chk--static"><i class="co-chk co-chk--ok"></i> All formulas are valid</li>
+                                                                <li data-check="currency"><i class="co-chk"></i> Currency and salary format selected</li>
+                                                                <li data-check="additional"><i class="co-chk"></i> Additional components within allowed range</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-lg-12">
+                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
+                                                    <div class="co-section-head">
+                                                        <div>
+                                                            <h5 class="co-section-title">Main Components <span class="co-section-note">(Must Total 100%)</span></h5>
+                                                            <div class="co-section-sub">These are core components. Total percentage must be exactly 100%.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="co_validation_banner" class="co-valid-banner co-valid-banner--warn">
+                                                        <i class="co-valid-ico"></i>
+                                                        <span id="co_validation_text">Total of main components: 0.00%</span>
+                                                    </div>
+                                                    <div class="row co-components-rows">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
                                                             role="grid" aria-describedby="myTable_info"
                                                             style="width: 100%;">
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}"
                                                                     role="row">
-                                                                    <th class="sorting_disabled" style="width: 25%!important">Components
+                                                                    <th class="sorting_disabled" style="width: 25%!important">Component Name
                                                                     </th>
                                                                     <th class="sorting_disabled"
                                                                         style="width:10% !important">View</th>
@@ -550,7 +776,7 @@
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}"
                                                                     role="row">
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 47% !important;">Components</th>
+                                                                        style="width: 47% !important;">Component Name</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 12% !important;">Percentage</th>
                                                                     <th class="sorting_disabled"
@@ -1116,7 +1342,13 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
+                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
+                                                    <div class="co-section-head">
+                                                        <div>
+                                                            <h5 class="co-section-title">Additional Components <span class="co-section-note">(Above 100% - Optional)</span></h5>
+                                                            <div class="co-section-sub">These components are additional and will be added on top of the main 100%.</div>
+                                                        </div>
+                                                    </div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
@@ -1124,7 +1356,7 @@
                                                             <thead>
                                                                 <tr class="other_section other_section_row row-template {{ $section_other }}">
                                                                     <th colspan="7" class="sorting_disabled"
-                                                                        style="width: 102px;">Other Component</th>
+                                                                        style="width: 102px;">Additional Component</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 102px;position: relative;">
                                                                         <button type="button" id="addRowBtnbonus"
@@ -1153,7 +1385,7 @@
                                                                 </tr>
                                                                 <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}">
                                                                     <th colspan="6" class="sorting_disabled other_text"
-                                                                        style="width: 102px;">Other Component</th>
+                                                                        style="width: 102px;">Additional Component</th>
 
                                                                         <th class="sorting_disabled"
                                                                         style="width: 102px;position: relative;">
@@ -1834,13 +2066,22 @@
                                         <span class="prev-btn" onclick="prevStep(event,3)"
                                             style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
                                     </div>
+                                    <div class="col-lg-3 d-flex justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                        <button type="button" class="btn btn-primary font-weight-bolder px-9 py-4" style="width:100%;margin-top:10px;" onclick="nextStep(event,3)">Continue to Approval</button>
+                                    </div>
+                                </div>
+                                <br>
+                            </div>
+
+                            <!-- Step 4 : Approval -->
+                            <div class="tab-content-section pt-5" id="step4">
+                                <div class="card card-body py-7 mb-5 mx-2">
+                                    <h5 class="co-section-title">Approval</h5>
+                                    <div class="co-section-sub mb-4">Send this offer for internal approval before it is released to the candidate.</div>
                                     <div class="row justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
                                         <div class="col-lg-3  d-flex justify-content-center">
-                                            <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                data-candidate="{{ @$application->id }}" data-mtype="3"
-                                                data-offerId="{{ $offer_id }}"
-                                                class="btn btn-success font-weight-bolder px-9 py-4 download_offer"
-                                                data-wizard-type="action-next" style="width: 100%;">Download</button>
+                                            <span class="prev-btn" onclick="prevStep(event,4)"
+                                                style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
                                         </div>
                                         <div class="col-lg-3  d-flex justify-content-center">
                                             <button type="button" data-jobId="{{ @$application->job_id }}"
@@ -1851,8 +2092,31 @@
                                                 data-wizard-type="action-next" style="width: 100%;">Approval Email
                                                 Send</button>
                                         </div>
+                                        <div class="col-lg-3 d-flex justify-content-center">
+                                            <button type="button" class="btn btn-primary font-weight-bolder px-9 py-4" style="width:100%;margin-top:10px;" onclick="nextStep(event,4)">Continue to Send</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 5 : Offer Sent -->
+                            <div class="tab-content-section pt-5" id="step5">
+                                <div class="card card-body py-7 mb-5 mx-2">
+                                    <h5 class="co-section-title">Offer Sent</h5>
+                                    <div class="co-section-sub mb-4">Download the offer letter or email the final offer to the candidate.</div>
+                                    <div class="row justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
                                         <div class="col-lg-3  d-flex justify-content-center">
-    
+                                            <span class="prev-btn" onclick="prevStep(event,5)"
+                                                style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
+                                        </div>
+                                        <div class="col-lg-3  d-flex justify-content-center">
+                                            <button type="button" data-jobId="{{ @$application->job_id }}"
+                                                data-candidate="{{ @$application->id }}" data-mtype="3"
+                                                data-offerId="{{ $offer_id }}"
+                                                class="btn btn-success font-weight-bolder px-9 py-4 download_offer"
+                                                data-wizard-type="action-next" style="width: 100%;">Download</button>
+                                        </div>
+                                        <div class="col-lg-3  d-flex justify-content-center">
                                             <button type="button" data-jobId="{{ @$application->job_id }}"
                                                 data-candidate="{{ @$application->id }}" data-mtype="1"
                                                 data-offerId="{{ $offer_id }}" data-toggle="modal"
@@ -1863,7 +2127,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <br>
                             </div>
 
                        
@@ -1907,16 +2170,17 @@
                                     $('#preview_offer_body_content').html(response.view);
                                     document.getElementById("step" + currentStep).classList.remove("active");
                                     document.getElementById("step" + (currentStep + 1)).classList.add("active");
+                                    if (typeof syncStepHeader === 'function') syncStepHeader();
                                 } else if (response.status == "error") {
                                     Swal.fire("Warning", "Offer letter not ready", "warning");
                                 }
                             }
                         });
 
-                    } else {                       
+                    } else {
                         document.getElementById("step" + currentStep).classList.remove("active");
                         document.getElementById("step" + (currentStep + 1)).classList.add("active");
-                        
+                        if (typeof syncStepHeader === 'function') syncStepHeader();
                     }
 
                 }
@@ -1926,6 +2190,7 @@
                     event.preventDefault();
                     document.getElementById("step" + currentStep).classList.remove("active");
                     document.getElementById("step" + (currentStep - 1)).classList.add("active");
+                    if (typeof syncStepHeader === 'function') syncStepHeader();
                 }
 
                 $(document).ready(function() {
@@ -3927,5 +4192,141 @@
 
 
                 });
+            </script>
+
+            <script>
+                /* ── Stepper controller (global scope so onclick handlers resolve) ──
+                   syncStepHeader() paints the stepper purely from which .tab-content-section
+                   is .active. goToStepNav() lets the user click backward freely, but forward
+                   only up to the furthest step actually reached via the real Save/Preview
+                   AJAX flow — so header clicks can never skip the preview-letter population. */
+                var coFurthestStep = 1;
+
+                function coPaintStep(el, state, statusText) {
+                    el.classList.remove('co-step--pending', 'co-step--current', 'co-step--done');
+                    el.classList.add('co-step--' + state);
+                    var s = el.querySelector('.co-step-status');
+                    if (s && statusText != null) s.textContent = statusText;
+                }
+
+                function coActiveStep() {
+                    var el = document.querySelector('.tab-content-section.active');
+                    var n = el ? parseInt((el.id || '').replace('step', ''), 10) : 1;
+                    return n > 0 ? n : 1;
+                }
+
+                function syncStepHeader() {
+                    var active = coActiveStep();
+                    if (active > coFurthestStep) coFurthestStep = active;
+                    var steps = document.querySelectorAll('#co_offer_stepper .co-step');
+                    steps.forEach(function (step) {
+                        var n = parseInt(step.getAttribute('data-step'), 10);
+                        if (n < active) coPaintStep(step, 'done', 'Completed');
+                        else if (n === active) coPaintStep(step, 'current', 'In progress');
+                        else coPaintStep(step, 'pending', 'Upcoming');
+                    });
+                }
+
+                function goToStepNav(n) {
+                    var active = coActiveStep();
+                    if (n === active) return;
+                    if (n > active && n > coFurthestStep) return;   // forward nav gated
+                    var target = document.getElementById('step' + n);
+                    if (!target) return;                            // step4/step5 added in a later piece
+                    var current = document.getElementById('step' + active);
+                    if (current) current.classList.remove('active');
+                    target.classList.add('active');
+                    syncStepHeader();
+                }
+
+                $(document).ready(function () { syncStepHeader(); });
+            </script>
+
+            <script>
+                /* ── Preview Salary Structure — 100% client-side, read-only ──
+                   Reads existing live fields (#ctc, #totalpercentage(bonus), #finalpaytotal*,
+                   and each visible component row) and repaints the panel. It NEVER writes back
+                   into any backend-bound field. New delegated listeners fire on the same events
+                   as the existing calc engine; a 0ms setTimeout guarantees we read post-calc
+                   values regardless of handler binding order. */
+                (function () {
+                    var coView = 'monthly';   // local-only Monthly/Annual toggle
+                    var coChart = null;
+                    var FORMAT_LABELS = { '0': 'Monthly / Annually', '1': 'Monthly', '2': 'Hourly', '3': 'Annually', '4': 'Hourly / Annually' };
+
+                    function coNum(v) { v = (v == null ? '' : String(v)).replace(/[^0-9.\-]/g, ''); var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+                    function coMoney(n) { try { return Number(Math.round(n)).toLocaleString('en-IN'); } catch (e) { return Math.round(n); } }
+                    function coEsc(s) { return $('<div>').text(s).html(); }
+                    function coVisibleRows(sel) {
+                        return $(sel + ' tr.row-template').filter(function () { return $(this).css('display') !== 'none' && !$(this).hasClass('d-none'); });
+                    }
+
+                    window.refreshPreviewPanel = function () {
+                        $('#co_preview_amount').val($('#ctc').val() || '');
+                        var mode = String($('#current_ctc_mode').val() || '0');
+                        $('#co_preview_format').text(FORMAT_LABELS[mode] || '—');
+
+                        var mainPct = coNum($('#totalpercentage').val()) || coNum($('#totalpercentagehouly').val());
+                        var addPct = coNum($('#totalpercentagebonus').val()) || coNum($('#totalhourlypercentagebonus').val());
+
+                        var body = '';
+                        var pushRows = function (rows, monClass, yrClass, nameClass) {
+                            rows.each(function () {
+                                var $r = $(this);
+                                var name = ($r.find('.' + nameClass).val() || $r.find('input[type=text]').first().val() || '').trim();
+                                if (!name) return;
+                                var amt = coView === 'monthly' ? coNum($r.find('.' + monClass).val()) : coNum($r.find('.' + yrClass).val());
+                                body += '<tr><td>' + coEsc(name) + '</td><td class="text-end">' + coMoney(amt) + '</td></tr>';
+                            });
+                        };
+                        pushRows(coVisibleRows('#pointList tbody'), 'offer_monthly', 'offer_yearly', 'offer_points');
+                        pushRows(coVisibleRows('#bonusList tbody'), 'bonus_offer_monthly', 'bonus_offer_yearly', 'bonus_offer_points');
+                        $('#co_breakup_preview tbody').html(body || '<tr><td colspan="2" style="color:#a1a5b7">No components yet</td></tr>');
+
+                        var tcc = coView === 'monthly' ? coNum($('#finalpaytotalMonthly').val()) : coNum($('#finalpaytotalYearly').val());
+                        if (!tcc) tcc = coNum($('#finalpaytotalhourly').val());
+                        $('#co_tcc').text(coMoney(tcc));
+                        $('#co_breakup_mode').text(coView === 'monthly' ? 'Monthly' : 'Annual');
+
+                        $('#co_legend_main').text(Math.round(mainPct) + '%');
+                        $('#co_legend_add').text(Math.round(addPct) + '%');
+                        if (typeof ApexCharts !== 'undefined') {
+                            var opts = {
+                                series: [mainPct || 0, addPct || 0], chart: { type: 'donut', height: 150, width: 150 },
+                                labels: ['Main', 'Additional'], colors: ['#7239ea', '#50cd89'],
+                                legend: { show: false }, dataLabels: { enabled: false },
+                                plotOptions: { pie: { donut: { size: '62%' } } },
+                                tooltip: { y: { formatter: function (v) { return Math.round(v) + '%'; } } }
+                            };
+                            try {
+                                if (coChart) { coChart.updateOptions(opts); }
+                                else { coChart = new ApexCharts(document.querySelector('#co_breakup_chart'), opts); coChart.render(); }
+                            } catch (e) { }
+                        }
+
+                        var main100 = Math.abs(mainPct - 100) < 0.01;
+                        var curOk = ($('#current_ctc_cur').val() !== '' && $('#current_ctc_mode').val() !== '');
+                        var setChk = function (sel, pass) { $(sel).removeClass('co-chk--pass co-chk--fail').addClass(pass ? 'co-chk--pass' : 'co-chk--fail'); };
+                        setChk('#co_checks li[data-check=main100]', main100);
+                        setChk('#co_checks li[data-check=currency]', curOk);
+                        setChk('#co_checks li[data-check=additional]', addPct >= 0);
+
+                        $('#co_validation_text').text('Total of main components: ' + mainPct.toFixed(2) + '%' + (main100 ? ' — exactly 100%' : ''));
+                        $('#co_validation_banner').removeClass('co-valid-banner--warn co-valid-banner--ok').addClass(main100 ? 'co-valid-banner--ok' : 'co-valid-banner--warn');
+                    };
+
+                    $(document).on('click', '#co_view_toggle .co-view-btn', function () {
+                        $('#co_view_toggle .co-view-btn').removeClass('co-view-btn--active');
+                        $(this).addClass('co-view-btn--active');
+                        coView = $(this).data('view');
+                        refreshPreviewPanel();
+                    });
+                    $(document).on('click', '#co_calc_btn', function () { refreshPreviewPanel(); });
+                    $(document).on('change input',
+                        '.option_percentage, .option_percentage_hourly, .bonus_option_percentage, .bonus_option_percentage_hourly, .offer_monthly, .offer_yearly, .bonus_offer_monthly, .bonus_offer_yearly, .offer_points, #ctc, #current_ctc_mode, #current_ctc_cur',
+                        function () { setTimeout(refreshPreviewPanel, 0); });
+                    $(document).on('click', '.addRowBtn, .addRowBtnbonus, .remove_points', function () { setTimeout(refreshPreviewPanel, 30); });
+                    $(document).ready(function () { setTimeout(refreshPreviewPanel, 200); });
+                })();
             </script>
         </div>
