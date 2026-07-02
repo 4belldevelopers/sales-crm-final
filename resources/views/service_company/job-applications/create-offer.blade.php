@@ -423,7 +423,6 @@
     <div class="card-header px-5 py-0" id="kt_activities_header">
         <div class="d-flex align-items-center py-1">
             <h3 class="card-title fw-bolder text-dark">Compensation</h3>
-            <span style="background:#f1416c;color:#fff;font-weight:700;padding:3px 10px;border-radius:6px;margin-left:12px;font-size:13px;">★ NEW BUILD v2</span>
             <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
         </div>
 
@@ -4338,8 +4337,20 @@
                         var mode = String($('#current_ctc_mode').val() || '0');
                         $('#co_preview_format').text(FORMAT_LABELS[mode] || '—');
 
-                        var mainPct = coNum($('#totalpercentage').val()) || coNum($('#totalpercentagehouly').val());
-                        var addPct = coNum($('#totalpercentagebonus').val()) || coNum($('#totalhourlypercentagebonus').val());
+                        var mainRows = coVisibleRows('#pointList tbody');
+                        var bonusRows = coVisibleRows('#bonusList tbody');
+
+                        // Sum percentages directly from the visible rows (reliable on page load,
+                        // before the calc engine's #totalpercentage field is populated).
+                        var sumPct = function (rows, c1, c2) {
+                            var t = 0;
+                            rows.each(function () { t += coNum($(this).find('.' + c1).val()) || coNum($(this).find('.' + c2).val()); });
+                            return t;
+                        };
+                        var mainPct = sumPct(mainRows, 'option_percentage', 'option_percentage_hourly')
+                                      || coNum($('#totalpercentage').val()) || coNum($('#totalpercentagehouly').val());
+                        var addPct = sumPct(bonusRows, 'bonus_option_percentage', 'bonus_option_percentage_hourly')
+                                      || coNum($('#totalpercentagebonus').val()) || coNum($('#totalhourlypercentagebonus').val());
 
                         var body = '';
                         var pushRows = function (rows, monClass, yrClass, nameClass) {
@@ -4351,8 +4362,8 @@
                                 body += '<tr><td>' + coEsc(name) + '</td><td class="text-end">' + coMoney(amt) + '</td></tr>';
                             });
                         };
-                        pushRows(coVisibleRows('#pointList tbody'), 'offer_monthly', 'offer_yearly', 'offer_points');
-                        pushRows(coVisibleRows('#bonusList tbody'), 'bonus_offer_monthly', 'bonus_offer_yearly', 'bonus_offer_points');
+                        pushRows(mainRows, 'offer_monthly', 'offer_yearly', 'offer_points');
+                        pushRows(bonusRows, 'bonus_offer_monthly', 'bonus_offer_yearly', 'bonus_offer_points');
                         $('#co_breakup_preview tbody').html(body || '<tr><td colspan="2" style="color:#a1a5b7">No components yet</td></tr>');
 
                         var tcc = coView === 'monthly' ? coNum($('#finalpaytotalMonthly').val()) : coNum($('#finalpaytotalYearly').val());
