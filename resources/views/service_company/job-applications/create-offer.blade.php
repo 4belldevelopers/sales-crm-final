@@ -423,6 +423,7 @@
     <div class="card-header px-5 py-0" id="kt_activities_header">
         <div class="d-flex align-items-center py-1">
             <h3 class="card-title fw-bolder text-dark">Compensation</h3>
+            <span style="background:#f1416c;color:#fff;font-weight:700;padding:3px 10px;border-radius:6px;margin-left:12px;font-size:13px;">★ NEW BUILD v2</span>
             <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
         </div>
 
