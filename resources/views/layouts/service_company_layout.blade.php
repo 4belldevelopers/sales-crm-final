@@ -478,7 +478,7 @@
   <div class="card shadow-none bg-custom-bar rounded-0 w-100" id="application_show_right_bar" ></div>
 </div>
 <div id="kt_create_offer_toggle"></div>
-<div id="kt_create_offer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="create_offer" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_create_offer_toggle" data-kt-drawer-close="#kt_offercreate_close">
+<div id="kt_create_offer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="create_offer" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default: '100%', lg: '82%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_create_offer_toggle" data-kt-drawer-close="#kt_offercreate_close">
   <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar" ></div>
 </div>
 

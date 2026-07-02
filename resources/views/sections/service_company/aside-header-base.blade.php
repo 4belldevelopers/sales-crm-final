@@ -177,21 +177,6 @@ $productAllowCompany = GeneralMethod::companiesType();
                                 </a>
                             </div>
                             <!--end::Offer Tracker-->
-                            <!--begin::Offer Dashboard-->
-                            <div class="menu-item {{ $lock_unlock ? '' : 'lock_unlock' }}"> <a
-                                    href="@if ($lock_unlock) {{ route('service_company.applicationoffer.tracker') }}  @else {{ 'javascript:;' }} @endif"
-                                    class="menu-link {{ request()->is('service_company/applicationoffer/tracker*') ? 'active' : '' }}">
-                                    <span class="menu-icon">
-                                        <!--begin::Svg Icon-->
-                                        <span class="bullet bullet-dot"></span>
-                                        <!--end::Svg Icon-->
-                                    </span> <span class="menu-title">Offer Dashboard</span>
-                                    @if ($lock_unlock == false)
-                                        <i class="fa fa-lock"></i>
-                                    @endif
-                                </a>
-                            </div>
-                            <!--end::Offer Dashboard-->
                         @endif
                         @if (in_array('view_joining', $userPermissions))
                             <!--begin::Joining Tracker-->

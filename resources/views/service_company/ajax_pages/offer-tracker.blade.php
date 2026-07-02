@@ -7,12 +7,13 @@
     $job_status_arr = GeneralMethod::job_status();
 
     $offerStatusMap = [
-        0 => ['label' => 'Pending',  'color' => '#f59e0b', 'bg' => '#fef3c7'],
-        1 => ['label' => 'Sent',     'color' => '#3b82f6', 'bg' => '#dbeafe'],
-        2 => ['label' => 'Accepted', 'color' => '#22c55e', 'bg' => '#dcfce7'],
-        3 => ['label' => 'Rejected', 'color' => '#ef4444', 'bg' => '#fee2e2'],
-        4 => ['label' => 'Expired',  'color' => '#ef4444', 'bg' => '#fee2e2'],
+        0 => ['label'=>'Pending',  'color'=>'#d97706','bg'=>'#fef3c7','icon'=>'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
+        1 => ['label'=>'Sent',     'color'=>'#2563eb','bg'=>'#dbeafe','icon'=>'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5'],
+        2 => ['label'=>'Accepted', 'color'=>'#16a34a','bg'=>'#dcfce7','icon'=>'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
+        3 => ['label'=>'Rejected', 'color'=>'#dc2626','bg'=>'#fee2e2','icon'=>'m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
+        4 => ['label'=>'Expired',  'color'=>'#dc2626','bg'=>'#fee2e2','icon'=>'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z'],
     ];
+    $joinedIconPath = 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632z';
 
     $now = \Carbon\Carbon::now();
 @endphp
@@ -86,15 +87,18 @@
         $isJoined        = ($row->of_joined ?? 0) == 1;
         if ($isJoined) {
             $offerBadgeLabel = 'Joined';
-            $offerBadgeColor = '#10b981'; $offerBadgeBg = '#d1fae5';
+            $offerBadgeColor = '#0891b2'; $offerBadgeBg = '#cffafe';
+            $offerIconPath   = $joinedIconPath;
         } elseif ($hasPendingOffer) {
             $offerBadgeLabel = 'Pending';
-            $offerBadgeColor = '#f59e0b'; $offerBadgeBg = '#fef3c7';
+            $offerBadgeColor = '#d97706'; $offerBadgeBg = '#fef3c7';
+            $offerIconPath   = $offerStatusMap[0]['icon'];
         } else {
             $s = $offerStatusMap[$offerAcceptance] ?? $offerStatusMap[0];
             $offerBadgeLabel = $s['label'];
             $offerBadgeColor = $s['color'];
             $offerBadgeBg    = $s['bg'];
+            $offerIconPath   = $s['icon'];
         }
 
         /* ── Offer Status sub-text ── */
@@ -196,7 +200,10 @@
 
         {{-- Offer Status --}}
         <td class="ot-td">
-            <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};">{{ $offerBadgeLabel }}</span>
+            <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
+                {{ $offerBadgeLabel }}
+            </span>
             @if($offerSubText)
                 <span class="ot-offer-sub">{{ $offerSubText }}</span>
             @endif
