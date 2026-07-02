@@ -212,6 +212,68 @@
         .co-checks .co-chk::after { content: '\2713'; color: #fff; font-size: 9px; position: absolute; top: -1px; left: 3px; }
         .co-checks li.co-chk--fail .co-chk::after { content: '\21'; }
         @media (max-width: 900px) { .co-preview-grid { grid-template-columns: 1fr; } }
+
+        /* ── Two-column layout: tables (left) + Preview panel (right sidebar) ── */
+        .co-comp-layout { display: flex; flex-wrap: wrap; }
+        .co-left-col { order: 1; }
+        .co-preview-col { order: 2; }              /* panel is first in DOM, rendered on the right */
+        .co-preview-sticky { position: sticky; top: 10px; }
+        /* In the sidebar the preview panel stacks vertically (not the 3-across grid) */
+        .co-preview-col .co-preview-grid { grid-template-columns: 1fr; gap: 14px; }
+        .co-preview-col .co-preview-topbar { flex-direction: column; align-items: stretch; }
+        .co-section-head--flex { display: flex; align-items: center; justify-content: space-between; }
+        @media (max-width: 991px) {
+            .co-left-col, .co-preview-col { flex: 0 0 100%; max-width: 100%; }
+            .co-preview-sticky { position: static; }
+            .co-preview-col .co-preview-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        /* ── Clean, modern component tables (calc reads by class, so restyle is safe) ── */
+        .co-components-card { border: 1px solid #f1f1f4; border-radius: 12px; }
+        #pointList, #bonusList { border-collapse: separate; border-spacing: 0; width: 100%; }
+        #pointList thead th, #bonusList thead th {
+            text-transform: none !important; color: #a1a5b7 !important; font-size: 11px !important;
+            font-weight: 600 !important; padding: 8px 8px !important; background: transparent !important;
+            border-bottom: 1px solid #f1f1f4 !important; letter-spacing: .2px;
+        }
+        #pointList tbody td, #bonusList tbody td {
+            padding: 6px 8px !important; border-bottom: 1px solid #f4f4f6 !important; vertical-align: middle;
+            width: revert !important;
+        }
+        #pointList tbody tr:hover, #bonusList tbody tr:hover { background: #fbfcfe; }
+        /* inputs & selects read like clean inline cells */
+        #pointList .form-control, #bonusList .form-control,
+        #pointList .form-select, #bonusList .form-select {
+            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 7px !important;
+            box-shadow: none !important; min-height: 36px; height: 36px; font-size: 13px !important;
+            color: #3f4254 !important; padding: 4px 10px !important;
+        }
+        #pointList .offer_points, #bonusList .offer_points,
+        #pointList .bonus_offer_points, #bonusList .bonus_offer_points {
+            font-weight: 600 !important; border-color: transparent !important; background: transparent !important; padding-left: 2px !important;
+        }
+        /* Monthly / Annually preview inputs — muted, right-aligned */
+        #pointList .offer_monthly, #pointList .offer_yearly,
+        #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly {
+            background: #f9fafd !important; color: #7e8299 !important; text-align: right;
+        }
+        /* delete → red trash button */
+        #pointList .remove_points, #bonusList .remove_points {
+            background: #fff5f8 !important; color: #f1416c !important; border: none !important;
+            border-radius: 7px !important; width: 34px; height: 34px; padding: 0 !important; margin: 0 !important;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        #pointList .remove_points:hover, #bonusList .remove_points:hover { background: #f1416c !important; color: #fff !important; }
+        #pointList .remove_points svg, #bonusList .remove_points svg { width: 16px; height: 16px; }
+        /* Total Gross (yellow) + Final Salary (green) footer rows → soft tints */
+        #pointList input[style*="ffeb00"], #bonusList input[style*="ffeb00"] { background: #fff8dd !important; color: #b78103 !important; font-weight: 600; }
+        #pointList input[style*="7de96f"], #bonusList input[style*="7de96f"], #final_pay input[style*="7de96f"] { background: #e8fff3 !important; color: #0f9463 !important; font-weight: 600; }
+        /* header "+ Add" buttons; hide the old in-table (+) add buttons (still click-triggered) */
+        .co-add-btn { background: #eef3ff; color: #4f46e5; border: 1px solid #e0e7ff; border-radius: 8px; padding: 8px 14px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; margin: 0 !important; white-space: nowrap; }
+        .co-add-btn:hover { background: #4f46e5; color: #fff; }
+        #pointList .addRowBtn, #bonusList .addRowBtnbonus { display: none !important; }
+        /* CSS row numbers shown as a leading pseudo-column on the name cell */
+        #pointList tbody tr.other_section_row .offer_points, #bonusList tbody tr.other_section_row .bonus_offer_points { position: relative; }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -681,9 +743,12 @@
                                                 </div>
                                             </div>
 
-                                            {{-- ── Preview Salary Structure panel (100% client-side; reads existing fields, writes nothing) ── --}}
-                                            <div class="col-lg-12">
-                                                <div class="card card-body py-5 mb-5 mb-xl-5 mx-2 co-preview-card">
+                                            {{-- ── Two-column layout: component tables (left) + Preview panel (right sidebar) ── --}}
+                                            <div class="row co-comp-layout">
+
+                                            {{-- Preview Salary Structure panel — right sidebar via CSS order (100% client-side) --}}
+                                            <div class="col-lg-4 co-preview-col">
+                                                <div class="card card-body py-5 mb-5 mb-xl-5 mx-2 co-preview-card co-preview-sticky">
                                                     <div class="co-section-head">
                                                         <div>
                                                             <h5 class="co-section-title"><i class="co-preview-eye"></i> Preview Salary Structure</h5>
@@ -737,14 +802,17 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            {{-- /Preview panel · start left column (component tables) --}}
+                                            <div class="col-lg-8 co-left-col">
 
                                             <div class="col-lg-12">
                                                 <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
-                                                    <div class="co-section-head">
+                                                    <div class="co-section-head co-section-head--flex">
                                                         <div>
                                                             <h5 class="co-section-title">Main Components <span class="co-section-note">(Must Total 100%)</span></h5>
                                                             <div class="co-section-sub">These are core components. Total percentage must be exactly 100%.</div>
                                                         </div>
+                                                        <button type="button" class="co-add-btn" onclick="$('#pointList').find('.addRowBtn').first().trigger('click')">+ Add Main Component</button>
                                                     </div>
                                                     <div id="co_validation_banner" class="co-valid-banner co-valid-banner--warn">
                                                         <i class="co-valid-ico"></i>
@@ -1343,11 +1411,12 @@
                                                 </div>
 
                                                 <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
-                                                    <div class="co-section-head">
+                                                    <div class="co-section-head co-section-head--flex">
                                                         <div>
                                                             <h5 class="co-section-title">Additional Components <span class="co-section-note">(Above 100% - Optional)</span></h5>
                                                             <div class="co-section-sub">These components are additional and will be added on top of the main 100%.</div>
                                                         </div>
+                                                        <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
@@ -2000,6 +2069,8 @@
 
 
                                             </div>
+                                            </div>{{-- /col-lg-8 co-left-col --}}
+                                            </div>{{-- /row co-comp-layout --}}
                                         </div>
                                     </form>
                                 </div>
