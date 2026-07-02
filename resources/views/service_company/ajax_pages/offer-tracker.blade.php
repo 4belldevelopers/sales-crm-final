@@ -7,6 +7,26 @@
     $job_status_arr = GeneralMethod::job_status();
 
     $now = \Carbon\Carbon::now();
+
+    /* ── Offer-lifecycle dates not present on the Elasticsearch candidate doc ──
+       "Salary saved" and "sent for approval" dates only live in MySQL
+       (offer_job_applications.updated_at / offer_create_main_tds.send_approved_date_time,
+       offer_create_main_tds.accept_date_time for the candidate's accept/reject moment).
+       Fetched once for the whole page (not per row) to avoid N+1 queries; tenancy is
+       scoped explicitly since raw DB::table() is not auto-scoped by company_id. */
+    $offerIds = collect($data)->pluck('offer_id')->filter()->unique()->values()->all();
+    $offerMeta = [];
+    if (!empty($offerIds)) {
+        $metaRows = DB::table('offer_job_applications as o')
+            ->leftJoin('offer_create_main_tds as t', function ($j) {
+                $j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+            })
+            ->whereIn('o.id', $offerIds)
+            ->where('o.company_id', auth()->user()->company_id)
+            ->select('o.id as offer_id', 'o.updated_at as salary_saved_at', 't.send_approved_date_time', 't.accept_date_time')
+            ->get();
+        foreach ($metaRows as $m) { $offerMeta[$m->offer_id] = $m; }
+    }
 @endphp
 
 @if (count($data) > 0)
@@ -80,17 +100,20 @@
            has been entered — a saved salary means the offer exists ("Offer Created"). */
         $hasPendingOffer = empty($offerAmount);
 
-        /* ── Offer Status — 7-state logic (row 1 = badge, row 2 = sub-status, row 3 = date) ──
-           1. No salary entered            → Pending
-           2. Salary entered & saved       → Offer Created
-           3. Released via email           → Offer Released   (sub: "Offer Sent")
-           4. Submitted for approval       → Approval Pending
-           5. Candidate accepted           → Accepted         (sub: date)
-           6. Candidate rejected           → Rejected         (sub: date)
-           7. No response / timed out      → Expired          (sub: date expired)          */
+        /* ── Offer Status — 7-state logic (row 1 = badge, row 2/3 = sub-status / date) ──
+           1. No salary entered            → Pending           (date: offer-stage entry date)
+           2. Salary entered & saved       → Offer Created     (date: salary saved date)
+           3. Released via email           → Offer Released    (sub: "Offer Sent")
+           4. Submitted for approval       → Approval Pending  (date: approval-email-sent date)
+           5. Candidate accepted           → Accepted          (sub: date accepted)
+           6. Candidate rejected           → Rejected          (sub: date rejected)
+           7. No response / timed out      → Expired           (sub: date expired)
+           Dates for 2 and 4 aren't on the Elasticsearch doc — pulled from the $offerMeta
+           bulk lookup above (offer_job_applications.updated_at / offer_create_main_tds). */
         $offerAcceptance = (int)($row->of_offer_acceptance ?? 0); // 0 none · 1 released · 2 accepted · 3 rejected · 4 expired
         $subForApproval  = (int)($row->sub_for_approval ?? 0);    // 1 = sent for approval
         $isJoined        = ($row->of_joined ?? 0) == 1;           // used by the Joining column
+        $meta            = $offerMeta[$row->offer_id ?? 0] ?? null;
         $fmtDate = fn($d) => (!empty($d) && date('d-m-Y', strtotime($d)) !== '01-01-1970')
                                 ? \Carbon\Carbon::parse($d)->format('d M Y') : '';
 
@@ -100,30 +123,31 @@
         if ($hasPendingOffer) {                       // 1 — no salary yet
             $offerBadgeLabel = 'Pending';          $offerBadgeColor = '#d97706'; $offerBadgeBg = '#fef3c7';
             $offerIconPath   = 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
+            $offerStatusDate = $fmtDate($row->of_stage_date ?? $row->created_at ?? '');
         } elseif ($offerAcceptance == 4) {            // 7 — expired
             $offerBadgeLabel = 'Expired';          $offerBadgeColor = '#64748b'; $offerBadgeBg = '#f1f5f9';
             $offerIconPath   = 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z';
-            $offerStatusText = 'Date Expired';
             $offerStatusDate = $fmtDate($row->of_expired_date ?? '');
         } elseif ($offerAcceptance == 3) {            // 6 — rejected
             $offerBadgeLabel = 'Rejected';         $offerBadgeColor = '#dc2626'; $offerBadgeBg = '#fee2e2';
             $offerIconPath   = 'm9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
-            $offerStatusDate = $fmtDate($row->of_rejected_date ?? '');
+            $offerStatusDate = $fmtDate($meta->accept_date_time ?? '');
         } elseif ($offerAcceptance == 2) {            // 5 — accepted
             $offerBadgeLabel = 'Accepted';         $offerBadgeColor = '#16a34a'; $offerBadgeBg = '#dcfce7';
             $offerIconPath   = 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z';
-            $offerStatusDate = $fmtDate($row->of_accepted_date ?? '');
+            $offerStatusDate = $fmtDate($meta->accept_date_time ?? '');
         } elseif ($offerAcceptance == 1) {            // 3 — released to candidate
             $offerBadgeLabel = 'Offer Released';   $offerBadgeColor = '#2563eb'; $offerBadgeBg = '#dbeafe';
             $offerIconPath   = 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5';
             $offerStatusText = 'Offer Sent';
-            $offerStatusDate = $fmtDate($row->of_released_date ?? '');
         } elseif ($subForApproval == 1) {             // 4 — sent for approval
-            $offerBadgeLabel = 'Approval Pending'; $offerBadgeColor = '#7c3aed'; $offerBadgeBg = '#ede9fe';
+            $offerBadgeLabel = 'Approval Pending'; $offerBadgeColor = '#c2410c'; $offerBadgeBg = '#ffedd5';
             $offerIconPath   = 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z';
+            $offerStatusDate = $fmtDate($meta->send_approved_date_time ?? '');
         } else {                                      // 2 — salary saved, offer created
-            $offerBadgeLabel = 'Offer Created';    $offerBadgeColor = '#6366f1'; $offerBadgeBg = '#e0e7ff';
+            $offerBadgeLabel = 'Offer Created';    $offerBadgeColor = '#4f46e5'; $offerBadgeBg = '#e0e7ff';
             $offerIconPath   = 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z';
+            $offerStatusDate = $fmtDate($meta->salary_saved_at ?? '');
         }
 
         /* ── Joining countdown ── */

@@ -6471,7 +6471,7 @@ class HomeController extends Controller
                     'passport' => $application->passport,
                     'updated_at' => ($application->updated_at) ? Carbon::parse($application->updated_at)->toIso8601String() : null,
                     'created_at' => ($application->created_at) ? Carbon::parse($application->created_at)->toIso8601String()  : null,
-                    'of_stage_date' => ($application->creaof_stage_dateted_at) ? Carbon::parse($application->of_stage_date)->toIso8601String()  : null,
+                    'of_stage_date' => ($application->of_stage_date) ? Carbon::parse($application->of_stage_date)->toIso8601String()  : null,
                     'deleted_at' => ($application->deleted_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
                     'process_id' => $application->process_id,
                     'qualification' => $application->qualification,
