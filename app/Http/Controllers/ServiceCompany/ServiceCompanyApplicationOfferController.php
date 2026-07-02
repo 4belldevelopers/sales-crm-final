@@ -100,7 +100,7 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 		];
 		$this->offerPipeline = [
 			['label'=>'Created',            'count'=>$t,             'pct'=>100,       'color'=>'#6366f1','icon_bg'=>'#e0e7ff','icon_clr'=>'#6366f1','icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z'],
-			['label'=>'Sent',               'count'=>$sn,            'pct'=>$pct($sn), 'color'=>'#3b82f6','icon_bg'=>'#dbeafe','icon_clr'=>'#3b82f6','icon'=>'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5'],
+			['label'=>'Released',           'count'=>$sn,            'pct'=>$pct($sn), 'color'=>'#3b82f6','icon_bg'=>'#dbeafe','icon_clr'=>'#3b82f6','icon'=>'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5'],
 			['label'=>'Accepted',           'count'=>$ac,            'pct'=>$pct($ac), 'color'=>'#22c55e','icon_bg'=>'#dcfce7','icon_clr'=>'#22c55e','icon'=>'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
 			['label'=>'Rejected',           'count'=>$rj,            'pct'=>$pct($rj), 'color'=>'#ef4444','icon_bg'=>'#fee2e2','icon_clr'=>'#ef4444','icon'=>'m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
 			['label'=>'Joined',             'count'=>$jn,            'pct'=>$pct($jn), 'color'=>'#10b981','icon_bg'=>'#d1fae5','icon_clr'=>'#10b981','icon'=>'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632z'],
@@ -138,21 +138,29 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 		$prevStart = (clone $prevEnd)->subDays($spanDays - 1)->startOfDay();
 
 		// ---- Single-pass KPI + funnel aggregate (one row) ----
+		// Same source of truth as the Offer Tracker index(): the offer lifecycle lives in
+		// offer_create_main_tds.candidate_status (0-created, 1-released, 2-accepted, 3-rejected,
+		// 4-expired). The legacy offer_job_applications flag columns (offer_release,
+		// offer_acceptance) are never populated for the release/accept steps, which made the
+		// "Offer Released" and "Offer Accepted" funnel stages read 0. We read the active offer
+		// doc (t.status IN (1,3); 2 = superseded). Tenancy: scoped by o.company_id (Rule 3).
 		$aggSelect = "
-			COUNT(*) as total,
-			SUM(CASE WHEN sub_for_approval = 1 AND offer_approved = 0 THEN 1 ELSE 0 END) as pending,
-			SUM(CASE WHEN offer_approved   = 1 THEN 1 ELSE 0 END) as approved,
-			SUM(CASE WHEN offer_release    = 1 THEN 1 ELSE 0 END) as released,
-			SUM(CASE WHEN offer_acceptance = 1 THEN 1 ELSE 0 END) as accepted,
-			SUM(CASE WHEN joined           = 1 THEN 1 ELSE 0 END) as joined,
-			SUM(CASE WHEN master_status_id IN (7,9) THEN 1 ELSE 0 END) as declined
+			COUNT(DISTINCT o.id) as total,
+			SUM(CASE WHEN COALESCE(t.candidate_status, 0) = 0 THEN 1 ELSE 0 END) as pending,
+			SUM(CASE WHEN t.candidate_status = 1 THEN 1 ELSE 0 END) as released,
+			SUM(CASE WHEN t.candidate_status = 2 THEN 1 ELSE 0 END) as accepted,
+			SUM(CASE WHEN t.candidate_status = 3 THEN 1 ELSE 0 END) as declined,
+			SUM(CASE WHEN o.joined = 1 THEN 1 ELSE 0 END) as joined
 		";
 
 		$baseQuery = function ($from, $to) use ($company_id, $aggSelect) {
-			return DB::table('offer_job_applications')
-				->whereNull('deleted_at')
-				->where('company_id', $company_id)
-				->whereBetween('created_at', [$from, $to])
+			return DB::table('offer_job_applications as o')
+				->leftJoin('offer_create_main_tds as t', function ($j) {
+					$j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+				})
+				->whereNull('o.deleted_at')
+				->where('o.company_id', $company_id)
+				->whereBetween('o.created_at', [$from, $to])
 				->selectRaw($aggSelect)
 				->first();
 		};
@@ -207,6 +215,9 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 		// ---- Top recruiters (one grouped query) ----
 		$topRecruiters = DB::table('offer_job_applications as o')
 			->leftJoin('users as u', 'u.id', '=', 'o.submitted_by')
+			->leftJoin('offer_create_main_tds as t', function ($j) {
+				$j->on('t.offer_id', '=', 'o.id')->whereIn('t.status', [1, 3]);
+			})
 			->whereNull('o.deleted_at')
 			->where('o.company_id', $company_id)
 			->whereBetween('o.created_at', [$start, $end])
@@ -215,8 +226,8 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 			->selectRaw("
 				o.submitted_by as id,
 				COALESCE(u.name, 'Unassigned') as name,
-				COUNT(*) as offers,
-				SUM(CASE WHEN o.offer_acceptance = 1 OR o.joined = 1 THEN 1 ELSE 0 END) as wins
+				COUNT(DISTINCT o.id) as offers,
+				SUM(CASE WHEN t.candidate_status = 2 OR o.joined = 1 THEN 1 ELSE 0 END) as wins
 			")
 			->orderByDesc('offers')
 			->limit(5)
