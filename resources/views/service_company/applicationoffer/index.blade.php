@@ -61,50 +61,50 @@ body { overflow-x: hidden; }
 .ot-pipeline-range {
     border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px;
 }
-/* ── Arrow/breadcrumb pipeline cards ── */
+/* ── Arrow/breadcrumb pipeline cards ──
+   Interlocking chevron segments built with clip-path only.
+   A small flex `gap` leaves the clean white chevron seam between
+   segments (no separate chevron elements, no negative margins —
+   that combination was what broke the layout previously). The whole
+   row lives in a horizontally-scrollable rail so the funnel never
+   wraps or crushes on 15.6" / smaller corporate laptop screens. */
+.ot-pipeline-rail { overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+.ot-pipeline-rail::-webkit-scrollbar { height: 6px; }
+.ot-pipeline-rail::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
 .ot-pipeline-flow {
-    display: flex; align-items: stretch; gap: 0;
+    display: flex; align-items: stretch; gap: 5px;
 }
 .ot-pipe-card-v2 {
-    flex: 1; min-width: 0; position: relative;
-    padding: 14px 28px 16px 24px;
-    margin-right: -18px;
+    flex: 1 1 0; min-width: 158px; position: relative;
+    padding: 13px 18px 15px 30px;
+    /* middle segment: notch on the left, arrow point on the right */
+    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 0 100%, 15px 50%);
 }
-/* First card — rounded left corners + arrow right */
+/* First card — softly rounded left corners + arrow right (no left notch) */
 .ot-pipe-card-v2:first-child {
-    padding-left: 16px; z-index: 6;
-    clip-path: polygon(0 8px, 8px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 8px 100%, 0 calc(100% - 8px));
+    padding-left: 18px;
+    clip-path: polygon(0 7px, 7px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 7px 100%, 0 calc(100% - 7px));
 }
-/* Middle cards — notch left + arrow right */
-.ot-pipe-card-v2:not(:first-child):not(:last-child) {
-    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%);
-}
-/* Decrease z-index left → right so left card arrow shows on top */
-.ot-pipeline-flow .ot-pipe-card-v2:nth-child(2) { z-index: 5; }
-.ot-pipeline-flow .ot-pipe-card-v2:nth-child(3) { z-index: 4; }
-.ot-pipeline-flow .ot-pipe-card-v2:nth-child(4) { z-index: 3; }
-.ot-pipeline-flow .ot-pipe-card-v2:nth-child(5) { z-index: 2; }
-/* Last card — notch left + rounded right corners */
+/* Last card — left notch + softly rounded right corners (no arrow point) */
 .ot-pipe-card-v2:last-child {
-    padding-left: 32px; padding-right: 16px;
-    margin-right: 0; z-index: 1;
-    clip-path: polygon(18px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 18px 50%);
+    padding-right: 18px;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 15px 50%);
 }
 .ot-pipe-head-row {
-    display: flex; align-items: center; gap: 7px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 7px; margin-bottom: 11px;
 }
-.ot-pipe-icon-sm { width: 24px; height: 24px; flex-shrink: 0; }
-.ot-pipe-icon-sm svg { width: 22px; height: 22px; }
+.ot-pipe-icon-sm { width: 22px; height: 22px; flex-shrink: 0; }
+.ot-pipe-icon-sm svg { width: 20px; height: 20px; }
 .ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ot-pipe-big { font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 4px; }
+.ot-pipe-big { font-size: 30px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 4px; }
 .ot-pipe-pct-v2 { font-size: 12px; color: #64748b; font-weight: 500; }
 .ot-pipe-sub-v2 { font-size: 11px; color: #94a3b8; margin-top: 1px; }
 /* colored line + dot at percentage */
 .ot-pipe-line {
-    height: 4px; border-radius: 99px; margin-top: 16px; position: relative; opacity: .75;
+    height: 4px; border-radius: 99px; margin-top: 15px; position: relative; opacity: .55;
 }
 .ot-pipe-marker {
-    width: 14px; height: 14px; border-radius: 50%; position: absolute;
+    width: 13px; height: 13px; border-radius: 50%; position: absolute;
     top: 50%; transform: translateY(-50%);
     border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
     opacity: 1;
@@ -271,16 +271,20 @@ body { overflow-x: hidden; }
 .ot-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; height: 16px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
+/* Tighten padding a touch on ~1366px 15.6" laptops so all six
+   segments fit the row without triggering the scroll rail. */
+@media (max-width: 1440px) {
+    .ot-pipe-card-v2 { padding: 12px 14px 14px 26px; min-width: 150px; }
+    .ot-pipe-big { font-size: 27px; }
+}
 @media (max-width: 1200px) {
     .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
-    .ot-pipeline-flow { flex-wrap: wrap; }
-    .ot-pipe-card-v2 { min-width: calc(33% - 14px); }
-    .ot-pipe-chevron { display: none; }
 }
 @media (max-width: 768px) {
     .ot-stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .ot-pipe-card-v2 { min-width: calc(50% - 8px); }
     .ot-page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    /* The funnel stays intact and simply scrolls horizontally on phones. */
+    .ot-pipe-card-v2 { min-width: 144px; }
 }
 </style>
 @endpush
@@ -390,33 +394,28 @@ body { overflow-x: hidden; }
             <option>All Time</option>
         </select>
     </div>
-    <div class="ot-pipeline-flow">
-        @foreach($offerPipeline as $p)
-        @php $dotLeft = max(4, min(90, (int)$p['pct'])); @endphp
-        <div class="ot-pipe-card-v2" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
-            <div class="ot-pipe-head-row">
-                <span class="ot-pipe-icon-sm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="{{ $p['icon'] ?? '' }}"/>
-                    </svg>
-                </span>
-                <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
+    <div class="ot-pipeline-rail">
+        <div class="ot-pipeline-flow">
+            @foreach($offerPipeline as $p)
+            @php $dotLeft = max(6, min(88, (int)$p['pct'])); @endphp
+            <div class="ot-pipe-card-v2" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
+                <div class="ot-pipe-head-row">
+                    <span class="ot-pipe-icon-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="{{ $p['icon'] ?? '' }}"/>
+                        </svg>
+                    </span>
+                    <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
+                </div>
+                <div class="ot-pipe-big">{{ $p['count'] }}</div>
+                <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
+                @if(isset($p['sub'])) <div class="ot-pipe-sub-v2">{{ $p['sub'] }}</div> @endif
+                <div class="ot-pipe-line" style="background:{{ $p['color'] }}">
+                    <div class="ot-pipe-marker" style="left:{{ $dotLeft }}%;background:{{ $p['color'] }}"></div>
+                </div>
             </div>
-            <div class="ot-pipe-big">{{ $p['count'] }}</div>
-            <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
-            @if(isset($p['sub'])) <div class="ot-pipe-sub-v2">{{ $p['sub'] }}</div> @endif
-            <div class="ot-pipe-line" style="background:{{ $p['color'] }}">
-                <div class="ot-pipe-marker" style="left:{{ $dotLeft }}%;background:{{ $p['color'] }}"></div>
-            </div>
+            @endforeach
         </div>
-        @if(!$loop->last)
-        <div class="ot-pipe-chevron">
-            <svg width="10" height="18" viewBox="0 0 10 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 1L9 9L1 17" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        @endif
-        @endforeach
     </div>
 </div>
 
