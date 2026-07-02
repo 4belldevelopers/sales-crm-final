@@ -131,9 +131,9 @@ body { overflow-x: hidden; }
 }
 .ot-search-input:focus { border-color: #6366f1; background: #fff; }
 .ot-location-select {
-    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #fff; cursor: pointer; outline: none; min-width: 160px;
+    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; cursor: pointer; outline: none; min-width: 160px;
 }
-.ot-location-select:focus { border-color: #6366f1; }
+.ot-location-select:focus { border-color: #6366f1; background: #fff; }
 
 /* Tabs row */
 .ot-tabs-bar {
@@ -170,8 +170,9 @@ body { overflow-x: hidden; }
 .ot-sort-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
 .ot-sort-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
 .ot-sort-select {
-    border: 1px solid #e2e8f0; border-radius: 7px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; outline: none; cursor: pointer;
+    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; outline: none; cursor: pointer; min-width: 160px;
 }
+.ot-sort-select:focus { border-color: #6366f1; background: #fff; }
 .ot-view-btns { display: flex; gap: 4px; }
 .ot-view-btn {
     width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e2e8f0; background: #fff;
@@ -227,6 +228,8 @@ body { overflow-x: hidden; }
 /* Compensation */
 .ot-comp-amount { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
 .ot-comp-type   { font-size: 11px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-comp-change { font-size: 11px; color: #6366f1; font-weight: 600; display: block; margin-top: 2px; }
+a:hover .ot-comp-change { text-decoration: underline; }
 .ot-pending-badge { font-size: 11px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
 .ot-create-btn { font-size: 12px; color: #f59e0b; font-weight: 700; text-decoration: none; }
 .ot-create-btn:hover { color: #d97706; text-decoration: underline; }
@@ -238,6 +241,7 @@ body { overflow-x: hidden; }
 }
 .ot-offer-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 .ot-offer-sub { font-size: 11px; color: #64748b; display: block; }
+.ot-offer-date { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
 
 /* Joining */
 .ot-join-date      { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
@@ -393,10 +397,10 @@ body { overflow-x: hidden; }
 <div class="ot-pipeline-wrap">
     <div class="ot-pipeline-head">
         <h5>Offers Pipeline</h5>
-        <select class="ot-pipeline-range">
-            <option>This Month ⌄</option>
-            <option>Last Month</option>
-            <option>All Time</option>
+        <select class="ot-pipeline-range" id="ot_pipeline_range">
+            <option value="current">This Month</option>
+            <option value="6m">Last 6 Months</option>
+            <option value="all">All Time</option>
         </select>
     </div>
     <div class="ot-pipeline-rail">
@@ -572,6 +576,7 @@ body { overflow-x: hidden; }
         country : '',
         sort    : '',
         tab     : 'all',
+        pipelineRange : 'current',
     };
 
     /* ── URLs ── */
@@ -593,11 +598,12 @@ body { overflow-x: hidden; }
                 country          : state.country,
                 sortingfilter    : state.sort,
                 offer_tab_filter : state.tab,
+                pipeline_range   : state.pipelineRange,
             },
             success: function (resp) {
                 document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
                 document.getElementById('ot_pagination').innerHTML  = resp.pagination || '';
-                if (resp.counts) updateOfferCounts(resp.counts);
+                if (resp.counts) updateOfferCounts(resp.counts, resp.pipelineCounts);
             },
             error: function () {
                 document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
@@ -608,12 +614,11 @@ body { overflow-x: hidden; }
     /* ── Sync tab badges + KPI cards + pipeline from the Elasticsearch counts ──
        Every number comes from the same aggregation that backs the table, so the
        badges/hero/pipeline always match the actual filtered result set. */
-    function updateOfferCounts(c) {
+    function updateOfferCounts(c, p) {
         if (!c) return;
-        var total = +c.total || 0;
         var n = function (v) { return (v != null ? v : 0); };
 
-        /* Tab badges */
+        /* Tab badges — from the full table result set */
         var badges = {
             tab_total: c.total, tab_pending: c.pending, tab_sent: c.sent,
             tab_accepted: c.accepted, tab_joining: c.joining_soon, tab_expired: c.expired
@@ -623,7 +628,7 @@ body { overflow-x: hidden; }
             if (el) el.textContent = n(badges[id]);
         });
 
-        /* KPI stat cards (data-kpi) */
+        /* KPI stat cards (data-kpi) — from the full table result set */
         var kpi = {
             total: c.total, pending: c.pending, sent: c.sent,
             expired: c.expired, joining_soon: c.joining_soon
@@ -633,16 +638,20 @@ body { overflow-x: hidden; }
             if (kpi[k] != null) el.textContent = kpi[k];
         });
 
-        /* Pipeline arrows (data-pipe) */
-        var pctOf = function (v) { return total > 0 ? Math.round((v / total) * 100) : 0; };
-        var ratio = pctOf(n(c.joined));
+        /* Pipeline arrows (data-pipe) — driven by the date-windowed counts
+           (dropdown: this month / last 6 months / all time); falls back to
+           the full counts if the server didn't return a windowed set. */
+        var pc = p || c;
+        var ptotal = +pc.total || 0;
+        var pctOf = function (v) { return ptotal > 0 ? Math.round((v / ptotal) * 100) : 0; };
+        var ratio = pctOf(n(pc.joined));
         var pipe = {
-            total:    { count: total,       pct: 100 },
-            sent:     { count: n(c.sent),   pct: pctOf(n(c.sent)) },
-            accepted: { count: n(c.accepted),pct: pctOf(n(c.accepted)) },
-            rejected: { count: n(c.rejected),pct: pctOf(n(c.rejected)) },
-            joined:   { count: n(c.joined), pct: ratio },
-            ratio:    { count: ratio + '%', pct: ratio, sub: n(c.joined) + '/' + total }
+            total:    { count: ptotal,        pct: 100 },
+            sent:     { count: n(pc.sent),    pct: pctOf(n(pc.sent)) },
+            accepted: { count: n(pc.accepted),pct: pctOf(n(pc.accepted)) },
+            rejected: { count: n(pc.rejected),pct: pctOf(n(pc.rejected)) },
+            joined:   { count: n(pc.joined),  pct: ratio },
+            ratio:    { count: ratio + '%',   pct: ratio, sub: n(pc.joined) + '/' + ptotal }
         };
         document.querySelectorAll('[data-pipe]').forEach(function (card) {
             var d = pipe[card.getAttribute('data-pipe')];
@@ -710,6 +719,15 @@ body { overflow-x: hidden; }
         state.size = parseInt(this.value, 10);
         fetchTable(true);
     });
+
+    /* Offers Pipeline date window (this month / last 6 months / all time) */
+    var pipeRangeEl = document.getElementById('ot_pipeline_range');
+    if (pipeRangeEl) {
+        pipeRangeEl.addEventListener('change', function () {
+            state.pipelineRange = this.value;
+            fetchTable(false);   /* only the pipeline counts change; keep the current page */
+        });
+    }
 
     /* tab clicks */
     document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (tab) {

@@ -359,6 +359,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			// Offer Tracker tab must vary the cache key, otherwise switching tabs
 			// returns a stale cached result set (the tab filter wasn't part of the key).
 			'offer_tab' => request('offer_tab_filter'),
+			'pipeline_range' => request('pipeline_range'),
 		];
 		
 		$versionKey = 'allcvtracker_version_user_'.$this->user->id;
@@ -1096,7 +1097,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// active tab) so every number matches THIS result set (fixes the MySQL-vs-ES
 		// mismatch where offer_job_applications counted a different population).
 		$offerCounts = null;
+		$offerPipelineCounts = null;
 		if ($status_cus == 5 && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			// Offers Pipeline date window (dropdown): current month / last 6 months / all time.
+			// Applied only to the nested "pipeline" agg so the pipeline can scope by date
+			// while the tab badges + KPI stay tied to the full table result set.
+			$pipelineRange = request('pipeline_range');
+			if ($pipelineRange === 'current') {
+				$pipelineFilter = ['range' => ['created_at' => ['gte' => 'now/M']]];
+			} elseif ($pipelineRange === '6m') {
+				$pipelineFilter = ['range' => ['created_at' => ['gte' => 'now-6M/d']]];
+			} else {
+				$pipelineFilter = ['match_all' => (object) []];
+			}
+
 			$countsResp = $this->elasticService->getClient()->search([
 				'index' => ELASTIC_CANDIDATES,
 				'request_cache' => true,
@@ -1108,6 +1122,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 						'by_acceptance' => ['terms'  => ['field' => 'of_offer_acceptance', 'size' => 10]],
 						'joined'        => ['filter' => ['term'  => ['of_joined' => 1]]],
 						'joining_soon'  => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]]],
+						'pipeline'      => [
+							'filter' => $pipelineFilter,
+							'aggs'   => [
+								'by_acceptance' => ['terms'  => ['field' => 'of_offer_acceptance', 'size' => 10]],
+								'joined'        => ['filter' => ['term' => ['of_joined' => 1]]],
+							],
+						],
 					],
 				],
 			]);
@@ -1125,6 +1146,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				'joined'       => (int) ($countsResp['aggregations']['joined']['doc_count'] ?? 0),
 				'joining_soon' => (int) ($countsResp['aggregations']['joining_soon']['doc_count'] ?? 0),
 			];
+
+			// Date-windowed counts that drive the Offers Pipeline funnel only.
+			$pacc = [];
+			foreach (($countsResp['aggregations']['pipeline']['by_acceptance']['buckets'] ?? []) as $b) {
+				$pacc[(int) $b['key']] = (int) $b['doc_count'];
+			}
+			$offerPipelineCounts = [
+				'total'    => (int) ($countsResp['aggregations']['pipeline']['doc_count'] ?? 0),
+				'sent'     => $pacc[1] ?? 0,
+				'accepted' => $pacc[2] ?? 0,
+				'rejected' => $pacc[3] ?? 0,
+				'joined'   => (int) ($countsResp['aggregations']['pipeline']['joined']['doc_count'] ?? 0),
+			];
 		}
 
 		$responseData = [
@@ -1132,6 +1166,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			'counts' => $offerCounts,
+			'pipelineCounts' => $offerPipelineCounts,
 		];
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CV_TRACKER_TIME));
