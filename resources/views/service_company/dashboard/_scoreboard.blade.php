@@ -500,22 +500,20 @@
     window.sb2Toggle = window.sb2Toggle || function (h) {
         var card = h.closest('.sb2-perf'); if (card) card.classList.toggle('closed');
     };
-    // Close the nearest .modal ancestor — force via direct DOM, bypasses Bootstrap state issues
-    window.sbCloseModal = function (el) {
+    // Close the nearest .modal ancestor — team page overrides this via window.sbCloseModal
+    window.sbCloseModal = window.sbCloseModal || function (el) {
         var m = el.closest('.modal');
         if (!m) return;
-        m.style.display = 'none';
-        m.classList.remove('show');
-        document.body.classList.remove('modal-open');
-        document.body.style.paddingRight = '';
-        document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
-        // Sync Bootstrap 5 internal flag so next open works
-        try {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var inst = bootstrap.Modal.getInstance(m);
-                if (inst) inst._isShown = false;
-            }
-        } catch (e) {}
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(m).hide();
+        } else if (typeof $ !== 'undefined' && $.fn.modal) {
+            $(m).modal('hide');
+        } else {
+            m.style.display = 'none';
+            m.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        }
     };
 </script>
 @endif
