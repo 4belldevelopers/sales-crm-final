@@ -109,16 +109,6 @@ body { overflow-x: hidden; }
 .ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; margin-bottom: 2px; }
 .ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
 .ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; margin-top: 1px; }
-/* colored line + dot at percentage */
-.ot-pipe-line {
-    height: 4px; border-radius: 99px; margin-top: 8px; position: relative; opacity: .55;
-}
-.ot-pipe-marker {
-    width: 13px; height: 13px; border-radius: 50%; position: absolute;
-    top: 50%; transform: translateY(-50%);
-    border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
-    opacity: 1;
-}
 
 /* ── Table card ── */
 .ot-card {
@@ -130,9 +120,10 @@ body { overflow-x: hidden; }
 /* Search + filter bar */
 .ot-filter-bar {
     display: flex; align-items: center; gap: 12px; padding: 16px 20px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9; flex-wrap: wrap;
 }
-.ot-search-wrap { flex: 1; position: relative; }
+.ot-filter-bar .ot-sort-bar { padding: 0; flex-shrink: 0; }
+.ot-search-wrap { flex: 1; min-width: 220px; position: relative; }
 .ot-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 16px; height: 16px; pointer-events: none; }
 .ot-search-input {
     width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px 8px 36px;
@@ -411,7 +402,6 @@ body { overflow-x: hidden; }
     <div class="ot-pipeline-rail">
         <div class="ot-pipeline-flow">
             @foreach($offerPipeline as $p)
-            @php $dotLeft = max(6, min(88, (int)$p['pct'])); @endphp
             <div class="ot-pipe-card-v2" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
                 <div class="ot-pipe-head-row">
                     <span class="ot-pipe-icon-sm">
@@ -424,9 +414,6 @@ body { overflow-x: hidden; }
                 <div class="ot-pipe-big">{{ $p['count'] }}</div>
                 <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
                 @if(isset($p['sub'])) <div class="ot-pipe-sub-v2">{{ $p['sub'] }}</div> @endif
-                <div class="ot-pipe-line" style="background:{{ $p['color'] }}">
-                    <div class="ot-pipe-marker" style="left:{{ $dotLeft }}%;background:{{ $p['color'] }}"></div>
-                </div>
             </div>
             @endforeach
         </div>
@@ -447,6 +434,18 @@ body { overflow-x: hidden; }
             <option value="{{ $c->id }}">{{ $c->country_name }}</option>
             @endforeach
         </select>
+        <div class="ot-sort-bar">
+            <span class="ot-sort-label">Sort by:</span>
+            <select class="ot-sort-select" id="ot_sort">
+                <option value="">Latest Updated</option>
+                <option value="10">Newest (Offer Date)</option>
+                <option value="11">Oldest (Offer Date)</option>
+                <option value="12">Newest (Join Date)</option>
+                <option value="13">Oldest (Join Date)</option>
+                <option value="14">Low → High (Amount)</option>
+                <option value="15">High → Low (Amount)</option>
+            </select>
+        </div>
     </div>
 
     {{-- Tabs + Sort --}}
@@ -460,16 +459,6 @@ body { overflow-x: hidden; }
             <div class="ot-tab" data-filter="expired">Expired <span class="ot-tab-badge" id="tab_expired">—</span></div>
         </div>
         <div class="ot-sort-bar">
-            <span class="ot-sort-label">Sort by:</span>
-            <select class="ot-sort-select" id="ot_sort">
-                <option value="">Latest Updated</option>
-                <option value="10">Newest (Offer Date)</option>
-                <option value="11">Oldest (Offer Date)</option>
-                <option value="12">Newest (Join Date)</option>
-                <option value="13">Oldest (Join Date)</option>
-                <option value="14">Low → High (Amount)</option>
-                <option value="15">High → Low (Amount)</option>
-            </select>
             <div class="ot-view-btns">
                 <button class="ot-view-btn active" title="List">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
