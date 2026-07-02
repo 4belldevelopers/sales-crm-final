@@ -992,6 +992,28 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
+		// Offer tracker tab filter (pending / sent / accepted / joining_soon / expired)
+		$offer_tab_filter = request('offer_tab_filter');
+		if ($status_cus == 5 && !empty($offer_tab_filter) && $offer_tab_filter !== 'all') {
+			switch ($offer_tab_filter) {
+				case 'pending':
+					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 0]];
+					break;
+				case 'sent':
+					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 1]];
+					break;
+				case 'accepted':
+					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 2]];
+					break;
+				case 'joining_soon':
+					$boolQuery['bool']['filter'][] = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]];
+					break;
+				case 'expired':
+					$boolQuery['bool']['filter'][] = ['term' => ['of_offer_acceptance' => 4]];
+					break;
+			}
+		}
+
 		// Activity filter
 		if (!empty($app_int_activity)) {
 			$activityFilter = $this->getActivityFilter(
@@ -4517,7 +4539,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		if ($attached_cv == 1) {
 			$resumeRowCount = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->count();
 			$resumeRow = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->get();
-			
+
 			$raw_filename = array();
 			if ($resumeRowCount) {
 				foreach ($resumeRow as $key=> $rval) {
@@ -4530,28 +4552,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $customName = 'JERO_'.str_replace(' ','_',$candidates->full_name) . '_' . $documentable_id . '.' . $extension;
 
 					$raw_filename[] = $hashname;
-						
+
 					$attachments[] = [
 							'path' => $hashname,
                             'filename' => $customName,
 							'options' => []
 						];
-
-					
-				// 	$attachmentPath = base_path() . '/public/user-uploads/documents/' . $documentable_id . '/' . $hashname;
-				
-			        	// $attachments[] = [
-						// 	'path' => $hashname,
-						// 	'options' => []
-						// ];
-						
-
-				// 	if (file_exists($attachmentPath)) {
-				// 		$attachments[] = [
-				// 			'file' => $attachmentPath,
-				// 			'options' => []
-				// 		];
-				// 	}
 					}
 
 				}
@@ -4568,10 +4574,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$company_name =  DB::table('companies')->select('companies.company_name')->where('id','=', $company_id)->first();
 			
             // dd(str_replace('"','',$testmail));
-            
-            
-		
-			
+
+			// Collect unique skills for all selected candidates to highlight in email
+			$candidateSkills = [];
+			if (!empty($arr)) {
+				$candidateSkills = DB::table('job_application_skills')
+					->whereIn('job_application_id', $arr)
+					->pluck('skills')
+					->filter()
+					->unique()
+					->values()
+					->toArray();
+			}
+
+
+
+
 			$senderName =  auth()->user()->name;
             $fromAddress = auth()->user()->email;
 
@@ -4600,16 +4618,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 							if($hr_name_first){
 								$hr_name_first_set = $hr_name_first->contact_person_name;
 							}
-							
+
 						}
-						
+
 						$template_description = str_replace(["[HR_NAME]"],[$hr_name_first_set], $message);
 					}else{
 						$template_description = str_replace(["[HR_NAME]"],[$hr_name_first_set], $message);
 					}
-					
-					
-                  $data = array('message' => $template_description,'subject'=>$subject,'company_name'=>$company_name->company_name,'consultant_name'=>"4Bell Technology",'position'=>"PHP");
+
+
+                  $data = array('message' => $template_description,'subject'=>$subject,'company_name'=>$company_name->company_name,'consultant_name'=>"4Bell Technology",'position'=>"PHP",'candidate_skills'=>$candidateSkills);
 				  $checkMailPermision = GeneralMethod::mailPermission(13);
 					if($checkMailPermision){
 						// QueueMailService

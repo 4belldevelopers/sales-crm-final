@@ -98,6 +98,7 @@ if($cc_email_count > 0){
   <div class="modal-body scroll-y py-0 px-lg-7">
     <div data-kt-element="options">
       <div class="py-5">
+
         <!--begin::Template-->
         <div class="form-group row mb-4">
           <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>

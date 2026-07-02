@@ -51,7 +51,47 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 					->where('job_applications.thirdparty_company_id', '=', $company_id);
 		});
 		$this->appCounter = $this->appCounter->count();
-			$this->countries = DB::table('countries')->get();
+		$this->countries  = DB::table('countries')->get();
+
+		// KPI stats & pipeline for the redesigned index page
+		$offerStats = DB::table('offer_job_applications')
+			->whereNull('deleted_at')
+			->where('company_id', $company_id)
+			->selectRaw("
+				COUNT(*) as total,
+				SUM(CASE WHEN offer_acceptance = 0 THEN 1 ELSE 0 END) as pending,
+				SUM(CASE WHEN offer_acceptance = 1 THEN 1 ELSE 0 END) as sent,
+				SUM(CASE WHEN offer_acceptance = 2 THEN 1 ELSE 0 END) as accepted,
+				SUM(CASE WHEN offer_acceptance = 3 THEN 1 ELSE 0 END) as rejected,
+				SUM(CASE WHEN offer_acceptance = 4 THEN 1 ELSE 0 END) as expired,
+				SUM(CASE WHEN joined = 1 THEN 1 ELSE 0 END) as joined_count,
+				SUM(CASE WHEN joined_date >= NOW() AND joined_date <= DATE_ADD(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as joining_soon
+			")
+			->first();
+
+		$t  = (int)($offerStats->total ?? 0);
+		$jn = (int)($offerStats->joined_count ?? 0);
+		$sn = (int)($offerStats->sent ?? 0);
+		$ac = (int)($offerStats->accepted ?? 0);
+		$rj = (int)($offerStats->rejected ?? 0);
+		$pct = fn($n) => $t > 0 ? (int)round($n / $t * 100) : 0;
+
+		$this->offerStats = [
+			'total'        => $t,
+			'pending'      => (int)($offerStats->pending ?? 0),
+			'sent'         => $sn,
+			'accepted'     => $ac,
+			'expired'      => (int)($offerStats->expired ?? 0),
+			'joining_soon' => (int)($offerStats->joining_soon ?? 0),
+		];
+		$this->offerPipeline = [
+			['label' => 'Created',             'count' => $t,   'pct' => 100,        'color' => '#6366f1'],
+			['label' => 'Sent',                'count' => $sn,  'pct' => $pct($sn),  'color' => '#3b82f6'],
+			['label' => 'Accepted',            'count' => $ac,  'pct' => $pct($ac),  'color' => '#22c55e'],
+			['label' => 'Rejected',            'count' => $rj,  'pct' => $pct($rj),  'color' => '#ef4444'],
+			['label' => 'Joined',              'count' => $jn,  'pct' => $pct($jn),  'color' => '#10b981'],
+			['label' => 'Offer to Join Ratio', 'count' => $pct($jn).'%', 'pct' => $pct($jn), 'color' => '#8b5cf6', 'sub' => $jn.'/'.$t],
+		];
 
 		return view('service_company.applicationoffer.index', $this->data);
 	}

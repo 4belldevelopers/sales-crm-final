@@ -48,11 +48,13 @@
     #resume_cv .rcv-kw-cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:14px; }
     #resume_cv .rcv-kw-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
     #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:6px; }
-    #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:default; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; }
+    #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
     #resume_cv .rcv-chip .rcv-cnt { font-size:10px; background:#e2e8f0; color:#475569; border-radius:10px; padding:0 5px; min-width:15px; text-align:center; }
     #resume_cv .rcv-chip.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
     #resume_cv .rcv-chip.found .rcv-cnt { background:#bbf7d0; color:#15803d; }
     #resume_cv .rcv-chip.missing { opacity:.6; }
+    #resume_cv .rcv-chip.active { background:#fef3c7; border-color:#fcd34d; color:#92400e; box-shadow:0 0 0 2px rgba(251,191,36,.25); }
+    #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
     #resume_cv .rcv-main { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; min-height:520px; }
     #resume_cv .rcv-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid #eef2f7; background:#fafbff; flex-wrap:wrap; }
     #resume_cv .rcv-file { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#334155; min-width:0; }
@@ -189,7 +191,7 @@
     function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
     function buildRegex(){ var a=activeList(); if(!a.length) return null; return new RegExp('('+a.map(escRe).sort(function(x,y){return y.length-x.length;}).join('|')+')','gi'); }
     function countOccurrences(){ Object.keys(keywords).forEach(function(k){ var m=resumeText.match(new RegExp(escRe(k),'gi')); keywords[k].count=m?m.length:0; }); }
-    function chipHtml(name){ var k=keywords[name]; var cls='rcv-chip'+(k.count>0?' found':' missing'); var rm=(k.type==='custom')?'<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>':''; return '<span class="'+cls+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>'; }
+    function chipHtml(name){ var k=keywords[name]; var cls='rcv-chip'+(k.count>0?' found':' missing')+(k.active?' active':''); var rm=(k.type==='custom')?'<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>':''; return '<span class="'+cls+'" data-kw="'+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>'; }
     function renderChips(){
       var jc='', xc='';
       Object.keys(keywords).forEach(function(n){ if(keywords[n].type==='custom') xc+=chipHtml(n); else jc+=chipHtml(n); });
@@ -370,6 +372,8 @@
       var kwB=$id('rcvKwAddBtn');
       if(kwB){ kwB.addEventListener('click', function(){ var i=$id('rcvKwInput'); addKeyword(i.value); i.value=''; i.focus(); }); }
       document.addEventListener('click', function(e){ var x=e.target.closest&&e.target.closest('#resume_cv .rcv-chip-x'); if(x){ e.preventDefault(); var nm=x.getAttribute('data-rm'); if(keywords[nm]){ delete keywords[nm]; renderChips(); applyHighlights(); } } });
+      // chip click toggles highlight on/off
+      document.addEventListener('click', function(e){ if(e.target.closest&&e.target.closest('#resume_cv .rcv-chip-x')) return; var chip=e.target.closest&&e.target.closest('#resume_cv .rcv-chip[data-kw]'); if(chip){ var nm=chip.getAttribute('data-kw'); if(keywords[nm]){ keywords[nm].active=!keywords[nm].active; renderChips(); applyHighlights(); } } });
     }
     function seedKeywords(){ jobSkills.forEach(function(s){ s=String(s||'').trim(); if(s) keywords[s]={type:'skill',active:false,count:0}; }); }
     function init(){

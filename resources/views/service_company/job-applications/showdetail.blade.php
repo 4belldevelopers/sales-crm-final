@@ -1010,6 +1010,12 @@
             var x = e.target.closest && e.target.closest('#resume_cv .rcv-chip-x');
             if(x){ e.preventDefault(); var nm = x.getAttribute('data-rm'); if(keywords[nm]){ delete keywords[nm]; renderChips(); applyHighlights(); } }
           });
+          // chip click toggles highlight on/off
+          document.addEventListener('click', function(e){
+            if(e.target.closest && e.target.closest('#resume_cv .rcv-chip-x')) return;
+            var chip = e.target.closest && e.target.closest('#resume_cv .rcv-chip[data-kw]');
+            if(chip){ toggleKw(chip.getAttribute('data-kw')); }
+          });
         }
 
         function withTimeout(promise, ms){
