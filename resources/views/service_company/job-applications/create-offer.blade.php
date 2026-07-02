@@ -743,68 +743,6 @@
                                                 </div>
                                             </div>
 
-                                            {{-- ── Two-column layout: component tables (left) + Preview panel (right sidebar) ── --}}
-                                            <div class="row co-comp-layout">
-
-                                            {{-- Preview Salary Structure panel — right sidebar via CSS order (100% client-side) --}}
-                                            <div class="col-lg-4 co-preview-col">
-                                                <div class="card card-body py-5 mb-5 mb-xl-5 mx-2 co-preview-card co-preview-sticky">
-                                                    <div class="co-section-head">
-                                                        <div>
-                                                            <h5 class="co-section-title"><i class="co-preview-eye"></i> Preview Salary Structure</h5>
-                                                            <div class="co-section-sub">See how this structure calculates for the entered amount.</div>
-                                                        </div>
-                                                        <div class="co-view-toggle" id="co_view_toggle">
-                                                            <button type="button" class="co-view-btn co-view-btn--active" data-view="monthly">Monthly View</button>
-                                                            <button type="button" class="co-view-btn" data-view="annual">Annual View</button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="co-preview-topbar">
-                                                        <div class="co-preview-amt">
-                                                            <label class="form-label">Amount</label>
-                                                            <input type="text" class="form-control form-control-solid" id="co_preview_amount" readonly>
-                                                        </div>
-                                                        <div class="co-preview-fmt">
-                                                            <label class="form-label">Salary Format</label>
-                                                            <div id="co_preview_format" class="co-fmt-badge">—</div>
-                                                        </div>
-                                                        <button type="button" class="btn btn-primary co-calc-btn" id="co_calc_btn">Calculate</button>
-                                                    </div>
-                                                    <div class="co-preview-grid">
-                                                        <div class="co-preview-breakup">
-                                                            <div class="co-preview-h">Breakup Preview (<span id="co_breakup_mode">Monthly</span>)</div>
-                                                            <table class="co-breakup-table" id="co_breakup_preview">
-                                                                <thead><tr><th>Components</th><th class="text-end">Amount</th></tr></thead>
-                                                                <tbody></tbody>
-                                                                <tfoot>
-                                                                    <tr class="co-breakup-total"><td>Total Cost to Company</td><td class="text-end" id="co_tcc">—</td></tr>
-                                                                </tfoot>
-                                                            </table>
-                                                        </div>
-                                                        <div class="co-preview-chart">
-                                                            <div id="co_breakup_chart"></div>
-                                                            <div class="co-chart-legend">
-                                                                <span><i class="co-dot co-dot--main"></i> Main (<span id="co_legend_main">100%</span>)</span>
-                                                                <span><i class="co-dot co-dot--add"></i> Additional (<span id="co_legend_add">0%</span>)</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="co-preview-checks">
-                                                            <div class="co-preview-h">Validation Checks</div>
-                                                            <ul class="co-checks" id="co_checks">
-                                                                <li data-check="main100"><i class="co-chk"></i> Main components total exactly 100%</li>
-                                                                {{-- static/presentational: no backing validation source in this form (per product decision) --}}
-                                                                <li class="co-chk--static"><i class="co-chk co-chk--ok"></i> No circular dependencies found</li>
-                                                                <li class="co-chk--static"><i class="co-chk co-chk--ok"></i> All formulas are valid</li>
-                                                                <li data-check="currency"><i class="co-chk"></i> Currency and salary format selected</li>
-                                                                <li data-check="additional"><i class="co-chk"></i> Additional components within allowed range</li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {{-- /Preview panel · start left column (component tables) --}}
-                                            <div class="col-lg-8 co-left-col">
-
                                             <div class="col-lg-12">
                                                 <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
                                                     <div class="co-section-head co-section-head--flex">
@@ -2069,8 +2007,6 @@
 
 
                                             </div>
-                                            </div>{{-- /col-lg-8 co-left-col --}}
-                                            </div>{{-- /row co-comp-layout --}}
                                         </div>
                                     </form>
                                 </div>
