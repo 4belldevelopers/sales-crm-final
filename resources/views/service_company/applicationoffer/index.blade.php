@@ -8,39 +8,45 @@
 ────────────────────────────────────────────── */
 body { overflow-x: hidden; }
 
-/* Page header */
+/* Poppins everywhere in the hero + pipeline; 16px hard cap per spec. */
+.ot-page-head, .ot-stats-grid, .ot-pipeline-wrap,
+.ot-page-head *, .ot-stats-grid *, .ot-pipeline-wrap * {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* Page header (hero) */
 .ot-page-head {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 24px 0;
+    padding: 14px 24px 0;
 }
-.ot-page-head h4 { font-size: 20px; font-weight: 700; margin: 0; color: #0f172a; }
-.ot-page-head p  { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+.ot-page-head h4 { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
+.ot-page-head p  { font-size: 11px; color: #64748b; margin: 2px 0 0; }
 .ot-head-actions { display: flex; gap: 10px; align-items: center; }
-.ot-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; }
+.ot-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; }
 .ot-btn:hover { background: #f8fafc; }
-.ot-btn svg { width: 15px; height: 15px; }
+.ot-btn svg { width: 14px; height: 14px; }
 .ot-btn-more { background: #fff; }
 
-/* ── KPI stat cards ── */
+/* ── KPI stat cards (hero boxes) — heights trimmed ~20% ── */
 .ot-stats-grid {
     display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
-    padding: 18px 24px 0;
+    padding: 14px 24px 0;
 }
 .ot-stat-card {
-    background: #fff; border-radius: 14px; padding: 18px 20px;
-    border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 14px;
+    background: #fff; border-radius: 14px; padding: 13px 16px;
+    border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 .ot-stat-icon {
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
 }
-.ot-stat-icon svg { width: 22px; height: 22px; }
+.ot-stat-icon svg { width: 18px; height: 18px; }
 .ot-stat-body { flex: 1; min-width: 0; }
-.ot-stat-label { font-size: 11px; color: #94a3b8; font-weight: 500; margin: 0 0 3px; text-transform: uppercase; letter-spacing: .4px; }
-.ot-stat-value { font-size: 26px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1; }
+.ot-stat-label { font-size: 10px; color: #94a3b8; font-weight: 500; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .4px; }
+.ot-stat-value { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.1; }
 .ot-stat-delta {
-    font-size: 11px; margin-top: 6px; display: flex; align-items: center; gap: 3px; font-weight: 500;
+    font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 3px; font-weight: 500;
 }
 .ot-stat-delta.up   { color: #16a34a; }
 .ot-stat-delta.down { color: #dc2626; }
@@ -51,11 +57,11 @@ body { overflow-x: hidden; }
 /* ── Pipeline section ── */
 .ot-pipeline-wrap {
     background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
-    margin: 18px 24px 0; padding: 18px 22px 22px;
+    margin: 14px 24px 0; padding: 14px 20px 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 .ot-pipeline-head {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
 }
 .ot-pipeline-head h5 { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
 .ot-pipeline-range {
@@ -79,7 +85,7 @@ body { overflow-x: hidden; }
 }
 .ot-pipe-card-v2 {
     flex: 1 1 0; min-width: 150px; position: relative;
-    padding: 10px 14px 11px 24px;
+    padding: 8px 14px 9px 24px;
     margin-left: -10px;
     /* middle segment: notch on the left, arrow point on the right */
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
@@ -95,17 +101,17 @@ body { overflow-x: hidden; }
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 14px 50%);
 }
 .ot-pipe-head-row {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
 }
-.ot-pipe-icon-sm { width: 20px; height: 20px; flex-shrink: 0; }
-.ot-pipe-icon-sm svg { width: 18px; height: 18px; }
+.ot-pipe-icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
+.ot-pipe-icon-sm svg { width: 16px; height: 16px; }
 .ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ot-pipe-big { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 3px; }
+.ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; margin-bottom: 2px; }
 .ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
-.ot-pipe-sub-v2 { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+.ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; margin-top: 1px; }
 /* colored line + dot at percentage */
 .ot-pipe-line {
-    height: 4px; border-radius: 99px; margin-top: 10px; position: relative; opacity: .55;
+    height: 4px; border-radius: 99px; margin-top: 8px; position: relative; opacity: .55;
 }
 .ot-pipe-marker {
     width: 13px; height: 13px; border-radius: 50%; position: absolute;
@@ -192,6 +198,11 @@ body { overflow-x: hidden; }
     border-bottom: 1px solid #f1f5f9;
 }
 .ot-table th .ot-sort-ico { margin-left: 4px; color: #cbd5e1; font-size: 10px; }
+.ot-table th.ot-th-sort { cursor: pointer; user-select: none; }
+.ot-table th.ot-th-sort:hover { color: #334155; }
+.ot-table th.ot-th-sort:hover .ot-sort-ico { color: #94a3b8; }
+.ot-table th.ot-th-sort.active { color: #6366f1; }
+.ot-table th.ot-th-sort.active .ot-sort-ico { color: #6366f1; }
 .ot-row { border-bottom: 1px solid #f8fafc; transition: background .12s; }
 .ot-row:hover { background: #fafbff; }
 .ot-td { padding: 12px 14px; vertical-align: middle; }
@@ -278,8 +289,7 @@ body { overflow-x: hidden; }
 /* Tighten a touch on ~1366px 15.6" laptops so all six
    segments fit the row without triggering the scroll rail. */
 @media (max-width: 1440px) {
-    .ot-pipe-card-v2 { padding: 10px 10px 11px 22px; min-width: 142px; }
-    .ot-pipe-big { font-size: 24px; }
+    .ot-pipe-card-v2 { padding: 8px 10px 9px 22px; min-width: 142px; }
 }
 @media (max-width: 1200px) {
     .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
@@ -341,11 +351,11 @@ body { overflow-x: hidden; }
             'delta_ico' => 'up',
         ],
         [
-            'label'  => 'Sent for Approval',
+            'label'  => 'Offer Released',
             'key'    => 'sent',
             'icon'   => 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5',
             'bg'     => '#dbeafe', 'ic' => '#2563eb',
-            'delta'  => 'Offers dispatched', 'delta_type' => 'up',
+            'delta'  => 'Released to candidate', 'delta_type' => 'up',
             'delta_ico' => 'up',
         ],
         [
@@ -444,7 +454,7 @@ body { overflow-x: hidden; }
         <div class="ot-tabs" id="ot_tabs">
             <div class="ot-tab active" data-filter="all">All <span class="ot-tab-badge" id="tab_total">—</span></div>
             <div class="ot-tab" data-filter="pending">Pending <span class="ot-tab-badge" id="tab_pending">—</span></div>
-            <div class="ot-tab" data-filter="sent">Sent for Approval <span class="ot-tab-badge" id="tab_sent">—</span></div>
+            <div class="ot-tab" data-filter="sent">Offer Released <span class="ot-tab-badge" id="tab_sent">—</span></div>
             <div class="ot-tab" data-filter="accepted">Accepted <span class="ot-tab-badge" id="tab_accepted">—</span></div>
             <div class="ot-tab" data-filter="joining_soon">Joining Soon <span class="ot-tab-badge" id="tab_joining">—</span></div>
             <div class="ot-tab" data-filter="expired">Expired <span class="ot-tab-badge" id="tab_expired">—</span></div>
@@ -477,13 +487,13 @@ body { overflow-x: hidden; }
         <table class="ot-table">
             <thead>
                 <tr>
-                    <th>Candidate <span class="ot-sort-ico">⇵</span></th>
-                    <th>Job <span class="ot-sort-ico">⇵</span></th>
-                    <th>Job Status, ID & Client <span class="ot-sort-ico">⇵</span></th>
-                    <th>Compensation <span class="ot-sort-ico">⇵</span></th>
-                    <th>Offer Status <span class="ot-sort-ico">⇵</span></th>
-                    <th>Joining <span class="ot-sort-ico">⇵</span></th>
-                    <th style="text-align:center;">Stage <span class="ot-sort-ico">⇵</span></th>
+                    <th>Candidate</th>
+                    <th>Job</th>
+                    <th>Job Status, ID &amp; Client</th>
+                    <th class="ot-th-sort" data-asc="14" data-desc="15">Compensation <span class="ot-sort-ico">⇵</span></th>
+                    <th class="ot-th-sort" data-asc="11" data-desc="10">Offer Status <span class="ot-sort-ico">⇵</span></th>
+                    <th class="ot-th-sort" data-asc="13" data-desc="12">Joining <span class="ot-sort-ico">⇵</span></th>
+                    <th style="text-align:center;">Stage</th>
                 </tr>
             </thead>
             <tbody id="offer-tracker">
