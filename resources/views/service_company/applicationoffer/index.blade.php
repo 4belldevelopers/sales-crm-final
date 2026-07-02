@@ -71,37 +71,41 @@ body { overflow-x: hidden; }
 .ot-pipeline-rail { overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
 .ot-pipeline-rail::-webkit-scrollbar { height: 6px; }
 .ot-pipeline-rail::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
+/* No flex gap: segments OVERLAP via negative margin so each arrow point
+   nests inside the next segment's notch, leaving only a thin parallel
+   white seam (arrow depth 14px, overlap 10px → ~4px seam). */
 .ot-pipeline-flow {
-    display: flex; align-items: stretch; gap: 5px;
+    display: flex; align-items: stretch; gap: 0;
 }
 .ot-pipe-card-v2 {
-    flex: 1 1 0; min-width: 158px; position: relative;
-    padding: 13px 18px 15px 30px;
+    flex: 1 1 0; min-width: 150px; position: relative;
+    padding: 10px 14px 11px 24px;
+    margin-left: -10px;
     /* middle segment: notch on the left, arrow point on the right */
-    clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 0 100%, 15px 50%);
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
 }
 /* First card — softly rounded left corners + arrow right (no left notch) */
 .ot-pipe-card-v2:first-child {
-    padding-left: 18px;
-    clip-path: polygon(0 7px, 7px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 7px 100%, 0 calc(100% - 7px));
+    margin-left: 0; padding-left: 16px;
+    clip-path: polygon(0 6px, 6px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 6px 100%, 0 calc(100% - 6px));
 }
 /* Last card — left notch + softly rounded right corners (no arrow point) */
 .ot-pipe-card-v2:last-child {
-    padding-right: 18px;
-    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 15px 50%);
+    padding-right: 16px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 14px 50%);
 }
 .ot-pipe-head-row {
-    display: flex; align-items: center; gap: 7px; margin-bottom: 11px;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 7px;
 }
-.ot-pipe-icon-sm { width: 22px; height: 22px; flex-shrink: 0; }
-.ot-pipe-icon-sm svg { width: 20px; height: 20px; }
+.ot-pipe-icon-sm { width: 20px; height: 20px; flex-shrink: 0; }
+.ot-pipe-icon-sm svg { width: 18px; height: 18px; }
 .ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ot-pipe-big { font-size: 30px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 4px; }
-.ot-pipe-pct-v2 { font-size: 12px; color: #64748b; font-weight: 500; }
+.ot-pipe-big { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1; margin-bottom: 3px; }
+.ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
 .ot-pipe-sub-v2 { font-size: 11px; color: #94a3b8; margin-top: 1px; }
 /* colored line + dot at percentage */
 .ot-pipe-line {
-    height: 4px; border-radius: 99px; margin-top: 15px; position: relative; opacity: .55;
+    height: 4px; border-radius: 99px; margin-top: 10px; position: relative; opacity: .55;
 }
 .ot-pipe-marker {
     width: 13px; height: 13px; border-radius: 50%; position: absolute;
@@ -271,11 +275,11 @@ body { overflow-x: hidden; }
 .ot-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; height: 16px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-/* Tighten padding a touch on ~1366px 15.6" laptops so all six
+/* Tighten a touch on ~1366px 15.6" laptops so all six
    segments fit the row without triggering the scroll rail. */
 @media (max-width: 1440px) {
-    .ot-pipe-card-v2 { padding: 12px 14px 14px 26px; min-width: 150px; }
-    .ot-pipe-big { font-size: 27px; }
+    .ot-pipe-card-v2 { padding: 10px 10px 11px 22px; min-width: 142px; }
+    .ot-pipe-big { font-size: 24px; }
 }
 @media (max-width: 1200px) {
     .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
