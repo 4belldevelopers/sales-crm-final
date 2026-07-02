@@ -375,7 +375,7 @@ body { overflow-x: hidden; }
         </div>
         <div class="ot-stat-body">
             <p class="ot-stat-label">{{ $card['label'] }}</p>
-            <p class="ot-stat-value">{{ $offerStats[$card['key']] ?? 0 }}</p>
+            <p class="ot-stat-value" data-kpi="{{ $card['key'] }}">{{ $offerStats[$card['key']] ?? 0 }}</p>
             <div class="ot-stat-delta {{ $card['delta_type'] }}">
                 @if($card['delta_ico'] === 'up')
                     <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
@@ -402,7 +402,7 @@ body { overflow-x: hidden; }
     <div class="ot-pipeline-rail">
         <div class="ot-pipeline-flow">
             @foreach($offerPipeline as $p)
-            <div class="ot-pipe-card-v2" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
+            <div class="ot-pipe-card-v2" data-pipe="{{ $p['key'] ?? '' }}" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
                 <div class="ot-pipe-head-row">
                     <span class="ot-pipe-icon-sm">
                         <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -413,7 +413,7 @@ body { overflow-x: hidden; }
                 </div>
                 <div class="ot-pipe-big">{{ $p['count'] }}</div>
                 <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
-                @if(isset($p['sub'])) <div class="ot-pipe-sub-v2">{{ $p['sub'] }}</div> @endif
+                <div class="ot-pipe-sub-v2">{{ $p['sub'] ?? '' }}</div>
             </div>
             @endforeach
         </div>
@@ -597,6 +597,7 @@ body { overflow-x: hidden; }
             success: function (resp) {
                 document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
                 document.getElementById('ot_pagination').innerHTML  = resp.pagination || '';
+                if (resp.counts) updateOfferCounts(resp.counts);
             },
             error: function () {
                 document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
@@ -604,21 +605,56 @@ body { overflow-x: hidden; }
         });
     }
 
-    /* ── Tab badge counts from server-rendered stats ── */
-    (function () {
-        var map = {
-            tab_total   : {{ $offerStats['total'] ?? 0 }},
-            tab_pending : {{ $offerStats['pending'] ?? 0 }},
-            tab_sent    : {{ $offerStats['sent'] ?? 0 }},
-            tab_accepted: {{ $offerStats['accepted'] ?? 0 }},
-            tab_joining : {{ $offerStats['joining_soon'] ?? 0 }},
-            tab_expired : {{ $offerStats['expired'] ?? 0 }},
+    /* ── Sync tab badges + KPI cards + pipeline from the Elasticsearch counts ──
+       Every number comes from the same aggregation that backs the table, so the
+       badges/hero/pipeline always match the actual filtered result set. */
+    function updateOfferCounts(c) {
+        if (!c) return;
+        var total = +c.total || 0;
+        var n = function (v) { return (v != null ? v : 0); };
+
+        /* Tab badges */
+        var badges = {
+            tab_total: c.total, tab_pending: c.pending, tab_sent: c.sent,
+            tab_accepted: c.accepted, tab_joining: c.joining_soon, tab_expired: c.expired
         };
-        Object.keys(map).forEach(function (id) {
+        Object.keys(badges).forEach(function (id) {
             var el = document.getElementById(id);
-            if (el) el.textContent = map[id];
+            if (el) el.textContent = n(badges[id]);
         });
-    })();
+
+        /* KPI stat cards (data-kpi) */
+        var kpi = {
+            total: c.total, pending: c.pending, sent: c.sent,
+            expired: c.expired, joining_soon: c.joining_soon
+        };
+        document.querySelectorAll('[data-kpi]').forEach(function (el) {
+            var k = el.getAttribute('data-kpi');
+            if (kpi[k] != null) el.textContent = kpi[k];
+        });
+
+        /* Pipeline arrows (data-pipe) */
+        var pctOf = function (v) { return total > 0 ? Math.round((v / total) * 100) : 0; };
+        var ratio = pctOf(n(c.joined));
+        var pipe = {
+            total:    { count: total,       pct: 100 },
+            sent:     { count: n(c.sent),   pct: pctOf(n(c.sent)) },
+            accepted: { count: n(c.accepted),pct: pctOf(n(c.accepted)) },
+            rejected: { count: n(c.rejected),pct: pctOf(n(c.rejected)) },
+            joined:   { count: n(c.joined), pct: ratio },
+            ratio:    { count: ratio + '%', pct: ratio, sub: n(c.joined) + '/' + total }
+        };
+        document.querySelectorAll('[data-pipe]').forEach(function (card) {
+            var d = pipe[card.getAttribute('data-pipe')];
+            if (!d) return;
+            var big = card.querySelector('.ot-pipe-big');
+            var pctEl = card.querySelector('.ot-pipe-pct-v2');
+            var subEl = card.querySelector('.ot-pipe-sub-v2');
+            if (big)   big.textContent = d.count;
+            if (pctEl) pctEl.textContent = d.pct + '%';
+            if (subEl) subEl.textContent = d.sub || '';
+        });
+    }
 
     /* ── events ── */
     /* search (debounced) */
