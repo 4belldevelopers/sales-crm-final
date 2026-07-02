@@ -109,6 +109,10 @@ body { overflow-x: hidden; }
 .ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; margin-bottom: 2px; }
 .ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
 .ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+/* Ratio card: percentage on the left, fraction pinned to the top-right corner */
+.ot-pipe-ratio-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.ot-pipe-ratio-row .ot-pipe-big { margin-bottom: 0; }
+.ot-pipe-ratio-row .ot-pipe-sub-v2 { margin-top: 2px; white-space: nowrap; }
 
 /* ── Table card ── */
 .ot-card {
@@ -415,9 +419,16 @@ a:hover .ot-comp-change { text-decoration: underline; }
                     </span>
                     <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
                 </div>
-                <div class="ot-pipe-big">{{ $p['count'] }}</div>
-                <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
-                <div class="ot-pipe-sub-v2">{{ $p['sub'] ?? '' }}</div>
+                @if(isset($p['sub']))
+                    {{-- Ratio card: percentage (left) and the fraction (top-right) share one row --}}
+                    <div class="ot-pipe-ratio-row">
+                        <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
+                        <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
+                    </div>
+                @else
+                    <div class="ot-pipe-big">{{ $p['count'] }}</div>
+                    <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
+                @endif
             </div>
             @endforeach
         </div>
