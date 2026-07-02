@@ -8,7 +8,7 @@
 
     $offerStatusMap = [
         0 => ['label'=>'Pending',  'color'=>'#d97706','bg'=>'#fef3c7','icon'=>'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
-        1 => ['label'=>'Sent',     'color'=>'#2563eb','bg'=>'#dbeafe','icon'=>'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5'],
+        1 => ['label'=>'Released',  'color'=>'#2563eb','bg'=>'#dbeafe','icon'=>'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5'],
         2 => ['label'=>'Accepted', 'color'=>'#16a34a','bg'=>'#dcfce7','icon'=>'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
         3 => ['label'=>'Rejected', 'color'=>'#dc2626','bg'=>'#fee2e2','icon'=>'m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
         4 => ['label'=>'Expired',  'color'=>'#dc2626','bg'=>'#fee2e2','icon'=>'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z'],
@@ -54,17 +54,22 @@
             try { $jobStatusRaw = GeneralMethod::jobDetails($row->jobId)->status ?? 'active'; } catch (\Throwable $e) {}
         }
         $jobStatusLabel = match($jobStatusRaw) {
-            'active'   => 'Active',
+            'active'   => 'Hiring',
             'hold'     => 'Hold',
             'inactive' => 'Closed',
             default    => ucfirst($jobStatusRaw),
         };
         $jobStatusStyle = match($jobStatusRaw) {
-            'active'   => 'color:#22c55e;background:#dcfce7;',
-            'hold'     => 'color:#f59e0b;background:#fef3c7;',
-            'inactive' => 'color:#64748b;background:#f1f5f9;',
+            'active'   => 'color:#16a34a;background:#dcfce7;',   // Hiring — green
+            'hold'     => 'color:#d97706;background:#fef3c7;',   // Hold — orange
+            'inactive' => 'color:#dc2626;background:#fee2e2;',   // Closed — red
             default    => 'color:#64748b;background:#f1f5f9;',
         };
+
+        /* ── Client type (Direct vs Internal) — internal = the company's own job ── */
+        $isOwnJob        = ($row->client_comapny_id ?? 0) == $company_id;
+        $clientType      = $isOwnJob ? 'Internal Client' : 'Direct Client';
+        $clientTypeColor = $isOwnJob ? '#2563eb' : '#16a34a'; // internal = blue, direct = green
 
         /* ── Compensation ── */
         $offerAmount   = $row->of_offer_amount ?? '';
@@ -101,18 +106,27 @@
             $offerIconPath   = $s['icon'];
         }
 
-        /* ── Offer Status sub-text ── */
-        $offerSubText = '';
+        /* ── Offer Status: row 2 = status text, row 3 = date updated ── */
+        $offerStatusText = '';
+        $offerStatusDate = '';
         if ($isJoined && !empty($offerJoinDate)) {
-            $offerSubText = 'Joined on '.\Carbon\Carbon::parse($offerJoinDate)->format('d M Y');
-        } elseif ($offerAcceptance == 4 && !empty($row->of_expired_date)) {
-            $offerSubText = 'Expired on '.\Carbon\Carbon::parse($row->of_expired_date)->format('d M Y');
+            $offerStatusText = 'Joined';
+            $offerStatusDate = \Carbon\Carbon::parse($offerJoinDate)->format('d M Y');
+        } elseif ($offerAcceptance == 4) {
+            $offerStatusText = 'Offer Expired';
+            $offerStatusDate = !empty($row->of_expired_date) ? \Carbon\Carbon::parse($row->of_expired_date)->format('d M Y') : '';
+        } elseif ($offerAcceptance == 3) {
+            $offerStatusText = 'Offer Rejected';
+            $offerStatusDate = !empty($row->of_rejected_date) ? \Carbon\Carbon::parse($row->of_rejected_date)->format('d M Y') : '';
         } elseif ($offerAcceptance == 2) {
-            $offerSubText = 'Offer Accepted '.(!empty($row->of_accepted_date) ? \Carbon\Carbon::parse($row->of_accepted_date)->format('d M Y') : '');
+            $offerStatusText = 'Offer Accepted';
+            $offerStatusDate = !empty($row->of_accepted_date) ? \Carbon\Carbon::parse($row->of_accepted_date)->format('d M Y') : '';
         } elseif ($offerAcceptance == 1) {
-            $offerSubText = 'Offer Sent '.(!empty($row->of_released_date) ? \Carbon\Carbon::parse($row->of_released_date)->format('d M Y') : '');
+            $offerStatusText = 'Offer Released';
+            $offerStatusDate = !empty($row->of_released_date) ? \Carbon\Carbon::parse($row->of_released_date)->format('d M Y') : '';
         } elseif ($hasPendingOffer) {
-            $offerSubText = 'Last update '.$now->format('d M Y');
+            $offerStatusText = 'Offer Pending';
+            $offerStatusDate = $now->format('d M Y');
         }
 
         /* ── Joining countdown ── */
@@ -162,20 +176,19 @@
             </div>
         </td>
 
-        {{-- Job --}}
+        {{-- Job: 1st row = position, 2nd row = company name --}}
         <td class="ot-td">
             <span class="ot-job-title">{{ $jobTitle }}</span>
-            <span class="ot-job-type">{{ $empLabel }}</span>
+            <span class="ot-job-type">{{ $clientName ?: '—' }}</span>
         </td>
 
-        {{-- Job Status, ID & Client --}}
+        {{-- Job Status: 1st row = status, 2nd row = client type + Job ID (colored) --}}
         <td class="ot-td">
             <span class="ot-status-pill" style="{{ $jobStatusStyle }}">{{ $jobStatusLabel }}</span>
-            <span class="ot-job-meta">{{ $row->jobId }} &bull; {{ $clientName }}</span>
+            <span class="ot-job-meta" style="color:{{ $clientTypeColor }};font-weight:600;">{{ $clientType }} &bull; {{ $row->jobId }}</span>
         </td>
 
-        {{-- Compensation --}}
-        @php $isOwnJob = ($row->client_comapny_id ?? 0) == $company_id; @endphp
+        {{-- Compensation: 1st = amount, 2nd = type, 3rd = Change --}}
         <td class="ot-td">
             @if($hasPendingOffer)
                 @if($isOwnJob)
@@ -188,24 +201,29 @@
                     <a href="javascript:void(0);" class="create_offer" style="text-decoration:none;color:inherit;" data-row-offerid="{{ $row->offer_id ?? '' }}">
                         <span class="ot-comp-amount">{{ $compDisplay }}</span>
                         <span class="ot-comp-type">{{ $empLabel }}</span>
+                        <span class="ot-comp-change">Change</span>
                     </a>
                 @else
                     <a href="javascript:void(0);" class="ot-client-offer-warn" style="text-decoration:none;color:inherit;">
                         <span class="ot-comp-amount">{{ $compDisplay }}</span>
                         <span class="ot-comp-type">{{ $empLabel }}</span>
+                        <span class="ot-comp-change">Change</span>
                     </a>
                 @endif
             @endif
         </td>
 
-        {{-- Offer Status --}}
+        {{-- Offer Status: 1st = badge, 2nd = status text, 3rd = date updated --}}
         <td class="ot-td">
             <span class="ot-offer-badge" style="background:{{ $offerBadgeBg }};color:{{ $offerBadgeColor }};">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $offerIconPath }}"/></svg>
                 {{ $offerBadgeLabel }}
             </span>
-            @if($offerSubText)
-                <span class="ot-offer-sub">{{ $offerSubText }}</span>
+            @if($offerStatusText)
+                <span class="ot-offer-sub">{{ $offerStatusText }}</span>
+            @endif
+            @if($offerStatusDate)
+                <span class="ot-offer-date">{{ $offerStatusDate }}</span>
             @endif
         </td>
 
