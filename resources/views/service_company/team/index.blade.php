@@ -949,6 +949,8 @@
                     success: function(response) {
                         if (response && response.status === 'success') {
                             $('#team_scoreboard_body').html(response.view);
+                            // Re-pin after injected script runs so our version always wins
+                            window.sbCloseModal = closeTeamScoreModal;
                         } else {
                             var msg = (response && response.message) ? response.message : 'Could not load scoreboard.';
                             $('#team_scoreboard_body').html('<div style="text-align:center;padding:40px;color:#e53935;">' + msg + '</div>');
@@ -991,6 +993,21 @@
                     closeTeamScoreModal();
                 }
             });
+
+            // Close via ✕ button (data-bs-dismiss doesn't fire when modal opened via JS on this page)
+            $(document).on('click', '#team_rank_user .sb2-x', function() {
+                closeTeamScoreModal();
+            });
+
+            // Export Report — print the scoreboard as PDF via browser print dialog
+            window.sbExportPdf = function (el) {
+                var prevTitle = document.title;
+                document.title = 'Score-Board-' + new Date().toISOString().slice(0, 10);
+                var done = function () { document.title = prevTitle; window.removeEventListener('afterprint', done); };
+                window.addEventListener('afterprint', done);
+                window.print();
+                setTimeout(done, 1500);
+            };
             // --- end score board close ---
 
             $(document).on('click', '.update_role_close', function() {
