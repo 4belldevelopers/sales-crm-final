@@ -106,13 +106,13 @@ body { overflow-x: hidden; }
 .ot-pipe-icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
 .ot-pipe-icon-sm svg { width: 16px; height: 16px; }
 .ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; margin-bottom: 2px; }
+.ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; }
 .ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
-.ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; margin-top: 1px; }
-/* Ratio card: percentage on the left, fraction pinned to the top-right corner */
-.ot-pipe-ratio-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.ot-pipe-ratio-row .ot-pipe-big { margin-bottom: 0; }
-.ot-pipe-ratio-row .ot-pipe-sub-v2 { margin-top: 2px; white-space: nowrap; }
+.ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; }
+/* Every stage card: main value pinned top-left, percentage/fraction pinned top-right */
+.ot-pipe-data-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.ot-pipe-data-row .ot-pipe-pct-v2,
+.ot-pipe-data-row .ot-pipe-sub-v2 { margin-top: 2px; white-space: nowrap; }
 
 /* ── Table card ── */
 .ot-card {
@@ -420,14 +420,17 @@ a:hover .ot-comp-change { text-decoration: underline; }
                     <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
                 </div>
                 @if(isset($p['sub']))
-                    {{-- Ratio card: percentage (left) and the fraction (top-right) share one row --}}
-                    <div class="ot-pipe-ratio-row">
+                    {{-- Ratio card: percentage (top-left) and the fraction (top-right) --}}
+                    <div class="ot-pipe-data-row">
                         <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
                         <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
                     </div>
                 @else
-                    <div class="ot-pipe-big">{{ $p['count'] }}</div>
-                    <div class="ot-pipe-pct-v2">{{ $p['pct'] }}%</div>
+                    {{-- All other stages: count (top-left) and percentage (top-right) --}}
+                    <div class="ot-pipe-data-row">
+                        <span class="ot-pipe-big">{{ $p['count'] }}</span>
+                        <span class="ot-pipe-pct-v2">{{ $p['pct'] }}%</span>
+                    </div>
                 @endif
             </div>
             @endforeach
