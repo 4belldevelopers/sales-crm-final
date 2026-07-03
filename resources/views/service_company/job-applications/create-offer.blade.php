@@ -270,7 +270,6 @@
 .co-sb-amount-num { font-size: 24px; font-weight: 700; color: #0f172a; }
 .co-sb-amount-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-<<<<<<< HEAD
         /* ──────────────────────────────────────────────
            Compensation drawer — Poppins + 16px hard cap
            Scoped to this drawer's root (#offer_create_show_right_bar) so it
@@ -507,92 +506,6 @@
         .co-chip--total { background: #e8fff3; color: #0f9463; }
         @media (max-width: 900px) { .co-howit-box { flex-direction: column; gap: 14px; } }
     </style>
-=======
-/* Validation checks */
-.co-check { display: flex; align-items: center; gap: 7px; font-size: 12px; padding: 4px 0; }
-.co-check svg { width: 14px; height: 14px; flex-shrink: 0; }
-.co-check.ok   { color: #16a34a; }
-.co-check.warn { color: #d97706; }
-.co-check.err  { color: #dc2626; }
-
-/* View toggle */
-.co-view-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 12px; }
-.co-view-btn { flex: 1; padding: 6px 8px; font-size: 11px; font-weight: 600; background: #fff; border: none; cursor: pointer; color: #64748b; font-family: Poppins, sans-serif !important; }
-.co-view-btn.active { background: #6366f1; color: #fff; }
-
-/* How it works */
-.co-how-works { padding: 12px 14px; background: #fff; border-radius: 10px; border: 1px solid #e8edf4; margin-top: 12px; }
-.co-how-title { font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-.co-how-flow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.co-how-pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
-.co-how-arr { color: #cbd5e1; font-size: 12px; }
-
-/* ── Step 3: Preview ── */
-#preview_offer_body_content { min-height: 300px; }
-
-/* ── Step 4: Wait for Approval ── */
-.co-approval-card {
-    background: #fff; border-radius: 12px; border: 1px solid #e8edf4;
-    padding: 30px 24px; text-align: center; margin-bottom: 16px;
-}
-.co-approval-icon {
-    width: 60px; height: 60px; border-radius: 50%; background: #fef3c7;
-    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
-}
-.co-approval-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-.co-approval-desc  { font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
-
-/* ── Step 5: Offer Sent ── */
-.co-sent-card {
-    background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
-    border-radius: 14px; border: 1px solid #bbf7d0;
-    padding: 36px 24px; text-align: center; margin-bottom: 16px;
-}
-.co-sent-icon {
-    width: 68px; height: 68px; border-radius: 50%; background: #22c55e;
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px; font-size: 30px;
-}
-.co-sent-title { font-size: 16px; font-weight: 700; color: #166534; margin-bottom: 8px; }
-.co-sent-desc  { font-size: 13px; color: #4ade80; margin-bottom: 22px; }
-
-/* Offer timeline (sidebar) */
-.co-timeline { padding: 4px 0; }
-.co-tl-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
-.co-tl-item:not(:last-child)::before {
-    content: ''; position: absolute; left: 9px; top: 20px; bottom: 0; width: 2px; background: #e2e8f0;
-}
-.co-tl-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
-.co-tl-dot.pending { background: #e2e8f0; color: #94a3b8; }
-.co-tl-dot.active  { background: #6366f1; }
-.co-tl-dot.done    { background: #22c55e; }
-.co-tl-text { font-size: 12px; font-weight: 600; color: #374151; }
-.co-tl-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-
-/* Aliases for step 4/5 markup */
-.co-section-header {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;
-}
-.co-section-header svg { color: #6366f1; }
-.co-tl-content { display: flex; flex-direction: column; }
-.co-tl-label { font-size: 12px; font-weight: 600; color: #374151; }
-.co-tl-dot { background: #e2e8f0; }
-.co-tl-item.done .co-tl-dot { background: #22c55e; }
-.co-tl-item.done .co-tl-dot::after { content: '✓'; color: #fff; font-size: 10px; }
-.co-tl-item.done:not(:last-child)::before { background: #86efac; }
-
-/* Preserve inner table CSS */
-@media only screen and (min-width: 900px) and (max-width: 2560px) {
-    #pointList td, #pointList th, #pointList tr,
-    #bonusList td, #bonusList th, #bonusList tr,
-    #insuranceList td, #insuranceList th, #insuranceList tr { width: max-content !important; }
-    #pointList > :not(caption) > * > *, #bonusList > :not(caption) > * > *, #insuranceList > :not(caption) > * > * { padding: 0.6em 0.4rem !important; }
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px) { .addRowBtnbonus { right: 17px; } }
-@media only screen and (min-width: 1440px) and (max-width: 2560px) { .addRowBtnbonus { right: 39px; } }
-</style>
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
     </script>
@@ -738,7 +651,6 @@
 
 
 
-<<<<<<< HEAD
     {{-- Header title "Compensation" removed — the 5-step timeline is the header. The close
          (X) button is floated to the top-right corner so the header bar takes NO height. --}}
     <div class="card-header border-0" id="kt_activities_header" style="min-height:0;padding:0;position:absolute;top:8px;right:12px;z-index:6;">
@@ -850,51 +762,6 @@
                                 @else
                                     <div class="symbol-label  border-radius-5">{{ ucwords(@$strVal) }}</div>
                                 @endif
-=======
-    {{-- ── Title bar ── --}}
-    <div class="co-titlebar" id="kt_activities_header">
-        <div class="co-titlebar-left">
-            <h1 class="co-offer-title">Create Offer</h1>
-            @if($hasOffer)
-                <span class="co-status-badge">
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
-                    Active
-                </span>
-            @else
-                <span class="co-status-badge draft">
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
-                    Draft
-                </span>
-            @endif
-            <span style="font-size:12px;color:#94a3b8;font-weight:500;">Create and manage the candidate offer letter</span>
-        </div>
-        <div class="co-titlebar-right">
-            <button type="button" class="co-tbtn co-tbtn-ghost" id="kt_offercreate_close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                Close
-            </button>
-            @if($hasOffer)
-            <button type="button" class="co-tbtn co-tbtn-ghost" onclick="window.print()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
-                Download
-            </button>
-            @endif
-            <button type="button" class="co-tbtn co-tbtn-primary" id="co-save-draft-btn" onclick="$('#save-form').click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save Template
-            </button>
-            @if($hasOffer)
-            <button type="button" class="co-tbtn co-tbtn-success co-send-offer-btn {{ $dnone }}"
-                data-jobId="{{ @$application->job_id }}" data-candidate="{{ @$application->id }}"
-                data-mtype="1" data-offerId="{{ $offer_id }}" data-toggle="modal" data-target="#fwd_offer"
-                onclick="$('.fwd_offer[data-mtype=1]').first().click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
-                Save &amp; Set as Default
-            </button>
-            @endif
-        </div>
-    </div>
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
 
     {{-- ── Breadcrumb + 5-step nav ── --}}
     <div class="co-navrow">
@@ -1031,7 +898,6 @@
                                             </div>
 
                                             <div class="col-lg-12">
-<<<<<<< HEAD
                                                 <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
                                                     <div class="co-section-head co-section-head--flex">
                                                         <div>
@@ -1045,51 +911,6 @@
                                                         <span id="co_validation_text">Total of main components: 0.00%</span>
                                                     </div>
                                                     <div class="row co-components-rows">
-=======
-                                                <div class="co-stats-bar-4" id="co-comp-stats">
-                                                    <div class="co-stat-card primary">
-                                                        <div class="co-stat-num" id="co-stat-main-pct">0.00%</div>
-                                                        <div class="co-stat-label">Main Components</div>
-                                                        <div class="co-stat-hint" id="co-stat-main-hint">Must be exactly 100%</div>
-                                                    </div>
-                                                    <div class="co-stat-card info">
-                                                        <div class="co-stat-num" id="co-stat-add-pct">0.00%</div>
-                                                        <div class="co-stat-label">Additional Components</div>
-                                                        <div class="co-stat-hint">Above 100% (Allowed)</div>
-                                                    </div>
-                                                    <div class="co-stat-card success">
-                                                        <div class="co-stat-num" id="co-stat-overall-pct">0.00%</div>
-                                                        <div class="co-stat-label">Overall Structure</div>
-                                                        <div class="co-stat-hint">Main + Additional</div>
-                                                    </div>
-                                                    <div class="co-stat-card" id="co-stat-valid-card">
-                                                        <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
-                                                            <svg id="co-valid-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-                                                            <span id="co-valid-text" style="font-size:13px;font-weight:700;color:#16a34a;">Valid</span>
-                                                        </div>
-                                                        <div class="co-stat-label" style="margin-top:6px;">Validation Status</div>
-                                                        <div class="co-stat-hint" id="co-valid-hint" style="color:#16a34a;">Ready to save</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-lg-12">
-                                                <div class="co-section">
-                                                    <div class="co-comp-header">
-                                                        <div>
-                                                            <div class="co-section-header" style="margin-bottom:2px;">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                                                                Main Components <span style="font-weight:500;color:#94a3b8;font-size:11px;">(Must Total 100%)</span>
-                                                            </div>
-                                                            <div style="font-size:11px;color:#94a3b8;">These are core components. Total percentage must be exactly 100%.</div>
-                                                        </div>
-                                                        <button type="button" class="co-comp-add-btn" onclick="$('#pointList .addRowBtn').first().trigger('click')">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                                            Add Main Component
-                                                        </button>
-                                                    </div>
-                                                    <div class="row">
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
                                                             role="grid" aria-describedby="myTable_info"
                                                             style="width: 100%;">
@@ -1685,7 +1506,6 @@
                                                     </div>
                                                 </div>
 
-<<<<<<< HEAD
                                                 <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-components-card">
                                                     <div class="co-section-head co-section-head--flex">
                                                         <div>
@@ -1695,22 +1515,6 @@
                                                         <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
                                                     <div id="co_additional_total" class="co-info-line">Total additional components: 0.00% (Allowed above 100%)</div>
-=======
-                                                <div class="co-section">
-                                                    <div class="co-comp-header">
-                                                        <div>
-                                                            <div class="co-section-header" style="margin-bottom:2px;">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                                                Additional Components <span style="font-weight:500;color:#94a3b8;font-size:11px;">(Above 100%) - Optional</span>
-                                                            </div>
-                                                            <div style="font-size:11px;color:#94a3b8;">These are additional and will be added on top of the main 100%.</div>
-                                                        </div>
-                                                        <button type="button" class="co-comp-add-btn" onclick="$('#bonusList .addRowBtnbonus').first().trigger('click')">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                                            Add Additional Component
-                                                        </button>
-                                                    </div>
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
@@ -2349,7 +2153,6 @@
                                                 <div id="text_for_hourly_annually" class="d-none"><br>
                                                     <p><b>Note:</b>*The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked</p> </div>
 
-<<<<<<< HEAD
                                                 {{-- Static/decorative footer (no backing calc source beyond the live example numbers) --}}
                                                 <div class="co-howit-box">
                                                     <div class="co-howit-col">
@@ -2364,31 +2167,6 @@
                                                     </div>
                                                 </div>
 
-=======
-                                                <div class="co-how-works" style="margin-top:4px;">
-                                                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                                                        <div style="flex:1;min-width:220px;">
-                                                            <div class="co-how-title">
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;color:#6366f1;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                                                                How it works
-                                                            </div>
-                                                            <p style="font-size:12px;color:#64748b;line-height:1.6;margin:0;">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</p>
-                                                        </div>
-                                                        <div style="flex:1.4;min-width:280px;">
-                                                            <div class="co-how-title">Examples</div>
-                                                            <div class="co-how-flow" id="co-how-flow">
-                                                                <span class="co-how-pill" style="background:#ede9fe;color:#6d28d9;">CTC <span id="co-ex-ctc">0</span></span>
-                                                                <span class="co-how-arr">=</span>
-                                                                <span class="co-how-pill" style="background:#dcfce7;color:#16a34a;">Main <span id="co-ex-mainpct">100.00%</span> = <span id="co-ex-mainamt">0</span></span>
-                                                                <span class="co-how-arr">+</span>
-                                                                <span class="co-how-pill" style="background:#fef3c7;color:#b45309;">Additional <span id="co-ex-addpct">0.00%</span> = <span id="co-ex-addamt">0</span></span>
-                                                                <span class="co-how-arr">=</span>
-                                                                <span class="co-how-pill" style="background:#e0e7ff;color:#4338ca;">Total Cost to Company = <span id="co-ex-total">0</span></span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                                                 <hr>
 
                                                 <div class="row justify-content-center">
@@ -2532,12 +2310,7 @@
                                         </div>
                                     </div>
                                 </div>
-<<<<<<< HEAD
                             </div>
-=======
-                                <br>
-                            </div>{{-- /step3 --}}
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
 
                             <!-- Step 4: Wait for Approval -->
                             <div class="tab-content-section pt-5" id="step4">
@@ -2838,7 +2611,6 @@
                             type: 'POST', url: url,
                             data: { '_token': "{{ csrf_token() }}", 'offerId': id },
                             cache: false,
-<<<<<<< HEAD
                             success: function(response) {
                                 if (response.status == "success") {
                                     // $('#titleSet').text(response.title)
@@ -2847,26 +2619,15 @@
                                     document.getElementById("step" + (currentStep + 1)).classList.add("active");
                                     if (typeof syncStepHeader === 'function') syncStepHeader();
                                 } else if (response.status == "error") {
-=======
-                            success: function(r) {
-                                if (r.status == "success") {
-                                    $('#preview_offer_body_content').html(r.view);
-                                    _coActivateStep(n);
-                                } else {
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                                     Swal.fire("Warning", "Offer letter not ready", "warning");
                                 }
                             }
                         });
-<<<<<<< HEAD
 
                     } else {
                         document.getElementById("step" + currentStep).classList.remove("active");
                         document.getElementById("step" + (currentStep + 1)).classList.add("active");
                         if (typeof syncStepHeader === 'function') syncStepHeader();
-=======
-                        return;
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                     }
                     _coActivateStep(n);
                 }
@@ -2908,137 +2669,9 @@
                 }
                 function prevStep(event, currentStep) {
                     event.preventDefault();
-<<<<<<< HEAD
                     document.getElementById("step" + currentStep).classList.remove("active");
                     document.getElementById("step" + (currentStep - 1)).classList.add("active");
                     if (typeof syncStepHeader === 'function') syncStepHeader();
-=======
-                    coGoStep(currentStep - 1);
-                }
-
-                /* ── Compensation preview: stat cards, banners, donut, breakup, validation ── */
-                var coSbMode = 'monthly';
-                var coCurrencySymbols = ['₹','€','¥','£','$','د.إ'];
-
-                function coIsHourlyMode() {
-                    var m = $('#current_ctc_mode').val();
-                    return (m == '1' || m == '2' || m == '3');
-                }
-                function coFmtNum(x) {
-                    return (Math.round(x * 100) / 100).toLocaleString('en-IN', {maximumFractionDigits: 0});
-                }
-                function coCurSym() {
-                    var idx = parseInt($('#current_ctc_cur').val()) || 0;
-                    return coCurrencySymbols[idx] || '';
-                }
-                function coSbToggle(mode) {
-                    coSbMode = mode;
-                    $('#co-sb-monthly-btn').toggleClass('active', mode === 'monthly');
-                    $('#co-sb-annual-btn').toggleClass('active', mode === 'annual');
-                    $('#co-breakup-mode').text(mode === 'monthly' ? 'Monthly' : 'Annual');
-                    coUpdateCompensationUI();
-                }
-
-                function coUpdateCompensationUI() {
-                    var hourly = coIsHourlyMode();
-                    var mainPct = parseFloat($(hourly ? '#totalpercentagehouly' : '#totalpercentage').val()) || 0;
-                    var addPct  = parseFloat($(hourly ? '#totalhourlypercentagebonus' : '#totalpercentagebonus').val()) || 0;
-                    var overallPct = mainPct + addPct;
-                    var sym = coCurSym();
-
-                    var mainMonthly = parseFloat($('#totalMonthly').val()) || 0;
-                    var mainYearly  = parseFloat($('#totalYearly').val()) || 0;
-                    var addMonthly  = parseFloat($('#totalMonthlybonus').val()) || 0;
-                    var addYearly   = parseFloat($('#totalYearlybonus').val()) || 0;
-                    var finalYearly = parseFloat($('#finalpaytotalYearly').val()) || 0;
-                    if (hourly) {
-                        mainMonthly = mainYearly = parseFloat($('#totalhourlyhourly').val()) || 0;
-                        addMonthly = addYearly = parseFloat($('#totalhourlyybonus').val()) || 0;
-                        finalYearly = parseFloat($('#finalpaytotalhourly').val()) || 0;
-                    }
-
-                    /* Stat cards */
-                    $('#co-stat-main-pct').text(mainPct.toFixed(2) + '%');
-                    $('#co-stat-add-pct').text(addPct.toFixed(2) + '%');
-                    $('#co-stat-overall-pct').text(overallPct.toFixed(2) + '%');
-                    var mainOk = Math.abs(mainPct - 100) < 0.01;
-                    $('#co-stat-main-hint').text(mainOk ? 'Exactly 100%' : 'Must be exactly 100%').css('color', mainOk ? '#7c3aed' : '#dc2626');
-
-                    if (mainOk) {
-                        $('#co-valid-icon').attr('stroke', '#16a34a');
-                        $('#co-valid-text').text('Valid').css('color', '#16a34a');
-                        $('#co-valid-hint').text('Ready to save').css('color', '#16a34a');
-                    } else {
-                        $('#co-valid-icon').attr('stroke', '#dc2626');
-                        $('#co-valid-text').text('Invalid').css('color', '#dc2626');
-                        $('#co-valid-hint').text('Main must total 100%').css('color', '#dc2626');
-                    }
-
-                    /* Table footer banners */
-                    if (mainOk) {
-                        $('#co-main-valid-banner').removeClass('warn').addClass('ok');
-                        $('#co-main-valid-text').text('Total of main components is exactly ' + mainPct.toFixed(2) + '%');
-                    } else {
-                        $('#co-main-valid-banner').removeClass('ok').addClass('warn');
-                        $('#co-main-valid-text').text('Total of main components is ' + mainPct.toFixed(2) + '% — must equal exactly 100.00%');
-                    }
-                    $('#co-add-valid-text').text('Total additional components: ' + addPct.toFixed(2) + '% (Allowed above 100%)');
-
-                    /* Sidebar validation checks */
-                    $('#co-check-main').removeClass('ok err').addClass(mainOk ? 'ok' : 'err');
-                    $('#co-check-main-text').text(mainOk ? 'Main components total is exactly 100%' : 'Main components total ' + mainPct.toFixed(2) + '% (needs to be 100%)');
-                    if (addPct > 0) {
-                        $('#co-check-add').removeClass('d-none');
-                    } else {
-                        $('#co-check-add').addClass('d-none');
-                    }
-
-                    /* How it works examples */
-                    var ctcVal = parseFloat($('#ctc').val()) || 0;
-                    $('#co-ex-ctc').text(sym + coFmtNum(ctcVal));
-                    $('#co-ex-mainpct').text(mainPct.toFixed(2) + '%');
-                    $('#co-ex-mainamt').text(sym + coFmtNum(mainYearly));
-                    $('#co-ex-addpct').text(addPct.toFixed(2) + '%');
-                    $('#co-ex-addamt').text(sym + coFmtNum(addYearly));
-                    $('#co-ex-total').text(sym + coFmtNum(finalYearly));
-
-                    /* Donut chart (Main vs Additional share) */
-                    var mAmt = coSbMode === 'monthly' ? mainMonthly : mainYearly;
-                    var aAmt = coSbMode === 'monthly' ? addMonthly : addYearly;
-                    var totalAmt = mAmt + aAmt;
-                    var mainSharePct = totalAmt > 0 ? (mAmt / totalAmt * 100) : 100;
-                    var mainShareDeg = mainSharePct / 100 * 360;
-                    $('#co-donut').css('background', 'conic-gradient(#6366f1 0deg ' + mainShareDeg + 'deg, #22c55e ' + mainShareDeg + 'deg 360deg)');
-                    $('#co-donut-main').text(mainSharePct.toFixed(0) + '%');
-                    $('#co-donut-add').text((100 - mainSharePct).toFixed(0) + '%');
-
-                    /* Breakup preview rows */
-                    var rows = '';
-                    var mainSel = hourly ? '#pointList tbody .hourly_section_row' : '#pointList tbody .other_section_row';
-                    var mainNameCls = hourly ? '.offer_point_hourly' : '.offer_points';
-                    var mainAmtCls  = hourly ? '.offer_hourly' : (coSbMode === 'monthly' ? '.offer_monthly' : '.offer_yearly');
-                    $(mainSel).each(function() {
-                        var name = $(this).find(mainNameCls).val() || 'Component';
-                        var amt = parseFloat($(this).find(mainAmtCls).val()) || 0;
-                        rows += '<div class="co-sb-row"><span class="co-sb-key">' + $('<div>').text(name).html() + '</span><span class="co-sb-val">' + sym + coFmtNum(amt) + '</span></div>';
-                    });
-                    var addSel = hourly ? '#bonusList tbody .hourly_section_row' : '#bonusList tbody .other_section_row';
-                    var addNameCls = hourly ? '.bonus_point_hourly' : '.bonus_points';
-                    var addAmtCls  = hourly ? '.bonus_offer_hourly' : (coSbMode === 'monthly' ? '.bonus_offer_monthly' : '.bonus_offer_yearly');
-                    $(addSel).each(function() {
-                        var name = $(this).find(addNameCls).val() || 'Component';
-                        var amt = parseFloat($(this).find(addAmtCls).val()) || 0;
-                        rows += '<div class="co-sb-row"><span class="co-sb-key">' + $('<div>').text(name).html() + '</span><span class="co-sb-val">' + sym + coFmtNum(amt) + '</span></div>';
-                    });
-                    $('#co-breakup-rows').html(rows || '<div style="font-size:11px;color:#94a3b8;padding:6px 0;">No components added yet.</div>');
-                    $('#co-breakup-total').text(sym + coFmtNum(totalAmt));
-                }
-
-                /* Standardize the per-row Action column to a single clean trash icon */
-                function coStyleActionButtons() {
-                    var trashSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>';
-                    $('#pointList .remove_points, #bonusList .remove_points').html(trashSvg);
->>>>>>> e34a35a7696b7af5bb28670010331d7829172e86
                 }
 
                 $(document).ready(function() {
