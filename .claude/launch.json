@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "offer-preview",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8899", "-t", "C:/Users/IMPROV~1/AppData/Local/Temp/claude/C--xampp-htdocs-git-JWMaincode28June2026/7a30eced-7351-4d1b-96d8-a55c42122a50/scratchpad/preview"],
+      "port": 8899
+    }
+  ]
+}

@@ -494,7 +494,7 @@
         .sb2-ai-grid{ grid-template-columns:1fr; }
         .sb2-foot{ grid-template-columns:1fr; }
     }
-</style>
+</style> 
 
 <script>
     window.sb2Toggle = window.sb2Toggle || function (h) {
