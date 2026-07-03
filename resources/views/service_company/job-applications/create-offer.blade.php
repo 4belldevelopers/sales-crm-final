@@ -174,9 +174,10 @@
             font-size: 12px; font-weight: 600; margin: 8px 0 12px;
         }
         .co-valid-banner .co-valid-ico { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-        .co-valid-banner--warn { background: #fff8dd; color: #b78103; }
-        .co-valid-banner--warn .co-valid-ico { background: #f6c000; }
-        .co-valid-banner--ok { background: #e8fff3; color: #1bc5bd; }
+        /* Below 100% → red (per spec); exactly 100% → green */
+        .co-valid-banner--warn { background: #fff5f8; color: #f1416c; }
+        .co-valid-banner--warn .co-valid-ico { background: #f1416c; }
+        .co-valid-banner--ok { background: #e8fff3; color: #17a673; }
         .co-valid-banner--ok .co-valid-ico { background: #50cd89; }
         /* Row numbering via CSS counter — no markup column added (keeps the
            salary-component array order + calc selectors untouched) */
@@ -276,9 +277,13 @@
         }
         #pointList .remove_points:hover, #bonusList .remove_points:hover { background: #f1416c !important; color: #fff !important; }
         #pointList .remove_points svg, #bonusList .remove_points svg { width: 16px; height: 16px; }
-        /* Total Gross (yellow) + Final Salary (green) footer rows → soft tints */
-        #pointList input[style*="ffeb00"], #bonusList input[style*="ffeb00"] { background: #fff8dd !important; color: #b78103 !important; font-weight: 600; }
-        #pointList input[style*="7de96f"], #bonusList input[style*="7de96f"], #final_pay input[style*="7de96f"] { background: #e8fff3 !important; color: #0f9463 !important; font-weight: 600; }
+        /* Total Main/Additional (indigo tint) total rows */
+        #pointList input[style*="ffeb00"], #bonusList input[style*="ffeb00"] { background: #eef3ff !important; color: #4f46e5 !important; font-weight: 700; border-color: transparent !important; }
+        /* CTC — Cost to Company: render #final_pay as a distinct green CARD */
+        #final_pay { background: #e8fff3; border: 1px solid #c3f0da; border-radius: 12px; margin-top: 6px; }
+        #final_pay th { border: none !important; padding: 12px 10px !important; }
+        #final_pay input[style*="7de96f"], #final_pay input { background: transparent !important; color: #0f9463 !important; font-weight: 700 !important; border-color: transparent !important; }
+        #final_pay input[value*="CTC"] { font-size: 14px !important; }
         /* header "+ Add" buttons; hide the old in-table (+) add buttons (still click-triggered) */
         .co-add-btn { background: #eef3ff; color: #4f46e5; border: 1px solid #e0e7ff; border-radius: 8px; padding: 8px 14px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; margin: 0 !important; white-space: nowrap; }
         .co-add-btn:hover { background: #4f46e5; color: #fff; }
@@ -1328,7 +1333,7 @@
                                                                 </tr>
                                                                 <tr>
                                                                     <th colspan="2" class="sorting_disabled">
-                                                                        <input type="text" class="form-control form-control-solid" value="Total Gross Amount" readonly style="cursor: not-allowed;background: #ffeb0066;">
+                                                                        <input type="text" class="form-control form-control-solid" value="Total Main Components" readonly style="cursor: not-allowed;background: #ffeb0066;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
                                                                         <input &nbsp="" type="text"
@@ -1367,7 +1372,7 @@
                                                                 </tr>
                                                                 <tr>
                                                                     <th class="sorting_disabled">
-                                                                        <input type="text" class="form-control form-control-solid" value="Total Gross Amount" readonly style="cursor: not-allowed;background: #ffeb0066;">
+                                                                        <input type="text" class="form-control form-control-solid" value="Total Main Components" readonly style="cursor: not-allowed;background: #ffeb0066;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
                                                                         <input &nbsp="" type="text"
@@ -1903,57 +1908,55 @@
 
                                                             </tbody>
                                                             <tfoot class="other_section {{ $section_other }}">
-                                                            
-                                                                <tr>
+
+                                                                <tr class="co-total-row">
                                                                     <th colspan="2" class="sorting_disabled">
-                                                                    
+                                                                        <input type="text" class="form-control form-control-solid" value="Total Additional Components" readonly style="cursor: not-allowed;background: #eef3ff;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
-                                                                        <input type="hidden"
+                                                                        <input type="text" readonly
                                                                             class="form-control form-control-solid totalpercentagebonus"
                                                                             name="totalpercentagebonus"
                                                                             value=""
-                                                                            id="totalpercentagebonus">
+                                                                            id="totalpercentagebonus" style="background:#eef3ff;">
                                                                     </th>
                                                                     <th colspan="2" class="sorting_disabled">&nbsp;</th>
                                                                     <th class="sorting_disabled" style="width: 78px;">
-                                                                        <input type="hidden"
+                                                                        <input type="text" readonly
                                                                             class="form-control form-control-solid totalMonthlybonus"
                                                                             name="totalMonthlybonus"
                                                                             id="totalMonthlybonus"
-                                                                            value="{{ @$monthly_bounus_gross }}">
+                                                                            value="{{ @$monthly_bounus_gross }}" style="background:#eef3ff;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
-                                                                        <input type="hidden"
+                                                                        <input type="text" readonly
                                                                             class="form-control form-control-solid totalYearlybonus"
                                                                             name="totalYearlybonus"
                                                                             value="{{ @$yearly_bonus_gross }}"
-                                                                            id="totalYearlybonus">
+                                                                            id="totalYearlybonus" style="background:#eef3ff;">
                                                                     </th>
                                                                     <th class="sorting_disabled">&nbsp;</th>
                                                                 </tr>
                                                             </tfoot>
 
                                                             <tfoot class="hourly_section {{ $section_hourly }}">
-                                                                <tr>
-                                                                    <th colspan="6" class="sorting_disabled"
-                                                                        style="width: 102px;">&nbsp; </th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th colspan="4" class="sorting_disabled"
-                                                                        style="width: 86% !important;">
-                                                                        <input type="hidden"
+                                                                <tr class="co-total-row">
+                                                                    <th colspan="2" class="sorting_disabled">
+                                                                        <input type="text" class="form-control form-control-solid" value="Total Additional Components" readonly style="cursor: not-allowed;background: #eef3ff;">
+                                                                    </th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 86% !important;">
+                                                                        <input type="text" readonly
                                                                             class="form-control form-control-solid totalhourlypercentagebonus"
                                                                             name="totalhourlypercentagebonus"
                                                                             value=""
-                                                                            id="totalhourlypercentagebonus">
+                                                                            id="totalhourlypercentagebonus" style="background:#eef3ff;">
                                                                     </th>
                                                                     <th class="sorting_disabled" colspan="1">
-                                                                        <input &nbsp="" type="hidden"
+                                                                        <input &nbsp="" type="text" readonly
                                                                             class="form-control form-control-solid totalhourlyybonus"
                                                                             name="totalhourlyybonus"
                                                                             value="{{ @$yearly_bonus_gross }}"
-                                                                            id="totalhourlyybonus">
+                                                                            id="totalhourlyybonus" style="background:#eef3ff;">
                                                                     </th>
                                                                 </tr>
                                                             </tfoot>
@@ -1973,7 +1976,7 @@
 
                                                                 <tr>
                                                                     <th colspan="2" class="sorting_disabled" style="width: 35%;">
-                                                                        <input type="text" class="form-control form-control-solid" value="Final Salary (Cost To Company)" readonly style="cursor: not-allowed;background: #7de96f40;">
+                                                                        <input type="text" class="form-control form-control-solid" value="CTC — Cost to Company" readonly style="cursor: not-allowed;background: #7de96f40;">
                                                                     </th>
                                                                     <th class="sorting_disabled" style="width: 10% !important;">
                                                                         <input &nbsp="" type="text"
@@ -2011,7 +2014,7 @@
 
                                                                 <tr>
                                                                     <th class="sorting_disabled" style="width: 47%;">
-                                                                        <input type="text" class="form-control form-control-solid" value="Final Salary (Cost To Company)" readonly style="cursor: not-allowed;background: #7de96f40;">
+                                                                        <input type="text" class="form-control form-control-solid" value="CTC — Cost to Company" readonly style="cursor: not-allowed;background: #7de96f40;">
                                                                     </th>
                                                                     <th class="sorting_disabled" style="width: 12% !important;">
                                                                         <input &nbsp="" type="text"
