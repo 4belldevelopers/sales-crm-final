@@ -272,8 +272,45 @@
         .co-add-btn { background: #eef3ff; color: #4f46e5; border: 1px solid #e0e7ff; border-radius: 8px; padding: 8px 14px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; margin: 0 !important; white-space: nowrap; }
         .co-add-btn:hover { background: #4f46e5; color: #fff; }
         #pointList .addRowBtn, #bonusList .addRowBtnbonus { display: none !important; }
-        /* CSS row numbers shown as a leading pseudo-column on the name cell */
-        #pointList tbody tr.other_section_row .offer_points, #bonusList tbody tr.other_section_row .bonus_offer_points { position: relative; }
+        /* ── Delete icon fix ──
+           The button's SVG has a hardcoded fill="#000000" (and is actually a plain
+           bar, not a trash can), so the CSS color override above never reached it —
+           that's why it read as "missing". Hide that SVG and paint a real trash-can
+           glyph via a CSS mask so it inherits currentColor (red) and hover-color (white). */
+        #pointList .remove_points .svg-icon svg, #bonusList .remove_points .svg-icon svg { display: none; }
+        #pointList .remove_points .svg-icon, #bonusList .remove_points .svg-icon {
+            width: 16px; height: 16px; display: inline-block; background-color: currentColor;
+            -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+            -webkit-mask-size: contain; mask-size: contain;
+            -webkit-mask-position: center; mask-position: center;
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20x='4'%20y='6'%20width='16'%20height='2'%20rx='1'/%3E%3Crect%20x='9'%20y='3'%20width='6'%20height='2'%20rx='1'/%3E%3Cpath%20d='M6%209h12l-1.2%2011.2A2%202%200%200114.8%2022H9.2a2%202%200%2001-2-1.8L6%209z'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20x='4'%20y='6'%20width='16'%20height='2'%20rx='1'/%3E%3Crect%20x='9'%20y='3'%20width='6'%20height='2'%20rx='1'/%3E%3Cpath%20d='M6%209h12l-1.2%2011.2A2%202%200%200114.8%2022H9.2a2%202%200%2001-2-1.8L6%209z'/%3E%3C/svg%3E");
+        }
+        /* Disabled (template) row's delete button stays visibly inert, not identical-looking-but-broken */
+        #pointList .remove_points:disabled, #bonusList .remove_points:disabled { background: #f4f4f6 !important; color: #c1c5cc !important; cursor: not-allowed; }
+
+        /* ── Row #, drag-handle, Main/Additional badge — injected by JS (coEnhanceRows) ── */
+        .co-row-lead { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; vertical-align: middle; }
+        .co-drag-handle { color: #c1c5cc; font-size: 12px; line-height: 1; cursor: grab; letter-spacing: -1px; user-select: none; }
+        .co-row-num { color: #a1a5b7; font-size: 12px; font-weight: 600; min-width: 14px; display: inline-block; }
+        .co-comp-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
+        .co-comp-badge--main { background: #eef3ff; color: #4f46e5; }
+        .co-comp-badge--add { background: #e8fff3; color: #0f9463; }
+
+        /* ── Additional-components info line ── */
+        .co-info-line { font-size: 12px; color: #7239ea; font-weight: 600; margin: 6px 0 12px; }
+
+        /* ── How it works? / Examples footer ── */
+        .co-howit-box { display: flex; gap: 28px; background: #f9fafd; border: 1px solid #eef1f7; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+        .co-howit-col { flex: 1; min-width: 0; }
+        .co-howit-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .co-howit-ico { width: 14px; height: 14px; border-radius: 4px; background: #4f46e5; display: inline-block; }
+        .co-howit-text { font-size: 11px; color: #7e8299; line-height: 1.5; }
+        .co-howit-formula { font-size: 11px; color: #3f4254; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .co-chip { background: #eef3ff; color: #4f46e5; border-radius: 6px; padding: 3px 8px; font-weight: 600; white-space: nowrap; }
+        .co-chip--add { background: #fff3e0; color: #c2410c; }
+        .co-chip--total { background: #e8fff3; color: #0f9463; }
+        @media (max-width: 900px) { .co-howit-box { flex-direction: column; gap: 14px; } }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -1356,6 +1393,7 @@
                                                         </div>
                                                         <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
+                                                    <div id="co_additional_total" class="co-info-line">Total additional components: 0.00% (Allowed above 100%)</div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
@@ -1991,7 +2029,22 @@
                                                 </div>
                                                 <div id="text_for_hourly_annually" class="d-none"><br>
                                                     <p><b>Note:</b>*The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked</p> </div>
-                                                <hr>                                              
+
+                                                {{-- Static/decorative footer (no backing calc source beyond the live example numbers) --}}
+                                                <div class="co-howit-box">
+                                                    <div class="co-howit-col">
+                                                        <div class="co-howit-title"><i class="co-howit-ico"></i> How it works?</div>
+                                                        <div class="co-howit-text">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</div>
+                                                    </div>
+                                                    <div class="co-howit-col">
+                                                        <div class="co-howit-title">Examples</div>
+                                                        <div class="co-howit-formula" id="co_howit_formula">
+                                                            <span class="co-chip">CTC —</span> = <span class="co-chip">Main 100.00% = —</span> + <span class="co-chip co-chip--add">Additional —% = —</span> = <span class="co-chip co-chip--total">Total Cost to Company = —</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <hr>
 
                                                 <div class="row justify-content-center">
                                                     <div class="col-lg-3 d-flex justify-content-center">
@@ -4332,7 +4385,45 @@
 
                         $('#co_validation_text').text('Total of main components: ' + mainPct.toFixed(2) + '%' + (main100 ? ' — exactly 100%' : ''));
                         $('#co_validation_banner').removeClass('co-valid-banner--warn co-valid-banner--ok').addClass(main100 ? 'co-valid-banner--ok' : 'co-valid-banner--warn');
+
+                        $('#co_additional_total').text('Total additional components: ' + addPct.toFixed(2) + '% (Allowed above 100%)');
+
+                        var ctcVal = coNum($('#ctc').val());
+                        var mainAmt = ctcVal * (mainPct / 100);
+                        var addAmt = ctcVal * (addPct / 100);
+                        $('#co_howit_formula').html(
+                            '<span class="co-chip">CTC ' + (ctcVal ? coMoney(ctcVal) : '—') + '</span> = ' +
+                            '<span class="co-chip">Main 100.00% = ' + (ctcVal ? coMoney(mainAmt) : '—') + '</span> + ' +
+                            '<span class="co-chip co-chip--add">Additional ' + addPct.toFixed(2) + '% = ' + (ctcVal ? coMoney(addAmt) : '—') + '</span> = ' +
+                            '<span class="co-chip co-chip--total">Total Cost to Company = ' + (ctcVal ? coMoney(mainAmt + addAmt) : '—') + '</span>'
+                        );
+
+                        coEnhanceRows();
                     };
+
+                    // ── Injects row #, drag-handle (visual only — does not reorder), and a
+                    // Main/Additional badge next to each visible component's name. Runs on
+                    // every refresh so numbers stay correct after rows are added/removed.
+                    // Idempotent: skips a row if it already has the lead markup.
+                    function coEnhanceRows() {
+                        var enhance = function (tbodySel, nameClasses, badgeClass, badgeText) {
+                            var n = 0;
+                            coVisibleRows(tbodySel).each(function () {
+                                n++;
+                                var $name = $(this).find(nameClasses).first();
+                                if (!$name.length) return;
+                                var $lead = $name.prev('.co-row-lead');
+                                if (!$lead.length) {
+                                    $lead = $('<span class="co-row-lead"><span class="co-drag-handle">&#8942;&#8942;</span><span class="co-row-num"></span></span>');
+                                    $name.before($lead);
+                                    $name.after('<span class="co-comp-badge ' + badgeClass + '">' + badgeText + '</span>');
+                                }
+                                $lead.find('.co-row-num').text(n);
+                            });
+                        };
+                        enhance('#pointList tbody', '.offer_points, .offer_point_hourly', 'co-comp-badge--main', 'Main');
+                        enhance('#bonusList tbody', '.bonus_offer_points, .bonus_point_hourly', 'co-comp-badge--add', 'Additional');
+                    }
 
                     $(document).on('click', '#co_view_toggle .co-view-btn', function () {
                         $('#co_view_toggle .co-view-btn').removeClass('co-view-btn--active');
