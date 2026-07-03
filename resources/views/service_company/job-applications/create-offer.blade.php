@@ -2,101 +2,358 @@
     use App\Helper\GeneralMethod;
 @endphp
 <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar">
-    <style>
-        .text-justify {
-            text-align: justify !important;
-        }
+<style>
+/* ═══════════════════════════════════════════════════════
+   Create Offer Drawer — Full Redesign
+   Font: Poppins (max 16px), clean two-column layout
+═══════════════════════════════════════════════════════ */
+#offer_create_show_right_bar {
+    height: 100vh; display: flex; flex-direction: column;
+    font-family: Poppins, sans-serif !important; overflow: hidden;
+}
+#offer_create_show_right_bar * { font-family: Poppins, sans-serif !important; box-sizing: border-box; }
 
-        @media only screen and (min-width: 900px) and (max-width: 2560px) {
+/* ── Top title bar ── */
+.co-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; background: #fff; border-bottom: 1px solid #e8edf4;
+    flex-shrink: 0;
+}
+.co-titlebar-left { display: flex; align-items: center; gap: 12px; }
+.co-offer-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }
+.co-status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px;
+    background: #dcfce7; color: #16a34a;
+}
+.co-status-badge.draft { background: #fef3c7; color: #d97706; }
+.co-titlebar-right { display: flex; align-items: center; gap: 8px; }
+.co-tbtn {
+    display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px;
+    border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border: none; font-family: Poppins, sans-serif !important; transition: all .15s;
+}
+.co-tbtn-ghost { background: #f8fafc; border: 1px solid #e2e8f0; color: #374151; }
+.co-tbtn-ghost:hover { background: #f1f5f9; }
+.co-tbtn-primary { background: #6366f1; color: #fff; }
+.co-tbtn-primary:hover { background: #4f46e5; }
+.co-tbtn-success { background: #22c55e; color: #fff; }
+.co-tbtn-success:hover { background: #16a34a; }
+.co-tbtn-close {
+    width: 32px; height: 32px; border-radius: 8px; background: #fee2e2;
+    border: none; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #dc2626; padding: 0;
+}
+.co-tbtn-close:hover { background: #fecaca; }
+.co-tbtn svg { width: 14px; height: 14px; }
+.co-tbtn-close svg { width: 16px; height: 16px; }
 
-            .table td,
-            .table th,
-            .table tr {
-                width: max-content !important;
-            }
+/* ── Breadcrumb + step nav row ── */
+.co-navrow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e8edf4;
+    flex-shrink: 0;
+}
+.co-breadcrumb { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #94a3b8; }
+.co-breadcrumb a { color: #6366f1; text-decoration: none; font-weight: 500; }
+.co-breadcrumb span { color: #cbd5e1; }
+.co-breadcrumb strong { color: #374151; font-weight: 600; }
+.co-step-btns { display: flex; align-items: center; gap: 6px; }
+.co-step-btn {
+    display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+    border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
+    border: 1px solid #e2e8f0; background: #fff; color: #94a3b8;
+    transition: all .15s; white-space: nowrap;
+}
+.co-step-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+.co-step-btn.done  { background: #dcfce7; border-color: #86efac; color: #16a34a; }
+.co-step-btn .co-step-num {
+    width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; background: rgba(255,255,255,.3);
+}
+.co-step-btn.active .co-step-num { background: rgba(255,255,255,.25); }
+.co-step-btn.done .co-step-num  { background: #22c55e; color: #fff; }
+.co-step-sep { color: #cbd5e1; font-size: 14px; padding: 0 2px; }
 
-            .table> :not(caption)>*>* {
-                padding: 0.75em 0rem !important;
-            }
+/* ── Body: main + sidebar ── */
+.co-body { display: flex; flex: 1; overflow: hidden; }
+.co-main {
+    flex: 1; overflow-y: auto; padding: 20px 22px;
+    background: #f8fafc; min-width: 0;
+}
+.co-sidebar {
+    width: 290px; flex-shrink: 0; overflow-y: auto;
+    background: #fff; border-left: 1px solid #e8edf4; padding: 18px 16px;
+}
 
-            td:nth-child(n+2),
-            th:nth-child(n+2) {
-                width: revert !important;
-                border-bottom: 1px dashed #f5f8fa !important;
-            }
-        }
+/* ── Candidate info bar ── */
+.co-cand-bar {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border-radius: 12px; border: 1px solid #e8edf4;
+    padding: 12px 16px; margin-bottom: 18px;
+}
+.co-cand-avatar {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: #e0e7ff; color: #6366f1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.co-cand-avatar img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; }
+.co-cand-name { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
+.co-cand-meta { font-size: 12px; color: #64748b; }
+.co-cand-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.co-cand-tag {
+    font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px;
+    background: #f1f5f9; color: #475569;
+}
 
-        /* .swal2-html-container{
-        text-align: left !important;
-        } */
+/* ── Section card ── */
+.co-section {
+    background: #fff; border-radius: 12px; border: 1px solid #e8edf4;
+    padding: 18px 20px; margin-bottom: 16px;
+}
+.co-section-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.co-section-title { font-size: 13px; font-weight: 700; color: #0f172a; margin: 0; }
+.co-section-sub   { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-        /* Step container fills the full drawer width */
-        .tab-container {
-            width: 100%;
-        }
+/* ── Form fields ── */
+.co-form-label {
+    display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px;
+}
+.co-form-label.req::after { content: ' *'; color: #ef4444; }
+.co-form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+.co-form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+.co-form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.co-form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
 
-        /* Hide all tabs by default */
-        .tab-content-section {
-            display: none;
-        }
+/* ── Stats summary bar (like the reference 100% / 0.82% / 100.82%) ── */
+.co-stats-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;
+}
+.co-stat-card {
+    background: #f8fafc; border-radius: 10px; border: 1px solid #e8edf4;
+    padding: 12px 16px; text-align: center;
+}
+.co-stat-card.primary { background: #ede9fe; border-color: #c4b5fd; }
+.co-stat-card.success { background: #dcfce7; border-color: #86efac; }
+.co-stat-card.info    { background: #dbeafe; border-color: #93c5fd; }
+.co-stat-num { font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1; }
+.co-stat-card.primary .co-stat-num { color: #7c3aed; }
+.co-stat-card.success .co-stat-num { color: #16a34a; }
+.co-stat-card.info    .co-stat-num  { color: #2563eb; }
+.co-stat-label { font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 3px; }
+.co-stat-hint  { font-size: 10px; margin-top: 2px; }
+.co-stat-card.primary .co-stat-hint { color: #7c3aed; }
+.co-stat-card.success .co-stat-hint { color: #16a34a; }
+.co-stat-card.info    .co-stat-hint  { color: #2563eb; }
+.co-stats-bar-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.co-stat-card.warning { background: #fef3c7; border-color: #fde68a; }
+.co-stat-card.danger  { background: #fee2e2; border-color: #fecaca; }
 
-        /* Display the active tab */
-        .tab-content-section.active {
-            display: block;
-        }
+/* ── Salary component section header + add button ── */
+.co-comp-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.co-comp-add-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; flex-shrink: 0;
+    background: #6366f1; color: #fff; border: none; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: Poppins, sans-serif !important;
+}
+.co-comp-add-btn:hover { background: #4f46e5; }
 
-        /* Button styling */
-        button {
-            padding: 10px 20px;
-            margin: 10px 5px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+/* ── Validation banner under each component table ── */
+.co-valid-banner { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+.co-valid-banner svg { width: 16px; height: 16px; flex-shrink: 0; }
+.co-valid-banner.ok   { background: #dcfce7; color: #16a34a; }
+.co-valid-banner.warn { background: #fef3c7; color: #d97706; }
+.co-valid-banner.info { background: #eff6ff; color: #2563eb; }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+/* ── Clean up legacy yellow/green highlighted footer inputs ── */
+#pointList tfoot input, #bonusList tfoot input, #final_pay tfoot input {
+    background: #f8fafc !important; border: 1px solid #e8edf4 !important; border-radius: 6px;
+    font-weight: 600; color: #0f172a;
+}
+#final_pay tfoot input { background: #f0fdf4 !important; border-color: #bbf7d0 !important; color: #16a34a; }
 
-        .prev-btn {
-            background-color: #6c757d;
-        }
+/* ── Action column: single delete icon only (adding is via the header "+Add" button) ── */
+#pointList .addRowBtn, #bonusList .addRowBtnbonus { display: none !important; }
+#pointList td[style*="width: 13%"], #bonusList td[style*="width: 13%"] { display: flex !important; justify-content: center; }
+#pointList .remove_points, #bonusList .remove_points {
+    width: 32px; height: 32px; padding: 0 !important; border-radius: 8px !important;
+    background: #fee2e2 !important; border: none !important; color: #dc2626;
+    display: flex !important; align-items: center; justify-content: center;
+}
+#pointList .remove_points:hover, #bonusList .remove_points:hover { background: #fecaca !important; }
+#pointList .remove_points:disabled, #bonusList .remove_points:disabled { background: #f1f5f9 !important; color: #cbd5e1; cursor: not-allowed; }
+#pointList .remove_points svg, #bonusList .remove_points svg { width: 16px; height: 16px; }
 
-        .prev-btn:hover {
-            background-color: #5a6268;
-        }
+/* ── Donut chart (sidebar breakup) ── */
+.co-donut-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.co-donut { width: 76px; height: 76px; border-radius: 50%; flex-shrink: 0; position: relative; background: conic-gradient(#6366f1 0deg 360deg); }
+.co-donut::after { content: ''; position: absolute; inset: 12px; background: #fff; border-radius: 50%; }
+.co-donut-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.co-donut-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #64748b; }
+.co-donut-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-        .submit-btn {
-            background-color: #28a745;
-        }
+/* ── Component table ── */
+.co-comp-table { width: 100%; border-collapse: collapse; }
+.co-comp-table th {
+    padding: 8px 10px; font-size: 11px; font-weight: 600; color: #64748b;
+    background: #f8fafc; text-align: left; border-bottom: 1px solid #e8edf4;
+    white-space: nowrap;
+}
+.co-comp-table td {
+    padding: 7px 10px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+}
+.co-comp-table tfoot td,
+.co-comp-table tfoot th {
+    padding: 8px 10px; font-size: 12px; font-weight: 600; background: #fafbfc;
+}
+/* Preserve existing table IDs but make them use co-comp-table class */
+#pointList, #bonusList, #insuranceList, #final_pay {
+    width: 100%; border-collapse: collapse;
+}
+#pointList th, #bonusList th, #insuranceList th, #final_pay th {
+    padding: 8px 10px; font-size: 11px; font-weight: 600; color: #64748b;
+    background: #f8fafc; text-align: left; border-bottom: 1px solid #e8edf4;
+}
+#pointList td, #bonusList td, #insuranceList td, #final_pay td,
+#pointList tfoot th, #bonusList tfoot th, #insuranceList tfoot th, #final_pay tfoot th {
+    padding: 6px 8px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+}
 
-        .submit-btn:hover {
-            background-color: #218838;
-        }
+/* ── Step bottom nav ── */
+.co-step-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; background: #fff; border-top: 1px solid #e8edf4;
+    flex-shrink: 0; position: sticky; bottom: 0;
+}
+.co-nav-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    background: #f1f5f9; color: #374151; border: none; cursor: pointer; font-family: Poppins, sans-serif !important;
+}
+.co-nav-next {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    background: #6366f1; color: #fff; border: none; cursor: pointer; font-family: Poppins, sans-serif !important;
+}
+.co-nav-next.success { background: #22c55e; }
+.co-nav-next.warning { background: #f59e0b; }
+.co-nav-next:hover { opacity: .9; }
 
-        .offer-details table {
-            width: 100%;
-            /* All tables will be 100% of the container width */
-            border-collapse: collapse;
-            /* Make the borders collapse for a cleaner look */
-        }
+/* ── Tab content sections ── */
+.tab-content-section { display: none; }
+.tab-content-section.active { display: block; }
 
-         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-           .addRowBtnbonus{
-               right: 17px;
-            }
-        }
+/* ── Sidebar cards ── */
+.co-sb-card {
+    background: #f8fafc; border-radius: 10px; border: 1px solid #e8edf4;
+    padding: 14px; margin-bottom: 14px;
+}
+.co-sb-title {
+    font-size: 11px; font-weight: 700; color: #0f172a; text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 12px;
+}
+.co-sb-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 5px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+}
+.co-sb-row:last-child { border-bottom: none; }
+.co-sb-key { color: #64748b; font-weight: 500; }
+.co-sb-val { color: #0f172a; font-weight: 600; text-align: right; max-width: 55%; }
 
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            .addRowBtnbonus{
-                right: 39px;
-            }
-        }
+/* Offer amount highlight */
+.co-sb-amount {
+    text-align: center; padding: 14px 0 10px;
+}
+.co-sb-amount-num { font-size: 24px; font-weight: 700; color: #0f172a; }
+.co-sb-amount-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-        
-    </style>
+/* Validation checks */
+.co-check { display: flex; align-items: center; gap: 7px; font-size: 12px; padding: 4px 0; }
+.co-check svg { width: 14px; height: 14px; flex-shrink: 0; }
+.co-check.ok   { color: #16a34a; }
+.co-check.warn { color: #d97706; }
+.co-check.err  { color: #dc2626; }
+
+/* View toggle */
+.co-view-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+.co-view-btn { flex: 1; padding: 6px 8px; font-size: 11px; font-weight: 600; background: #fff; border: none; cursor: pointer; color: #64748b; font-family: Poppins, sans-serif !important; }
+.co-view-btn.active { background: #6366f1; color: #fff; }
+
+/* How it works */
+.co-how-works { padding: 12px 14px; background: #fff; border-radius: 10px; border: 1px solid #e8edf4; margin-top: 12px; }
+.co-how-title { font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+.co-how-flow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.co-how-pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+.co-how-arr { color: #cbd5e1; font-size: 12px; }
+
+/* ── Step 3: Preview ── */
+#preview_offer_body_content { min-height: 300px; }
+
+/* ── Step 4: Wait for Approval ── */
+.co-approval-card {
+    background: #fff; border-radius: 12px; border: 1px solid #e8edf4;
+    padding: 30px 24px; text-align: center; margin-bottom: 16px;
+}
+.co-approval-icon {
+    width: 60px; height: 60px; border-radius: 50%; background: #fef3c7;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+}
+.co-approval-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+.co-approval-desc  { font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+
+/* ── Step 5: Offer Sent ── */
+.co-sent-card {
+    background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+    border-radius: 14px; border: 1px solid #bbf7d0;
+    padding: 36px 24px; text-align: center; margin-bottom: 16px;
+}
+.co-sent-icon {
+    width: 68px; height: 68px; border-radius: 50%; background: #22c55e;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px; font-size: 30px;
+}
+.co-sent-title { font-size: 16px; font-weight: 700; color: #166534; margin-bottom: 8px; }
+.co-sent-desc  { font-size: 13px; color: #4ade80; margin-bottom: 22px; }
+
+/* Offer timeline (sidebar) */
+.co-timeline { padding: 4px 0; }
+.co-tl-item { display: flex; gap: 10px; padding-bottom: 14px; position: relative; }
+.co-tl-item:not(:last-child)::before {
+    content: ''; position: absolute; left: 9px; top: 20px; bottom: 0; width: 2px; background: #e2e8f0;
+}
+.co-tl-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+.co-tl-dot.pending { background: #e2e8f0; color: #94a3b8; }
+.co-tl-dot.active  { background: #6366f1; }
+.co-tl-dot.done    { background: #22c55e; }
+.co-tl-text { font-size: 12px; font-weight: 600; color: #374151; }
+.co-tl-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+/* Aliases for step 4/5 markup */
+.co-section-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;
+}
+.co-section-header svg { color: #6366f1; }
+.co-tl-content { display: flex; flex-direction: column; }
+.co-tl-label { font-size: 12px; font-weight: 600; color: #374151; }
+.co-tl-dot { background: #e2e8f0; }
+.co-tl-item.done .co-tl-dot { background: #22c55e; }
+.co-tl-item.done .co-tl-dot::after { content: '✓'; color: #fff; font-size: 10px; }
+.co-tl-item.done:not(:last-child)::before { background: #86efac; }
+
+/* Preserve inner table CSS */
+@media only screen and (min-width: 900px) and (max-width: 2560px) {
+    #pointList td, #pointList th, #pointList tr,
+    #bonusList td, #bonusList th, #bonusList tr,
+    #insuranceList td, #insuranceList th, #insuranceList tr { width: max-content !important; }
+    #pointList > :not(caption) > * > *, #bonusList > :not(caption) > * > *, #insuranceList > :not(caption) > * > * { padding: 0.6em 0.4rem !important; }
+}
+@media only screen and (min-width: 1024px) and (max-width: 1440px) { .addRowBtnbonus { right: 17px; } }
+@media only screen and (min-width: 1440px) and (max-width: 2560px) { .addRowBtnbonus { right: 39px; } }
+</style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
     </script>
@@ -242,188 +499,86 @@
 
 
 
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-        <div class="d-flex align-items-center py-1">
-            <h3 class="card-title fw-bolder text-dark">Create Offer </h3>
-            <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
+    {{-- ── Title bar ── --}}
+    <div class="co-titlebar" id="kt_activities_header">
+        <div class="co-titlebar-left">
+            <h1 class="co-offer-title">Create Offer</h1>
+            @if($hasOffer)
+                <span class="co-status-badge">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+                    Active
+                </span>
+            @else
+                <span class="co-status-badge draft">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
+                    Draft
+                </span>
+            @endif
+            <span style="font-size:12px;color:#94a3b8;font-weight:500;">Create and manage the candidate offer letter</span>
         </div>
-
-        @php
-            $dnone = 'd-none';
-            if (
-                $application->master_status_id == 8 &&
-                $application->rjobid > 0 &&
-                $application->from_company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (
-                $application->master_status_id != 8 &&
-                $application->rjobid > 0 &&
-                $application->from_company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (in_array('add_schedule', $userPermissions) && $application->rjobid < 0) {
-                $dnone = '';
-            } elseif (
-                in_array('add_schedule', $userPermissions) &&
-                $application->company_id == auth()->user()->company_id
-            ) {
-                $dnone = '';
-            } elseif (
-                in_array('add_schedule', $userPermissions) &&
-                $application->master_status_id == 8 &&
-                $application->submitted_by == auth()->user()->id
-            ) {
-                $dnone = '';
-            }
-        @endphp
-
-        <div class="card-toolbar">
-            <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_offercreate_close">
-                <span class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                        height="24px" viewBox="0 0 24 24" version="1.1">
-                        <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                            fill="currentColor">
-                            <rect x="0" y="7" width="16" height="2" rx="1"></rect>
-                            <rect opacity="0.5"
-                                transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                x="0" y="7" width="16" height="2" rx="1"></rect>
-                        </g>
-                    </svg>
-                </span> </button>
+        <div class="co-titlebar-right">
+            <button type="button" class="co-tbtn co-tbtn-ghost" id="kt_offercreate_close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                Close
+            </button>
+            @if($hasOffer)
+            <button type="button" class="co-tbtn co-tbtn-ghost" onclick="window.print()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+                Download
+            </button>
+            @endif
+            <button type="button" class="co-tbtn co-tbtn-primary" id="co-save-draft-btn" onclick="$('#save-form').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Template
+            </button>
+            @if($hasOffer)
+            <button type="button" class="co-tbtn co-tbtn-success co-send-offer-btn {{ $dnone }}"
+                data-jobId="{{ @$application->job_id }}" data-candidate="{{ @$application->id }}"
+                data-mtype="1" data-offerId="{{ $offer_id }}" data-toggle="modal" data-target="#fwd_offer"
+                onclick="$('.fwd_offer[data-mtype=1]').first().click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                Save &amp; Set as Default
+            </button>
+            @endif
         </div>
     </div>
-    <div class="card-body position-relative px-0 py-0" id="kt_offercreate_body">
-        <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
-            data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body"
-            data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
-            <div class="mb-5 mb-xl-5 mx-2">
-                <div class="card-body pt-1 pb-0 px-1">
-                    <div class="d-flex flex-wrap flex-sm-nowrap mb-3 d-none">
-                        <div class="me-7 mb-4">
-                            <div class="symbol symbol-100px symbol-lg-140px symbol-fixed position-relative">
-                                @php
-                                    $str = trim(@$application->full_name);
-                                    $strVal = strtolower($str[0]);
-                                @endphp
-                                @if (!empty($photo))
-                                    <img src="{{ @$photo }}" alt="image">
-                                @else
-                                    <div class="symbol-label  border-radius-5">{{ ucwords(@$strVal) }}</div>
-                                @endif
 
-                                <div
-                                    class="position-absolute translate-middle bottom-0 start-100 mb-6 bg-success rounded-circle border border-4 border-white h-20px w-20px">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                                <div class="d-flex flex-column">
-                                    <div class="d-flex align-items-center mb-2"> <span
-                                            class="text-gray-900 fs-2 fw-bolder me-2">{{ ucwords(@$application->full_name) }}</span>
-                                    </div>
-                                    <div class="d-flex flex-wrap fw-bold fs-6 pe-2"> <a href="javascript:void(0);"
-                                            class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">
-                                            <span class="svg-icon svg-icon-4 me-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                    height="24px" viewBox="0 0 24 24" version="1.1">
-                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                        fill-rule="evenodd">
-                                                        <rect x="0" y="0" width="24" height="24" />
-                                                        <path
-                                                            d="M5.84026576,8 L18.1597342,8 C19.1999115,8 20.0664437,8.79732479 20.1528258,9.83390904 L20.8194924,17.833909 C20.9112219,18.9346631 20.0932459,19.901362 18.9924919,19.9930915 C18.9372479,19.9976952 18.8818364,20 18.8264009,20 L5.1735991,20 C4.0690296,20 3.1735991,19.1045695 3.1735991,18 C3.1735991,17.9445645 3.17590391,17.889153 3.18050758,17.833909 L3.84717425,9.83390904 C3.93355627,8.79732479 4.80008849,8 5.84026576,8 Z M10.5,10 C10.2238576,10 10,10.2238576 10,10.5 L10,11.5 C10,11.7761424 10.2238576,12 10.5,12 L13.5,12 C13.7761424,12 14,11.7761424 14,11.5 L14,10.5 C14,10.2238576 13.7761424,10 13.5,10 L10.5,10 Z"
-                                                            fill="#000000" />
-                                                        <path
-                                                            d="M10,8 L8,8 L8,7 C8,5.34314575 9.34314575,4 11,4 L13,4 C14.6568542,4 16,5.34314575 16,7 L16,8 L14,8 L14,7 C14,6.44771525 13.5522847,6 13,6 L11,6 C10.4477153,6 10,6.44771525 10,7 L10,8 Z"
-                                                            fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                    </g>
-                                                </svg>
-                                            </span> {{ ucwords(@$application->total_exp) }} Years </a> <a
-                                            href="javascript:void(0);"
-                                            class="d-flex align-items-center text-gray-400 text-hover-primary me-5 mb-2">
-                                            <!--begin::Svg Icon-->
-                                            <span class="svg-icon svg-icon-4 me-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                    height="24px" viewBox="0 0 24 24" version="1.1">
-                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                        fill-rule="evenodd">
-                                                        <rect x="0" y="0" width="24" height="24" />
-                                                        <rect fill="#000000" opacity="0.3" x="2" y="2" width="10"
-                                                            height="12" rx="2" />
-                                                        <path
-                                                            d="M4,6 L20,6 C21.1045695,6 22,6.8954305 22,8 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,8 C2,6.8954305 2.8954305,6 4,6 Z M18,16 C19.1045695,16 20,15.1045695 20,14 C20,12.8954305 19.1045695,12 18,12 C16.8954305,12 16,12.8954305 16,14 C16,15.1045695 16.8954305,16 18,16 Z"
-                                                            fill="#000000" />
-                                                    </g>
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            @if ($application->condidate_type == 'other')
-                                                {!! @$current_ctc_cur !!}&nbsp;
-                                                {!! @$application->ctc !!}-{!! @$application->ectc !!}
-                                            @else
-                                                {!! @$current_ctc_cur !!}&nbsp; {!! @$application->bill_rate_amount !!}
-                                            @endif
+    {{-- ── Breadcrumb + 5-step nav ── --}}
+    <div class="co-navrow">
+        <div class="co-breadcrumb">
+            <a href="{{ route('service_company.applicationoffer.index') }}">Offer Tracker</a>
+            <span>›</span>
+            <a href="#">Create Offer</a>
+            <span>›</span>
+            <strong>{{ ucwords($application->full_name ?? '') }}</strong>
+        </div>
+        <div class="co-step-btns" id="co-step-btns">
+            <button class="co-step-btn active" data-goto="1" onclick="coGoStep(1)">
+                <span class="co-step-num">1</span> Compensation
+            </button>
+            <span class="co-step-sep">›</span>
+            <button class="co-step-btn" data-goto="2" onclick="coGoStep(2)">
+                <span class="co-step-num">2</span> Offer Template
+            </button>
+            <span class="co-step-sep">›</span>
+            <button class="co-step-btn" data-goto="3" onclick="coGoStep(3)">
+                <span class="co-step-num">3</span> Preview Letter
+            </button>
+            <span class="co-step-sep">›</span>
+            <button class="co-step-btn" data-goto="4" onclick="coGoStep(4)">
+                <span class="co-step-num">4</span> Wait for Approval
+            </button>
+            <span class="co-step-sep">›</span>
+            <button class="co-step-btn" data-goto="5" onclick="coGoStep(5)">
+                <span class="co-step-num">5</span> Offer Sent
+            </button>
+        </div>
+    </div>
+    {{-- ── Two-column body ── --}}
+    <div class="co-body" id="kt_offercreate_body">
+        <div class="co-main" id="kt_activities_scroll">
 
-                                            @php
-                                                $current_ctc_mode = 0;
-                                                if ($application->condidate_type == 'other') {
-                                                    $current_ctc_mode = @$application->current_ctc_mode;
-                                                } else {
-                                                    $current_ctc_mode = @$application->bill_rate_mode;
-                                                }
-
-                                                echo $salaryMode[$current_ctc_mode];
-                                            @endphp
-                                        </a>
-
-                                        <a href="javascript:void(0);"
-                                            class="d-flex align-items-center text-gray-400 text-hover-primary mb-2">
-                                            <span class="svg-icon svg-icon-4 me-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none">
-                                                    <path opacity="0.3"
-                                                        d="M18.0624 15.3453L13.1624 20.7453C12.5624 21.4453 11.5624 21.4453 10.9624 20.7453L6.06242 15.3453C4.56242 13.6453 3.76242 11.4453 4.06242 8.94534C4.56242 5.34534 7.46242 2.44534 11.0624 2.04534C15.8624 1.54534 19.9624 5.24534 19.9624 9.94534C20.0624 12.0453 19.2624 13.9453 18.0624 15.3453Z"
-                                                        fill="black"></path>
-                                                    <path
-                                                        d="M12.0624 13.0453C13.7193 13.0453 15.0624 11.7022 15.0624 10.0453C15.0624 8.38849 13.7193 7.04535 12.0624 7.04535C10.4056 7.04535 9.06241 8.38849 9.06241 10.0453C9.06241 11.7022 10.4056 13.0453 12.0624 13.0453Z"
-                                                        fill="black"></path>
-                                                </svg>
-                                            </span> {{ ucwords(@$city_name) }}, {{ ucwords(@$state_name) }},
-                                            {{ ucwords(@$country_name) }}
-                                        </a>
-
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="d-flex flex-wrap flex-stack">
-                                <div class="d-flex flex-column flex-grow-1 pe-8">
-                                    <div class="row w-75"> <span class="">
-                                            @php
-                                                $skills = '';
-                                                $skills = @$application->skills;
-                                                if (!empty($skills)) {
-                                                    $skillsArr = '';
-                                                    $skillsArr = explode(',', $skills);
-                                                    foreach ($skillsArr as $sval) {
-                                                        echo '<span class="badge badge-light me-3">' .
-                                                            @$sval .
-                                                            '</span>';
-                                                    }
-                                                }
-                                            @endphp
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                   
-                        
-                            <!-- Step 1 -->
+            <!-- Step 1 -->
                             <div class="tab-content-section pt-0 active" id="step1">
                                 <div class="tab-content pt-0">
                                     <form class="ajax-form" method="POST" id="createForm" name="createForm"
@@ -523,7 +678,48 @@
                                             </div>
 
                                             <div class="col-lg-12">
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
+                                                <div class="co-stats-bar-4" id="co-comp-stats">
+                                                    <div class="co-stat-card primary">
+                                                        <div class="co-stat-num" id="co-stat-main-pct">0.00%</div>
+                                                        <div class="co-stat-label">Main Components</div>
+                                                        <div class="co-stat-hint" id="co-stat-main-hint">Must be exactly 100%</div>
+                                                    </div>
+                                                    <div class="co-stat-card info">
+                                                        <div class="co-stat-num" id="co-stat-add-pct">0.00%</div>
+                                                        <div class="co-stat-label">Additional Components</div>
+                                                        <div class="co-stat-hint">Above 100% (Allowed)</div>
+                                                    </div>
+                                                    <div class="co-stat-card success">
+                                                        <div class="co-stat-num" id="co-stat-overall-pct">0.00%</div>
+                                                        <div class="co-stat-label">Overall Structure</div>
+                                                        <div class="co-stat-hint">Main + Additional</div>
+                                                    </div>
+                                                    <div class="co-stat-card" id="co-stat-valid-card">
+                                                        <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+                                                            <svg id="co-valid-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                                                            <span id="co-valid-text" style="font-size:13px;font-weight:700;color:#16a34a;">Valid</span>
+                                                        </div>
+                                                        <div class="co-stat-label" style="margin-top:6px;">Validation Status</div>
+                                                        <div class="co-stat-hint" id="co-valid-hint" style="color:#16a34a;">Ready to save</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-lg-12">
+                                                <div class="co-section">
+                                                    <div class="co-comp-header">
+                                                        <div>
+                                                            <div class="co-section-header" style="margin-bottom:2px;">
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                                                Main Components <span style="font-weight:500;color:#94a3b8;font-size:11px;">(Must Total 100%)</span>
+                                                            </div>
+                                                            <div style="font-size:11px;color:#94a3b8;">These are core components. Total percentage must be exactly 100%.</div>
+                                                        </div>
+                                                        <button type="button" class="co-comp-add-btn" onclick="$('#pointList .addRowBtn').first().trigger('click')">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                                            Add Main Component
+                                                        </button>
+                                                    </div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="pointList"
                                                             role="grid" aria-describedby="myTable_info"
@@ -1113,10 +1309,27 @@
 
 
                                                         </table>
+                                                        <div class="co-valid-banner ok" id="co-main-valid-banner">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                                                            <span id="co-main-valid-text">Total of main components is exactly 100.00%</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
+                                                <div class="co-section">
+                                                    <div class="co-comp-header">
+                                                        <div>
+                                                            <div class="co-section-header" style="margin-bottom:2px;">
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                                                Additional Components <span style="font-weight:500;color:#94a3b8;font-size:11px;">(Above 100%) - Optional</span>
+                                                            </div>
+                                                            <div style="font-size:11px;color:#94a3b8;">These are additional and will be added on top of the main 100%.</div>
+                                                        </div>
+                                                        <button type="button" class="co-comp-add-btn" onclick="$('#bonusList .addRowBtnbonus').first().trigger('click')">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                                            Add Additional Component
+                                                        </button>
+                                                    </div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
@@ -1671,6 +1884,10 @@
                                                             </tfoot>
 
                                                         </table>
+                                                        <div class="co-valid-banner info" id="co-add-valid-banner">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4M12 16h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                                                            <span id="co-add-valid-text">Total additional components: 0.00% (Allowed above 100%)</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -1752,7 +1969,31 @@
                                                 </div>
                                                 <div id="text_for_hourly_annually" class="d-none"><br>
                                                     <p><b>Note:</b>*The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked</p> </div>
-                                                <hr>                                              
+
+                                                <div class="co-how-works" style="margin-top:4px;">
+                                                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                                                        <div style="flex:1;min-width:220px;">
+                                                            <div class="co-how-title">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;color:#6366f1;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                                                How it works
+                                                            </div>
+                                                            <p style="font-size:12px;color:#64748b;line-height:1.6;margin:0;">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</p>
+                                                        </div>
+                                                        <div style="flex:1.4;min-width:280px;">
+                                                            <div class="co-how-title">Examples</div>
+                                                            <div class="co-how-flow" id="co-how-flow">
+                                                                <span class="co-how-pill" style="background:#ede9fe;color:#6d28d9;">CTC <span id="co-ex-ctc">0</span></span>
+                                                                <span class="co-how-arr">=</span>
+                                                                <span class="co-how-pill" style="background:#dcfce7;color:#16a34a;">Main <span id="co-ex-mainpct">100.00%</span> = <span id="co-ex-mainamt">0</span></span>
+                                                                <span class="co-how-arr">+</span>
+                                                                <span class="co-how-pill" style="background:#fef3c7;color:#b45309;">Additional <span id="co-ex-addpct">0.00%</span> = <span id="co-ex-addamt">0</span></span>
+                                                                <span class="co-how-arr">=</span>
+                                                                <span class="co-how-pill" style="background:#e0e7ff;color:#4338ca;">Total Cost to Company = <span id="co-ex-total">0</span></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <hr>
 
                                                 <div class="row justify-content-center">
                                                     <div class="col-lg-3 d-flex justify-content-center">
@@ -1864,71 +2105,499 @@
                                     </div>
                                 </div>
                                 <br>
-                            </div>
+                            </div>{{-- /step3 --}}
 
-                       
-                   
+                            <!-- Step 4: Wait for Approval -->
+                            <div class="tab-content-section pt-5" id="step4">
+                                <div class="co-section">
+                                    <div class="co-section-header">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-6v2m0-8v4"/></svg>
+                                        Wait for Approval
+                                    </div>
+                                    <div style="padding:24px 0 16px;">
+                                        <div class="co-approval-card">
+                                            <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+                                                <div style="width:48px;height:48px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;">
+                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-6v2m0-8v4"/></svg>
+                                                </div>
+                                                <div>
+                                                    <div style="font-weight:600;font-size:14px;color:#1e293b;">Approval Email Send</div>
+                                                    <div style="font-size:12px;color:#64748b;margin-top:2px;">Send the offer for internal approval before sending to candidate</div>
+                                                </div>
+                                            </div>
+                                            <p style="font-size:13px;color:#64748b;margin-bottom:18px;">Once the offer letter is ready and reviewed, send an approval email to the concerned authority. The offer will not be sent to the candidate until approval is received.</p>
+                                            <div class="section_change_value {{ $section_change_value ? '' : 'd-none' }}" style="display:flex;gap:12px;flex-wrap:wrap;">
+                                                <button type="button"
+                                                    data-jobId="{{ @$application->job_id }}"
+                                                    data-candidate="{{ @$application->id }}"
+                                                    data-mtype="2"
+                                                    data-offerId="{{ $offer_id }}"
+                                                    data-toggle="modal"
+                                                    data-target="#fwd_offer"
+                                                    class="co-tbtn co-tbtn-primary fwd_offer"
+                                                    style="font-size:13px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                                                    Send Approval Email
+                                                </button>
+                                                <button type="button" class="co-tbtn co-tbtn-ghost" onclick="coGoStep(3)">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                                    Back to Preview
+                                                </button>
+                                            </div>
+                                            @if(!$section_change_value)
+                                            <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;">
+                                                <strong>Note:</strong> Save the offer template in Step 1 &amp; 2 before sending for approval.
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:10px;margin-top:8px;">
+                                        <span class="co-nav-back" onclick="coGoStep(3)">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                            Back
+                                        </span>
+                                        <span class="co-nav-next" onclick="coGoStep(5)">
+                                            Next: Offer Sent
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>{{-- /step4 --}}
+
+                            <!-- Step 5: Offer Sent -->
+                            <div class="tab-content-section pt-5" id="step5">
+                                <div class="co-section">
+                                    <div class="co-section-header">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                                        Offer Sent
+                                    </div>
+                                    <div style="padding:24px 0 16px;">
+                                        <div class="co-sent-card">
+                                            <div style="text-align:center;margin-bottom:24px;">
+                                                <div style="width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                                                </div>
+                                                <div style="font-weight:700;font-size:15px;color:#1e293b;">Send Offer to Candidate</div>
+                                                <div style="font-size:12px;color:#64748b;margin-top:4px;">Send the final approved offer letter directly to the candidate</div>
+                                            </div>
+                                            <p style="font-size:13px;color:#64748b;margin-bottom:20px;text-align:center;">Once approved, click the button below to send the official offer letter to <strong>{{ ucwords(@$application->full_name) }}</strong> at <strong>{{ @$application->email }}</strong>.</p>
+                                            <div class="section_change_value {{ $section_change_value ? '' : 'd-none' }}" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                                                <button type="button"
+                                                    data-jobId="{{ @$application->job_id }}"
+                                                    data-candidate="{{ @$application->id }}"
+                                                    data-mtype="1"
+                                                    data-offerId="{{ $offer_id }}"
+                                                    data-toggle="modal"
+                                                    data-target="#fwd_offer"
+                                                    class="co-tbtn co-tbtn-success fwd_offer"
+                                                    style="font-size:13px;padding:10px 28px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                                                    Send Offer to Candidate
+                                                </button>
+                                                <button type="button"
+                                                    data-jobId="{{ @$application->job_id }}"
+                                                    data-candidate="{{ @$application->id }}"
+                                                    data-mtype="3"
+                                                    data-offerId="{{ $offer_id }}"
+                                                    class="co-tbtn co-tbtn-ghost download_offer"
+                                                    style="font-size:13px;padding:10px 28px;">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+                                                    Download Offer Letter
+                                                </button>
+                                            </div>
+                                            @if(!$section_change_value)
+                                            <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;text-align:center;">
+                                                <strong>Note:</strong> Complete all previous steps before sending the offer.
+                                            </div>
+                                            @endif
+
+                                            <!-- Offer timeline status -->
+                                            <div style="margin-top:28px;border-top:1px solid #f1f5f9;padding-top:20px;">
+                                                <div style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">Offer Timeline</div>
+                                                <div class="co-timeline">
+                                                    <div class="co-tl-item done">
+                                                        <div class="co-tl-dot"></div>
+                                                        <div class="co-tl-content">
+                                                            <div class="co-tl-label">Compensation Added</div>
+                                                            <div class="co-tl-sub">Salary structure defined</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-tl-item done">
+                                                        <div class="co-tl-dot"></div>
+                                                        <div class="co-tl-content">
+                                                            <div class="co-tl-label">Offer Template Ready</div>
+                                                            <div class="co-tl-sub">Terms &amp; conditions applied</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-tl-item done">
+                                                        <div class="co-tl-dot"></div>
+                                                        <div class="co-tl-content">
+                                                            <div class="co-tl-label">Letter Previewed</div>
+                                                            <div class="co-tl-sub">Offer letter reviewed</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-tl-item {{ $hasOffer ? 'done' : '' }}">
+                                                        <div class="co-tl-dot"></div>
+                                                        <div class="co-tl-content">
+                                                            <div class="co-tl-label">Approval Sent</div>
+                                                            <div class="co-tl-sub">Awaiting authority approval</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-tl-item">
+                                                        <div class="co-tl-dot"></div>
+                                                        <div class="co-tl-content">
+                                                            <div class="co-tl-label">Offer Sent to Candidate</div>
+                                                            <div class="co-tl-sub">{{ $hasOffer ? 'Waiting for candidate response' : 'Pending' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:10px;margin-top:8px;">
+                                        <span class="co-nav-back" onclick="coGoStep(4)">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                            Back
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>{{-- /step5 --}}
+
+        </div>{{-- /co-main --}}
+
+        {{-- ── Right Sidebar ── --}}
+        <div class="co-sidebar" id="co-sidebar">
+
+            {{-- Candidate Summary (always visible) --}}
+            <div class="co-section" style="padding:14px 16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    @php $str2 = trim(@$application->full_name); $strV2 = strtoupper($str2[0] ?? 'C'); @endphp
+                    <div style="width:36px;height:36px;border-radius:50%;background:#e0e7ff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#6366f1;">{{ $strV2 }}</div>
+                    <div>
+                        <div style="font-weight:600;font-size:13px;color:#1e293b;">{{ ucwords(@$application->full_name) }}</div>
+                        <div style="font-size:11px;color:#64748b;">{{ @$application->title }}</div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <span>📧 {{ @$application->email }}</span>
+                    @if(!empty($application->total_exp))
+                    <span>⏱ {{ @$application->total_exp }} yrs exp</span>
+                    @endif
+                    @if(!empty($country_name))
+                    <span>📍 {{ $city_name ? ucwords($city_name).', ' : '' }}{{ ucwords($country_name) }}</span>
+                    @endif
                 </div>
             </div>
 
+            {{-- Step 1 Sidebar: Preview Salary Structure --}}
+            <div class="co-section co-sb-step" id="co-sb-step1" style="padding:14px 16px;">
+                <div class="co-section-header" style="font-size:12px;margin-bottom:12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Preview Salary Structure
+                </div>
+                <div style="font-size:11px;color:#94a3b8;margin-bottom:12px;margin-top:-8px;">See how this structure calculates for the entered amount.</div>
 
+                <div style="display:flex;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;margin-bottom:14px;">
+                    <button type="button" id="co-sb-monthly-btn" class="co-view-btn active"
+                        onclick="coSbToggle('monthly')">Monthly View</button>
+                    <button type="button" id="co-sb-annual-btn" class="co-view-btn"
+                        onclick="coSbToggle('annual')">Annual View</button>
+                </div>
 
+                <div class="co-donut-wrap">
+                    <div class="co-donut" id="co-donut"></div>
+                    <div class="co-donut-legend" id="co-donut-legend">
+                        <div class="co-donut-legend-item"><span class="co-donut-dot" style="background:#6366f1;"></span> Main <strong id="co-donut-main" style="color:#1e293b;">100%</strong></div>
+                        <div class="co-donut-legend-item"><span class="co-donut-dot" style="background:#22c55e;"></span> Additional <strong id="co-donut-add" style="color:#1e293b;">0%</strong></div>
+                    </div>
+                </div>
+
+                <div class="co-sb-card" id="co-breakup-card" style="padding:12px 14px;">
+                    <div class="co-sb-title" style="margin-bottom:8px;">Breakup Preview (<span id="co-breakup-mode">Monthly</span>)</div>
+                    <div id="co-breakup-rows"></div>
+                    <div class="co-sb-row" style="border-top:1px solid #e8edf4;margin-top:4px;padding-top:8px;">
+                        <span class="co-sb-key" style="font-weight:700;color:#0f172a;">Total Cost to Company</span>
+                        <span class="co-sb-val" id="co-breakup-total" style="color:#16a34a;font-size:13px;">—</span>
+                    </div>
+                </div>
+
+                <div class="co-sb-card" style="margin-bottom:0;">
+                    <div class="co-sb-title">Validation Checks</div>
+                    <div class="co-check ok" id="co-check-main">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        <span id="co-check-main-text">Main components total is exactly 100%</span>
+                    </div>
+                    <div class="co-check ok">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        No circular dependencies found
+                    </div>
+                    <div class="co-check ok">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        All formulas are valid
+                    </div>
+                    <div class="co-check warn d-none" id="co-check-add">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+                        <span id="co-check-add-text">Additional components exceed 100% (Allowed)</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Step 2 Sidebar --}}
+            <div class="co-section co-sb-step d-none" id="co-sb-step2" style="padding:14px 16px;">
+                <div style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Offer Template</div>
+                <p style="font-size:12px;color:#64748b;line-height:1.6;">Define the offer terms &amp; conditions and letter body. This will be used to generate the official PDF offer letter.</p>
+                <div style="background:#eff6ff;border-radius:8px;padding:10px 12px;font-size:12px;color:#1d4ed8;">
+                    <strong>Tip:</strong> Use the "Set as Default" button to save your template for future offers.
+                </div>
+            </div>
+
+            {{-- Step 3 Sidebar --}}
+            <div class="co-section co-sb-step d-none" id="co-sb-step3" style="padding:14px 16px;">
+                <div style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Preview Offer Letter</div>
+                <p style="font-size:12px;color:#64748b;line-height:1.6;">Review the generated offer letter. Ensure all details are correct before sending for approval.</p>
+                <div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:12px;color:#16a34a;">
+                    <strong>Looks good?</strong> Proceed to Step 4 to send for approval.
+                </div>
+            </div>
+
+            {{-- Step 4 Sidebar --}}
+            <div class="co-section co-sb-step d-none" id="co-sb-step4" style="padding:14px 16px;">
+                <div style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Approval Status</div>
+                <p style="font-size:12px;color:#64748b;line-height:1.6;">An approval email will be sent to the designated approver. Wait for their confirmation before proceeding.</p>
+                <div style="background:#fef9c3;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;">
+                    <strong>Pending Approval:</strong> Approver has been notified.
+                </div>
+            </div>
+
+            {{-- Step 5 Sidebar --}}
+            <div class="co-section co-sb-step d-none" id="co-sb-step5" style="padding:14px 16px;">
+                <div style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">How It Works</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;gap:10px;align-items:flex-start;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#16a34a;">1</div>
+                        <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">Click "Send Offer" — the candidate receives an email with the offer letter.</p>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:flex-start;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#16a34a;">2</div>
+                        <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">The candidate can accept or reject the offer from their email.</p>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:flex-start;">
+                        <div style="width:22px;height:22px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#16a34a;">3</div>
+                        <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;">You will be notified once the candidate responds. Track status in Offer Tracker.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>{{-- /co-sidebar --}}
+
+    </div>{{-- /co-body --}}
 
 
 
             <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    // Initially show the first step
-                    document.getElementById("step1").classList.add("active");
-                });
-
-                // Function to move to the next step
-                function nextStep(event, currentStep) {
-                    event.preventDefault(); // Prevent form submission
-                    if (currentStep == 2) {
+                /* ── Step navigation ── */
+                function coGoStep(n) {
+                    if (n == 3) {
+                        /* Load preview via AJAX when going to step 3 */
                         var id = "{{ $offer_id }}";
-                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id') }}";
-                        url = url.replace(':id', id);
-                        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                        var token = "{{ csrf_token() }}";
-                        var offerId = "{{ $offer_id }}";
+                        if (!id) { nextStep({preventDefault:function(){}}, 2); return; }
+                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id') }}".replace(':id', id);
                         $.ajax({
-                            type: 'POST',
-                            url: url,
-                            data: {
-                                '_token': token,
-                                '_method': 'POST',
-                                'offerId': offerId
-                            },
+                            type: 'POST', url: url,
+                            data: { '_token': "{{ csrf_token() }}", 'offerId': id },
                             cache: false,
-                            success: function(response) {
-                                if (response.status == "success") {
-                                    // $('#titleSet').text(response.title)
-                                    $('#preview_offer_body_content').html(response.view);
-                                    document.getElementById("step" + currentStep).classList.remove("active");
-                                    document.getElementById("step" + (currentStep + 1)).classList.add("active");
-                                } else if (response.status == "error") {
+                            success: function(r) {
+                                if (r.status == "success") {
+                                    $('#preview_offer_body_content').html(r.view);
+                                    _coActivateStep(n);
+                                } else {
                                     Swal.fire("Warning", "Offer letter not ready", "warning");
                                 }
                             }
                         });
-
-                    } else {                       
-                        document.getElementById("step" + currentStep).classList.remove("active");
-                        document.getElementById("step" + (currentStep + 1)).classList.add("active");
-                        
+                        return;
                     }
-
+                    _coActivateStep(n);
                 }
 
-                // Function to move to the previous step
+                function _coActivateStep(n) {
+                    /* Hide all steps */
+                    document.querySelectorAll('.tab-content-section').forEach(function(el){ el.classList.remove('active'); });
+                    var target = document.getElementById('step' + n);
+                    if (target) target.classList.add('active');
+
+                    /* Update step nav buttons */
+                    document.querySelectorAll('.co-step-btn').forEach(function(btn, i){
+                        btn.classList.remove('active','done');
+                        var g = parseInt(btn.dataset.goto);
+                        if (g === n) btn.classList.add('active');
+                        else if (g < n) btn.classList.add('done');
+                    });
+
+                    /* Update sidebar panels */
+                    document.querySelectorAll('.co-sb-step').forEach(function(el){ el.classList.add('d-none'); });
+                    var sb = document.getElementById('co-sb-step' + n);
+                    if (sb) sb.classList.remove('d-none');
+
+                    /* Scroll main panel to top */
+                    var main = document.getElementById('kt_activities_scroll');
+                    if (main) main.scrollTop = 0;
+
+                    if (n === 1 && typeof coUpdateCompensationUI === 'function') coUpdateCompensationUI();
+                }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    _coActivateStep(1);
+                });
+
+                /* Legacy wrappers kept for existing Back/Next buttons */
+                function nextStep(event, currentStep) {
+                    event.preventDefault();
+                    coGoStep(currentStep + 1);
+                }
                 function prevStep(event, currentStep) {
                     event.preventDefault();
-                    document.getElementById("step" + currentStep).classList.remove("active");
-                    document.getElementById("step" + (currentStep - 1)).classList.add("active");
+                    coGoStep(currentStep - 1);
+                }
+
+                /* ── Compensation preview: stat cards, banners, donut, breakup, validation ── */
+                var coSbMode = 'monthly';
+                var coCurrencySymbols = ['₹','€','¥','£','$','د.إ'];
+
+                function coIsHourlyMode() {
+                    var m = $('#current_ctc_mode').val();
+                    return (m == '1' || m == '2' || m == '3');
+                }
+                function coFmtNum(x) {
+                    return (Math.round(x * 100) / 100).toLocaleString('en-IN', {maximumFractionDigits: 0});
+                }
+                function coCurSym() {
+                    var idx = parseInt($('#current_ctc_cur').val()) || 0;
+                    return coCurrencySymbols[idx] || '';
+                }
+                function coSbToggle(mode) {
+                    coSbMode = mode;
+                    $('#co-sb-monthly-btn').toggleClass('active', mode === 'monthly');
+                    $('#co-sb-annual-btn').toggleClass('active', mode === 'annual');
+                    $('#co-breakup-mode').text(mode === 'monthly' ? 'Monthly' : 'Annual');
+                    coUpdateCompensationUI();
+                }
+
+                function coUpdateCompensationUI() {
+                    var hourly = coIsHourlyMode();
+                    var mainPct = parseFloat($(hourly ? '#totalpercentagehouly' : '#totalpercentage').val()) || 0;
+                    var addPct  = parseFloat($(hourly ? '#totalhourlypercentagebonus' : '#totalpercentagebonus').val()) || 0;
+                    var overallPct = mainPct + addPct;
+                    var sym = coCurSym();
+
+                    var mainMonthly = parseFloat($('#totalMonthly').val()) || 0;
+                    var mainYearly  = parseFloat($('#totalYearly').val()) || 0;
+                    var addMonthly  = parseFloat($('#totalMonthlybonus').val()) || 0;
+                    var addYearly   = parseFloat($('#totalYearlybonus').val()) || 0;
+                    var finalYearly = parseFloat($('#finalpaytotalYearly').val()) || 0;
+                    if (hourly) {
+                        mainMonthly = mainYearly = parseFloat($('#totalhourlyhourly').val()) || 0;
+                        addMonthly = addYearly = parseFloat($('#totalhourlyybonus').val()) || 0;
+                        finalYearly = parseFloat($('#finalpaytotalhourly').val()) || 0;
+                    }
+
+                    /* Stat cards */
+                    $('#co-stat-main-pct').text(mainPct.toFixed(2) + '%');
+                    $('#co-stat-add-pct').text(addPct.toFixed(2) + '%');
+                    $('#co-stat-overall-pct').text(overallPct.toFixed(2) + '%');
+                    var mainOk = Math.abs(mainPct - 100) < 0.01;
+                    $('#co-stat-main-hint').text(mainOk ? 'Exactly 100%' : 'Must be exactly 100%').css('color', mainOk ? '#7c3aed' : '#dc2626');
+
+                    if (mainOk) {
+                        $('#co-valid-icon').attr('stroke', '#16a34a');
+                        $('#co-valid-text').text('Valid').css('color', '#16a34a');
+                        $('#co-valid-hint').text('Ready to save').css('color', '#16a34a');
+                    } else {
+                        $('#co-valid-icon').attr('stroke', '#dc2626');
+                        $('#co-valid-text').text('Invalid').css('color', '#dc2626');
+                        $('#co-valid-hint').text('Main must total 100%').css('color', '#dc2626');
+                    }
+
+                    /* Table footer banners */
+                    if (mainOk) {
+                        $('#co-main-valid-banner').removeClass('warn').addClass('ok');
+                        $('#co-main-valid-text').text('Total of main components is exactly ' + mainPct.toFixed(2) + '%');
+                    } else {
+                        $('#co-main-valid-banner').removeClass('ok').addClass('warn');
+                        $('#co-main-valid-text').text('Total of main components is ' + mainPct.toFixed(2) + '% — must equal exactly 100.00%');
+                    }
+                    $('#co-add-valid-text').text('Total additional components: ' + addPct.toFixed(2) + '% (Allowed above 100%)');
+
+                    /* Sidebar validation checks */
+                    $('#co-check-main').removeClass('ok err').addClass(mainOk ? 'ok' : 'err');
+                    $('#co-check-main-text').text(mainOk ? 'Main components total is exactly 100%' : 'Main components total ' + mainPct.toFixed(2) + '% (needs to be 100%)');
+                    if (addPct > 0) {
+                        $('#co-check-add').removeClass('d-none');
+                    } else {
+                        $('#co-check-add').addClass('d-none');
+                    }
+
+                    /* How it works examples */
+                    var ctcVal = parseFloat($('#ctc').val()) || 0;
+                    $('#co-ex-ctc').text(sym + coFmtNum(ctcVal));
+                    $('#co-ex-mainpct').text(mainPct.toFixed(2) + '%');
+                    $('#co-ex-mainamt').text(sym + coFmtNum(mainYearly));
+                    $('#co-ex-addpct').text(addPct.toFixed(2) + '%');
+                    $('#co-ex-addamt').text(sym + coFmtNum(addYearly));
+                    $('#co-ex-total').text(sym + coFmtNum(finalYearly));
+
+                    /* Donut chart (Main vs Additional share) */
+                    var mAmt = coSbMode === 'monthly' ? mainMonthly : mainYearly;
+                    var aAmt = coSbMode === 'monthly' ? addMonthly : addYearly;
+                    var totalAmt = mAmt + aAmt;
+                    var mainSharePct = totalAmt > 0 ? (mAmt / totalAmt * 100) : 100;
+                    var mainShareDeg = mainSharePct / 100 * 360;
+                    $('#co-donut').css('background', 'conic-gradient(#6366f1 0deg ' + mainShareDeg + 'deg, #22c55e ' + mainShareDeg + 'deg 360deg)');
+                    $('#co-donut-main').text(mainSharePct.toFixed(0) + '%');
+                    $('#co-donut-add').text((100 - mainSharePct).toFixed(0) + '%');
+
+                    /* Breakup preview rows */
+                    var rows = '';
+                    var mainSel = hourly ? '#pointList tbody .hourly_section_row' : '#pointList tbody .other_section_row';
+                    var mainNameCls = hourly ? '.offer_point_hourly' : '.offer_points';
+                    var mainAmtCls  = hourly ? '.offer_hourly' : (coSbMode === 'monthly' ? '.offer_monthly' : '.offer_yearly');
+                    $(mainSel).each(function() {
+                        var name = $(this).find(mainNameCls).val() || 'Component';
+                        var amt = parseFloat($(this).find(mainAmtCls).val()) || 0;
+                        rows += '<div class="co-sb-row"><span class="co-sb-key">' + $('<div>').text(name).html() + '</span><span class="co-sb-val">' + sym + coFmtNum(amt) + '</span></div>';
+                    });
+                    var addSel = hourly ? '#bonusList tbody .hourly_section_row' : '#bonusList tbody .other_section_row';
+                    var addNameCls = hourly ? '.bonus_point_hourly' : '.bonus_points';
+                    var addAmtCls  = hourly ? '.bonus_offer_hourly' : (coSbMode === 'monthly' ? '.bonus_offer_monthly' : '.bonus_offer_yearly');
+                    $(addSel).each(function() {
+                        var name = $(this).find(addNameCls).val() || 'Component';
+                        var amt = parseFloat($(this).find(addAmtCls).val()) || 0;
+                        rows += '<div class="co-sb-row"><span class="co-sb-key">' + $('<div>').text(name).html() + '</span><span class="co-sb-val">' + sym + coFmtNum(amt) + '</span></div>';
+                    });
+                    $('#co-breakup-rows').html(rows || '<div style="font-size:11px;color:#94a3b8;padding:6px 0;">No components added yet.</div>');
+                    $('#co-breakup-total').text(sym + coFmtNum(totalAmt));
+                }
+
+                /* Standardize the per-row Action column to a single clean trash icon */
+                function coStyleActionButtons() {
+                    var trashSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>';
+                    $('#pointList .remove_points, #bonusList .remove_points').html(trashSvg);
                 }
 
                 $(document).ready(function() {
+
+                    coUpdateCompensationUI();
+                    coStyleActionButtons();
+
+                    $(document).on('input change', '.option_percentage, .bonus_option_percentage, .offer_monthly, .offer_yearly, .bonus_offer_monthly, .bonus_offer_yearly, .offer_hourly, .bonus_offer_hourly, .offer_points, .bonus_points, #ctc, #current_ctc_cur, #current_ctc_mode', function() {
+                        coUpdateCompensationUI();
+                    });
+                    $(document).on('click', '.addRowBtn, .addRowBtnbonus, .remove_points, .co-comp-add-btn', function() {
+                        setTimeout(function() {
+                            coUpdateCompensationUI();
+                            coStyleActionButtons();
+                        }, 50);
+                    });
 
                     $(document).on('click', '#setToDefaultCompanyTerms', function() {
 
