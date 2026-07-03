@@ -826,9 +826,9 @@
                                                                     <th class="sorting_disabled" style="width: 25%!important">Component Name
                                                                     </th>
                                                                     <th class="sorting_disabled"
-                                                                        style="width:10% !important">View</th>
+                                                                        style="width:10% !important">Applicable</th>
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 7% !important;">Percentage</th>
+                                                                        style="width: 7% !important;">Allocation</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 3% !important;">&nbsp;</th>
                                                                     <th class="sorting_disabled"
@@ -844,7 +844,7 @@
                                                                     <th class="sorting_disabled"
                                                                         style="width: 47% !important;">Component Name</th>
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 12% !important;">Percentage</th>
+                                                                        style="width: 12% !important;">Allocation</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 3% !important;">&nbsp;</th>
                                                                     <th class="sorting_disabled"
@@ -879,7 +879,7 @@
                                                                                     style="width: 100%;display: initial; ">
                                                                                     <option value="0" {{ $basic->view_type == 0 ? 'selected' : '' }}> Annually </option>
                                                                                     <option value="1" {{ $basic->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                                                                    <option value="2" {{ $basic->view_type == 2 ? 'selected' : '' }}> Both</option>
+                                                                                    <option value="2" {{ $basic->view_type == 2 ? 'selected' : '' }}> Annually &amp; Monthly</option>
                                                                                     </select>
                                                                                 </td>
 
@@ -1117,7 +1117,7 @@
                                                                                     style="width: 100%;display: initial; ">
                                                                                     <option value="0" {{ $value->view_type == 0 ? 'selected' : '' }}> Annually </option>
                                                                                     <option value="1" {{ $value->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                                                                    <option value="2" {{ $value->view_type == 2 ? 'selected' : '' }}> Both</option>
+                                                                                    <option value="2" {{ $value->view_type == 2 ? 'selected' : '' }}> Annually &amp; Monthly</option>
                                                                                     </select>
                                                                                 </td>
 
@@ -1508,7 +1508,7 @@
                                                                                     style="width: 100%;display: initial; ">
                                                                                     <option value="0" {{ @$bonus->view_type == 0 ? 'selected' : '' }}> Annually </option>
                                                                                     <option value="1" {{ @$bonus->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                                                                    <option value="2" {{ @$bonus->view_type == 2 ? 'selected' : '' }}> Both</option>
+                                                                                    <option value="2" {{ @$bonus->view_type == 2 ? 'selected' : '' }}> Annually &amp; Monthly</option>
                                                                                     </select>
                                                                                 </td>
                                                                                 <td class="" style="width: 7% !important;">
@@ -1692,7 +1692,7 @@
                                                                                     style="width: 100%;display: initial; ">
                                                                                     <option value="0" {{ @$offer->view_type == 0 ? 'selected' : '' }}> Annually </option>
                                                                                     <option value="1" {{ @$offer->view_type == 1 ? 'selected' : '' }}> Monthly</option>
-                                                                                    <option value="2" {{ @$offer->view_type == 2 ? 'selected' : '' }}> Both</option>
+                                                                                    <option value="2" {{ @$offer->view_type == 2 ? 'selected' : '' }}> Annually &amp; Monthly</option>
                                                                                     </select>
                                                                                 </td>
 
