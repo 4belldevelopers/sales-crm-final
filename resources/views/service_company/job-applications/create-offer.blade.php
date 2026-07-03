@@ -255,11 +255,11 @@
         /* Name cell becomes a flex row so the drag-handle/number/badge sit inline
            with the (block-level, 100%-width) name input instead of wrapping onto
            their own lines. */
-        /* flex-wrap (not nowrap): if the drag-handle + row# + badge don't fit beside
-           the name in this narrow column, the badge wraps to its own line instead of
-           squeezing the name input down to near-zero width (which was hiding the text). */
-        .co-name-cell { display: flex !important; align-items: center; gap: 4px; flex-wrap: wrap; }
-        .co-name-cell .form-control { flex: 1 1 90px; min-width: 70px; }
+        /* Give the name column real room so # + drag + name + badge sit cleanly on ONE
+           line, with the name input taking priority (never collapsing to hide its text). */
+        #pointList tbody td:first-child, #bonusList tbody td:first-child { min-width: 230px; width: 230px; }
+        .co-name-cell { display: flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
+        .co-name-cell .form-control { flex: 1 1 auto; min-width: 80px; width: auto !important; }
         .co-name-cell .co-row-lead, .co-name-cell .co-comp-badge { flex: 0 0 auto; }
         /* Monthly / Annually preview inputs — muted, right-aligned */
         #pointList .offer_monthly, #pointList .offer_yearly,
@@ -302,9 +302,9 @@
         .co-row-lead { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; vertical-align: middle; }
         .co-drag-handle { color: #c1c5cc; font-size: 12px; line-height: 1; cursor: grab; letter-spacing: -1px; user-select: none; }
         .co-row-num { color: #a1a5b7; font-size: 12px; font-weight: 600; min-width: 14px; display: inline-block; }
-        .co-comp-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
-        .co-comp-badge--main { background: #eef3ff; color: #4f46e5; }
-        .co-comp-badge--add { background: #e8fff3; color: #0f9463; }
+        .co-comp-badge { display: inline-block; font-size: 10px !important; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin: 0; vertical-align: middle; white-space: nowrap; }
+        .co-comp-badge--main { background: #eef3ff !important; color: #4f46e5 !important; }   /* Main = blue/indigo */
+        .co-comp-badge--add  { background: #e8fff3 !important; color: #0f9463 !important; }   /* Additional = green */
 
         /* ── Additional-components info line ── */
         .co-info-line { font-size: 12px; color: #7239ea; font-weight: 600; margin: 6px 0 12px; }
