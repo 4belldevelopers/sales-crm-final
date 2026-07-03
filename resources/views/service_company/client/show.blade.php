@@ -146,6 +146,11 @@ use Carbon\Carbon;
               </div>
               <div class="profile-right">
                 <span class="status-badge"><span class="status-dot"></span>Active</span>
+                @if(in_array('edit_clients', $userPermissions))
+                <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-sm btn-light-primary fw-bold" style="font-size:13px;">
+                  <i class="fas fa-edit me-1" style="font-size:12px;"></i>Edit Client
+                </a>
+                @endif
               </div>
             </div>
           </div>
@@ -269,6 +274,11 @@ use Carbon\Carbon;
                 <div class="tab-content pt-5">
                     <!--begin::Overview Content-->
                     <div class="tab-pane active" id="overview" role="tabpanel">
+                        @if(in_array('edit_clients', $userPermissions))
+                        <div class="d-flex justify-content-end pt-4 pb-2">
+                            <a href="{{ route('service_company.clients.edit', GeneralMethod::value_encrypt($client->id)) }}" class="btn btn-primary align-self-center">Edit Client</a>
+                        </div>
+                        @endif
                         <div class="cd-content-grid py-5">
                             <div class="cd-card">
                                 <div class="cd-card-head">

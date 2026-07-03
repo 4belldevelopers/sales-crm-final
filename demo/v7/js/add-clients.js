@@ -8,437 +8,316 @@ var KTWizard1 = function() {
     var _wizardObj;
     var _validations = [];
 
-    // Private functions
+    // Resolve the correct Bootstrap plugin for the FormValidation version loaded (Bootstrap5 in Metronic v7).
+    function _bootstrapPlugin() {
+        if (typeof FormValidation !== 'undefined' && FormValidation.plugins) {
+            if (typeof FormValidation.plugins.Bootstrap5 === 'function') {
+                return new FormValidation.plugins.Bootstrap5({ eleValidClass: '' });
+            }
+            if (typeof FormValidation.plugins.Bootstrap === 'function') {
+                return new FormValidation.plugins.Bootstrap({ eleValidClass: '' });
+            }
+        }
+        return null;
+    }
+
+    function _pluginSet() {
+        var bp = _bootstrapPlugin();
+        var set = { trigger: new FormValidation.plugins.Trigger() };
+        if (bp) set.bootstrapPlugin = bp;
+        return set;
+    }
+
     var _initValidation = function() {
-        // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-        // Step 1
+
+        // Step 1 — Client Information
         _validations.push(FormValidation.formValidation(
             _formEl, {
                 fields: {
                     name: {
                         validators: {
-                            notEmpty: {
-                                message: 'Client Name is required'
-                            }
-                        }
-                    },
-                    logo: {
-                        validators: {
-                            file: {
-                                maxSize: 2097152, // 5 MB in bytes
-                                message: "The file size must not exceed 5 MB"
-                            }
+                            notEmpty: { message: 'Client Name is required' }
                         }
                     },
                     website: {
                         validators: {
-                            notEmpty: {
-                                message: 'Website is required'
-                            }
+                            notEmpty: { message: 'Website is required' }
                         }
                     },
                     industry: {
                         validators: {
-                            notEmpty: {
-                                message: 'Industry is required'
-                            }
+                            notEmpty: { message: 'Industry is required' }
                         }
                     },
                     company_sizes: {
                         validators: {
-                            notEmpty: {
-                                message: "Company Size is required"
-                            },
-                            digits: {
-                                message: "Company Size must contain only digits"
-                            }
+                            notEmpty: { message: 'Company Size is required' },
+                            digits:   { message: 'Company Size must contain only digits' }
                         }
                     },
                     company_type: {
                         validators: {
-                            notEmpty: {
-                                message: "Company Type is required"
-                            }
+                            notEmpty: { message: 'Company Type is required' }
                         }
                     },
                     founded: {
                         validators: {
-                            notEmpty: {
-                                message: "Founded Year is required"
-                            },
-                            digits: {
-                                message: "The Value is not a valid digits"
-                            },
-                            stringLength: {
-                                min: 4,
-                                max: 4,
-                                message: "Founded Year must contain 4 digits only"
-                            }
+                            notEmpty:     { message: 'Founded Year is required' },
+                            digits:       { message: 'Founded Year must be a number' },
+                            stringLength: { min: 4, max: 4, message: 'Founded Year must be 4 digits' }
                         }
-                    },
+                    }
                 },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    // Bootstrap Framework Integration
-                    bootstrap: new FormValidation.plugins.Bootstrap({
-                        //eleInvalidClass: '',
-                        eleValidClass: '',
-                    })
-                }
+                plugins: _pluginSet()
             }
         ));
 
-        // Step 2
+        // Step 2 — Client Description (description & tags are optional; validate only if filled)
         _validations.push(FormValidation.formValidation(
             _formEl, {
                 fields: {
                     kt_docs_tinymce_hidden: {
                         validators: {
                             callback: {
-                                message: 'The Description must be between 5 and 1500 characters long',
-                                callback: function(value) {
-                                    const text = tinyMCE.activeEditor.getContent({
-                                        format: 'text',
-                                    });
-                                    return text.length <= 9999999999999999000500 && text.length >= 5;
-                                },
-                            },
-                        },
-                    },
-                    tags: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Tags is required'
+                                message: 'Description must be at least 5 characters if provided',
+                                callback: function() {
+                                    var editor = (typeof tinymce !== 'undefined') ? tinymce.get('kt_docs_tinymce_hidden') : null;
+                                    if (!editor) return true;
+                                    var text = editor.getContent({ format: 'text' }).trim();
+                                    return text.length === 0 || text.length >= 5;
+                                }
                             }
                         }
                     }
                 },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    // Bootstrap Framework Integration
-                    bootstrap: new FormValidation.plugins.Bootstrap({
-                        //eleInvalidClass: '',
-                        eleValidClass: '',
-                    })
-                }
+                plugins: _pluginSet()
             }
         ));
 
-        // Step 3
+        // Step 3 — Address Details
         _validations.push(FormValidation.formValidation(
             _formEl, {
                 fields: {
                     'address[]': {
                         validators: {
-                            notEmpty: {
-                                message: "Address is required"
-                            }
+                            notEmpty: { message: 'Address is required' }
                         }
                     },
                     'country[]': {
                         validators: {
-                            notEmpty: {
-                                message: "country is required"
-                            }
+                            notEmpty: { message: 'Country is required' }
                         }
                     },
                     'state[]': {
                         validators: {
-                            notEmpty: {
-                                message: "State is required"
-                            }
+                            notEmpty: { message: 'State is required' }
                         }
                     },
                     'postcode[]': {
                         validators: {
-                            notEmpty: {
-                                message: "Postcode is required"
-                            },
-                            digits: {
-                                message: "Postcode must contain only digits"
-                            },
-                            stringLength: {
-                                min: 6,
-                                max: 6,
-                                message: "Postcode must contain 6 digits only"
-                            }
+                            notEmpty:     { message: 'Postcode is required' },
+                            digits:       { message: 'Postcode must contain only digits' },
+                            stringLength: { min: 6, max: 6, message: 'Postcode must be 6 digits' }
                         }
                     }
                 },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    // Bootstrap Framework Integration
-                    bootstrap: new FormValidation.plugins.Bootstrap({
-                        //eleInvalidClass: '',
-                        eleValidClass: '',
-                    })
-                }
+                plugins: _pluginSet()
             }
         ));
 
-        // Step 4
+        // Step 4 — Contact Person
         _validations.push(FormValidation.formValidation(
             _formEl, {
                 fields: {
                     'cp_name[]': {
                         validators: {
-                            notEmpty: {
-                                message: "Contact person name is required"
-                            }
+                            notEmpty: { message: 'Contact person name is required' }
                         }
                     },
                     'cp_email[]': {
                         validators: {
-                            notEmpty: {
-                                message: 'Email is required'
-                            },
-                            emailAddress: {
-                                message: 'The value is not a valid email address'
-                            }
+                            notEmpty:     { message: 'Email is required' },
+                            emailAddress: { message: 'Please enter a valid email address' }
                         }
                     },
                     'cp_number[]': {
                         validators: {
-                            digits: {
-                                message: "Contact must contain only digits"
-                            },
-                            stringLength: {
-                                min: 10,
-                                max: 10,
-                                message: "Contact must contain 10 digits only"
-                            }
+                            digits:       { message: 'Contact number must contain only digits' },
+                            stringLength: { min: 10, max: 10, message: 'Contact number must be 10 digits' }
                         }
                     },
                     'cp_desigination[]': {
                         validators: {
-                            notEmpty: {
-                                message: "Desigination is required"
-                            }
+                            notEmpty: { message: 'Designation is required' }
                         }
                     }
                 },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    // Bootstrap Framework Integration
-                    bootstrap: new FormValidation.plugins.Bootstrap({
-                        //eleInvalidClass: '',
-                        eleValidClass: '',
-                    })
-                }
+                plugins: _pluginSet()
             }
         ));
-    }
+    };
 
     var _initWizard = function() {
-        // Initialize form wizard
         _wizardObj = new KTWizard(_wizardEl, {
-            startStep: 1, // initial active step number
-            clickableSteps: false // allow step clicking
+            startStep: 1,
+            clickableSteps: false
         });
 
-        // Validation before going to next page
+        // Validate current step before moving forward
         _wizardObj.on('change', function(wizard) {
             if (wizard.getStep() > wizard.getNewStep()) {
-                return; // Skip if stepped back
+                return; // going back — skip validation
             }
+
+            var currentStep  = wizard.getStep();
             var getStepcheck = true;
-            if (wizard.getStep() == 3) {
 
-                let addressInputs = document.querySelectorAll('input[name="address[]"]');
-                let validaddress = true;
-                addressInputs.forEach((input) => {
-                    let addressValue = input.value.trim();
-                    if (addressValue === "") {
-                        validaddress = false;
-                        alert("Address is required");
-                    }
-                });
-                if (validaddress) {
-                    getStepcheck = true;
-                } else {
-                    getStepcheck = false;
-                    // alert("Please enter valid 10-digit contact numbers.");
-                }
-
-                let cityInputs = document.querySelectorAll('input[name="kt_tagify_work_location[]"]');
-                let validcity = true;
-                cityInputs.forEach((input) => {
-                    let cityValue = input.value.trim();
-                    if (cityValue === "") {
-                        validcity = false;
-                        alert("City name is required");
-                    }
-                });
-                if (validcity) {
-                    getStepcheck = true;
-                } else {
-                    getStepcheck = false;
-                    // alert("Please enter valid 10-digit contact numbers.");
-                }
-
-
-
-
-            }
-            if (wizard.getStep() == 4) {
-
-                let nameInputs = document.querySelectorAll('input[name="cp_name[]"]');
-                let validname = true;
-                nameInputs.forEach((input) => {
-                    let nameValue = input.value.trim();
-                    if (nameValue === "") {
-                        validname = false;
-                        alert("Contact person name is required");
-                    }
-                });
-                if (validname) {
-                    let emailInputs = document.querySelectorAll('input[name="cp_email[]"]');
-                    let valid = true;
-
-                    emailInputs.forEach((input) => {
-                        // Basic email validation regex
-                        let emailValue = input.value.trim();
-                        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (emailValue === "") {
-
-                        } else {
-                            if (!emailPattern.test(input.value)) {
-                                input.classList.add("is-invalid"); // Highlight invalid input
-                                valid = false;
-                                alert("This Email " + emailValue + " Please enter valid emails.");
-                            } else {
-                                input.classList.remove("is-invalid"); // Remove highlight if valid
-                                input.classList.add("is-valid");
-                            }
-                        }
-                    });
-
-                    if (valid) {
-                        getStepcheck = true;
-                        let numberInputs = document.querySelectorAll('input[name="cp_number[]"]');
-                        let validNo = true;
-
-                        numberInputs.forEach((input) => {
-                            // Check if the input value is a 10-digit number
-                            let numberValue = input.value.trim();
-                            if (numberValue === "") {
-
-                            } else {
-                                if (numberValue.length !== 10 || isNaN(numberValue)) {
-                                    input.classList.add("is-invalid"); // Highlight invalid input
-                                    validNo = false;
-                                    alert("This contact number " + numberValue + " Please enter valid 10-digit contact numbers");
-                                } else {
-                                    input.classList.remove("is-invalid"); // Remove highlight if valid
-                                    input.classList.add("is-valid");
-                                }
-                            }
-
-                        });
-
-                        if (validNo) {
-                            getStepcheck = true;
-                            // alert("All contact numbers are valid!");
-                            // Submit the form if needed
-                            // this.submit();
-                        } else {
-                            getStepcheck = false;
-                            // alert("Please enter valid 10-digit contact numbers.");
-                        }
-
-                    } else {
+            // Step 3: custom address/city checks (FormValidation handles field-level, this catches empty tags)
+            if (currentStep === 3) {
+                var addressInputs = document.querySelectorAll('textarea[name="address[]"], input[name="address[]"]');
+                addressInputs.forEach(function(input) {
+                    if (input.value.trim() === '') {
                         getStepcheck = false;
-                        // alert("Please enter valid emails.");
+                        Swal.fire({ text: 'Address is required for all entries.', icon: 'warning', confirmButtonText: 'Ok' });
                     }
-                } else {
-                    getStepcheck = false;
-                }
+                });
 
-
-                // alert(wizard.getStep());
-
-            }
-
-            // Validate form before change wizard step
-            var validator = _validations[wizard.getStep() - 1]; // get validator for currnt step
-
-
-            if (getStepcheck) {
-                if (validator) {
-                    validator.validate().then(function(status) {
-
-
-
-                        if (status == 'Valid') {
-                            wizard.goTo(wizard.getNewStep());
-
-                            KTUtil.scrollTop();
-                        } else {
-                            Swal.fire({
-                                text: "Sorry, looks like there are some errors detected, please try again.",
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, got it!",
-                                customClass: {
-                                    confirmButton: "btn font-weight-bold btn-light"
-                                }
-                            }).then(function() {
-                                KTUtil.scrollTop();
-                            });
+                if (getStepcheck) {
+                    var cityInputs = document.querySelectorAll('input[name="kt_tagify_work_location[]"]');
+                    cityInputs.forEach(function(input) {
+                        if (input.value.trim() === '') {
+                            getStepcheck = false;
+                            Swal.fire({ text: 'City is required for all address entries.', icon: 'warning', confirmButtonText: 'Ok' });
                         }
-
-
                     });
                 }
             }
 
-            return false; // Do not change wizard step, further action will be handled by he validator
+            // Step 4: custom contact checks
+            if (currentStep === 4) {
+                var nameInputs = document.querySelectorAll('input[name="cp_name[]"]');
+                nameInputs.forEach(function(input) {
+                    if (input.value.trim() === '') {
+                        getStepcheck = false;
+                    }
+                });
+
+                if (!getStepcheck) {
+                    Swal.fire({ text: 'Contact person name is required.', icon: 'warning', confirmButtonText: 'Ok' });
+                }
+
+                if (getStepcheck) {
+                    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    document.querySelectorAll('input[name="cp_email[]"]').forEach(function(input) {
+                        var v = input.value.trim();
+                        if (v && !emailPattern.test(v)) {
+                            input.classList.add('is-invalid');
+                            getStepcheck = false;
+                            Swal.fire({ text: 'Please enter a valid email: ' + v, icon: 'warning', confirmButtonText: 'Ok' });
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                }
+
+                if (getStepcheck) {
+                    document.querySelectorAll('input[name="cp_number[]"]').forEach(function(input) {
+                        var v = input.value.trim();
+                        if (v && (v.length !== 10 || isNaN(v))) {
+                            input.classList.add('is-invalid');
+                            getStepcheck = false;
+                            Swal.fire({ text: 'Contact number must be 10 digits: ' + v, icon: 'warning', confirmButtonText: 'Ok' });
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                }
+            }
+
+            if (!getStepcheck) {
+                return false;
+            }
+
+            var validator = _validations[currentStep - 1];
+            if (validator) {
+                validator.validate().then(function(status) {
+                    if (status === 'Valid') {
+                        wizard.goTo(wizard.getNewStep());
+                        KTUtil.scrollTop();
+                    } else {
+                        Swal.fire({
+                            text: 'Please fill in all required fields before continuing.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: { confirmButton: 'btn font-weight-bold btn-light' }
+                        }).then(function() {
+                            KTUtil.scrollTop();
+                        });
+                    }
+                });
+            } else {
+                // No validator for this step — go straight through
+                wizard.goTo(wizard.getNewStep());
+                KTUtil.scrollTop();
+            }
+
+            return false; // always prevent default step change; handled in callback above
         });
 
-        // Change event
-        _wizardObj.on('changed', function(wizard) {
+        _wizardObj.on('changed', function() {
             KTUtil.scrollTop();
         });
 
-        // Submit event
-        _wizardObj.on('submit', function(wizard) {
+        _wizardObj.on('submit', function() {
             Swal.fire({
-                text: "All is good! Please confirm the form submission.",
-                icon: "success",
+                text: 'All is good! Please confirm the form submission.',
+                icon: 'success',
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, submit!",
-                cancelButtonText: "No, cancel",
+                confirmButtonText: 'Yes, submit!',
+                cancelButtonText: 'No, cancel',
                 customClass: {
-                    confirmButton: "btn font-weight-bold btn-primary",
-                    cancelButton: "btn font-weight-bold btn-default"
+                    confirmButton: 'btn font-weight-bold btn-primary',
+                    cancelButton:  'btn font-weight-bold btn-default'
                 }
             }).then(function(result) {
                 if (result.value) {
-                    _formEl.submit(); // Submit form
+                    _formEl.submit();
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
-                        text: "Your form has not been submitted!.",
-                        icon: "error",
+                        text: 'Your form has not been submitted!',
+                        icon: 'error',
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn font-weight-bold btn-primary",
-                        }
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: { confirmButton: 'btn font-weight-bold btn-primary' }
                     });
                 }
             });
         });
-    }
+    };
 
     return {
-        // public functions
         init: function() {
             _wizardEl = KTUtil.getById('kt_wizard');
-            _formEl = KTUtil.getById('kt_form');
+            _formEl   = KTUtil.getById('kt_form');
 
-            _initValidation();
-            _initWizard();
+            if (!_wizardEl || !_formEl) {
+                console.error('KTWizard1: #kt_wizard or #kt_form element not found.');
+                return;
+            }
+
+            try {
+                _initValidation();
+            } catch (e) {
+                console.error('KTWizard1: FormValidation init failed —', e);
+            }
+
+            try {
+                _initWizard();
+            } catch (e) {
+                console.error('KTWizard1: KTWizard init failed —', e);
+            }
         }
     };
 }();
