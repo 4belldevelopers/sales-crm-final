@@ -74,6 +74,9 @@
     #resume_cv .rcv-dl-menu .rcv-dl-item { display:block; width:100%; height:auto; justify-content:flex-start; text-align:left; padding:9px 13px; font-size:12px; font-weight:500; color:#334155; background:#fff; border:0; border-radius:0; cursor:pointer; text-decoration:none; white-space:nowrap; }
     #resume_cv .rcv-dl-menu .rcv-dl-item:hover { background:#eef2ff; color:#4f46e5; }
     #resume_cv .rcv-dl-menu .rcv-dl-item + .rcv-dl-item { border-top:1px solid #f1f5f9; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo { background:#f0fdf4; color:#15803d; font-weight:600; border-left:3px solid #22c55e; display:flex; align-items:center; gap:6px; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo:hover { background:#dcfce7; color:#166534; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo .rcv-logo-badge { font-size:10px; background:#22c55e; color:#fff; border-radius:4px; padding:1px 5px; margin-left:auto; font-weight:700; letter-spacing:.3px; }
     #resume_cv .rcv-viewport { flex:1; overflow:auto; background:#525659; padding:18px; display:flex; flex-direction:column; align-items:center; gap:14px; }
     #resume_cv .rcv-page { position:relative; box-shadow:0 4px 16px rgba(0,0,0,.35); background:#fff; }
     #resume_cv .rcv-page canvas { display:block; }
@@ -156,7 +159,11 @@
             </button>
             <div class="rcv-dl-menu" id="rcvDlMenu">
               <a class="rcv-dl-item" href="{{ $rcvDownloadUrl }}" target="_blank">Download Resume</a>
-              <button type="button" class="rcv-dl-item" data-dl="logo">Resume with Company Logo</button>
+              <button type="button" class="rcv-dl-item rcv-dl-logo" data-dl="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Resume with Company Logo
+                <span class="rcv-logo-badge">LOGO</span>
+              </button>
               <button type="button" class="rcv-dl-item" data-dl="hl">Resume with Highlighted Keywords</button>
               <button type="button" class="rcv-dl-item" data-dl="both">Highlighted Keywords + Company Logo</button>
             </div>
