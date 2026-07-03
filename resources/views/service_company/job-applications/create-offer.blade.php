@@ -255,12 +255,14 @@
         /* Name cell becomes a flex row so the drag-handle/number/badge sit inline
            with the (block-level, 100%-width) name input instead of wrapping onto
            their own lines. */
-        /* Give the name column real room so # + drag + name + badge sit cleanly on ONE
-           line, with the name input taking priority (never collapsing to hide its text). */
-        #pointList tbody td:first-child, #bonusList tbody td:first-child { min-width: 230px; width: 230px; }
+        /* Give the name column generous room so # + drag + name + badge sit on ONE line,
+           with a wide name input that shows the full component name (no truncation). */
+        #pointList tbody td:first-child, #bonusList tbody td:first-child { min-width: 340px; }
+        #pointList thead th:first-child, #bonusList thead th:first-child { min-width: 340px; }
         .co-name-cell { display: flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
-        .co-name-cell .form-control { flex: 1 1 auto; min-width: 80px; width: auto !important; }
+        .co-name-cell .form-control { flex: 1 1 auto; min-width: 170px; width: auto !important; }
         .co-name-cell .co-row-lead, .co-name-cell .co-comp-badge { flex: 0 0 auto; }
+        .co-drag-handle { flex-shrink: 0; }
         /* Monthly / Annually preview inputs — muted, right-aligned */
         #pointList .offer_monthly, #pointList .offer_yearly,
         #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly {
@@ -4395,7 +4397,9 @@
                         $('#co_validation_text').text('Total of main components: ' + mainPct.toFixed(2) + '%' + (main100 ? ' — exactly 100%' : ''));
                         $('#co_validation_banner').removeClass('co-valid-banner--warn co-valid-banner--ok').addClass(main100 ? 'co-valid-banner--ok' : 'co-valid-banner--warn');
 
-                        $('#co_additional_total').text('Total additional components: ' + addPct.toFixed(2) + '% (Allowed above 100%)');
+                        var addAmtTotal = coNum($('#totalYearlybonus').val()) || coNum($('#totalMonthlybonus').val()) || (coNum($('#ctc').val()) * addPct / 100);
+                        $('#co_additional_total').html('Total additional components: <b>' + addPct.toFixed(2) + '%</b> (Allowed above 100%)'
+                            + (addAmtTotal ? ' &nbsp;•&nbsp; Amount: <b>' + coMoney(addAmtTotal) + '</b>' : ''));
 
                         var ctcVal = coNum($('#ctc').val());
                         var mainAmt = ctcVal * (mainPct / 100);
