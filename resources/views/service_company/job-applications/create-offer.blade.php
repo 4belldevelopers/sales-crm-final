@@ -255,8 +255,12 @@
         /* Name cell becomes a flex row so the drag-handle/number/badge sit inline
            with the (block-level, 100%-width) name input instead of wrapping onto
            their own lines. */
-        .co-name-cell { display: flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
-        .co-name-cell .form-control { flex: 1 1 auto; min-width: 0; }
+        /* flex-wrap (not nowrap): if the drag-handle + row# + badge don't fit beside
+           the name in this narrow column, the badge wraps to its own line instead of
+           squeezing the name input down to near-zero width (which was hiding the text). */
+        .co-name-cell { display: flex !important; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .co-name-cell .form-control { flex: 1 1 90px; min-width: 70px; }
+        .co-name-cell .co-row-lead, .co-name-cell .co-comp-badge { flex: 0 0 auto; }
         /* Monthly / Annually preview inputs — muted, right-aligned */
         #pointList .offer_monthly, #pointList .offer_yearly,
         #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly {
