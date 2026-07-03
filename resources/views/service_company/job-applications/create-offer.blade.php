@@ -131,8 +131,11 @@
         #offer_create_show_right_bar .fs-3x,
         #offer_create_show_right_bar .fs-4x { font-size: 16px !important; }
 
-        /* ── 5-step timeline stepper ── */
-        .co-stepper { display: flex; align-items: flex-start; padding: 16px 24px; background: #fff; border-bottom: 1px solid #eff2f5; }
+        /* Drawer root is the positioning context for the floated close (X) button */
+        #offer_create_show_right_bar { position: relative; }
+
+        /* ── 5-step timeline stepper (acts as the header — kept compact) ── */
+        .co-stepper { display: flex; align-items: flex-start; padding: 14px 44px 14px 24px; background: #fff; border-bottom: 1px solid #eff2f5; }
         .co-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; text-align: center; min-width: 0; }
         /* connector line between nodes */
         .co-step:not(:last-child)::after {
@@ -473,11 +476,9 @@
 
 
 
-    <div class="card-header px-5 py-0" id="kt_activities_header">
-        <div class="d-flex align-items-center py-1">
-            <h3 class="card-title fw-bolder text-dark">Compensation</h3>
-            <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-        </div>
+    {{-- Header title "Compensation" removed — the 5-step timeline is the header. The close
+         (X) button is floated to the top-right corner so the header bar takes NO height. --}}
+    <div class="card-header border-0" id="kt_activities_header" style="min-height:0;padding:0;position:absolute;top:8px;right:12px;z-index:6;">
 
         @php
             $dnone = 'd-none';
