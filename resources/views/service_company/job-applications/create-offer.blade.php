@@ -249,9 +249,14 @@
             color: #3f4254 !important; padding: 4px 10px !important;
         }
         #pointList .offer_points, #bonusList .offer_points,
-        #pointList .bonus_offer_points, #bonusList .bonus_offer_points {
+        #pointList .bonus_points, #bonusList .bonus_points {
             font-weight: 600 !important; border-color: transparent !important; background: transparent !important; padding-left: 2px !important;
         }
+        /* Name cell becomes a flex row so the drag-handle/number/badge sit inline
+           with the (block-level, 100%-width) name input instead of wrapping onto
+           their own lines. */
+        .co-name-cell { display: flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
+        .co-name-cell .form-control { flex: 1 1 auto; min-width: 0; }
         /* Monthly / Annually preview inputs — muted, right-aligned */
         #pointList .offer_monthly, #pointList .offer_yearly,
         #bonusList .bonus_offer_monthly, #bonusList .bonus_offer_yearly {
@@ -4352,7 +4357,7 @@
                             });
                         };
                         pushRows(mainRows, 'offer_monthly', 'offer_yearly', 'offer_points');
-                        pushRows(bonusRows, 'bonus_offer_monthly', 'bonus_offer_yearly', 'bonus_offer_points');
+                        pushRows(bonusRows, 'bonus_offer_monthly', 'bonus_offer_yearly', 'bonus_points');
                         $('#co_breakup_preview tbody').html(body || '<tr><td colspan="2" style="color:#a1a5b7">No components yet</td></tr>');
 
                         var tcc = coView === 'monthly' ? coNum($('#finalpaytotalMonthly').val()) : coNum($('#finalpaytotalYearly').val());
@@ -4412,17 +4417,20 @@
                                 n++;
                                 var $name = $(this).find(nameClasses).first();
                                 if (!$name.length) return;
-                                var $lead = $name.prev('.co-row-lead');
+                                // Make the name cell a flex row so the injected elements sit
+                                // inline with the input instead of wrapping under it.
+                                var $td = $name.closest('td').addClass('co-name-cell');
+                                var $lead = $td.find('.co-row-lead');
                                 if (!$lead.length) {
                                     $lead = $('<span class="co-row-lead"><span class="co-drag-handle">&#8942;&#8942;</span><span class="co-row-num"></span></span>');
                                     $name.before($lead);
                                     $name.after('<span class="co-comp-badge ' + badgeClass + '">' + badgeText + '</span>');
                                 }
-                                $lead.find('.co-row-num').text(n);
+                                $td.find('.co-row-num').text(n);
                             });
                         };
                         enhance('#pointList tbody', '.offer_points, .offer_point_hourly', 'co-comp-badge--main', 'Main');
-                        enhance('#bonusList tbody', '.bonus_offer_points, .bonus_point_hourly', 'co-comp-badge--add', 'Additional');
+                        enhance('#bonusList tbody', '.bonus_points, .bonus_point_hourly', 'co-comp-badge--add', 'Additional');
                     }
 
                     $(document).on('click', '#co_view_toggle .co-view-btn', function () {
