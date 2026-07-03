@@ -307,11 +307,36 @@
         #pointList .remove_points svg, #bonusList .remove_points svg { width: 16px; height: 16px; }
         /* Total Main/Additional (indigo tint) total rows */
         #pointList input[style*="ffeb00"], #bonusList input[style*="ffeb00"] { background: #eef3ff !important; color: #4f46e5 !important; font-weight: 700; border-color: transparent !important; }
-        /* CTC — Cost to Company: render #final_pay as a distinct green CARD */
-        #final_pay { background: #e8fff3; border: 1px solid #c3f0da; border-radius: 12px; margin-top: 6px; }
-        #final_pay th { border: none !important; padding: 12px 10px !important; }
-        #final_pay input[style*="7de96f"], #final_pay input { background: transparent !important; color: #0f9463 !important; font-weight: 700 !important; border-color: transparent !important; }
-        #final_pay input[value*="CTC"] { font-size: 14px !important; }
+        /* Final CTC card + row → AMBER (per mockup) */
+        .co-finalctc-card { border: 1px solid #f6e6b8 !important; border-radius: 12px; }
+        #final_pay { background: #fff8e1; border: 1px solid #f6e6b8; border-radius: 12px; margin-top: 4px; }
+        #final_pay th { border: none !important; padding: 12px 10px !important; vertical-align: middle; }
+        #final_pay input { background: transparent !important; color: #a9791b !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
+        #final_pay input[value*="Total CTC"] { font-size: 14px !important; color: #7a5a10 !important; }
+
+        /* Applicable column: widen so "Annually & Monthly" shows fully */
+        #pointList .basic_view, #bonusList .bonus_view { min-width: 150px !important; width: auto !important; }
+        #pointList thead th:nth-child(2), #bonusList thead th:nth-child(2) { min-width: 150px; }
+
+        /* "%" appended inside the Total (Main/Additional) + Final CTC percentage cells */
+        .co-pct-sign { pointer-events: none; }
+        #pointList tfoot th:has(> .totalpercentage), #pointList tfoot th:has(> .totalpercentagehouly),
+        #bonusList tfoot th:has(> .totalpercentagebonus), #bonusList tfoot th:has(> .totalhourlypercentagebonus),
+        #final_pay th:has(> .totalpercentagefinal), #final_pay th:has(> .totalpercentagefinalhourly) { position: relative; }
+        #pointList tfoot th:has(> .totalpercentage)::after, #pointList tfoot th:has(> .totalpercentagehouly)::after,
+        #bonusList tfoot th:has(> .totalpercentagebonus)::after, #bonusList tfoot th:has(> .totalhourlypercentagebonus)::after,
+        #final_pay th:has(> .totalpercentagefinal)::after, #final_pay th:has(> .totalpercentagefinalhourly)::after {
+            content: '%'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+            font-weight: 700; font-size: 12px; color: inherit; pointer-events: none;
+        }
+
+        /* ── Additional Components empty state ── */
+        .co-empty-state { text-align: center; padding: 26px 20px; }
+        .co-empty-illus { width: 56px; height: 56px; border-radius: 14px; background: #f1f5ff; color: #93a4f4; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .co-empty-illus svg { width: 30px; height: 30px; }
+        .co-empty-title { font-size: 14px !important; font-weight: 600; color: #3f4254; }
+        .co-empty-sub { font-size: 12px; color: #a1a5b7; margin: 4px 0 14px; }
+        .co-empty-state .co-add-btn { display: inline-block; }
         /* header "+ Add" buttons; hide the old in-table (+) add buttons (still click-triggered) */
         .co-add-btn { background: #eef3ff; color: #4f46e5; border: 1px solid #e0e7ff; border-radius: 8px; padding: 8px 14px !important; font-size: 12px !important; font-weight: 600; cursor: pointer; margin: 0 !important; white-space: nowrap; }
         .co-add-btn:hover { background: #4f46e5; color: #fff; }
@@ -913,7 +938,7 @@
                                                                                                                                                 
                                                                                     </select> --}}
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> </td>
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> </td>
                                                                                 <td class="" style="width:12% !important">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
@@ -1015,7 +1040,7 @@
                                                                                         value="{{ $basic->basic_percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                 </td>
                                                                                 <td class="" style="width: 10% !important;">
                                                                                     <select &nbsp=""
@@ -1132,7 +1157,7 @@
                                                                                         value="{{ $value->percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> </td>
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> </td>
                                                                                 <td class="" style="width:12% !important">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
@@ -1240,7 +1265,7 @@
                                                                                         value="{{ $value->percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                 </td>
                                                                                 <td class=""
                                                                                     style="width: 10% !important;">
@@ -1417,6 +1442,19 @@
                                                         <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
                                                     </div>
                                                     <div id="co_additional_total" class="co-info-line">Total additional components: 0.00% (Allowed above 100%)</div>
+
+                                                    {{-- Empty state — shown (via JS) only when there are no additional components --}}
+                                                    <div id="co_additional_empty" class="co-empty-state" style="display:none;">
+                                                        <div class="co-empty-illus">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="co-empty-title">No additional components added yet</div>
+                                                        <div class="co-empty-sub">Add bonuses, reimbursements or other components if applicable.</div>
+                                                        <button type="button" class="co-add-btn" onclick="$('#bonusList').find('.addRowBtnbonus').first().trigger('click')">+ Add Additional Component</button>
+                                                    </div>
+
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer" id="bonusList"
                                                             role="grid" aria-describedby="bonusList_info"
@@ -1522,7 +1560,7 @@
             
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
-                                                                                    <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                    <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                 </td>
                                                                             
                                                                                 <td class="" style="width: 12% !important;">
@@ -1609,7 +1647,7 @@
                                                                                     value="{{ $bonus->bonus_percentage }}" placeholder="%">
             
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                 </td>
 
                                                                                 <td class="" style="width: 10% !important;">
@@ -1709,7 +1747,7 @@
 
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
-                                                                                    <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                    <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                 </td>
                                                                                 <td class="" style="width: 12% !important;">
                                                                                     <select &nbsp=""
@@ -1824,7 +1862,7 @@
                                                                                             value="{{ $offer->percentage }}"
                                                                                             placeholder="%">
                                                                                     </td>
-                                                                                    <td class="" style="position: relative; width: 3% !important;"> <i class="fa fa-close" style="position: absolute; top: 17px; left: 11px;"></i> 
+                                                                                    <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
                                                                                     </td>
                                                                                     <td class=""
                                                                                         style="width: 10% !important;">
@@ -1972,7 +2010,13 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
+                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-finalctc-card">
+                                                    <div class="co-section-head">
+                                                        <div>
+                                                            <h5 class="co-section-title">Final CTC <span class="co-section-note">(Cost to Company)</span></h5>
+                                                            <div class="co-section-sub">Summary of the total cost including main and additional components.</div>
+                                                        </div>
+                                                    </div>
                                                     <div class="row">
                                                         <table class="table-row-dashed fs-6 gy-5 no-footer"
                                                             id="final_pay" role="grid"
@@ -1983,7 +2027,7 @@
 
                                                                 <tr>
                                                                     <th colspan="2" class="sorting_disabled" style="width: 35%;">
-                                                                        <input type="text" class="form-control form-control-solid" value="CTC — Cost to Company" readonly style="cursor: not-allowed;background: #7de96f40;">
+                                                                        <input type="text" class="form-control form-control-solid" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
                                                                     <th class="sorting_disabled" style="width: 10% !important;">
                                                                         <input &nbsp="" type="text"
@@ -2021,7 +2065,7 @@
 
                                                                 <tr>
                                                                     <th class="sorting_disabled" style="width: 47%;">
-                                                                        <input type="text" class="form-control form-control-solid" value="CTC — Cost to Company" readonly style="cursor: not-allowed;background: #7de96f40;">
+                                                                        <input type="text" class="form-control form-control-solid" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
                                                                     <th class="sorting_disabled" style="width: 12% !important;">
                                                                         <input &nbsp="" type="text"
@@ -4449,6 +4493,27 @@
                         };
                         enhance('#pointList tbody', '.offer_points, .offer_point_hourly', 'co-comp-badge--main', 'Main');
                         enhance('#bonusList tbody', '.bonus_points, .bonus_point_hourly', 'co-comp-badge--add', 'Additional');
+                        coToggleAdditionalEmpty();
+                    }
+
+                    // Show the empty-state (illustration + CTA) when there are no additional
+                    // components; show the table + total line once at least one row exists.
+                    // Counts only real data rows (those with a bonus name input), not the header.
+                    function coToggleAdditionalEmpty() {
+                        var $empty = $('#co_additional_empty');
+                        if (!$empty.length) return;
+                        var dataRows = $('#bonusList tbody tr.row-template').filter(function () {
+                            return $(this).is(':visible') && $(this).find('.bonus_points, .bonus_point_hourly').length > 0;
+                        }).length;
+                        if (dataRows === 0) {
+                            $empty.show();
+                            $('#bonusList').closest('.row').hide();
+                            $('#co_additional_total').hide();
+                        } else {
+                            $empty.hide();
+                            $('#bonusList').closest('.row').show();
+                            $('#co_additional_total').show();
+                        }
                     }
 
                     $(document).on('click', '#co_view_toggle .co-view-btn', function () {
