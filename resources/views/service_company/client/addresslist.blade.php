@@ -1,131 +1,86 @@
-<style>
-    .tagify .tagify__tag div .tagify__tag-text {
-      color: #0c0c0c !important;
-      font-weight: 500 !important;
-      font-size: 14px !important;
-  }
-  .client-address-container-child{
-    background: #f9f9f940;
-    border-radius: 14px;
-    padding: 7px 0px;
-    margin-bottom: 15px;
-  }
-  </style>
-  <?php 
-                                
-                  $countryListing	= $stateListing =	'';
-                  foreach($countryArr as $cont){
-                          $sel	=	'';
-                          if($cont['id'] == 101){
-                              $sel	=	'selected="selected"';
-                          }
-                          $countryListing	.= '<option value="'.$cont['id'].'"  '.@$sel.' >'.$cont['name'].'</option>';	
-                  }										
-                                            
-                        
-  ?>
-  
-  <div class="row client-address-container-child" id="clientAddr_<?php echo @$cid; ?>">
-    <div class="form-group">
-      <label class="form-label required fw-bolder">Address: <?php echo @$cid+1; ?></label>
-      <input type="text" class="form-control form-control-lg form-control-solid" name="address[]" placeholder="Enter address" value="" id="address_<?php echo @$cid; ?>">
-      <span class="form-text text-muted">Please enter your Address</span> 
-     
-    </div>
-    <div class="col-xl-12">
-      <div class="form-group fv-plugins-icon-container">
-        <label class="form-label required fw-bolder">Select City:</label>
-         <input class="form-control form-control-solid" value="" id="kt_tagify_work_location_<?php echo @$cid; ?>" name="kt_tagify_work_location[]" placeholder="Enter your Location..."/>
-        <span class="form-text text-muted">Please select your city</span>
-        <div class="fv-plugins-message-container"></div>
-      </div>
-    </div>
-   
-   
+<?php
+  $additionalIndex = (int) @$cid + 1;
+?>
+<div class="client-address-card is-additional client-address-container-child" id="clientAddr_<?php echo @$cid; ?>">
+  <div class="client-address-card-head">
+    <h4>Additional Address (<?php echo max(1, $additionalIndex); ?>)</h4>
+    <button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_<?php echo @$cid; ?>"><i class="la la-trash"></i> Remove</button>
   </div>
-  
-  
-  <script>
-  $(document ).ready(function() { 
-  
-    setTimeout(() => {
-    var cid =  $("#country_{{@$cid}}").val();
-      setTimeout(() => {
-      $("#country_{{@$cid}}").val(cid).change();
-     }, 500);
-   
-    }, 500);
-  
-  
-      var inputloc = document.querySelector("#kt_tagify_work_location_{{@$cid}}");
-      var cities = @json($cities);
-                               
-      // Initialize Tagify script on the above inputs 
-      var tagifylocation =  new Tagify(inputloc, {
-          whitelist: cities,
-          enforceWhitelist: true, // Prevents users from adding custom values
-          maxTags: 1,
-          dropdown: {
-              maxItems: 20,           // <- mixumum allowed rendered suggestions
-              classname: "", // <- custom classname for this dropdown, so it could be targeted
-              enabled: 0,             // <- show suggestions on focus
-              closeOnSelect: true    // <- do not hide the suggestions dropdown once an item has been selected
+  <div class="client-field fv-plugins-icon-container mb-3">
+    <label class="form-label required" for="kt_tagify_work_location_<?php echo @$cid; ?>">City</label>
+    <div class="input-group input-group-solid">
+      <span class="input-group-text"><i class="la la-map-marker"></i></span>
+      <input class="form-control form-control-solid" value="" id="kt_tagify_work_location_<?php echo @$cid; ?>" name="kt_tagify_work_location[]" placeholder="Start typing to search for a city"/>
+    </div>
+    <span class="form-text text-muted">Start typing to search for a city.</span>
+  </div>
+  <div class="client-field fv-plugins-icon-container">
+    <label class="form-label required" for="address_<?php echo @$cid; ?>">Full Address</label>
+    <textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="4" maxlength="500" placeholder="Building, street, area, landmark, pincode, etc." id="address_<?php echo @$cid; ?>"></textarea>
+    <div class="d-flex justify-content-between mt-1">
+      <span class="form-text text-muted">Provide the complete and accurate address for better identification.</span>
+      <span class="client-char-count"><span class="client-address-count">0</span>/500</span>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function () {
+  var inputloc = document.querySelector("#kt_tagify_work_location_{{ @$cid }}");
+  var cities = @json($cities);
+
+  if (inputloc) {
+    var tagifylocation = new Tagify(inputloc, {
+      whitelist: cities,
+      enforceWhitelist: true,
+      maxTags: 1,
+      dropdown: {
+        maxItems: 20,
+        classname: "",
+        enabled: 0,
+        closeOnSelect: true
+      }
+    });
+
+    tagifylocation.on('input', function () {
+      tagifylocation.dropdown.show();
+    });
+
+    tagifylocation.on('dropdown:select', function (e) {
+      tagifylocation.addTags([e.detail.data.value]);
+    });
+
+    function debounce(func, delay) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    const fetchSuggestions = debounce(function (query) {
+      $.ajax({
+        url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+        method: 'GET',
+        success: function (data) {
+          if (Array.isArray(data)) {
+            tagifylocation.settings.whitelist = data;
+            tagifylocation.dropdown.show.call(tagifylocation);
           }
-      });
-  
-      // Prevent creating tags on blur or enter key
-      tagifylocation.on('input', function(e) {
-          tagify.dropdown.show(); // show the dropdown immediately
-      });
-  
-      // Create tags only on select
-      tagifylocation.on('dropdown:select', function(e) {
-          tagify.addTags([e.detail.data.value]);
-      });
-
-      tagifylocation.on('add', function(e) {
-        // Remove the tag if it wasn't selected from the dropdown
-        // if (!cities.includes(e.detail.data.value)) {
-        //     tagifylocation.removeTag(e.detail.data.value);
-        // }
-      });
-  
-      function debounce(func, delay) {     
-            let timer;
-            return function (...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => func.apply(this, args), delay);
-            };
         }
+      });
+    }, 200);
 
-        const fetchSuggestions = debounce(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-                method: 'GET',
-                success: function(data) {
-                    console.warn("Fetched Cities: ", data);
+    tagifylocation.on('input', function (e) {
+      var query = e.detail.value.trim();
+      if (query.length < 2) return;
+      fetchSuggestions(query);
+    });
+  }
 
-                    if (Array.isArray(data)) {
-                      tagifylocation.settings.whitelist = data; 
-                      // tagifylocation.dropdown.show(query); 
-                      tagifylocation.dropdown.show.call(tagifylocation);
-                    } else {
-                        console.error("Invalid API response format: Expected array.");
-                    }
-                },
-                error: function(err) {
-                    console.error("Error fetching cities:", err);
-                }
-            });
-        }, 200); // 300ms delay
-        tagifylocation.on('input', function(e) {
-            var query = e.detail.value.trim();
-            if (query.length < 2) return;
-            fetchSuggestions(query);
-        });
-   
-  
-  });
-  
-  </script>
-  
+  if (typeof window.clientWizardUi !== 'undefined') {
+    window.clientWizardUi.syncAdditionalAddressEmpty();
+    window.clientWizardUi.bindAddressCounters(document.getElementById('clientAddr_{{ @$cid }}'));
+  }
+});
+</script>

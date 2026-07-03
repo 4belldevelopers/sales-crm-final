@@ -7,8 +7,25 @@
 <link href="{{ asset('demo/v7/css/style.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
 <!--Add New Css of Metronic-7 End-->
 <style>
-body {overflow-x:hidden; width:100%;}
-.form-label{ margin-bottom	: 0.5rem!important; font-size: 1.05rem!important; font-weight: 500!important; color	: #3f4254!important;} 
+/* Purpose: give the shared add/edit client wizard a compact, reference-aligned Metronic presentation without changing its form contract. */
+:root {
+  --client-primary: #1769f5;
+  --client-primary-soft: #edf4ff;
+  --client-ink: #0d194d;
+  --client-muted: #68738d;
+  --client-border: #dde4ef;
+  --client-surface: #ffffff;
+  --client-page: #f7f9fc;
+}
+
+body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
+#kt_content {background: var(--client-page);}
+#kt_toolbar {background: var(--client-page); padding-top: 14px;}
+#kt_toolbar .page-title {align-items: flex-start !important;}
+#kt_toolbar .page-title h1,
+#kt_toolbar .page-title h1 a {font-size: 16px !important; line-height: 1.25; color: var(--client-ink) !important;}
+#kt_subheader_total {font-size: 12px; color: var(--client-muted) !important; border: 0 !important; margin: 2px 0 0 !important; font-weight: 400 !important;}
+.form-label{ margin-bottom: 0.5rem!important; font-size: 12px!important; font-weight: 600!important; color: var(--client-ink)!important;}
 .last-input-border-radius{border-radius	: 5px 0px 0px 5px!important;}
 .tagify .tagify__tag div .tagify__tag-text {
       color: #0c0c0c !important;
@@ -34,8 +51,299 @@ body {overflow-x:hidden; width:100%;}
   .invalid-feedback {
     display: none !important;
     color: red;
-}
+  }
 
+  /* The legacy wizard stays responsible for state; these rules only modernize its visual language. */
+  .client-wizard-shell.card {background: transparent; box-shadow: none;}
+  #kt_wizard .wizard-nav {
+    background: var(--client-surface);
+    border: 1px solid var(--client-border) !important;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(17, 28, 68, 0.03);
+    overflow: hidden;
+  }
+  #kt_wizard .wizard-steps {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 14px 18px !important;
+    gap: 0;
+  }
+  #kt_wizard .wizard-step {
+    display: flex !important;
+    align-items: center;
+    min-width: 0;
+    position: relative;
+    padding-right: 26px;
+  }
+  #kt_wizard .wizard-step:not(:last-child)::after {
+    content: '';
+    height: 1px;
+    background: #dce3ee;
+    position: absolute;
+    right: 8px;
+    width: 20px;
+    top: 18px;
+  }
+  #kt_wizard .wizard-label {display: grid !important; grid-template-columns: 36px minmax(0, 1fr); column-gap: 10px; width: 100%; align-items: center;}
+  #kt_wizard .wizard-icon {
+    grid-row: 1 / span 2;
+    width: 36px !important;
+    height: 36px !important;
+    display: grid !important;
+    place-items: center;
+    border-radius: 50%;
+    background: #f2f5f9;
+    border: 1px solid #dce3ee;
+    color: #344054 !important;
+  }
+  #kt_wizard .wizard-icon svg {display: none;}
+  #kt_wizard .wizard-icon::before {content: attr(data-step-number); font-size: 12px; font-weight: 600;}
+  #kt_wizard .wizard-step:nth-child(1) .wizard-icon::before {content: '1';}
+  #kt_wizard .wizard-step:nth-child(2) .wizard-icon::before {content: '2';}
+  #kt_wizard .wizard-step:nth-child(3) .wizard-icon::before {content: '3';}
+  #kt_wizard .wizard-step:nth-child(4) .wizard-icon::before {content: '4';}
+  #kt_wizard .wizard-step:nth-child(5) .wizard-icon::before {content: '5';}
+  #kt_wizard .wizard-title {font-size: 12px !important; font-weight: 600 !important; color: var(--client-ink) !important; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  #kt_wizard .wizard-title::after {display: block; margin-top: 2px; color: #7b8497; font-size: 10.5px; font-weight: 400;}
+  #kt_wizard .wizard-step:nth-child(1) .wizard-title::after {content: 'Basic details';}
+  #kt_wizard .wizard-step:nth-child(2) .wizard-title::after {content: 'About the client';}
+  #kt_wizard .wizard-step:nth-child(3) .wizard-title::after {content: 'Location & address';}
+  #kt_wizard .wizard-step:nth-child(4) .wizard-title::after {content: 'Key contacts';}
+  #kt_wizard .wizard-step:nth-child(5) .wizard-title::after {content: 'Confirm & save';}
+  #kt_wizard .wizard-arrow {display: none !important;}
+  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-icon,
+  #kt_wizard .wizard-step[data-wizard-state="done"] .wizard-icon {
+    background: var(--client-primary);
+    border-color: var(--client-primary);
+    color: #fff !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22);
+  }
+  #kt_wizard .wizard-step[data-wizard-state="current"] .wizard-title {color: var(--client-primary) !important;}
+  #kt_wizard, #kt_wizard > .row, #kt_wizard > .row > div, #kt_form {width: 100%; max-width: 100%; min-width: 0;}
+  #kt_wizard > .row {margin: 14px 0 0 !important; padding: 0 !important;}
+  #kt_wizard > .row > div {padding: 0 !important;}
+  #kt_form > [data-wizard-type="step-content"] {
+    background: var(--client-surface);
+    border: 1px solid var(--client-border);
+    border-radius: 10px;
+    padding: 18px !important;
+    min-height: 330px;
+    box-shadow: 0 2px 8px rgba(17, 28, 68, 0.03);
+  }
+  #kt_form > [data-wizard-type="step-content"] > h3 {font-size: 14px !important; margin-bottom: 16px !important; color: var(--client-ink) !important;}
+  #kt_form .form-control,
+  #kt_form .form-select,
+  #kt_form .input-group-text,
+  #kt_form .tagify {
+    min-height: 38px;
+    font-size: 12px !important;
+    border-color: #dce3ee !important;
+    background-color: #fff !important;
+  }
+  #kt_form .form-control:focus,
+  #kt_form .form-select:focus,
+  #kt_form .tagify:focus-within {border-color: var(--client-primary) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;}
+  #kt_form .form-text {font-size: 10.5px !important; color: #7b8497 !important; margin-top: 5px;}
+  .client-info-step {background: transparent !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; min-height: auto !important;}
+  .client-step-layout {display: grid; width: 100%; max-width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: stretch;}
+  .client-main-column {min-width: 0;}
+  .client-side-column {min-width: 0;}
+  .client-section-card {background: #fff; border: 1px solid var(--client-border); border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(17, 28, 68, 0.04);}
+  .client-main-column .client-section-card:last-child {margin-bottom: 0;}
+  .client-section-heading {font-size: 13px; font-weight: 600; color: var(--client-ink); margin: 0 0 3px;}
+  .client-section-copy {font-size: 10.5px; color: var(--client-muted); margin: 0 0 15px;}
+  .client-branding-grid {display: grid; width: 100%; min-width: 0; grid-template-columns: 190px 130px minmax(0, 1fr); gap: 16px; align-items: stretch;}
+  .client-logo-upload {border: 1px dashed #8db5ff; border-radius: 8px; background: #fbfdff; min-height: 152px; padding: 14px; display: flex; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: border-color .2s ease, background .2s ease;}
+  .client-logo-upload:hover {border-color: var(--client-primary); background: #f5f9ff;}
+  .client-upload-icon {display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 6px; border-radius: 50%; background: var(--client-primary-soft); color: var(--client-primary); font-size: 23px;}
+  .client-logo-upload .client-upload-title {font-size: 11.5px; color: var(--client-primary); font-weight: 600;}
+  .client-logo-upload .client-upload-copy {font-size: 10px; color: #7b8497; margin-top: 3px;}
+  .client-logo-preview {border: 1px solid var(--client-border); border-radius: 8px; overflow: hidden; min-height: 152px; display: flex; flex-direction: column; background: #fff;}
+  .client-preview-label {padding: 9px 11px 0; color: var(--client-ink); font-size: 10.5px; font-weight: 600;}
+  .client-logo-preview .image-input {margin: auto;}
+  .client-logo-preview .image-input-wrapper {width: 72px !important; height: 72px !important; border-radius: 10px; background-size: cover; background-position: center; background-color: #f1efff;}
+  .client-logo-preview .btn[data-kt-image-input-action="change"] {display: none;}
+  .client-preview-remove {border: 0; border-top: 1px solid var(--client-border); background: #fff; min-height: 32px; color: #ef3858; font-size: 10.5px; font-weight: 500;}
+  .client-brand-fields {display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: center;}
+  .client-details-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px;}
+  .client-field, .client-field .input-group, .client-field .form-control, .client-field .form-select {min-width: 0;}
+  .client-field .form-label {display: block;}
+  #kt_form .client-field .input-group {
+    display: flex;
+    flex-wrap: nowrap;
+    min-height: 38px;
+    border: 1px solid #d5deeb !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    overflow: hidden;
+  }
+  #kt_form .client-field .input-group:focus-within {border-color: var(--client-primary) !important; box-shadow: 0 0 0 3px rgba(23, 105, 245, 0.1);}
+  #kt_form .client-field .input-group-text {flex: 0 0 38px; width: 38px; justify-content: center; color: #53607e; border: 0 !important; background: #fff !important;}
+  #kt_form .client-field .input-group .form-control,
+  #kt_form .client-field .input-group .form-select {
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background-color: #fff !important;
+    color: var(--client-ink) !important;
+    box-shadow: none !important;
+    padding-left: 8px !important;
+  }
+  #kt_form .client-field .input-group .form-control::placeholder {color: #8993a8; opacity: 1;}
+  .client-tip {display: flex; align-items: center; gap: 8px; background: var(--client-primary-soft); color: #405174; border-radius: 7px; padding: 9px 11px; font-size: 10.5px; margin-top: 15px;}
+  .client-tip i {color: var(--client-primary); font-size: 14px;}
+  .client-auto-fetch {flex: 0 0 auto; max-width: 145px; border: 0 !important; border-left: 1px solid #b9d1ff !important; border-radius: 0 !important; color: var(--client-primary) !important; background: #f5f9ff !important; white-space: nowrap; font-size: 10.5px !important; font-weight: 600; padding: 0 10px !important;}
+  .client-assistant {min-width: 0; overflow: hidden; border: 1px solid #e0e4f5; border-radius: 10px; padding: 18px; min-height: 100%; background: linear-gradient(145deg, #fbfaff 0%, #f4f6ff 100%); box-shadow: 0 2px 8px rgba(17, 28, 68, 0.04);}
+  .client-assistant-head {display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 15px;}
+  .client-assistant-title {font-size: 13px; font-weight: 600; color: #4c38ed; margin: 0;}
+  .client-beta {padding: 3px 8px; border-radius: 12px; background: #e9e4ff; color: #6a47f5; font-size: 9.5px; font-weight: 600;}
+  .client-assistant-copy {font-size: 10.5px; line-height: 1.5; color: #53607e; margin: 5px 0 0;}
+  .client-assistant-spark {display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 10px; background: #fff; color: #6246ea; font-size: 23px; box-shadow: 0 8px 18px rgba(78, 56, 237, 0.12);}
+  .client-suggestions {border: 1px solid #e1e6ef; border-radius: 8px; background: #fff; overflow: hidden;}
+  .client-suggestions-title {padding: 12px 13px 10px; border-bottom: 1px solid #edf0f5; font-size: 11px; color: var(--client-ink); font-weight: 600;}
+  .client-suggestion-row {display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) 16px; align-items: center; gap: 6px; min-height: 38px; padding: 7px 13px; border-bottom: 1px solid #edf0f5; font-size: 10px;}
+  .client-suggestion-label {color: #53607e;}
+  .client-assistant-value {color: var(--client-ink); text-align: right; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
+  .client-suggestion-status {color: #10a66a; font-size: 12px;}
+  .client-suggestion-status.is-missing {color: #b7bfce;}
+  .client-assistant-action {width: calc(100% - 22px); margin: 12px 11px 0; min-height: 34px; border: 0; border-radius: 6px; background: linear-gradient(90deg, #3f46f5, #116cf5); color: #fff; font-size: 10.5px; font-weight: 600;}
+  .client-assistant-note {font-size: 9.5px; color: #7b8497; text-align: center; margin: 10px 8px 12px;}
+  #kt_form > .d-flex.border-top {background: #fff; border: 1px solid var(--client-border) !important; border-radius: 10px; margin-top: 14px !important; padding: 10px 12px !important; justify-content: space-between !important; gap: 8px;}
+  .client-action-left, .client-action-right {display: flex; align-items: center; gap: 8px;}
+  #kt_form > .d-flex.border-top .btn {min-height: 36px; padding: 8px 18px !important; font-size: 11.5px !important; text-transform: none !important; border-radius: 7px;}
+  #continueButton {min-width: 128px; background: linear-gradient(90deg, #315efb, #2557e7);}
+  .client-cancel-btn {border: 1px solid #cfd7e6; color: var(--client-ink); background: #fff;}
+  .client-profile-completion {display: flex; align-items: center; gap: 10px; margin-left: auto;}
+  .client-completion-copy {text-align: right;}
+  .client-completion-label {font-size: 10px; color: var(--client-ink); font-weight: 600;}
+  .client-completion-status {display: block; margin-top: 3px; font-size: 9.5px; color: #10a66a;}
+  .client-completion-ring {--completion: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--client-primary) calc(var(--completion) * 1%), #e5ebf4 0); position: relative;}
+  .client-completion-ring::before {content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--client-page);}
+  .client-completion-ring span {position: relative; color: var(--client-ink); font-size: 9.5px; font-weight: 600;}
+
+  @media (max-width: 1199px) {
+    #kt_wizard .wizard-title::after {display: none;}
+    #kt_wizard .wizard-step {padding-right: 16px;}
+    #kt_wizard .wizard-step:not(:last-child)::after {right: 4px; width: 10px;}
+    .client-step-layout {grid-template-columns: minmax(0, 1fr) 240px;}
+    .client-branding-grid {grid-template-columns: 170px 120px minmax(0, 1fr); gap: 12px;}
+  }
+  @media (max-width: 991px) {
+    .client-step-layout {grid-template-columns: 1fr;}
+    .client-assistant {min-height: auto;}
+  }
+  @media (max-width: 767px) {
+    #kt_wizard .wizard-steps {display: flex !important; overflow-x: auto; padding: 10px !important;}
+    #kt_wizard .wizard-step {min-width: 155px;}
+    .client-branding-grid, .client-brand-fields, .client-details-grid {grid-template-columns: 1fr;}
+    .client-logo-upload {min-height: 130px;}
+    .client-logo-preview {min-height: 140px;}
+    .client-profile-completion {display: none;}
+    #kt_form > .d-flex.border-top {align-items: stretch; flex-direction: column-reverse;}
+    .client-action-left, .client-action-right {justify-content: flex-end;}
+  }
+
+  /* Steps 2–5: shared layout helpers aligned to the Add Client redesign mockups. */
+  .client-desc-step, .client-address-step, .client-contact-step, .client-review-step {background: transparent !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; min-height: auto !important;}
+  .client-step-header {display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px;}
+  .client-step-header h3 {font-size: 14px !important; font-weight: 600 !important; color: var(--client-ink) !important; margin: 0 !important;}
+  .client-step-header p {font-size: 10.5px; color: var(--client-muted); margin: 4px 0 0;}
+  .client-helper-card {border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid transparent;}
+  .client-helper-card:last-child {margin-bottom: 0;}
+  .client-helper-card h4 {font-size: 12px; font-weight: 600; margin: 0 0 10px; display: flex; align-items: center; gap: 8px;}
+  .client-helper-card p, .client-helper-card li {font-size: 10.5px; color: #53607e; line-height: 1.55;}
+  .client-helper-card ul {margin: 0; padding-left: 0; list-style: none;}
+  .client-helper-card li {display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px;}
+  .client-helper-card li i {color: #10a66a; margin-top: 2px;}
+  .client-helper-blue {background: #eef5ff; border-color: #d7e6ff;}
+  .client-helper-purple {background: #f3f0ff; border-color: #e4dcff;}
+  .client-helper-green {background: #eefbf3; border-color: #d5f0de;}
+  .client-helper-sky {background: #eef7ff; border-color: #d3e8ff;}
+  .client-editor-wrap {border: 1px solid var(--client-border); border-radius: 8px; overflow: hidden; background: #fff;}
+  .client-editor-toolbar {display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #edf0f5; background: #fafbfd;}
+  .client-editor-toolbar span {font-size: 10.5px; color: var(--client-muted);}
+  .client-char-count {font-size: 10px; color: #7b8497;}
+  .client-services-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px;}
+  .client-service-chip {display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 10px; border: 1px solid #dce3ee; border-radius: 8px; background: #fff; font-size: 11px; color: var(--client-ink);}
+  .client-service-chip i.la-grip-vertical {color: #b8c0d0; cursor: grab;}
+  .client-add-service {width: 100%; min-height: 40px; border: 1px dashed #b9c7de; border-radius: 8px; background: #fbfdff; color: var(--client-primary); font-size: 11px; font-weight: 600;}
+  .client-preview-box {border: 1px solid #dce3ee; border-radius: 8px; padding: 12px; background: #fff;}
+  .client-preview-box .preview-title {font-size: 12px; font-weight: 600; color: var(--client-ink); margin-bottom: 6px;}
+  .client-preview-box .preview-body {font-size: 10.5px; color: #53607e; min-height: 48px;}
+  .client-preview-tags {display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;}
+  .client-preview-tag {padding: 4px 10px; border-radius: 14px; background: #edf4ff; color: #315efb; font-size: 9.5px; font-weight: 600;}
+  .client-info-banner {display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; background: var(--client-primary-soft); color: #405174; font-size: 10.5px; margin-bottom: 14px;}
+  .client-info-banner i {color: var(--client-primary); font-size: 15px; margin-top: 1px;}
+  .client-address-card {border: 1px solid var(--client-border); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: #fff;}
+  .client-address-card.is-additional {background: #fafbfd;}
+  .client-address-card-head {display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;}
+  .client-address-card-head h4 {font-size: 12px; font-weight: 600; margin: 0; color: var(--client-ink);}
+  .client-address-empty {text-align: center; padding: 28px 16px; color: #7b8497;}
+  .client-address-empty i {font-size: 36px; color: #c5cfe0; display: block; margin-bottom: 8px;}
+  .client-address-empty p {font-size: 10.5px; margin: 0;}
+  .client-add-address-btn {min-height: 34px; padding: 6px 14px; border-radius: 7px; border: 0; background: var(--client-primary); color: #fff; font-size: 10.5px; font-weight: 600;}
+  .client-remove-address-btn {min-height: 30px; padding: 4px 10px; border-radius: 6px; border: 1px solid #f5c2cb; background: #fff5f6; color: #e5484d; font-size: 10px;}
+  .client-contact-toolbar {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;}
+  .client-contact-table-wrap {border: 1px solid var(--client-border); border-radius: 10px; overflow: hidden; background: #fff;}
+  .client-contact-table {width: 100%; margin: 0; font-size: 11px;}
+  .client-contact-table thead th {background: #f7f9fc; color: #53607e; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; padding: 10px 12px; border-bottom: 1px solid var(--client-border); white-space: nowrap;}
+  .client-contact-table tbody td {padding: 12px; border-bottom: 1px solid #edf0f5; vertical-align: middle; color: var(--client-ink);}
+  .client-contact-table tbody tr:last-child td {border-bottom: 0;}
+  .client-contact-person {display: flex; align-items: center; gap: 10px;}
+  .client-contact-avatar {width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #edf4ff; color: var(--client-primary); font-size: 11px; font-weight: 700;}
+  .client-contact-name {font-weight: 600; font-size: 11.5px;}
+  .client-badge-primary {display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 10px; background: #e7f8ef; color: #0f9d58; font-size: 9px; font-weight: 600;}
+  .client-badge-secondary {display: inline-block; padding: 2px 8px; border-radius: 10px; background: #f2f4f8; color: #68738d; font-size: 9px; font-weight: 600;}
+  .client-table-actions {display: flex; gap: 6px;}
+  .client-table-actions button {width: 30px; height: 30px; border: 1px solid #dce3ee; border-radius: 7px; background: #fff; color: #53607e; display: grid; place-items: center; padding: 0;}
+  .client-table-actions button:hover {border-color: var(--client-primary); color: var(--client-primary);}
+  .client-table-actions button.is-delete:hover {border-color: #f5c2cb; color: #e5484d;}
+  .client-contact-fields {position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;}
+  .client-contact-drawer-backdrop {position: fixed; inset: 0; background: rgba(15, 25, 77, .35); z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .2s ease;}
+  .client-contact-drawer-backdrop.is-open {opacity: 1; visibility: visible;}
+  .client-contact-drawer {position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh; background: #fff; z-index: 1051; box-shadow: -8px 0 30px rgba(17, 28, 68, .12); transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column;}
+  .client-contact-drawer.is-open {transform: translateX(0);}
+  .client-drawer-head {padding: 18px 20px; border-bottom: 1px solid var(--client-border); display: flex; align-items: center; justify-content: space-between;}
+  .client-drawer-head h4 {margin: 0; font-size: 14px; font-weight: 600; color: var(--client-ink);}
+  .client-drawer-body {padding: 18px 20px; overflow-y: auto; flex: 1;}
+  .client-drawer-foot {padding: 14px 20px; border-top: 1px solid var(--client-border); display: flex; justify-content: flex-end; gap: 8px;}
+  .client-drawer-field {margin-bottom: 14px;}
+  .client-drawer-field .form-label {margin-bottom: 6px !important;}
+  .client-review-layout {display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: start;}
+  .client-review-card {background: #fff; border: 1px solid var(--client-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(17, 28, 68, .03);}
+  .client-review-card-head {display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;}
+  .client-review-card-head h4 {margin: 0; font-size: 13px; font-weight: 600; color: var(--client-ink);}
+  .client-review-edit {border: 0; background: transparent; color: var(--client-primary); font-size: 11px; font-weight: 600; padding: 0;}
+  .client-review-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px;}
+  .client-review-item label {display: block; font-size: 10px; color: #7b8497; margin-bottom: 3px;}
+  .client-review-item span, .client-review-item a {font-size: 11.5px; color: var(--client-ink); font-weight: 600;}
+  .client-review-logo {width: 52px; height: 52px; border-radius: 10px; background: #f1efff center/cover no-repeat; border: 1px solid var(--client-border); margin-bottom: 12px;}
+  .client-review-addresses {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;}
+  .client-review-address-box {border: 1px solid #edf0f5; border-radius: 8px; padding: 12px; background: #fafbfd;}
+  .client-review-address-box h5 {font-size: 11px; font-weight: 600; margin: 0 0 6px; color: var(--client-ink);}
+  .client-review-address-box p {font-size: 10.5px; color: #53607e; margin: 0; line-height: 1.5;}
+  .client-summary-card {display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--client-border); border-radius: 8px; background: #fff; margin-bottom: 10px;}
+  .client-summary-icon {width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: #edf4ff; color: var(--client-primary); flex: 0 0 32px;}
+  .client-summary-body {flex: 1; min-width: 0;}
+  .client-summary-body h5 {font-size: 11px; font-weight: 600; margin: 0 0 3px; color: var(--client-ink);}
+  .client-summary-body p {font-size: 10px; color: #7b8497; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+  .client-summary-edit {border: 0; background: transparent; color: #7b8497; padding: 0;}
+  .client-almost-done {margin-top: 14px; padding: 14px; border-radius: 10px; background: #eefbf3; border: 1px solid #d5f0de; text-align: center;}
+  .client-almost-done i {color: #10a66a; font-size: 22px; margin-bottom: 6px;}
+  .client-almost-done h5 {font-size: 12px; font-weight: 600; margin: 0 0 4px; color: var(--client-ink);}
+  .client-almost-done p {font-size: 10px; color: #53607e; margin: 0;}
+  .client-submit-wrap {text-align: right;}
+  .client-submit-note {font-size: 9.5px; color: #7b8497; margin-top: 6px;}
+  .client-submit-btn {min-width: 150px; background: linear-gradient(90deg, #315efb, #2557e7) !important; border: 0 !important; color: #fff !important; font-weight: 600;}
+  .client-submit-btn:hover, .client-submit-btn:focus, .client-submit-btn:active {background: linear-gradient(90deg, #2557e7, #1e4fd4) !important; color: #fff !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;}
+  .client-draft-btn {border: 1px solid #b9d1ff !important; color: var(--client-primary) !important; background: #f5f9ff !important;}
+  #kt_wizard .wizard-step[data-wizard-state="done"] .wizard-icon::before {content: '✓'; font-size: 14px;}
+  @media (max-width: 991px) {
+    .client-review-layout {grid-template-columns: 1fr;}
+    .client-review-grid, .client-review-addresses, .client-services-grid {grid-template-columns: 1fr;}
+  }
 
 </style>
 @endpush
@@ -78,8 +386,18 @@ body {overflow-x:hidden; width:100%;}
     <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
       <div class="d-flex flex-column">
         <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1"><a href="javascript:void(0);" class="text-gray-800 mb-1"><?php echo @$pagetitle; ?></a></h1>
+        <span class="text-dark-800 fw-bold" id="kt_subheader_total"><?php echo $page_event === 'EDIT' ? 'Update the client profile, contacts and business details.' : 'Create a new internal client profile to manage jobs, contacts and interactions.'; ?></span>
       </div>
-      <span class="h-20px border-gray-200 border-start mx-4"></span> <span class="text-dark-800 fw-bold" id="kt_subheader_total">Enter client details and submit</span> </div>
+    </div>
+    <div class="client-profile-completion" aria-live="polite">
+      <div class="client-completion-copy">
+        <span class="client-completion-label">Profile Completion</span>
+        <span class="client-completion-status"><i class="la la-check-circle" aria-hidden="true"></i> Details saved as you continue</span>
+      </div>
+      <div class="client-completion-ring" id="client_completion_ring" role="img" aria-label="Profile completion 0 percent">
+        <span id="client_completion_percent">0%</span>
+      </div>
+    </div>
   </div>
 </div>
 <!--end::Toolbar-->
@@ -90,7 +408,7 @@ body {overflow-x:hidden; width:100%;}
     <!--begin::Container-->
     <div class="container-fluid px-3">
       <!--Card-->
-      <div class="card card-custom">
+      <div class="card card-custom client-wizard-shell">
         <div class="card-body p-0">
           <!--begin::Wizard-->
           <div class="wizard wizard-1" id="kt_wizard" data-wizard-state="first" data-wizard-clickable="false">
@@ -225,7 +543,7 @@ body {overflow-x:hidden; width:100%;}
                     </svg>
                     </span>
                     <!--end::Svg Icon-->
-                    <h3 class="wizard-title">5. Review and Submit</h3>
+                    <h3 class="wizard-title">5. Review &amp; Submit</h3>
                   </div>
                 </div>
                 <!--end::Review and Submit-->
@@ -239,588 +557,596 @@ body {overflow-x:hidden; width:100%;}
                 <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
                   <!--begin::Client Information-->
-                  <div class="pb-5" data-wizard-type="step-content" data-wizard-state="current">
-                    <h3 class="mb-10 font-weight-bold text-dark">Enter the Client Information</h3>
-                    <div class="row">
-                      <div class="col-xl-12">
-                        <!--begin::Image-->
-                        <div class="form-group row">
-                          <label class="col-xl-3 col-lg-3 col-form-label fw-bolder">Change Image:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="image-input image-input-outline" id="logo">
-                              <div class="image-input-wrapper w-90px h-90px" style="background-image: url(<?php echo @$background_image; ?>);"></div>
-                                <!--end::Image preview wrapper-->
-                                <!--begin::Edit button-->
-                                <label class="btn btn-icon btn-circle btn-active-color-primary w-20px h-20px bg-white shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" data-bs-dismiss="click" title="Change avatar"> <i class="bi bi-pencil-fill fs-9"></i>
-                                  <input type="file" name="logo" id="logo" accept=".png, .jpg, .jpeg"  onchange="loadFile(event)"/>
+                  <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
+                    <!-- Purpose: group identity and company metadata into compact cards that scan well on laptop screens. -->
+                    <div class="client-step-layout">
+                      <div class="client-main-column">
+                        <section class="client-section-card" aria-labelledby="client-branding-title">
+                          <h3 class="client-section-heading" id="client-branding-title">Company Branding</h3>
+                          <p class="client-section-copy">Upload company logo for visual identification.</p>
+                          <div class="client-branding-grid">
+                            <label class="client-logo-upload" for="client_logo_input">
+                              <span class="client-upload-icon"><i class="la la-cloud-upload-alt" aria-hidden="true"></i></span>
+                              <span class="client-upload-title">Upload Company Logo</span>
+                              <span class="client-upload-copy">PNG or JPG (Max. 2MB)</span>
+                              <span class="client-upload-copy">Recommended: square image</span>
+                            </label>
+                            <div class="client-logo-preview">
+                              <span class="client-preview-label">Preview</span>
+                              <div class="image-input image-input-outline" id="client_logo_preview">
+                                <div class="image-input-wrapper" style="background-image: url(<?php echo @$background_image; ?>);"></div>
+                                <label data-kt-image-input-action="change" title="Change company logo">
+                                  <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg" onchange="loadFile(event)"/>
                                   <input type="hidden" name="avatar_remove" />
-                                  </label>
-                                <!--end::Edit button-->
-                                <!--begin::Cancel button-->
-                                <span class="btn btn-icon btn-circle btn-active-color-primary w-20px h-20px bg-white shadow" data-kt-image-input-action="cancel" data-bs-toggle="tooltip" data-bs-dismiss="click" title="" data-original-title="Cancel avatar"> <i class="bi bi-x fs-4"></i> </span>
-                               </div>
-                            <span class="form-text text-muted d-block">Allowed file types: png,jpg, jpeg.</span> </div>
-                        </div>
-                        <!--end::Image-->
-                        <!--begin::Website-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Website:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-globe"></i> </span> </div>
-                              <input type="text" class="form-control form-control-lg form-control-solid" name="website" id="website" value="<?php echo @$website; ?>" placeholder="Enter client website">
+                                </label>
+                              </div>
+                              <button type="button" class="client-preview-remove" data-kt-image-input-action="cancel"><i class="la la-trash" aria-hidden="true"></i> Remove</button>
                             </div>
-                            <span class="form-text text-muted">Please enter your Website</span> </div>
-                        </div>
-                        <!--end::Website-->
-                        <!--begin::Client-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Client Name:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-building"></i> </span> </div>
-                              <input type="text" class="form-control form-control-lg form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="*Enter client name">
+                            <div class="client-brand-fields">
+                              <div class="client-field fv-plugins-icon-container">
+                                <label class="form-label required" for="website">Website</label>
+                                <div class="input-group input-group-solid">
+                                  <span class="input-group-text"><i class="la la-globe"></i></span>
+                                  <input type="text" class="form-control form-control-solid" name="website" id="website" value="<?php echo @$website; ?>" placeholder="https://www.example.com">
+                                  <button type="button" class="btn client-auto-fetch" id="client_auto_fetch"><i class="la la-magic" aria-hidden="true"></i> Auto Fetch Data</button>
+                                </div>
+                                <span class="form-text text-muted">Enter website to auto-fetch available company details.</span>
+                              </div>
+                              <div class="client-field fv-plugins-icon-container">
+                                <label class="form-label required" for="client_id">Client Name</label>
+                                <div class="input-group input-group-solid">
+                                  <span class="input-group-text"><i class="la la-user"></i></span>
+                                  <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name">
+                                </div>
+                              </div>
                             </div>
-                            <span class="form-text text-muted">Please enter your Name</span> </div>
-                        </div>
-                        <!--end::Client-->
-                        <!--begin::Industry-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Industry:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-bar-chart"></i> </span> </div>
-                              <select class="form-select form-select-lg form-select-solid" name="industry" id="industry">
-                                <option value="" >Select Client Industry</option>
-                                <?php 
-                                print_r($department);
-                             
-										   foreach($department as $key=> $val){
-												$sel	=	'';
-												if($val->ind_id == $industry){
-													$sel	=	'selected="selected"';	
-												}
-												echo '<option value="'.@$val->ind_id.'"  '.@$sel.' >'.ucwords(@$val->ind_name).'</option>';	 
-										   }
-                                ?>
-                              </select>
+                          </div>
+                        </section>
+
+                        <section class="client-section-card" aria-labelledby="client-details-title">
+                          <h3 class="client-section-heading" id="client-details-title">Company Details</h3>
+                          <p class="client-section-copy">Enter essential details about the client organization.</p>
+                          <div class="client-details-grid">
+                            <div class="client-field fv-plugins-icon-container">
+                              <label class="form-label required" for="industry">Industry</label>
+                              <div class="input-group input-group-solid">
+                                <span class="input-group-text"><i class="la la-briefcase"></i></span>
+                                <select class="form-select form-select-solid" name="industry" id="industry">
+                                  <option value="">Select industry</option>
+                                  <?php foreach($department as $key => $val){
+                                    $sel = $val->ind_id == $industry ? 'selected="selected"' : '';
+                                    echo '<option value="'.@$val->ind_id.'" '.@$sel.'>'.ucwords(@$val->ind_name).'</option>';
+                                  } ?>
+                                </select>
+                              </div>
                             </div>
-                            <span class="form-text text-muted">Please enter your industry</span> </div>
-                        </div>
-                        <!--end::Industry-->
-                        <!--begin::Company Sizes-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Company Sizes:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-calculator"></i> </span> </div>
-                              <input type="number" class="form-control form-control-lg form-control-solid" name="company_sizes" id="company_sizes" value="<?php echo @$company_sizes; ?>" placeholder="Enter company sizes">
+                            <div class="client-field fv-plugins-icon-container">
+                              <label class="form-label required" for="company_sizes">Company Size</label>
+                              <div class="input-group input-group-solid">
+                                <span class="input-group-text"><i class="la la-users"></i></span>
+                                <input type="number" class="form-control form-control-solid" name="company_sizes" id="company_sizes" value="<?php echo @$company_sizes; ?>" placeholder="Enter employee count">
+                              </div>
                             </div>
-                            <span class="form-text text-muted">Please enter your company sizes</span> </div>
-                        </div>
-                        <!--end::Company Sizes-->
-                        <!--begin::Type-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Type:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-codepen"></i> </span> </div>
-                              <select class="form-select form-select-lg form-select-solid" name="company_type" id="company_type">
-                                <option value="" >Select Company Type</option>
-                                <?php 
-										foreach($companyType as $key=>$val){
-											$sel	=	'';
-											if($key == $company_type){
-												$sel	=	'selected="selected"';
-											}
-											echo '<option value="'.@$key.'"  '.@$sel.'>'.ucwords(@$val).'</option>';	 
-										}
-								?>
-                              </select>
+                            <div class="client-field fv-plugins-icon-container">
+                              <label class="form-label required" for="company_type">Type</label>
+                              <div class="input-group input-group-solid">
+                                <span class="input-group-text"><i class="la la-city"></i></span>
+                                <select class="form-select form-select-solid" name="company_type" id="company_type">
+                                  <option value="">Select company type</option>
+                                  <?php foreach($companyType as $key => $val){
+                                    $sel = $key == $company_type ? 'selected="selected"' : '';
+                                    echo '<option value="'.@$key.'" '.@$sel.'>'.ucwords(@$val).'</option>';
+                                  } ?>
+                                </select>
+                              </div>
                             </div>
-                            <span class="form-text text-muted">Please enter your type</span> </div>
-                        </div>
-                        <!--end::Type-->
-                        <!--begin::Founded-->
-                        <div class="form-group row fv-plugins-icon-container">
-                          <label class="col-xl-3 col-lg-3 col-form-label required fw-bolder">Founded:</label>
-                          <div class="col-lg-9 col-xl-9">
-                            <div class="input-group input-group-lg input-group-solid">
-                              <div class="input-group-prepend"> <span class="input-group-text"> <i class="la la-delicious"></i> </span> </div>
-                              <input type="number" class="form-control form-control-lg form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="*Enter the year in which the company was founded.">
+                            <div class="client-field fv-plugins-icon-container">
+                              <label class="form-label required" for="founded">Founded Year</label>
+                              <div class="input-group input-group-solid">
+                                <span class="input-group-text"><i class="la la-calendar"></i></span>
+                                <input type="number" class="form-control form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="Select year">
+                              </div>
                             </div>
-                            <span class="form-text text-muted">Please enter your founded year</span> </div>
-                        </div>
+                          </div>
+                          <div class="client-tip"><i class="la la-info-circle" aria-hidden="true"></i><span><strong>Tip:</strong> You can update these details anytime from the client profile.</span></div>
+                        </section>
                       </div>
+
+                      <aside class="client-assistant" aria-labelledby="client-assistant-title">
+                        <div class="client-assistant-head">
+                          <div>
+                            <div class="d-flex align-items-center gap-2">
+                              <h3 class="client-assistant-title" id="client-assistant-title">AI Assistant</h3>
+                              <span class="client-beta">Beta</span>
+                            </div>
+                            <p class="client-assistant-copy">We can auto-fetch available information from the company website.</p>
+                          </div>
+                          <span class="client-assistant-spark"><i class="la la-magic" aria-hidden="true"></i></span>
+                        </div>
+                        <div class="client-suggestions">
+                          <div class="client-suggestions-title">Profile Suggestions</div>
+                          <div class="client-suggestion-row">
+                            <span class="client-suggestion-label">Industry</span>
+                            <span class="client-assistant-value" data-client-field="industry">Not set</span>
+                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
+                          </div>
+                          <div class="client-suggestion-row">
+                            <span class="client-suggestion-label">Company Size</span>
+                            <span class="client-assistant-value" data-client-field="company_sizes">Not set</span>
+                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
+                          </div>
+                          <div class="client-suggestion-row">
+                            <span class="client-suggestion-label">Company Type</span>
+                            <span class="client-assistant-value" data-client-field="company_type">Not set</span>
+                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
+                          </div>
+                          <div class="client-suggestion-row">
+                            <span class="client-suggestion-label">Founded Year</span>
+                            <span class="client-assistant-value" data-client-field="founded">Not set</span>
+                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
+                          </div>
+                          <button type="button" class="client-assistant-action" id="client_review_details"><i class="la la-magic" aria-hidden="true"></i> Apply Website Data</button>
+                          <p class="client-assistant-note">Not accurate? You can edit every field manually.</p>
+                        </div>
+                      </aside>
                     </div>
                   </div>
                   <!--end::Client Information-->
                   <!--begin::Client Description-->
-                  <div class="pb-5" data-wizard-type="step-content">
-                    <h3 class="mb-10 font-weight-bold text-dark">Enter the Client Description</h3>
-                    <div class="form-group row fv-row mb-10">
-                      <!--begin::Description-->
-                      <div class="col-lg-12">
-                        <label class="form-label required fw-bolder">Description:</label>
-                        <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target"><?php echo @$description; ?></textarea>
-                       
+                  <div class="pb-5 client-desc-step" data-wizard-type="step-content">
+                    <div class="client-step-layout">
+                      <div class="client-main-column">
+                        <section class="client-section-card">
+                          <div class="client-step-header">
+                            <div>
+                              <h3>About the Company</h3>
+                              <p>Describe the client's business, mission and background.</p>
+                            </div>
+                          </div>
+                          <div class="client-editor-wrap">
+                            <div class="client-editor-toolbar">
+                              <span>Company Description</span>
+                              <span class="client-char-count"><span id="client_desc_count">0</span>/2000</span>
+                            </div>
+                            <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target"><?php echo @$description; ?></textarea>
+                          </div>
+                        </section>
+
+                        <section class="client-section-card">
+                          <div class="client-step-header">
+                            <div>
+                              <h3>Services Offerings</h3>
+                              <p>Add the services this client provides or is known for.</p>
+                            </div>
+                          </div>
+                          <div id="client_services_preview" class="client-services-grid"></div>
+                          <input class="form-control form-control-solid" name="tags" id="tags" placeholder="Type a service and press Enter" value="<?php echo @$tags; ?>">
+                          <button type="button" class="client-add-service mt-3" id="client_focus_tags"><i class="la la-plus" aria-hidden="true"></i> Add Another Service</button>
+                        </section>
                       </div>
-                      <!--end::Description-->
-                      <!--begin::Tags-->
-                      <div class="col-lg-12 mt-7">
-                        <label class="form-label required fw-bolder">Enter the services:</label>
-                        <input class="form-control form-control-solid" name="tags" id="tags" placeholder="Enter tags" value="<?php echo @$tags; ?>" >
-                        <span class="form-text text-muted">Please select your tags</span> </div>
-                      <!--end::Tags-->
+
+                      <aside class="client-side-column">
+                        <div class="client-helper-card client-helper-blue">
+                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Writing Tips</h4>
+                          <ul>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include company mission, vision and background.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Mention key products, services or market focus.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Keep the tone professional and concise.</span></li>
+                          </ul>
+                        </div>
+                        <div class="client-helper-card client-helper-purple">
+                          <h4><i class="la la-cube" aria-hidden="true"></i> Why add Services?</h4>
+                          <p>Services help match this client with relevant job requirements and improve search visibility across the platform.</p>
+                        </div>
+                        <div class="client-helper-card client-helper-green">
+                          <h4><i class="la la-eye" aria-hidden="true"></i> Live Preview</h4>
+                          <div class="client-preview-box">
+                            <div class="preview-title" id="client_preview_company"><?php echo @$name ?: 'Company Name'; ?></div>
+                            <div class="preview-body" id="client_preview_description">Your company description will appear here.</div>
+                            <div class="client-preview-tags" id="client_preview_tags"></div>
+                          </div>
+                        </div>
+                      </aside>
                     </div>
                   </div>
                   <!--end::Client Description-->
                   <!--begin::Address Details-->
-                  <div class="pb-5" data-wizard-type="step-content" >
-                    <h3 class="mb-10 font-weight-bold text-dark">Enter the Address Details</h3>
-                        <?php 
-
-                          $countryListing	= $stateListing =	'';
-                          foreach($countryArr as $cont){
-                            $sel		=	'';
-                            if($cont['id'] == 101){
-                              $sel	=	'selected="selected"';
-                            }
-                            $countryListing	.= '<option value="'.$cont['id'].'"  '.@$sel.' >'.$cont['name'].'</option>';	
-                          }										
-                          
-                          foreach($statelist as $state){ 
-                            $sel	=	'';
-                            $stateListing .= '<option value="'.$state['id'].'"  '.@$sel.' >'.$state['name'].'</option>';	
-                          }
-
-                        ?>
-                    <?php 
-
-$addressId		=	0;
-$addressIdCount		=	1;
-if($page_event == 'EDIT')
-	{
-		$display_city_id	=	'';
-		$stateListing 		=	'';
-		$cityListing 		=	'';
-    $countryName = '';
-										
-		$clhtml				=	'<div class="row client-address-container">';
-		foreach($client_location_arr as $clVal) 
-		{
-					
-				$countryListing	= $stateListing =	'';
-				foreach($countryArr as $cont){
-						$sel	=	'';
-						if($cont['id'] == $clVal->country_id){
-							$sel	=	'selected="selected"';
-              $countryName = $cont['name'];
-						}
-						$countryListing	.= '<option value="'.$cont['id'].'"  '.@$sel.' >'.$cont['name'].'</option>';	
-				}			
-        // dd($clVal->country_id);
-
-				$statelist	=	GeneralMethod::statelist($clVal->country_id);
-
-        // dd($statelist);
-
-        
-				foreach($statelist as $state){
-						$sel	=	'';
-						if($state['id'] == $clVal->state){
-							$sel	=	'selected="selected"';
-						}
-						$stateListing .= '<option value="'.$state['id'].'"  '.@$sel.' >'.$state['name'].'</option>';	
-				}
-				
-				$display_city	=	$display_city_id = 'style="display:none"';
-
-
-        $statelist 					=	DB::table('state_list')
-												->select('state_list.id', 'state_list.state as name', DB::raw("101 as country_id"))
-												->where('state_list.country_id', $clVal->country_id)
-												->orderBy('state_list.state')
-												->get()->toArray();
-				$indianStatelist       = json_decode(json_encode($statelist), true);
-
-											
-											
-				// if($clVal->country_id == 101)
-				// {
-					$display_city_id	=	'';
-					$stateListing 		=	'';
-					$cityListing 		=	'';
-          $stateName = '';
-          $cityName = '';
-					foreach($indianStatelist as $sRow){
-						$sel	=	'';
-						if($sRow['id'] == $clVal->state){
-							$sel	=	'selected="selected"';
-              $stateName = $sRow['name'];
-						}
-						$stateListing .= '<option value="'.$sRow['id'].'"  '.@$sel.' >'.$sRow['name'].'</option>';	
-					}
-					$Rawcitylist 		=	DB::table('city_list')->select('city_list.city_id as id', 'city_list.city as name')->where('city_list.state_id', $clVal->state)->orderBy('city_list.city')->get();												
-					foreach($Rawcitylist as $cRow){
-						$sel	=	'';
-						if($cRow->id == $clVal->city_id){
-							$sel	=	'selected="selected"';
-              $cityName = $cRow->name;
-						}
-							$cityListing .= '<option value="'.$cRow->id.'"  '.@$sel.' >'.$cRow->name.'</option>';	
-						}
-					// }else{
-					// 	$display_city	= '';
-					// }
-          $return =  $cityName . ' | ' . $stateName . ' | ' . $countryName;
-
-          // dd($return);
-																							
-$clhtml			.='
-  <div class="row client-address-container-child" id="clientAddr_'.$addressId.'">                                                
-	 <div class="form-group">
-		<label class="form-label required fw-bolder">Address- '.$addressIdCount.':</label>
-		<input type="text" class="form-control form-control-lg form-control-solid" name="address[]" placeholder="Enter address" value="'.@$clVal->address.'" id="address_'.@$addressId.'">
-		<span class="form-text text-muted">Please enter your Address</span>
-	 </div>
-  
-	 <div class="col-xl-12">
-		<div class="form-group fv-plugins-icon-container">
-		   <label class="form-label required fw-bolder">Select City:</label>
-		   <input type="hidden" name="hid_country_id[]" id="hid_country_id_'.@$addressId.'" class="gethiddencountry" value="'.$clVal->country_id.'" />
-		  <input class="form-control form-control-solid" value="'.$return.'" id="kt_tagify_work_location_'.@$addressId.'" name="kt_tagify_work_location[]" placeholder="Enter your Location..."/>
-		   <span class="form-text text-muted">Please select your city</span>
-		   <div class="fv-plugins-message-container"></div>
-		</div>
-	 </div>
-                                                                                                           
-  </div>';
-
-$addressId++;	
-$addressIdCount++;
-                                 	}
-                                 	
-                                 	$clhtml			.=	'</div>'; 
-                                 	
-                                 	echo $clhtml;
-                                 	$addressId--;
-                                 	
-}else{					 
-?>
-                    <div class="row client-address-container">
-                      <div class="row client-address-container-child" id="clientAddr_<?php echo @$addressId; ?>">
-                        <div class="form-group">
-                          <label class="form-label required fw-bolder">Address: 1</label>
-                          <input type="text" class="form-control form-control-lg form-control-solid" name="address[]" placeholder="Enter address" value="" id="address_<?php echo @$addressId; ?>">
-                          <span class="form-text text-muted">Please enter your Address</span> </div>
-                        <div class="col-xl-12">
-                          <div class="form-group fv-plugins-icon-container">
-                            <label class="form-label required fw-bolder">Select City:</label>
-                            <input class="form-control form-control-solid" value="" id="kt_tagify_work_location_<?php echo @$addressId; ?>" name="kt_tagify_work_location[]" placeholder="Enter your Location..."/>
-                            <span class="form-text text-muted">Please select your city</span>
-                            <div class="fv-plugins-message-container"></div>
+                  <div class="pb-5 client-address-step" data-wizard-type="step-content">
+                    <div class="client-step-layout">
+                      <div class="client-main-column">
+                        <div class="client-step-header">
+                          <div>
+                            <h3>Address Details</h3>
+                            <p>Enter the city and full address of this client.</p>
                           </div>
                         </div>
-                       
+                        <div class="client-info-banner"><i class="la la-info-circle" aria-hidden="true"></i><span>The first address you enter will be considered as the headquarters.</span></div>
+                        <?php
+                          $countryListing = $stateListing = '';
+                          foreach ($countryArr as $cont) {
+                            $sel = ($cont['id'] == 101) ? 'selected="selected"' : '';
+                            $countryListing .= '<option value="'.$cont['id'].'" '.$sel.'>'.$cont['name'].'</option>';
+                          }
+                          foreach ($statelist as $state) {
+                            $stateListing .= '<option value="'.$state['id'].'">'.$state['name'].'</option>';
+                          }
+
+                          $addressId = 0;
+                          $addressIdCount = 1;
+                          if ($page_event == 'EDIT') {
+                            $clhtml = '<div class="row client-address-container">';
+                            foreach ($client_location_arr as $clVal) {
+                              $countryListing = $stateListing = '';
+                              $countryName = '';
+                              foreach ($countryArr as $cont) {
+                                $sel = ($cont['id'] == $clVal->country_id) ? 'selected="selected"' : '';
+                                if ($cont['id'] == $clVal->country_id) {
+                                  $countryName = $cont['name'];
+                                }
+                                $countryListing .= '<option value="'.$cont['id'].'" '.$sel.'>'.$cont['name'].'</option>';
+                              }
+                              $statelist = GeneralMethod::statelist($clVal->country_id);
+                              foreach ($statelist as $state) {
+                                $sel = ($state['id'] == $clVal->state) ? 'selected="selected"' : '';
+                                $stateListing .= '<option value="'.$state['id'].'" '.$sel.'>'.$state['name'].'</option>';
+                              }
+                              $statelist = DB::table('state_list')
+                                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+                                ->where('state_list.country_id', $clVal->country_id)
+                                ->orderBy('state_list.state')
+                                ->get()->toArray();
+                              $indianStatelist = json_decode(json_encode($statelist), true);
+                              $stateListing = '';
+                              $cityListing = '';
+                              $stateName = '';
+                              $cityName = '';
+                              foreach ($indianStatelist as $sRow) {
+                                $sel = ($sRow['id'] == $clVal->state) ? 'selected="selected"' : '';
+                                if ($sRow['id'] == $clVal->state) {
+                                  $stateName = $sRow['name'];
+                                }
+                                $stateListing .= '<option value="'.$sRow['id'].'" '.$sel.'>'.$sRow['name'].'</option>';
+                              }
+                              $Rawcitylist = DB::table('city_list')->select('city_list.city_id as id', 'city_list.city as name')->where('city_list.state_id', $clVal->state)->orderBy('city_list.city')->get();
+                              foreach ($Rawcitylist as $cRow) {
+                                $sel = ($cRow->id == $clVal->city_id) ? 'selected="selected"' : '';
+                                if ($cRow->id == $clVal->city_id) {
+                                  $cityName = $cRow->name;
+                                }
+                                $cityListing .= '<option value="'.$cRow->id.'" '.$sel.'>'.$cRow->name.'</option>';
+                              }
+                              $return = $cityName.' | '.$stateName.' | '.$countryName;
+                              $cardClass = ($addressIdCount === 1) ? '' : ' is-additional';
+                              $cardTitle = ($addressIdCount === 1) ? 'Headquarters (Primary)' : 'Additional Address ('.($addressIdCount - 1).')';
+                              $clhtml .= '
+                                <div class="client-address-card'.$cardClass.' client-address-container-child" id="clientAddr_'.$addressId.'">
+                                  <div class="client-address-card-head">
+                                    <h4>'.$cardTitle.'</h4>
+                                    '.($addressIdCount > 1 ? '<button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_'.$addressId.'"><i class="la la-trash"></i> Remove</button>' : '').'
+                                  </div>
+                                  <div class="client-field fv-plugins-icon-container mb-3">
+                                    <label class="form-label required" for="kt_tagify_work_location_'.$addressId.'">City</label>
+                                    <div class="input-group input-group-solid">
+                                      <span class="input-group-text"><i class="la la-map-marker"></i></span>
+                                      <input type="hidden" name="hid_country_id[]" id="hid_country_id_'.$addressId.'" class="gethiddencountry" value="'.$clVal->country_id.'" />
+                                      <input class="form-control form-control-solid" value="'.$return.'" id="kt_tagify_work_location_'.$addressId.'" name="kt_tagify_work_location[]" placeholder="Start typing to search for a city"/>
+                                    </div>
+                                    <span class="form-text text-muted">Start typing to search for a city.</span>
+                                  </div>
+                                  <div class="client-field fv-plugins-icon-container">
+                                    <label class="form-label required" for="address_'.$addressId.'">Full Address</label>
+                                    <textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="4" maxlength="500" placeholder="Building, street, area, landmark, pincode, etc." id="address_'.$addressId.'">'.@$clVal->address.'</textarea>
+                                    <div class="d-flex justify-content-between mt-1">
+                                      <span class="form-text text-muted">Provide the complete and accurate address for better identification.</span>
+                                      <span class="client-char-count"><span class="client-address-count">0</span>/500</span>
+                                    </div>
+                                  </div>
+                                </div>';
+                              $addressId++;
+                              $addressIdCount++;
+                            }
+                            $clhtml .= '</div>';
+                            echo $clhtml;
+                            $addressId--;
+                          } else {
+                        ?>
+                        <div class="row client-address-container">
+                          <div class="client-address-card client-address-container-child" id="clientAddr_<?php echo @$addressId; ?>">
+                            <div class="client-address-card-head">
+                              <h4>Headquarters (Primary)</h4>
+                            </div>
+                            <div class="client-field fv-plugins-icon-container mb-3">
+                              <label class="form-label required" for="kt_tagify_work_location_<?php echo @$addressId; ?>">City</label>
+                              <div class="input-group input-group-solid">
+                                <span class="input-group-text"><i class="la la-map-marker"></i></span>
+                                <input class="form-control form-control-solid" value="" id="kt_tagify_work_location_<?php echo @$addressId; ?>" name="kt_tagify_work_location[]" placeholder="Start typing to search for a city"/>
+                              </div>
+                              <span class="form-text text-muted">Start typing to search for a city.</span>
+                            </div>
+                            <div class="client-field fv-plugins-icon-container">
+                              <label class="form-label required" for="address_<?php echo @$addressId; ?>">Full Address</label>
+                              <textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="4" maxlength="500" placeholder="Building, street, area, landmark, pincode, etc." id="address_<?php echo @$addressId; ?>"></textarea>
+                              <div class="d-flex justify-content-between mt-1">
+                                <span class="form-text text-muted">Provide the complete and accurate address for better identification.</span>
+                                <span class="client-char-count"><span class="client-address-count">0</span>/500</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <?php } ?>
+                        <section class="client-section-card mt-3">
+                          <div class="client-address-card-head">
+                            <div>
+                              <h4>Additional Address <span class="text-muted fw-normal">(Optional)</span></h4>
+                            </div>
+                            <button type="button" class="client-add-address-btn add_address"><i class="la la-plus" aria-hidden="true"></i> Add Another Address</button>
+                          </div>
+                          <div id="addressLoader"></div>
+                          <div class="client-address-empty" id="client_additional_empty">
+                            <i class="la la-building" aria-hidden="true"></i>
+                            <p>No additional address added yet.</p>
+                          </div>
+                        </section>
+                        <input type="hidden" name="addressId" id="addressId" value="<?php echo @$addressId; ?>" />
                       </div>
+                      <aside class="client-side-column">
+                        <div class="client-helper-card client-helper-sky">
+                          <h4><i class="la la-map-marked-alt" aria-hidden="true"></i> About Headquarters</h4>
+                          <p>The first address is treated as the client headquarters and appears prominently on the client profile and job listings.</p>
+                        </div>
+                        <div class="client-helper-card client-helper-green">
+                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Tips for Accurate Address</h4>
+                          <ul>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Search and select the correct city.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include landmark and pincode in the full address.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Add branch offices as additional addresses if needed.</span></li>
+                          </ul>
+                        </div>
+                      </aside>
                     </div>
-                    <?php }?>
-                    <div id="addressLoader"></div>
-                    <input type="hidden" name="addressId" id="addressId" value="<?php echo @$addressId; ?>"  />
-                    <!--begin::Add More Button-->
-                    <div class="d-flex justify-content-center py-5 my-5">
-                      <button type="button" class="btn btn-light-dark font-weight-bolder text-uppercase me-5  add_address d-flex">
-                      <!--begin::Svg Icon-->
-                      <span class="svg-icon svg-icon svg-icon me-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                          <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                          <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                        </g>
-                      </svg>
-                      </span> 
-                     <span>  Add More Location </span> 
-                    </button>
-                      <button type="button" class="btn btn-light-danger font-weight-bolder text-uppercase remove_address d-flex">
-                      <!-- <i class="fa fa-plus"></i> -->
-                      <!--begin::Svg Icon-->
-                      <span class="svg-icon svg-icon svg-icon-2x">
-                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                          <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                        </g>
-                      </svg>
-                      </span>
-                      <!--end::Svg Icon-->
-                     <span>  Remove Location </span> 
-                    </button>
-                    </div>
-                    <!--begin::Add More Button-->
                   </div>
                   <!--end::Address Details-->
                   <!--begin::Contact Person-->
-                  <div class="pb-5" data-wizard-type="step-content">
-                    <h3 class="mb-10 font-weight-bold text-dark">Enter the Contact Person Details</h3>
-                    <div class="form-group">
-                      <div class="col-sm-12 px-0">
-                        <div class="row client-cperson-row">
-<?php 
+                  <div class="pb-5 client-contact-step" data-wizard-type="step-content">
+                    <div class="client-step-layout">
+                      <div class="client-main-column">
+                        <div class="client-contact-toolbar">
+                          <div>
+                            <h3 class="client-section-heading mb-1">Contact Person</h3>
+                            <p class="client-section-copy mb-0">Add key contacts for this client organization.</p>
+                          </div>
+                          <button type="button" class="client-add-address-btn" id="client_open_contact_drawer"><i class="la la-plus" aria-hidden="true"></i> Add Contact Person</button>
+                        </div>
+                        <div class="client-contact-table-wrap mb-3">
+                          <table class="client-contact-table">
+                            <thead>
+                              <tr>
+                                <th>Contact Person</th>
+                                <th>Designation</th>
+                                <th>Email</th>
+                                <th>Phone Number</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody id="client_contact_table_body">
+                              <tr id="client_contact_empty_row">
+                                <td colspan="6" class="text-center text-muted py-6">No contact person added yet. Click "Add Contact Person" to begin.</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="client-info-banner mb-0"><i class="la la-info-circle" aria-hidden="true"></i><span>The first contact person is set as the primary contact by default.</span></div>
+
+                        <div class="client-contact-fields">
+                          <div class="row client-cperson-row">
+<?php
 $contactPersonId = 0;
 $contactPersonIdCount = 1;
-if($page_event == 'EDIT')
-{
-    if(count($client_contact_arr) > 0){
-	foreach($client_contact_arr as $ccArr)
-	{
-				 echo '<div class="row client-cperson-container" style="position: relative;">	
-				  <span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'.$contactPersonIdCount.'</span> </b></span>
-				 <div class="col-xl-3">
-					<div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-					   <input type="text" name="cp_name[]" id="cp_name_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded me-5" value="'.$ccArr->contact_person_name.'" placeholder="Enter person name">
-					   <span class="form-text text-muted">Please enter contact person name</span>
-					</div>
-				 </div>   
-
-				 <div class="col-xl-3">
-					<div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-					   <input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded me-5" value="'.$ccArr->contact_person_email.'" placeholder="Enter email">
-					   <span class="form-text text-muted">Please enter contact email</span>
-					</div>
-				 </div> 
-
-				 <div class="col-xl-3">
-					<div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-					   <input type="number" name="cp_number[]" id="cp_number_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded me-5" value="'.$ccArr->contact_person_number.'" placeholder="Enter contact number">
-             <input type="hidden" value="'.($ccArr->calling_code ? $ccArr->calling_code : $country_code).'" class="calling_code" name="calling_code[]" id="calling_code_'.$contactPersonId.'">
-					   <span class="form-text text-muted">Please enter contact number</span>
-					</div>
-				 </div> 
-
-				 <div class="col-xl-3">
-					<div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-					   <input type="text" name="cp_desigination[]" id="cp_desigination_'.$contactPersonId.'" class="form-control form-control-lg form-control-solid rounded" value="'.$ccArr->contact_person_designation.'" placeholder="Enter desigination" style="width: 95%;">
-					   <span class="form-text text-muted">Please enter desigination</span>
-					</div>
-          <i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i>
-				 </div>
-			  </div>';	
-				$contactPersonId++;	
-        $contactPersonIdCount++;
-			}
-    }else{ ?>
-    <div class="row client-cperson-container">
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter person name">
-                              <span class="form-text text-muted">Please enter contact person name</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter email">
-                              <span class="form-text text-muted">Please enter contact email</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter contact number">
-                              <input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId;?>">
-                              <span class="form-text text-muted">Please enter contact number</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded" placeholder="Enter desigination">
-                              <span class="form-text text-muted">Please enter desigination</span> </div>
-                          </div>
-                        </div>
-        
-   <?php }
-			$contactPersonId--;
-			
-}else {
+if ($page_event == 'EDIT') {
+    if (count($client_contact_arr) > 0) {
+        foreach ($client_contact_arr as $ccArr) {
+            echo '<div class="row client-cperson-container" data-contact-index="'.$contactPersonId.'">
+              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_name.'" placeholder="Enter person name"></div></div>
+              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_email.'" placeholder="Enter email"></div></div>
+              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_number.'" placeholder="Enter contact number"><input type="hidden" value="'.($ccArr->calling_code ? $ccArr->calling_code : $country_code).'" class="calling_code" name="calling_code[]" id="calling_code_'.$contactPersonId.'"></div></div>
+              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_'.$contactPersonId.'" class="form-control form-control-solid cp_desigination" value="'.$ccArr->contact_person_designation.'" placeholder="Enter desigination"></div></div>
+            </div>';
+            $contactPersonId++;
+            $contactPersonIdCount++;
+        }
+    } else {
 ?>
-                        <div class="row client-cperson-container">
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter person name">
-                              <span class="form-text text-muted">Please enter contact person name</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter email">
-                              <span class="form-text text-muted">Please enter contact email</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded me-5" placeholder="Enter contact number">
-                              <input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId;?>">
-                              <span class="form-text text-muted">Please enter contact number</span> </div>
-                          </div>
-                          <div class="col-xl-3">
-                            <div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove">
-                              <input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId;?>" class="form-control form-control-lg form-control-solid rounded" placeholder="Enter desigination">
-                              <span class="form-text text-muted">Please enter desigination</span> </div>
+                            <div class="row client-cperson-container" data-contact-index="<?php echo $contactPersonId; ?>">
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter person name"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter email"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId; ?>"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId; ?>" class="form-control form-control-solid cp_desigination" placeholder="Enter desigination"></div></div>
+                            </div>
+<?php
+    }
+    $contactPersonId--;
+} else {
+?>
+                            <div class="row client-cperson-container" data-contact-index="<?php echo $contactPersonId; ?>">
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter person name"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter email"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId; ?>"></div></div>
+                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId; ?>" class="form-control form-control-solid cp_desigination" placeholder="Enter desigination"></div></div>
+                            </div>
+<?php } ?>
                           </div>
                         </div>
-                        <?php }	?>
-                  </div>
-                        <input type="hidden" name="contactPersonId" id="contactPersonId" value="<?php echo @$contactPersonId; ?>"  />
-                        <div class="d-flex justify-content-center py-5 my-5">
-                          <button type="button" class="btn btn-light-success font-weight-bolder text-uppercase me-5 add_cperson d-flex">
-                          <!--begin::Svg Icon-->
-                          <span class="svg-icon svg-icon svg-icon me-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                              <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                              <rect fill="#000000" opacity="0.3" transform="translate(12.000000, 12.000000) rotate(-270.000000) translate(-12.000000, -12.000000) " x="4" y="11" width="16" height="2" rx="1"></rect>
-                            </g>
-                          </svg>
-                          </span> 
-                          <span> Add more </span> </button>
-                          <button type="button" class="btn btn-light-danger font-weight-bolder text-uppercase remove_cperson d-flex">
-                          <!-- <i class="fa fa-plus"></i> -->
-                          <!--begin::Svg Icon-->
-                          <span class="svg-icon svg-icon svg-icon-2x">
-                          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                              <rect fill="#000000" x="4" y="11" width="16" height="2" rx="1"></rect>
-                            </g>
-                          </svg>
-                          </span>
-                          <!--end::Svg Icon-->
-                         <span>  Remove </span> </button>
-                        </div>
-                        <!--begin::Add & Remove Button-->
+                        <input type="hidden" name="contactPersonId" id="contactPersonId" value="<?php echo @$contactPersonId; ?>" />
+                        <button type="button" class="add_cperson d-none" aria-hidden="true"></button>
+                        <button type="button" class="remove_cperson d-none" aria-hidden="true"></button>
                       </div>
+                      <aside class="client-side-column">
+                        <div class="client-helper-card client-helper-purple">
+                          <h4><i class="la la-users" aria-hidden="true"></i> Why add Contact Person?</h4>
+                          <ul>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Quick communication for job requirements.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Track interactions and follow-ups easily.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Assign primary and secondary contacts.</span></li>
+                          </ul>
+                        </div>
+                        <div class="client-helper-card client-helper-green">
+                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Best Practices</h4>
+                          <ul>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Ensure email and phone number are valid.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Add HR or hiring manager as primary contact.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include designation for context.</span></li>
+                          </ul>
+                        </div>
+                      </aside>
+                    </div>
+                  </div>
+                  <div class="client-contact-drawer-backdrop" id="client_contact_drawer_backdrop"></div>
+                  <div class="client-contact-drawer" id="client_contact_drawer" aria-hidden="true">
+                    <div class="client-drawer-head">
+                      <h4 id="client_contact_drawer_title">Add Contact Person</h4>
+                      <button type="button" class="btn btn-sm btn-light" id="client_close_contact_drawer"><i class="la la-times"></i></button>
+                    </div>
+                    <div class="client-drawer-body">
+                      <input type="hidden" id="client_drawer_edit_index" value="">
+                      <div class="client-drawer-field">
+                        <label class="form-label required" for="client_drawer_name">Contact Name</label>
+                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-user"></i></span><input type="text" class="form-control form-control-solid" id="client_drawer_name" placeholder="Enter contact name"></div>
+                      </div>
+                      <div class="client-drawer-field">
+                        <label class="form-label required" for="client_drawer_designation">Designation</label>
+                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-id-badge"></i></span><input type="text" class="form-control form-control-solid" id="client_drawer_designation" placeholder="Enter designation"></div>
+                      </div>
+                      <div class="client-drawer-field">
+                        <label class="form-label required" for="client_drawer_email">Email Address</label>
+                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-envelope"></i></span><input type="email" class="form-control form-control-solid" id="client_drawer_email" placeholder="name@company.com"></div>
+                      </div>
+                      <div class="client-drawer-field">
+                        <label class="form-label required" for="client_drawer_phone">Phone Number</label>
+                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-phone"></i></span><input type="number" class="form-control form-control-solid" id="client_drawer_phone" placeholder="Enter phone number"></div>
+                      </div>
+                    </div>
+                    <div class="client-drawer-foot">
+                      <button type="button" class="btn client-cancel-btn" id="client_cancel_contact_drawer">Cancel</button>
+                      <button type="button" class="btn btn-primary" id="client_save_contact_drawer">Save Contact</button>
                     </div>
                   </div>
                   <!--end::Contact Person-->
                   <!--begin::Review and Submit-->
-                  <div class="pb-5" data-wizard-type="step-content">
-                    <h3 class="mb-10 font-weight-bold text-dark">Review your Details and Submit</h3>
-                    <h6 class="font-weight-bold mb-3">Client Information:</h6>
-                    <!--begin::Client Information content-->
-                    <div class="row pt-7">
-                      <!--begin::Left Section-->
-                      <div class="col-lg-6">
-                        <!--begin::Ciient-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Client Name</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <span class="fw-bold text-gray-800 fs-6 span_name">&nbsp;</span> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Ciient-->
-                        <!--begin::Website-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Website</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <a href="javascript:void(0);" class="fw-bold text-gray-800 text-hover-primary fs-6 span_website">&nbsp;</a> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Website-->
-                        <!--begin::Industry-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Industry</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <span class="fw-bold text-gray-800 fs-6 span_industry">&nbsp;</span> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Industry-->
+                  <div class="pb-5 client-review-step" data-wizard-type="step-content">
+                    <div class="client-step-header mb-3">
+                      <div>
+                        <h3>Review &amp; Submit</h3>
+                        <p>Review all the information before submitting. You can edit any section if needed.</p>
                       </div>
-                      <!--end::Left Section-->
-                      <!--begin::Right Section-->
-                      <div class="col-lg-6">
-                        <!--begin::Company Sizes-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Company Sizes</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <span class="fw-bold fs-6 text-gray-800 fs-6 span_company_sizes">&nbsp;</span> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Company Sizes-->
-                        <!--begin::Company Type-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Company Type</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <span class="fw-bold fs-6 text-gray-800 fs-6 span_company_type">&nbsp;</span> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Company Type-->
-                        <!--begin::Founded-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-4 fw-bold text-muted fs-6">Founded</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-8"> <span class="fw-bold fs-6 text-gray-800 fs-6 span_founded">&nbsp;</span> </div>
-                          <!--end::Description-->
-                        </div>
-                        <!--end::Founded-->
+                    </div>
+                    <div class="client-review-layout">
+                      <div class="client-review-main">
+                        <section class="client-review-card">
+                          <div class="client-review-card-head">
+                            <h4>Client Information</h4>
+                            <button type="button" class="client-review-edit" data-client-goto-step="1"><i class="la la-pencil"></i> Edit</button>
+                          </div>
+                          <div class="client-review-logo" id="client_review_logo" style="background-image: url(<?php echo @$background_image; ?>);"></div>
+                          <div class="client-review-grid">
+                            <div class="client-review-item"><label>Client Name</label><span class="span_name">&nbsp;</span></div>
+                            <div class="client-review-item"><label>Industry</label><span class="span_industry">&nbsp;</span></div>
+                            <div class="client-review-item"><label>Website</label><a href="javascript:void(0);" class="span_website">&nbsp;</a></div>
+                            <div class="client-review-item"><label>Company Size</label><span class="span_company_sizes">&nbsp;</span></div>
+                            <div class="client-review-item"><label>Company Type</label><span class="span_company_type">&nbsp;</span></div>
+                            <div class="client-review-item"><label>Founded Year</label><span class="span_founded">&nbsp;</span></div>
+                          </div>
+                        </section>
+
+                        <section class="client-review-card">
+                          <div class="client-review-card-head">
+                            <h4>Client Description</h4>
+                            <button type="button" class="client-review-edit" data-client-goto-step="2"><i class="la la-pencil"></i> Edit</button>
+                          </div>
+                          <div class="client-review-item mb-3"><label>About the Client</label></div>
+                          <p class="span_kt_docs_tinymce_hidden text-justify mb-3" style="font-size:11px;color:#53607e;">&nbsp;</p>
+                          <div class="client-review-item"><label>Services</label><span class="span_tags">&nbsp;</span></div>
+                        </section>
+
+                        <section class="client-review-card">
+                          <div class="client-review-card-head">
+                            <h4>Address Details</h4>
+                            <button type="button" class="client-review-edit" data-client-goto-step="3"><i class="la la-pencil"></i> Edit</button>
+                          </div>
+                          <div class="client-review-addresses divAddressDetail">&nbsp;</div>
+                        </section>
+
+                        <section class="client-review-card">
+                          <div class="client-review-card-head">
+                            <h4>Contact Persons</h4>
+                            <button type="button" class="client-review-edit" data-client-goto-step="4"><i class="la la-pencil"></i> Edit</button>
+                          </div>
+                          <div class="client-contact-table-wrap">
+                            <table class="client-contact-table">
+                              <thead>
+                                <tr>
+                                  <th>Contact Person</th>
+                                  <th>Designation</th>
+                                  <th>Email</th>
+                                  <th>Phone Number</th>
+                                  <th>Type</th>
+                                </tr>
+                              </thead>
+                              <tbody class="div-contact-person">&nbsp;</tbody>
+                            </table>
+                          </div>
+                        </section>
                       </div>
-                      <!--end::Right Section-->
-                    </div>
-                    <!--end::Client Information content-->
-                    <div class="separator separator-dashed mt-5 mb-10"></div>
-                    <h6 class="font-weight-bold mb-3">Client Description:</h6>
-                    <!--begin::Client Description content-->
-                    <div class="row pt-7">
-                      <!--Client Description-->
-                      <p class="text-justify span_kt_docs_tinymce_hidden">&nbsp; </p>
-                    </div>
-                    <!--end::Client Description content-->
-                    <!--begin::Tags content-->
-                    <div class="row pt-7">
-                      <!--begin::Tags Section-->
-                      <div class="col-lg-12">
-                        <!--begin::Tags-->
-                        <div class="row mb-7">
-                          <!--begin::Title-->
-                          <label class="col-lg-2 fw-bold text-muted fs-6">Tags</label>
-                          <!--end::Title-->
-                          <!--begin::Description-->
-                          <div class="col-lg-10"> <span class="fw-bold text-gray-800 fs-6 span_tags">&nbsp;</span> </div>
-                          <!--end::Description-->
+
+                      <aside class="client-side-column">
+                        <div class="client-summary-card">
+                          <span class="client-summary-icon"><i class="la la-building"></i></span>
+                          <div class="client-summary-body"><h5>Client Information</h5><p class="client_summary_name">—</p></div>
+                          <button type="button" class="client-summary-edit" data-client-goto-step="1"><i class="la la-pencil"></i></button>
                         </div>
-                        <!--end::Tags-->
-                      </div>
-                      <!--end::Tags Section-->
+                        <div class="client-summary-card">
+                          <span class="client-summary-icon"><i class="la la-file-alt"></i></span>
+                          <div class="client-summary-body"><h5>Description</h5><p class="client_summary_desc">—</p></div>
+                          <button type="button" class="client-summary-edit" data-client-goto-step="2"><i class="la la-pencil"></i></button>
+                        </div>
+                        <div class="client-summary-card">
+                          <span class="client-summary-icon"><i class="la la-map-marker"></i></span>
+                          <div class="client-summary-body"><h5>Address</h5><p class="client_summary_address">—</p></div>
+                          <button type="button" class="client-summary-edit" data-client-goto-step="3"><i class="la la-pencil"></i></button>
+                        </div>
+                        <div class="client-summary-card">
+                          <span class="client-summary-icon"><i class="la la-user"></i></span>
+                          <div class="client-summary-body"><h5>Contacts</h5><p class="client_summary_contacts">—</p></div>
+                          <button type="button" class="client-summary-edit" data-client-goto-step="4"><i class="la la-pencil"></i></button>
+                        </div>
+                        <div class="client-almost-done">
+                          <i class="la la-check-circle" aria-hidden="true"></i>
+                          <h5>You're Almost Done!</h5>
+                          <p>Review the details above and submit to create the client profile.</p>
+                        </div>
+                      </aside>
                     </div>
-                    <!--end::Tags content-->
-                    <div class="separator separator-dashed mt-5 mb-10"></div>
-                    <!--begin::Address Details content-->
-                    <h6 class="font-weight-bold mb-3">Address Details:</h6>
-                    <div class="row pt-7 divAddressDetail">&nbsp;</div>
-                    <!--end::Address Details content-->
-                    <div class="separator separator-dashed mt-5 mb-10"></div>
-                    <!--begin::Contact Person content-->
-                    <h6 class="font-weight-bold mb-3">Contact Person:</h6>
-                    <div class="row pt-7 div-contact-person">&nbsp;</div>
                   </div>
                   <!--end::Review and Submit-->
                   <!--begin::Wizard Actions-->
-                  <div class="d-flex justify-content-center border-top mt-5 pt-10">
-                    <div class="mr-2">
-                      <button type="button" class="btn btn-light-primary font-weight-bolder text-uppercase px-9 py-4" data-wizard-type="action-prev">Back</button>
+                  <div class="d-flex border-top mt-5 pt-10">
+                    <div class="client-action-left">
+                      <a href="{{ route('service_company.clients.index') }}" class="btn client-cancel-btn"><i class="la la-times"></i> Cancel</a>
+                      <button type="button" class="btn client-draft-btn" id="client_save_draft"><i class="la la-bookmark"></i> Save as Draft</button>
                     </div>
-                    <div>
-<?php 
-if($page_event == 'EDIT'){ 
-	echo '<button type="button" id="submitBtn" class="btn btn-success font-weight-bolder text-uppercase px-9 py-4 updatefrm" data-wizard-type="action-submit1" style="display:none">Update</button>';
-}else{
-	echo '<button type="button" id="submitBtn" class="btn btn-success font-weight-bolder text-uppercase px-9 py-4 submitfrm" data-wizard-type="action-submit1" style="display:none">Submit</button>';	
+                    <div class="client-action-right ms-auto">
+                      <button type="button" class="btn client-cancel-btn" data-wizard-type="action-prev"><i class="la la-arrow-left"></i> Back</button>
+                      <div class="client-submit-wrap">
+<?php
+if ($page_event == 'EDIT') {
+    echo '<button type="button" id="submitBtn" class="btn client-submit-btn updatefrm" data-wizard-type="action-submit1" style="display:none"><i class="la la-paper-plane"></i> Update Client</button>';
+} else {
+    echo '<button type="button" id="submitBtn" class="btn client-submit-btn submitfrm" data-wizard-type="action-submit1" style="display:none"><i class="la la-paper-plane"></i> Submit Client</button>';
 }
 ?>
-                      <button type="button" id="continueButton" class="btn btn-primary font-weight-bolder text-uppercase px-9 py-4" data-wizard-type="action-next">Continue</button>
+                        <button type="button" id="continueButton" class="btn btn-primary" data-wizard-type="action-next">Continue <i class="la la-arrow-right"></i></button>
+                        <p class="client-submit-note">After submission, you can't edit basic details.</p>
+                      </div>
                     </div>
                   </div>
                   <!--end::Wizard Actions-->
@@ -980,7 +1306,8 @@ if($page_event == 'EDIT'){
    			
    			$('#contactPersonId').val(contactPersonId);  			
    			
-   			$('.client-cperson-row').last().append('<div class="row client-cperson-container" style="position: relative;"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
+   			$('.client-cperson-row').last().append('<div class="row client-cperson-container" data-contact-index="'+contactPersonId+'"><span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"><b>Contact Person Info: <span class="count_class">'+countAddressFinal+'</span> </b></span><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="text" name="cp_name[]" id="cp_name_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter person name"><span class="form-text text-muted">Please enter contact person name</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="email" name="cp_email[]" id="cp_email_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter email"><span class="form-text text-muted">Please enter contact email</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group"><input type="number" name="cp_number[]" id="cp_number_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded w-100" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_'+contactPersonId+'"><span class="form-text text-muted">Please enter contact number</span></div></div></div><div class="col-xl-3"><div class="form-group mb-0 mt-7 client-cperson-container-child" id="remove"><div class="input-group" style="width: 95%;"><input type="text" name="cp_desigination[]" id="cp_desigination_'+contactPersonId+'" class="form-control form-control-lg form-control-solid rounded cp_desigination" placeholder="Enter desigination"><span class="form-text text-muted">Please enter contact desigination</span></div><i class="fa fa-close" style="position: absolute;font-size: 33px;color:red;top: 26px;right: 0;cursor: pointer;"></i></div></div></div></div>');
+          if (window.clientWizardUi) window.clientWizardUi.renderContactTable();
           // Reinitialize intl-tel-input for the newly added cp_number[] field
          var newContactNumberField = $(`input[name='cp_number[]']`).last()[0];
          var initialCountry = $(`input[name='calling_code[]']`).last().val();
@@ -1007,7 +1334,7 @@ if($page_event == 'EDIT'){
    // The DOM element you wish to replace with Tagify
    var input = document.querySelector('input[name=tags]'); 
    // initialize Tagify on the above input node reference
-   new Tagify(input)
+   window.clientTagsTagify = new Tagify(input)
    
    const cities = @json($cities);
    var countAddrees  = "{{ $countAddrees }}";
@@ -1222,6 +1549,10 @@ for (let i = 0; i < countAddrees; i++) {
 									success		: function (response) {																		
 																		$('#addressLoader').hide();
 																		$('.client-address-container').last().append(response.data);
+                                    if (window.clientWizardUi) {
+                                      window.clientWizardUi.syncAdditionalAddressEmpty();
+                                      window.clientWizardUi.bindAddressCounters(document);
+                                    }
 																  }		
 						});		
    		});
@@ -1296,104 +1627,67 @@ for (let i = 0; i < countAddrees; i++) {
    			$('.span_founded').html('');
    			$('.span_kt_docs_tinymce_hidden').html('');
    			$('.span_tags').html('');
-   			$('.span_tags').html('');
    			$('.divAddressDetail').html('');
    			$('.div-contact-person').html('');
    				
    			var name			=	$('#client_id').val();
    			$('.span_name').html(name);			
    			var website			=	$('#website').val();
-   			$('.span_website').html(website);			
+   			$('.span_website').html(website).attr('href', website);			
    			var industry		=	$('#industry option:selected').text(); 
    			$('.span_industry').html(industry);			
    			var company_sizes	=	$('#company_sizes').val(); 
-   			$('.span_company_sizes').html(company_sizes+' + Employees');			
+   			$('.span_company_sizes').html(company_sizes ? company_sizes + ' employees' : '');			
    			var company_type	=	$('#company_type option:selected').text(); 
    			$('.span_company_type').html(company_type);			
    			var founded			=	$('#founded').val(); 
    			$('.span_founded').html(founded);
    			
-   			var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();//CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
+   			var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();
 			$('.span_kt_docs_tinymce_hidden').html(kt_docs_tinymce_hidden);
-			//alert('hello'+kt_docs_tinymce_hidden); 
 			
-   			var tags					=	$('#tags').val(); 	
-   			var json_tags 				= $.parseJSON(tags);
+   			var tags = $('#tags').val(); 	
+   			var json_tags = tags ? $.parseJSON(tags) : [];
+   			var tagLabels = [];
    			for(let len=0; len<json_tags.length; len++){
-   					if(len==0){
-   						$('.span_tags').append(json_tags[len].value);	
-   					}else{
-   						$('.span_tags').append('  , '+json_tags[len].value);	
-   					}
-   					
+   				tagLabels.push(json_tags[len].value);
    			}
-   			//Client Address			
-   			var addressId				=	$('#addressId').val();
+   			$('.span_tags').html(tagLabels.join(', '));
+
+   			var addressId = $('#addressId').val();
+   			var addressBlocks = [];
    			for(let cntAdd=0; cntAdd<=addressId; cntAdd++)
    			{
-   					var address			=	$('#address_'+cntAdd).val();
-   					var country			=	'';//$('#country_'+cntAdd+' option:selected').text();      //$('#country_'+cntAdd).val();
-   					var state			=	'';//$('#state_'+cntAdd+' option:selected').text();      // $('#state_'+cntAdd).val();
-   					var city			=	'';//$('#city_id_'+cntAdd+' option:selected').text();
-   					var postcode		=	'';//$('#postcode_'+cntAdd).val();
-           
-                  if(country == 'India')
-                  {	
-                    // city			=	$('#city_id_'+cntAdd+' option:selected').text();      
-                  }else{
-                    // city			=	$('#city_'+cntAdd).val();
-                  }
-               var cextractedValueity		=	$('#kt_tagify_work_location_'+cntAdd).val();
-              //  alert(cextractedValueity);
-              // Removing the specified parts of the string
-            
-
-              var city = '';
-              if (typeof address === 'undefined') {
-                
-              }else{
+   				var address = $('#address_'+cntAdd).val();
+   				var cextractedValueity = $('#kt_tagify_work_location_'+cntAdd).val();
+   				if (typeof address === 'undefined') continue;
             var city = cextractedValueity
-                    .replace('[{"value":"', '')  // Remove the starting part
-                    .replace('"}]', '');         // Remove the ending part
-
-                    $('.divAddressDetail').append('<div class="row mb-4"><div class="col-lg-2"><label class=" fw-bold text-muted fs-6">Address</label></div><div class="col-lg-10"> <span class="fw-bold text-gray-800 fs-6">'+address+'</span> </div></div><div class="row"><div class="col-lg-2"><label class="fw-bold text-muted fs-6 w-100">City</label></div><div class="col-lg-10"><span class="fw-bold text-gray-800 fs-6 w-100">'+city+'</span> </div></div>');		
-            }
-   					
+                    .replace('[{"value":"', '')
+                    .replace('"}]', '');
+            var title = cntAdd === 0 ? 'Headquarters (Primary)' : 'Additional Address ('+cntAdd+')';
+            addressBlocks.push('<div class="client-review-address-box"><h5>'+title+'</h5><p><strong>'+city+'</strong><br>'+address+'</p></div>');
    			}
+   			$('.divAddressDetail').html(addressBlocks.join(''));
    			
-   			//Contact Person 
-   			var contactPersonCounter	=	$('#contactPersonId').val();
-        // alert(contactPersonCounter);
+   			var contactPersonCounter = $('#contactPersonId').val();
+   			var contactRows = [];
    			for(let cnt=0; cnt<=contactPersonCounter; cnt++)
    			{
-   				var cp_name			=	$('#cp_name_'+cnt).val();
-   				var cp_email		=	$('#cp_email_'+cnt).val();
-   				var cp_number		=	$('#cp_number_'+cnt).val();
-   				var cp_desigination	=	$('#cp_desigination_'+cnt).val();
-           var calling_code = $('#calling_code_' + cnt).val();
-   				
-            if(typeof cp_name != 'undefined')
-            {
-                $('.div-contact-person').append('<div class="row"><div class="col-xl-3"><div class="form-group fv-plugins-icon-container"><label class="fw-bold text-muted fs-6 w-100">Person Name</label><span class="fw-bold text-gray-800 fs-6 w-100">'+cp_name+'</span> </div></div><div class="col-xl-3"><div class="form-group fv-plugins-icon-container"><label class="fw-bold text-muted fs-6 w-100">Phone Number</label><span class="fw-bold text-gray-800 fs-6 w-100"><div style="position: relative;display: flex;"><div class="iti__flag-container" id="phoneDisplay_'+cnt+'" style="display: flex;position: relative;"> <!-- Flag and dial code will be appended here --> </div><div style="margin-left: 6px;">'+cp_number+'</div></div></span> </div></div><div class="col-xl-3"><div class="form-group fv-plugins-icon-container"><label class="fw-bold text-muted fs-6 w-100">Email</label><span class="fw-bold text-gray-800 fs-6 w-100">'+cp_email+'</span> </div></div><div class="col-xl-3"><div class="form-group fv-plugins-icon-container"><label class="fw-bold text-muted fs-6 w-100">Designation</label><span class="fw-bold text-gray-800 fs-6 w-100">'+cp_desigination+'</span> </div></div></div>')
+   				var cp_name = $('#cp_name_'+cnt).val();
+   				var cp_email = $('#cp_email_'+cnt).val();
+   				var cp_number = $('#cp_number_'+cnt).val();
+   				var cp_desigination = $('#cp_desigination_'+cnt).val();
+            if(typeof cp_name == 'undefined' || !cp_name) continue;
+            var typeBadge = contactRows.length === 0 ? '<span class="client-badge-primary">Primary</span>' : '<span class="client-badge-secondary">Secondary</span>';
+            var primaryTag = contactRows.length === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
+            contactRows.push('<tr><td><div class="client-contact-person"><span class="client-contact-avatar">'+cp_name.trim().split(/\s+/).slice(0,2).map(function(p){return p.charAt(0).toUpperCase();}).join('')+'</span><span class="client-contact-name">'+cp_name+primaryTag+'</span></div></td><td>'+(cp_desigination || '—')+'</td><td>'+(cp_email || '—')+'</td><td>'+(cp_number || '—')+'</td><td>'+typeBadge+'</td></tr>');
+   			}
+   			$('.div-contact-person').html(contactRows.join(''));
 
-
-                const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
-                if (flagContainer) {
-                    const flagDiv = document.createElement("div");
-                    flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
-
-                    const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
-                    const dialCodeSpan = document.createElement("span");
-                    dialCodeSpan.textContent = dialCode;
-
-                    // Append the flag and dial code
-                    flagContainer.appendChild(flagDiv);
-                    flagContainer.appendChild(dialCodeSpan);
-                }
-
-            }
-				    //alert(cp_name); 	
-   			}   			
+   			if (window.clientWizardUi && typeof window.clientWizardUi.populateReviewSummaries === 'function') {
+          window.clientWizardUi.populateReviewSummaries();
+        }
+   			$('#continueButton').hide();
    			$('.submitfrm').show();
    			$('.updatefrm').show();
    		}
@@ -1401,6 +1695,7 @@ for (let i = 0; i < countAddrees; i++) {
    		{
    			$('.submitfrm').hide();
    			$('.updatefrm').hide();
+   			$('#continueButton').show();
    		}
    		
    	});
@@ -1411,11 +1706,10 @@ for (let i = 0; i < countAddrees; i++) {
 
    $(document).ready(function () {
    
-       $('#kt_form').validate({ 
+       $('#kt_form').validate({
            						rules: {
                								name: {
-                   										required: true,
-                   										email: true
+                   										required: true
                										},
                								website: {
    														required: true,
@@ -1582,30 +1876,9 @@ for (let i = 0; i < countAddrees; i++) {
   // });
 
 
-  // ✅ FormValidation.js Init
-const formValidationInstance = FormValidation.formValidation(
-    document.getElementById('kt_form'),
-    {
-        fields: {
-            website: {
-                validators: {
-                    notEmpty: {
-                        message: 'Website is required'
-                    },
-                    uri: {
-                        message: 'Enter a valid URL (http(s)://...)'
-                    }
-                }
-            }
-        },
-        plugins: {
-            trigger: new FormValidation.plugins.Trigger(),
-            bootstrap5: new FormValidation.plugins.Bootstrap5(),
-            submitButton: new FormValidation.plugins.SubmitButton(),
-            defaultSubmit: new FormValidation.plugins.DefaultSubmit() // Remove if using only AJAX
-        }
-    }
-);
+  // Placeholder — website validation is handled by the wizard's FormValidation instance in add-clients.js.
+  // Kept as null so clientDomainRegisterChk can safely call revalidateField without crashing.
+  var formValidationInstance = null;
 
 
   $(document).on('change', '#website', function() { 
@@ -1654,12 +1927,16 @@ const formValidationInstance = FormValidation.formValidation(
                                       Swal.fire("Warning", response.message, "warning");
                                       $('.updatefrm').prop("disabled", true);
                                       $('#website').val('');
-                                    if (typeof formValidationInstance !== 'undefined') {
+                                    if (formValidationInstance && typeof formValidationInstance.revalidateField === 'function') {
                                         formValidationInstance.revalidateField('website');
                                     }
                                   }else{
                                     $("#client_id").val(response.clientName);
                                       $('.image-input-wrapper').css('background-image', 'url(' + response.logo_url + ')');
+                                      if (window.clientWizardUi) {
+                                        window.clientWizardUi.updateAssistantPanel();
+                                        window.clientWizardUi.updateCompletion();
+                                      }
                                   }
                             }
             });             		
@@ -1672,6 +1949,335 @@ const formValidationInstance = FormValidation.formValidation(
 
 </script>
 <script src="{{ asset('demo/v7/js/add-clients.js') }}<?php echo TM_VERSION; ?>"></script>
+<script>
+/**
+ * Purpose: client create wizard UX layer — completion meter, assistant panel, contact drawer,
+ * review summaries, and draft persistence without changing the underlying submit contract.
+ */
+(function ($) {
+  var draftKey = 'jero_client_create_draft';
+
+  function initials(name) {
+    return (name || '').trim().split(/\s+/).slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join('') || 'NA';
+  }
+
+  function parseTagifyValue(raw) {
+    if (!raw) return [];
+    try {
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(function (t) { return t.value; }) : [];
+    } catch (e) {
+      return raw ? [raw] : [];
+    }
+  }
+
+  function fieldLabel($el, fallback) {
+    if (!$el.length || !$el.val()) return fallback || 'Not set';
+    if ($el.is('select')) return $el.find('option:selected').text() || fallback || 'Not set';
+    return $el.val();
+  }
+
+  function updateAssistantPanel() {
+    var map = {
+      industry: fieldLabel($('#industry'), 'Not set'),
+      company_sizes: $('#company_sizes').val() ? $('#company_sizes').val() + ' employees' : 'Not set',
+      company_type: fieldLabel($('#company_type'), 'Not set'),
+      founded: $('#founded').val() || 'Not set'
+    };
+    $.each(map, function (key, value) {
+      var $value = $('.client-assistant-value[data-client-field="' + key + '"]');
+      var hasValue = value !== 'Not set';
+      $value.text(value);
+      $value.closest('.client-suggestion-row').find('.client-suggestion-status')
+        .toggleClass('is-missing', !hasValue);
+    });
+  }
+
+  function updateCompletion() {
+    var checks = [
+      $('#client_id').val(),
+      $('#website').val(),
+      $('#industry').val(),
+      $('#company_sizes').val(),
+      $('#company_type').val(),
+      $('#founded').val(),
+      (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) ? tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim() : '',
+      $('#tags').val(),
+      $('textarea[name="address[]"]').first().val(),
+      $('input[name="kt_tagify_work_location[]"]').first().val(),
+      $('input[name="cp_name[]"]').first().val()
+    ];
+    var filled = checks.filter(function (v) { return !!v; }).length;
+    var percent = Math.round((filled / checks.length) * 100);
+    $('#client_completion_percent').text(percent + '%');
+    $('#client_completion_ring').css('--completion', percent).attr('aria-label', 'Profile completion ' + percent + ' percent');
+  }
+
+  function renderServicePreview(values) {
+    var $grid = $('#client_services_preview');
+    var $tags = $('#client_preview_tags');
+    $grid.empty();
+    $tags.empty();
+    values.forEach(function (value) {
+      $grid.append('<div class="client-service-chip"><i class="la la-grip-vertical"></i><i class="la la-cube"></i><span>' + value + '</span></div>');
+      $tags.append('<span class="client-preview-tag">' + value + '</span>');
+    });
+  }
+
+  function bindAddressCounters(scope) {
+    $(scope || document).find('.client-address-textarea').each(function () {
+      var $textarea = $(this);
+      var $counter = $textarea.closest('.client-field, .client-address-card').find('.client-address-count');
+      var sync = function () {
+        $counter.text(($textarea.val() || '').length);
+      };
+      $textarea.off('input.clientAddressCount').on('input.clientAddressCount', sync);
+      sync();
+    });
+  }
+
+  function syncAdditionalAddressEmpty() {
+    var extraCount = $('.client-address-container .client-address-container-child.is-additional, .client-address-container .client-address-card.is-additional').length;
+    $('#client_additional_empty').toggle(extraCount === 0);
+  }
+
+  function getContactRowsData() {
+    var rows = [];
+    $('.client-cperson-container').each(function (idx) {
+      var index = $(this).data('contact-index');
+      if (typeof index === 'undefined') index = idx;
+      var name = $('#cp_name_' + index).val() || '';
+      if (!name.trim()) return;
+      rows.push({
+        index: index,
+        name: name.trim(),
+        email: ($('#cp_email_' + index).val() || '').trim(),
+        phone: ($('#cp_number_' + index).val() || '').trim(),
+        designation: ($('#cp_desigination_' + index).val() || '').trim(),
+        callingCode: ($('#calling_code_' + index).val() || 'in')
+      });
+    });
+    return rows;
+  }
+
+  function renderContactTable() {
+    var rows = getContactRowsData();
+    var $tbody = $('#client_contact_table_body');
+    $tbody.empty();
+    if (!rows.length) {
+      $tbody.append('<tr id="client_contact_empty_row"><td colspan="6" class="text-center text-muted py-6">No contact person added yet. Click "Add Contact Person" to begin.</td></tr>');
+      return;
+    }
+    rows.forEach(function (row, i) {
+      var typeBadge = i === 0
+        ? '<span class="client-badge-primary">Primary</span>'
+        : '<span class="client-badge-secondary">Secondary</span>';
+      var primaryTag = i === 0 ? '<span class="client-badge-primary">Primary</span>' : '';
+      $tbody.append(
+        '<tr data-contact-index="' + row.index + '">' +
+          '<td><div class="client-contact-person"><span class="client-contact-avatar">' + initials(row.name) + '</span><span class="client-contact-name">' + row.name + primaryTag + '</span></div></td>' +
+          '<td>' + (row.designation || '—') + '</td>' +
+          '<td>' + (row.email || '—') + '</td>' +
+          '<td>' + (row.phone || '—') + '</td>' +
+          '<td>' + typeBadge + '</td>' +
+          '<td><div class="client-table-actions">' +
+            '<button type="button" class="client-edit-contact" data-index="' + row.index + '" title="Edit"><i class="la la-pencil"></i></button>' +
+            '<button type="button" class="client-delete-contact is-delete" data-index="' + row.index + '" title="Delete"><i class="la la-trash"></i></button>' +
+          '</div></td>' +
+        '</tr>'
+      );
+    });
+  }
+
+  function openContactDrawer(index) {
+    $('#client_drawer_edit_index').val(index === null ? '' : index);
+    $('#client_contact_drawer_title').text(index === null ? 'Add Contact Person' : 'Edit Contact Person');
+    if (index === null) {
+      $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').val('');
+    } else {
+      $('#client_drawer_name').val($('#cp_name_' + index).val());
+      $('#client_drawer_designation').val($('#cp_desigination_' + index).val());
+      $('#client_drawer_email').val($('#cp_email_' + index).val());
+      $('#client_drawer_phone').val($('#cp_number_' + index).val());
+    }
+    $('#client_contact_drawer, #client_contact_drawer_backdrop').addClass('is-open').attr('aria-hidden', 'false');
+  }
+
+  function closeContactDrawer() {
+    $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
+  }
+
+  function saveContactDrawer() {
+    var name = $('#client_drawer_name').val().trim();
+    var designation = $('#client_drawer_designation').val().trim();
+    var email = $('#client_drawer_email').val().trim();
+    var phone = $('#client_drawer_phone').val().trim();
+    if (!name || !designation || !email || !phone) {
+      Swal.fire({ text: 'Please fill all required contact fields.', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
+    if (phone.length !== 10 || isNaN(phone)) {
+      Swal.fire({ text: 'Please enter a valid 10-digit phone number.', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
+
+    var editIndex = $('#client_drawer_edit_index').val();
+    if (editIndex === '') {
+      var targetIndex = null;
+      $('.client-cperson-container').each(function () {
+        var idx = $(this).data('contact-index');
+        if (!$('#cp_name_' + idx).val().trim()) {
+          targetIndex = idx;
+          return false;
+        }
+      });
+      if (targetIndex === null) {
+        $('.add_cperson').trigger('click');
+        targetIndex = parseInt($('#contactPersonId').val(), 10);
+        $('.client-cperson-container').last().attr('data-contact-index', targetIndex);
+      }
+      $('#cp_name_' + targetIndex).val(name);
+      $('#cp_desigination_' + targetIndex).val(designation);
+      $('#cp_email_' + targetIndex).val(email);
+      $('#cp_number_' + targetIndex).val(phone);
+    } else {
+      $('#cp_name_' + editIndex).val(name);
+      $('#cp_desigination_' + editIndex).val(designation);
+      $('#cp_email_' + editIndex).val(email);
+      $('#cp_number_' + editIndex).val(phone);
+    }
+    renderContactTable();
+    updateCompletion();
+    closeContactDrawer();
+  }
+
+  function populateReviewSummaries() {
+    $('.client_summary_name').text($('#client_id').val() || '—');
+    var descText = (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden'))
+      ? tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim()
+      : '';
+    $('.client_summary_desc').text(descText ? descText.substring(0, 80) + (descText.length > 80 ? '…' : '') : '—');
+    var firstCity = $('input[name="kt_tagify_work_location[]"]').first().val();
+    var cityLabel = parseTagifyValue(firstCity)[0] || firstCity || '—';
+    $('.client_summary_address').text(cityLabel);
+    var contacts = getContactRowsData();
+    $('.client_summary_contacts').text(contacts.length ? contacts.length + ' contact(s)' : '—');
+    $('#client_review_logo').css('background-image', $('.image-input-wrapper').css('background-image'));
+    $('#client_preview_company').text($('#client_id').val() || 'Company Name');
+  }
+
+  window.clientWizardUi = {
+    syncAdditionalAddressEmpty: syncAdditionalAddressEmpty,
+    bindAddressCounters: bindAddressCounters,
+    populateReviewSummaries: populateReviewSummaries,
+    updateAssistantPanel: updateAssistantPanel,
+    updateCompletion: updateCompletion,
+    renderContactTable: renderContactTable
+  };
+
+  $(function () {
+    bindAddressCounters(document);
+    syncAdditionalAddressEmpty();
+    updateAssistantPanel();
+    updateCompletion();
+    renderContactTable();
+
+    $(document).on('input change', '#kt_form input, #kt_form select, #kt_form textarea', function () {
+      updateAssistantPanel();
+      updateCompletion();
+    });
+
+    $('#client_auto_fetch, #client_review_details').on('click', function () {
+      if ($('#website').val()) {
+        clientDomainRegisterChk();
+      } else {
+        Swal.fire({ text: 'Enter a website URL first.', icon: 'info', confirmButtonText: 'Ok' });
+      }
+    });
+
+    $('#client_focus_tags').on('click', function () {
+      $('#tags').focus();
+    });
+
+    $('#client_open_contact_drawer').on('click', function () { openContactDrawer(null); });
+    $('#client_close_contact_drawer, #client_cancel_contact_drawer, #client_contact_drawer_backdrop').on('click', closeContactDrawer);
+    $('#client_save_contact_drawer').on('click', saveContactDrawer);
+    $(document).on('click', '.client-edit-contact', function () { openContactDrawer($(this).data('index')); });
+    $(document).on('click', '.client-delete-contact', function () {
+      var index = $(this).data('index');
+      $('.client-cperson-container[data-contact-index="' + index + '"]').remove();
+      renderContactTable();
+      updateCompletion();
+    });
+
+    $(document).on('click', '.remove_address_single', function () {
+      var target = $(this).data('target');
+      $('#' + target).remove();
+      syncAdditionalAddressEmpty();
+    });
+
+    $(document).on('click', '[data-client-goto-step]', function () {
+      var step = parseInt($(this).data('client-goto-step'), 10);
+      if (window.KTWizard && window.KTWizard.getInstance && $('#kt_wizard').length) {
+        var wizard = KTWizard.getInstance($('#kt_wizard')[0]);
+        if (wizard) wizard.goTo(step);
+      }
+    });
+
+    $('#client_save_draft').on('click', function () {
+      var draft = $('#kt_form').serializeArray();
+      if (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) {
+        draft.push({ name: 'description_draft', value: tinymce.get('kt_docs_tinymce_hidden').getContent() });
+      }
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      $('.client-completion-status').html('<i class="la la-check-circle"></i> Draft saved locally');
+    });
+
+    var existingDraft = localStorage.getItem(draftKey);
+    if (existingDraft && page_event === 'ADD') {
+      try {
+        var draftData = JSON.parse(existingDraft);
+        draftData.forEach(function (item) {
+          var $field = $('[name="' + item.name + '"]');
+          if ($field.length) $field.val(item.value).trigger('change');
+        });
+      } catch (e) {}
+    }
+
+    if (tagsInput && window.clientTagsTagify) {
+      var refreshTags = function () {
+        renderServicePreview((window.clientTagsTagify.value || []).map(function (t) { return t.value; }));
+      };
+      window.clientTagsTagify.on('add remove', refreshTags);
+      refreshTags();
+    }
+
+    if (typeof tinymce !== 'undefined') {
+      var attachEditorHooks = function () {
+        var editor = tinymce.get('kt_docs_tinymce_hidden');
+        if (!editor) return;
+        var syncDesc = function () {
+          var text = editor.getContent({ format: 'text' }) || '';
+          $('#client_desc_count').text(Math.min(text.trim().length, 2000));
+          $('#client_preview_description').text(text.trim() ? text.trim().substring(0, 180) : 'Your company description will appear here.');
+          updateCompletion();
+        };
+        editor.on('keyup change SetContent', syncDesc);
+        syncDesc();
+      };
+      setTimeout(attachEditorHooks, 1200);
+    }
+
+    var originalAddAddressSuccess = null;
+    $(document).on('click', '.add_address', function () {
+      setTimeout(function () {
+        syncAdditionalAddressEmpty();
+        bindAddressCounters(document);
+      }, 1200);
+    });
+  });
+})(jQuery);
+</script>
 <script src="{{ asset('demo/v7/js/pages/crud/file-upload/image-input.js') }}"></script> 
 <script src="{{ asset('demo/v7/js/plugins.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
 <script src="{{ asset('demo/v7/js/scripts.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
