@@ -134,19 +134,17 @@
         /* Drawer root is the positioning context for the floated close (X) button */
         #offer_create_show_right_bar { position: relative; }
 
-        /* ── 5-step timeline stepper (acts as the header — kept compact) ── */
-        .co-stepper { display: flex; align-items: flex-start; padding: 14px 44px 14px 24px; background: #fff; border-bottom: 1px solid #eff2f5; }
-        .co-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; text-align: center; min-width: 0; }
-        /* connector line between nodes */
-        .co-step:not(:last-child)::after {
-            content: ''; position: absolute; top: 15px; height: 2px; background: #e4e6ef; z-index: 1;
-            left: calc(50% + 18px); right: calc(-50% + 18px);
-        }
+        /* ── 5-step timeline stepper = the header (circle + title/sub-label, minimal font) ── */
+        .co-stepper { display: flex; align-items: center; padding: 12px 60px 12px 22px; background: #fff; border-bottom: 1px solid #eff2f5; }
+        .co-step { flex: 1 1 0; display: flex; align-items: center; gap: 10px; cursor: pointer; min-width: 0; }
+        .co-step:last-child { flex: 0 0 auto; }
+        /* connector line fills the space after each step's label, up to the next circle */
+        .co-step:not(:last-child)::after { content: ''; flex: 1 1 auto; height: 2px; background: #e4e6ef; min-width: 16px; margin: 0 4px; }
         .co-step--done:not(:last-child)::after { background: #50cd89; }
         .co-step-node {
             width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 12px; z-index: 2; background: #fff; border: 2px solid #e4e6ef; color: #b5b5c3;
-            transition: all .2s;
+            font-weight: 700; font-size: 12px !important; background: #fff; border: 2px solid #e4e6ef; color: #b5b5c3;
+            flex-shrink: 0; transition: all .2s;
         }
         .co-step-check { display: none; }
         .co-step-num { display: inline; }
@@ -154,18 +152,45 @@
         .co-step--done .co-step-node { background: #50cd89; border-color: #50cd89; color: #fff; }
         .co-step--done .co-step-check { display: inline; }
         .co-step--done .co-step-num { display: none; }
-        .co-step-label { margin-top: 6px; }
-        .co-step-title { font-size: 12px; font-weight: 600; color: #b5b5c3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .co-step-status { font-size: 10px; color: #b5b5c3; margin-top: 1px; }
-        .co-step--current .co-step-title { color: #181c32; }
-        .co-step--current .co-step-status { color: #3699ff; }
+        .co-step-label { flex-shrink: 0; min-width: 0; }
+        .co-step-title { font-size: 13px !important; font-weight: 600; color: #b5b5c3; white-space: nowrap; line-height: 1.2; }
+        .co-step-status { font-size: 10px !important; color: #a1a5b7; white-space: nowrap; margin-top: 1px; }
+        .co-step--current .co-step-title { color: #3699ff; }
         .co-step--done .co-step-title { color: #181c32; }
-        .co-step--done .co-step-status { color: #50cd89; }
-        @media (max-width: 640px) {
-            .co-stepper { padding: 12px 10px; }
+        @media (max-width: 900px) {
+            .co-stepper { padding: 12px 44px 12px 14px; }
             .co-step-status { display: none; }
-            .co-step-title { font-size: 11px; }
+            .co-step-title { font-size: 11px !important; }
         }
+
+        /* ── Colored square field/component icons (closest-match line icons) ── */
+        .co-ic { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; margin-right: 6px; }
+        .co-ic svg { width: 13px; height: 13px; }
+        .co-ic--blue   { background: #e8f1fd; color: #3699ff; }
+        .co-ic--green  { background: #e8fff3; color: #17a673; }
+        .co-ic--indigo { background: #eef2ff; color: #4f46e5; }
+        .co-ic--amber  { background: #fff4e0; color: #d9822b; }
+        .co-ic--red    { background: #fdeef0; color: #e24b4a; }
+        .co-ic--purple { background: #f3ecfe; color: #7239ea; }
+
+        /* ── Compensation Details card ── */
+        .co-details-card { border: 1px solid #f1f1f4; border-radius: 12px; }
+        .co-details-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+        .co-conf-wrap { min-width: 240px; }
+        .co-conf-hint { display: block; font-size: 11px; color: #3699ff; margin-top: 3px; text-align: right; text-decoration: none; }
+        .co-conf-hint:hover { text-decoration: underline; }
+        .co-field-grid { margin: 0; }
+        .co-field { margin-bottom: 14px; }
+        .co-flabel { font-size: 12px !important; font-weight: 600; color: #3f4254; display: flex; align-items: center; margin-bottom: 5px; }
+        .co-field-hint { font-size: 10px; color: #a1a5b7; margin-top: 3px; }
+        #offer_create_show_right_bar .co-details-card .form-control,
+        #offer_create_show_right_bar .co-details-card .form-select {
+            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 8px !important;
+            min-height: 42px; height: 42px; font-size: 13px !important; color: #3f4254 !important; box-shadow: none !important;
+        }
+        #offer_create_show_right_bar .co-details-card .form-control:focus,
+        #offer_create_show_right_bar .co-details-card .form-select:focus { border-color: #3699ff !important; }
+        @media (max-width: 700px) { .co-field { flex: 0 0 100%; max-width: 100%; } }
 
         /* ── Components card section headings + validation banner ── */
         .co-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -539,35 +564,35 @@
             <div class="co-step-node"><span class="co-step-num">1</span><span class="co-step-check">&#10003;</span></div>
             <div class="co-step-label">
                 <div class="co-step-title">Compensation</div>
-                <div class="co-step-status">In progress</div>
+                <div class="co-step-status">Build salary structure</div>
             </div>
         </div>
         <div class="co-step co-step--pending" data-step="2" onclick="goToStepNav(2)">
             <div class="co-step-node"><span class="co-step-num">2</span><span class="co-step-check">&#10003;</span></div>
             <div class="co-step-label">
                 <div class="co-step-title">Template</div>
-                <div class="co-step-status">Upcoming</div>
+                <div class="co-step-status">Select offer template</div>
             </div>
         </div>
         <div class="co-step co-step--pending" data-step="3" onclick="goToStepNav(3)">
             <div class="co-step-node"><span class="co-step-num">3</span><span class="co-step-check">&#10003;</span></div>
             <div class="co-step-label">
                 <div class="co-step-title">Preview Offer</div>
-                <div class="co-step-status">Upcoming</div>
+                <div class="co-step-status">Review before approval</div>
             </div>
         </div>
         <div class="co-step co-step--pending" data-step="4" onclick="goToStepNav(4)">
             <div class="co-step-node"><span class="co-step-num">4</span><span class="co-step-check">&#10003;</span></div>
             <div class="co-step-label">
                 <div class="co-step-title">Approval</div>
-                <div class="co-step-status">Upcoming</div>
+                <div class="co-step-status">Get approver sign-off</div>
             </div>
         </div>
         <div class="co-step co-step--pending" data-step="5" onclick="goToStepNav(5)">
             <div class="co-step-node"><span class="co-step-num">5</span><span class="co-step-check">&#10003;</span></div>
             <div class="co-step-label">
                 <div class="co-step-title">Offer Sent</div>
-                <div class="co-step-status">Upcoming</div>
+                <div class="co-step-status">Send to candidate</div>
             </div>
         </div>
     </div>
@@ -711,89 +736,67 @@
                                             <input type="hidden" name="offer_id" value="{{ $offer_id }}">
                                         
                                             <div class="col-lg-12">
-                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2">
-                                                    <div class="row">
-                                                         <div class="col-3 pe-0">
-                                                            <label class="form-label required">Select Confidential:</label>
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" id="confidential"
-                                                                name="confidential">
-                                                                <option value="0"
-                                                                    {{ $confidential == 0 ? 'selected' : '' }}>No</option>
-                                                                <option value="1"
-                                                                    {{ $confidential == 1 ? 'selected' : '' }}>Yes</option>
+                                                <div class="card card-body py-7 mb-5 mb-xl-5 mx-2 co-details-card">
+                                                    {{-- Header: title + subtitle (left) · Confidentiality Status (right) --}}
+                                                    <div class="co-details-head">
+                                                        <div>
+                                                            <h5 class="co-section-title">Compensation Details</h5>
+                                                            <div class="co-section-sub">Enter the offer details to generate the compensation structure</div>
+                                                        </div>
+                                                        <div class="co-conf-wrap">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg></span> Confidentiality Status</label>
+                                                            <select class="form-select form-select-solid" arial-label="Select Confidential" id="confidential" name="confidential">
+                                                                <option value="0" {{ $confidential == 0 ? 'selected' : '' }}>No</option>
+                                                                <option value="1" {{ $confidential == 1 ? 'selected' : '' }}>Yes</option>
+                                                            </select>
+                                                            <a href="javascript:void(0);" class="co-conf-hint">Who can view the Salary</a>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row co-field-grid">
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency</label>
+                                                            <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
+                                                                <option value="0" {{ $currency == 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
+                                                                <option value="1" {{ $currency == 1 ? 'selected' : '' }}>EUR</option>
+                                                                <option value="2" {{ $currency == 2 ? 'selected' : '' }}>JPY</option>
+                                                                <option value="3" {{ $currency == 3 ? 'selected' : '' }}>GBP</option>
+                                                                <option value="4" {{ $currency == 4 ? 'selected' : '' }}>USD</option>
+                                                                <option value="5" {{ $currency == 5 ? 'selected' : '' }}>AED</option>
                                                             </select>
                                                         </div>
-                                                        <div class="col-3 pe-0">
-                                                            <label class="form-label required">Select Currency:</label>
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" id="current_ctc_cur"
-                                                                name="current_ctc_cur">
-                                                                <option value="0"
-                                                                    {{ $currency == 0 ? 'selected' : '' }}>INR</option>
-                                                                <option value="1"
-                                                                    {{ $currency == 1 ? 'selected' : '' }}>EUR</option>
-                                                                <option value="2"
-                                                                    {{ $currency == 2 ? 'selected' : '' }}>JPY</option>
-                                                                <option value="3"
-                                                                    {{ $currency == 3 ? 'selected' : '' }}>GBP</option>
-                                                                <option value="4"
-                                                                    {{ $currency == 4 ? 'selected' : '' }}>USD</option>
-                                                                <option value="5"
-                                                                    {{ $currency == 5 ? 'selected' : '' }}>AED</option>
-                                                            </select>
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/></svg></span> Enter Amount (CTC)</label>
+                                                            <input type="text" class="form-control form-control-solid" name="ctc" id="ctc" placeholder="Enter current CTC" value="{{ @$salary_ctc }}">
+                                                            <div class="fv-plugins-message-container invalid-feedback"></div>
                                                         </div>
-                                                        <div class="col-3 px-2">
-                                                            <label class="form-label required">Enter Amount:</label>
-                                                            <input type="text" class="form-control form-control-solid"
-                                                                name="ctc" id="ctc"
-                                                                placeholder="Enter current CTC"
-                                                                value="{{ @$salary_ctc }}">
-                                                            <div class="fv-plugins-message-container invalid-feedback">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-3 pl-0">
-                                                            <label class="form-label required">Select Salary Format:</label>
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" id="current_ctc_mode"
-                                                                name="current_ctc_mode">
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span> Salary Breakdown Format</label>
+                                                            <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
                                                                 <option value="2" {{ $salary_mode == 2 ? 'selected' : '' }}>Hourly</option>
                                                                 <option value="1" {{ $salary_mode == 1 ? 'selected' : '' }}>Monthly</option>
                                                                 <option value="3" {{ $salary_mode == 3 ? 'selected' : '' }}>Annually</option>
                                                                 <option value="0" {{ empty($salary_mode) || $salary_mode == 0 ? 'selected' : '' }}>Monthly/Annually</option>
                                                                 <option value="4" {{ $salary_mode == 4 ? 'selected' : '' }}>Hourly/Annually</option>
                                                             </select>
+                                                            <div class="co-field-hint">Annually / Monthly</div>
                                                         </div>
                                                     </div>
-                                                    <div class="row">
-                                                        <div class="col-4 pe-0">
-                                                            <label class="form-label required">Enter Offer Designation:</label>
-                                                            <input type="text" class="form-control form-control-solid"
-                                                                name="current_designation" id="current_designation"
-                                                                placeholder="Enter designation"
-                                                                value="{{ @$designation }}">
+                                                    <div class="row co-field-grid">
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span> Offered Designation</label>
+                                                            <input type="text" class="form-control form-control-solid" name="current_designation" id="current_designation" placeholder="Enter designation" value="{{ @$designation }}">
                                                         </div>
-                                                        <div class="col-4 px-2">
-                                                            <label class="form-label">Select Date & Time for Joining:</label>
-                                                            <input type="datetime-local"
-                                                                class="form-control form-control-solid" name="dob"
-                                                                id="dob" placeholder="Enter dob"
-                                                                value="{{ @$joined_date }}" onclick="this.showPicker()">
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label co-flabel"><span class="co-ic co-ic--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span> Date of Joining (DOJ)</label>
+                                                            <input type="datetime-local" class="form-control form-control-solid" name="dob" id="dob" placeholder="Enter dob" value="{{ @$joined_date }}" onclick="this.showPicker()">
                                                         </div>
-                                                        <div class="col-4 pe-0">
-                                                            <label class="form-label required">Select Job Type</label>
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Job Type" id="employment_type"
-                                                                name="employment_type">
-                                                                <option value="0"
-                                                                    {{ $employment_type == 0 ? 'selected' : '' }}>Full-time
-                                                                </option>
-                                                                <option value="1"
-                                                                    {{ $employment_type == 1 ? 'selected' : '' }}>Contract
-                                                                </option>
-                                                                <option value="3"
-                                                                {{ $employment_type == 3 ? 'selected' : '' }}>Part Time
-                                                            </option>
+                                                        <div class="col-lg-4 co-field">
+                                                            <label class="form-label required co-flabel"><span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span> Employment Type</label>
+                                                            <select class="form-select form-select-solid" arial-label="Select Job Type" id="employment_type" name="employment_type">
+                                                                <option value="0" {{ $employment_type == 0 ? 'selected' : '' }}>Full Time</option>
+                                                                <option value="1" {{ $employment_type == 1 ? 'selected' : '' }}>Contract</option>
+                                                                <option value="3" {{ $employment_type == 3 ? 'selected' : '' }}>Part Time</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -4280,11 +4283,11 @@
                    AJAX flow — so header clicks can never skip the preview-letter population. */
                 var coFurthestStep = 1;
 
-                function coPaintStep(el, state, statusText) {
+                function coPaintStep(el, state) {
+                    // Only toggle state classes — the sub-label text is a static description
+                    // ("Build salary structure", etc.) and must not be overwritten.
                     el.classList.remove('co-step--pending', 'co-step--current', 'co-step--done');
                     el.classList.add('co-step--' + state);
-                    var s = el.querySelector('.co-step-status');
-                    if (s && statusText != null) s.textContent = statusText;
                 }
 
                 function coActiveStep() {
@@ -4299,9 +4302,9 @@
                     var steps = document.querySelectorAll('#co_offer_stepper .co-step');
                     steps.forEach(function (step) {
                         var n = parseInt(step.getAttribute('data-step'), 10);
-                        if (n < active) coPaintStep(step, 'done', 'Completed');
-                        else if (n === active) coPaintStep(step, 'current', 'In progress');
-                        else coPaintStep(step, 'pending', 'Upcoming');
+                        if (n < active) coPaintStep(step, 'done');
+                        else if (n === active) coPaintStep(step, 'current');
+                        else coPaintStep(step, 'pending');
                     });
                 }
 
