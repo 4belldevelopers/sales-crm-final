@@ -400,7 +400,7 @@
         .co-row-num { color: #a1a5b7; font-size: 12px; font-weight: 600; min-width: 14px; display: inline-block; }
         .co-comp-badge { display: inline-block; font-size: 10px !important; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin: 0; vertical-align: middle; white-space: nowrap; }
         .co-comp-badge--main { background: #eef3ff !important; color: #4f46e5 !important; }   /* Main = blue/indigo */
-        .co-comp-badge--add  { background: #e8fff3 !important; color: #0f9463 !important; }   /* Additional = green */
+        .co-comp-badge--add  { background: #f5f0ff !important; color: #7c3aed !important; }   /* Additional = violet, matches the Additional card's total-row theme */
 
         /* ── Additional-components info line ── */
         .co-info-line { font-size: 12px; color: #7239ea; font-weight: 600; margin: 6px 0 12px; }
@@ -957,7 +957,7 @@
                                                                                         data-id="{{ $basic->id }}"
                                                                                         data-offerid="{{ $basic->id }}"
                                                                                         value="{{ $basic->basic_percentage }}"
-                                                                                        placeholder="%">
+                                                                                        placeholder="0">
 
 
                                                                                     {{-- <select &nbsp=""
@@ -1078,7 +1078,7 @@
                                                                                         data-id="{{ $basic->id }}"
                                                                                         data-offerid="{{ $basic->id }}"
                                                                                         value="{{ $basic->basic_percentage }}"
-                                                                                        placeholder="%">
+                                                                                        placeholder="0">
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
@@ -1195,7 +1195,7 @@
                                                                                         data-id="{{ $value->id }}"
                                                                                         data-offerid="{{ $value->id }}"
                                                                                         value="{{ $value->percentage }}"
-                                                                                        placeholder="%">
+                                                                                        placeholder="0">
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> </td>
                                                                                 <td class="" style="width:12% !important">
@@ -1303,7 +1303,7 @@
                                                                                         data-id="{{ $value->id }}"
                                                                                         data-offerid="{{ $value->id }}"
                                                                                         value="{{ $value->percentage }}"
-                                                                                        placeholder="%">
+                                                                                        placeholder="0">
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
@@ -1616,7 +1616,7 @@
                                                                                     id="bonus_option_percentage{{ $bonus->id }}"
                                                                                     data-id="{{ $bonus->id }}"
                                                                                     data-offerid="{{ $bonus->id }}"
-                                                                                    value="{{ $bonus->bonus_percentage }}" placeholder="%">
+                                                                                    value="{{ $bonus->bonus_percentage }}" placeholder="0">
             
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
@@ -1704,7 +1704,7 @@
                                                                                     id="bonus_option_percentage_hourly{{ $bonus->id }}"
                                                                                     data-id="{{ $bonus->id }}"
                                                                                     data-offerid="{{ $bonus->id }}"
-                                                                                    value="{{ $bonus->bonus_percentage }}" placeholder="%">
+                                                                                    value="{{ $bonus->bonus_percentage }}" placeholder="0">
             
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
@@ -1803,7 +1803,7 @@
                                                                                         data-id="{{ $offer->id }}"
                                                                                         data-offerid="{{ $offer->id }}"
                                                                                         value="{{ $offer->percentage }}"
-                                                                                        placeholder="%">
+                                                                                        placeholder="0">
 
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
@@ -1920,7 +1920,7 @@
                                                                                             data-id="{{ $offer->id }}"
                                                                                             data-offerid="{{ $offer->id }}"
                                                                                             value="{{ $offer->percentage }}"
-                                                                                            placeholder="%">
+                                                                                            placeholder="0">
                                                                                     </td>
                                                                                     <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                     </td>
