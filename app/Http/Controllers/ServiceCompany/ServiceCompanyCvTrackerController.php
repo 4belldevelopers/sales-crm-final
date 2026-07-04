@@ -2787,6 +2787,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$this->offerId = $request->offerId;
 		$this->mtype = $request->mtype;
 		// $this->arr = $request->id;
+
+		// Send Offer Letter (mtype=1) — data for the candidate summary header card. Real values
+		// only: the saved offer row (CTC/joining/designation/currency) and, if it was routed for
+		// approval, the latest approval-timeline row (approver name + management_status).
+		if ((int) $request->mtype === 1) {
+			$this->co_send_offer = DB::table('offer_create_main_tds')
+				->where('offer_id', $request->offerId)->where('status', 1)->orderByDesc('id')->first();
+			$this->co_send_appr = DB::table('updatetimeline')
+				->where('application_id', (int) (@$this->arr[0] ?? 0))
+				->where('mtypeSection', 2)->orderByDesc('id')->first();
+		}
+
         if( $request->mtype==1){
 			$title = 'Candidate Email Send';
 		}else{
