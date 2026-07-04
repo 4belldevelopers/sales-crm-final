@@ -131,7 +131,7 @@ if($cc_email_count > 0){
 }
 .co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block; }
 </style>
-<div class="co-appr-drawer-backdrop" id="co_appr_drawer_backdrop"></div>
+<div class="co-appr-drawer-backdrop {{ (int) @$mtype === 2 ? 'co-appr-drawer-backdrop--open' : '' }}" id="co_appr_drawer_backdrop"></div>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
 
@@ -385,7 +385,7 @@ if($cc_email_count > 0){
 
 
 
-<div id="kt_activitiesIntTeam_to" class="bg-body co-appr-drawer" data-kt-drawer-name="activities">
+<div id="kt_activitiesIntTeam_to" class="bg-body co-appr-drawer {{ (int) @$mtype === 2 ? 'co-appr-drawer--open' : '' }}" data-kt-drawer-name="activities">
   <div class="card-body position-relative px-0 py-0" id="kt__to_body">
   <div id="kt_to_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__to_body" data-kt-scroll-dependencies="#kt__to_header, #kt__to_footer" data-kt-scroll-offset="5px" style="">
     <!--begin::Team card-->
