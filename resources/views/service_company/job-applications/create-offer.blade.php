@@ -311,13 +311,19 @@
         /* Total Additional (violet tint — distinct from Main's indigo) — whole row, incl. empty gap cells */
         #bonusList tfoot tr.co-total-row > th { background: #f5f0ff !important; }
         #bonusList tfoot tr.co-total-row input { background: transparent !important; color: #7c3aed !important; font-weight: 700 !important; border-color: transparent !important; }
-        /* Final CTC: header sits OUTSIDE the colour block; only the total row is tinted GREEN */
+        /* Final CTC: header sits OUTSIDE the colour block; only the total row is tinted GREEN.
+           Same box height/font-size as Total Main/Additional (reuse their input + th rules). */
         .co-finalctc-card { border: 1px solid #b7ebc6 !important; border-radius: 12px; }
         #final_pay { background: transparent; border: none; margin-top: 4px; }
-        #final_pay thead th { background: transparent !important; border: none !important; padding: 8px 10px !important; }
-        #final_pay tfoot th { border: none !important; padding: 12px 10px !important; vertical-align: middle; background: #e3f7e9 !important; border-radius: 10px; }
+        #final_pay thead th { background: transparent !important; }
+        #final_pay .form-control, #final_pay .form-select {
+            background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 7px !important;
+            box-shadow: none !important; min-height: 36px; height: 36px; font-size: 13px !important;
+            color: #3f4254 !important; padding: 4px 10px !important;
+        }
+        #final_pay tfoot th { vertical-align: middle; background: #e3f7e9 !important; }
         #final_pay tfoot input { background: transparent !important; color: #0f7a3d !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
-        #final_pay tfoot input[value*="Total CTC"] { font-size: 14px !important; color: #0b5c2e !important; }
+        #final_pay tfoot input[value*="Total CTC"] { color: #0b5c2e !important; }
 
         /* Applicable column: widen so "Annually & Monthly" shows fully */
         #pointList .basic_view, #bonusList .bonus_view { min-width: 150px !important; width: auto !important; }
@@ -391,17 +397,21 @@
         /* ── Additional-components info line ── */
         .co-info-line { font-size: 12px; color: #7239ea; font-weight: 600; margin: 6px 0 12px; }
 
-        /* ── How it works? / Examples footer ── */
+        /* ── How it works? / footer instructions ── */
         .co-howit-box { display: flex; gap: 28px; background: #f9fafd; border: 1px solid #eef1f7; border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
         .co-howit-col { flex: 1; min-width: 0; }
         .co-howit-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-        .co-howit-ico { width: 14px; height: 14px; border-radius: 4px; background: #4f46e5; display: inline-block; }
+        .co-howit-ico { width: 14px; height: 14px; border-radius: 4px; background: #4f46e5; display: inline-block; flex-shrink: 0; }
+        .co-howit-ico--amber { background: #f1a204; }
         .co-howit-text { font-size: 11px; color: #7e8299; line-height: 1.5; }
-        .co-howit-formula { font-size: 11px; color: #3f4254; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .co-chip { background: #eef3ff; color: #4f46e5; border-radius: 6px; padding: 3px 8px; font-weight: 600; white-space: nowrap; }
-        .co-chip--add { background: #fff3e0; color: #c2410c; }
-        .co-chip--total { background: #e8fff3; color: #0f9463; }
         @media (max-width: 900px) { .co-howit-box { flex-direction: column; gap: 14px; } }
+
+        /* ── Footer actions: Close (outline) + Save & Next (blue), right-aligned ── */
+        .co-footer-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+        .co-btn-close { background: #fff !important; border: 1px solid #d7dae3 !important; color: #5e6278 !important; font-weight: 600 !important; min-width: 110px; height: 40px; border-radius: 8px; }
+        .co-btn-close:hover { background: #f5f8fa !important; border-color: #c4c9d6 !important; }
+        .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; }
+        .co-btn-save:hover { background: #0b6cdb !important; border-color: #0b6cdb !important; }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -2102,17 +2112,17 @@
                                                             <thead>
                                                                 <tr class="fw-bolder text-muted other_section {{ $section_other }}">
                                                                     <th colspan="2" class="sorting_disabled" style="width: 35%;">Component</th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important;">Allocation</th>
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 10% !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" style="width: 17% !important;">Monthly</th>
+                                                                    <th class="sorting_disabled" style="width: 7% !important;">Allocation</th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 15% !important;">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 15% !important;">Monthly</th>
                                                                     <th class="sorting_disabled" style="width: 15% !important;">{{ $first_text }}</th>
                                                                     <th class="sorting_disabled">&nbsp;</th>
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
                                                                     <th class="sorting_disabled" style="width: 47%;">Component</th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important;">Allocation</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important;">Allocation</th>
                                                                     <th colspan="2" class="sorting_disabled" style="width: 13% !important;">&nbsp;</th>
-                                                                    <th class="sorting_disabled" colspan="1">{{ $first_text }}</th>
+                                                                    <th class="sorting_disabled" colspan="2">{{ $first_text }}</th>
                                                                 </tr>
                                                             </thead>
 
@@ -2122,20 +2132,20 @@
                                                                     <th colspan="2" class="sorting_disabled" style="width: 35%;">
                                                                         <input type="text" class="form-control form-control-solid" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important;">
+                                                                    <th class="sorting_disabled" style="width: 7% !important;">
                                                                         <input &nbsp="" type="text"
                                                                             class="form-control form-control-solid totalpercentagefinal"
                                                                             name="totalpercentagefinal"
                                                                             value=""
                                                                             id="totalpercentagefinal" style="background: #7de96f40;">
                                                                     </th>
-                                                                    <th colspan="2" class="sorting_disabled" style="width: 10% !important;">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 15% !important;">
                                                                         <input &nbsp="" type="text"
                                                                         class="form-control form-control-solid show_currency"
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: #7de96f40;">
                                                                     </th>
-                                                                    <th class="sorting_disabled"  style="width: 17% !important;">
+                                                                    <th class="sorting_disabled"  style="width: 15% !important;">
                                                                         <input &nbsp="" type="text"
                                                                             class="form-control form-control-solid finalpaytotalMonthly"
                                                                             name="finalpaytotalMonthly"
@@ -2160,7 +2170,7 @@
                                                                     <th class="sorting_disabled" style="width: 47%;">
                                                                         <input type="text" class="form-control form-control-solid" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 12% !important;">
+                                                                    <th class="sorting_disabled" style="width: 10% !important;">
                                                                         <input &nbsp="" type="text"
                                                                             class="form-control form-control-solid totalpercentagefinalhourly"
                                                                             name="totalpercentagefinalhourly"
@@ -2173,7 +2183,7 @@
                                                                         name="show_currency"
                                                                         value="" readonly style="cursor: not-allowed;background: #7de96f40;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" colspan="1">
+                                                                    <th class="sorting_disabled" colspan="2">
                                                                         <input &nbsp="" type="text"
                                                                             class="form-control form-control-solid finalpaytotalhourly"
                                                                             name="finalpaytotalhourly"
@@ -2188,32 +2198,25 @@
                                                 <div id="text_for_hourly_annually" class="d-none"><br>
                                                     <p><b>Note:</b>*The per-hour salary is calculated based on 8 hours per day, 5 days per week, and 2,080 hours per year. The annual salary is subject to adjustments based on the actual number of hours worked</p> </div>
 
-                                                {{-- Static/decorative footer (no backing calc source beyond the live example numbers) --}}
+                                                {{-- Static/decorative footer (no backing calc source) --}}
                                                 <div class="co-howit-box">
                                                     <div class="co-howit-col">
                                                         <div class="co-howit-title"><i class="co-howit-ico"></i> How it works?</div>
                                                         <div class="co-howit-text">Main components must total exactly 100%. Additional components can exceed 100% and will be added on top of the main 100%.</div>
                                                     </div>
                                                     <div class="co-howit-col">
-                                                        <div class="co-howit-title">Examples</div>
-                                                        <div class="co-howit-formula" id="co_howit_formula">
-                                                            <span class="co-chip">CTC —</span> = <span class="co-chip">Main 100.00% = —</span> + <span class="co-chip co-chip--add">Additional —% = —</span> = <span class="co-chip co-chip--total">Total Cost to Company = —</span>
-                                                        </div>
+                                                        <div class="co-howit-title"><i class="co-howit-ico co-howit-ico--amber"></i> Before you proceed</div>
+                                                        <div class="co-howit-text">Double-check the currency, condition (Amount/Basic) and allocation of every component — these values drive the offer letter and cannot be edited once the offer is generated.</div>
                                                     </div>
                                                 </div>
 
                                                 <hr>
 
-                                                <div class="row justify-content-center">
-                                                    <div class="col-lg-3 d-flex justify-content-center">
-                                                        <input type="submit" name="save"
-                                                            value="Save & {{($section_change_value) ? 'Next' : 'Generate'}}" id="save-form"
-                                                            class="btn {{($section_change_value) ? 'btn-warning' : 'btn-primary'}}"
-                                                            style="width: 100%;height: 40px;margin-top: 10px;">
-                                                    </div>
-                                                    {{-- <div class="col-lg-3  d-flex justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                                       <button class="next-btn btn btn-warning" onclick="nextStep(event,1)" style="width: 100%">Next</button>
-                                                    </div> --}}
+                                                <div class="co-footer-actions">
+                                                    <button type="button" class="btn co-btn-close" onclick="$('#kt_offercreate_close').trigger('click')">Close</button>
+                                                    <input type="submit" name="save"
+                                                        value="Save & {{($section_change_value) ? 'Next' : 'Generate'}}" id="save-form"
+                                                        class="btn co-btn-save">
                                                 </div>
 
 
@@ -4547,16 +4550,6 @@
                         var addAmtTotal = coNum($('#totalYearlybonus').val()) || coNum($('#totalMonthlybonus').val()) || (coNum($('#ctc').val()) * addPct / 100);
                         $('#co_additional_total').html('Total additional components: <b>' + addPct.toFixed(2) + '%</b> (Allowed above 100%)'
                             + (addAmtTotal ? ' &nbsp;•&nbsp; Amount: <b>' + coMoney(addAmtTotal) + '</b>' : ''));
-
-                        var ctcVal = coNum($('#ctc').val());
-                        var mainAmt = ctcVal * (mainPct / 100);
-                        var addAmt = ctcVal * (addPct / 100);
-                        $('#co_howit_formula').html(
-                            '<span class="co-chip">CTC ' + (ctcVal ? coMoney(ctcVal) : '—') + '</span> = ' +
-                            '<span class="co-chip">Main 100.00% = ' + (ctcVal ? coMoney(mainAmt) : '—') + '</span> + ' +
-                            '<span class="co-chip co-chip--add">Additional ' + addPct.toFixed(2) + '% = ' + (ctcVal ? coMoney(addAmt) : '—') + '</span> = ' +
-                            '<span class="co-chip co-chip--total">Total Cost to Company = ' + (ctcVal ? coMoney(mainAmt + addAmt) : '—') + '</span>'
-                        );
 
                         coEnhanceRows();
                     };
