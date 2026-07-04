@@ -420,6 +420,74 @@
         .co-btn-close:hover { background: #f5f8fa !important; border-color: #c4c9d6 !important; }
         .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; }
         .co-btn-save:hover { background: #0b6cdb !important; border-color: #0b6cdb !important; }
+
+        /* ══════════════════════════ Step 2 — Offer Letter Template ══════════════════════════
+           Every rule below is scoped so nothing exceeds 14px (stricter than step 1's 16px cap).
+           No extra server round-trips: search/tabs/zoom/preview/download all run client-side. */
+        .co-tpl-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
+        .co-tpl-sub { font-size: 12px; color: #7e8299; margin-top: 2px; }
+        .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+
+        .co-tpl-layout { display: flex; align-items: flex-start; gap: 14px; }
+        .co-tpl-sidebar { flex: 0 0 220px; max-width: 220px; }
+        .co-tpl-editor-col { flex: 1 1 auto; min-width: 0; }
+        .co-tpl-side { flex: 0 0 240px; max-width: 240px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* Templates sidebar */
+        .co-tpl-card-box { border: 1px solid #eef1f7; border-radius: 12px; padding: 12px; }
+        .co-tpl-sidebar-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 8px; }
+        .co-tpl-search input { height: 34px !important; font-size: 12px !important; padding: 4px 10px !important; }
+        .co-tpl-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .co-tpl-card { display: flex; align-items: flex-start; gap: 8px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px; background: #fff; cursor: default; }
+        .co-tpl-card--active { border-color: #1b84ff; background: #f3f8ff; }
+        .co-tpl-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-tpl-ico svg { width: 16px; height: 16px; }
+        .co-tpl-card-body { min-width: 0; flex: 1 1 auto; }
+        .co-tpl-card-name { font-size: 12px; font-weight: 700; color: #181c32; line-height: 1.3; }
+        .co-tpl-card-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .co-tpl-badge { font-size: 10px !important; font-weight: 700; padding: 1px 7px; border-radius: 99px; }
+        .co-tpl-badge--active { background: #e8fff3; color: #0f9463; }
+        .co-tpl-type { font-size: 10px; color: #a1a5b7; }
+        .co-tpl-check { color: #1b84ff; flex-shrink: 0; margin-left: auto; }
+        .co-tpl-check svg { width: 16px; height: 16px; }
+        .co-tpl-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 10px 4px; }
+
+        /* Template editor card */
+        .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 12px; }
+        .co-tpl-tab { background: none; border: none; padding: 8px 14px; font-size: 13px !important; font-weight: 600; color: #a1a5b7; border-bottom: 2px solid transparent; cursor: pointer; }
+        .co-tpl-tab--active { color: #1b84ff; border-bottom-color: #1b84ff; }
+        .co-tpl-meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+        .co-tpl-meta-item { font-size: 11px; color: #7e8299; }
+        .co-tpl-meta-item b { color: #181c32; font-weight: 600; margin-left: 4px; }
+        .co-tpl-toolbar-extra { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .co-tpl-zoom { display: flex; align-items: center; gap: 8px; }
+        .co-tpl-zoom-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; color: #5e6278; font-weight: 700; font-size: 13px !important; cursor: pointer; line-height: 1; }
+        .co-tpl-zoom-btn:hover { background: #f5f8fa; }
+        .co-tpl-zoom-pct { font-size: 11px; color: #7e8299; min-width: 34px; text-align: center; display: inline-block; }
+        .co-tpl-download-btn { font-size: 11px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .co-tpl-download-btn:hover { background: #e0e7ff; }
+        .co-tpl-download-btn svg { width: 12px; height: 12px; }
+        .co-tpl-preview { border: 1px solid #eef1f7; border-radius: 10px; padding: 18px; min-height: 350px; max-height: 480px; overflow: auto; font-size: 13px; background: #fff; }
+
+        /* Insert Variables + info panel */
+        .co-tpl-side-title { font-size: 13px; font-weight: 700; color: #181c32; }
+        .co-tpl-side-sub { font-size: 11px; color: #7e8299; margin: 3px 0 10px; line-height: 1.4; }
+        .co-var-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .co-var-chip { font-size: 11px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: 1px solid #e0e7ff; border-radius: 7px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+        .co-var-chip:hover { background: #e0e7ff; }
+        .co-var-chip:disabled { opacity: .5; cursor: not-allowed; }
+        .co-tpl-note { font-size: 11px; color: #7e8299; line-height: 1.5; }
+        .co-tpl-note a { color: #1b84ff; font-weight: 600; }
+        .co-btn-reset { width: 100%; background: #fff !important; border: 1px solid #f1416c !important; color: #f1416c !important; font-weight: 600 !important; height: 38px; border-radius: 8px; font-size: 12px !important; }
+        .co-btn-reset:hover { background: #fff5f8 !important; }
+
+        /* Responsive: collapse to a single column under ~1100px (fits smaller 15.6" / 13" laptops) */
+        @media (max-width: 1100px) {
+            .co-tpl-layout { flex-direction: column; }
+            .co-tpl-sidebar, .co-tpl-side { flex: 1 1 auto; max-width: none; width: 100%; }
+            .co-tpl-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+            .co-tpl-card { min-width: 220px; }
+        }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -447,7 +515,14 @@
                     );
                 }
                 if (wysiwygareaAvailable) {
-                    CKEDITOR.replace('editorterms1');
+                    CKEDITOR.replace('editorterms1', {
+                        toolbar: [
+                            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline'] },
+                            { name: 'paragraph', items: ['NumberedList', 'BulletedList'] },
+                            { name: 'align', items: ['JustifyLeft', 'JustifyCenter', 'JustifyRight'] },
+                            { name: 'links', items: ['Link'] }
+                        ]
+                    });
                 } else {
                     editorElement.setAttribute('contenteditable', 'true');
                     CKEDITOR.inline('editorterms1');
@@ -2218,53 +2293,120 @@
 
                             <!-- Step 2 -->
                             <div class="tab-content-section pt-5" id="step2">
+                                @php
+                                    // Same mapping Step 1's Employment Type select uses — shown here purely as a
+                                    // read-only label (this is not an editable "template type" — the backend has
+                                    // exactly one offer-letter template per company, not a multi-template catalog).
+                                    $co_emp_type_label = ['Full Time', 'Contract', null, 'Part Time'][$employment_type ?? 0] ?? 'Full Time';
+                                @endphp
 
-                                <div class="" style="position: relative;margin: 0px 2px 15px 0px;">
-                                    <div> 
-                                         <h2>Offer Terms & Condition</h2>
-                                    </div>
-                                    <div style="position: absolute; right: -7px; top: -17px;"> 
-                                        <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button"
-                                            id="setToDefaultCompanyTerms">Set to Default
-                                        </button>
+                                <div class="co-tpl-header">
+                                    <div>
+                                        <h5 class="co-tpl-title">Offer Letter Template</h5>
+                                        <div class="co-tpl-sub">Personalize the offer letter before sending it for approval.</div>
                                     </div>
                                 </div>
 
-                                <div class="row">
+                                <div class="co-tpl-layout">
+                                    {{-- Templates sidebar — only one template exists (the company's default offer
+                                         letter, configured in Settings), so exactly one card is shown. --}}
+                                    <div class="co-tpl-sidebar co-tpl-card-box">
+                                        <div class="co-tpl-sidebar-head">Templates</div>
+                                        <div class="co-tpl-search">
+                                            <input type="text" id="co_tpl_search" class="form-control form-control-solid" placeholder="Search templates...">
+                                        </div>
+                                        <div class="co-tpl-list">
+                                            <div class="co-tpl-card co-tpl-card--active" data-tpl-name="company offer letter template">
+                                                <span class="co-tpl-ico">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+                                                </span>
+                                                <div class="co-tpl-card-body">
+                                                    <div class="co-tpl-card-name">Company Offer Letter Template</div>
+                                                    <div class="co-tpl-card-meta">
+                                                        <span class="co-tpl-badge co-tpl-badge--active">Active</span>
+                                                        <span class="co-tpl-type">{{ $co_emp_type_label }}</span>
+                                                    </div>
+                                                </div>
+                                                <span class="co-tpl-check">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                                </span>
+                                            </div>
+                                            <div class="co-tpl-empty d-none" id="co_tpl_search_empty">No templates match your search.</div>
+                                        </div>
+                                    </div>
 
-                                    <form class="ajax-form" method="POST" id="termConditioncreateForm"
-                                        name="termConditioncreateForm" enctype="multipart/form-data">
-                                        @csrf
-                                        <div class="col-lg-12 col-xl-12">
-                                            <textarea id="editorterms1" name="editorterms1">
-                                                {{ $offer_terms }}
-                                            </textarea>
-                                            <span class="form-text text-muted">&nbsp; </span>
+                                    {{-- Template editor --}}
+                                    <div class="co-tpl-editor-col co-tpl-card-box">
+                                        <div class="co-tpl-tabs">
+                                            <button type="button" class="co-tpl-tab co-tpl-tab--active" data-co-tab="editor">Template Editor</button>
+                                            <button type="button" class="co-tpl-tab" data-co-tab="preview">Preview</button>
                                         </div>
 
-                                        <div class="row justify-content-center">
-                                            <div class="col-lg-3  d-flex justify-content-center">
-                                                <span class="prev-btn" onclick="prevStep(event,2)"
-                                                    style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
-                                            </div>
-                                            <div class="col-lg-3  d-flex justify-content-center">
-                                                <input type="submit" name="save" value="Save & Preview"
-                                                    id="" class="btn btn-primary"
-                                                    style="margin-top: 10px; width: 100%; height: 43px;">
-                                            </div>
-                                            {{-- <div class="col-lg-3 d-flex justify-content-center">
-                                                <button class="btn btn btn-warning next-btn"
-                                                    onclick="nextStep(event,2)" style="width: 100%;">Preview Offer
-                                                    Letter</button>
-                                            </div> --}}
+                                        <div class="co-tpl-meta-row">
+                                            <span class="co-tpl-meta-item">Type<b>{{ $co_emp_type_label }}</b></span>
+                                            <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                                         </div>
-                                    </form>
 
+                                        <div class="co-tpl-tabpane" data-co-pane="editor">
+                                            <form class="ajax-form" method="POST" id="termConditioncreateForm"
+                                                name="termConditioncreateForm" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="col-lg-12 col-xl-12">
+                                                    <textarea id="editorterms1" name="editorterms1">
+                                                        {{ $offer_terms }}
+                                                    </textarea>
+                                                </div>
+
+                                                <div class="co-tpl-toolbar-extra">
+                                                    <div class="co-tpl-zoom">
+                                                        <button type="button" class="co-tpl-zoom-btn" id="co_tpl_zoom_out" aria-label="Zoom out">&minus;</button>
+                                                        <span class="co-tpl-zoom-pct" id="co_tpl_zoom_pct">100%</span>
+                                                        <button type="button" class="co-tpl-zoom-btn" id="co_tpl_zoom_in" aria-label="Zoom in">+</button>
+                                                    </div>
+                                                    <button type="button" class="co-tpl-download-btn" id="co_tpl_download_sample">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+                                                        Download Sample
+                                                    </button>
+                                                </div>
+
+                                                <div class="co-footer-actions" style="margin-top:14px;">
+                                                    <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
+                                                    <input type="submit" name="save" value="Save & Preview" class="btn co-btn-save">
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <div class="co-tpl-tabpane d-none" data-co-pane="preview">
+                                            <div id="co_tpl_preview_content" class="co-tpl-preview"></div>
+                                            <div class="co-footer-actions" style="margin-top:14px;">
+                                                <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
+                                                <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Preview</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Insert Variables + template info --}}
+                                    <div class="co-tpl-side">
+                                        <div class="co-tpl-card-box">
+                                            <div class="co-tpl-side-title">Insert Variables</div>
+                                            <div class="co-tpl-side-sub">Click to insert this candidate's actual details at the cursor.</div>
+                                            <div class="co-var-chips">
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_candidate_name ?? '' }}" {{ empty($co_candidate_name) ? 'disabled' : '' }}>Candidate Name</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_candidate_email ?? '' }}" {{ empty($co_candidate_email) ? 'disabled' : '' }}>Candidate Email</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_candidate_mobile ?? '' }}" {{ empty($co_candidate_mobile) ? 'disabled' : '' }}>Candidate Mobile</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_company_name ?? '' }}" {{ empty($co_company_name) ? 'disabled' : '' }}>Company Name</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_job_title ?? '' }}" {{ empty($co_job_title) ? 'disabled' : '' }}>Job Title</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_joining_date ?? '' }}" {{ empty($co_joining_date) ? 'disabled' : '' }}>Joining Date</button>
+                                                <button type="button" class="co-var-chip" data-co-var="{{ $co_today_date ?? '' }}" {{ empty($co_today_date) ? 'disabled' : '' }}>Today's Date</button>
+                                            </div>
+                                        </div>
+                                        <div class="co-tpl-card-box">
+                                            <div class="co-tpl-side-title">About this template</div>
+                                            <div class="co-tpl-note" style="margin-top:6px;">This is your company's default Offer Letter Template, configured in <b>Settings &rarr; Company Profile &rarr; Terms &amp; Conditions</b>. Changes made here apply only to this candidate's offer.</div>
+                                        </div>
+                                        <button type="button" class="co-btn-reset setToDefaultCompanyTerms" id="setToDefaultCompanyTerms">Reset Template</button>
+                                    </div>
                                 </div>
-
-                               
-
-
 
                             </div>
 
@@ -2437,7 +2579,85 @@
                         });
                     });
 
+                    // ── Step 2 (Offer Letter Template) — everything below is client-side only,
+                    // no extra server round-trips: template search filter, tab switching, zoom,
+                    // insert-variable, and the sample export all run against the existing
+                    // CKEditor instance already loaded on the page.
 
+                    // Templates sidebar: filter the (currently single) template card by name.
+                    $(document).on('input', '#co_tpl_search', function() {
+                        var q = $(this).val().trim().toLowerCase();
+                        var anyVisible = false;
+                        $('.co-tpl-card').each(function() {
+                            var match = !q || ($(this).data('tpl-name') || '').indexOf(q) !== -1;
+                            $(this).toggle(match);
+                            if (match) anyVisible = true;
+                        });
+                        $('#co_tpl_search_empty').toggleClass('d-none', anyVisible);
+                    });
+
+                    // Template Editor / Preview tabs
+                    $(document).on('click', '.co-tpl-tab', function() {
+                        var tab = $(this).data('co-tab');
+                        $('.co-tpl-tab').removeClass('co-tpl-tab--active');
+                        $(this).addClass('co-tpl-tab--active');
+                        $('.co-tpl-tabpane').addClass('d-none');
+                        $('.co-tpl-tabpane[data-co-pane="' + tab + '"]').removeClass('d-none');
+                        if (tab === 'preview' && CKEDITOR.instances.editorterms1) {
+                            $('#co_tpl_preview_content').html(CKEDITOR.instances.editorterms1.getData());
+                        }
+                    });
+
+                    // Insert Variables — inserts this offer's actual resolved value at the cursor
+                    // (the template is merged once, server-side, before this page loads, so
+                    // inserting a raw [PLACEHOLDER] token here would never get substituted again).
+                    $(document).on('click', '.co-var-chip', function() {
+                        var val = $(this).data('co-var');
+                        if (!val) return;
+                        if (CKEDITOR.instances.editorterms1) {
+                            CKEDITOR.instances.editorterms1.insertText(String(val));
+                            CKEDITOR.instances.editorterms1.focus();
+                        }
+                    });
+
+                    // Zoom controls — scales the CKEditor content area's font-size only (view aid,
+                    // does not touch the saved HTML).
+                    var coTplZoom = 100;
+                    function coApplyTplZoom() {
+                        $('#co_tpl_zoom_pct').text(coTplZoom + '%');
+                        if (CKEDITOR.instances.editorterms1) {
+                            var doc = CKEDITOR.instances.editorterms1.document;
+                            if (doc && doc.getBody()) {
+                                doc.getBody().setStyle('font-size', (coTplZoom / 100 * 14) + 'px');
+                            }
+                        }
+                    }
+                    $(document).on('click', '#co_tpl_zoom_in', function() {
+                        coTplZoom = Math.min(coTplZoom + 10, 150);
+                        coApplyTplZoom();
+                    });
+                    $(document).on('click', '#co_tpl_zoom_out', function() {
+                        coTplZoom = Math.max(coTplZoom - 10, 70);
+                        coApplyTplZoom();
+                    });
+
+                    // Download Sample — exports the current (unsaved) editor content as a
+                    // standalone .html file, entirely client-side (Blob), no server call.
+                    $(document).on('click', '#co_tpl_download_sample', function() {
+                        if (!CKEDITOR.instances.editorterms1) return;
+                        var html = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+                            '<title>Offer Letter Sample</title></head><body>' +
+                            CKEDITOR.instances.editorterms1.getData() + '</body></html>';
+                        var blob = new Blob([html], { type: 'text/html' });
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'offer-letter-sample.html';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
 
                     function calculateRowDetails(row) {
 
