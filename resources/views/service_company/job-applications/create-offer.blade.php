@@ -425,60 +425,71 @@
            Every rule below is scoped so nothing exceeds 14px (stricter than step 1's 16px cap).
            No extra server round-trips: search/tabs/zoom/preview/download all run client-side. */
         .co-tpl-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
-        .co-tpl-sub { font-size: 12px; color: #7e8299; margin-top: 2px; }
+        .co-tpl-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
         .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 
-        .co-tpl-layout { display: flex; align-items: flex-start; gap: 14px; }
-        .co-tpl-sidebar { flex: 0 0 220px; max-width: 220px; }
+        /* All three columns are plain white cards on a white page — no grey/lavender fill anywhere */
+        #step2, .co-tpl-layout { background: #fff; }
+        .co-tpl-layout { display: flex; align-items: stretch; gap: 12px; }
+        .co-tpl-sidebar { flex: 0 0 180px; max-width: 180px; }
         .co-tpl-editor-col { flex: 1 1 auto; min-width: 0; }
-        .co-tpl-side { flex: 0 0 240px; max-width: 240px; display: flex; flex-direction: column; gap: 12px; }
+        .co-tpl-side { flex: 0 0 200px; max-width: 200px; display: flex; flex-direction: column; gap: 10px; }
 
         /* Templates sidebar */
-        .co-tpl-card-box { border: 1px solid #eef1f7; border-radius: 12px; padding: 12px; }
-        .co-tpl-sidebar-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 8px; }
-        .co-tpl-search input { height: 34px !important; font-size: 12px !important; padding: 4px 10px !important; }
-        .co-tpl-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .co-tpl-card { display: flex; align-items: flex-start; gap: 8px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px; background: #fff; cursor: default; }
+        .co-tpl-card-box { background: #fff; border: 1px solid #eef1f7; border-radius: 12px; padding: 10px; }
+        .co-tpl-sidebar-head { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: 6px; }
+        .co-tpl-search input { height: 30px !important; font-size: 11px !important; padding: 4px 8px !important; }
+        .co-tpl-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .co-tpl-card { display: flex; align-items: flex-start; gap: 6px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 8px; background: #fff; cursor: default; }
         .co-tpl-card--active { border-color: #1b84ff; background: #f3f8ff; }
-        .co-tpl-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-tpl-ico svg { width: 16px; height: 16px; }
+        .co-tpl-ico { width: 26px; height: 26px; border-radius: 7px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-tpl-ico svg { width: 14px; height: 14px; }
         .co-tpl-card-body { min-width: 0; flex: 1 1 auto; }
-        .co-tpl-card-name { font-size: 12px; font-weight: 700; color: #181c32; line-height: 1.3; }
-        .co-tpl-card-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
-        .co-tpl-badge { font-size: 10px !important; font-weight: 700; padding: 1px 7px; border-radius: 99px; }
+        .co-tpl-card-name { font-size: 11px; font-weight: 700; color: #181c32; line-height: 1.3; }
+        .co-tpl-card-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+        .co-tpl-badge { font-size: 9px !important; font-weight: 700; padding: 1px 6px; border-radius: 99px; }
         .co-tpl-badge--active { background: #e8fff3; color: #0f9463; }
-        .co-tpl-type { font-size: 10px; color: #a1a5b7; }
+        .co-tpl-type { font-size: 9px; color: #a1a5b7; }
         .co-tpl-check { color: #1b84ff; flex-shrink: 0; margin-left: auto; }
-        .co-tpl-check svg { width: 16px; height: 16px; }
-        .co-tpl-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 10px 4px; }
+        .co-tpl-check svg { width: 14px; height: 14px; }
+        .co-tpl-empty { font-size: 10px; color: #a1a5b7; text-align: center; padding: 10px 4px; }
 
         /* Template editor card */
-        .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 12px; }
-        .co-tpl-tab { background: none; border: none; padding: 8px 14px; font-size: 13px !important; font-weight: 600; color: #a1a5b7; border-bottom: 2px solid transparent; cursor: pointer; }
+        .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 10px; }
+        .co-tpl-tab { background: none; border: none; padding: 7px 12px; font-size: 12px !important; font-weight: 600; color: #a1a5b7; border-bottom: 2px solid transparent; cursor: pointer; }
         .co-tpl-tab--active { color: #1b84ff; border-bottom-color: #1b84ff; }
-        .co-tpl-meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
-        .co-tpl-meta-item { font-size: 11px; color: #7e8299; }
+        .co-tpl-meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+        .co-tpl-meta-item { font-size: 10px; color: #7e8299; }
         .co-tpl-meta-item b { color: #181c32; font-weight: 600; margin-left: 4px; }
-        .co-tpl-toolbar-extra { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .co-tpl-zoom { display: flex; align-items: center; gap: 8px; }
-        .co-tpl-zoom-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; color: #5e6278; font-weight: 700; font-size: 13px !important; cursor: pointer; line-height: 1; }
+
+        /* Letterhead — logo left, company address right (real data; shown identically in the
+           editor and the preview so what you see is what the candidate will get). */
+        .co-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eef1f7; }
+        .co-letterhead-logo img { max-height: 42px; max-width: 160px; object-fit: contain; }
+        .co-letterhead-logo-fallback { font-size: 13px; font-weight: 700; color: #181c32; }
+        .co-letterhead-address { text-align: right; font-size: 10px; color: #7e8299; line-height: 1.5; max-width: 260px; }
+        .co-letterhead-company { font-size: 12px; font-weight: 700; color: #181c32; }
+
+        .co-tpl-toolbar-extra { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .co-tpl-zoom { display: flex; align-items: center; gap: 6px; }
+        .co-tpl-zoom-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; color: #5e6278; font-weight: 700; font-size: 12px !important; cursor: pointer; line-height: 1; }
         .co-tpl-zoom-btn:hover { background: #f5f8fa; }
-        .co-tpl-zoom-pct { font-size: 11px; color: #7e8299; min-width: 34px; text-align: center; display: inline-block; }
-        .co-tpl-download-btn { font-size: 11px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .co-tpl-zoom-pct { font-size: 10px; color: #7e8299; min-width: 30px; text-align: center; display: inline-block; }
+        .co-tpl-download-btn { font-size: 10px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .co-tpl-download-btn:hover { background: #e0e7ff; }
-        .co-tpl-download-btn svg { width: 12px; height: 12px; }
-        .co-tpl-preview { border: 1px solid #eef1f7; border-radius: 10px; padding: 18px; min-height: 350px; max-height: 480px; overflow: auto; font-size: 13px; background: #fff; }
+        .co-tpl-download-btn svg { width: 11px; height: 11px; }
+        .co-tpl-preview { border: 1px solid #eef1f7; border-radius: 10px; padding: 18px; min-height: 350px; max-height: 480px; overflow: auto; font-size: 12px; background: #fff; }
 
         /* Insert Variables + info panel */
-        .co-tpl-side-title { font-size: 13px; font-weight: 700; color: #181c32; }
-        .co-tpl-side-sub { font-size: 11px; color: #7e8299; margin: 3px 0 10px; line-height: 1.4; }
-        .co-var-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-        .co-var-chip { font-size: 11px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: 1px solid #e0e7ff; border-radius: 7px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+        .co-tpl-side-title { font-size: 12px; font-weight: 700; color: #181c32; }
+        .co-tpl-side-sub { font-size: 10px; color: #7e8299; margin: 3px 0 8px; line-height: 1.4; }
+        .co-var-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .co-var-chip { font-size: 10px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: 1px solid #e0e7ff; border-radius: 7px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
         .co-var-chip:hover { background: #e0e7ff; }
         .co-var-chip:disabled { opacity: .5; cursor: not-allowed; }
-        .co-tpl-note { font-size: 11px; color: #7e8299; line-height: 1.5; }
+        .co-tpl-note { font-size: 10px; color: #7e8299; line-height: 1.5; }
         .co-tpl-note a { color: #1b84ff; font-weight: 600; }
-        .co-btn-reset { width: 100%; background: #fff !important; border: 1px solid #f1416c !important; color: #f1416c !important; font-weight: 600 !important; height: 38px; border-radius: 8px; font-size: 12px !important; }
+        .co-btn-reset { width: 100%; background: #fff !important; border: 1px solid #f1416c !important; color: #f1416c !important; font-weight: 600 !important; height: 36px; border-radius: 8px; font-size: 11px !important; margin-top: auto; }
         .co-btn-reset:hover { background: #fff5f8 !important; }
 
         /* Responsive: collapse to a single column under ~1100px (fits smaller 15.6" / 13" laptops) */
@@ -2347,10 +2358,26 @@
                                             <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                                         </div>
 
+                                        @php
+                                            $co_letterhead = '
+                                                <div class="co-letterhead">
+                                                    <div class="co-letterhead-logo">'
+                                                        . (!empty($co_company_logo)
+                                                            ? '<img src="'.e($co_company_logo).'" alt="'.e($co_company_name ?? 'Company').'">'
+                                                            : '<span class="co-letterhead-logo-fallback">'.e($co_company_name ?? 'Company').'</span>')
+                                                    . '</div>
+                                                    <div class="co-letterhead-address">'
+                                                        . (!empty($co_company_name) ? '<div class="co-letterhead-company">'.e($co_company_name).'</div>' : '')
+                                                        . (!empty($co_company_address) ? '<div>'.e($co_company_address).'</div>' : '')
+                                                    . '</div>
+                                                </div>';
+                                        @endphp
+
                                         <div class="co-tpl-tabpane" data-co-pane="editor">
                                             <form class="ajax-form" method="POST" id="termConditioncreateForm"
                                                 name="termConditioncreateForm" enctype="multipart/form-data">
                                                 @csrf
+                                                {!! $co_letterhead !!}
                                                 <div class="col-lg-12 col-xl-12">
                                                     <textarea id="editorterms1" name="editorterms1">
                                                         {{ $offer_terms }}
@@ -2371,16 +2398,17 @@
 
                                                 <div class="co-footer-actions" style="margin-top:14px;">
                                                     <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                                    <input type="submit" name="save" value="Save & Preview" class="btn co-btn-save">
+                                                    <input type="submit" name="save" value="Save & Next" class="btn co-btn-save">
                                                 </div>
                                             </form>
                                         </div>
 
                                         <div class="co-tpl-tabpane d-none" data-co-pane="preview">
+                                            {!! $co_letterhead !!}
                                             <div id="co_tpl_preview_content" class="co-tpl-preview"></div>
                                             <div class="co-footer-actions" style="margin-top:14px;">
                                                 <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                                <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Preview</button>
+                                                <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
                                             </div>
                                         </div>
                                     </div>

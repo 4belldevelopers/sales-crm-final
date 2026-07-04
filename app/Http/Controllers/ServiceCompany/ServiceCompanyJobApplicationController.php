@@ -4645,6 +4645,8 @@ protected $elasticService;
 		$this->co_job_title        = $job_title;
 		$this->co_joining_date     = $of_joined_date_update;
 		$this->co_today_date       = date("d M Y");
+		$this->co_company_logo     = $logo;
+		$this->co_company_address  = $address;
 
 
 		// dd($this->offer_points);
