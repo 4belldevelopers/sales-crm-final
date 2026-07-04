@@ -805,12 +805,10 @@ a:hover .ot-comp-change { text-decoration: underline; }
             success:function(r){
                 if(r.status=='success'){
                     $('#titleSet').text(r.title);
+                    // For the approval flow (mtype 2) the approver picker drawer opens itself —
+                    // it's rendered already-open server-side (see offerSendMail.blade.php), so
+                    // there's no reliance on a script executing at just the right moment.
                     $('#application_fwd_offer_body_content').html(r.view);
-                    // Approval flow (mtype 2): jump straight to the approver picker instead of
-                    // making the user find the small "+ Add Approver" link inside the composer.
-                    if (mtype == 2 && typeof coApprOpenDrawer === 'function') {
-                        setTimeout(function () { coApprOpenDrawer('to'); }, 50);
-                    }
                 }
             }
         });
