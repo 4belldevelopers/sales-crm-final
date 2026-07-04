@@ -879,9 +879,11 @@
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}"
                                                                     role="row">
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 47% !important;">Component Name</th>
+                                                                        style="width: 35% !important;">Component Name</th>
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 12% !important;">Allocation</th>
+                                                                        style="width: 12% !important;">Applicable</th>
+                                                                    <th class="sorting_disabled"
+                                                                        style="width: 10% !important;">Allocation</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 3% !important;">&nbsp;</th>
                                                                     <th class="sorting_disabled"
@@ -1032,7 +1034,7 @@
 
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 47% !important;">
+                                                                                <td class="" style="width: 35% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -1043,6 +1045,14 @@
                                                                                         placeholder="Enter Point">
                                                                                 </td>
                                                                                 <td class="" style="width: 12% !important;">
+                                                                                    {{-- Applicable (display/consistency column for the reduced layout — named *_hourly so it never collides with other_section's basic_view[] on submit) --}}
+                                                                                    <select &nbsp="" class="form-select form-select-solid basic_view_hourly" arial-label="Select View" name="basic_view_hourly[]" id="basic_view_hourly_{{ $basic->id }}" data-id="{{ $basic->id }}" data-offerid="{{ $basic->id }}" style="width: 100%;display: initial;">
+                                                                                        <option value="0" {{ (isset($basic->view_type) && $basic->view_type == 0) ? 'selected' : '' }}>Annually</option>
+                                                                                        <option value="1" {{ (isset($basic->view_type) && $basic->view_type == 1) ? 'selected' : '' }}>Monthly</option>
+                                                                                        <option value="2" {{ (isset($basic->view_type) && $basic->view_type == 2) ? 'selected' : '' }}>Annually &amp; Monthly</option>
+                                                                                    </select>
+                                                                                </td>
+                                                                                <td class="" style="width: 10% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage_hourly"
                                                                                         name="option_percentage_hourly[]"
@@ -1255,7 +1265,7 @@
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 1 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
                                                                                 <td class=""
-                                                                                    style="width: 47% !important;">
+                                                                                    style="width: 35% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -1264,6 +1274,14 @@
                                                                                         data-offerid="{{ $value->id }}"
                                                                                         value="{{ $value->points }}"
                                                                                         placeholder="Enter Point">
+                                                                                </td>
+                                                                                <td class="" style="width: 12% !important;">
+                                                                                    {{-- Applicable (display/consistency column for the reduced layout — named *_hourly so it never collides with other_section's basic_view[] on submit) --}}
+                                                                                    <select &nbsp="" class="form-select form-select-solid basic_view_hourly" arial-label="Select View" name="basic_view_hourly[]" id="basic_view_hourly_{{ $value->id }}" data-id="{{ $value->id }}" data-offerid="{{ $value->id }}" style="width: 100%;display: initial;">
+                                                                                        <option value="0">Annually</option>
+                                                                                        <option value="1">Monthly</option>
+                                                                                        <option value="2">Annually &amp; Monthly</option>
+                                                                                    </select>
                                                                                 </td>
                                                                                 <td class=""
                                                                                     style="width: 12% !important;">
@@ -1411,11 +1429,11 @@
 
                                                             <tfoot class="hourly_section {{ $section_hourly }}">
                                                                 <tr>
-                                                                    <th colspan="5" class="sorting_disabled"
+                                                                    <th colspan="7" class="sorting_disabled"
                                                                         style="width: 102px;">&nbsp; </th>
                                                                 </tr>
                                                                 <tr>
-                                                                    <th class="sorting_disabled">
+                                                                    <th colspan="2" class="sorting_disabled">
                                                                         <input type="text" class="form-control form-control-solid" value="Total Main Components" readonly style="cursor: not-allowed;background: #ffeb0066;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
@@ -1472,7 +1490,27 @@
                                                             role="grid" aria-describedby="bonusList_info"
                                                             style="width: 100%;">
                                                             <thead>
-                                                                <tr class="other_section other_section_row row-template {{ $section_other }}">
+                                                                {{-- Column header row (like Main Components) --}}
+                                                                <tr class="fw-bolder text-muted other_section {{ $section_other }}">
+                                                                    <th class="sorting_disabled" style="width: 25%!important">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width:10% !important">Applicable</th>
+                                                                    <th class="sorting_disabled" style="width: 7% !important;">Allocation</th>
+                                                                    <th class="sorting_disabled" style="width: 3% !important;">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 12% !important;">Condition</th>
+                                                                    <th class="sorting_disabled" style="width: 15% !important;">Monthly</th>
+                                                                    <th class="sorting_disabled" style="width:15% !important">{{$first_text}}</th>
+                                                                    <th class="sorting_disabled">Action</th>
+                                                                </tr>
+                                                                <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
+                                                                    <th class="sorting_disabled" style="width: 47% !important;">Component Name</th>
+                                                                    <th class="sorting_disabled" style="width: 12% !important;">Allocation</th>
+                                                                    <th class="sorting_disabled" style="width: 3% !important;">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important;">Condition</th>
+                                                                    <th class="sorting_disabled" style="width:15% !important">{{ $secont_text }}</th>
+                                                                    <th class="sorting_disabled" style="width: 78px;">Action</th>
+                                                                </tr>
+                                                                {{-- Old compact "Additional Component" bar kept only to host the add-row trigger (hidden; replaced by column headers above) --}}
+                                                                <tr class="other_section other_section_row row-template {{ $section_other }}" style="display:none;">
                                                                     <th colspan="7" class="sorting_disabled"
                                                                         style="width: 102px;">Additional Component</th>
                                                                     <th class="sorting_disabled"
@@ -1501,7 +1539,7 @@
                                                                     </button>
                                                                     </th>
                                                                 </tr>
-                                                                <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}">
+                                                                <tr class="hourly_section hourly_section_row row-template remove_row {{ $section_hourly }}" style="display:none;">
                                                                     <th colspan="6" class="sorting_disabled other_text"
                                                                         style="width: 102px;">Additional Component</th>
 
@@ -2034,6 +2072,23 @@
                                                             id="final_pay" role="grid"
                                                             aria-describedby="final_pay_info" style="width: 100%;">
 
+                                                            {{-- Column header row for the Final CTC values (like Main / Additional) --}}
+                                                            <thead>
+                                                                <tr class="fw-bolder text-muted other_section {{ $section_other }}">
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 35%;">Component</th>
+                                                                    <th class="sorting_disabled" style="width: 10% !important;">Allocation</th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 10% !important;">&nbsp;</th>
+                                                                    <th class="sorting_disabled" style="width: 17% !important;">Monthly</th>
+                                                                    <th class="sorting_disabled" style="width: 15% !important;">{{ $first_text }}</th>
+                                                                    <th class="sorting_disabled">&nbsp;</th>
+                                                                </tr>
+                                                                <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
+                                                                    <th class="sorting_disabled" style="width: 47%;">Component</th>
+                                                                    <th class="sorting_disabled" style="width: 12% !important;">Allocation</th>
+                                                                    <th colspan="2" class="sorting_disabled" style="width: 13% !important;">&nbsp;</th>
+                                                                    <th class="sorting_disabled" colspan="1">{{ $first_text }}</th>
+                                                                </tr>
+                                                            </thead>
 
                                                             <tfoot class="other_section_final other_section {{ $section_other }}">
 
