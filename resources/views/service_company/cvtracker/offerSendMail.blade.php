@@ -89,7 +89,27 @@ if($cc_email_count > 0){
 @media only screen and (min-width: 1440px) and (max-width: 2560px){
   #kt_activitiesIntTeamsss{width: 750;}
 }
-</style> 
+
+/* ── Approver recipient picker (Internal Company Approvers / Client Company Approvers) ──
+   Scoped to .co-appr-* so it doesn't affect the rest of this shared email-composer modal.
+   Reuses the exact same underlying data + Add/Remove wiring — this only changes presentation. */
+.co-appr-picker, .co-appr-picker * { font-family: 'Poppins', sans-serif; }
+.co-appr-picker { font-size: 12px; }
+.co-appr-source-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.co-appr-source-card {
+    flex: 1 1 220px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+    border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px 12px; background: #fff;
+}
+.co-appr-source-card input { margin: 0 6px 0 0; }
+.co-appr-source-card--active { border-color: #1b84ff; background: #f3f8ff; }
+.co-appr-source-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.co-appr-source-ico svg { width: 16px; height: 16px; }
+.co-appr-source-title { font-size: 12px; font-weight: 700; color: #181c32; }
+.co-appr-source-sub { font-size: 10px; color: #7e8299; margin-top: 1px; }
+.co-appr-search { margin-bottom: 10px; }
+.co-appr-search input { height: 34px; font-size: 12px; }
+.co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 14px 4px; }
+</style>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
 
@@ -238,7 +258,7 @@ if($cc_email_count > 0){
       <div class="card-header px-5 py-0" id="kt__cc_header">
           <div class="d-flex align-items-center py-1">
             <div class=" d-flex align-items-center"> 
-              <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light__cc_name">Assign Members</a> </div>
+              <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light__cc_name">Select Approver</a> </div>
             </div>
             <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
           <div class="card-toolbar">
@@ -254,19 +274,41 @@ if($cc_email_count > 0){
         </div>
       <!--end::Team header-->
       <!--begin::Team Content-->
-      <div class="card-body py-7">
+      <div class="card-body py-7 co-appr-picker">
+        {{-- Choose Approver Source: internal team always available; client team only shown
+             when this job actually has a client (i.e. it's not an internal-only job). --}}
+        <div class="co-appr-source-row">
+            <label class="co-appr-source-card co-appr-source-card--active" data-source-for="cc" data-source="internal">
+                <input type="radio" name="apprSourceCc" value="internal" checked>
+                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
+                <div>
+                    <div class="co-appr-source-title">Internal Company Approvers</div>
+                    <div class="co-appr-source-sub">{{ count($cc_email_internal_data ?? []) }} available</div>
+                </div>
+            </label>
+            @if(!empty($cc_email_client_data))
+            <label class="co-appr-source-card" data-source-for="cc" data-source="client">
+                <input type="radio" name="apprSourceCc" value="client">
+                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                <div>
+                    <div class="co-appr-source-title">Client Company Approvers</div>
+                    <div class="co-appr-source-sub">{{ count($cc_email_client_data) }} available</div>
+                </div>
+            </label>
+            @endif
+        </div>
+        <div class="co-appr-search">
+            <input type="text" class="form-control form-control-solid co-appr-search-input" data-search-for="cc" placeholder="Search by name, email or company...">
+        </div>
         <!--begin::Table-->
         <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_cc">
           <!--begin::Table head-->
           <thead>
             <!--begin::Table row-->
             <tr class="fw-bolder text-muted">
-              <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                  <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-target="#Iteam_Table .form-check-input-Item" value="1">
-                </div></th>
-              <th class="min-w-250px">Name</th>
-              <th class="min-w-250px">Contact</th>
-              <th class="min-w-250px">Company</th>
+              <th class="min-w-200px">Approver</th>
+              <th class="min-w-200px">Contact</th>
+              <th class="min-w-200px">Company</th>
               <th class="min-w-100px">Action</th>
             </tr>
             <!--end::Table row-->
@@ -274,70 +316,40 @@ if($cc_email_count > 0){
           <!--end::Table head-->
           <!--begin::Table body-->
           <tbody class="text-gray-600 fw-bold">
-           	@if(!empty($cc_email_assignData))
-           
-							@foreach($cc_email_assignData as $teamVal )
-							
-								@php
-                                	$bgTextDecore = $strVal = '';
-									$str 			= trim(@$teamVal->name);
-									$str 			= $strVal = strtolower($str[0]);
-									$str = ord($str);
-									if ($str >= 97 && $str <= 101) {
-										$bgTextDecore = 'fs-3 bg-light-danger text-danger';
-									} 
-									else if ($str >= 102 && $str <= 106) {
-										$bgTextDecore = 'fs-3 bg-light-warning text-warning';
-									} 
-									else if ($str >= 107 && $str <= 111) {
-										$bgTextDecore = 'fs-3 bg-light-primary text-primary';
-									} 
-									else if ($str >= 112 && $str <= 116) {
-										$bgTextDecore = 'fs-3 bg-light-success text-success';
-									} 
-									else if ($str >= 117 && $str <= 121) {
-										$bgTextDecore = 'fs-3 bg-dark text-secondary';
-									} else {
-										$bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-									}
-
-									$working_status	= $working_status_style	=	'';
-									$working_status			=  @$teamVal->working_status ==1 ? 'Enable' : 'Disable';
-									$working_status_style	=  @$teamVal->working_status ==1 ? 'text-success' : 'text-danger';
-									@endphp
-									
-							 <tr>
-              <!--begin::Checkbox-->
-              <td><div class="form-check form-check-sm form-check-custom form-check-solid">
-                  <input class="form-check-input form-check-input-Item" type="checkbox" value="1">
-                </div></td>
-              <!--end::Checkbox-->
-              <!--begin::Name-->
-              <td><div class="d-flex align-items-center">
-                  <!--begin::Avatar-->
-                  <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
-                    <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
-                    </a> </div>
-                  <!--end::Avatar-->
-                  <!--begin::Name details-->
-                  <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 15)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 15)) }}</span> </div>
-                  <!--end::Name details-->
-                </div></td>
-              <!--end::Name-->
-              <!--begin::Role-->
-              <td><div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6"></span> {{ @$teamVal->email }}</div></td>
-              <!--begin::Role-->
-             <td><div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6"></span> {{ @$teamVal->company_name }}</div></td>
-              <!--begin::Action-->
-              <td><div class="d-flex flex-column"> <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select btn btn-sm btn-light-primary w-130" 
-											 rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
-              <!--end::Action-->
-            </tr>
-							
-							@endforeach
-						@endif	
-           
-          
+            @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
+                @foreach ($group['data'] as $teamVal)
+                    @php
+                        $bgTextDecore = $strVal = '';
+                        $str = trim(@$teamVal->name);
+                        $str = $strVal = strtolower($str[0] ?? 'c');
+                        $str = ord($str);
+                        if ($str >= 97 && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
+                        else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
+                        else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
+                        else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
+                        else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
+                        else { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
+                    @endphp
+                    <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
+                        data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                        <!--begin::Name-->
+                        <td><div class="d-flex align-items-center">
+                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
+                                <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
+                                </a> </div>
+                            <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 20)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 25)) }}</span> </div>
+                        </div></td>
+                        <!--end::Name-->
+                        <td><div class="d-flex flex-column">{{ @$teamVal->email }}</div></td>
+                        <td><div class="d-flex flex-column">{{ @$teamVal->company_name }}</div></td>
+                        <!--begin::Action-->
+                        <td><div class="d-flex flex-column"> <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select btn btn-sm btn-light-primary w-130"
+                            rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
+                        <!--end::Action-->
+                    </tr>
+                @endforeach
+            @endforeach
+            <tr class="co-appr-row co-appr-row--internal co-appr-empty-row {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal approvers found.</td></tr>
           </tbody>
           <!--end::Table body-->
         </table>
@@ -361,8 +373,7 @@ if($cc_email_count > 0){
       <!--begin::Team header-->
       <div class="card-header px-5 py-0" id="kt_to_header">
           <div class="d-flex align-items-center py-1">
-            <div class=" d-flex align-items-center"> 
-              <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light_to_name">Assign Members</a> </div>
+              <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light_to_name">Select Approver</a> </div>
             </div>
             <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
           <div class="card-toolbar">
@@ -378,19 +389,39 @@ if($cc_email_count > 0){
         </div>
       <!--end::Team header-->
       <!--begin::Team Content-->
-      <div class="card-body py-7">
+      <div class="card-body py-7 co-appr-picker">
+        <div class="co-appr-source-row">
+            <label class="co-appr-source-card co-appr-source-card--active" data-source-for="to" data-source="internal">
+                <input type="radio" name="apprSourceTo" value="internal" checked>
+                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
+                <div>
+                    <div class="co-appr-source-title">Internal Company Approvers</div>
+                    <div class="co-appr-source-sub">{{ count($cc_email_internal_data ?? []) }} available</div>
+                </div>
+            </label>
+            @if(!empty($cc_email_client_data))
+            <label class="co-appr-source-card" data-source-for="to" data-source="client">
+                <input type="radio" name="apprSourceTo" value="client">
+                <span class="co-appr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                <div>
+                    <div class="co-appr-source-title">Client Company Approvers</div>
+                    <div class="co-appr-source-sub">{{ count($cc_email_client_data) }} available</div>
+                </div>
+            </label>
+            @endif
+        </div>
+        <div class="co-appr-search">
+            <input type="text" class="form-control form-control-solid co-appr-search-input" data-search-for="to" placeholder="Search by name, email or company...">
+        </div>
         <!--begin::Table-->
         <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_to">
           <!--begin::Table head-->
           <thead>
             <!--begin::Table row-->
             <tr class="fw-bolder text-muted">
-              <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                  <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-target="#Iteam_Table .form-check-input-Item" value="1">
-                </div></th>
-              <th class="min-w-250px">Name</th>
-              <th class="min-w-250px">Contact</th>
-              <th class="min-w-250px">Company</th>
+              <th class="min-w-200px">Approver</th>
+              <th class="min-w-200px">Contact</th>
+              <th class="min-w-200px">Company</th>
               <th class="min-w-100px">Action</th>
             </tr>
             <!--end::Table row-->
@@ -398,70 +429,40 @@ if($cc_email_count > 0){
           <!--end::Table head-->
           <!--begin::Table body-->
           <tbody class="text-gray-600 fw-bold">
-           	@if(!empty($cc_email_assignData))
-           
-							@foreach($cc_email_assignData as $teamVal )
-							
-								@php
-                                	$bgTextDecore = $strVal = '';
-									$str 			= trim(@$teamVal->name);
-									$str 			= $strVal = strtolower($str[0]);
-									$str = ord($str);
-									if ($str >= 97 && $str <= 101) {
-										$bgTextDecore = 'fs-3 bg-light-danger text-danger';
-									} 
-									else if ($str >= 102 && $str <= 106) {
-										$bgTextDecore = 'fs-3 bg-light-warning text-warning';
-									} 
-									else if ($str >= 107 && $str <= 111) {
-										$bgTextDecore = 'fs-3 bg-light-primary text-primary';
-									} 
-									else if ($str >= 112 && $str <= 116) {
-										$bgTextDecore = 'fs-3 bg-light-success text-success';
-									} 
-									else if ($str >= 117 && $str <= 121) {
-										$bgTextDecore = 'fs-3 bg-dark text-secondary';
-									} else {
-										$bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-									}
-
-									$working_status	= $working_status_style	=	'';
-									$working_status			=  @$teamVal->working_status ==1 ? 'Enable' : 'Disable';
-									$working_status_style	=  @$teamVal->working_status ==1 ? 'text-success' : 'text-danger';
-									@endphp
-									
-							 <tr>
-              <!--begin::Checkbox-->
-              <td><div class="form-check form-check-sm form-check-custom form-check-solid">
-                  <input class="form-check-input form-check-input-Item" type="checkbox" value="1">
-                </div></td>
-              <!--end::Checkbox-->
-              <!--begin::Name-->
-              <td><div class="d-flex align-items-center">
-                  <!--begin::Avatar-->
-                  <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
-                    <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
-                    </a> </div>
-                  <!--end::Avatar-->
-                  <!--begin::Name details-->
-                  <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 15)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 15)) }}</span> </div>
-                  <!--end::Name details-->
-                </div></td>
-              <!--end::Name-->
-              <!--begin::Role-->
-              <td><div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6"></span> {{ @$teamVal->email }}</div></td>
-              <!--begin::Role-->
-             <td><div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6"></span> {{ @$teamVal->company_name }}</div></td>
-              <!--begin::Action-->
-              <td><div class="d-flex flex-column"> <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select btn btn-sm btn-light-primary w-130" 
-											 rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
-              <!--end::Action-->
-            </tr>
-							
-							@endforeach
-						@endif	
-           
-          
+            @foreach ([['data' => $cc_email_internal_data ?? [], 'source' => 'internal'], ['data' => $cc_email_client_data ?? [], 'source' => 'client']] as $group)
+                @foreach ($group['data'] as $teamVal)
+                    @php
+                        $bgTextDecore = $strVal = '';
+                        $str = trim(@$teamVal->name);
+                        $str = $strVal = strtolower($str[0] ?? 'c');
+                        $str = ord($str);
+                        if ($str >= 97 && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
+                        else if ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
+                        else if ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
+                        else if ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
+                        else if ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
+                        else { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
+                    @endphp
+                    <tr class="co-appr-row co-appr-row--{{ $group['source'] }} {{ $group['source'] === 'client' ? 'd-none' : '' }}"
+                        data-search-name="{{ strtolower((string) @$teamVal->name) }}" data-search-email="{{ strtolower((string) @$teamVal->email) }}" data-search-company="{{ strtolower((string) @$teamVal->company_name) }}">
+                        <!--begin::Name-->
+                        <td><div class="d-flex align-items-center">
+                            <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"> <a href="javascript:void(0);" class="">
+                                <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
+                                </a> </div>
+                            <div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 20)) }}</span> <span class="text-muted fw-bold d-block fs-7">{{ ucwords(substr(@$teamVal->display_name, 0, 25)) }}</span> </div>
+                        </div></td>
+                        <!--end::Name-->
+                        <td><div class="d-flex flex-column">{{ @$teamVal->email }}</div></td>
+                        <td><div class="d-flex flex-column">{{ @$teamVal->company_name }}</div></td>
+                        <!--begin::Action-->
+                        <td><div class="d-flex flex-column"> <a id="to_team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="to_select btn btn-sm btn-light-primary w-130"
+                            rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> </div></td>
+                        <!--end::Action-->
+                    </tr>
+                @endforeach
+            @endforeach
+            <tr class="co-appr-row co-appr-row--internal co-appr-empty-row {{ !empty($cc_email_internal_data) ? 'd-none' : '' }}"><td colspan="4" class="co-appr-empty">No internal approvers found.</td></tr>
           </tbody>
           <!--end::Table body-->
         </table>
@@ -874,12 +875,44 @@ function DeleteEventTo(contact_person_name, email)
 	}	
 	
 	$('#to_email').val(team_hiring_manager_email);
-	
+
 }
 
+// ── Approver source toggle (Internal / Client) + search filter ──
+// Purely presentational: it only shows/hides rows already rendered server-side from real
+// data (cc_email_internal_data / cc_email_client_data). The existing Add/Remove wiring
+// (cp_select / to_select, AddEvent*/DeleteEvent*) above is untouched.
+$(document).on('click', '.co-appr-source-card', function() {
+	var drawer = $(this).data('source-for'); // "cc" or "to"
+	var source = $(this).data('source'); // "internal" or "client"
+	var $scope = $(this).closest('.co-appr-picker');
+	$scope.find('.co-appr-source-card[data-source-for="' + drawer + '"]').removeClass('co-appr-source-card--active');
+	$(this).addClass('co-appr-source-card--active');
+	$scope.find('.co-appr-row').addClass('d-none');
+	$scope.find('.co-appr-row--' + source).removeClass('d-none');
+	$scope.find('.co-appr-empty-row').addClass('d-none');
+	if (source === 'internal') {
+		$scope.find('.co-appr-row--internal.co-appr-empty-row').each(function() {
+			if ($scope.find('.co-appr-row--internal:not(.co-appr-empty-row)').length === 0) { $(this).removeClass('d-none'); }
+		});
+	}
+	// Re-apply the current search term to whichever source is now visible
+	$scope.find('.co-appr-search-input').trigger('input');
+});
 
+$(document).on('input', '.co-appr-search-input', function() {
+	var drawer = $(this).data('search-for'); // "cc" or "to"
+	var q = $(this).val().trim().toLowerCase();
+	var $scope = $(this).closest('.co-appr-picker');
+	var activeSource = $scope.find('.co-appr-source-card--active').data('source') || 'internal';
+	$scope.find('.co-appr-row--' + activeSource + ':not(.co-appr-empty-row)').each(function() {
+		var $row = $(this);
+		var hay = ($row.data('search-name') + ' ' + $row.data('search-email') + ' ' + $row.data('search-company'));
+		$row.toggleClass('d-none', q !== '' && hay.indexOf(q) === -1);
+	});
+});
 
-</script> 
+</script>
 <script>
 	
 	// $.noConflict();

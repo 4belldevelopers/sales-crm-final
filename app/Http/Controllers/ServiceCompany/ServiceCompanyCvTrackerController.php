@@ -2774,10 +2774,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		$assignData = array_merge($assignDataclient,$assignDatatwo);
 		// dd($assignData);
-		
+
 			$this->cc_email_count = $assignCount;
 			$this->cc_email_data = $commonCcArr;
 			$this->cc_email_assignData = (object)$assignData;
+
+			// Same directories, kept separate so the recipient picker can group them as
+			// "Internal Company Approvers" vs "Client Company Approvers" instead of one merged list.
+			$this->cc_email_internal_data = $assignDatatwo;
+			$this->cc_email_client_data = $assignDataclient;
 		}
 		$this->offerId = $request->offerId;
 		$this->mtype = $request->mtype;
