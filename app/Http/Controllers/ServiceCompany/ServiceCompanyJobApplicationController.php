@@ -4674,7 +4674,8 @@ protected $elasticService;
 		// offer a pick-from-team drawer without an AJAX round-trip.
 		$this->co_send_internal = DB::table('users')
 			->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-			->select('users.id', 'users.name', 'users.email', 'users_profile.designation as display_name')
+			->leftjoin('companies', 'companies.id', 'users.company_id')
+			->select('users.id', 'users.name', 'users.email', 'users_profile.designation as display_name', 'companies.company_name')
 			->where('users.company_id', '=', auth()->user()->company_id)
 			->where('users.status', '=', 'active')
 			->whereNotNull('users.email')
@@ -4687,7 +4688,8 @@ protected $elasticService;
 			->where('jobs.id', $this->application->job_id)->first();
 		if ($co_job_client && (int) @$co_job_client->self_company === 0 && @$co_job_client->client_id) {
 			$this->co_send_client = DB::table('client_contact_info')
-				->select('client_contact_info.id', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_designation as display_name')
+				->leftjoin('clients', 'clients.id', 'client_contact_info.client_id')
+				->select('client_contact_info.id', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
 				->where('client_contact_info.client_id', $co_job_client->client_id)
 				->whereNotNull('client_contact_info.contact_person_email')->get()->toArray();
 		}
