@@ -4648,6 +4648,25 @@ protected $elasticService;
 		$this->co_company_logo     = $logo;
 		$this->co_company_address  = $address;
 
+		// Approval step (Step 4): $section_change_value already carries offer_create_main_tds.*
+		// (management_status/send_approved_date_time/approved_date_time). The approver's own
+		// name/email only lives on updatetimeline (written by fwd_offer_send()/saveSignature()),
+		// so pull the latest approval-type row for this application, plus a short activity feed.
+		$this->co_appr_timeline = DB::table('updatetimeline')
+			->where('application_id', $this->application->id)
+			->where('job_id', $this->application->job_id)
+			->where('mtypeSection', 2)
+			->orderByDesc('id')
+			->first();
+
+		$this->co_activity_log = DB::table('updatetimeline')
+			->where('application_id', $this->application->id)
+			->where('job_id', $this->application->job_id)
+			->whereNotNull('mtypeSection')
+			->orderByDesc('id')
+			->limit(8)
+			->get();
+
 
 		// dd($this->offer_points);
 		$view = view('service_company.job-applications.create-offer', $this->data)->render();
