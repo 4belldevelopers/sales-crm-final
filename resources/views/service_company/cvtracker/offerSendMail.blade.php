@@ -121,15 +121,17 @@ if($cc_email_count > 0){
    to the (small, mid-page) modal box instead of the viewport and ends up invisible/off-screen.
    Anchoring to the already-positioned modal body sidesteps that entirely. */
 .co-appr-drawer {
-    position: absolute; top: 0; right: -100%; left: auto; width: 100%; min-height: 100%;
-    background: #fff; box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 50;
-    transition: right .25s ease; overflow-y: auto;
+    position: absolute !important; top: 0 !important; right: -100% !important; left: auto !important;
+    width: 100% !important; min-height: 100%; background: #fff !important;
+    box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 2147483000 !important;
+    transition: right .25s ease; overflow-y: auto; display: block !important;
 }
-.co-appr-drawer.co-appr-drawer--open { right: 0; }
+.co-appr-drawer.co-appr-drawer--open { right: 0 !important; }
 .co-appr-drawer-backdrop {
-    display: none; position: absolute; inset: 0; background: rgba(24,28,50,.35); z-index: 49;
+    display: none; position: absolute !important; inset: 0; background: rgba(24,28,50,.35);
+    z-index: 2147482999 !important;
 }
-.co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block; }
+.co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block !important; }
 </style>
 <div class="co-appr-drawer-backdrop {{ (int) @$mtype === 2 ? 'co-appr-drawer-backdrop--open' : '' }}" id="co_appr_drawer_backdrop"></div>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
@@ -270,7 +272,7 @@ if($cc_email_count > 0){
 
 
 
-<div id="kt_activitiesIntTeam_cc" class="bg-body co-appr-drawer" data-kt-drawer-name="activities">
+<div id="kt_activitiesIntTeam_cc" class="co-appr-drawer">
   <div class="card-body position-relative px-0 py-0" id="kt__cc_body">
   <div id="kt_cc_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__cc_body" data-kt-scroll-dependencies="#kt__cc_header, #kt__cc_footer" data-kt-scroll-offset="5px" style="">
     <!--begin::Team card-->
@@ -385,7 +387,7 @@ if($cc_email_count > 0){
 
 
 
-<div id="kt_activitiesIntTeam_to" class="bg-body co-appr-drawer {{ (int) @$mtype === 2 ? 'co-appr-drawer--open' : '' }}" data-kt-drawer-name="activities">
+<div id="kt_activitiesIntTeam_to" class="co-appr-drawer {{ (int) @$mtype === 2 ? 'co-appr-drawer--open' : '' }}">
   <div class="card-body position-relative px-0 py-0" id="kt__to_body">
   <div id="kt_to_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__to_body" data-kt-scroll-dependencies="#kt__to_header, #kt__to_footer" data-kt-scroll-offset="5px" style="">
     <!--begin::Team card-->
