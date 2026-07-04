@@ -4635,7 +4635,17 @@ protected $elasticService;
 		$this->offer_terms = str_replace(["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"],[$candidate_name, $candidate_email,$candidate_mobile,$comapny_name,$job_title,$of_joined_date_update,$job_title,date("d M Y")], $offer_terms);
 		// dd($this->offer_terms,$offer_terms,$this->account );
 		// $this->offer_terms = $offer_terms;
-		
+
+		// Same values used in the merge above, exposed to the view so the Template step's
+		// "Insert Variable" chips can insert this offer's actual resolved values.
+		$this->co_candidate_name   = $candidate_name;
+		$this->co_candidate_email  = $candidate_email;
+		$this->co_candidate_mobile = $candidate_mobile;
+		$this->co_company_name     = $comapny_name;
+		$this->co_job_title        = $job_title;
+		$this->co_joining_date     = $of_joined_date_update;
+		$this->co_today_date       = date("d M Y");
+
 
 		// dd($this->offer_points);
 		$view = view('service_company.job-applications.create-offer', $this->data)->render();
