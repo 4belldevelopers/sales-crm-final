@@ -132,6 +132,61 @@ if($cc_email_count > 0){
     z-index: 2147482999 !important;
 }
 .co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block !important; }
+
+/* ════════════ Send Offer Letter (candidate flow, mtype=1) — polished composer ════════════
+   Scoped entirely to .co-sendoffer so the shared approval composer (mtype=2) is untouched.
+   Poppins, capped at 14px, restyle only — every field id/name/handler stays exactly as-is. */
+.co-sendoffer, .co-sendoffer * { font-family: 'Poppins', sans-serif; }
+.co-sendoffer { font-size: 13px; color: #3f4254; }
+
+/* Candidate summary header card */
+.co-so-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #f9fafd; border: 1px solid #eef1f7; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
+.co-so-avatar { width: 52px; height: 52px; border-radius: 50%; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.co-so-ident { min-width: 160px; }
+.co-so-name { font-size: 14px !important; font-weight: 700; color: #181c32; }
+.co-so-role { font-size: 12px; color: #1b84ff; font-weight: 600; }
+.co-so-meta { font-size: 11px; color: #7e8299; margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
+.co-so-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.co-so-meta svg { width: 12px; height: 12px; }
+.co-so-facts { display: flex; gap: 22px; flex-wrap: wrap; margin-left: auto; }
+.co-so-fact-label { font-size: 10px; color: #a1a5b7; }
+.co-so-fact-value { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 2px; }
+.co-so-fact-value.co-so-ctc { color: #0f9463; }
+.co-so-status { border-radius: 10px; padding: 8px 12px; text-align: center; align-self: stretch; display: flex; flex-direction: column; justify-content: center; min-width: 150px; }
+.co-so-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
+.co-so-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
+.co-so-status-title { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
+.co-so-status--approved .co-so-status-title { color: #0f7a3d; }
+.co-so-status--pending .co-so-status-title { color: #8a6d00; }
+.co-so-status-title svg { width: 14px; height: 14px; }
+.co-so-status-sub { font-size: 10px; color: #5e6278; margin-top: 3px; }
+
+/* Fields: keep the existing label-left / field-right structure, just polish it + add icons. */
+.co-sendoffer .form-group.row { margin-bottom: 16px; align-items: flex-start; }
+.co-sendoffer .col-form-label { font-size: 12px !important; font-weight: 600 !important; color: #3f4254 !important; padding-top: 8px; }
+.co-sendoffer .col-form-label .co-so-licon { color: #4f46e5; vertical-align: -2px; margin-right: 6px; }
+.co-sendoffer .col-form-label .co-so-licon svg { width: 15px; height: 15px; }
+.co-sendoffer .form-control, .co-sendoffer .form-select {
+    background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 8px !important;
+    box-shadow: none !important; font-size: 13px !important; color: #3f4254 !important; min-height: 40px;
+}
+.co-sendoffer .form-control:focus, .co-sendoffer .form-select:focus { border-color: #1b84ff !important; }
+.co-sendoffer .form-text { font-size: 10px !important; color: #a1a5b7 !important; }
+/* Tagify (From field renders as chips) — align its look to the polished inputs */
+.co-sendoffer .tagify { border: 1px solid #e4e6ef !important; border-radius: 8px !important; background: #fff !important; min-height: 40px; }
+.co-sendoffer .tagify__tag > div { font-size: 12px; }
+/* "+ Add Email"/"Add Approver" side buttons */
+.co-sendoffer .to_email_panel, .co-sendoffer .cc_email_panel { background: #eef3ff !important; border: 1px solid #e0e7ff !important; color: #4f46e5 !important; font-size: 11px !important; font-weight: 600; border-radius: 7px; padding: 6px 12px !important; }
+.co-sendoffer .to_email_panel:hover, .co-sendoffer .cc_email_panel:hover { background: #e0e7ff !important; }
+/* Signature radios → clean inline chips */
+.co-sendoffer .form-check { padding: 6px 12px; border: 1px solid #e4e6ef; border-radius: 8px; margin-bottom: 0; display: inline-flex; align-items: center; gap: 6px; }
+.co-sendoffer .form-check .form-check-label { font-size: 12px; color: #3f4254; margin: 0; }
+
+/* Footer: right-aligned, gradient Send button (matches screenshot) */
+.co-sendoffer-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-top: 1px solid #eef1f7; padding: 14px 0 4px; margin-top: 6px; }
+.co-sendoffer-footer .co-so-cancel { background: #fff !important; border: 1px solid #d7dae3 !important; color: #5e6278 !important; font-weight: 600 !important; font-size: 12px !important; min-width: 100px; height: 42px; border-radius: 9px; }
+.co-sendoffer-footer .co-so-send { background: linear-gradient(90deg,#4f46e5,#1b84ff) !important; border: none !important; color: #fff !important; font-weight: 600 !important; font-size: 13px !important; min-width: 180px; height: 42px; border-radius: 9px; }
+.co-sendoffer-footer .co-so-send:hover { filter: brightness(.95); }
 </style>
 <div class="co-appr-drawer-backdrop {{ (int) @$mtype === 2 ? 'co-appr-drawer-backdrop--open' : '' }}" id="co_appr_drawer_backdrop"></div>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
@@ -139,13 +194,59 @@ if($cc_email_count > 0){
 
 <form id="form1">
   <!--begin::Modal body-->
-  <div class="modal-body scroll-y py-0 px-lg-7">
+  <div class="modal-body scroll-y py-0 px-lg-7 {{ (int) @$mtype === 1 ? 'co-sendoffer' : '' }}">
     <div data-kt-element="options">
       <div class="py-5">
+        @if((int) @$mtype === 1)
+          @php
+              $so_app   = (isset($applicationData) && count($applicationData) > 0) ? $applicationData[0] : null;
+              $so_name  = trim((string) @$so_app->full_name) ?: 'Candidate';
+              $so_role  = @$so_app->current_designation ?: @$so_app->job_title;
+              $so_exp   = @$so_app->total_exp;
+              $so_email = @$so_app->email;
+              $so_initial = strtoupper(substr($so_name, 0, 1) ?: 'C');
+              $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
+              $so_curr  = $so_currencyArr[(int) @$co_send_offer->currency] ?? '';
+              $so_ctc   = @$co_send_offer->salary_ctc ?: @$co_send_offer->yearly_final_gross;
+              $so_join  = @$co_send_offer->joined_date;
+              $so_mgmt  = (int) @$co_send_offer->management_status;
+              $so_appr_name = trim((string) (@$co_send_appr->name_hr ?: @$co_send_appr->email_id_hr ?? ''));
+              $so_appr_date = @$co_send_offer->approved_date_time;
+          @endphp
+          <div class="co-so-head">
+              <div class="co-so-avatar">{{ $so_initial }}</div>
+              <div class="co-so-ident">
+                  <div class="co-so-name">{{ ucwords($so_name) }}</div>
+                  @if(!empty($so_role))<div class="co-so-role">{{ ucwords($so_role) }}</div>@endif
+                  <div class="co-so-meta">
+                      @if(!empty($so_exp))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Exp: {{ $so_exp }} Years</span>@endif
+                      @if(!empty($so_email))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>{{ $so_email }}</span>@endif
+                  </div>
+              </div>
+              <div class="co-so-facts">
+                  <div><div class="co-so-fact-label">Offer ID</div><div class="co-so-fact-value">OFF-{{ $offerId }}</div></div>
+                  @if(!empty($so_ctc))<div><div class="co-so-fact-label">Offered CTC</div><div class="co-so-fact-value co-so-ctc">{{ $so_curr }} {{ number_format((float) $so_ctc) }}</div></div>@endif
+                  @if(!empty($so_join))<div><div class="co-so-fact-label">Joining Date</div><div class="co-so-fact-value">{{ date('d M Y', strtotime($so_join)) }}</div></div>@endif
+              </div>
+              @if($so_mgmt === 2 || $so_mgmt === 1)
+              <div class="co-so-status co-so-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
+                  <span class="co-so-status-title">
+                      @if($so_mgmt === 2)
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Approved
+                      @else
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Pending Approval
+                      @endif
+                  </span>
+                  @if($so_mgmt === 2 && !empty($so_appr_name))<div class="co-so-status-sub">by {{ ucwords($so_appr_name) }}</div>@endif
+                  @if($so_mgmt === 2 && !empty($so_appr_date))<div class="co-so-status-sub">on {{ date('d M Y, h:i A', strtotime($so_appr_date)) }}</div>@endif
+              </div>
+              @endif
+          </div>
+        @endif
         <!--begin::Template-->
-       
+
         <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">From</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>From</label>
           <div class="col-lg-10 col-xl-10">
             <input class="form-control form-control-solid" name="from_email" id="from_email"  value="{{ $userdata->email }}" readonly="" data-role="from_email" >
             <span class="form-text text-muted">Please enter email</span> </div>
@@ -153,7 +254,7 @@ if($cc_email_count > 0){
         <!--end::From email-->
         <!--begin::To email-->
         <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">To</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>To</label>
           <div class="col-lg-10 col-xl-10" style="position: relative;">
             <input type="hidden" id="mtypeId" name="mtype" value="{{ $mtype }}">
             <input type="hidden" id="offerId" name="offerId" value="{{ $offerId }}">
@@ -170,7 +271,7 @@ if($cc_email_count > 0){
         <!--end::To email-->
         <!--begin::CC email-->
         <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">CC</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg></span>CC</label>
           <div class="col-lg-10 col-xl-10" style="position: relative;">
 
 			  <!--<select class="form-control select2" id="kt_select2_2" data-placeholder="Select a client..." name="cc_email[]" multiple="multiple">-->
@@ -200,7 +301,7 @@ if($cc_email_count > 0){
 			@if(@$mtype==2)
 			<input type="hidden" class="form-check-input signature" value="0" name="signature" id="signature2">
 			@else
-			<label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Signature</label>
+			<label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg></span>Signature</label>
 			  <div class="col-lg-10 col-xl-3">
 				<div class="form-check">
 				  <input type="radio" class="form-check-input signature" value="1" name="signature" id="signature1" checked>
@@ -216,7 +317,7 @@ if($cc_email_count > 0){
 			  @endif
 		  <!--end::Subject-->
 		   <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>Template</label>
           <div class="col-lg-10 col-xl-10">
             <select name="template" id="template" class="form-select form-select-solid" aria-label="Select template">
               <option value="">Select Email Template...</option>
@@ -232,7 +333,7 @@ if($cc_email_count > 0){
         </div>
         <!--begin::Subject-->
         <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4M4 10v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m4 10 8 5 8-5"/></svg></span>Subject</label>
           <div class="col-lg-10 col-xl-10">
             <input class="form-control form-control-solid" name="subject" id="subject" placeholder="Enter subject" value="" >
             <span class="form-text text-muted">Please enter subject</span> </div>
@@ -240,7 +341,7 @@ if($cc_email_count > 0){
         <!--end::Subject-->
         <!--begin::Body-->
         <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
+          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>Body</label>
           <div class="col-lg-10 col-xl-10">
             <textarea  id="editor1" name="editor1" row="10" >
 				{{ @$template_body }}
@@ -253,12 +354,12 @@ if($cc_email_count > 0){
   </div>
   <!--begin::Modal body-->
   <!--begin::Modal footer-->
-  <div class="modal-footer flex-center">
+  <div class="modal-footer flex-center {{ (int) @$mtype === 1 ? 'co-sendoffer-footer' : '' }}">
     <div class="div1">
       <!--begin::Cancel-->
-      <button type="close" id="" class="btn btn-light-dark me-3" data-dismiss="modal">Cancel</button>
+      <button type="close" id="" class="btn btn-light-dark me-3 co-so-cancel" data-dismiss="modal">Cancel</button>
       <!--begin::Send-->
-      <button type="button" class="btn btn-light-primary" name="btnSubmit" id="btnSubmit" value="btnSubmit"> <span class="indicator-label">Send</span> <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
+      <button type="button" class="btn btn-light-primary co-so-send" name="btnSubmit" id="btnSubmit" value="btnSubmit"> <span class="indicator-label">{{ (int) @$mtype === 1 ? 'Send Offer Letter' : 'Send' }}</span> <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
       <!--end::Send-->
     </div>
     <!--<span style="position: absolute;right: 2%;"></span>-->
