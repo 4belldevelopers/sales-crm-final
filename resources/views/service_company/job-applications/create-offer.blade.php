@@ -308,13 +308,19 @@
         /* Total Main (indigo tint) — whole row, incl. empty gap cells, so every box lines up */
         #pointList tfoot tr.co-total-row > th { background: #eef3ff !important; }
         #pointList tfoot tr.co-total-row input { background: transparent !important; color: #4f46e5 !important; font-weight: 700 !important; border-color: transparent !important; }
+        /* Main Components percentage total: flip blue → red when it isn't exactly 100%, so the
+           mismatch is obvious at a glance (JS toggles .co-pct-invalid in updateTotalpercentage*). */
+        #pointList tfoot tr.co-total-row input.co-pct-invalid { color: #f1416c !important; }
+        #pointList tfoot tr.co-total-row th:has(> input.co-pct-invalid)::after { color: #f1416c !important; }
         /* Total Additional (violet tint — distinct from Main's indigo) — whole row, incl. empty gap cells */
         #bonusList tfoot tr.co-total-row > th { background: #f5f0ff !important; }
         #bonusList tfoot tr.co-total-row input { background: transparent !important; color: #7c3aed !important; font-weight: 700 !important; border-color: transparent !important; }
         /* Final CTC: header sits OUTSIDE the colour block; only the total row is tinted GREEN.
            Same box height/font-size as Total Main/Additional (reuse their input + th rules). */
         .co-finalctc-card { border: 1px solid #b7ebc6 !important; border-radius: 12px; }
-        #final_pay { background: transparent; border: none; margin-top: 4px; }
+        /* table-layout:fixed makes the declared column widths authoritative (not content-based),
+           so Allocation/Currency/Monthly/Annually line up exactly under Total Main/Additional's columns. */
+        #final_pay { background: transparent; border: none; margin-top: 4px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
         #final_pay thead th { background: transparent !important; }
         #final_pay .form-control, #final_pay .form-select {
             background: #fff !important; border: 1px solid #e4e6ef !important; border-radius: 7px !important;
@@ -322,7 +328,9 @@
             color: #3f4254 !important; padding: 4px 10px !important;
         }
         #final_pay tfoot th { vertical-align: middle; background: #e3f7e9 !important; }
-        #final_pay tfoot input { background: transparent !important; color: #0f7a3d !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
+        /* Must out-specificity "#final_pay .form-control" above (id+class) — add tfoot to the
+           selector so this transparent override actually wins and the green shows through. */
+        #final_pay tfoot .form-control, #final_pay tfoot .form-select { background: transparent !important; color: #0f7a3d !important; font-weight: 700 !important; border-color: transparent !important; box-shadow: none !important; }
         #final_pay tfoot input[value*="Total CTC"] { color: #0b5c2e !important; }
 
         /* Applicable column: widen so "Annually & Monthly" shows fully */
@@ -899,11 +907,9 @@
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}"
                                                                     role="row">
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 35% !important;">Component Name</th>
+                                                                        style="width: 47% !important;">Component Name</th>
                                                                     <th class="sorting_disabled"
-                                                                        style="width: 12% !important;">Applicable</th>
-                                                                    <th class="sorting_disabled"
-                                                                        style="width: 10% !important;">Allocation</th>
+                                                                        style="width: 12% !important;">Allocation</th>
                                                                     <th class="sorting_disabled"
                                                                         style="width: 3% !important;">&nbsp;</th>
                                                                     <th class="sorting_disabled"
@@ -1054,7 +1060,7 @@
 
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 0 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
-                                                                                <td class="" style="width: 35% !important;">
+                                                                                <td class="" style="width: 47% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -1065,14 +1071,6 @@
                                                                                         placeholder="Enter Point">
                                                                                 </td>
                                                                                 <td class="" style="width: 12% !important;">
-                                                                                    {{-- Applicable (display/consistency column for the reduced layout — named *_hourly so it never collides with other_section's basic_view[] on submit) --}}
-                                                                                    <select &nbsp="" class="form-select form-select-solid basic_view_hourly" arial-label="Select View" name="basic_view_hourly[]" id="basic_view_hourly_{{ $basic->id }}" data-id="{{ $basic->id }}" data-offerid="{{ $basic->id }}" style="width: 100%;display: initial;">
-                                                                                        <option value="0" {{ (isset($basic->view_type) && $basic->view_type == 0) ? 'selected' : '' }}>Annually</option>
-                                                                                        <option value="1" {{ (isset($basic->view_type) && $basic->view_type == 1) ? 'selected' : '' }}>Monthly</option>
-                                                                                        <option value="2" {{ (isset($basic->view_type) && $basic->view_type == 2) ? 'selected' : '' }}>Annually &amp; Monthly</option>
-                                                                                    </select>
-                                                                                </td>
-                                                                                <td class="" style="width: 10% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-select-solid option_percentage_hourly"
                                                                                         name="option_percentage_hourly[]"
@@ -1285,7 +1283,7 @@
                                                                             <tr class="hourly_section hourly_section_row row-template {{ $key > 1 ? 'remove_row' : '' }} {{ $section_hourly }}"
                                                                                 role="row">
                                                                                 <td class=""
-                                                                                    style="width: 35% !important;">
+                                                                                    style="width: 47% !important;">
                                                                                     <input &nbsp="" type="text"
                                                                                         class="form-control form-control-solid offer_point_hourly"
                                                                                         name="offer_point_hourly[]"
@@ -1294,14 +1292,6 @@
                                                                                         data-offerid="{{ $value->id }}"
                                                                                         value="{{ $value->points }}"
                                                                                         placeholder="Enter Point">
-                                                                                </td>
-                                                                                <td class="" style="width: 12% !important;">
-                                                                                    {{-- Applicable (display/consistency column for the reduced layout — named *_hourly so it never collides with other_section's basic_view[] on submit) --}}
-                                                                                    <select &nbsp="" class="form-select form-select-solid basic_view_hourly" arial-label="Select View" name="basic_view_hourly[]" id="basic_view_hourly_{{ $value->id }}" data-id="{{ $value->id }}" data-offerid="{{ $value->id }}" style="width: 100%;display: initial;">
-                                                                                        <option value="0">Annually</option>
-                                                                                        <option value="1">Monthly</option>
-                                                                                        <option value="2">Annually &amp; Monthly</option>
-                                                                                    </select>
                                                                                 </td>
                                                                                 <td class=""
                                                                                     style="width: 12% !important;">
@@ -1449,11 +1439,11 @@
 
                                                             <tfoot class="hourly_section {{ $section_hourly }}">
                                                                 <tr>
-                                                                    <th colspan="7" class="sorting_disabled"
+                                                                    <th colspan="6" class="sorting_disabled"
                                                                         style="width: 102px;">&nbsp; </th>
                                                                 </tr>
                                                                 <tr class="co-total-row">
-                                                                    <th colspan="2" class="sorting_disabled">
+                                                                    <th class="sorting_disabled">
                                                                         <input type="text" class="form-control form-control-solid" value="Total Main Components" readonly style="cursor: not-allowed;background: #ffeb0066;">
                                                                     </th>
                                                                     <th class="sorting_disabled">
@@ -2120,7 +2110,7 @@
                                                                 </tr>
                                                                 <tr class="fw-bolder text-muted hourly_section {{ $section_hourly }}">
                                                                     <th class="sorting_disabled" style="width: 47%;">Component</th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important;">Allocation</th>
+                                                                    <th class="sorting_disabled" style="width: 12% !important;">Allocation</th>
                                                                     <th colspan="2" class="sorting_disabled" style="width: 13% !important;">&nbsp;</th>
                                                                     <th class="sorting_disabled" colspan="2">{{ $first_text }}</th>
                                                                 </tr>
@@ -2170,7 +2160,7 @@
                                                                     <th class="sorting_disabled" style="width: 47%;">
                                                                         <input type="text" class="form-control form-control-solid" value="Total CTC (Main + Additional)" readonly style="cursor: not-allowed;background: transparent;">
                                                                     </th>
-                                                                    <th class="sorting_disabled" style="width: 10% !important;">
+                                                                    <th class="sorting_disabled" style="width: 12% !important;">
                                                                         <input &nbsp="" type="text"
                                                                             class="form-control form-control-solid totalpercentagefinalhourly"
                                                                             name="totalpercentagefinalhourly"
@@ -3071,6 +3061,7 @@
                         });
 
                         $('#totalpercentage').val(totalPercentage.toFixed(2));
+                        $('#totalpercentage').toggleClass('co-pct-invalid', Math.abs(totalPercentage - 100) > 0.01);
                     }
 
                     function updateTotalpercentagebonus() {
@@ -3095,6 +3086,7 @@
                         });
                         //    alert(totalPercentage);
                         $('#totalpercentagehouly').val(totalPercentage.toFixed(2));
+                        $('#totalpercentagehouly').toggleClass('co-pct-invalid', Math.abs(totalPercentage - 100) > 0.01);
                     }
 
                     function updateTotalpercentagebonushourly() {
@@ -3261,7 +3253,6 @@
                         if (current_ctc_mode == 1 || current_ctc_mode == 2 || current_ctc_mode == 3) {
                             var newRow = $('.hourly_section_row').first().clone(); // Clone the first template row{
                             newRow.find('.co-row-lead, .co-comp-badge').remove(); // Strip cloned row-number/badge markup — coEnhanceRows() re-injects the correct one for this table
-                            newRow.find('.basic_view_hourly').closest('td').remove(); // This row is being converted into a bonus row, which has no Applicable column
                             newRow.find('input').val(''); // Clear input values
                             newRow.find('select').val('0'); // Reset selects to default values
                             newRow.find('.offer_point_hourly').addClass('bonus_point_hourly').removeClass(
