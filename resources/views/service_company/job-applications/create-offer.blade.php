@@ -585,27 +585,27 @@
 
         /* MAIN CARD wrapping the whole composer */
         .co-send-card { background: #fff; border: 1px solid #eef1f7; border-radius: 16px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 20px 22px; }
-        /* SUB CARD: candidate hero */
-        .co-send-hero { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; background: #f9fafd; border: 1px solid #eef1f7; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; }
-        .co-send-hero-lead { display: flex; align-items: center; gap: 14px; min-width: 220px; }
-        .co-send-hero-avatar { width: 58px; height: 58px; border-radius: 50%; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+        /* SUB CARD: candidate hero — matches the "Krishna Murthy" reference */
+        .co-send-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #f6f8fe; border: 1px solid #eaeefb; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
+        .co-send-hero-lead { display: flex; align-items: center; gap: 15px; flex: 1 1 260px; min-width: 240px; }
+        .co-send-hero-avatar { width: 62px; height: 62px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
         .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .co-send-hero-name { font-size: 15px !important; font-weight: 700; color: #181c32; }
-        .co-send-hero-role { font-size: 12px; color: #1b84ff; font-weight: 600; margin-top: 1px; }
-        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 6px; display: flex; gap: 16px; flex-wrap: wrap; }
+        .co-send-hero-name { font-size: 16px !important; font-weight: 700; color: #181c32; }
+        .co-send-hero-role { font-size: 12px; color: #1b84ff; font-weight: 600; margin-top: 2px; }
+        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 7px; display: flex; gap: 18px; flex-wrap: wrap; }
         .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; }
-        .co-send-hero-meta svg { width: 13px; height: 13px; }
-        .co-send-hero-facts { display: flex; gap: 34px; flex-wrap: wrap; margin-left: auto; }
+        .co-send-hero-meta svg { width: 13px; height: 13px; color: #a1a5b7; }
+        .co-send-hero-facts { display: flex; gap: 36px; flex-wrap: wrap; }
         .co-send-fact-l { font-size: 10px; color: #a1a5b7; }
-        .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 3px; }
+        .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 4px; }
         .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
-        .co-send-hero-status { border-radius: 12px; padding: 10px 16px; text-align: center; min-width: 150px; }
+        .co-send-hero-status { border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 160px; }
         .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
         .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
-        .co-send-status-title { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .co-send-status-title { font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
         .co-send-hero-status--approved .co-send-status-title { color: #0f7a3d; }
         .co-send-hero-status--pending .co-send-status-title { color: #8a6d00; }
-        .co-send-status-title svg { width: 15px; height: 15px; }
+        .co-send-status-title svg { width: 16px; height: 16px; }
         .co-send-status-sub { font-size: 10px; color: #5e6278; margin-top: 3px; }
 
         /* Form rows: icon label left, field right */
@@ -621,14 +621,15 @@
         .co-send-input[readonly] { background: #f9fafd; color: #5e6278; }
         .co-send-hint { font-size: 11px; color: #a1a5b7; margin-top: 7px; }
 
-        /* Chip inputs (To / CC) — "+ Add Email" sits INSIDE the box at the right edge */
-        .co-send-chips { min-height: 44px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 6px 6px 6px 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
+        /* Chip inputs (To / CC): a fixed-height box + a separate "+ Add Email" button to its right */
+        .co-send-chiprow { display: flex; gap: 12px; align-items: stretch; }
+        .co-send-chips { flex: 1 1 auto; min-width: 0; min-height: 46px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 5px 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
         .co-send-chips:focus-within { border-color: #1b84ff; }
         .co-send-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef3ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 7px; padding: 5px 10px; }
         .co-send-chip .co-chip-x { cursor: pointer; font-style: normal; font-size: 14px; line-height: 1; opacity: .7; }
         .co-send-chip .co-chip-x:hover { opacity: 1; }
-        .co-send-chip-input { flex: 1 1 90px; min-width: 90px; border: none; outline: none; font-size: 13px; padding: 6px 4px; background: transparent; }
-        .co-send-addemail { flex-shrink: 0; margin-left: auto; align-self: center; background: #eef3ff; border: 1px solid #e0e7ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 8px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+        .co-send-chip-input { flex: 1 1 100px; min-width: 100px; border: none; outline: none; font-size: 13px; padding: 6px 4px; background: transparent; }
+        .co-send-addemail { flex-shrink: 0; align-self: stretch; display: inline-flex; align-items: center; background: #eef3ff; border: 1px solid #e0e7ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 0 16px; cursor: pointer; white-space: nowrap; }
         .co-send-addemail:hover { background: #e0e7ff; }
 
         /* Signature toggle */
@@ -654,35 +655,44 @@
         .co-send-submit:hover { filter: brightness(.95); }
         .co-send-submit:disabled { opacity: .7; cursor: not-allowed; }
 
-        /* Add-Email drawer — anchored to #offer_create_show_right_bar (position:relative) */
-        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(24,28,50,.35); z-index: 900; }
+        /* Add-Email drawer — anchored to #offer_create_show_right_bar (position:relative), full height,
+           wide enough for the 4-column member table (translateX avoids magic offsets). */
+        .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(24,28,50,.4); z-index: 1000; }
         .co-send-drawer-bd.co-send-drawer-bd--open { display: block; }
-        .co-send-drawer { position: absolute; top: 0; right: -440px; width: 420px; max-width: 92%; height: 100%; background: #fff; box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 901; transition: right .25s ease; display: flex; flex-direction: column; }
-        .co-send-drawer.co-send-drawer--open { right: 0; }
-        .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #eef1f7; }
+        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 560px; max-width: 96%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
+        .co-send-drawer.co-send-drawer--open { transform: translateX(0); visibility: visible; }
+        .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #eef1f7; flex-shrink: 0; }
         .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #181c32; }
         .co-send-drawer-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
-        .co-send-drawer-x { background: #f5f8fa; border: none; width: 30px; height: 30px; border-radius: 8px; font-size: 18px; color: #7e8299; cursor: pointer; line-height: 1; }
+        .co-send-drawer-x { background: #f5f8fa; border: none; width: 32px; height: 32px; border-radius: 8px; font-size: 18px; color: #7e8299; cursor: pointer; line-height: 1; flex-shrink: 0; }
         .co-send-drawer-x:hover { background: #eef1f7; color: #f1416c; }
-        .co-send-drawer-body { flex: 1 1 auto; overflow-y: auto; padding: 14px 18px 18px; }
+        .co-send-drawer-body { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 20px; }
         /* Source cards (Internal / Client) — the previous approver-picker design */
-        .co-appr-source-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-        .co-appr-source-card { flex: 1 1 200px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px 12px; background: #fff; margin: 0; }
-        .co-appr-source-card input { margin: 0 6px 0 0; }
+        .co-appr-source-row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .co-appr-source-card { flex: 1 1 230px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid #e4e6ef; border-radius: 10px; padding: 10px 12px; background: #fff; margin: 0; min-width: 0; }
+        .co-appr-source-card input { margin: 0 6px 0 0; flex-shrink: 0; }
         .co-appr-source-card--active { border-color: #1b84ff; background: #f3f8ff; }
         .co-appr-source-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .co-appr-source-ico svg { width: 16px; height: 16px; }
-        .co-appr-source-title { font-size: 12px; font-weight: 700; color: #181c32; }
+        .co-appr-source-card > div { min-width: 0; }
+        .co-appr-source-title { font-size: 12px; font-weight: 700; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .co-appr-source-sub { font-size: 10px; color: #7e8299; margin-top: 1px; }
         .co-appr-search { margin-bottom: 12px; }
-        .co-appr-search input { height: 38px; font-size: 12px; border: 1px solid #e4e6ef; border-radius: 9px; }
+        .co-appr-search input { width: 100%; height: 40px; font-size: 12px; border: 1px solid #e4e6ef; border-radius: 9px; padding: 6px 12px; }
+        .co-appr-search input:focus { outline: none; border-color: #1b84ff; }
         .co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 16px 4px; }
-        /* Member table rows */
-        #co_send_member_table { width: 100%; font-size: 12px; }
-        #co_send_member_table thead th { font-size: 10px !important; color: #a1a5b7; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #eef1f7; text-transform: none; }
-        #co_send_member_table tbody td { padding: 10px 8px; border-bottom: 1px dashed #f1f1f4; vertical-align: middle; color: #5e6278; }
-        .co-send-mrow-av { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-right: 10px; flex-shrink: 0; }
-        .co-send-mrow-role { font-size: 10px !important; }
+        /* Member table — table-layout fixed so 4 columns fit the drawer; long text truncates */
+        #co_send_member_table { width: 100%; table-layout: fixed; font-size: 11px; }
+        #co_send_member_table thead th { font-size: 10px !important; color: #a1a5b7; font-weight: 600; padding: 6px 6px; border-bottom: 1px solid #eef1f7; text-transform: none; text-align: left; }
+        #co_send_member_table th:nth-child(1) { width: 42%; }
+        #co_send_member_table th:nth-child(2) { width: 26%; }
+        #co_send_member_table th:nth-child(3) { width: 20%; }
+        #co_send_member_table th:nth-child(4) { width: 12%; }
+        #co_send_member_table tbody td { padding: 9px 6px; border-bottom: 1px dashed #f1f1f4; vertical-align: middle; color: #5e6278; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #co_send_member_table tbody td:first-child { white-space: normal; }
+        .co-send-mrow-av { width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
+        #co_send_member_table .co-send-mrow-role { font-size: 9px !important; }
+        .co-send-mrow-add { padding: 5px 12px !important; font-size: 11px !important; font-weight: 600; }
         .co-send-mrow-add.co-send-mrow--added { background: #e8fff3 !important; color: #0f9463 !important; }
 
         @media (max-width: 900px) {
@@ -2917,7 +2927,10 @@
                                         <div class="co-send-row">
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> To Email ID <span class="co-send-req">*</span></label>
                                             <div class="co-send-field">
-                                                <div class="co-send-chips" id="co_to_chips">@if(!empty($so_email))<span class="co-send-chip">{{ $so_email }}<i class="co-chip-x">&times;</i></span>@endif<input type="text" class="co-send-chip-input" placeholder="Type an email…"><button type="button" class="co-send-addemail" data-chip-target="co_to_chips">+ Add Email</button></div>
+                                                <div class="co-send-chiprow">
+                                                    <div class="co-send-chips" id="co_to_chips">@if(!empty($so_email))<span class="co-send-chip">{{ $so_email }}<i class="co-chip-x">&times;</i></span>@endif<input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
+                                                    <button type="button" class="co-send-addemail" data-chip-target="co_to_chips">+ Add Email</button>
+                                                </div>
                                                 <div class="co-send-hint">Primary candidate email address</div>
                                             </div>
                                         </div>
@@ -2925,7 +2938,10 @@
                                         <div class="co-send-row">
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg> CC Email ID</label>
                                             <div class="co-send-field">
-                                                <div class="co-send-chips" id="co_cc_chips"><input type="text" class="co-send-chip-input" placeholder="Type an email…"><button type="button" class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</button></div>
+                                                <div class="co-send-chiprow">
+                                                    <div class="co-send-chips" id="co_cc_chips"><input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
+                                                    <button type="button" class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</button>
+                                                </div>
                                                 <div class="co-send-hint">Add email addresses separated by commas</div>
                                             </div>
                                         </div>
