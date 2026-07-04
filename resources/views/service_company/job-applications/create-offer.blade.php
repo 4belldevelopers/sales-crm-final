@@ -549,6 +549,27 @@
         .co-appr-detail-label { color: #7e8299; }
         .co-appr-detail-value { color: #181c32; font-weight: 600; text-align: right; }
 
+        /* Real approval status (pending/approved/rejected), sourced from offer_create_main_tds.management_status */
+        .co-appr-status-card { border-radius: 12px; padding: 16px; text-align: center; }
+        .co-appr-status-card--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
+        .co-appr-status-card--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
+        .co-appr-status-card--rejected { background: #fff0f3; border: 1px solid #ffd6de; }
+        .co-appr-status-icon { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+        .co-appr-status-card--pending .co-appr-status-icon { background: #ffeb0066; color: #8a6d00; }
+        .co-appr-status-card--approved .co-appr-status-icon { background: #d7f3e0; color: #0f7a3d; }
+        .co-appr-status-card--rejected .co-appr-status-icon { background: #ffd9e1; color: #d1224b; }
+        .co-appr-status-icon svg { width: 22px; height: 22px; }
+        .co-appr-status-title { font-size: 13px !important; font-weight: 700; color: #181c32; }
+        .co-appr-status-approver { font-size: 11px; color: #3f4254; font-weight: 600; margin-top: 4px; }
+        .co-appr-status-meta { font-size: 10px; color: #7e8299; margin-top: 2px; }
+        .co-appr-status-note { font-size: 10px; color: #5e6278; font-style: italic; margin-top: 8px; background: rgba(255,255,255,.6); border-radius: 8px; padding: 6px 10px; }
+
+        /* Activity log — real entries from the updatetimeline table */
+        .co-appr-activity-item { padding: 8px 0; border-bottom: 1px solid #f4f4f6; }
+        .co-appr-activity-item:last-child { border-bottom: none; }
+        .co-appr-activity-text { font-size: 11px; color: #181c32; font-weight: 600; }
+        .co-appr-activity-time { font-size: 10px; color: #a1a5b7; margin-top: 2px; }
+
         @media (max-width: 1100px) {
             .co-appr-layout { flex-direction: column; }
             .co-appr-side { flex: 1 1 auto; max-width: none; width: 100%; }
@@ -2563,23 +2584,75 @@
                                     </div>
                                 </div>
 
+                                @php
+                                    // Real, persisted approval status — offer_create_main_tds.management_status:
+                                    // 0/absent = never sent, 1 = pending, 2 = approved, 3 = rejected.
+                                    // (Set by fwd_offer_send() when the request is emailed, and by the public
+                                    // saveSignature() endpoint when the approver clicks Approve/Reject.)
+                                    $co_mgmt_status = (int) (@$section_change_value->management_status ?? 0);
+                                    $co_approver_label = trim((string) (@$co_appr_timeline->name_hr ?: @$co_appr_timeline->email_id_hr ?? ''));
+                                @endphp
+
                                 <div class="co-appr-layout">
                                     <div class="co-appr-main">
                                         <h5 class="co-tpl-title" style="margin-bottom:14px;">Approval</h5>
-                                        <div class="co-appr-empty-state">
-                                            <div class="co-appr-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M19 8v6M22 11h-6"/></svg></div>
-                                            <div class="co-appr-empty-title">Send this offer for approval</div>
-                                            <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
-                                            <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                data-candidate="{{ @$application->id }}" data-mtype="2"
-                                                data-offerId="{{ $offer_id }}" data-toggle="modal"
-                                                data-target="#fwd_offer"
-                                                class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
-                                                data-wizard-type="action-next">+ Send Approval Request</button>
-                                        </div>
+
+                                        @if($co_mgmt_status === 0)
+                                            <div class="co-appr-empty-state">
+                                                <div class="co-appr-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M19 8v6M22 11h-6"/></svg></div>
+                                                <div class="co-appr-empty-title">Send this offer for approval</div>
+                                                <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
+                                                <button type="button" data-jobId="{{ @$application->job_id }}"
+                                                    data-candidate="{{ @$application->id }}" data-mtype="2"
+                                                    data-offerId="{{ $offer_id }}" data-toggle="modal"
+                                                    data-target="#fwd_offer"
+                                                    class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
+                                                    data-wizard-type="action-next">+ Send Approval Request</button>
+                                            </div>
+                                        @else
+                                            <div class="co-appr-status-card co-appr-status-card--{{ $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'pending') }}">
+                                                <div class="co-appr-status-icon">
+                                                    @if($co_mgmt_status == 2)
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                                    @elseif($co_mgmt_status == 3)
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                                    @else
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                                    @endif
+                                                </div>
+                                                <div class="co-appr-status-title">
+                                                    @if($co_mgmt_status == 2) Offer Approved
+                                                    @elseif($co_mgmt_status == 3) Offer Rejected
+                                                    @else Pending Approval
+                                                    @endif
+                                                </div>
+                                                @if(!empty($co_approver_label))
+                                                    <div class="co-appr-status-approver">{{ $co_mgmt_status == 1 ? 'Awaiting response from' : ($co_mgmt_status == 2 ? 'Approved by' : 'Rejected by') }} {{ $co_approver_label }}</div>
+                                                @endif
+                                                <div class="co-appr-status-meta">
+                                                    @if($co_mgmt_status == 1 && !empty(@$section_change_value->send_approved_date_time))
+                                                        Requested on {{ date('d M Y, h:i A', strtotime($section_change_value->send_approved_date_time)) }}
+                                                    @elseif($co_mgmt_status >= 2 && !empty(@$section_change_value->approved_date_time))
+                                                        {{ $co_mgmt_status == 2 ? 'Approved' : 'Rejected' }} on {{ date('d M Y, h:i A', strtotime($section_change_value->approved_date_time)) }}
+                                                    @endif
+                                                </div>
+                                                @if($co_mgmt_status == 3 && !empty(@$co_appr_timeline->note))
+                                                    <div class="co-appr-status-note">&ldquo;{{ $co_appr_timeline->note }}&rdquo;</div>
+                                                @endif
+                                            </div>
+                                            <div style="text-align:center; margin-top:12px;">
+                                                <button type="button" data-jobId="{{ @$application->job_id }}"
+                                                    data-candidate="{{ @$application->id }}" data-mtype="2"
+                                                    data-offerId="{{ $offer_id }}" data-toggle="modal"
+                                                    data-target="#fwd_offer"
+                                                    class="btn co-btn-close fwd_offer"
+                                                    data-wizard-type="action-next">{{ $co_mgmt_status == 1 ? 'Resend / Choose a Different Approver' : 'Send to Another Approver' }}</button>
+                                            </div>
+                                        @endif
+
                                         <div class="co-appr-note">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                                            <span>An approval request email will be sent to the recipient(s) you choose. You can pick from your internal team, or the client's team when this job has one.</span>
+                                            <span>An approval request email will be sent to the recipient(s) you choose, with a link they can use to approve or reject &mdash; no login required. You can pick from your internal team, or the client's team when this job has one.</span>
                                         </div>
                                     </div>
 
@@ -2593,6 +2666,29 @@
                                             @if(!empty(@$application->phone))
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Candidate Mobile</span><span class="co-appr-detail-value">{{ $application->phone }}</span></div>
                                             @endif
+                                        </div>
+
+                                        <div class="co-appr-side-card">
+                                            <div class="co-appr-side-title">Activity Log</div>
+                                            @forelse(($co_activity_log ?? []) as $log)
+                                                @php
+                                                    $log_label = 'Activity recorded';
+                                                    $log_who = trim((string) ($log->name_hr ?: $log->email_id_hr ?? ''));
+                                                    if ((int) $log->mtypeSection === 2) {
+                                                        if ((int) $log->management_status === 1) { $log_label = 'Approval requested' . ($log_who ? ' from ' . $log_who : ''); }
+                                                        elseif ((int) $log->management_status === 2) { $log_label = 'Approved' . ($log_who ? ' by ' . $log_who : ''); }
+                                                        elseif ((int) $log->management_status === 3) { $log_label = 'Rejected' . ($log_who ? ' by ' . $log_who : ''); }
+                                                    } elseif ((int) $log->mtypeSection === 1) {
+                                                        $log_label = ((int) $log->candidate_status === 1) ? 'Offer sent to candidate' : 'Candidate offer activity';
+                                                    }
+                                                @endphp
+                                                <div class="co-appr-activity-item">
+                                                    <div class="co-appr-activity-text">{{ $log_label }}</div>
+                                                    <div class="co-appr-activity-time">{{ !empty($log->create_at) ? date('d M Y, h:i A', strtotime($log->create_at)) : '' }}</div>
+                                                </div>
+                                            @empty
+                                                <div class="co-appr-empty-sub" style="margin-bottom:0;">No activity yet. Activities will appear here once the offer moves forward.</div>
+                                            @endforelse
                                         </div>
                                     </div>
                                 </div>
