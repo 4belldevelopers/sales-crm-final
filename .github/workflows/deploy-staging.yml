@@ -46,6 +46,19 @@ jobs:
             # without that perf optimization, until the duplicate names are cleaned up.
             php artisan route:clear
             php artisan view:cache
-            echo ">> Reloading Octane workers (zero-downtime)"
-            php artisan octane:reload
+            echo ">> Full Octane restart"
+            # FrankenPHP + OPcache: `octane:reload` only gracefully reloads worker threads,
+            # which re-read the SAME cached bytecode — so new code silently never takes effect
+            # (documented in the project's CLAUDE.md). A full process stop/start is required to
+            # clear OPcache and actually load the freshly deployed code.
+            php artisan octane:stop || true
+            sleep 3
+            # Relaunch detached (setsid+nohup) so the daemon survives this SSH session closing —
+            # start-octane.sh runs `octane:start` in the foreground. If the process manager
+            # (aaPanel) already auto-relaunched it after the stop, this second start simply fails
+            # to bind port 8000 and exits harmlessly; either way the site comes back up fresh and
+            # there is no window where it is left down without an attempt to restart it.
+            setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            sleep 5
+            php artisan octane:status || true
             echo ">> Staging deploy complete"
