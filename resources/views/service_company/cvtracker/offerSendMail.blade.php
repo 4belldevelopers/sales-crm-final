@@ -109,7 +109,23 @@ if($cc_email_count > 0){
 .co-appr-search { margin-bottom: 10px; }
 .co-appr-search input { height: 34px; font-size: 12px; }
 .co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 14px 4px; }
+
+/* Self-contained sliding drawer — driven entirely by our own JS/CSS classes below, not
+   Metronic's KTDrawer plugin (which never re-scans HTML injected into the modal via AJAX,
+   so its data-kt-drawer-toggle wiring silently did nothing — that was the "drawer won't
+   open" bug). */
+.co-appr-drawer {
+    position: fixed; top: 0; right: -420px; width: 400px; max-width: 92vw; height: 100vh;
+    background: #fff; box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 1200;
+    transition: right .25s ease; overflow-y: auto;
+}
+.co-appr-drawer.co-appr-drawer--open { right: 0; }
+.co-appr-drawer-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(24,28,50,.35); z-index: 1199;
+}
+.co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block; }
 </style>
+<div class="co-appr-drawer-backdrop" id="co_appr_drawer_backdrop"></div>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
 
@@ -137,7 +153,7 @@ if($cc_email_count > 0){
             <span class="form-text text-muted">Please enter email</span> 
             @if(@$mtype==2)
              <div class="" style="position: absolute; right: 13px; top: 4px;">
-                <a href="javascript:;" class="btn btn-primary btn-sm to_email_panel" data-bs-toggle="modal" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
+                <a href="javascript:;" class="btn btn-primary btn-sm to_email_panel" data-co-appr-open="to">+ Add Approver</a>
              </div>
              @endif
             </div>
@@ -164,7 +180,7 @@ if($cc_email_count > 0){
             <span class="form-text text-muted">Please enter email</span>
             
             <div class="" style="position: absolute; right: 13px; top: 4px;">
-            <a href="javascript:;" class="btn btn-primary btn-sm cc_email_panel" data-bs-toggle="modal" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
+            <a href="javascript:;" class="btn btn-primary btn-sm cc_email_panel" data-co-appr-open="cc">Add E-mail ID</a>
            </div>
            
             </div>
@@ -248,8 +264,7 @@ if($cc_email_count > 0){
 
 
 
-<div id="kt_activitiesIntTeam_toggle_cc"></div>
-<div id="kt_activitiesIntTeam_cc" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle_cc" data-kt-drawer-close="#kt_activitiesIntTeam_close_cc">
+<div id="kt_activitiesIntTeam_cc" class="bg-body co-appr-drawer" data-kt-drawer-name="activities">
   <div class="card-body position-relative px-0 py-0" id="kt__cc_body">
   <div id="kt_cc_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__cc_body" data-kt-scroll-dependencies="#kt__cc_header, #kt__cc_footer" data-kt-scroll-offset="5px" style="">
     <!--begin::Team card-->
@@ -364,8 +379,7 @@ if($cc_email_count > 0){
 
 
 
-<div id="kt_activitiesIntTeam_toggle_to"></div>
-<div id="kt_activitiesIntTeam_to" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle_to" data-kt-drawer-close="#kt_activitiesIntTeam_close_to">
+<div id="kt_activitiesIntTeam_to" class="bg-body co-appr-drawer" data-kt-drawer-name="activities">
   <div class="card-body position-relative px-0 py-0" id="kt__to_body">
   <div id="kt_to_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__to_body" data-kt-scroll-dependencies="#kt__to_header, #kt__to_footer" data-kt-scroll-offset="5px" style="">
     <!--begin::Team card-->
@@ -768,16 +782,17 @@ document.getElementById("btnSubmit").addEventListener("click", ()=>{
 				$(this).text('Remove');
 				$(this).attr("data-assign", 1);
 				AddEventTo(title, email);
+				if (typeof coApprCloseDrawers === 'function') { coApprCloseDrawers(); }
 			}
 			else if(assign ==1)
 			{
 				$(this).addClass("btn-light-primary");
 				$(this).removeClass("btn-light-danger");
 				$(this).text('Add');
-				$(this).attr("data-assign", 0);	
+				$(this).attr("data-assign", 0);
 				DeleteEventTo(title, email);
 			}
-			
+
 	});
 	
 	
@@ -877,6 +892,28 @@ function DeleteEventTo(contact_person_name, email)
 	$('#to_email').val(team_hiring_manager_email);
 
 }
+
+// ── Approver picker drawer open/close ──
+// Self-contained: does not rely on Metronic's KTDrawer (this HTML is injected into the
+// modal via AJAX after KTDrawer.init() already ran on initial page load, so its declarative
+// data-kt-drawer-toggle wiring never picks these elements up).
+function coApprOpenDrawer(which) {
+	var $drawer = which === 'cc' ? $('#kt_activitiesIntTeam_cc') : $('#kt_activitiesIntTeam_to');
+	$drawer.addClass('co-appr-drawer--open');
+	$('#co_appr_drawer_backdrop').addClass('co-appr-drawer-backdrop--open');
+}
+function coApprCloseDrawers() {
+	$('.co-appr-drawer').removeClass('co-appr-drawer--open');
+	$('#co_appr_drawer_backdrop').removeClass('co-appr-drawer-backdrop--open');
+}
+$(document).on('click', '[data-co-appr-open]', function(e) {
+	e.preventDefault();
+	coApprOpenDrawer($(this).data('co-appr-open'));
+});
+$(document).on('click', '#kt_activitiesIntTeam_close_cc, #kt_activitiesIntTeam_close_to, #co_appr_drawer_backdrop', function(e) {
+	e.preventDefault();
+	coApprCloseDrawers();
+});
 
 // ── Approver source toggle (Internal / Client) + search filter ──
 // Purely presentational: it only shows/hides rows already rendered server-side from real

@@ -802,7 +802,17 @@ a:hover .ot-comp-change { text-decoration: underline; }
         $.ajax({
             type:'POST', url:url,
             data:{_token:'{{ csrf_token() }}', _method:'POST', arr:[candidate], jobIdArr:[jobId], mtype:mtype, offerId:offerId},
-            success:function(r){ if(r.status=='success'){ $('#titleSet').text(r.title); $('#application_fwd_offer_body_content').html(r.view); } }
+            success:function(r){
+                if(r.status=='success'){
+                    $('#titleSet').text(r.title);
+                    $('#application_fwd_offer_body_content').html(r.view);
+                    // Approval flow (mtype 2): jump straight to the approver picker instead of
+                    // making the user find the small "+ Add Approver" link inside the composer.
+                    if (mtype == 2 && typeof coApprOpenDrawer === 'function') {
+                        setTimeout(function () { coApprOpenDrawer('to'); }, 50);
+                    }
+                }
+            }
         });
     });
 

@@ -2607,7 +2607,7 @@
                                                     data-offerId="{{ $offer_id }}" data-toggle="modal"
                                                     data-target="#fwd_offer"
                                                     class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
-                                                    data-wizard-type="action-next">+ Send Approval Request</button>
+                                                    data-wizard-type="action-next">+ Add Approver</button>
                                             </div>
                                         @else
                                             <div class="co-appr-status-card co-appr-status-card--{{ $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'pending') }}">
