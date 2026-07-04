@@ -113,15 +113,21 @@ if($cc_email_count > 0){
 /* Self-contained sliding drawer — driven entirely by our own JS/CSS classes below, not
    Metronic's KTDrawer plugin (which never re-scans HTML injected into the modal via AJAX,
    so its data-kt-drawer-toggle wiring silently did nothing — that was the "drawer won't
-   open" bug). */
+   open" bug).
+   position:absolute (not fixed) anchored to #application_fwd_offer_body_content, which the
+   modal markup already gives `position-relative`. Bootstrap's modal applies a CSS transform
+   to .modal-dialog for its open/close animation, and any transformed ancestor becomes the
+   containing block for position:fixed descendants — so a fixed drawer here renders relative
+   to the (small, mid-page) modal box instead of the viewport and ends up invisible/off-screen.
+   Anchoring to the already-positioned modal body sidesteps that entirely. */
 .co-appr-drawer {
-    position: fixed; top: 0; right: -420px; width: 400px; max-width: 92vw; height: 100vh;
-    background: #fff; box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 1200;
+    position: absolute; top: 0; right: -100%; left: auto; width: 100%; min-height: 100%;
+    background: #fff; box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 50;
     transition: right .25s ease; overflow-y: auto;
 }
 .co-appr-drawer.co-appr-drawer--open { right: 0; }
 .co-appr-drawer-backdrop {
-    display: none; position: fixed; inset: 0; background: rgba(24,28,50,.35); z-index: 1199;
+    display: none; position: absolute; inset: 0; background: rgba(24,28,50,.35); z-index: 49;
 }
 .co-appr-drawer-backdrop.co-appr-drawer-backdrop--open { display: block; }
 </style>

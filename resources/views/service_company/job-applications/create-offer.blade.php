@@ -2558,7 +2558,7 @@
                                         <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
                                         <div>
                                             <div class="co-appr-info-label">CTC (Annual)</div>
-                                            <div class="co-appr-info-value">{{ @$current_ctc_cur }} {{ number_format((float) @$yearly_final_gross, 0) }}</div>
+                                            <div class="co-appr-info-value">{!! @$current_ctc_cur !!} {{ number_format((float) @$yearly_final_gross, 0) }}</div>
                                         </div>
                                     </div>
                                     <div class="co-appr-info-card">
