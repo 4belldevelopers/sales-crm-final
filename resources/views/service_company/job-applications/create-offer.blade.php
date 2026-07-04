@@ -318,6 +318,18 @@
         #pointList .basic_view, #bonusList .bonus_view { min-width: 150px !important; width: auto !important; }
         #pointList thead th:nth-child(2), #bonusList thead th:nth-child(2) { min-width: 150px; }
 
+        /* "%" INSIDE the Allocation input box (data rows); "×" multiplier sits in the spacer cell */
+        .co-mult-sign { pointer-events: none; }
+        #pointList td:has(> .option_percentage), #pointList td:has(> .option_percentage_hourly),
+        #bonusList td:has(> .bonus_option_percentage), #bonusList td:has(> .bonus_option_percentage_hourly) { position: relative; }
+        #pointList td:has(> .option_percentage)::after, #pointList td:has(> .option_percentage_hourly)::after,
+        #bonusList td:has(> .bonus_option_percentage)::after, #bonusList td:has(> .bonus_option_percentage_hourly)::after {
+            content: '%'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: #a1a5b7; font-size: 12px; font-weight: 600; pointer-events: none;
+        }
+        #pointList .option_percentage, #pointList .option_percentage_hourly,
+        #bonusList .bonus_option_percentage, #bonusList .bonus_option_percentage_hourly { padding-right: 26px !important; }
+
         /* "%" appended inside the Total (Main/Additional) + Final CTC percentage cells */
         .co-pct-sign { pointer-events: none; }
         #pointList tfoot th:has(> .totalpercentage), #pointList tfoot th:has(> .totalpercentagehouly),
@@ -938,7 +950,7 @@
                                                                                                                                                 
                                                                                     </select> --}}
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> </td>
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> </td>
                                                                                 <td class="" style="width:12% !important">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
@@ -1040,7 +1052,7 @@
                                                                                         value="{{ $basic->basic_percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
                                                                                 <td class="" style="width: 10% !important;">
                                                                                     <select &nbsp=""
@@ -1157,7 +1169,7 @@
                                                                                         value="{{ $value->percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> </td>
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> </td>
                                                                                 <td class="" style="width:12% !important">
                                                                                     <select &nbsp=""
                                                                                         class="form-select form-select-solid option_salarymode"
@@ -1265,7 +1277,7 @@
                                                                                         value="{{ $value->percentage }}"
                                                                                         placeholder="%">
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
                                                                                 <td class=""
                                                                                     style="width: 10% !important;">
@@ -1560,7 +1572,7 @@
             
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
-                                                                                    <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                    <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
                                                                             
                                                                                 <td class="" style="width: 12% !important;">
@@ -1647,7 +1659,7 @@
                                                                                     value="{{ $bonus->bonus_percentage }}" placeholder="%">
             
                                                                                 </td>
-                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
 
                                                                                 <td class="" style="width: 10% !important;">
@@ -1747,7 +1759,7 @@
 
                                                                                 </td>
                                                                                 <td class="" style="position: relative; width: 3% !important;">
-                                                                                    <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                    <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                 </td>
                                                                                 <td class="" style="width: 12% !important;">
                                                                                     <select &nbsp=""
@@ -1862,7 +1874,7 @@
                                                                                             value="{{ $offer->percentage }}"
                                                                                             placeholder="%">
                                                                                     </td>
-                                                                                    <td class="" style="position: relative; width: 3% !important;"> <span class="co-pct-sign" style="position: absolute; top: 10px; left: 2px; color:#7e8299; font-size:13px; font-weight:600;">%</span> 
+                                                                                    <td class="" style="position: relative; width: 3% !important;"> <span class="co-mult-sign" style="position: absolute; top: 10px; left: 2px; color:#a1a5b7; font-size:14px; font-weight:600;">&times;</span> 
                                                                                     </td>
                                                                                     <td class=""
                                                                                         style="width: 10% !important;">
@@ -4502,8 +4514,11 @@
                     function coToggleAdditionalEmpty() {
                         var $empty = $('#co_additional_empty');
                         if (!$empty.length) return;
+                        // Count real data rows for the CURRENT salary-mode section (not :visible —
+                        // the parent table may be hidden by this very function, which would make a
+                        // freshly-added row read as invisible and the list never re-appear).
                         var dataRows = $('#bonusList tbody tr.row-template').filter(function () {
-                            return $(this).is(':visible') && $(this).find('.bonus_points, .bonus_point_hourly').length > 0;
+                            return !$(this).hasClass('d-none') && $(this).find('.bonus_points, .bonus_point_hourly').length > 0;
                         }).length;
                         if (dataRows === 0) {
                             $empty.show();
