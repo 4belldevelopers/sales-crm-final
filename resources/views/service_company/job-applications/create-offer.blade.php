@@ -2464,16 +2464,10 @@
                             <div class="tab-content-section pt-5" id="step3">
 
                                 <div id="preview_offer_body_content"></div>
-                                <div class="row justify-content-center">
-                                    <div class="col-lg-3  d-flex justify-content-center">
-                                        <span class="prev-btn" onclick="prevStep(event,3)"
-                                            style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
-                                    </div>
-                                    <div class="col-lg-3 d-flex justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                        <button type="button" class="btn btn-primary font-weight-bolder px-9 py-4" style="width:100%;margin-top:10px;" onclick="nextStep(event,3)">Continue to Approval</button>
-                                    </div>
+                                <div class="co-footer-actions co-tpl-footer">
+                                    <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
+                                    <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
                                 </div>
-                                <br>
                             </div>
 
                             <!-- Step 4 : Approval -->
