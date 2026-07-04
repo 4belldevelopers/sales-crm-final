@@ -574,6 +574,18 @@
             .co-appr-layout { flex-direction: column; }
             .co-appr-side { flex: 1 1 auto; max-width: none; width: 100%; }
         }
+
+        /* ══════════════════════════ Step 5 — Send Offer Letter ══════════════════════════ */
+        #step5 { background: #fff; }
+        .co-step5-final { font-size: 10px !important; font-weight: 700; color: #7239ea; background: #f5f0ff; border-radius: 99px; padding: 2px 9px; vertical-align: middle; margin-left: 6px; }
+        .co-step5-tools { display: flex; align-items: center; gap: 10px; }
+        .co-step5-download { background: #e8fff3 !important; border: 1px solid #b7ebc6 !important; color: #0f9463 !important; font-weight: 600 !important; font-size: 12px !important; height: 40px; border-radius: 8px; display: inline-flex; align-items: center; }
+        .co-step5-download:hover { background: #d7f3e0 !important; }
+        .co-step5-composer { background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 6px 6px 2px; }
+        .co-step5-loading { text-align: center; padding: 40px 20px; color: #a1a5b7; font-size: 12px; }
+        /* The inline composer reuses the modal markup; its "Cancel" (data-dismiss=modal) is a no-op
+           here, so hide it — Back lives in the Step 5 toolbar and Send is the composer's own button. */
+        #co_step5_composer .co-so-cancel { display: none !important; }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -2699,33 +2711,30 @@
                                 </div>
                             </div>
 
-                            <!-- Step 5 : Offer Sent -->
+                            <!-- Step 5 : Send Offer Letter (candidate email composer, inline) -->
                             <div class="tab-content-section pt-5" id="step5">
-                                <div class="card card-body py-7 mb-5 mx-2">
-                                    <h5 class="co-section-title">Offer Sent</h5>
-                                    <div class="co-section-sub mb-4">Download the offer letter or email the final offer to the candidate.</div>
-                                    <div class="row justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                        <div class="col-lg-3  d-flex justify-content-center">
-                                            <span class="prev-btn" onclick="prevStep(event,5)"
-                                                style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
-                                        </div>
-                                        <div class="col-lg-3  d-flex justify-content-center">
-                                            <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                data-candidate="{{ @$application->id }}" data-mtype="3"
-                                                data-offerId="{{ $offer_id }}"
-                                                class="btn btn-success font-weight-bolder px-9 py-4 download_offer"
-                                                data-wizard-type="action-next" style="width: 100%;">Download</button>
-                                        </div>
-                                        <div class="col-lg-3  d-flex justify-content-center">
-                                            <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                data-candidate="{{ @$application->id }}" data-mtype="1"
-                                                data-offerId="{{ $offer_id }}" data-toggle="modal"
-                                                data-target="#fwd_offer"
-                                                class="btn btn-primary font-weight-bolder px-9 py-4 fwd_offer"
-                                                data-wizard-type="action-next" style="width: 100%;">Candidate Email
-                                                Send</button>
-                                        </div>
+                                <div class="co-tpl-header">
+                                    <div>
+                                        <h5 class="co-tpl-title">Send Offer Letter <span class="co-step5-final">Final Step</span></h5>
+                                        <div class="co-tpl-sub">Review the details and send the final offer email to your candidate.</div>
                                     </div>
+                                    <div class="co-step5-tools section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                        <span class="btn co-btn-close" onclick="prevStep(event,5)">Back</span>
+                                        <button type="button" data-jobId="{{ @$application->job_id }}"
+                                            data-candidate="{{ @$application->id }}" data-mtype="3"
+                                            data-offerId="{{ $offer_id }}"
+                                            class="btn co-step5-download download_offer"
+                                            data-wizard-type="action-next">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Candidate email composer, loaded inline (mtype=1) from the same
+                                     offer_send_mail endpoint the old "Candidate Email Send" button used.
+                                     Populated by coEnsureStep5Composer() when this step becomes active. --}}
+                                <div id="co_step5_composer" class="co-step5-composer section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                    <div class="co-step5-loading">Loading composer…</div>
                                 </div>
                             </div>
 
@@ -4929,6 +4938,43 @@
                         if (n < active) coPaintStep(step, 'done');
                         else if (n === active) coPaintStep(step, 'current');
                         else coPaintStep(step, 'pending');
+                    });
+                    if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
+                }
+
+                // Loads the candidate email composer inline into Step 5 (mtype=1), reusing the exact
+                // same offer_send_mail endpoint the old "Candidate Email Send" button used — so the
+                // page IS the composer, with the same send functionality. Idempotent (loads once).
+                var coStep5Loaded = false;
+                function coEnsureStep5Composer() {
+                    var step5 = document.getElementById('step5');
+                    if (!step5 || !step5.classList.contains('active')) return;
+                    if (coStep5Loaded) return;
+                    var $box = $('#co_step5_composer');
+                    if (!$box.length) return;
+                    var offerId = "{{ $offer_id }}";
+                    if (!offerId) return;                        // no saved offer → nothing to send
+                    coStep5Loaded = true;
+                    // If the Step 4 approval modal already spun up a CKEditor on #editor1, tear it down
+                    // first so the inline composer's editor initialises cleanly (no duplicate-id clash).
+                    try { if (window.CKEDITOR && CKEDITOR.instances.editor1) { CKEDITOR.instances.editor1.destroy(true); } } catch (e) {}
+                    $('#application_fwd_offer_body_content').empty();
+                    var jobId = "{{ @$application->job_id }}";
+                    var url = "{{ route('service_company.cvtracker.offer_send_mail', ':id') }}".replace(':id', jobId);
+                    $.ajax({
+                        type: 'POST', url: url,
+                        data: {
+                            '_token': "{{ csrf_token() }}", '_method': 'POST',
+                            'arr': ["{{ @$application->id }}"], 'jobIdArr': [jobId], 'mtype': 1, 'offerId': offerId
+                        },
+                        success: function (r) {
+                            if (r && r.status == 'success') { $box.html(r.view); }
+                            else { coStep5Loaded = false; $box.html('<div class="co-step5-loading" style="color:#f1416c;">Unable to load the email composer. Please go Back and try again.</div>'); }
+                        },
+                        error: function () {
+                            coStep5Loaded = false;
+                            $box.html('<div class="co-step5-loading" style="color:#f1416c;">Unable to load the email composer. Please go Back and try again.</div>');
+                        }
                     });
                 }
 
