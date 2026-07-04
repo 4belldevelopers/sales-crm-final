@@ -137,8 +137,7 @@ body
                                                     </li>
                                                 </ul>
                                                 <ul class="list-group" id="files-list">
-                                                    @foreach (\Illuminate\Support\Facades\File::files($updateFilePath) as
-                                                    $key=>$filename)
+                                                    @foreach (\Illuminate\Support\Facades\File::files($updateFilePath) as $key=>$filename)
                                                         @if (\Illuminate\Support\Facades\File::basename($filename) != "modules_statuses.json" &&
                                                         strpos(\Illuminate\Support\Facades\File::basename($filename) , 'auto') ===
                                                         false)
@@ -209,8 +208,7 @@ body
                                 </div>
                                 <div class="col-md-12">
                                     <ul class="list-group" id="files-list">
-                                        @foreach (\Illuminate\Support\Facades\File::files($updateFilePath) as
-                                        $key=>$filename)
+                                        @foreach (\Illuminate\Support\Facades\File::files($updateFilePath) as $key=>$filename)
                                             @if (\Illuminate\Support\Facades\File::basename($filename) != "modules_statuses.json" &&
                                             strpos(\Illuminate\Support\Facades\File::basename($filename) , 'auto') ===
                                             false)

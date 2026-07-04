@@ -35,9 +35,16 @@ jobs:
             npm run build
             echo ">> Running migrations"
             php artisan migrate --force
-            echo ">> Caching config/routes/views"
+            echo ">> Caching config/views"
             php artisan config:cache
-            php artisan route:cache
+            # route:cache is skipped: the route files currently contain ~59 duplicate route
+            # names (pre-existing, unrelated to any one feature), which makes route:cache fail
+            # outright and, since this script uses `set -e`, was aborting every deploy before
+            # reaching `octane:reload` below — so code changes reached disk via git but Octane
+            # kept serving the old code from memory indefinitely. route:clear ensures no stale
+            # cached route file lingers instead. Routing still works without the cache, just
+            # without that perf optimization, until the duplicate names are cleaned up.
+            php artisan route:clear
             php artisan view:cache
             echo ">> Reloading Octane workers (zero-downtime)"
             php artisan octane:reload
