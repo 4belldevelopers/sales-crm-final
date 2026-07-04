@@ -422,24 +422,37 @@
         .co-btn-save:hover { background: #0b6cdb !important; border-color: #0b6cdb !important; }
 
         /* ══════════════════════════ Step 2 — Offer Letter Template ══════════════════════════
+           Enterprise nested-card hierarchy, matching Step 1's language:
+             Main card   = .co-tpl-sidebar / .co-tpl-editor-col / .co-tpl-side (white, bordered, shadowed)
+             Sub card    = .co-tpl-subcard  (light recessed panel inside a main card)
+             Sub-sub card= .co-tpl-card, .co-var-chip, .co-tpl-badge (small elements inside a sub card)
            Every rule below is scoped so nothing exceeds 14px (stricter than step 1's 16px cap).
            No extra server round-trips: search/tabs/zoom/preview/download all run client-side. */
         .co-tpl-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
         .co-tpl-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
         .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 
-        /* All three columns are plain white cards on a white page — no grey/lavender fill anywhere */
+        /* Page + main cards are plain white — no grey/lavender fill anywhere */
         #step2, .co-tpl-layout { background: #fff; }
-        .co-tpl-layout { display: flex; align-items: stretch; gap: 12px; }
-        .co-tpl-sidebar { flex: 0 0 180px; max-width: 180px; }
+        .co-tpl-layout { display: flex; align-items: flex-start; gap: 16px; }
+        .co-tpl-sidebar { flex: 0 0 190px; max-width: 190px; }
         .co-tpl-editor-col { flex: 1 1 auto; min-width: 0; }
-        .co-tpl-side { flex: 0 0 200px; max-width: 200px; display: flex; flex-direction: column; gap: 10px; }
+        .co-tpl-side { flex: 0 0 210px; max-width: 210px; display: flex; flex-direction: column; }
+
+        /* Main cards (level 1) — reuse Step 1's exact card language: white, bordered, shadowed */
+        .co-tpl-sidebar, .co-tpl-editor-col, .co-tpl-side {
+            background: #fff; border: 1px solid #eef1f7; border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 14px;
+        }
+
+        /* Sub cards (level 2) — light recessed panel grouping related fields inside a main card */
+        .co-tpl-subcard { background: #f9fafd; border: 1px solid #eef1f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
 
         /* Templates sidebar */
-        .co-tpl-card-box { background: #fff; border: 1px solid #eef1f7; border-radius: 12px; padding: 10px; }
-        .co-tpl-sidebar-head { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: 6px; }
+        .co-tpl-sidebar-head { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: 8px; }
         .co-tpl-search input { height: 30px !important; font-size: 11px !important; padding: 4px 8px !important; }
         .co-tpl-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+        /* Sub-sub card (level 3) — one template row inside the Templates main card */
         .co-tpl-card { display: flex; align-items: flex-start; gap: 6px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 8px; background: #fff; cursor: default; }
         .co-tpl-card--active { border-color: #1b84ff; background: #f3f8ff; }
         .co-tpl-ico { width: 26px; height: 26px; border-radius: 7px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -455,22 +468,20 @@
         .co-tpl-empty { font-size: 10px; color: #a1a5b7; text-align: center; padding: 10px 4px; }
 
         /* Template editor card */
-        .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 10px; }
+        .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 12px; }
         .co-tpl-tab { background: none; border: none; padding: 7px 12px; font-size: 12px !important; font-weight: 600; color: #a1a5b7; border-bottom: 2px solid transparent; cursor: pointer; }
         .co-tpl-tab--active { color: #1b84ff; border-bottom-color: #1b84ff; }
-        .co-tpl-meta-row { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; flex-wrap: wrap; }
+        .co-tpl-meta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .co-tpl-meta-item { font-size: 10px; color: #7e8299; }
         .co-tpl-meta-item b { color: #181c32; font-weight: 600; margin-left: 4px; }
 
-        /* Letterhead — logo left, company address right (real data; shown identically in the
-           editor and the preview so what you see is what the candidate will get). */
-        .co-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eef1f7; }
-        .co-letterhead-logo img { max-height: 42px; max-width: 160px; object-fit: contain; }
-        .co-letterhead-logo-fallback { font-size: 13px; font-weight: 700; color: #181c32; }
+        /* Letterhead sub card — actual company logo (image, never text) left, address right;
+           shown identically in the editor and the preview so what you see is what the candidate gets. */
+        .co-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .co-letterhead-logo img { max-height: 40px; max-width: 150px; object-fit: contain; display: block; }
         .co-letterhead-address { text-align: right; font-size: 10px; color: #7e8299; line-height: 1.5; max-width: 260px; }
         .co-letterhead-company { font-size: 12px; font-weight: 700; color: #181c32; }
 
-        .co-tpl-toolbar-extra { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
         .co-tpl-zoom { display: flex; align-items: center; gap: 6px; }
         .co-tpl-zoom-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; color: #5e6278; font-weight: 700; font-size: 12px !important; cursor: pointer; line-height: 1; }
         .co-tpl-zoom-btn:hover { background: #f5f8fa; }
@@ -478,9 +489,9 @@
         .co-tpl-download-btn { font-size: 10px !important; font-weight: 600; color: #4f46e5; background: #eef3ff; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .co-tpl-download-btn:hover { background: #e0e7ff; }
         .co-tpl-download-btn svg { width: 11px; height: 11px; }
-        .co-tpl-preview { border: 1px solid #eef1f7; border-radius: 10px; padding: 18px; min-height: 350px; max-height: 480px; overflow: auto; font-size: 12px; background: #fff; }
+        .co-tpl-preview { border: 1px solid #eef1f7; border-radius: 10px; padding: 18px; min-height: 320px; max-height: 460px; overflow: auto; font-size: 12px; background: #fff; }
 
-        /* Insert Variables + info panel */
+        /* Insert Variables + info panel (sub cards, level 2) */
         .co-tpl-side-title { font-size: 12px; font-weight: 700; color: #181c32; }
         .co-tpl-side-sub { font-size: 10px; color: #7e8299; margin: 3px 0 8px; line-height: 1.4; }
         .co-var-chips { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -489,8 +500,13 @@
         .co-var-chip:disabled { opacity: .5; cursor: not-allowed; }
         .co-tpl-note { font-size: 10px; color: #7e8299; line-height: 1.5; }
         .co-tpl-note a { color: #1b84ff; font-weight: 600; }
-        .co-btn-reset { width: 100%; background: #fff !important; border: 1px solid #f1416c !important; color: #f1416c !important; font-weight: 600 !important; height: 36px; border-radius: 8px; font-size: 11px !important; margin-top: auto; }
+        /* Reset sits directly under the "About this template" sub card, not floated to a corner */
+        .co-btn-reset { width: 100%; background: #fff !important; border: 1px solid #f1416c !important; color: #f1416c !important; font-weight: 600 !important; height: 36px; border-radius: 8px; font-size: 11px !important; }
         .co-btn-reset:hover { background: #fff5f8 !important; }
+
+        /* Shared page-level footer (Back / Save & Next) — one bar under all three cards, bottom-right,
+           same position regardless of which tab (Editor/Preview) is active. */
+        .co-tpl-footer { margin-top: 16px; }
 
         /* Responsive: collapse to a single column under ~1100px (fits smaller 15.6" / 13" laptops) */
         @media (max-width: 1100px) {
@@ -2318,15 +2334,32 @@
                                     </div>
                                 </div>
 
+                                @php
+                                    // Company logo: always render an actual image (never a text fallback),
+                                    // using the same app-wide default-logo asset the Company Profile page uses.
+                                    $co_logo_src = !empty($co_company_logo) ? $co_company_logo : asset('assets/logo-not-found.png');
+                                    $co_letterhead = '
+                                        <div class="co-letterhead">
+                                            <div class="co-letterhead-logo">
+                                                <img src="'.e($co_logo_src).'" alt="'.e($co_company_name ?? 'Company').'" onerror="this.src=\''.asset('assets/logo-not-found.png').'\'">
+                                            </div>
+                                            <div class="co-letterhead-address">'
+                                                . (!empty($co_company_name) ? '<div class="co-letterhead-company">'.e($co_company_name).'</div>' : '')
+                                                . (!empty($co_company_address) ? '<div>'.e($co_company_address).'</div>' : '')
+                                            . '</div>
+                                        </div>';
+                                @endphp
+
                                 <div class="co-tpl-layout">
-                                    {{-- Templates sidebar — only one template exists (the company's default offer
-                                         letter, configured in Settings), so exactly one card is shown. --}}
-                                    <div class="co-tpl-sidebar co-tpl-card-box">
+                                    {{-- MAIN CARD 1: Templates — only one template exists (the company's default
+                                         offer letter, configured in Settings), so exactly one card is shown. --}}
+                                    <div class="co-tpl-sidebar">
                                         <div class="co-tpl-sidebar-head">Templates</div>
                                         <div class="co-tpl-search">
                                             <input type="text" id="co_tpl_search" class="form-control form-control-solid" placeholder="Search templates...">
                                         </div>
                                         <div class="co-tpl-list">
+                                            {{-- Sub-sub card: one template row --}}
                                             <div class="co-tpl-card co-tpl-card--active" data-tpl-name="company offer letter template">
                                                 <span class="co-tpl-ico">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
@@ -2346,45 +2379,33 @@
                                         </div>
                                     </div>
 
-                                    {{-- Template editor --}}
-                                    <div class="co-tpl-editor-col co-tpl-card-box">
+                                    {{-- MAIN CARD 2: Template editor --}}
+                                    <div class="co-tpl-editor-col">
                                         <div class="co-tpl-tabs">
                                             <button type="button" class="co-tpl-tab co-tpl-tab--active" data-co-tab="editor">Template Editor</button>
                                             <button type="button" class="co-tpl-tab" data-co-tab="preview">Preview</button>
                                         </div>
 
-                                        <div class="co-tpl-meta-row">
+                                        {{-- Sub card: template type/status --}}
+                                        <div class="co-tpl-subcard co-tpl-meta-row">
                                             <span class="co-tpl-meta-item">Type<b>{{ $co_emp_type_label }}</b></span>
                                             <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                                         </div>
-
-                                        @php
-                                            $co_letterhead = '
-                                                <div class="co-letterhead">
-                                                    <div class="co-letterhead-logo">'
-                                                        . (!empty($co_company_logo)
-                                                            ? '<img src="'.e($co_company_logo).'" alt="'.e($co_company_name ?? 'Company').'">'
-                                                            : '<span class="co-letterhead-logo-fallback">'.e($co_company_name ?? 'Company').'</span>')
-                                                    . '</div>
-                                                    <div class="co-letterhead-address">'
-                                                        . (!empty($co_company_name) ? '<div class="co-letterhead-company">'.e($co_company_name).'</div>' : '')
-                                                        . (!empty($co_company_address) ? '<div>'.e($co_company_address).'</div>' : '')
-                                                    . '</div>
-                                                </div>';
-                                        @endphp
 
                                         <div class="co-tpl-tabpane" data-co-pane="editor">
                                             <form class="ajax-form" method="POST" id="termConditioncreateForm"
                                                 name="termConditioncreateForm" enctype="multipart/form-data">
                                                 @csrf
-                                                {!! $co_letterhead !!}
+                                                {{-- Sub card: letterhead (logo + address) --}}
+                                                <div class="co-tpl-subcard">{!! $co_letterhead !!}</div>
                                                 <div class="col-lg-12 col-xl-12">
                                                     <textarea id="editorterms1" name="editorterms1">
                                                         {{ $offer_terms }}
                                                     </textarea>
                                                 </div>
 
-                                                <div class="co-tpl-toolbar-extra">
+                                                {{-- Sub card: zoom + download tools --}}
+                                                <div class="co-tpl-subcard co-tpl-toolbar-extra" style="margin-top:10px;margin-bottom:0;display:flex;">
                                                     <div class="co-tpl-zoom">
                                                         <button type="button" class="co-tpl-zoom-btn" id="co_tpl_zoom_out" aria-label="Zoom out">&minus;</button>
                                                         <span class="co-tpl-zoom-pct" id="co_tpl_zoom_pct">100%</span>
@@ -2395,27 +2416,20 @@
                                                         Download Sample
                                                     </button>
                                                 </div>
-
-                                                <div class="co-footer-actions" style="margin-top:14px;">
-                                                    <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                                    <input type="submit" name="save" value="Save & Next" class="btn co-btn-save">
-                                                </div>
                                             </form>
                                         </div>
 
                                         <div class="co-tpl-tabpane d-none" data-co-pane="preview">
-                                            {!! $co_letterhead !!}
+                                            {{-- Sub card: letterhead (logo + address), identical to the editor tab --}}
+                                            <div class="co-tpl-subcard">{!! $co_letterhead !!}</div>
                                             <div id="co_tpl_preview_content" class="co-tpl-preview"></div>
-                                            <div class="co-footer-actions" style="margin-top:14px;">
-                                                <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                                <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
-                                            </div>
                                         </div>
                                     </div>
 
-                                    {{-- Insert Variables + template info --}}
+                                    {{-- MAIN CARD 3: Insert Variables + template info --}}
                                     <div class="co-tpl-side">
-                                        <div class="co-tpl-card-box">
+                                        {{-- Sub card: variable chips --}}
+                                        <div class="co-tpl-subcard">
                                             <div class="co-tpl-side-title">Insert Variables</div>
                                             <div class="co-tpl-side-sub">Click to insert this candidate's actual details at the cursor.</div>
                                             <div class="co-var-chips">
@@ -2428,12 +2442,20 @@
                                                 <button type="button" class="co-var-chip" data-co-var="{{ $co_today_date ?? '' }}" {{ empty($co_today_date) ? 'disabled' : '' }}>Today's Date</button>
                                             </div>
                                         </div>
-                                        <div class="co-tpl-card-box">
+                                        {{-- Sub card: about this template --}}
+                                        <div class="co-tpl-subcard" style="margin-bottom:0;">
                                             <div class="co-tpl-side-title">About this template</div>
                                             <div class="co-tpl-note" style="margin-top:6px;">This is your company's default Offer Letter Template, configured in <b>Settings &rarr; Company Profile &rarr; Terms &amp; Conditions</b>. Changes made here apply only to this candidate's offer.</div>
                                         </div>
-                                        <button type="button" class="co-btn-reset setToDefaultCompanyTerms" id="setToDefaultCompanyTerms">Reset Template</button>
+                                        {{-- Reset sits directly below the sub card above it, not floated to a corner --}}
+                                        <button type="button" class="co-btn-reset setToDefaultCompanyTerms" id="setToDefaultCompanyTerms" style="margin-top:10px;">Reset Template</button>
                                     </div>
+                                </div>
+
+                                {{-- Shared footer for both tabs: one Back / Save & Next bar, bottom-right --}}
+                                <div class="co-footer-actions co-tpl-footer">
+                                    <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
+                                    <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
                                 </div>
 
                             </div>
