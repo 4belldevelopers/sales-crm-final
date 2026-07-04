@@ -515,6 +515,44 @@
             .co-tpl-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
             .co-tpl-card { min-width: 220px; }
         }
+
+        /* ══════════════════════════ Step 4 — Approval ══════════════════════════
+           Same enterprise card language as steps 2/3. Capped at 12px, Poppins, white background. */
+        #step4, #step4 * { font-family: 'Poppins', sans-serif; }
+        #step4 { background: #fff; font-size: 12px; }
+        #step4 h1, #step4 h2, #step4 h3, #step4 h4, #step4 h5 { font-size: 12px !important; font-weight: 700; color: #181c32; margin: 0; }
+
+        .co-appr-info-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+        .co-appr-info-card { flex: 1 1 160px; background: #fff; border: 1px solid #eef1f7; border-radius: 12px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 12px; display: flex; gap: 10px; align-items: flex-start; }
+        .co-appr-info-ico { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-appr-info-ico svg { width: 15px; height: 15px; }
+        .co-appr-info-label { font-size: 10px; color: #7e8299; }
+        .co-appr-info-value { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 2px; }
+        .co-appr-info-sub { font-size: 10px; color: #a1a5b7; margin-top: 1px; }
+
+        .co-appr-layout { display: flex; align-items: flex-start; gap: 16px; }
+        .co-appr-main { flex: 1 1 auto; min-width: 0; background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 18px; }
+        .co-appr-side { flex: 0 0 260px; max-width: 260px; display: flex; flex-direction: column; gap: 12px; }
+        .co-appr-side-card { background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 14px; }
+        .co-appr-side-title { font-size: 12px !important; font-weight: 700; color: #181c32; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+
+        .co-appr-empty-state { text-align: center; padding: 30px 14px; }
+        .co-appr-empty-ico { width: 64px; height: 64px; border-radius: 50%; border: 2px dashed #e0e7ff; background: #f5f7ff; color: #93a4f4; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .co-appr-empty-ico svg { width: 30px; height: 30px; }
+        .co-appr-empty-title { font-size: 12px !important; font-weight: 700; color: #181c32; margin-bottom: 4px; }
+        .co-appr-empty-sub { font-size: 11px; color: #7e8299; margin-bottom: 14px; }
+        .co-appr-note { display: flex; gap: 8px; align-items: flex-start; background: #f3f8ff; border: 1px solid #dbe9ff; border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #3f4254; margin-top: 14px; }
+        .co-appr-note svg { width: 14px; height: 14px; color: #1b84ff; flex-shrink: 0; margin-top: 1px; }
+
+        .co-appr-detail-row { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; padding: 6px 0; border-bottom: 1px solid #f4f4f6; }
+        .co-appr-detail-row:last-child { border-bottom: none; }
+        .co-appr-detail-label { color: #7e8299; }
+        .co-appr-detail-value { color: #181c32; font-weight: 600; text-align: right; }
+
+        @media (max-width: 1100px) {
+            .co-appr-layout { flex-direction: column; }
+            .co-appr-side { flex: 1 1 auto; max-width: none; width: 100%; }
+        }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -2472,27 +2510,96 @@
 
                             <!-- Step 4 : Approval -->
                             <div class="tab-content-section pt-5" id="step4">
-                                <div class="card card-body py-7 mb-5 mx-2">
-                                    <h5 class="co-section-title">Approval</h5>
-                                    <div class="co-section-sub mb-4">Send this offer for internal approval before it is released to the candidate.</div>
-                                    <div class="row justify-content-center section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                        <div class="col-lg-3  d-flex justify-content-center">
-                                            <span class="prev-btn" onclick="prevStep(event,4)"
-                                                style="padding: 15px 32px; border-radius: 9px; font-weight: bold; margin: 10px;background: #000;color: #fff;cursor: pointer;">Back</span>
+                                <div class="co-tpl-header">
+                                    <div>
+                                        <h5 class="co-tpl-title">Approval</h5>
+                                        <div class="co-tpl-sub">Send this offer for internal approval before it is released to the candidate.</div>
+                                    </div>
+                                </div>
+
+                                <div class="co-appr-info-row">
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">Candidate</div>
+                                            <div class="co-appr-info-value">{{ @$application->full_name }}</div>
+                                            <div class="co-appr-info-sub">{{ @$application->email }}</div>
                                         </div>
-                                        <div class="col-lg-3  d-flex justify-content-center">
+                                    </div>
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">Role</div>
+                                            <div class="co-appr-info-value">{{ @$designation }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">CTC (Annual)</div>
+                                            <div class="co-appr-info-value">{{ @$current_ctc_cur }} {{ number_format((float) @$yearly_final_gross, 0) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">Joining Date</div>
+                                            <div class="co-appr-info-value">{{ @$joined_date ? date('d M Y', strtotime($joined_date)) : '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 0 0 0-6M21 20a5 5 0 0 0-3.5-4.8"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">Requested By</div>
+                                            <div class="co-appr-info-value">{{ auth()->user()->name ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="co-appr-info-card">
+                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+                                        <div>
+                                            <div class="co-appr-info-label">Employment Type</div>
+                                            <div class="co-appr-info-value">{{ $co_emp_type_label }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="co-appr-layout">
+                                    <div class="co-appr-main">
+                                        <h5 class="co-tpl-title" style="margin-bottom:14px;">Approval</h5>
+                                        <div class="co-appr-empty-state">
+                                            <div class="co-appr-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M19 8v6M22 11h-6"/></svg></div>
+                                            <div class="co-appr-empty-title">Send this offer for approval</div>
+                                            <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
                                             <button type="button" data-jobId="{{ @$application->job_id }}"
                                                 data-candidate="{{ @$application->id }}" data-mtype="2"
                                                 data-offerId="{{ $offer_id }}" data-toggle="modal"
                                                 data-target="#fwd_offer"
-                                                class="btn btn-warning font-weight-bolder px-9 py-4 fwd_offer"
-                                                data-wizard-type="action-next" style="width: 100%;">Approval Email
-                                                Send</button>
+                                                class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
+                                                data-wizard-type="action-next">+ Send Approval Request</button>
                                         </div>
-                                        <div class="col-lg-3 d-flex justify-content-center">
-                                            <button type="button" class="btn btn-primary font-weight-bolder px-9 py-4" style="width:100%;margin-top:10px;" onclick="nextStep(event,4)">Continue to Send</button>
+                                        <div class="co-appr-note">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                            <span>An approval request email will be sent to the recipient(s) you choose. You can pick from your internal team, or the client's team when this job has one.</span>
                                         </div>
                                     </div>
+
+                                    <div class="co-appr-side">
+                                        <div class="co-appr-side-card">
+                                            <div class="co-appr-side-title">Details &amp; Insights</div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Offer ID</span><span class="co-appr-detail-value">{{ $offer_id }}</span></div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Template</span><span class="co-appr-detail-value">Company Offer Letter Template</span></div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Employment Type</span><span class="co-appr-detail-value">{{ $co_emp_type_label }}</span></div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value">{{ @$designation ?: '—' }}</span></div>
+                                            @if(!empty(@$application->phone))
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Candidate Mobile</span><span class="co-appr-detail-value">{{ $application->phone }}</span></div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="co-footer-actions co-tpl-footer section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                    <span class="btn co-btn-close" onclick="prevStep(event,4)">Back</span>
+                                    <button type="button" class="btn co-btn-save" onclick="nextStep(event,4)">Save &amp; Next</button>
                                 </div>
                             </div>
 
