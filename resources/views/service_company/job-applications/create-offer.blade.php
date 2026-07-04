@@ -3215,6 +3215,7 @@
                         } else {
                             var newRow = $('.other_section_row').first().clone(); // Clone the first template row{
                         }
+                        newRow.find('.co-row-lead, .co-comp-badge').remove(); // Strip cloned row-number/badge markup — coEnhanceRows() re-injects the correct one for this table
                         newRow.find('input').val(''); // Clear input values
                         newRow.find('select').val('0'); // Reset selects to default values
                         newRow.addClass('remove_row');
@@ -3259,6 +3260,8 @@
                         var current_ctc_mode = $('#current_ctc_mode').val();
                         if (current_ctc_mode == 1 || current_ctc_mode == 2 || current_ctc_mode == 3) {
                             var newRow = $('.hourly_section_row').first().clone(); // Clone the first template row{
+                            newRow.find('.co-row-lead, .co-comp-badge').remove(); // Strip cloned row-number/badge markup — coEnhanceRows() re-injects the correct one for this table
+                            newRow.find('.basic_view_hourly').closest('td').remove(); // This row is being converted into a bonus row, which has no Applicable column
                             newRow.find('input').val(''); // Clear input values
                             newRow.find('select').val('0'); // Reset selects to default values
                             newRow.find('.offer_point_hourly').addClass('bonus_point_hourly').removeClass(
@@ -3330,6 +3333,7 @@
 
                         } else {
                             var newRow = $('.other_section_row').first().clone(); // Clone the first template row{
+                            newRow.find('.co-row-lead, .co-comp-badge').remove(); // Strip cloned row-number/badge markup — coEnhanceRows() re-injects the correct one for this table
                             newRow.find('input').val(''); // Clear input values
                             newRow.find('select').val('0'); // Reset selects to default values
                             newRow.find('.offer_points').addClass('bonus_points').removeClass('offer_points');
@@ -4078,7 +4082,11 @@
                                     // tableLoad('load');
                                     return false;
                                 } else if(response.status == 'errors') {
-                                    Swal.fire("Warning", response.message, "warning");
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "Main Components must add up to exactly 100%. Please adjust the allocation of your Main Components and try again.",
+                                        icon: "warning"
+                                    });
                                 }else if(response.status == 'permisionInfo') {
                                     Swal.fire("Warning", response.view, "warning");
                                 }else{
@@ -4087,26 +4095,44 @@
 
                             },
                             error: function(response) {
-                                // displayErrors(response.responseJSON.errors);
-                                // Handle validation errors and display in SweetAlert
-                                let errors = response.responseJSON.errors;
-                                let errorMessages = '';
-                                let counter = 1;
-
-                                $.each(errors, function(fieldName, errorMessage) {
-                                    // Add error messages with red color using inline CSS
-                                    errorMessages +=
-                                        `<span style="color:red;">${counter}. ${errorMessage[0]}</span><br>`;
-                                    counter++;
-                                });
-                                // Show error messages in SweetAlert
-                                Swal.fire({
-                                    title: "Validation Errors",
-                                    html: errorMessages, // Display the errors with HTML content
-                                    icon: "warning",
-                                    customClass: {
-                                        popup: 'text-left' // Align the text to the left
+                                // Backend returns one message per empty field (e.g. "Offer point is
+                                // required.", "Bonus offer monthly is required.") — that reads like a
+                                // wall of jargon to a normal user. Group the raw field names into plain,
+                                // actionable sentences instead of dumping the field-level list.
+                                let errors = response.responseJSON.errors || {};
+                                let groups = { main: false, additional: false, details: false };
+                                $.each(errors, function(fieldName) {
+                                    if (/^(offer_point|option_percentage|option_salarymode|offer_monthly|offer_yearly)/.test(fieldName)) {
+                                        groups.main = true;
+                                    } else if (/^bonus_/.test(fieldName)) {
+                                        groups.additional = true;
+                                    } else if (/^(ctc|dob|current_designation|finalpaytotal)/.test(fieldName)) {
+                                        groups.details = true;
                                     }
+                                });
+
+                                let messages = [];
+                                if (groups.main) {
+                                    messages.push('Main Components rows cannot be empty. Please fill in every field (Point, Allocation, Condition, Monthly, Annually) for each row you\'ve added, or remove the empty row.');
+                                }
+                                if (groups.additional) {
+                                    messages.push('Additional Components rows cannot be empty. Please fill in every field for each row you\'ve added, or remove the empty row.');
+                                }
+                                if (groups.details) {
+                                    messages.push('Please complete the Compensation Details section (CTC, Offered Designation and Date of Joining) before proceeding.');
+                                }
+                                if (!messages.length) {
+                                    messages.push('Please review the highlighted fields and try again.');
+                                }
+
+                                let errorMessages = messages.map(function(msg, i) {
+                                    return `<div style="margin-bottom:8px;">${i + 1}. ${msg}</div>`;
+                                }).join('');
+
+                                Swal.fire({
+                                    title: "Error",
+                                    html: `<div style="text-align:left;font-size:13px;color:#3f4254;">${errorMessages}</div>`,
+                                    icon: "warning"
                                 });
                             }
                         });
