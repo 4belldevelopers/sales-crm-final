@@ -575,17 +575,89 @@
             .co-appr-side { flex: 1 1 auto; max-width: none; width: 100%; }
         }
 
-        /* ══════════════════════════ Step 5 — Send Offer Letter ══════════════════════════ */
+        /* ══════════════════════════ Step 5 — Send Offer Letter (native full composer) ══════════════════════════ */
         #step5 { background: #fff; }
+        #step5, #step5 * { font-family: 'Poppins', sans-serif; }
         .co-step5-final { font-size: 10px !important; font-weight: 700; color: #7239ea; background: #f5f0ff; border-radius: 99px; padding: 2px 9px; vertical-align: middle; margin-left: 6px; }
         .co-step5-tools { display: flex; align-items: center; gap: 10px; }
         .co-step5-download { background: #e8fff3 !important; border: 1px solid #b7ebc6 !important; color: #0f9463 !important; font-weight: 600 !important; font-size: 12px !important; height: 40px; border-radius: 8px; display: inline-flex; align-items: center; }
         .co-step5-download:hover { background: #d7f3e0 !important; }
-        .co-step5-composer { background: #fff; border: 1px solid #eef1f7; border-radius: 14px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 6px 6px 2px; }
-        .co-step5-loading { text-align: center; padding: 40px 20px; color: #a1a5b7; font-size: 12px; }
-        /* The inline composer reuses the modal markup; its "Cancel" (data-dismiss=modal) is a no-op
-           here, so hide it — Back lives in the Step 5 toolbar and Send is the composer's own button. */
-        #co_step5_composer .co-so-cancel { display: none !important; }
+
+        .co-send { background: #fff; }
+        /* Candidate hero card */
+        .co-send-hero { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; background: #f9fafd; border: 1px solid #eef1f7; border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; }
+        .co-send-hero-avatar { width: 60px; height: 60px; border-radius: 50%; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+        .co-send-hero-ident { min-width: 180px; }
+        .co-send-hero-name { font-size: 15px !important; font-weight: 700; color: #181c32; }
+        .co-send-hero-role { font-size: 12px; color: #1b84ff; font-weight: 600; margin-top: 1px; }
+        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 5px; display: flex; gap: 16px; flex-wrap: wrap; }
+        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; }
+        .co-send-hero-meta svg { width: 13px; height: 13px; }
+        .co-send-hero-facts { display: flex; gap: 30px; flex-wrap: wrap; margin-left: auto; }
+        .co-send-fact-l { font-size: 10px; color: #a1a5b7; }
+        .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 3px; }
+        .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
+        .co-send-hero-status { border-radius: 12px; padding: 10px 16px; text-align: center; min-width: 150px; }
+        .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
+        .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
+        .co-send-status-title { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .co-send-hero-status--approved .co-send-status-title { color: #0f7a3d; }
+        .co-send-hero-status--pending .co-send-status-title { color: #8a6d00; }
+        .co-send-status-title svg { width: 15px; height: 15px; }
+        .co-send-status-sub { font-size: 10px; color: #5e6278; margin-top: 3px; }
+
+        /* Form rows: icon label left, field right */
+        .co-send-form { display: flex; flex-direction: column; }
+        .co-send-row { display: flex; align-items: flex-start; gap: 20px; padding: 14px 0; border-bottom: 1px solid #f4f4f6; }
+        .co-send-row--body { align-items: flex-start; }
+        .co-send-label { flex: 0 0 160px; font-size: 13px; font-weight: 600; color: #3f4254; display: flex; align-items: center; gap: 8px; padding-top: 8px; }
+        .co-send-label svg { width: 16px; height: 16px; color: #4f46e5; flex-shrink: 0; }
+        .co-send-req { color: #f1416c; }
+        .co-send-field { flex: 1 1 auto; min-width: 0; }
+        .co-send-input { width: 100%; height: 42px; border: 1px solid #e4e6ef; border-radius: 9px; padding: 8px 14px; font-size: 13px; color: #3f4254; background: #fff; }
+        .co-send-input:focus { outline: none; border-color: #1b84ff; }
+        .co-send-input[readonly] { background: #f9fafd; color: #5e6278; }
+        .co-send-hint { font-size: 11px; color: #a1a5b7; margin-top: 6px; }
+
+        /* Chip inputs (To / CC) */
+        .co-send-chipwrap { display: flex; gap: 10px; align-items: stretch; }
+        .co-send-chips { flex: 1 1 auto; min-height: 42px; border: 1px solid #e4e6ef; border-radius: 9px; padding: 5px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
+        .co-send-chips:focus-within { border-color: #1b84ff; }
+        .co-send-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef3ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 7px; padding: 4px 10px; }
+        .co-send-chip .co-chip-x { cursor: pointer; font-style: normal; font-size: 14px; line-height: 1; opacity: .7; }
+        .co-send-chip .co-chip-x:hover { opacity: 1; }
+        .co-send-chip-input { flex: 1 1 90px; min-width: 90px; border: none; outline: none; font-size: 13px; padding: 6px 4px; background: transparent; }
+        .co-send-addemail { flex-shrink: 0; background: #eef3ff; border: 1px solid #e0e7ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 9px; padding: 0 16px; cursor: pointer; }
+        .co-send-addemail:hover { background: #e0e7ff; }
+
+        /* Signature toggle */
+        .co-send-sigrow { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
+        .co-send-switch { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .co-send-switch input { opacity: 0; width: 0; height: 0; }
+        .co-send-slider { position: absolute; inset: 0; background: #d7dae3; border-radius: 99px; transition: .2s; cursor: pointer; }
+        .co-send-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+        .co-send-switch input:checked + .co-send-slider { background: #1b84ff; }
+        .co-send-switch input:checked + .co-send-slider::before { transform: translateX(20px); }
+        .co-send-sigtext { font-size: 13px; color: #3f4254; }
+
+        /* Body / CKEditor */
+        .co-send-row--body .co-send-field { padding-top: 0; }
+        #step5 .cke_chrome { border-radius: 10px !important; border-color: #e4e6ef !important; }
+
+        /* Footer */
+        .co-send-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid #eef1f7; padding: 16px 0 4px; margin-top: 8px; flex-wrap: wrap; }
+        .co-send-footer-note { font-size: 11px; color: #7e8299; display: inline-flex; align-items: center; gap: 6px; }
+        .co-send-footer-note svg { width: 14px; height: 14px; color: #a1a5b7; }
+        .co-send-footer-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .co-send-submit { background: linear-gradient(90deg,#4f46e5,#1b84ff) !important; border: none !important; color: #fff !important; font-weight: 600 !important; font-size: 13px !important; min-width: 180px; height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
+        .co-send-submit:hover { filter: brightness(.95); }
+        .co-send-submit:disabled { opacity: .7; cursor: not-allowed; }
+
+        @media (max-width: 900px) {
+            .co-send-row { flex-direction: column; gap: 8px; }
+            .co-send-label { flex: none; padding-top: 0; }
+            .co-send-hero-facts { margin-left: 0; }
+        }
     </style>
     <script>
         $("timeline-item:last-child").addClass("timeline-item:last-child");
@@ -2730,11 +2802,130 @@
                                     </div>
                                 </div>
 
-                                {{-- Candidate email composer, loaded inline (mtype=1) from the same
-                                     offer_send_mail endpoint the old "Candidate Email Send" button used.
-                                     Populated by coEnsureStep5Composer() when this step becomes active. --}}
-                                <div id="co_step5_composer" class="co-step5-composer section_change_value {{ $section_change_value ? '' : 'd-none' }}">
-                                    <div class="co-step5-loading">Loading composer…</div>
+                                @php
+                                    // Native composer — all values are real (from createOffer's scope); no AJAX loader.
+                                    $so_name    = trim((string) @$co_candidate_name) ?: (@$application->full_name ?: 'Candidate');
+                                    $so_email   = @$co_candidate_email ?: @$application->email;
+                                    $so_role    = @$designation ?: @$co_job_title;
+                                    $so_exp     = @$application->total_exp;
+                                    $so_company = @$co_company_name ?: '';
+                                    $so_initial = strtoupper(substr(trim($so_name), 0, 1) ?: 'C');
+                                    $so_from_name  = auth()->user()->name ?? '';
+                                    $so_from_email = auth()->user()->email ?? '';
+                                    $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
+                                    $so_curr    = $so_currencyArr[(int) @$section_change_value->currency] ?? '';
+                                    $so_ctc     = @$yearly_final_gross;
+                                    $so_join    = @$joined_date ?: @$co_joining_date;
+                                    $so_join_fmt = ($so_join && strtotime($so_join)) ? date('d M Y', strtotime($so_join)) : '';
+                                    $so_mgmt    = (int) (@$section_change_value->management_status ?? 0);
+                                    $so_appr_name = trim((string) (@$co_appr_timeline->name_hr ?: @$co_appr_timeline->email_id_hr ?? ''));
+                                    $so_appr_date = @$section_change_value->approved_date_time;
+                                    $so_subject = 'Offer Letter | '.($so_role ?: 'Position').($so_company ? ' | '.$so_company : '');
+                                    $so_ctc_line = trim($so_curr.' '.($so_ctc ? number_format((float) $so_ctc) : ''));
+                                    $so_default_body = '<p>Dear '.e(ucwords($so_name)).',</p>'
+                                        .'<p>We are pleased to offer you the position of <strong>'.e(ucwords($so_role)).'</strong>'.($so_company ? ' at <strong>'.e($so_company).'</strong>' : '').'. We believe your skills and experience will be a great addition to our team.</p>'
+                                        .'<p><strong>Annual CTC:</strong> '.e($so_ctc_line).'<br><strong>Joining Date:</strong> '.e($so_join_fmt).'</p>'
+                                        .'<p>Please find the offer letter and related documents attached with this email. We look forward to your positive response.</p>'
+                                        .'<p>Best Regards,<br>'.e($so_from_name).($so_company ? '<br>'.e($so_company) : '').'</p>';
+                                @endphp
+
+                                <div class="co-send section_change_value {{ $section_change_value ? '' : 'd-none' }}">
+                                    {{-- Candidate summary header card --}}
+                                    <div class="co-send-hero">
+                                        <div class="co-send-hero-avatar">{{ $so_initial }}</div>
+                                        <div class="co-send-hero-ident">
+                                            <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
+                                            @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
+                                            <div class="co-send-hero-meta">
+                                                @if(!empty($so_exp))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Exp: {{ $so_exp }} Years</span>@endif
+                                                @if(!empty($so_email))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>{{ $so_email }}</span>@endif
+                                            </div>
+                                        </div>
+                                        <div class="co-send-hero-facts">
+                                            <div><div class="co-send-fact-l">Offer ID</div><div class="co-send-fact-v">OFF-{{ $offer_id }}</div></div>
+                                            @if(!empty($so_ctc))<div><div class="co-send-fact-l">Offered CTC</div><div class="co-send-fact-v co-send-fact-ctc">{{ $so_ctc_line }}</div></div>@endif
+                                            @if(!empty($so_join_fmt))<div><div class="co-send-fact-l">Joining Date</div><div class="co-send-fact-v">{{ $so_join_fmt }}</div></div>@endif
+                                        </div>
+                                        @if($so_mgmt === 2 || $so_mgmt === 1)
+                                        <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
+                                            <span class="co-send-status-title">
+                                                @if($so_mgmt === 2)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Approved
+                                                @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Pending
+                                                @endif
+                                            </span>
+                                            @if($so_mgmt === 2 && !empty($so_appr_name))<div class="co-send-status-sub">by {{ ucwords($so_appr_name) }}</div>@endif
+                                            @if($so_mgmt === 2 && !empty($so_appr_date))<div class="co-send-status-sub">on {{ date('d M Y, h:i A', strtotime($so_appr_date)) }}</div>@endif
+                                        </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- Composer form (native; posts to fwd_offer_send) --}}
+                                    <div class="co-send-form">
+                                        <input type="hidden" id="co_send_offerid" value="{{ $offer_id }}">
+                                        <input type="hidden" id="co_send_appid" value="{{ @$application->id }}">
+                                        <input type="hidden" id="co_send_fromemail" value="{{ $so_from_email }}">
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
+                                            <div class="co-send-field">
+                                                <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
+                                                <div class="co-send-hint">This will be the email sender address</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> To Email ID <span class="co-send-req">*</span></label>
+                                            <div class="co-send-field">
+                                                <div class="co-send-chipwrap">
+                                                    <div class="co-send-chips" id="co_to_chips">@if(!empty($so_email))<span class="co-send-chip">{{ $so_email }}<i class="co-chip-x">&times;</i></span>@endif<input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
+                                                    <button type="button" class="co-send-addemail" data-chip-target="co_to_chips">+ Add Email</button>
+                                                </div>
+                                                <div class="co-send-hint">Primary candidate email address</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg> CC Email ID</label>
+                                            <div class="co-send-field">
+                                                <div class="co-send-chipwrap">
+                                                    <div class="co-send-chips" id="co_cc_chips"><input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
+                                                    <button type="button" class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</button>
+                                                </div>
+                                                <div class="co-send-hint">Add email addresses separated by commas</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg> Email Signature</label>
+                                            <div class="co-send-field co-send-sigrow">
+                                                <label class="co-send-switch"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
+                                                <span class="co-send-sigtext">Include email signature in this message</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 8.4 12 3 3.4 8.4M4 10v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m4 10 8 5 8-5"/></svg> Subject <span class="co-send-req">*</span></label>
+                                            <div class="co-send-field">
+                                                <input type="text" class="co-send-input" id="co_send_subject" value="{{ $so_subject }}" placeholder="Enter email subject">
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row co-send-row--body">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg> Email Body</label>
+                                            <div class="co-send-field">
+                                                <textarea id="co_send_editor" name="co_send_editor">{!! $so_default_body !!}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Footer --}}
+                                    <div class="co-send-footer">
+                                        <div class="co-send-footer-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Email will be sent automatically</div>
+                                        <div class="co-send-footer-actions">
+                                            <span class="btn co-btn-close" onclick="prevStep(event,5)">Cancel</span>
+                                            <button type="button" class="btn co-send-submit" id="co_send_submit"><span class="co-send-submit-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Send Offer Letter</span><span class="co-send-submit-wait" style="display:none;">Sending…</span></button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -4942,41 +5133,107 @@
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
                 }
 
-                // Loads the candidate email composer inline into Step 5 (mtype=1), reusing the exact
-                // same offer_send_mail endpoint the old "Candidate Email Send" button used — so the
-                // page IS the composer, with the same send functionality. Idempotent (loads once).
-                var coStep5Loaded = false;
+                // Native Step 5 composer — initialises CKEditor on the body once Step 5 is active.
+                // No AJAX loader: the composer markup is server-rendered with real values; only the
+                // rich-text editor needs client-side init.
+                var coSendEditorReady = false;
                 function coEnsureStep5Composer() {
                     var step5 = document.getElementById('step5');
                     if (!step5 || !step5.classList.contains('active')) return;
-                    if (coStep5Loaded) return;
-                    var $box = $('#co_step5_composer');
-                    if (!$box.length) return;
-                    var offerId = "{{ $offer_id }}";
-                    if (!offerId) return;                        // no saved offer → nothing to send
-                    coStep5Loaded = true;
-                    // If the Step 4 approval modal already spun up a CKEditor on #editor1, tear it down
-                    // first so the inline composer's editor initialises cleanly (no duplicate-id clash).
-                    try { if (window.CKEDITOR && CKEDITOR.instances.editor1) { CKEDITOR.instances.editor1.destroy(true); } } catch (e) {}
-                    $('#application_fwd_offer_body_content').empty();
-                    var jobId = "{{ @$application->job_id }}";
-                    var url = "{{ route('service_company.cvtracker.offer_send_mail', ':id') }}".replace(':id', jobId);
+                    if (coSendEditorReady) return;
+                    if (!document.getElementById('co_send_editor')) return;
+                    if (typeof CKEDITOR === 'undefined') return;
+                    coSendEditorReady = true;
+                    try {
+                        CKEDITOR.replace('co_send_editor', {
+                            height: 300,
+                            toolbar: [
+                                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline'] },
+                                { name: 'paragraph', items: ['NumberedList', 'BulletedList'] },
+                                { name: 'align', items: ['JustifyLeft', 'JustifyCenter', 'JustifyRight'] },
+                                { name: 'links', items: ['Link'] }
+                            ]
+                        });
+                    } catch (e) { coSendEditorReady = false; }
+                }
+
+                // ── Chip inputs (To / CC) ──
+                function coAddChip(containerId, email) {
+                    email = (email || '').trim().replace(/,$/, '');
+                    if (!email) return;
+                    var $c = $('#' + containerId);
+                    // de-dupe
+                    var exists = false;
+                    $c.find('.co-send-chip').each(function () { if ($(this).clone().children().remove().end().text().trim() === email) exists = true; });
+                    if (exists) return;
+                    $('<span class="co-send-chip"></span>').text(email).append('<i class="co-chip-x">&times;</i>').insertBefore($c.find('.co-send-chip-input'));
+                }
+                function coCollectChips(containerId) {
+                    var out = [];
+                    $('#' + containerId).find('.co-send-chip').each(function () { out.push($(this).clone().children().remove().end().text().trim()); });
+                    return out;
+                }
+                $(document).on('click', '.co-send-addemail', function () {
+                    var target = $(this).data('chip-target');
+                    var $inp = $('#' + target).find('.co-send-chip-input');
+                    coAddChip(target, $inp.val()); $inp.val('').focus();
+                });
+                $(document).on('keydown', '.co-send-chip-input', function (e) {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        var target = $(this).closest('.co-send-chips').attr('id');
+                        coAddChip(target, $(this).val()); $(this).val('');
+                    }
+                });
+                $(document).on('click', '.co-send-chip .co-chip-x', function () { $(this).closest('.co-send-chip').remove(); });
+
+                // ── Send Offer Letter (native → same fwd_offer_send endpoint) ──
+                $(document).on('click', '#co_send_submit', function () {
+                    var $btn = $(this);
+                    // fold any half-typed chip text into a chip first
+                    $('#co_to_chips, #co_cc_chips').each(function () {
+                        var id = $(this).attr('id'); var $inp = $(this).find('.co-send-chip-input');
+                        if ($inp.val().trim()) { coAddChip(id, $inp.val()); $inp.val(''); }
+                    });
+                    var toArr = coCollectChips('co_to_chips');
+                    if (!toArr.length) { Swal.fire('Warning', 'Please add at least one recipient email address.', 'warning'); return; }
+                    var subject = $('#co_send_subject').val().trim();
+                    if (!subject) { Swal.fire('Warning', 'Please enter an email subject.', 'warning'); return; }
+                    var body = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) ? CKEDITOR.instances.co_send_editor.getData() : '';
+                    var fromEmail = $('#co_send_fromemail').val();
+                    var payload = {
+                        '_token': "{{ csrf_token() }}", '_method': 'POST',
+                        'template': '',
+                        'from_email': JSON.stringify([{ value: fromEmail }]),   // backend json_decodes this
+                        'to_email': toArr.join(','),
+                        'cc_email': coCollectChips('co_cc_chips').join(','),
+                        'subject': subject,
+                        'attached_cv': 0,
+                        'editor1': body,
+                        'arr': [],
+                        'mtypeId': 1,
+                        'offerId': $('#co_send_offerid').val(),
+                        'signature': $('#co_send_signature').is(':checked') ? 1 : 0
+                    };
+                    $btn.prop('disabled', true);
+                    $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
                     $.ajax({
-                        type: 'POST', url: url,
-                        data: {
-                            '_token': "{{ csrf_token() }}", '_method': 'POST',
-                            'arr': ["{{ @$application->id }}"], 'jobIdArr': [jobId], 'mtype': 1, 'offerId': offerId
-                        },
+                        type: 'POST',
+                        url: "{{ route('service_company.cvtracker.fwd_offer_send', 1) }}",
+                        data: payload,
                         success: function (r) {
-                            if (r && r.status == 'success') { $box.html(r.view); }
-                            else { coStep5Loaded = false; $box.html('<div class="co-step5-loading" style="color:#f1416c;">Unable to load the email composer. Please go Back and try again.</div>'); }
+                            $btn.prop('disabled', false);
+                            $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();
+                            if (r && r.status === 'coinCheck') { Swal.fire('Failed', r.message || 'Insufficient coins.', 'warning'); return; }
+                            Swal.fire('Success', 'Offer letter sent to the candidate.', 'success');
                         },
                         error: function () {
-                            coStep5Loaded = false;
-                            $box.html('<div class="co-step5-loading" style="color:#f1416c;">Unable to load the email composer. Please go Back and try again.</div>');
+                            $btn.prop('disabled', false);
+                            $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();
+                            Swal.fire('Error', 'Could not send the offer letter. Please try again.', 'error');
                         }
                     });
-                }
+                });
 
                 function goToStepNav(n) {
                     var active = coActiveStep();
