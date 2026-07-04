@@ -4668,6 +4668,30 @@ protected $elasticService;
 			->get();
 
 
+		// Step 5 "Add Email" picker: internal team members (active users in this company) and,
+		// when the job belongs to an external client, that client's contacts. Same directories
+		// the approval composer uses, exposed here so the native Send Offer Letter page can
+		// offer a pick-from-team drawer without an AJAX round-trip.
+		$this->co_send_internal = DB::table('users')
+			->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
+			->select('users.id', 'users.name', 'users.email', 'users_profile.designation as display_name')
+			->where('users.company_id', '=', auth()->user()->company_id)
+			->where('users.status', '=', 'active')
+			->whereNotNull('users.email')
+			->groupBy('users.id')->get()->toArray();
+
+		$this->co_send_client = [];
+		$co_job_client = DB::table('jobs')
+			->leftjoin('clients', 'clients.id', 'jobs.client_id')
+			->select('clients.id as client_id', 'clients.self_company')
+			->where('jobs.id', $this->application->job_id)->first();
+		if ($co_job_client && (int) @$co_job_client->self_company === 0 && @$co_job_client->client_id) {
+			$this->co_send_client = DB::table('client_contact_info')
+				->select('client_contact_info.id', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_designation as display_name')
+				->where('client_contact_info.client_id', $co_job_client->client_id)
+				->whereNotNull('client_contact_info.contact_person_email')->get()->toArray();
+		}
+
 		// dd($this->offer_points);
 		$view = view('service_company.job-applications.create-offer', $this->data)->render();
 		$permisiionCheck  = GeneralMethod::permissioncheck($offerPermision,auth()->user()->id);
