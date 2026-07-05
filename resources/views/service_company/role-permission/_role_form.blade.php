@@ -29,36 +29,43 @@
     };
 
     /* Display grouping: map real DB group_names onto the product's IA sections (display only —
-       no data is invented, unmapped groups fall through to "Other Modules"). Order matches
-       the Roles & Permissions tree agreed with the product owner. */
+       no data is invented, unmapped groups fall through to "Other Modules"). Order + subtitles
+       match the Roles & Permissions tree agreed with the product owner. */
     $sectionConfig = [
-        'Administrator' => [
-            'icon'   => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-            'groups' => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Subscription', 'Salary', 'Salary Break'],
-        ],
         'CRM / Sales' => [
-            'icon'   => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
-            'groups' => ['Clients', 'Team'],
+            'icon'     => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+            'subtitle' => 'Lead & Client Management',
+            'groups'   => ['Clients', 'Team'],
         ],
         'Recruitment' => [
-            'icon'   => '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
-            'groups' => ['Jobs', 'Job Applications', 'Requisition', 'Schedule', 'Offer', 'Joining', 'Team On Requisition'],
+            'icon'     => '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+            'subtitle' => 'Jobs & Candidate Management',
+            'groups'   => ['Jobs', 'Job Applications', 'Requisition', 'Schedule', 'Offer', 'Joining', 'Team On Requisition'],
         ],
         'Agencies' => [
-            'icon'   => '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-3"/>',
-            'groups' => ['Staffing Partners'],
+            'icon'     => '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-3"/>',
+            'subtitle' => 'Agency & Vendor Management',
+            'groups'   => ['Staffing Partners'],
         ],
         'Staffing Business' => [
-            'icon'   => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-            'groups' => ['Bench'],
+            'icon'     => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+            'subtitle' => 'Talent Pool Management',
+            'groups'   => ['Bench'],
+        ],
+        'Administrator' => [
+            'icon'     => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+            'subtitle' => 'System & Security Management',
+            'groups'   => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Subscription', 'Salary', 'Salary Break'],
         ],
         'Reports' => [
-            'icon'   => '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
-            'groups' => ['Reports'],
+            'icon'     => '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+            'subtitle' => 'Analytics & Performance',
+            'groups'   => ['Reports'],
         ],
         'Website' => [
-            'icon'   => '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
-            'groups' => ['Reports & Analytics'],
+            'icon'     => '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+            'subtitle' => 'Career Website Management',
+            'groups'   => ['Reports & Analytics'],
         ],
     ];
 
@@ -77,14 +84,41 @@
             $k = strtolower(trim($gWant));
             if (isset($groupsByKey[$k])) { $mods[] = $groupsByKey[$k]; $usedKeys[$k] = true; }
         }
-        if (!empty($mods)) $sections[] = ['name' => $secName, 'icon' => $cfg['icon'], 'mods' => $mods];
+        if (!empty($mods)) $sections[] = ['name' => $secName, 'icon' => $cfg['icon'], 'subtitle' => $cfg['subtitle'], 'mods' => $mods];
     }
     /* Anything not mapped above → "Other Modules" so nothing is ever hidden from the admin */
     $otherMods = [];
     foreach ($groupsByKey as $k => $g) { if (empty($usedKeys[$k])) $otherMods[] = $g; }
     if (!empty($otherMods)) {
-        $sections[] = ['name' => 'Other Modules', 'icon' => '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', 'mods' => $otherMods];
+        $sections[] = ['name' => 'Other Modules', 'icon' => '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', 'subtitle' => 'Ungrouped permissions', 'mods' => $otherMods];
     }
+
+    /* Bucket a group's real permissions into the 3 fixed table columns (Add / Edit / View) by
+       matching keywords in their display_name. Anything that doesn't fit (e.g. Delete, Share)
+       is kept as "other" and preserved via a hidden input so this simplified 3-column grid
+       never silently revokes a permission the role already had. */
+    $bucketAction = function ($displayName) {
+        $d = strtolower($displayName);
+        if (str_contains($d, 'add') || str_contains($d, 'create')) return 'add';
+        if (str_contains($d, 'edit') || str_contains($d, 'update') || str_contains($d, 'manage')) return 'edit';
+        if (str_contains($d, 'view') || str_contains($d, 'read')) return 'view';
+        return 'other';
+    };
+    $bucketModPerms = function ($modPerms) use ($bucketAction) {
+        $buckets = ['add' => null, 'edit' => null, 'view' => null];
+        $other = [];
+        foreach ($modPerms as $p) {
+            $p = (object) $p;
+            if ($p->status == 0) continue;
+            $action = $bucketAction($p->display_name);
+            if ($action !== 'other' && $buckets[$action] === null) {
+                $buckets[$action] = $p;
+            } else {
+                $other[] = $p;
+            }
+        }
+        return [$buckets, $other];
+    };
 
     /* Job Requisition extra permissions (excluded from $permissions on purpose) */
     $jobActions = ['Add' => 14, 'View' => 15, 'Edit' => 16, 'Delete' => 17];
@@ -203,47 +237,75 @@
         {{-- Two-column: module list + summary rail --}}
         <div class="rpf-grid">
 
-            {{-- Main: permission groups --}}
+            {{-- Main: fixed-column permission table (Permission Groups | Add | Edit | View) --}}
             <div class="rpf-main">
-                @foreach($sections as $sec)
-                <div class="rpf-sec">
-                    <p class="rpf-sec-head">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $sec['icon'] !!}</svg>
-                        {{ $sec['name'] }}
-                        <span class="rpf-sec-count">{{ count($sec['mods']) }}</span>
-                    </p>
-
-                    @foreach($sec['mods'] as $mod)
-                    @php
-                        $modName  = ucwords($mod['name']);
-                        $modPerms = $mod['perms'];
-                        $onCount  = 0; $totalCount = 0;
-                        foreach ($modPerms as $p) { $p = (object)$p; if ($p->status != 0) { $totalCount++; if ($permOn($p->id)) $onCount++; } }
-                        $badgeClass = $onCount === 0 ? 'none' : ($onCount >= $totalCount ? 'full' : 'partial');
-                        $badgeText  = $onCount === 0 ? 'None' : ($onCount >= $totalCount ? 'Full' : $onCount.'/'.$totalCount);
-                    @endphp
-                    <div class="rpf-mod open" data-mod-name="{{ strtolower($modName) }}">
-                        <div class="rpf-mod-head">
-                            <svg class="rpf-mod-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                            <span class="rpf-mod-name">{{ $modName }}</span>
-                            <span class="rpf-mod-meta"><span class="rpf-mod-badge {{ $badgeClass }}">{{ $badgeText }}</span></span>
+                <div class="rpf-ptable">
+                    <div class="rpf-ptable-head">
+                        <div class="rpf-th rpf-th-group">Permission Groups</div>
+                        <div class="rpf-th rpf-th-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add
                         </div>
-                        <div class="rpf-mod-body">
-                            @foreach($modPerms as $p)
-                            @php $p = (object)$p; $disabled = $p->status == 0; $checked = !$disabled && $permOn($p->id); @endphp
-                            <label class="rpf-chk rpf-chk-min">
-                                <input type="checkbox" class="rpf-perm-check" name="role[]" value="{{ $p->id }}"
-                                       data-action="{{ $p->display_name }}"
-                                       {{ $checked ? 'checked' : '' }} {{ $disabled ? 'disabled' : '' }}>
-                                <span class="rpf-chk-box"></span>
-                                <span class="rpf-chk-lbl">{{ ucwords($p->display_name) }}</span>
-                            </label>
+                        <div class="rpf-th rpf-th-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
+                        </div>
+                        <div class="rpf-th rpf-th-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            View
+                        </div>
+                    </div>
+
+                    @foreach($sections as $sec)
+                    <div class="rpf-sec-group" data-sec-name="{{ strtolower($sec['name']) }}">
+                        <div class="rpf-sec-line" onclick="this.closest('.rpf-sec-group').classList.toggle('collapsed')">
+                            <span class="rpf-sec-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $sec['icon'] !!}</svg>
+                            </span>
+                            <div class="rpf-sec-names">
+                                <div class="rpf-sec-title">{{ $sec['name'] }}</div>
+                                <div class="rpf-sec-subtitle">{{ $sec['subtitle'] }}</div>
+                            </div>
+                            <span class="rpf-sec-count">{{ count($sec['mods']) }}</span>
+                            <svg class="rpf-sec-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+
+                        <div class="rpf-sec-rows">
+                            @foreach($sec['mods'] as $mod)
+                            @php
+                                $modName = ucwords($mod['name']);
+                                [$buckets, $otherPerms] = $bucketModPerms($mod['perms']);
+                            @endphp
+                            <div class="rpf-row" data-mod-name="{{ strtolower($modName) }}">
+                                <div class="rpf-row-label">{{ $modName }}</div>
+                                @foreach(['add', 'edit', 'view'] as $actionKey)
+                                <div class="rpf-row-cell">
+                                    @if($buckets[$actionKey])
+                                        @php $p = $buckets[$actionKey]; $checked = $permOn($p->id); @endphp
+                                        <label class="rpf-chk rpf-chk-center">
+                                            <input type="checkbox" class="rpf-perm-check" name="role[]" value="{{ $p->id }}"
+                                                   data-action="{{ ucfirst($actionKey) }}" data-group="{{ $modName }}"
+                                                   aria-label="{{ ucfirst($actionKey) }} {{ $modName }}"
+                                                   {{ $checked ? 'checked' : '' }}>
+                                            <span class="rpf-chk-box"></span>
+                                        </label>
+                                    @endif
+                                </div>
+                                @endforeach
+
+                                {{-- Preserve any permission that doesn't fit Add/Edit/View (e.g. Delete) so this
+                                     3-column grid never silently revokes it from the role on save --}}
+                                @foreach($otherPerms as $op)
+                                    @if($permOn($op->id))
+                                        <input type="hidden" name="role[]" value="{{ $op->id }}">
+                                    @endif
+                                @endforeach
+                            </div>
                             @endforeach
                         </div>
                     </div>
                     @endforeach
                 </div>
-                @endforeach
             </div>
 
             {{-- Aside rail --}}
