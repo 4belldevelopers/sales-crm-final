@@ -14,6 +14,11 @@
 
     $company_id = auth()->user()->company_id;
     $today = strtotime(date('Y-m-d'));
+
+    // Loaded once (static lookup arrays) and reused for the Job Status / Offer Amount / Stage cells.
+    $job_status_arr  = GeneralMethod::job_status();
+    $currencySymbole = GeneralMethod::currencySymbole();
+    $salaryModeOffer = GeneralMethod::salaryModeOffer();
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -81,11 +86,40 @@
             } else {
                 $stLabel = 'Pre-Joining';  $stBg = '#d1fae5'; $stClr = '#059669'; $stSub = 'Docs in Progress';
             }
-            /* Prefer the company's own configured sub-status name when present. */
+            /* ---- Job Status (live job hiring state + requisition id + client/internal tag) ---- */
+            $jobStatusRow   = GeneralMethod::jobDetails($row->jobId);
+            $jobStatusRaw   = $jobStatusRow->status ?? '';
+            $jobStatusClass = $job_status_arr[$jobStatusRaw] ?? 'text-muted';
+            $jobStatusLabel = ucwords($jobStatusRaw);
+            if ($jobStatusLabel == 'Active')   { $jobStatusLabel = 'Hiring'; }
+            if ($jobStatusLabel == 'Inactive') { $jobStatusLabel = 'Closed'; }
+            $recTag = __('messages.clinet_tag');
+            if (((int) @$row->recommendation_id > 0 && @$row->client_comapny_id == $company_id) || @$row->client_comapny_id == $company_id) {
+                $recTag = __('messages.internal_tag');
+            }
+
+            /* ---- Offer Amount (currency symbol + amount + /mode, honouring confidentiality) ---- */
+            $employment_type = @$row->of_employment_type ?: '';
+            $offer_currency  = $currencySymbole[$row->of_offer_currency ? @$row->of_offer_currency : 0];
+            $offer_amount    = GeneralMethod::thousandsCurrencyFormat($row->of_offer_amount ? @$row->of_offer_amount : 0);
+            $offer_mode      = $salaryModeOffer[$row->of_offer_mode ? @$row->of_offer_mode : 0];
+            if (@$row->confidential == 1) {
+                $offerAmount = 'Confidential';
+                if (GeneralMethod::confidentialAmontShow($row->jobId)) {
+                    $offerAmount = @$offer_currency . ' ' . @$offer_amount . ' / ' . mb_substr(@$offer_mode, 0, 1);
+                }
+            } else {
+                $offerAmount = @$offer_currency . ' ' . @$offer_amount . ' / ' . mb_substr(@$offer_mode, 0, 1);
+            }
+
+            /* ---- Stage (pipeline master-status badge + configured sub-status) ---- */
+            $stageName  = ucwords(mb_substr((string) @$row->name, 0, 14));
+            $stageBadge = @$row->css_style;
+            $stageChild = '';
             if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
                 $childStatus = DB::table('candidate_status')->select('name')->where('id', $row->childStatus)->first();
                 if ($childStatus && !empty($childStatus->name)) {
-                    $stSub = $childStatus->name;
+                    $stageChild = $childStatus->name;
                 }
             }
 
@@ -137,6 +171,12 @@
                 <span class="jt-job-type" title="{{ $deptRaw }}">{{ $dept }}</span>
             </td>
 
+            {{-- Job Status --}}
+            <td class="jt-td">
+                <span class="jt-jobstatus {{ $jobStatusClass }}">{{ $jobStatusLabel }}</span>
+                <span class="jt-jobstatus-sub">{{ @$row->jobId }} · {{ $recTag }}</span>
+            </td>
+
             {{-- HR Owner --}}
             <td class="jt-td">
                 <div class="jt-cand">
@@ -152,14 +192,16 @@
                 </div>
             </td>
 
-            {{-- Joining Status (click opens the stage-change modal, preserving that action) --}}
+            {{-- Offer Amount --}}
             <td class="jt-td">
-                <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}"
-                   class="jt-status-link {{ $stageCss }}"
-                   @if($stageCss) data-toggle="modal" data-target="#{{ $stageCss }}" @endif>
-                    <span class="jt-status-pill" style="background:{{ $stBg }};color:{{ $stClr }}">{{ $stLabel }}</span>
-                    <span class="jt-status-sub">{{ $stSub }}</span>
-                </a>
+                <span class="jt-comp-amount">{{ $offerAmount }}</span>
+                <span class="jt-comp-type">{{ $employment_type }}</span>
+            </td>
+
+            {{-- Joining Status (derived display) --}}
+            <td class="jt-td">
+                <span class="jt-status-pill" style="background:{{ $stBg }};color:{{ $stClr }}">{{ $stLabel }}</span>
+                <span class="jt-status-sub">{{ $stSub }}</span>
             </td>
 
             {{-- Joining Date --}}
@@ -178,11 +220,25 @@
                     <span class="jt-na-sub">Not scheduled</span>
                 @endif
             </td>
+
+            {{-- Stage (editable pipeline stage — opens the stage-change modal) --}}
+            <td class="jt-td jt-td-stage">
+                @if($stageCss)
+                    <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}"
+                       class="jt-stage-link {{ $stageCss }}" data-toggle="modal" data-target="#{{ $stageCss }}">
+                        <span class="jt-stage-pill badge {{ $stageBadge }}">{{ $stageName ?: 'Stage' }}</span>
+                        <span class="jt-stage-sub">{{ $stageChild }}</span>
+                    </a>
+                @else
+                    <span class="jt-stage-pill badge {{ $stageBadge }}">{{ $stageName ?: '—' }}</span>
+                    <span class="jt-stage-sub">{{ $stageChild }}</span>
+                @endif
+            </td>
         </tr>
     @endforeach
 @else
     <tr class="jt-empty">
-        <td colspan="5">
+        <td colspan="8">
             <div class="jt-empty-inner">
                 <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 <p>No joining records found</p>
