@@ -2891,13 +2891,12 @@
                                     $so_sent = !empty($so_sent_date);
                                     $so_sent_by_name = trim((string) (@$co_send_timeline->sent_by_name ?? ''));
                                     $so_sent_by_when = ($so_sent && $so_sent_by_name) ? (date('j F y', strtotime($so_sent_date)).' | '.date('h:iA', strtotime($so_sent_date)).' (IST)') : '';
-                                    $so_subject = 'Offer Letter | '.($so_role ?: 'Position').($so_company ? ' | '.$so_company : '');
                                     $so_ctc_line = trim($so_curr.' '.($so_ctc ? number_format((float) $so_ctc) : ''));
-                                    $so_default_body = '<p>Dear '.e(ucwords($so_name)).',</p>'
-                                        .'<p>We are pleased to offer you the position of <strong>'.e(ucwords($so_role)).'</strong>'.($so_company ? ' at <strong>'.e($so_company).'</strong>' : '').'. We believe your skills and experience will be a great addition to our team.</p>'
-                                        .'<p><strong>Annual CTC:</strong> '.e($so_ctc_line).'<br><strong>Joining Date:</strong> '.e($so_join_fmt).'</p>'
-                                        .'<p>Please find the offer letter and related documents attached with this email. We look forward to your positive response.</p>'
-                                        .'<p>Best Regards,<br>'.e($so_from_name).($so_company ? '<br>'.e($so_company) : '').'</p>';
+                                    // Subject/body start blank by design — they should only ever be filled by
+                                    // the sender typing them or by picking a Template (which fills both via
+                                    // the email_template AJAX call), never a canned pre-fill nobody asked for.
+                                    $so_subject = '';
+                                    $so_default_body = '';
                                 @endphp
 
                                 {{-- MAIN CARD --}}
@@ -5555,7 +5554,15 @@
                             $btn.prop('disabled', false);
                             $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();
                             if (r && r.status === 'coinCheck') { Swal.fire('Failed', r.message || 'Insufficient coins.', 'warning'); return; }
+                            if (r && r.status === 'rateLimited') { Swal.fire('Limit Reached', r.message || 'This offer letter has already been sent the maximum number of times recently.', 'warning'); return; }
                             Swal.fire('Success', 'Offer letter sent to the candidate.', 'success');
+                            // The hero's Offer Status/Sent By were server-rendered at page load and don't
+                            // otherwise refresh after a successful send — reflect it immediately instead of
+                            // leaving "Not Sent" on screen until the whole drawer is reopened.
+                            $('.co-send-fact-v.co-send-fact-notsent').removeClass('co-send-fact-notsent').addClass('co-send-fact-sent').text('Sent');
+                            $('.co-send-fact-v.co-send-fact-sentby').html(
+                                '<span class="co-send-sentby-name">{{ e($so_from_name) }}</span><span class="co-send-sentby-when">Sent just now</span>'
+                            );
                         },
                         error: function () {
                             $btn.prop('disabled', false);

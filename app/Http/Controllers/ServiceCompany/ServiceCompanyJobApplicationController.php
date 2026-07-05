@@ -4424,7 +4424,11 @@ protected $elasticService;
 					'offer_job_applications.offer_amount as salary_ctc',
 					'offer_job_applications.offer_mode as salary_mode',
 					'offer_create_main_tds.designation',
-					'offer_job_applications.joined_date',
+					// The Compensation step's Joining Date field saves to offer_create_main_tds.joined_date
+					// (not offer_job_applications.joined_date, which nothing keeps in sync) — reading from
+					// the wrong table meant a joining date set on Compensation could show blank everywhere
+					// this feeds (hero facts, approval info card, email body).
+					'offer_create_main_tds.joined_date',
 					'offer_job_applications.confidential',
 					'offer_create_main_tds.monthly_gross',
 					'offer_create_main_tds.yearly_gross',
