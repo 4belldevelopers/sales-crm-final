@@ -369,7 +369,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 
 .rpf-drawer {
     position: fixed; top: 0; right: 0; bottom: 0; left: var(--rpf-aside-w); height: 100vh;
-    background: #f6f7fb; z-index: 1080; box-shadow: -12px 0 40px rgba(20,26,46,.20);
+    background: #fff; z-index: 1080; box-shadow: -12px 0 40px rgba(20,26,46,.20);
     transform: translateX(100%);
     transition: transform .32s cubic-bezier(.4,0,.2,1), left .2s ease;
     display: flex; flex-direction: column; overflow: hidden;
@@ -419,7 +419,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-body-inner { padding: 18px 24px 20px; }
 
 /* Summary card */
-.rpf-summary { background: #fff; border: 1px solid #eaf0fb; border-radius: 12px; padding: 16px; margin-bottom: 14px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px 18px; }
+.rpf-summary { background: #fff; border: 1px solid #eaf0fb; border-radius: 12px; box-shadow: 0 1px 3px rgba(20,26,46,.05); padding: 16px; margin-bottom: 14px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px 18px; }
 .rpf-field-label { font-size: 10px; font-weight: 600; color: #8b93b8; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 5px; display: block; }
 .rpf-field-label .req { color: #e74c3c; }
 .rpf-input { width: 100%; border: 1px solid #dde2f0; border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #1e2640; font-family: 'Poppins', sans-serif; background: #f8f9fc; outline: none; transition: border-color .15s, background .15s; }
@@ -458,20 +458,30 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-main { flex: 1 1 auto; min-width: 0; }
 .rpf-aside { flex: 0 0 236px; display: flex; flex-direction: column; gap: 12px; }
 
-/* ══ Fixed-column permission table: Permission Groups | Add | Edit | View ══ */
-.rpf-ptable { border: 1px solid #eaf0fb; border-radius: 10px; background: #fff; overflow: hidden; }
+/* ══ Fixed-column permission table: Permission Groups | Add | Edit | View ══
+   Card + subcard treatment on a plain white canvas: the header bar and each section
+   are white "cards", and every permission group inside a section is its own white
+   "subcard" — separation comes from border + soft shadow only, not background tint. */
+.rpf-ptable { display: flex; flex-direction: column; gap: 12px; }
 
 .rpf-ptable-head, .rpf-row { display: grid; grid-template-columns: 1fr 88px 88px 88px; align-items: center; }
 
-.rpf-ptable-head { position: sticky; top: 0; z-index: 3; background: #f8f9fc; border-bottom: 1px solid #eaf0fb; }
+.rpf-ptable-head {
+    position: sticky; top: 0; z-index: 3; background: #fff;
+    border: 1px solid #eaf0fb; border-radius: 10px; box-shadow: 0 1px 3px rgba(20,26,46,.05);
+}
 .rpf-th { padding: 10px 14px; font-size: 10.5px; font-weight: 700; color: #8b93b8; text-transform: uppercase; letter-spacing: .3px; }
 .rpf-th-action { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
 .rpf-th-action svg { width: 14px; height: 14px; color: #5e72e4; }
 
-.rpf-sec-group { border-bottom: 1px solid #eaf0fb; }
-.rpf-sec-group:last-child { border-bottom: none; }
-.rpf-sec-line { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; background: #fafbff; }
-.rpf-sec-line:hover { background: #f5f6fd; }
+/* Section card */
+.rpf-sec-group {
+    background: #fff; border: 1px solid #eaf0fb; border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(20,26,46,.05); overflow: hidden;
+}
+.rpf-sec-line { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+.rpf-sec-line:hover { background: #fafbff; }
+.rpf-sec-group:not(.collapsed) .rpf-sec-line { border-bottom: 1px solid #f1f3f8; }
 .rpf-sec-icon { width: 30px; height: 30px; border-radius: 8px; background: #eef0fb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .rpf-sec-icon svg { width: 15px; height: 15px; color: #5e72e4; }
 .rpf-sec-names { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -482,8 +492,15 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-sec-group.collapsed .rpf-sec-caret { transform: rotate(-90deg); }
 .rpf-sec-group.collapsed .rpf-sec-rows { display: none; }
 
-.rpf-row { padding: 9px 14px; border-top: 1px solid #f5f6fa; }
-.rpf-row-label { font-size: 11.5px; color: #5a6080; font-weight: 500; padding-left: 38px; }
+/* Rows container inside a section card, holding one subcard per permission group */
+.rpf-sec-rows { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; background: #fafbfd; }
+
+/* Subcard — one per permission group (e.g. "Clients") */
+.rpf-row {
+    background: #fff; border: 1px solid #eef0f6; border-radius: 9px;
+    padding: 9px 12px; box-shadow: 0 1px 2px rgba(20,26,46,.04);
+}
+.rpf-row-label { font-size: 11.5px; color: #5a6080; font-weight: 500; padding-left: 4px; }
 .rpf-row-cell { display: flex; align-items: center; justify-content: center; }
 
 /* Checkbox */
@@ -508,7 +525,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-radio-lbl small { display: block; font-size: 9.5px; color: #b0bbd8; font-weight: 400; }
 
 /* Aside cards */
-.rpf-acard { background: #fff; border: 1px solid #eaf0fb; border-radius: 11px; padding: 14px; }
+.rpf-acard { background: #fff; border: 1px solid #eaf0fb; border-radius: 11px; box-shadow: 0 1px 3px rgba(20,26,46,.05); padding: 14px; }
 .rpf-acard-title { font-size: 11.5px; font-weight: 700; color: #1e2640; margin: 0 0 12px; display: flex; align-items: center; gap: 6px; }
 .rpf-acard-title svg { width: 14px; height: 14px; color: #5e72e4; }
 
