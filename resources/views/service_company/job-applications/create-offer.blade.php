@@ -420,6 +420,9 @@
         .co-btn-close:hover { background: #f5f8fa !important; border-color: #c4c9d6 !important; }
         .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; }
         .co-btn-save:hover { background: #0b6cdb !important; border-color: #0b6cdb !important; }
+        /* Step 3 footer: Download Offer Letter pinned to the lower-left, Back/Continue stay right */
+        .co-step3-footer { justify-content: space-between; }
+        .co-step3-footer-right { display: flex; align-items: center; gap: 10px; }
 
         /* ══════════════════════════ Step 2 — Offer Letter Template ══════════════════════════
            Enterprise nested-card hierarchy, matching Step 1's language:
@@ -2687,9 +2690,20 @@
                             <div class="tab-content-section pt-5" id="step3">
 
                                 <div id="preview_offer_body_content"></div>
-                                <div class="co-footer-actions co-tpl-footer">
-                                    <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
-                                    <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
+                                <div class="co-footer-actions co-tpl-footer co-step3-footer">
+                                    <button type="button"
+                                        data-jobId="{{ @$application->job_id }}"
+                                        data-candidate="{{ @$application->id }}"
+                                        data-mtype="3"
+                                        data-offerId="{{ $offer_id }}"
+                                        class="btn co-btn-close download_offer"
+                                        data-wizard-type="action-next">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
+                                    </button>
+                                    <div class="co-step3-footer-right">
+                                        <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
+                                        <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
+                                    </div>
                                 </div>
                             </div>
 

@@ -12,7 +12,11 @@
     <title>Offer Letter</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            /* Poppins with a Helvetica/Arial fallback — no Poppins font file is bundled/embedded for
+               dompdf yet, so it currently renders via the fallback; kept named so it picks up Poppins
+               automatically if a font file is added later. Matches the Step 3 preview's 12px base. */
+            font-family: 'Poppins', Helvetica, Arial, sans-serif;
+            font-size: 12px;
             margin: 0;
             padding: 20px;
         }
@@ -56,13 +60,31 @@
         .logo-container {
             position: absolute;
             top: 0;
-            right: 0;
+            left: 0;
             margin: 10px; /* Adjust as needed for spacing */
         }
 
         .logo-container img {
             width: 110px;
             height: auto;
+        }
+
+        /* Matches the Step 3 preview's letterhead: logo top-left, company name/address top-right */
+        .address-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 10px;
+            text-align: right;
+            font-size: 11px;
+            color: #555;
+            max-width: 260px;
+        }
+
+        .address-container .address-company {
+            font-size: 12px;
+            font-weight: bold;
+            color: #181c32;
         }
 
         .title-container {
@@ -226,7 +248,11 @@ if ($imageData && $httpCode === 200) {
             @else
                 <h3>{{ $comapny_name }}</h3>
             @endif
-            
+
+        </div>
+        <div class="address-container">
+            @if(!empty($comapny_name))<div class="address-company">{{ $comapny_name }}</div>@endif
+            @if(!empty($address))<div>{{ $address }}</div>@endif
         </div>
     </header>
     
