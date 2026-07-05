@@ -2992,10 +2992,13 @@
                                         </div>
 
                                         <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg> Email Signature</label>
-                                            <div class="co-send-field co-send-sigrow">
-                                                <label class="co-send-switch"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
-                                                <span class="co-send-sigtext">Include email signature in this message</span>
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3-1 6-8 8-8s2 3 4 3 3-2 6-2"/><path d="m15 5 4 4"/></svg> E-Signature</label>
+                                            <div class="co-send-field">
+                                                <div class="co-send-sigrow">
+                                                    <label class="co-send-switch"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
+                                                    <span class="co-send-sigtext" id="co_send_sigtext">With E-Signature</span>
+                                                </div>
+                                                <div class="co-send-hint">On: candidate uploads a signature to accept, which appears on the offer letter copy. Off: candidate can only accept or reject, no signature required.</div>
                                             </div>
                                         </div>
 
@@ -5460,6 +5463,12 @@
                         coAddChip(target, email);
                     }
                     coSyncDrawerAddedState();
+                });
+
+                // ── E-Signature toggle text (the toggle itself already posts to `signature`, which
+                //    fwd_offer_send() already reads — this only updates the label next to it) ──
+                $(document).on('change', '#co_send_signature', function () {
+                    $('#co_send_sigtext').text($(this).is(':checked') ? 'With E-Signature' : 'Without E-Signature');
                 });
 
                 // ── Template select (reuses the existing email_template endpoint/behavior from the
