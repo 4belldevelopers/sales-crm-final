@@ -583,34 +583,38 @@
         /* MAIN CARD wrapping the whole composer */
         .co-send-card { background: #fff; border: 1px solid #eef1f7; border-radius: 16px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 20px 22px; }
         /* SUB CARD: candidate hero — matches the "Krishna Murthy" reference */
-        .co-send-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
-        .co-send-hero-lead { display: flex; align-items: center; gap: 15px; flex: 1 1 260px; min-width: 240px; }
-        .co-send-hero-avatar { width: 62px; height: 62px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+        /* Hero fonts capped at 12px and the facts grid uses fractional (not fixed-px) columns so the
+           whole card fits a 15.6" laptop panel width — and anything narrower — without overflowing. */
+        .co-send-hero { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; }
+        .co-send-hero-lead { display: flex; align-items: center; gap: 12px; flex: 1 1 200px; min-width: 180px; }
+        .co-send-hero-avatar { width: 46px; height: 46px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
         .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .co-send-hero-name { font-size: 16px !important; font-weight: 700; color: #181c32; }
-        .co-send-hero-role { font-size: 12px; color: #1b84ff; font-weight: 600; margin-top: 2px; }
-        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 7px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; background: #eef1f7; border-radius: 6px; padding: 3px 9px; }
-        .co-send-hero-meta svg { width: 13px; height: 13px; color: #a1a5b7; }
+        .co-send-hero-name { font-size: 12px !important; font-weight: 700; color: #181c32; }
+        .co-send-hero-role { font-size: 11px; color: #1b84ff; font-weight: 600; margin-top: 2px; }
+        .co-send-hero-meta { font-size: 10px; color: #7e8299; margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; background: #eef1f7; border-radius: 6px; padding: 2px 8px; }
+        .co-send-hero-meta svg { width: 12px; height: 12px; color: #a1a5b7; }
         /* Grid (not flex) so every column sits in a fixed slot — position doesn't shift between
-           offers even when a value (e.g. Sent By) is blank or a different length. */
-        .co-send-hero-facts { display: grid; grid-template-columns: 82px 108px 100px 84px 100px minmax(150px, 190px); column-gap: 20px; align-items: start; }
-        .co-send-fact-l { font-size: 10px; color: #a1a5b7; white-space: nowrap; }
-        .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 4px; }
+           offers even when a value (e.g. Sent By) is blank or a different length. Fractional (fr)
+           columns instead of fixed px widths so it shrinks to fit narrower panels/screens instead
+           of overflowing; wraps to 2 rows of 3 rather than forcing 6 columns into one row. */
+        .co-send-hero-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 10px; align-items: start; flex: 1 1 320px; min-width: 260px; }
+        .co-send-fact-l { font-size: 9px; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .co-send-fact-v { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; }
         .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
         .co-send-fact-v.co-send-fact-expiry { color: #d9214e; }
         .co-send-fact-v.co-send-fact-sent { color: #0f9463; }
         .co-send-fact-v.co-send-fact-notsent { color: #a1a5b7; }
-        .co-send-fact-v.co-send-fact-sentby { display: flex; flex-direction: column; gap: 2px; min-height: 1.2em; }
-        .co-send-sentby-name { font-size: 12px; font-weight: 700; color: #181c32; }
-        .co-send-sentby-when { font-size: 10px; font-weight: 600; color: #a1a5b7; white-space: nowrap; }
-        .co-send-hero-status { border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 160px; }
+        .co-send-fact-v.co-send-fact-sentby { display: flex; flex-direction: column; gap: 2px; min-height: 1.1em; }
+        .co-send-sentby-name { font-size: 11px; font-weight: 700; color: #181c32; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .co-send-sentby-when { font-size: 9px; font-weight: 600; color: #a1a5b7; white-space: nowrap; }
+        .co-send-hero-status { border-radius: 12px; padding: 8px 14px; text-align: center; min-width: 130px; }
         .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
         .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
-        .co-send-status-title { font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+        .co-send-status-title { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
         .co-send-hero-status--approved .co-send-status-title { color: #0f7a3d; }
         .co-send-hero-status--pending .co-send-status-title { color: #8a6d00; }
-        .co-send-status-title svg { width: 16px; height: 16px; }
+        .co-send-status-title svg { width: 14px; height: 14px; }
         .co-send-status-sub { font-size: 10px; color: #5e6278; margin-top: 3px; }
 
         /* Form rows: icon label left, field right */
@@ -2933,7 +2937,7 @@
                                             <div class="co-send-fact"><div class="co-send-fact-l">Joining Date</div><div class="co-send-fact-v">{{ $so_join_fmt }}</div></div>
                                             <div class="co-send-fact"><div class="co-send-fact-l">Offer Status</div><div class="co-send-fact-v {{ $so_sent ? 'co-send-fact-sent' : 'co-send-fact-notsent' }}">{{ $so_sent ? 'Sent' : 'Not Sent' }}</div></div>
                                             <div class="co-send-fact"><div class="co-send-fact-l">Offer Valid Until</div><div class="co-send-fact-v co-send-fact-expiry">{{ $so_valid_until }}</div></div>
-                                            <div class="co-send-fact"><div class="co-send-fact-l">Sent By</div><div class="co-send-fact-v co-send-fact-sentby">@if($so_sent_by_name)<span class="co-send-sentby-name">{{ ucwords($so_sent_by_name) }}</span><span class="co-send-sentby-when">{{ $so_sent_by_when }}</span>@endif</div></div>
+                                            <div class="co-send-fact"><div class="co-send-fact-l">Sent By</div><div class="co-send-fact-v co-send-fact-sentby">@if($so_sent && $so_sent_by_name)<span class="co-send-sentby-name">{{ ucwords($so_sent_by_name) }}</span><span class="co-send-sentby-when">{{ $so_sent_by_when }}</span>@endif</div></div>
                                         </div>
                                         @if($so_mgmt === 2 || $so_mgmt === 1)
                                         <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
