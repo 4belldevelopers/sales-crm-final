@@ -186,6 +186,16 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-action-btn svg { width: 14px; height: 14px; }
 .rp-action-btn.danger:hover { background: #fde8e8; color: #c0392b; }
 
+/* "Edit" text button (replaces the eye/pencil icons) — opens the same role form drawer */
+.rp-edit-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: 1px solid #dde2f0; border-radius: 7px;
+    padding: 5px 12px; font-size: 11px; font-weight: 600; color: #5e72e4;
+    cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s;
+}
+.rp-edit-btn:hover { background: #eef0fb; border-color: #c5ccee; }
+.rp-edit-btn svg { width: 12px; height: 12px; }
+
 /* ── Add New Role card ── */
 .rp-add-card {
     background: #fff; border: 2px dashed #c5d0ea; border-radius: 12px;
@@ -902,7 +912,9 @@ if (!function_exists('rpCardIcon')) {
                         $isCustom    = $rlist->manual_add;
                         $roleType    = $isCustom ? 'custom' : 'system';
                         $grpAll      = $rlist->grouped_permissions ?? [];
-                        $grpKeys     = array_keys((array)$grpAll);
+                        /* grouped_permissions is a Collection — use its real group-name keys, not a
+                           (array) cast (which would expose the Collection's internal *items props) */
+                        $grpKeys     = $grpAll instanceof \Illuminate\Support\Collection ? $grpAll->keys()->all() : array_keys((array) $grpAll);
                         $grpShown    = array_slice($grpKeys, 0, 3);
                         $grpExtra    = count($grpKeys) > 3 ? count($grpKeys) - 3 : 0;
                         $canEdit     = in_array("edit_roles_permission", $userPermissions) && ($rlist->priority != 0) && ($rlist->name != 'admin');
@@ -1008,23 +1020,13 @@ if (!function_exists('rpCardIcon')) {
 
                         <div class="rp-card-actions" onclick="event.stopPropagation()">
                             <div class="rp-action-group">
-                                <button type="button" class="rp-action-btn" title="View Role" onclick="event.stopPropagation(); openRoleFormFromCard(this.closest('.rp-role-card'));">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                        <circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                @if(in_array("edit_roles_permission", $userPermissions))
-                                @if(($rlist->priority != 0) && ($rlist->name != 'admin'))
-                                <button class="rp-action-btn editRole" title="Edit Role"
-                                        data-id="{{ $roleId }}" onclick="event.stopPropagation()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <button type="button" class="rp-edit-btn" onclick="event.stopPropagation(); openRoleFormFromCard(this.closest('.rp-role-card'));">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                     </svg>
+                                    Edit
                                 </button>
-                                @endif
-                                @endif
                                 @if($rlist->manual_add)
                                 <button class="rp-action-btn danger role_delete" title="Delete Role"
                                         data-id="{{ $roleId }}" onclick="event.stopPropagation()">
