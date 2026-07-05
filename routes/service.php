@@ -200,6 +200,10 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::post('offer-mail-format/{id?}', [ServiceCompanyCvTrackerController::class,'offerSendMail'])->name('cvtracker.offer_send_mail');
 						Route::post('offer-send-mail/fwd_offer_send', [ServiceCompanyCvTrackerController::class,'fwd_offer_send'])->name('cvtracker.fwd_offer_send');
 						Route::post('offer_download_mail/{id?}', [ServiceCompanyCvTrackerController::class,'fwd_offer_download'])->name('cvtracker.offer_download_mail');
+						// Direct streamed offer-letter PDF download (create-offer Step 3 button). GET so the
+						// browser can navigate straight to it; streams the PDF as an attachment with no
+						// intermediate file/URL/storage dependency. See downloadOfferLetterStream() docblock.
+						Route::get('offer-letter/download/{offerId}', [ServiceCompanyCvTrackerController::class,'downloadOfferLetterStream'])->name('cvtracker.offer_letter_stream');
 
 						//END	 
 						//#############       	START APPTRACKER MANAGEMENT	

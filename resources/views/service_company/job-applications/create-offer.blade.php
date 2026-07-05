@@ -2691,15 +2691,14 @@
 
                                 <div id="preview_offer_body_content"></div>
                                 <div class="co-footer-actions co-tpl-footer co-step3-footer">
-                                    <button type="button"
-                                        data-jobId="{{ @$application->job_id }}"
-                                        data-candidate="{{ @$application->id }}"
-                                        data-mtype="3"
-                                        data-offerId="{{ $offer_id }}"
-                                        class="btn co-btn-close download_offer"
-                                        data-wizard-type="action-next">
+                                    {{-- Direct download: navigates to a route that streams the PDF as an
+                                         attachment (no AJAX/JSON/storage-URL — those all failed silently on
+                                         the live host). target=_blank so the current drawer stays put. --}}
+                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}"
+                                       target="_blank" rel="noopener"
+                                       class="btn co-btn-close co-step3-download">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
-                                    </button>
+                                    </a>
                                     <div class="co-step3-footer-right">
                                         <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
                                         <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
