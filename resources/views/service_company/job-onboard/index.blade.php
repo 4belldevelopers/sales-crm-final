@@ -284,13 +284,12 @@
                     <th>Job Status</th>
                     <th>HR Owner</th>
                     <th class="jt-th-sort" data-asc="14" data-desc="15">Offer Amount <span class="jt-sort-ico">⇵</span></th>
-                    <th>Joining Status</th>
                     <th class="jt-th-sort" data-asc="13" data-desc="12">Joining Date <span class="jt-sort-ico">⇵</span></th>
                     <th>Stage</th>
                 </tr>
             </thead>
             <tbody id="joining-tracker">
-                <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
                     <img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...
                 </td></tr>
             </tbody>
@@ -352,7 +351,7 @@
     var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
 
     function loaderRow() {
-        return '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
+        return '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
     }
 
     /* ── fetch table (one request also returns every KPI/tab count) ── */
@@ -372,12 +371,12 @@
                 joining_tab_filter : state.tab,
             },
             success: function (resp) {
-                document.getElementById('joining-tracker').innerHTML = resp.html || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No joining records found</td></tr>';
+                document.getElementById('joining-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No joining records found</td></tr>';
                 document.getElementById('jt_pagination').innerHTML = resp.pagination || '';
                 if (resp.joiningCounts) updateCounts(resp.joiningCounts);
             },
             error: function () {
-                document.getElementById('joining-tracker').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+                document.getElementById('joining-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
             }
         });
     }
