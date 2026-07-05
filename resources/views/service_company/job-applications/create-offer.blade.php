@@ -426,49 +426,36 @@
 
         /* ══════════════════════════ Step 2 — Offer Letter Template ══════════════════════════
            Enterprise nested-card hierarchy, matching Step 1's language:
-             Main card   = .co-tpl-sidebar / .co-tpl-editor-col / .co-tpl-side (white, bordered, shadowed)
+             Main card   = .co-tpl-editor-col / .co-tpl-side (white, bordered, shadowed)
              Sub card    = .co-tpl-subcard  (light recessed panel inside a main card)
-             Sub-sub card= .co-tpl-card, .co-var-chip, .co-tpl-badge (small elements inside a sub card)
+             Sub-sub card= .co-var-chip, .co-tpl-badge (small elements inside a sub card)
            Every rule below is scoped so nothing exceeds 14px (stricter than step 1's 16px cap).
            No extra server round-trips: search/tabs/zoom/preview/download all run client-side. */
         .co-tpl-title { font-size: 14px !important; font-weight: 700; color: #181c32; margin: 0; }
         .co-tpl-sub { font-size: 11px; color: #7e8299; margin-top: 2px; }
-        .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+        .co-tpl-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+
+        /* Templates dropdown — same row as the "Offer Letter Template" heading (was a whole sidebar
+           card with a search box for what is always exactly one template). */
+        .co-tpl-select-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .co-tpl-select-label { font-size: 12px; font-weight: 700; color: #181c32; white-space: nowrap; }
+        .co-tpl-select { font-size: 12px !important; height: 36px; min-width: 220px; border: 1px solid #e4e6ef; border-radius: 8px; padding: 4px 10px; background: #fff; color: #3f4254; }
+        .co-tpl-select:focus { outline: none; border-color: #1b84ff; }
 
         /* Page + main cards are plain white — no grey/lavender fill anywhere */
         #step2, .co-tpl-layout { background: #fff; }
         .co-tpl-layout { display: flex; align-items: flex-start; gap: 16px; }
-        .co-tpl-sidebar { flex: 0 0 190px; max-width: 190px; }
         .co-tpl-editor-col { flex: 1 1 auto; min-width: 0; }
         .co-tpl-side { flex: 0 0 210px; max-width: 210px; display: flex; flex-direction: column; }
 
         /* Main cards (level 1) — reuse Step 1's exact card language: white, bordered, shadowed */
-        .co-tpl-sidebar, .co-tpl-editor-col, .co-tpl-side {
+        .co-tpl-editor-col, .co-tpl-side {
             background: #fff; border: 1px solid #eef1f7; border-radius: 14px;
             box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 14px;
         }
 
         /* Sub cards (level 2) — light recessed panel grouping related fields inside a main card */
         .co-tpl-subcard { background: #f9fafd; border: 1px solid #eef1f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
-
-        /* Templates sidebar */
-        .co-tpl-sidebar-head { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: 8px; }
-        .co-tpl-search input { height: 30px !important; font-size: 11px !important; padding: 4px 8px !important; }
-        .co-tpl-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-        /* Sub-sub card (level 3) — one template row inside the Templates main card */
-        .co-tpl-card { display: flex; align-items: flex-start; gap: 6px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 8px; background: #fff; cursor: default; }
-        .co-tpl-card--active { border-color: #1b84ff; background: #f3f8ff; }
-        .co-tpl-ico { width: 26px; height: 26px; border-radius: 7px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .co-tpl-ico svg { width: 14px; height: 14px; }
-        .co-tpl-card-body { min-width: 0; flex: 1 1 auto; }
-        .co-tpl-card-name { font-size: 11px; font-weight: 700; color: #181c32; line-height: 1.3; }
-        .co-tpl-card-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
-        .co-tpl-badge { font-size: 9px !important; font-weight: 700; padding: 1px 6px; border-radius: 99px; }
-        .co-tpl-badge--active { background: #e8fff3; color: #0f9463; }
-        .co-tpl-type { font-size: 9px; color: #a1a5b7; }
-        .co-tpl-check { color: #1b84ff; flex-shrink: 0; margin-left: auto; }
-        .co-tpl-check svg { width: 14px; height: 14px; }
-        .co-tpl-empty { font-size: 10px; color: #a1a5b7; text-align: center; padding: 10px 4px; }
 
         /* Template editor card */
         .co-tpl-tabs { display: flex; gap: 4px; border-bottom: 1px solid #eef1f7; margin-bottom: 12px; }
@@ -514,9 +501,10 @@
         /* Responsive: collapse to a single column under ~1100px (fits smaller 15.6" / 13" laptops) */
         @media (max-width: 1100px) {
             .co-tpl-layout { flex-direction: column; }
-            .co-tpl-sidebar, .co-tpl-side { flex: 1 1 auto; max-width: none; width: 100%; }
-            .co-tpl-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
-            .co-tpl-card { min-width: 220px; }
+            .co-tpl-side { flex: 1 1 auto; max-width: none; width: 100%; }
+            .co-tpl-header { flex-direction: column; align-items: stretch; }
+            .co-tpl-select-wrap { width: 100%; }
+            .co-tpl-select { flex: 1 1 auto; min-width: 0; }
         }
 
         /* ══════════════════════════ Step 4 — Approval ══════════════════════════
@@ -2558,6 +2546,16 @@
                                         <h5 class="co-tpl-title">Offer Letter Template</h5>
                                         <div class="co-tpl-sub">Personalize the offer letter before sending it for approval.</div>
                                     </div>
+                                    {{-- Templates: was a whole sidebar card (search + one card) for what is
+                                         always exactly one template (the company's default, set in Settings) —
+                                         collapsed into a dropdown in the heading row so the editor gets that
+                                         width back. Scales fine if a real multi-template catalog is added later. --}}
+                                    <div class="co-tpl-select-wrap">
+                                        <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
+                                        <select id="co_tpl_select" class="co-tpl-select">
+                                            <option value="company-offer-letter-template" selected>Company Offer Letter Template</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 @php
@@ -2577,35 +2575,8 @@
                                 @endphp
 
                                 <div class="co-tpl-layout">
-                                    {{-- MAIN CARD 1: Templates — only one template exists (the company's default
-                                         offer letter, configured in Settings), so exactly one card is shown. --}}
-                                    <div class="co-tpl-sidebar">
-                                        <div class="co-tpl-sidebar-head">Templates</div>
-                                        <div class="co-tpl-search">
-                                            <input type="text" id="co_tpl_search" class="form-control form-control-solid" placeholder="Search templates...">
-                                        </div>
-                                        <div class="co-tpl-list">
-                                            {{-- Sub-sub card: one template row --}}
-                                            <div class="co-tpl-card co-tpl-card--active" data-tpl-name="company offer letter template">
-                                                <span class="co-tpl-ico">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
-                                                </span>
-                                                <div class="co-tpl-card-body">
-                                                    <div class="co-tpl-card-name">Company Offer Letter Template</div>
-                                                    <div class="co-tpl-card-meta">
-                                                        <span class="co-tpl-badge co-tpl-badge--active">Active</span>
-                                                        <span class="co-tpl-type">{{ $co_emp_type_label }}</span>
-                                                    </div>
-                                                </div>
-                                                <span class="co-tpl-check">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                                                </span>
-                                            </div>
-                                            <div class="co-tpl-empty d-none" id="co_tpl_search_empty">No templates match your search.</div>
-                                        </div>
-                                    </div>
-
-                                    {{-- MAIN CARD 2: Template editor --}}
+                                    {{-- MAIN CARD: Template editor — now gets the full width that used to be
+                                         shared with the Templates sidebar card (moved to the heading row above). --}}
                                     <div class="co-tpl-editor-col">
                                         <div class="co-tpl-tabs">
                                             <button type="button" class="co-tpl-tab co-tpl-tab--active" data-co-tab="editor">Template Editor</button>
@@ -3247,21 +3218,10 @@
                     });
 
                     // ── Step 2 (Offer Letter Template) — everything below is client-side only,
-                    // no extra server round-trips: template search filter, tab switching, zoom,
-                    // insert-variable, and the sample export all run against the existing
-                    // CKEditor instance already loaded on the page.
-
-                    // Templates sidebar: filter the (currently single) template card by name.
-                    $(document).on('input', '#co_tpl_search', function() {
-                        var q = $(this).val().trim().toLowerCase();
-                        var anyVisible = false;
-                        $('.co-tpl-card').each(function() {
-                            var match = !q || ($(this).data('tpl-name') || '').indexOf(q) !== -1;
-                            $(this).toggle(match);
-                            if (match) anyVisible = true;
-                        });
-                        $('#co_tpl_search_empty').toggleClass('d-none', anyVisible);
-                    });
+                    // no extra server round-trips: tab switching, zoom, insert-variable, and the
+                    // sample export all run against the existing CKEditor instance already loaded
+                    // on the page. (The Templates dropdown in the heading row has exactly one real
+                    // option today — no filter/switch logic needed unless a real catalog is added.)
 
                     // Template Editor / Preview tabs
                     $(document).on('click', '.co-tpl-tab', function() {
