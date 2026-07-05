@@ -946,8 +946,9 @@ if (!function_exists('rpCardIcon')) {
                          data-user-count="{{ $uCount }}"
                          data-grp-count="{{ $grpCount }}"
                          data-access-level="{{ $access['class'] }}"
+                         data-role-id="{{ $roleId }}"
                          data-role-detail='{{ $detailJson }}'
-                         onclick="openRoleDrawer(this)">
+                         onclick="openRoleFormFromCard(this)">
 
                         <div class="rp-card-top">
                             <div class="rp-card-icon-wrap">
@@ -1007,7 +1008,7 @@ if (!function_exists('rpCardIcon')) {
 
                         <div class="rp-card-actions" onclick="event.stopPropagation()">
                             <div class="rp-action-group">
-                                <button type="button" class="rp-action-btn" title="View Role" onclick="event.stopPropagation(); openRoleDrawer(this.closest('.rp-role-card'));">
+                                <button type="button" class="rp-action-btn" title="View Role" onclick="event.stopPropagation(); openRoleFormFromCard(this.closest('.rp-role-card'));">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                         <circle cx="12" cy="12" r="3"/>
@@ -1493,6 +1494,17 @@ document.addEventListener('keydown', function (e) {
 /* ══════════════ Add / Edit Role FORM Drawer ══════════════ */
 
 /* Open the drawer and AJAX-load the shared role form (Add id=0, or Edit id) into it */
+/* Clicking a role card (or its View button) on the main page now opens the SAME full-page
+   Add-Role-style form drawer, pre-filled for that role (edit mode) — replacing the old
+   read-only Overview drawer so Add and Edit share one identical design. */
+function openRoleFormFromCard(card) {
+    if (!card) return;
+    var id = card.getAttribute('data-role-id');
+    if (!id) return;
+    var url = "{{ route('service_company.settings.loadEditRole', ':id') }}".replace(':id', id);
+    loadRoleFormDrawer(url);
+}
+
 function loadRoleFormDrawer(url) {
     var $slot = $('#roleFormBody');
     $slot.html('<div class="rpf-loading"><div class="rpf-spinner"></div><span>Loading role form…</span></div>');
