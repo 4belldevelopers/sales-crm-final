@@ -592,13 +592,14 @@
         .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .co-send-hero-name { font-size: 16px !important; font-weight: 700; color: #181c32; }
         .co-send-hero-role { font-size: 12px; color: #1b84ff; font-weight: 600; margin-top: 2px; }
-        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 7px; display: flex; gap: 18px; flex-wrap: wrap; }
-        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; }
+        .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 7px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; background: #eef1f7; border-radius: 6px; padding: 3px 9px; }
         .co-send-hero-meta svg { width: 13px; height: 13px; color: #a1a5b7; }
         .co-send-hero-facts { display: flex; gap: 36px; flex-wrap: wrap; }
         .co-send-fact-l { font-size: 10px; color: #a1a5b7; }
         .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 4px; }
         .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
+        .co-send-fact-v.co-send-fact-expiry { color: #d9214e; }
         .co-send-hero-status { border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 160px; }
         .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
         .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
@@ -631,6 +632,21 @@
         .co-send-chip-input { flex: 1 1 100px; min-width: 100px; border: none; outline: none; font-size: 13px; padding: 6px 4px; background: transparent; }
         .co-send-addemail { flex-shrink: 0; align-self: stretch; display: inline-flex; align-items: center; background: #eef3ff; border: 1px solid #e0e7ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 0 16px; cursor: pointer; white-space: nowrap; }
         .co-send-addemail:hover { background: #e0e7ff; }
+        .co-send-attach-count { font-size: 11px; color: #a1a5b7; font-weight: 600; }
+        .co-send-attachrow { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .co-send-attachrow:empty { margin-bottom: 0; }
+        .co-send-attach-chip { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid #e4e6ef; border-radius: 9px; padding: 8px 12px; min-width: 190px; }
+        .co-send-attach-ico { width: 30px; height: 30px; border-radius: 7px; background: #fde8ec; color: #d9214e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .co-send-attach-ico svg { width: 14px; height: 14px; }
+        .co-send-attach-ico.co-send-attach-ico--doc { background: #e7edff; color: #3568e8; }
+        .co-send-attach-meta { min-width: 0; }
+        .co-send-attach-name { font-size: 12px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .co-send-attach-size { font-size: 10px; color: #a1a5b7; }
+        .co-send-attach-x { margin-left: 4px; cursor: pointer; color: #a1a5b7; font-size: 16px; line-height: 1; flex-shrink: 0; }
+        .co-send-attach-x:hover { color: #f1416c; }
+        .co-send-addattach { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px dashed #c4cada; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 9px 16px; cursor: pointer; }
+        .co-send-addattach:hover { background: #f8f9ff; }
+        .co-send-addattach svg { width: 13px; height: 13px; }
 
         /* Signature toggle */
         .co-send-sigrow { display: flex; align-items: center; gap: 12px; padding-top: 10px; }
@@ -681,6 +697,14 @@
         .co-appr-search input { width: 100%; height: 40px; font-size: 12px; border: 1px solid #e4e6ef; border-radius: 9px; padding: 6px 12px; }
         .co-appr-search input:focus { outline: none; border-color: #1b84ff; }
         .co-appr-empty { font-size: 11px; color: #a1a5b7; text-align: center; padding: 16px 4px; }
+        /* Search bar + inline "add a custom email not in the list" action, one pill row */
+        .co-send-searchrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .co-send-searchbox { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; height: 42px; background: #f8f9fb; border: 1px solid #e4e6ef; border-radius: 21px; padding: 0 16px; }
+        .co-send-searchbox svg { width: 15px; height: 15px; color: #a1a5b7; flex-shrink: 0; }
+        .co-send-searchbox:focus-within { border-color: #1b84ff; background: #fff; }
+        .co-send-drawer-search-input { flex: 1 1 auto; min-width: 0; border: none; background: transparent; outline: none; font-size: 12px; height: 100%; }
+        .co-send-addmore { flex-shrink: 0; border: none; background: none; color: #4f46e5; font-weight: 700; font-size: 12px; white-space: nowrap; cursor: pointer; padding: 0 4px; }
+        .co-send-addmore:disabled { color: #c4c7d6; cursor: not-allowed; }
         /* Member table — table-layout fixed so 4 columns fit the drawer; long text truncates */
         #co_send_member_table { width: 100%; table-layout: fixed; font-size: 11px; }
         #co_send_member_table thead th { font-size: 10px !important; color: #a1a5b7; font-weight: 600; padding: 6px 6px; border-bottom: 1px solid #eef1f7; text-transform: none; text-align: left; }
@@ -2865,6 +2889,14 @@
                                     $so_mgmt    = (int) (@$section_change_value->management_status ?? 0);
                                     $so_appr_name = trim((string) (@$co_appr_timeline->name_hr ?: @$co_appr_timeline->email_id_hr ?? ''));
                                     $so_appr_date = @$section_change_value->approved_date_time;
+                                    // Not a stored field (no expiry column exists on offer_create_main_tds) — a standard
+                                    // 15-day acceptance window computed off the offer's creation date, display-only.
+                                    // offer_create_main_tds.created_at is not populated by the offer-save insert
+                                    // (existing gap, out of scope here) so it's frequently NULL — fall back to
+                                    // "today" (i.e. the send date), which is the standard offer-letter convention anyway.
+                                    $so_valid_days = 15;
+                                    $so_created = @$section_change_value->created_at ?: now();
+                                    $so_valid_until = date('d M Y', strtotime($so_created.' +'.$so_valid_days.' days'));
                                     $so_subject = 'Offer Letter | '.($so_role ?: 'Position').($so_company ? ' | '.$so_company : '');
                                     $so_ctc_line = trim($so_curr.' '.($so_ctc ? number_format((float) $so_ctc) : ''));
                                     $so_default_body = '<p>Dear '.e(ucwords($so_name)).',</p>'
@@ -2896,6 +2928,7 @@
                                             <div class="co-send-fact"><div class="co-send-fact-l">Offer ID</div><div class="co-send-fact-v">OFF-{{ $offer_id }}</div></div>
                                             @if(!empty($so_ctc))<div class="co-send-fact"><div class="co-send-fact-l">Offered CTC</div><div class="co-send-fact-v co-send-fact-ctc">{{ $so_ctc_line }}</div></div>@endif
                                             @if(!empty($so_join_fmt))<div class="co-send-fact"><div class="co-send-fact-l">Joining Date</div><div class="co-send-fact-v">{{ $so_join_fmt }}</div></div>@endif
+                                            @if(!empty($so_valid_until))<div class="co-send-fact"><div class="co-send-fact-l">Offer Valid Until</div><div class="co-send-fact-v co-send-fact-expiry">{{ $so_valid_until }}</div></div>@endif
                                         </div>
                                         @if($so_mgmt === 2 || $so_mgmt === 1)
                                         <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
@@ -2967,6 +3000,18 @@
                                                 <textarea id="co_send_editor" name="co_send_editor">{!! $so_default_body !!}</textarea>
                                             </div>
                                         </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.4 11.5-8.9 8.9a5 5 0 0 1-7.1-7.1l8.9-8.9a3.5 3.5 0 0 1 5 5l-8.9 8.9a2 2 0 0 1-2.8-2.8l8.2-8.2"/></svg> Attachments <span class="co-send-attach-count" id="co_send_attach_count"></span></label>
+                                            <div class="co-send-field">
+                                                <div class="co-send-attachrow" id="co_send_attach_list"></div>
+                                                <input type="file" id="co_send_attach_input" multiple style="display:none;">
+                                                <button type="button" class="co-send-addattach" id="co_send_addattach">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Attachment
+                                                </button>
+                                                <div class="co-send-hint">Max 10 MB each</div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {{-- Footer --}}
@@ -3012,8 +3057,12 @@
                                             </label>
                                             @endif
                                         </div>
-                                        <div class="co-appr-search">
-                                            <input type="text" class="form-control form-control-solid co-send-drawer-search-input" id="co_send_drawer_search" placeholder="Search by name, email or company...">
+                                        <div class="co-send-searchrow">
+                                            <div class="co-send-searchbox">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                                <input type="text" class="co-send-drawer-search-input" id="co_send_drawer_search" placeholder="Search team members...">
+                                            </div>
+                                            <button type="button" class="co-send-addmore" id="co_send_addmore" disabled>+ Add More</button>
                                         </div>
                                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="co_send_member_table">
                                             <thead>
@@ -5360,6 +5409,17 @@
                         var hay = String($(this).data('search') || '');
                         $(this).toggleClass('d-none', q !== '' && hay.indexOf(q) === -1);
                     });
+                    // "+ Add More" only lights up once what's typed looks like an email —
+                    // it's for adding someone NOT in the searchable list below, not a filter action.
+                    $('#co_send_addmore').prop('disabled', !/^\S+@\S+\.\S+$/.test(q));
+                });
+                // Manually add a typed email that isn't one of the searchable team members
+                $(document).on('click', '#co_send_addmore', function () {
+                    var email = $('#co_send_drawer_search').val().trim();
+                    if (!/^\S+@\S+\.\S+$/.test(email)) return;
+                    var target = $('#co_send_drawer').attr('data-target') || 'co_to_chips';
+                    coAddChip(target, email);
+                    $('#co_send_drawer_search').val('').trigger('input');
                 });
                 // Add / remove a member email from the current target field
                 $(document).on('click', '.co-send-mrow-add', function () {
@@ -5377,6 +5437,40 @@
                     coSyncDrawerAddedState();
                 });
 
+                // ── Attachments ("+ Add Attachment" — real files, actually sent with the email) ──
+                var coAttachFiles = [];
+                function coFileSizeLabel(bytes) {
+                    var kb = bytes / 1024;
+                    return kb < 1024 ? Math.round(kb) + ' KB' : (kb / 1024).toFixed(1) + ' MB';
+                }
+                function coRenderAttachments() {
+                    var $list = $('#co_send_attach_list').empty();
+                    $('#co_send_attach_count').text(coAttachFiles.length ? '(' + coAttachFiles.length + ')' : '');
+                    coAttachFiles.forEach(function (file, idx) {
+                        var isDoc = /\.(docx?|xls|xlsx)$/i.test(file.name);
+                        var $chip = $('<div class="co-send-attach-chip"></div>');
+                        $chip.append('<span class="co-send-attach-ico' + (isDoc ? ' co-send-attach-ico--doc' : '') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>');
+                        var $meta = $('<div class="co-send-attach-meta"></div>');
+                        $meta.append($('<div class="co-send-attach-name"></div>').text(file.name));
+                        $meta.append($('<div class="co-send-attach-size"></div>').text(coFileSizeLabel(file.size)));
+                        $chip.append($meta).append($('<i class="co-send-attach-x">&times;</i>').data('idx', idx));
+                        $list.append($chip);
+                    });
+                }
+                $(document).on('click', '#co_send_addattach', function () { $('#co_send_attach_input').trigger('click'); });
+                $(document).on('change', '#co_send_attach_input', function () {
+                    Array.prototype.slice.call(this.files || []).forEach(function (f) {
+                        if (f.size > 10 * 1024 * 1024) { Swal.fire('Warning', f.name + ' exceeds 10 MB and was skipped.', 'warning'); return; }
+                        coAttachFiles.push(f);
+                    });
+                    this.value = '';
+                    coRenderAttachments();
+                });
+                $(document).on('click', '.co-send-attach-x', function () {
+                    coAttachFiles.splice($(this).data('idx'), 1);
+                    coRenderAttachments();
+                });
+
                 // ── Send Offer Letter (native → same fwd_offer_send endpoint) ──
                 $(document).on('click', '#co_send_submit', function () {
                     var $btn = $(this);
@@ -5391,26 +5485,27 @@
                     if (!subject) { Swal.fire('Warning', 'Please enter an email subject.', 'warning'); return; }
                     var body = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) ? CKEDITOR.instances.co_send_editor.getData() : '';
                     var fromEmail = $('#co_send_fromemail').val();
-                    var payload = {
-                        '_token': "{{ csrf_token() }}", '_method': 'POST',
-                        'template': '',
-                        'from_email': JSON.stringify([{ value: fromEmail }]),   // backend json_decodes this
-                        'to_email': toArr.join(','),
-                        'cc_email': coCollectChips('co_cc_chips').join(','),
-                        'subject': subject,
-                        'attached_cv': 0,
-                        'editor1': body,
-                        'arr': [],
-                        'mtypeId': 1,
-                        'offerId': $('#co_send_offerid').val(),
-                        'signature': $('#co_send_signature').is(':checked') ? 1 : 0
-                    };
+                    var formData = new FormData();
+                    formData.append('_token', "{{ csrf_token() }}");
+                    formData.append('template', '');
+                    formData.append('from_email', JSON.stringify([{ value: fromEmail }]));   // backend json_decodes this
+                    formData.append('to_email', toArr.join(','));
+                    formData.append('cc_email', coCollectChips('co_cc_chips').join(','));
+                    formData.append('subject', subject);
+                    formData.append('attached_cv', 0);
+                    formData.append('editor1', body);
+                    formData.append('mtypeId', 1);
+                    formData.append('offerId', $('#co_send_offerid').val());
+                    formData.append('signature', $('#co_send_signature').is(':checked') ? 1 : 0);
+                    coAttachFiles.forEach(function (f) { formData.append('attachments[]', f); });
                     $btn.prop('disabled', true);
                     $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
                     $.ajax({
                         type: 'POST',
                         url: "{{ route('service_company.cvtracker.fwd_offer_send', 1) }}",
-                        data: payload,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
                         success: function (r) {
                             $btn.prop('disabled', false);
                             $btn.find('.co-send-submit-label').show(); $btn.find('.co-send-submit-wait').hide();

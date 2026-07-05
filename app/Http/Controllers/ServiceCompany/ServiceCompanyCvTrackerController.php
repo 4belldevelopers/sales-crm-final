@@ -5459,7 +5459,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // 		dd($emails);
 		$attachments = array();
-		
+
+		// Sender-supplied files (Step 5 "+ Add Attachment"): store to the public disk so
+		// MailService::downloadAttachment() (which fetches attachments by public URL) can read them.
+		if ($request->hasFile('attachments')) {
+			$request->validate(['attachments.*' => 'file|max:10240']);
+			foreach ($request->file('attachments') as $file) {
+				if (!$file->isValid()) continue;
+				$safeName = time().'_'.preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
+				$storedPath = $file->storeAs('offer-attachments/'.$offerId, $safeName, 'public');
+				$attachments[] = [
+					'path' => Storage::disk('public')->url($storedPath),
+					'filename' => $file->getClientOriginalName(),
+					'options' => [],
+				];
+			}
+		}
 
 			$path = base_path() . '/public/user-uploads/documents/';
 			$mailto = $to;
@@ -5619,7 +5634,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 							'path' => $path,   
 							'options' => []      
 						];*/
-						$attachments = [];
                         //    dd($attachments);
 
 							// QueueMailService
