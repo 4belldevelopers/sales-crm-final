@@ -4680,6 +4680,26 @@ protected $elasticService;
 			->select('updatetimeline.*', 'users.name as sent_by_name')
 			->first();
 
+		// Step 5 "Template" dropdown — same ES-backed list offerSendMail() uses for mtype==1
+		// (candidate offer email): temptype 7. Selecting one calls the existing
+		// service_company.cvtracker.email_template endpoint (unchanged) to fill Subject/Body.
+		$co_send_tpl_params = [
+			'index' => ELASTIC_EMAIL_TEMPLATE,
+			'body'  => [
+				'size' => 10000,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term'  => ['status' => 1]],
+							['match' => ['temptype' => 7]],
+						],
+					],
+				],
+			],
+		];
+		$co_send_tpl_response = $this->elasticService->getClient()->search($co_send_tpl_params);
+		$this->co_send_templates = collect($co_send_tpl_response['hits']['hits'] ?? [])
+			->map(function ($hit) { return (object) $hit['_source']; });
 
 		// Step 5 "Add Email" picker: internal team members (active users in this company) and,
 		// when the job belongs to an external client, that client's contacts. Same directories
