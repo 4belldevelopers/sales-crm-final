@@ -352,22 +352,33 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-dempty { font-size: 11.5px; color: #b0bbd8; text-align: center; padding: 24px 8px; }
 
 /* ══════════════ Add / Edit Role FORM Drawer (screenshot-2 styled, real-data driven) ══════════════ */
+/* Guard against any padding/border pushing an element past its container's width —
+   the #1 cause of a stray horizontal scrollbar inside the drawer. */
+#roleFormBody, #roleFormBody * { box-sizing: border-box; }
+
+/* The backdrop/drawer only cover the MAIN content area, not the fixed left sidebar
+   (#kt_aside) — JS sets --rpf-aside-w from the sidebar's real rendered width at open
+   time, so this stays correct whether the sidebar is expanded or minimized. */
+:root { --rpf-aside-w: 0px; }
 .rpf-backdrop {
-    position: fixed; inset: 0; background: rgba(20,26,46,.45);
-    z-index: 1070; opacity: 0; visibility: hidden; transition: opacity .25s ease;
+    position: fixed; top: 0; right: 0; bottom: 0; left: var(--rpf-aside-w);
+    background: rgba(20,26,46,.45);
+    z-index: 1070; opacity: 0; visibility: hidden; transition: opacity .25s ease, left .2s ease;
 }
 .rpf-backdrop.open { opacity: 1; visibility: visible; }
 
 .rpf-drawer {
-    position: fixed; top: 0; right: -100%; width: 100%; height: 100vh;
+    position: fixed; top: 0; right: 0; bottom: 0; left: var(--rpf-aside-w); height: 100vh;
     background: #f6f7fb; z-index: 1080; box-shadow: -12px 0 40px rgba(20,26,46,.20);
-    transition: right .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .32s cubic-bezier(.4,0,.2,1), left .2s ease;
+    display: flex; flex-direction: column; overflow: hidden;
     font-family: 'Poppins', sans-serif;
 }
-.rpf-drawer.open { right: 0; }
+.rpf-drawer.open { transform: translateX(0); }
 
-/* Content inside the full-page drawer stays centered and capped so the layout doesn't
-   over-stretch on large/4K monitors, while still filling 15.6" laptop widths (1366–1920px) */
+/* Content inside the drawer stays centered and capped so the layout doesn't over-stretch
+   on large/4K monitors, while still filling 15.6" laptop widths (1366–1920px) */
 .rpf-container { max-width: 1600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 
 /* Loading / error states */
@@ -375,8 +386,11 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-spinner { width: 26px; height: 26px; border: 3px solid #e3e7f3; border-top-color: #5e72e4; border-radius: 50%; animation: rpf-spin .7s linear infinite; }
 @keyframes rpf-spin { to { transform: rotate(360deg); } }
 
-/* Form shell */
-.rpf-form { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+/* Form shell — the drawer, its slot, and the injected form are all flex columns with
+   min-height:0 all the way down, so .rpf-body's overflow-y:auto actually gets a bounded
+   height to scroll within instead of the form silently growing past the viewport. */
+.rpf-form-slot { flex: 1; display: flex; flex-direction: column; min-height: 0; width: 100%; }
+.rpf-form { display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%; }
 
 /* Header — full-bleed white bar, content centered/capped via .rpf-container */
 .rpf-head { background: #fff; padding: 14px 0; border-bottom: 1px solid #eaf0fb; flex-shrink: 0; }
@@ -1468,16 +1482,32 @@ function loadRoleFormDrawer(url) {
     });
 }
 
+/* Measure the real rendered width of the fixed left sidebar (#kt_aside) so the drawer/backdrop
+   start right after it instead of covering it — works whether the sidebar is expanded or
+   minimized, and re-measures on resize so it never drifts stale while the drawer is open. */
+function syncRoleFormAsideOffset() {
+    var aside = document.getElementById('kt_aside');
+    /* Below Metronic's own lg breakpoint the sidebar becomes an off-canvas overlay rather
+       than a static column, so the drawer should take the full width in that case. */
+    var isStaticSidebar = window.innerWidth >= 992;
+    var w = (aside && isStaticSidebar && aside.getBoundingClientRect().left <= 0)
+        ? aside.getBoundingClientRect().width : 0;
+    document.documentElement.style.setProperty('--rpf-aside-w', w + 'px');
+}
+
 function openRoleForm() {
+    syncRoleFormAsideOffset();
     document.getElementById('roleFormDrawer').classList.add('open');
     document.getElementById('roleFormBackdrop').classList.add('open');
     document.body.style.overflow = 'hidden';
+    window.addEventListener('resize', syncRoleFormAsideOffset);
 }
 
 function closeRoleForm() {
     document.getElementById('roleFormDrawer').classList.remove('open');
     document.getElementById('roleFormBackdrop').classList.remove('open');
     document.body.style.overflow = '';
+    window.removeEventListener('resize', syncRoleFormAsideOffset);
 }
 
 /* Wire up all interactions inside the freshly-injected form (tabs, quick actions, search,
