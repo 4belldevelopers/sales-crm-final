@@ -64,9 +64,13 @@
             margin: 10px; /* Adjust as needed for spacing */
         }
 
+        /* Constrain by HEIGHT (not width) so any logo — tall or wide — lands at the same
+           ~50px height and lines up with the address block on the right. max-width guards
+           against an unusually wide logo overrunning the address. */
         .logo-container img {
-            width: 110px;
-            height: auto;
+            height: 50px;
+            width: auto;
+            max-width: 160px;
         }
 
         /* Matches the Step 3 preview's letterhead: logo top-left, company name/address top-right */
@@ -244,7 +248,7 @@ if ($imageData && $httpCode === 200) {
     <header>
          <div class="logo-container">
             @if($logoBase64)
-                <img src="{{ $logoBase64 }}" alt="{{ $comapny_name }}" style="width:120px;">
+                <img src="{{ $logoBase64 }}" alt="{{ $comapny_name }}" style="height:50px; width:auto; max-width:160px;">
             @else
                 <h3>{{ $comapny_name }}</h3>
             @endif
@@ -281,12 +285,11 @@ if ($imageData && $httpCode === 200) {
     </div>
 
 
-    <!-- Footer -->
+    <!-- Footer: company name & address removed entirely (they live in the top letterhead).
+         Neutral copyright only, so the footer isn't left empty/broken. -->
     <footer>
         <div class="">
-            <p><strong>{{ $comapny_name }}</strong></p>
-            <p>{{ $address }}</p>
-            <p>&copy; {{ date("Y") }} {{ $comapny_name }} - All Rights Reserved</p>
+            <p>&copy; {{ date("Y") }} - All Rights Reserved</p>
         </div>
     </footer>
 
