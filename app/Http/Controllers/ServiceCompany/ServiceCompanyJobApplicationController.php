@@ -4667,6 +4667,19 @@ protected $elasticService;
 			->limit(8)
 			->get();
 
+		// Step 5 hero: "Sent By" — mtypeSection 1 = candidate-facing offer email (fwd_offer_send,
+		// mtypeId==1). name_hr/email_id_hr aren't populated for this event type, so the sender
+		// comes from event_by_user_id instead. "Sent/Not Sent" itself reads
+		// offer_create_main_tds.send_accept_date_time (already in $section_change_value).
+		$this->co_send_timeline = DB::table('updatetimeline')
+			->leftJoin('users', 'users.id', '=', 'updatetimeline.event_by_user_id')
+			->where('updatetimeline.application_id', $this->application->id)
+			->where('updatetimeline.job_id', $this->application->job_id)
+			->where('updatetimeline.mtypeSection', 1)
+			->orderByDesc('updatetimeline.id')
+			->select('updatetimeline.*', 'users.name as sent_by_name')
+			->first();
+
 
 		// Step 5 "Add Email" picker: internal team members (active users in this company) and,
 		// when the job belongs to an external client, that client's contacts. Same directories
