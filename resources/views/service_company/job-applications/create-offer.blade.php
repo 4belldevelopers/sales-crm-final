@@ -583,9 +583,11 @@
         /* MAIN CARD wrapping the whole composer */
         .co-send-card { background: #fff; border: 1px solid #eef1f7; border-radius: 16px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 20px 22px; }
         /* SUB CARD: candidate hero — matches the "Krishna Murthy" reference */
-        /* Hero fonts capped at 12px and the facts grid uses fractional (not fixed-px) columns so the
-           whole card fits a 15.6" laptop panel width — and anything narrower — without overflowing. */
-        .co-send-hero { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; }
+        /* Hero fonts capped at 12px. Facts sit on their own full-width row below the avatar/status
+           row (rather than sharing that row) so all 6 columns have room to stay in one single row
+           on a 15.6" laptop panel instead of wrapping. */
+        .co-send-hero { display: flex; flex-direction: column; gap: 12px; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 14px 18px; margin-bottom: 20px; }
+        .co-send-hero-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .co-send-hero-lead { display: flex; align-items: center; gap: 12px; flex: 1 1 200px; min-width: 180px; }
         .co-send-hero-avatar { width: 46px; height: 46px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
         .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -596,11 +598,10 @@
         .co-send-hero-meta svg { width: 12px; height: 12px; color: #a1a5b7; }
         /* Grid (not flex) so every column sits in a fixed slot — position doesn't shift between
            offers even when a value (e.g. Sent By) is blank or a different length. Fractional (fr)
-           columns instead of fixed px widths so it shrinks to fit narrower panels/screens instead
-           of overflowing; wraps to 2 rows of 3 rather than forcing 6 columns into one row. */
-        .co-send-hero-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; row-gap: 10px; align-items: start; flex: 1 1 320px; min-width: 260px; }
+           columns so it shrinks instead of overflowing, but always exactly one row of 6. */
+        .co-send-hero-facts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 12px; align-items: start; }
         .co-send-fact-l { font-size: 9px; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .co-send-fact-v { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; }
+        .co-send-fact-v { font-size: 12px; font-weight: 700; color: #181c32; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
         .co-send-fact-v.co-send-fact-expiry { color: #d9214e; }
         .co-send-fact-v.co-send-fact-sent { color: #0f9463; }
@@ -2919,17 +2920,30 @@
                                 <div class="co-send co-send-card section_change_value {{ $section_change_value ? '' : 'd-none' }}">
                                     {{-- SUB CARD 1: candidate hero --}}
                                     <div class="co-send-hero">
-                                        <div class="co-send-hero-lead">
-                                            <div class="co-send-hero-avatar">
-                                                @if(!empty($so_photo))<img src="{{ $so_photo }}" alt="{{ $so_name }}" onerror="this.parentNode.innerHTML='{{ $so_initial }}';">@else{{ $so_initial }}@endif
-                                            </div>
-                                            <div class="co-send-hero-ident">
-                                                <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
-                                                @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
-                                                <div class="co-send-hero-meta">
-                                                    @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
+                                        <div class="co-send-hero-top">
+                                            <div class="co-send-hero-lead">
+                                                <div class="co-send-hero-avatar">
+                                                    @if(!empty($so_photo))<img src="{{ $so_photo }}" alt="{{ $so_name }}" onerror="this.parentNode.innerHTML='{{ $so_initial }}';">@else{{ $so_initial }}@endif
+                                                </div>
+                                                <div class="co-send-hero-ident">
+                                                    <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
+                                                    @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
+                                                    <div class="co-send-hero-meta">
+                                                        @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
+                                                    </div>
                                                 </div>
                                             </div>
+                                            @if($so_mgmt === 2 || $so_mgmt === 1)
+                                            <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
+                                                <span class="co-send-status-title">
+                                                    @if($so_mgmt === 2)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Approved
+                                                    @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Pending
+                                                    @endif
+                                                </span>
+                                                @if($so_mgmt === 2 && !empty($so_appr_name))<div class="co-send-status-sub">by {{ ucwords($so_appr_name) }}</div>@endif
+                                                @if($so_mgmt === 2 && !empty($so_appr_date))<div class="co-send-status-sub">on {{ date('d M Y, h:i A', strtotime($so_appr_date)) }}</div>@endif
+                                            </div>
+                                            @endif
                                         </div>
                                         <div class="co-send-hero-facts">
                                             <div class="co-send-fact"><div class="co-send-fact-l">Offer ID</div><div class="co-send-fact-v">OFF-{{ $offer_id }}</div></div>
@@ -2939,17 +2953,6 @@
                                             <div class="co-send-fact"><div class="co-send-fact-l">Offer Valid Until</div><div class="co-send-fact-v co-send-fact-expiry">{{ $so_valid_until }}</div></div>
                                             <div class="co-send-fact"><div class="co-send-fact-l">Sent By</div><div class="co-send-fact-v co-send-fact-sentby">@if($so_sent && $so_sent_by_name)<span class="co-send-sentby-name">{{ ucwords($so_sent_by_name) }}</span><span class="co-send-sentby-when">{{ $so_sent_by_when }}</span>@endif</div></div>
                                         </div>
-                                        @if($so_mgmt === 2 || $so_mgmt === 1)
-                                        <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
-                                            <span class="co-send-status-title">
-                                                @if($so_mgmt === 2)<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg> Approved
-                                                @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Pending
-                                                @endif
-                                            </span>
-                                            @if($so_mgmt === 2 && !empty($so_appr_name))<div class="co-send-status-sub">by {{ ucwords($so_appr_name) }}</div>@endif
-                                            @if($so_mgmt === 2 && !empty($so_appr_date))<div class="co-send-status-sub">on {{ date('d M Y, h:i A', strtotime($so_appr_date)) }}</div>@endif
-                                        </div>
-                                        @endif
                                     </div>
 
                                     {{-- SUB CARD 2: composer form (native; posts to fwd_offer_send) --}}
