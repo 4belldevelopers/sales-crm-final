@@ -625,16 +625,20 @@
         .co-send-input[readonly] { background: #f9fafd; color: #5e6278; }
         .co-send-hint { font-size: 11px; color: #a1a5b7; margin-top: 7px; }
 
-        /* Chip inputs (To / CC): a fixed-height box + a separate "+ Add Email" button to its right */
-        .co-send-chiprow { display: flex; gap: 12px; align-items: stretch; }
-        .co-send-chips { flex: 1 1 auto; min-width: 0; min-height: 46px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 5px 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
+        /* Chip inputs (To / CC): one compact box holding chips + the input, kept as short as the chip row allows */
+        .co-send-chips { min-width: 0; min-height: 38px; border: 1px solid #e4e6ef; border-radius: 10px; padding: 4px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #fff; }
         .co-send-chips:focus-within { border-color: #1b84ff; }
         .co-send-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef3ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 7px; padding: 5px 10px; }
         .co-send-chip .co-chip-x { cursor: pointer; font-style: normal; font-size: 14px; line-height: 1; opacity: .7; }
         .co-send-chip .co-chip-x:hover { opacity: 1; }
-        .co-send-chip-input { flex: 1 1 100px; min-width: 100px; border: none; outline: none; font-size: 13px; padding: 6px 4px; background: transparent; }
-        .co-send-addemail { flex-shrink: 0; align-self: stretch; display: inline-flex; align-items: center; background: #eef3ff; border: 1px solid #e0e7ff; color: #4f46e5; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 0 16px; cursor: pointer; white-space: nowrap; }
-        .co-send-addemail:hover { background: #e0e7ff; }
+        .co-send-chip-input { flex: 1 1 100px; min-width: 60px; border: none; outline: none; font-size: 13px; padding: 4px; background: transparent; }
+        /* "+ Add Email" reads as plain text, not a button, pinned to the box's right edge */
+        .co-send-addemail { flex-shrink: 0; margin-left: auto; background: none; border: none; color: #4f46e5; font-size: 12px; font-weight: 700; padding: 2px 4px; cursor: pointer; white-space: nowrap; }
+        .co-send-addemail:hover { text-decoration: underline; }
+        /* To Email ID: locked to the candidate's address — no remove, no typing, no add control */
+        .co-send-chips--locked { background: #f8f9fb; }
+        .co-send-chip--locked { background: #eef1f7; color: #3f4254; cursor: default; }
+        .co-chip-lock { width: 12px; height: 12px; opacity: .55; }
         .co-send-attach-count { font-size: 11px; color: #a1a5b7; font-weight: 600; }
         .co-send-attachrow { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
         .co-send-attachrow:empty { margin-bottom: 0; }
@@ -2928,8 +2932,7 @@
                                                 <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
                                                 @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
                                                 <div class="co-send-hero-meta">
-                                                    @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>
-                                                    @elseif(!empty($so_email))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>{{ $so_email }}</span>@endif
+                                                    @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
                                                 </div>
                                             </div>
                                         </div>
@@ -2971,20 +2974,19 @@
                                         <div class="co-send-row">
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> To Email ID <span class="co-send-req">*</span></label>
                                             <div class="co-send-field">
-                                                <div class="co-send-chiprow">
-                                                    <div class="co-send-chips" id="co_to_chips">@if(!empty($so_email))<span class="co-send-chip">{{ $so_email }}<i class="co-chip-x">&times;</i></span>@endif<input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
-                                                    <button type="button" class="co-send-addemail" data-chip-target="co_to_chips">+ Add Email</button>
+                                                <div class="co-send-chips co-send-chips--locked" id="co_to_chips">
+                                                    @if(!empty($so_email))<span class="co-send-chip co-send-chip--locked">{{ $so_email }}<svg class="co-chip-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>@endif
                                                 </div>
-                                                <div class="co-send-hint">Primary candidate email address</div>
+                                                <div class="co-send-hint">Primary candidate email address — fixed, can't be changed or removed</div>
                                             </div>
                                         </div>
 
                                         <div class="co-send-row">
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="14" height="14" rx="2"/><path d="M3 15V5a2 2 0 0 1 2-2h10"/></svg> CC Email ID</label>
                                             <div class="co-send-field">
-                                                <div class="co-send-chiprow">
-                                                    <div class="co-send-chips" id="co_cc_chips"><input type="text" class="co-send-chip-input" placeholder="Type an email…"></div>
-                                                    <button type="button" class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</button>
+                                                <div class="co-send-chips" id="co_cc_chips">
+                                                    <input type="text" class="co-send-chip-input" placeholder="Type an email…">
+                                                    <span class="co-send-addemail" data-chip-target="co_cc_chips">+ Add Email</span>
                                                 </div>
                                                 <div class="co-send-hint">Add email addresses separated by commas</div>
                                             </div>
@@ -3038,7 +3040,7 @@
                                 {{-- Add-Email drawer: pick a teammate/client contact. Anchored to the create-offer
                                      root (#offer_create_show_right_bar is position:relative) to avoid transform/overflow issues. --}}
                                 <div class="co-send-drawer-bd" id="co_send_drawer_bd"></div>
-                                <div class="co-send-drawer" id="co_send_drawer" data-target="co_to_chips">
+                                <div class="co-send-drawer" id="co_send_drawer" data-target="co_cc_chips">
                                     <div class="co-send-drawer-head">
                                         <div>
                                             <div class="co-send-drawer-title">Select Email</div>
@@ -5485,10 +5487,10 @@
                 // ── Send Offer Letter (native → same fwd_offer_send endpoint) ──
                 $(document).on('click', '#co_send_submit', function () {
                     var $btn = $(this);
-                    // fold any half-typed chip text into a chip first
-                    $('#co_to_chips, #co_cc_chips').each(function () {
+                    // fold any half-typed chip text into a chip first (To has no input — it's locked to the candidate)
+                    $('#co_cc_chips').each(function () {
                         var id = $(this).attr('id'); var $inp = $(this).find('.co-send-chip-input');
-                        if ($inp.val().trim()) { coAddChip(id, $inp.val()); $inp.val(''); }
+                        if ($inp.length && $inp.val().trim()) { coAddChip(id, $inp.val()); $inp.val(''); }
                     });
                     var toArr = coCollectChips('co_to_chips');
                     if (!toArr.length) { Swal.fire('Warning', 'Please add at least one recipient email address.', 'warning'); return; }
