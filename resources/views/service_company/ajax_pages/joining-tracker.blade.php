@@ -40,7 +40,7 @@
             $expLabel = ($exp !== '' && $exp != 0) ? $exp . ' Yrs' : '';
 
             $designation = ucwords(mb_substr((string) @$row->current_designation, 0, 22));
-            $candSub = trim($designation . ($expLabel ? '  •  ' . $expLabel : ''));
+            $candSub = $designation; // experience intentionally omitted per design
 
             /* ---- Job & Department (client acts as department proxy) ---- */
             $jobTitle = ucwords(mb_substr((string) @$row->title, 0, 24));
@@ -115,6 +115,12 @@
             /* ---- Stage (pipeline master-status badge + configured sub-status) ---- */
             $stageName  = ucwords(mb_substr((string) @$row->name, 0, 14));
             $stageBadge = @$row->css_style;
+            // "Joined" pipeline stage always reads green, regardless of the stored css_style.
+            $stageStyle = '';
+            if (strtolower(trim((string) @$row->name)) === 'joined') {
+                $stageStyle = 'background:#dcfce7;color:#16a34a;';
+                $stageBadge = '';
+            }
             $stageChild = '';
             if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
                 $childStatus = DB::table('candidate_status')->select('name')->where('id', $row->childStatus)->first();
@@ -133,8 +139,9 @@
                 elseif ($diffDays > 1)    { $relTxt = 'In ' . $diffDays . ' Days'; $relClr = '#64748b'; }
                 else {
                     $ago = abs($diffDays);
-                    if ($joined === 1) { $relTxt = $ago . ' Days Ago';     $relClr = '#16a34a'; }
-                    else               { $relTxt = $ago . ' Days Overdue'; $relClr = '#dc2626'; }
+                    // Overdue indicator intentionally suppressed per design; joined-in-the-past still shows "N Days Ago".
+                    if ($joined === 1) { $relTxt = $ago . ' Days Ago'; $relClr = '#16a34a'; }
+                    else               { $relTxt = ''; }
                 }
             }
 
@@ -179,22 +186,15 @@
 
             {{-- HR Owner --}}
             <td class="jt-td">
-                <div class="jt-cand">
-                    @if(!empty($ownerImg))
-                        <img src="{{ $ownerImg }}" class="jt-avatar-img jt-avatar-sm" alt="">
-                    @else
-                        <span class="jt-avatar jt-avatar-sm {{ $ownerTone }}">{{ strtoupper(mb_substr($owner ?: '?', 0, 1)) }}</span>
-                    @endif
-                    <div class="jt-cand-info">
-                        <span class="jt-owner-name" title="{{ $owner }}">{{ $ownerName }}</span>
-                        <span class="jt-owner-role" title="{{ @$row->post_company_name }}">{{ $ownerCompany }}</span>
-                    </div>
+                <div class="jt-cand-info">
+                    <span class="jt-owner-name" title="{{ $owner }}">{{ $ownerName }}</span>
+                    <span class="jt-owner-role" title="{{ @$row->post_company_name }}">{{ $ownerCompany }}</span>
                 </div>
             </td>
 
             {{-- Offer Amount --}}
             <td class="jt-td">
-                <span class="jt-comp-amount">{{ $offerAmount }}</span>
+                <span class="jt-comp-amount">{!! $offerAmount !!}</span>
                 <span class="jt-comp-type">{{ $employment_type }}</span>
             </td>
 
@@ -226,11 +226,11 @@
                 @if($stageCss)
                     <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}"
                        class="jt-stage-link {{ $stageCss }}" data-toggle="modal" data-target="#{{ $stageCss }}">
-                        <span class="jt-stage-pill badge {{ $stageBadge }}">{{ $stageName ?: 'Stage' }}</span>
+                        <span class="jt-stage-pill badge {{ $stageBadge }}" style="{{ $stageStyle }}">{{ $stageName ?: 'Stage' }}</span>
                         <span class="jt-stage-sub">{{ $stageChild }}</span>
                     </a>
                 @else
-                    <span class="jt-stage-pill badge {{ $stageBadge }}">{{ $stageName ?: '—' }}</span>
+                    <span class="jt-stage-pill badge {{ $stageBadge }}" style="{{ $stageStyle }}">{{ $stageName ?: '—' }}</span>
                     <span class="jt-stage-sub">{{ $stageChild }}</span>
                 @endif
             </td>
