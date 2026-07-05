@@ -25,7 +25,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
 }
 .rp-page-title { display: flex; align-items: center; gap: 8px; }
-.rp-page-title h1 { font-size: 20px; font-weight: 700; color: #1e2640; margin: 0; line-height: 1.2; }
+.rp-page-title h1 { font-size: 12px; font-weight: 700; color: #1e2640; margin: 0; line-height: 1.2; }
 .rp-page-title .shield-icon { color: #5e72e4; }
 .rp-page-subtitle { font-size: 12px; color: #8b93b8; margin: 4px 0 0; font-weight: 400; }
 .rp-header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
@@ -57,7 +57,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .rp-stat-icon svg { width: 22px; height: 22px; }
-.rp-stat-val { font-size: 22px; font-weight: 700; color: #1e2640; line-height: 1; }
+.rp-stat-val { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1; }
 .rp-stat-lbl { font-size: 11px; color: #5a6080; font-weight: 500; margin-top: 2px; }
 .rp-stat-sub { font-size: 10px; font-weight: 500; margin-top: 2px; }
 
@@ -111,7 +111,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     display: flex; align-items: center; justify-content: center; color: #b0bbd8;
 }
 .rp-empty-icon svg { width: 22px; height: 22px; }
-.rp-empty-title { font-size: 13px; font-weight: 600; color: #5a6080; }
+.rp-empty-title { font-size: 12px; font-weight: 600; color: #5a6080; }
 .rp-empty-sub { font-size: 11px; color: #b0bbd8; }
 
 /* ── Grid layout ── */
@@ -149,7 +149,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-card-desc { font-size: 11px; color: #8b93b8; margin-bottom: 10px; line-height: 1.5; }
 
 .rp-card-counts { display: flex; gap: 20px; margin-bottom: 10px; }
-.rp-count-val { font-size: 18px; font-weight: 700; color: #1e2640; line-height: 1; }
+.rp-count-val { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1; }
 .rp-count-lbl { font-size: 10px; color: #b0bbd8; font-weight: 400; margin-top: 1px; }
 
 .rp-perm-label { font-size: 10px; color: #b0bbd8; margin-bottom: 5px; font-weight: 500; }
@@ -201,7 +201,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-add-card:hover .rp-add-plus { border-color: #5e72e4; color: #5e72e4; }
 .rp-add-plus svg { width: 16px; height: 16px; }
-.rp-add-title { font-size: 13px; font-weight: 600; color: #5a6080; }
+.rp-add-title { font-size: 12px; font-weight: 600; color: #5a6080; }
 .rp-add-sub { font-size: 11px; color: #b0bbd8; text-align: center; line-height: 1.5; }
 
 /* ── Hidden tab filter ── */
@@ -231,7 +231,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-drawer-icon svg { width: 20px; height: 20px; }
 .rp-drawer-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.rp-drawer-title { font-size: 15px; font-weight: 700; color: #1e2640; margin: 0; }
+.rp-drawer-title { font-size: 12px; font-weight: 700; color: #1e2640; margin: 0; }
 .rp-drawer-meta { font-size: 11px; color: #8b93b8; margin-top: 3px; }
 .rp-drawer-head-actions { display: flex; gap: 4px; flex-shrink: 0; position: relative; }
 .rp-drawer-icon-btn {
@@ -292,7 +292,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     display: flex; align-items: center; justify-content: center;
 }
 .rp-dmetric-icon svg { width: 14px; height: 14px; }
-.rp-dmetric-val { font-size: 15px; font-weight: 700; color: #1e2640; line-height: 1.2; }
+.rp-dmetric-val { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1.2; }
 .rp-dmetric-lbl { font-size: 9.5px; color: #8b93b8; margin-top: 2px; }
 
 /* Info / coverage cards */
@@ -350,6 +350,230 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-duser-email { font-size: 10.5px; color: #8b93b8; }
 
 .rp-dempty { font-size: 11.5px; color: #b0bbd8; text-align: center; padding: 24px 8px; }
+
+/* ══════════════ Add / Edit Role FORM Drawer (screenshot-2 styled, real-data driven) ══════════════ */
+.rpf-backdrop {
+    position: fixed; inset: 0; background: rgba(20,26,46,.45);
+    z-index: 1070; opacity: 0; visibility: hidden; transition: opacity .25s ease;
+}
+.rpf-backdrop.open { opacity: 1; visibility: visible; }
+
+.rpf-drawer {
+    position: fixed; top: 0; right: -100%; width: 100%; height: 100vh;
+    background: #f6f7fb; z-index: 1080; box-shadow: -12px 0 40px rgba(20,26,46,.20);
+    transition: right .32s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column;
+    font-family: 'Poppins', sans-serif;
+}
+.rpf-drawer.open { right: 0; }
+
+/* Content inside the full-page drawer stays centered and capped so the layout doesn't
+   over-stretch on large/4K monitors, while still filling 15.6" laptop widths (1366–1920px) */
+.rpf-container { max-width: 1600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+/* Loading / error states */
+.rpf-loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #8b93b8; font-size: 12px; }
+.rpf-spinner { width: 26px; height: 26px; border: 3px solid #e3e7f3; border-top-color: #5e72e4; border-radius: 50%; animation: rpf-spin .7s linear infinite; }
+@keyframes rpf-spin { to { transform: rotate(360deg); } }
+
+/* Form shell */
+.rpf-form { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+/* Header — full-bleed white bar, content centered/capped via .rpf-container */
+.rpf-head { background: #fff; padding: 14px 0; border-bottom: 1px solid #eaf0fb; flex-shrink: 0; }
+.rpf-head-inner { display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+.rpf-head-icon { width: 40px; height: 40px; border-radius: 11px; background: #eef0fb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rpf-head-icon svg { width: 20px; height: 20px; color: #5e72e4; }
+.rpf-head-titles { min-width: 0; flex: 1; }
+.rpf-head-title-row { display: flex; align-items: center; gap: 8px; }
+.rpf-head-title { font-size: 12px; font-weight: 700; color: #1e2640; margin: 0; }
+.rpf-badge-active { font-size: 9.5px; font-weight: 600; color: #27ae60; background: #e8f8f0; border-radius: 20px; padding: 2px 9px 2px 7px; display: inline-flex; align-items: center; gap: 4px; }
+.rpf-badge-active::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #27ae60; }
+.rpf-head-sub { font-size: 11px; color: #8b93b8; margin: 2px 0 0; }
+.rpf-head-close { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent; color: #8b93b8; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rpf-head-close:hover { background: #f1f3f8; color: #5a6080; }
+.rpf-head-close svg { width: 16px; height: 16px; }
+
+/* Warning banner (edit only) — lives inside the scrollable body, above the summary card */
+.rpf-warn { margin: 0 0 14px; background: #fff8ec; border: 1px solid #ffe3ad; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.rpf-warn svg { width: 16px; height: 16px; color: #f39c12; flex-shrink: 0; }
+.rpf-warn-text { font-size: 11.5px; color: #a3762b; }
+.rpf-warn-text b { color: #8a5a00; font-weight: 600; }
+
+/* Scroll body — the scroll container is full-width so the scrollbar sits flush at the
+   drawer's edge; the actual content is centered/capped one level in via .rpf-body-inner */
+.rpf-body { flex: 1; overflow-y: auto; min-height: 0; }
+.rpf-body-inner { padding: 18px 24px 20px; }
+
+/* Summary card */
+.rpf-summary { background: #fff; border: 1px solid #eaf0fb; border-radius: 12px; padding: 16px; margin-bottom: 14px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px 18px; }
+.rpf-field-label { font-size: 10px; font-weight: 600; color: #8b93b8; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 5px; display: block; }
+.rpf-field-label .req { color: #e74c3c; }
+.rpf-input { width: 100%; border: 1px solid #dde2f0; border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #1e2640; font-family: 'Poppins', sans-serif; background: #f8f9fc; outline: none; transition: border-color .15s, background .15s; }
+.rpf-input:focus { border-color: #5e72e4; background: #fff; }
+.rpf-input[readonly] { color: #8b93b8; cursor: not-allowed; }
+.rpf-summary-users { display: flex; align-items: center; gap: 6px; }
+.rpf-uav { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+.rpf-uav:first-child { margin-left: 0; }
+.rpf-users-count { font-size: 11px; color: #5a6080; font-weight: 500; }
+.rpf-access-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.rpf-access-pill::before { content:''; width:6px; height:6px; border-radius:50%; background: currentColor; }
+.rpf-prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.rpf-prog-frac { font-size: 12px; font-weight: 700; color: #1e2640; }
+.rpf-prog-frac span { color: #8b93b8; font-weight: 500; }
+.rpf-prog-pct { font-size: 11px; font-weight: 600; color: #5e72e4; }
+.rpf-prog-track { height: 6px; border-radius: 4px; background: #e8eaf2; overflow: hidden; }
+.rpf-prog-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#5e72e4,#7b8cf0); transition: width .3s ease; }
+
+/* Tabs */
+.rpf-tabs { display: flex; gap: 18px; border-bottom: 1px solid #eaf0fb; margin-bottom: 14px; }
+.rpf-tab { padding: 0 0 10px; font-size: 12px; font-weight: 500; color: #8b93b8; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; user-select: none; }
+.rpf-tab.active { color: #5e72e4; font-weight: 600; border-bottom-color: #5e72e4; }
+
+/* Quick actions + toolbar */
+.rpf-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.rpf-quick-label { font-size: 11px; font-weight: 600; color: #5a6080; margin-right: 2px; }
+.rpf-qbtn { background: #fff; border: 1px solid #dde2f0; border-radius: 7px; padding: 6px 11px; font-size: 11px; font-weight: 500; color: #5a6080; cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s; }
+.rpf-qbtn:hover { border-color: #5e72e4; color: #5e72e4; }
+.rpf-qbtn.primary { background: #eef0fb; border-color: #d4d9f5; color: #5e72e4; font-weight: 600; }
+.rpf-search { flex: 1 1 150px; display: flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #dde2f0; border-radius: 7px; padding: 6px 11px; min-width: 130px; }
+.rpf-search svg { width: 13px; height: 13px; color: #b0bbd8; flex-shrink: 0; }
+.rpf-search input { border: none; outline: none; background: transparent; font-size: 11.5px; color: #1e2640; font-family: 'Poppins', sans-serif; width: 100%; }
+
+/* Two-column grid: modules + aside rail */
+.rpf-grid { display: flex; gap: 14px; align-items: flex-start; }
+.rpf-main { flex: 1 1 auto; min-width: 0; }
+.rpf-aside { flex: 0 0 236px; display: flex; flex-direction: column; gap: 12px; }
+
+/* Section + module rows */
+.rpf-sec { margin-bottom: 14px; }
+.rpf-sec-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 700; color: #8b93b8; text-transform: uppercase; letter-spacing: .4px; margin: 0 0 8px; }
+.rpf-sec-head svg { width: 13px; height: 13px; color: #5e72e4; }
+.rpf-sec-head .rpf-sec-count { margin-left: auto; background: #eef0fb; color: #5e72e4; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; letter-spacing: 0; }
+
+.rpf-mod { background: #fff; border: 1px solid #eaf0fb; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.rpf-mod-head { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; }
+.rpf-mod-head:hover { background: #fafbff; }
+.rpf-mod-caret { width: 14px; height: 14px; color: #b0bbd8; transition: transform .2s; flex-shrink: 0; }
+.rpf-mod.open .rpf-mod-caret { transform: rotate(90deg); }
+.rpf-mod-name { font-size: 12px; font-weight: 600; color: #1e2640; }
+.rpf-mod-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.rpf-mod-badge { font-size: 9.5px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #f1f3f8; color: #8b93b8; }
+.rpf-mod-badge.full { background: #e8f8f0; color: #27ae60; }
+.rpf-mod-badge.partial { background: #fff3e0; color: #f39c12; }
+.rpf-mod-badge.none { background: #fdeeee; color: #c0392b; }
+.rpf-mod-body { display: none; padding: 4px 14px 13px 38px; flex-wrap: wrap; gap: 8px; border-top: 1px solid #f5f6fa; }
+.rpf-mod.open .rpf-mod-body { display: flex; }
+
+/* Checkbox chip */
+.rpf-chk { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.rpf-chk input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rpf-chk-box { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid #cdd4e8; background: #fff; flex-shrink: 0; transition: all .15s; background-repeat: no-repeat; background-position: center; background-size: 11px; }
+.rpf-chk input:checked + .rpf-chk-box { background-color: #5e72e4; border-color: #5e72e4; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E"); }
+.rpf-chk input:disabled + .rpf-chk-box { background-color: #eef0f5; border-color: #e0e4ee; cursor: not-allowed; }
+.rpf-chk input:disabled ~ .rpf-chk-lbl { color: #b8bfd2; }
+.rpf-chk-lbl { font-size: 11.5px; color: #5a6080; font-weight: 500; }
+.rpf-chk-min { min-width: 74px; }
+
+/* Radio chip */
+.rpf-radio { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
+.rpf-radio input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rpf-radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #cdd4e8; background: #fff; flex-shrink: 0; transition: all .15s; position: relative; }
+.rpf-radio input:checked + .rpf-radio-dot { border-color: #5e72e4; }
+.rpf-radio input:checked + .rpf-radio-dot::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #5e72e4; }
+.rpf-radio input:disabled + .rpf-radio-dot { background: #eef0f5; border-color: #e0e4ee; }
+.rpf-radio input:disabled ~ .rpf-radio-lbl { color: #b8bfd2; }
+.rpf-radio-lbl { font-size: 11.5px; color: #5a6080; font-weight: 500; }
+.rpf-radio-lbl small { display: block; font-size: 9.5px; color: #b0bbd8; font-weight: 400; }
+
+/* Aside cards */
+.rpf-acard { background: #fff; border: 1px solid #eaf0fb; border-radius: 11px; padding: 14px; }
+.rpf-acard-title { font-size: 11.5px; font-weight: 700; color: #1e2640; margin: 0 0 12px; display: flex; align-items: center; gap: 6px; }
+.rpf-acard-title svg { width: 14px; height: 14px; color: #5e72e4; }
+
+/* Donut */
+.rpf-donut-wrap { display: flex; align-items: center; gap: 12px; }
+.rpf-donut { width: 84px; height: 84px; flex-shrink: 0; position: relative; }
+.rpf-donut svg { transform: rotate(-90deg); }
+.rpf-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.rpf-donut-num { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1; }
+.rpf-donut-cap { font-size: 8px; color: #8b93b8; margin-top: 1px; }
+.rpf-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.rpf-legend-row { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #5a6080; }
+.rpf-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rpf-legend-val { margin-left: auto; font-weight: 700; color: #1e2640; }
+
+/* Scope + advanced rows */
+.rpf-scope-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid #f5f6fa; }
+.rpf-scope-row:last-child { border-bottom: none; }
+.rpf-adv-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid #f5f6fa; }
+.rpf-adv-row:last-child { border-bottom: none; }
+.rpf-adv-row .rpf-chk { width: 100%; }
+.rpf-adv-grid { display: flex; flex-direction: column; }
+
+/* Footer — full-bleed white bar, content centered/capped via .rpf-container */
+.rpf-footer { background: #fff; border-top: 1px solid #eaf0fb; padding: 12px 0; flex-shrink: 0; }
+.rpf-footer-inner { display: flex; align-items: center; gap: 8px; padding: 0 24px; }
+.rpf-footer .rpf-foot-spacer { flex: 1; font-size: 10.5px; color: #b0bbd8; text-align: center; }
+.rpf-fbtn { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 9px 16px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #dde2f0; background: #fff; color: #5a6080; font-family: 'Poppins', sans-serif; transition: all .15s; }
+.rpf-fbtn:hover { border-color: #c5ccee; background: #f8f9fc; }
+.rpf-fbtn svg { width: 13px; height: 13px; }
+.rpf-fbtn.primary { background: #5e72e4; border-color: #5e72e4; color: #fff; }
+.rpf-fbtn.primary:hover { background: #4c5fd5; border-color: #4c5fd5; }
+.rpf-fbtn.danger { color: #c0392b; border-color: #f5d5d0; }
+.rpf-fbtn.danger:hover { background: #fde8e8; border-color: #c0392b; }
+.rpf-fbtn .indicator-progress { display: none; }
+.rpf-fbtn.loading .indicator-label { display: none; }
+.rpf-fbtn.loading .indicator-progress { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ══════════════ Responsive breakpoints (page + drawer) ══════════════
+   Tuned so the whole redesign — cards grid, stats row, and the full-page
+   Add/Edit drawer — fits a 15.6" laptop (1366×768 / 1536×864 / 1920×1080)
+   without horizontal scroll, then degrades gracefully to tablet/mobile. */
+
+/* ── 15.6" laptop range: tighten the drawer's two-column grid slightly ── */
+@media (max-width: 1440px) {
+    .rpf-aside { flex-basis: 216px; }
+    .rpf-grid { gap: 12px; }
+    .rp-cards-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Small laptop / large tablet: drop stats to 3-up, stack drawer aside below main ── */
+@media (max-width: 1180px) {
+    .rp-stats { grid-template-columns: repeat(3, 1fr); }
+    .rpf-grid { flex-direction: column; }
+    .rpf-aside { flex-basis: auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .rpf-aside > .rpf-acard { flex: 1 1 240px; }
+}
+
+/* ── Tablet ── */
+@media (max-width: 992px) {
+    .rp-cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .rp-page { padding: 14px 18px 20px; }
+    .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+    .rp-header-card { flex-direction: column; align-items: stretch; }
+    .rp-stats { grid-template-columns: repeat(2, 1fr); }
+    .rp-cards-grid { grid-template-columns: 1fr; }
+    .rp-filter-row { align-items: stretch; }
+    .rp-search-box { flex-basis: auto; }
+    .rp-sort-label { margin-left: 0; }
+    .rp-drawer { width: 100%; max-width: 100vw; }
+
+    .rpf-grid { flex-direction: column; }
+    .rpf-aside { flex-basis: auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .rpf-aside > .rpf-acard { flex: 1 1 200px; }
+    .rpf-summary { grid-template-columns: 1fr; }
+    .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 14px; padding-right: 14px; }
+    .rpf-footer-inner { flex-wrap: wrap; }
+    .rpf-toolbar { gap: 6px; }
+}
+
+@media (max-width: 420px) {
+    .rp-stats { grid-template-columns: 1fr; }
+}
 </style>
 @endpush
 
@@ -507,7 +731,7 @@ if (!function_exists('rpCardIcon')) {
         </div>
         <div class="rp-header-actions">
             @if(in_array("add_roles_permission", $userPermissions))
-            <button class="btn-rp-primary" data-toggle="modal" data-target="#kt_modal_add_role" id="addNewRoleBtn">
+            <button class="btn-rp-primary" id="addNewRoleBtn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
@@ -747,7 +971,6 @@ if (!function_exists('rpCardIcon')) {
                                 @if(in_array("edit_roles_permission", $userPermissions))
                                 @if(($rlist->priority != 0) && ($rlist->name != 'admin'))
                                 <button class="rp-action-btn editRole" title="Edit Role"
-                                        data-toggle="modal" data-target="#kt_modal_edit_role"
                                         data-id="{{ $roleId }}" onclick="event.stopPropagation()">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -775,7 +998,7 @@ if (!function_exists('rpCardIcon')) {
 
                 {{-- Add New Role card --}}
                 @if(in_array("add_roles_permission", $userPermissions))
-                <div class="rp-add-card" id="addNewRole" data-toggle="modal" data-target="#kt_modal_add_role">
+                <div class="rp-add-card" id="addNewRole">
                     <div class="rp-add-plus">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -840,48 +1063,11 @@ if (!function_exists('rpCardIcon')) {
     <div class="rp-drawer-footer" id="drawerFooter"></div>
 </div>
 
-{{-- ── Add Role Modal ── --}}
-<div class="modal fade" id="kt_modal_add_role" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered mw-750px">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="fw-bolder">Add Role</h2>
-                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-dismiss="modal">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"/>
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"/>
-                        </svg>
-                    </span>
-                </div>
-            </div>
-            <div class="modal-body scroll-y mx-5 my-7">
-                <div class="stage_body_content" id="stage_body_content"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- ── Edit Role Modal ── --}}
-<div class="modal fade" id="kt_modal_edit_role" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered mw-750px">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="fw-bolder">Edit Role</h2>
-                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-dismiss="modal">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"/>
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"/>
-                        </svg>
-                    </span>
-                </div>
-            </div>
-            <div class="modal-body scroll-y mx-5 my-7">
-                <div class="edit_body_content" id="edit_body_content"></div>
-            </div>
-        </div>
-    </div>
+{{-- ── Add / Edit Role Form Drawer (single wide right drawer, opened for both Add New Role and Edit) ── --}}
+<div class="rpf-backdrop" id="roleFormBackdrop" onclick="closeRoleForm()"></div>
+<div class="rpf-drawer" id="roleFormDrawer" aria-hidden="true">
+    {{-- AJAX injects rolelist (Add) or loadEditRole (Edit) — both include the shared _role_form partial --}}
+    <div class="rpf-form-slot" id="roleFormBody"></div>
 </div>
 
 {{-- ── Legacy AJAX Modal ── --}}
@@ -971,23 +1157,11 @@ $('.show-members').click(function () {
 /* ── Load role form into add modal ── */
 $(document).ready(function () {
 
+    /* ── Open the Add/Edit Role form drawer (same drawer for both) ── */
     $('#addNewRole, #addNewRoleBtn').on('click', function (e) {
         e.preventDefault();
         var url = "{{ route('service_company.settings.loadRole',':id') }}".replace(':id', 0);
-        $('#stage_body_content').html('<div class="text-center py-10"><span class="spinner-border spinner-border-sm align-middle me-2"></span>Loading...</div>');
-        $('#kt_modal_add_role').modal('show');
-        $.ajax({ type: 'GET', url: url,
-            success: function (response) {
-                if (response.status === "success") {
-                    $('#stage_body_content').html(response.view);
-                } else {
-                    $('#stage_body_content').html('<div class="text-center text-danger py-10">Unable to load the form. Please try again.</div>');
-                }
-            },
-            error: function () {
-                $('#stage_body_content').html('<div class="text-center text-danger py-10">Something went wrong while loading the form.</div>');
-            }
-        });
+        loadRoleFormDrawer(url);
     });
 
     $(document).on('click', '.editRole', function (e) {
@@ -995,20 +1169,7 @@ $(document).ready(function () {
         if (typeof closeRoleDrawer === 'function') closeRoleDrawer();
         var id = $(this).data('id');
         var url = "{{ route('service_company.settings.loadEditRole',':id') }}".replace(':id', id);
-        $('#edit_body_content').html('<div class="text-center py-10"><span class="spinner-border spinner-border-sm align-middle me-2"></span>Loading...</div>');
-        $('#kt_modal_edit_role').modal('show');
-        $.ajax({ type: 'GET', url: url,
-            success: function (response) {
-                if (response.status === "success") {
-                    $('#edit_body_content').html(response.view);
-                } else {
-                    $('#edit_body_content').html('<div class="text-center text-danger py-10">Unable to load the form. Please try again.</div>');
-                }
-            },
-            error: function () {
-                $('#edit_body_content').html('<div class="text-center text-danger py-10">Something went wrong while loading the form.</div>');
-            }
-        });
+        loadRoleFormDrawer(url);
     });
 
     /* ── Delete role ── */
@@ -1282,6 +1443,207 @@ document.addEventListener('click', function (e) {
 
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeRoleDrawer();
+});
+
+/* ══════════════ Add / Edit Role FORM Drawer ══════════════ */
+
+/* Open the drawer and AJAX-load the shared role form (Add id=0, or Edit id) into it */
+function loadRoleFormDrawer(url) {
+    var $slot = $('#roleFormBody');
+    $slot.html('<div class="rpf-loading"><div class="rpf-spinner"></div><span>Loading role form…</span></div>');
+    openRoleForm();
+    $.ajax({
+        type: 'GET', url: url,
+        success: function (response) {
+            if (response && response.status === 'success') {
+                $slot.html(response.view);
+                initRoleFormDrawer();
+            } else {
+                $slot.html('<div class="rpf-loading" style="color:#c0392b;">Unable to load the form. Please try again.</div>');
+            }
+        },
+        error: function () {
+            $slot.html('<div class="rpf-loading" style="color:#c0392b;">Something went wrong while loading the form.</div>');
+        }
+    });
+}
+
+function openRoleForm() {
+    document.getElementById('roleFormDrawer').classList.add('open');
+    document.getElementById('roleFormBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRoleForm() {
+    document.getElementById('roleFormDrawer').classList.remove('open');
+    document.getElementById('roleFormBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* Wire up all interactions inside the freshly-injected form (tabs, quick actions, search,
+   collapse, per-module + master toggles, live permission summary / donut / progress). */
+function initRoleFormDrawer() {
+    var root = document.getElementById('roleFormBody');
+    if (!root) return;
+
+    /* ── Collapse / expand a module row ── */
+    root.querySelectorAll('.rpf-mod-head').forEach(function (h) {
+        h.addEventListener('click', function () { h.closest('.rpf-mod').classList.toggle('open'); });
+    });
+
+    /* ── Collapse All / Expand All ── */
+    var collapseBtn = root.querySelector('[data-rpf="collapse"]');
+    if (collapseBtn) {
+        collapseBtn.addEventListener('click', function () {
+            var mods = root.querySelectorAll('.rpf-mod');
+            var anyOpen = root.querySelector('.rpf-mod.open');
+            mods.forEach(function (m) { m.classList.toggle('open', !anyOpen); });
+            collapseBtn.querySelector('.rpf-collapse-lbl').textContent = anyOpen ? 'Expand All' : 'Collapse All';
+        });
+    }
+
+    /* ── Tabs (All / Module / Advanced) ── */
+    root.querySelectorAll('.rpf-tab').forEach(function (t) {
+        t.addEventListener('click', function () {
+            root.querySelectorAll('.rpf-tab').forEach(function (x) { x.classList.remove('active'); });
+            t.classList.add('active');
+            var view = t.getAttribute('data-tab');
+            var main = root.querySelector('.rpf-main');
+            var aside = root.querySelector('.rpf-aside');
+            if (view === 'module') {
+                if (main) main.style.display = '';
+                root.querySelectorAll('.rpf-aside .rpf-acard').forEach(function (c, i) { c.style.display = (i === 0) ? '' : 'none'; });
+            } else if (view === 'advanced') {
+                if (main) main.style.display = 'none';
+                root.querySelectorAll('.rpf-aside .rpf-acard').forEach(function (c, i) { c.style.display = (i === 0) ? 'none' : ''; });
+            } else {
+                if (main) main.style.display = '';
+                root.querySelectorAll('.rpf-aside .rpf-acard').forEach(function (c) { c.style.display = ''; });
+            }
+        });
+    });
+
+    /* ── Search permissions ── */
+    var search = root.querySelector('[data-rpf="search"]');
+    if (search) {
+        search.addEventListener('input', function () {
+            var q = search.value.toLowerCase().trim();
+            root.querySelectorAll('.rpf-sec').forEach(function (sec) {
+                var secVisible = false;
+                sec.querySelectorAll('.rpf-mod').forEach(function (m) {
+                    var name = (m.getAttribute('data-mod-name') || '').toLowerCase();
+                    var hit = !q || name.indexOf(q) !== -1;
+                    m.style.display = hit ? '' : 'none';
+                    if (hit) { secVisible = true; if (q) m.classList.add('open'); }
+                });
+                sec.style.display = secVisible ? '' : 'none';
+            });
+        });
+    }
+
+    /* ── Quick actions: Select All / Clear All / View Only / Full Access ── */
+    function setAllPerms(state) {
+        root.querySelectorAll('input.rpf-perm-check:not(:disabled)').forEach(function (c) { c.checked = state; });
+        recalcRoleSummary();
+    }
+    var qSelectAll = root.querySelector('[data-rpf="select-all"]');
+    var qClearAll  = root.querySelector('[data-rpf="clear-all"]');
+    var qViewOnly  = root.querySelector('[data-rpf="view-only"]');
+    var qFull      = root.querySelector('[data-rpf="full-access"]');
+    function setRadio(name, value) {
+        var r = root.querySelector('input[name="' + name + '"][value="' + value + '"]');
+        if (r) r.checked = true;
+    }
+    if (qSelectAll) qSelectAll.addEventListener('click', function () { setAllPerms(true); });
+    if (qClearAll)  qClearAll.addEventListener('click', function () { setAllPerms(false); });
+    if (qFull) qFull.addEventListener('click', function () {
+        setRadio('all_requisition', '1');
+        setRadio('add_team_on_requisition', '1');
+        setAllPerms(true);
+    });
+    if (qViewOnly) qViewOnly.addEventListener('click', function () {
+        root.querySelectorAll('input.rpf-perm-check:not(:disabled)').forEach(function (c) {
+            var lbl = (c.getAttribute('data-action') || '').toLowerCase();
+            c.checked = (lbl.indexOf('view') !== -1);
+        });
+        setRadio('all_requisition', '0');
+        recalcRoleSummary();
+    });
+
+    /* ── Master "Administrator Access / Select all" ── */
+    var master = root.querySelector('input.rpf-master');
+    if (master) {
+        master.addEventListener('change', function () { setAllPerms(master.checked); });
+    }
+
+    /* ── Recalc live summary on any permission change ── */
+    root.querySelectorAll('input.rpf-perm-check, input[name="all_requisition"], input[name="add_team_on_requisition"]').forEach(function (c) {
+        c.addEventListener('change', recalcRoleSummary);
+    });
+
+    recalcRoleSummary();
+
+    function recalcRoleSummary() {
+        var checks = root.querySelectorAll('input.rpf-perm-check');
+        var total = 0, enabled = 0;
+        checks.forEach(function (c) { total++; if (c.checked) enabled++; });
+        /* Access-scope + add-team radios count as 2 tunable permissions (parity with backend 58/59) */
+        var allReq = root.querySelector('input[name="all_requisition"][value="1"]');
+        var addTeam = root.querySelector('input[name="add_team_on_requisition"][value="1"]');
+        total += 2;
+        if (allReq && allReq.checked) enabled++;
+        if (addTeam && addTeam.checked) enabled++;
+
+        var disabled = total - enabled;
+        var pct = total ? Math.round((enabled / total) * 100) : 0;
+
+        /* Partial = module groups with some-but-not-all actions checked */
+        var partial = 0;
+        root.querySelectorAll('.rpf-mod').forEach(function (m) {
+            var boxes = m.querySelectorAll('input.rpf-perm-check');
+            if (!boxes.length) return;
+            var on = 0; boxes.forEach(function (b) { if (b.checked) on++; });
+            if (on > 0 && on < boxes.length) partial++;
+            var badge = m.querySelector('.rpf-mod-badge');
+            if (badge) {
+                badge.classList.remove('full', 'partial', 'none');
+                if (on === 0) { badge.classList.add('none'); badge.textContent = 'None'; }
+                else if (on === boxes.length) { badge.classList.add('full'); badge.textContent = 'Full'; }
+                else { badge.classList.add('partial'); badge.textContent = on + '/' + boxes.length; }
+            }
+        });
+
+        /* Progress bar + fraction */
+        setText('.rpf-prog-enabled', enabled);
+        setText('.rpf-prog-total', total);
+        setText('.rpf-prog-pct', pct + '%');
+        var fill = root.querySelector('.rpf-prog-fill'); if (fill) fill.style.width = pct + '%';
+
+        /* Donut */
+        var circ = 2 * Math.PI * 34; /* r=34 */
+        var ring = root.querySelector('.rpf-donut-ring');
+        if (ring) { ring.style.strokeDasharray = circ; ring.style.strokeDashoffset = circ * (1 - enabled / (total || 1)); }
+        setText('.rpf-donut-num', enabled);
+        setText('.rpf-legend-enabled', enabled);
+        setText('.rpf-legend-disabled', disabled);
+        setText('.rpf-legend-partial', partial);
+
+        /* Access level pill */
+        var pill = root.querySelector('.rpf-access-pill');
+        if (pill) {
+            var lvl = pct >= 70 ? { t: 'High', c: '#c0392b', b: '#fde8e8' } : (pct >= 35 ? { t: 'Medium', c: '#e67e22', b: '#fff3e0' } : { t: 'Low', c: '#27ae60', b: '#e8f8f0' });
+            pill.textContent = lvl.t; pill.style.color = lvl.c; pill.style.background = lvl.b;
+        }
+
+        /* Keep master checkbox in sync */
+        if (master) master.checked = (enabled >= total && total > 0);
+    }
+
+    function setText(sel, val) { var el = root.querySelector(sel); if (el) el.textContent = val; }
+}
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.getElementById('roleFormDrawer').classList.contains('open')) closeRoleForm();
 });
 
 /* ── Switchery init ── */
