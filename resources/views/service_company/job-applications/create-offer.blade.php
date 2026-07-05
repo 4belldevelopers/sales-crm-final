@@ -3034,7 +3034,7 @@
                                                 <button type="button" class="co-send-addattach" id="co_send_addattach">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add Attachment
                                                 </button>
-                                                <div class="co-send-hint">Max 10 MB each</div>
+                                                <div class="co-send-hint">Max 2 MB each, up to 3 files</div>
                                             </div>
                                         </div>
                                     </div>
@@ -5522,7 +5522,8 @@
                 $(document).on('click', '#co_send_addattach', function () { $('#co_send_attach_input').trigger('click'); });
                 $(document).on('change', '#co_send_attach_input', function () {
                     Array.prototype.slice.call(this.files || []).forEach(function (f) {
-                        if (f.size > 10 * 1024 * 1024) { Swal.fire('Warning', f.name + ' exceeds 10 MB and was skipped.', 'warning'); return; }
+                        if (coAttachFiles.length >= 3) { Swal.fire('Warning', 'You can attach a maximum of 3 files. ' + f.name + ' was skipped.', 'warning'); return; }
+                        if (f.size > 2 * 1024 * 1024) { Swal.fire('Warning', f.name + ' exceeds 2 MB and was skipped.', 'warning'); return; }
                         coAttachFiles.push(f);
                     });
                     this.value = '';

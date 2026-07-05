@@ -5462,8 +5462,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 		// Sender-supplied files (Step 5 "+ Add Attachment"): store to the public disk so
 		// MailService::downloadAttachment() (which fetches attachments by public URL) can read them.
+		// Capped at 2MB/3 files — separate from any system-generated offer-letter PDF, which can
+		// run larger and isn't part of this user-uploaded set.
 		if ($request->hasFile('attachments')) {
-			$request->validate(['attachments.*' => 'file|max:10240']);
+			$request->validate(['attachments' => 'max:3', 'attachments.*' => 'file|max:2048']);
 			foreach ($request->file('attachments') as $file) {
 				if (!$file->isValid()) continue;
 				$safeName = time().'_'.preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
