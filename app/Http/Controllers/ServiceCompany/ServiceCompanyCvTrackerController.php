@@ -5945,7 +5945,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					   //    $path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
 					    Storage::disk('public')->put($filename, $pdf->output());
                         //    $path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
-                        $path = asset('storage/' . $filename);
+                        // Built from the actual incoming request's host (not asset()/APP_URL) — the
+                        // deployed .env's APP_URL points at a different, unrelated domain, which made
+                        // the previous asset() call return a link the browser couldn't resolve at all.
+                        $path = $request->getSchemeAndHttpHost() . '/storage/' . $filename;
 					   // dd($path);
 						if($coinnotdeduct){
 								$eventId = 36;
