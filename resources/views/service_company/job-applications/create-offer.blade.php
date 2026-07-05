@@ -586,7 +586,7 @@
         /* MAIN CARD wrapping the whole composer */
         .co-send-card { background: #fff; border: 1px solid #eef1f7; border-radius: 16px; box-shadow: 0 1px 3px rgba(24,28,50,.05); padding: 20px 22px; }
         /* SUB CARD: candidate hero — matches the "Krishna Murthy" reference */
-        .co-send-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #f6f8fe; border: 1px solid #eaeefb; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
+        .co-send-hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: #fff; border: 1px solid #eaeefb; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; }
         .co-send-hero-lead { display: flex; align-items: center; gap: 15px; flex: 1 1 260px; min-width: 240px; }
         .co-send-hero-avatar { width: 62px; height: 62px; border-radius: 50%; background: #e5eaff; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
         .co-send-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -595,11 +595,14 @@
         .co-send-hero-meta { font-size: 11px; color: #7e8299; margin-top: 7px; display: flex; gap: 8px; flex-wrap: wrap; }
         .co-send-hero-meta span { display: inline-flex; align-items: center; gap: 5px; background: #eef1f7; border-radius: 6px; padding: 3px 9px; }
         .co-send-hero-meta svg { width: 13px; height: 13px; color: #a1a5b7; }
-        .co-send-hero-facts { display: flex; gap: 36px; flex-wrap: wrap; }
+        .co-send-hero-facts { display: flex; gap: 24px; flex-wrap: wrap; row-gap: 12px; }
         .co-send-fact-l { font-size: 10px; color: #a1a5b7; }
         .co-send-fact-v { font-size: 13px; font-weight: 700; color: #181c32; margin-top: 4px; }
         .co-send-fact-v.co-send-fact-ctc { color: #0f9463; }
         .co-send-fact-v.co-send-fact-expiry { color: #d9214e; }
+        .co-send-fact-v.co-send-fact-sent { color: #0f9463; }
+        .co-send-fact-v.co-send-fact-notsent { color: #a1a5b7; }
+        .co-send-fact-v.co-send-fact-sentby { font-size: 11px; font-weight: 600; color: #5e6278; white-space: normal; max-width: 190px; min-height: 1em; }
         .co-send-hero-status { border-radius: 12px; padding: 10px 18px; text-align: center; min-width: 160px; }
         .co-send-hero-status--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
         .co-send-hero-status--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
@@ -2897,6 +2900,13 @@
                                     $so_valid_days = 15;
                                     $so_created = @$section_change_value->created_at ?: now();
                                     $so_valid_until = date('d M Y', strtotime($so_created.' +'.$so_valid_days.' days'));
+                                    // Offer Status / Sent By — send_accept_date_time is set by fwd_offer_send() the
+                                    // moment the candidate email actually goes out (mtypeId==1); co_send_timeline
+                                    // carries who sent it (event_by_user_id joined to users), blank if never sent.
+                                    $so_sent_date = @$section_change_value->send_accept_date_time;
+                                    $so_sent = !empty($so_sent_date);
+                                    $so_sent_by_name = trim((string) (@$co_send_timeline->sent_by_name ?? ''));
+                                    $so_sent_by_line = ($so_sent && $so_sent_by_name) ? ($so_sent_by_name.' on '.date('d M Y, h:i A', strtotime($so_sent_date)).' IST') : '';
                                     $so_subject = 'Offer Letter | '.($so_role ?: 'Position').($so_company ? ' | '.$so_company : '');
                                     $so_ctc_line = trim($so_curr.' '.($so_ctc ? number_format((float) $so_ctc) : ''));
                                     $so_default_body = '<p>Dear '.e(ucwords($so_name)).',</p>'
@@ -2918,7 +2928,6 @@
                                                 <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
                                                 @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
                                                 <div class="co-send-hero-meta">
-                                                    @if(!empty($so_exp))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Exp: {{ $so_exp }} Years</span>@endif
                                                     @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>
                                                     @elseif(!empty($so_email))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>{{ $so_email }}</span>@endif
                                                 </div>
@@ -2929,6 +2938,8 @@
                                             @if(!empty($so_ctc))<div class="co-send-fact"><div class="co-send-fact-l">Offered CTC</div><div class="co-send-fact-v co-send-fact-ctc">{{ $so_ctc_line }}</div></div>@endif
                                             @if(!empty($so_join_fmt))<div class="co-send-fact"><div class="co-send-fact-l">Joining Date</div><div class="co-send-fact-v">{{ $so_join_fmt }}</div></div>@endif
                                             @if(!empty($so_valid_until))<div class="co-send-fact"><div class="co-send-fact-l">Offer Valid Until</div><div class="co-send-fact-v co-send-fact-expiry">{{ $so_valid_until }}</div></div>@endif
+                                            <div class="co-send-fact"><div class="co-send-fact-l">Offer Status</div><div class="co-send-fact-v {{ $so_sent ? 'co-send-fact-sent' : 'co-send-fact-notsent' }}">{{ $so_sent ? 'Sent' : 'Not Sent' }}</div></div>
+                                            <div class="co-send-fact"><div class="co-send-fact-l">Sent By</div><div class="co-send-fact-v co-send-fact-sentby">{{ $so_sent_by_line }}</div></div>
                                         </div>
                                         @if($so_mgmt === 2 || $so_mgmt === 1)
                                         <div class="co-send-hero-status co-send-hero-status--{{ $so_mgmt === 2 ? 'approved' : 'pending' }}">
