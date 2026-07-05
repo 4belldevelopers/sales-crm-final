@@ -458,27 +458,35 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-main { flex: 1 1 auto; min-width: 0; }
 .rpf-aside { flex: 0 0 236px; display: flex; flex-direction: column; gap: 12px; }
 
-/* Section + module rows */
-.rpf-sec { margin-bottom: 14px; }
-.rpf-sec-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 700; color: #8b93b8; text-transform: uppercase; letter-spacing: .4px; margin: 0 0 8px; }
-.rpf-sec-head svg { width: 13px; height: 13px; color: #5e72e4; }
-.rpf-sec-head .rpf-sec-count { margin-left: auto; background: #eef0fb; color: #5e72e4; font-size: 9.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; letter-spacing: 0; }
+/* ══ Fixed-column permission table: Permission Groups | Add | Edit | View ══ */
+.rpf-ptable { border: 1px solid #eaf0fb; border-radius: 10px; background: #fff; overflow: hidden; }
 
-.rpf-mod { background: #fff; border: 1px solid #eaf0fb; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
-.rpf-mod-head { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; }
-.rpf-mod-head:hover { background: #fafbff; }
-.rpf-mod-caret { width: 14px; height: 14px; color: #b0bbd8; transition: transform .2s; flex-shrink: 0; }
-.rpf-mod.open .rpf-mod-caret { transform: rotate(90deg); }
-.rpf-mod-name { font-size: 12px; font-weight: 600; color: #1e2640; }
-.rpf-mod-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.rpf-mod-badge { font-size: 9.5px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #f1f3f8; color: #8b93b8; }
-.rpf-mod-badge.full { background: #e8f8f0; color: #27ae60; }
-.rpf-mod-badge.partial { background: #fff3e0; color: #f39c12; }
-.rpf-mod-badge.none { background: #fdeeee; color: #c0392b; }
-.rpf-mod-body { display: none; padding: 4px 14px 13px 38px; flex-wrap: wrap; gap: 8px; border-top: 1px solid #f5f6fa; }
-.rpf-mod.open .rpf-mod-body { display: flex; }
+.rpf-ptable-head, .rpf-row { display: grid; grid-template-columns: 1fr 88px 88px 88px; align-items: center; }
 
-/* Checkbox chip */
+.rpf-ptable-head { position: sticky; top: 0; z-index: 3; background: #f8f9fc; border-bottom: 1px solid #eaf0fb; }
+.rpf-th { padding: 10px 14px; font-size: 10.5px; font-weight: 700; color: #8b93b8; text-transform: uppercase; letter-spacing: .3px; }
+.rpf-th-action { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.rpf-th-action svg { width: 14px; height: 14px; color: #5e72e4; }
+
+.rpf-sec-group { border-bottom: 1px solid #eaf0fb; }
+.rpf-sec-group:last-child { border-bottom: none; }
+.rpf-sec-line { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; background: #fafbff; }
+.rpf-sec-line:hover { background: #f5f6fd; }
+.rpf-sec-icon { width: 30px; height: 30px; border-radius: 8px; background: #eef0fb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rpf-sec-icon svg { width: 15px; height: 15px; color: #5e72e4; }
+.rpf-sec-names { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rpf-sec-title { font-size: 12px; font-weight: 700; color: #1e2640; }
+.rpf-sec-subtitle { font-size: 10.5px; color: #8b93b8; }
+.rpf-sec-count { background: #eef0fb; color: #5e72e4; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+.rpf-sec-caret { width: 14px; height: 14px; color: #b0bbd8; transition: transform .2s; flex-shrink: 0; }
+.rpf-sec-group.collapsed .rpf-sec-caret { transform: rotate(-90deg); }
+.rpf-sec-group.collapsed .rpf-sec-rows { display: none; }
+
+.rpf-row { padding: 9px 14px; border-top: 1px solid #f5f6fa; }
+.rpf-row-label { font-size: 11.5px; color: #5a6080; font-weight: 500; padding-left: 38px; }
+.rpf-row-cell { display: flex; align-items: center; justify-content: center; }
+
+/* Checkbox */
 .rpf-chk { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
 .rpf-chk input { position: absolute; opacity: 0; width: 0; height: 0; }
 .rpf-chk-box { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid #cdd4e8; background: #fff; flex-shrink: 0; transition: all .15s; background-repeat: no-repeat; background-position: center; background-size: 11px; }
@@ -486,7 +494,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-chk input:disabled + .rpf-chk-box { background-color: #eef0f5; border-color: #e0e4ee; cursor: not-allowed; }
 .rpf-chk input:disabled ~ .rpf-chk-lbl { color: #b8bfd2; }
 .rpf-chk-lbl { font-size: 11.5px; color: #5a6080; font-weight: 500; }
-.rpf-chk-min { min-width: 74px; }
+.rpf-chk-center { margin: 0; }
 
 /* Radio chip */
 .rpf-radio { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; }
@@ -564,6 +572,8 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     .rp-cards-grid { grid-template-columns: repeat(2, 1fr); }
     .rp-page { padding: 14px 18px 20px; }
     .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 16px; padding-right: 16px; }
+    .rpf-ptable-head, .rpf-row { grid-template-columns: 1fr 64px 64px 64px; }
+    .rpf-row-label { padding-left: 24px; }
 }
 
 /* ── Mobile ── */
@@ -583,6 +593,10 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 14px; padding-right: 14px; }
     .rpf-footer-inner { flex-wrap: wrap; }
     .rpf-toolbar { gap: 6px; }
+    .rpf-ptable-head, .rpf-row { grid-template-columns: 1fr 48px 48px 48px; }
+    .rpf-th-action { font-size: 9px; }
+    .rpf-row-label { padding-left: 16px; font-size: 11px; }
+    .rpf-sec-subtitle { display: none; }
 }
 
 @media (max-width: 420px) {
@@ -1516,19 +1530,14 @@ function initRoleFormDrawer() {
     var root = document.getElementById('roleFormBody');
     if (!root) return;
 
-    /* ── Collapse / expand a module row ── */
-    root.querySelectorAll('.rpf-mod-head').forEach(function (h) {
-        h.addEventListener('click', function () { h.closest('.rpf-mod').classList.toggle('open'); });
-    });
-
-    /* ── Collapse All / Expand All ── */
+    /* ── Collapse All / Expand All (per-section collapse is wired inline via onclick in the blade) ── */
     var collapseBtn = root.querySelector('[data-rpf="collapse"]');
     if (collapseBtn) {
         collapseBtn.addEventListener('click', function () {
-            var mods = root.querySelectorAll('.rpf-mod');
-            var anyOpen = root.querySelector('.rpf-mod.open');
-            mods.forEach(function (m) { m.classList.toggle('open', !anyOpen); });
-            collapseBtn.querySelector('.rpf-collapse-lbl').textContent = anyOpen ? 'Expand All' : 'Collapse All';
+            var secs = root.querySelectorAll('.rpf-sec-group');
+            var anyExpanded = root.querySelector('.rpf-sec-group:not(.collapsed)');
+            secs.forEach(function (s) { s.classList.toggle('collapsed', !!anyExpanded); });
+            collapseBtn.querySelector('.rpf-collapse-lbl').textContent = anyExpanded ? 'Expand All' : 'Collapse All';
         });
     }
 
@@ -1558,15 +1567,16 @@ function initRoleFormDrawer() {
     if (search) {
         search.addEventListener('input', function () {
             var q = search.value.toLowerCase().trim();
-            root.querySelectorAll('.rpf-sec').forEach(function (sec) {
+            root.querySelectorAll('.rpf-sec-group').forEach(function (sec) {
                 var secVisible = false;
-                sec.querySelectorAll('.rpf-mod').forEach(function (m) {
-                    var name = (m.getAttribute('data-mod-name') || '').toLowerCase();
+                sec.querySelectorAll('.rpf-row').forEach(function (row) {
+                    var name = (row.getAttribute('data-mod-name') || '').toLowerCase();
                     var hit = !q || name.indexOf(q) !== -1;
-                    m.style.display = hit ? '' : 'none';
-                    if (hit) { secVisible = true; if (q) m.classList.add('open'); }
+                    row.style.display = hit ? '' : 'none';
+                    if (hit) secVisible = true;
                 });
                 sec.style.display = secVisible ? '' : 'none';
+                if (q) sec.classList.remove('collapsed');
             });
         });
     }
@@ -1627,20 +1637,13 @@ function initRoleFormDrawer() {
         var disabled = total - enabled;
         var pct = total ? Math.round((enabled / total) * 100) : 0;
 
-        /* Partial = module groups with some-but-not-all actions checked */
+        /* Partial = permission-group rows with some-but-not-all of Add/Edit/View checked */
         var partial = 0;
-        root.querySelectorAll('.rpf-mod').forEach(function (m) {
-            var boxes = m.querySelectorAll('input.rpf-perm-check');
+        root.querySelectorAll('.rpf-row').forEach(function (row) {
+            var boxes = row.querySelectorAll('input.rpf-perm-check');
             if (!boxes.length) return;
             var on = 0; boxes.forEach(function (b) { if (b.checked) on++; });
             if (on > 0 && on < boxes.length) partial++;
-            var badge = m.querySelector('.rpf-mod-badge');
-            if (badge) {
-                badge.classList.remove('full', 'partial', 'none');
-                if (on === 0) { badge.classList.add('none'); badge.textContent = 'None'; }
-                else if (on === boxes.length) { badge.classList.add('full'); badge.textContent = 'Full'; }
-                else { badge.classList.add('partial'); badge.textContent = on + '/' + boxes.length; }
-            }
         });
 
         /* Progress bar + fraction */
