@@ -2957,6 +2957,7 @@
                                         <input type="hidden" id="co_send_offerid" value="{{ $offer_id }}">
                                         <input type="hidden" id="co_send_appid" value="{{ @$application->id }}">
                                         <input type="hidden" id="co_send_fromemail" value="{{ $so_from_email }}">
+                                        <input type="hidden" id="co_send_candidateemail" value="{{ $so_email }}">
 
                                         <div class="co-send-row">
                                             <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
@@ -2992,6 +2993,19 @@
                                             <div class="co-send-field co-send-sigrow">
                                                 <label class="co-send-switch"><input type="checkbox" id="co_send_signature" checked><span class="co-send-slider"></span></label>
                                                 <span class="co-send-sigtext">Include email signature in this message</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="co-send-row">
+                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> Template</label>
+                                            <div class="co-send-field">
+                                                <select class="co-send-input" id="co_send_template">
+                                                    <option value="">Select Email Template…</option>
+                                                    @foreach($co_send_templates ?? [] as $co_tpl)
+                                                        <option value="{{ $co_tpl->id }}">{{ $co_tpl->display_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="co-send-hint">Choosing a template replaces the Subject and Body below</div>
                                             </div>
                                         </div>
 
@@ -5443,6 +5457,43 @@
                         coAddChip(target, email);
                     }
                     coSyncDrawerAddedState();
+                });
+
+                // ── Template select (reuses the existing email_template endpoint/behavior from the
+                //    original composer — fills Subject + Body, doesn't touch anything else) ──
+                $(document).on('change', '#co_send_template', function () {
+                    var template = $(this).val();
+                    if (!template) return;
+                    // mailtype 7 = candidate offer email (same code path offerSendMail() used for
+                    // mtype==1) — it's what fills COMPANY_NAME/CANDIDATE_NAME/JOB_TITLE/OFFER_LETTER_LINK
+                    // placeholders in the template using the real offer/candidate data server-side.
+                    $.ajax({
+                        type: 'POST',
+                        url: "{{ route('service_company.cvtracker.email_template') }}",
+                        data: {
+                            '_token': "{{ csrf_token() }}",
+                            'template': template,
+                            'selectedApplicantListing': [$('#co_send_appid').val()],
+                            'offerId': $('#co_send_offerid').val(),
+                            'mailtype': 7,
+                            'to_email': $('#co_send_candidateemail').val(),
+                            'from_email': JSON.stringify([{ value: $('#co_send_fromemail').val() }])
+                        },
+                        success: function (response) {
+                            if (!response) return;
+                            if (response.subject) { $('#co_send_subject').val(response.subject); }
+                            if (response.template_description) {
+                                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) {
+                                    CKEDITOR.instances.co_send_editor.setData(response.template_description);
+                                } else {
+                                    $('#co_send_editor').val(response.template_description);
+                                }
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'Could not load the selected template. Please try again.', 'error');
+                        }
+                    });
                 });
 
                 // ── Attachments ("+ Add Attachment" — real files, actually sent with the email) ──
