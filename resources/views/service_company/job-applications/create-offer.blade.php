@@ -3140,7 +3140,9 @@
                     event.preventDefault(); // Prevent form submission
                     if (currentStep == 2) {
                         var id = "{{ $offer_id }}";
-                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id') }}";
+                        // Relative URL — see the note on the Send Offer Letter AJAX call further down
+                        // for why route()'s default absolute URL is unsafe here.
+                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id', false) }}";
                         url = url.replace(':id', id);
                         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                         var token = "{{ csrf_token() }}";
@@ -5453,7 +5455,7 @@
                     // placeholders in the template using the real offer/candidate data server-side.
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.email_template') }}",
+                        url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
                         data: {
                             '_token': "{{ csrf_token() }}",
                             'template': template,
@@ -5546,7 +5548,11 @@
                     $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.fwd_offer_send', 1) }}",
+                        {{-- Relative URL, not route()'s default absolute one — the deployed .env's
+                             APP_URL points at a different, unrelated domain (hire.jero.works), so an
+                             absolute URL here silently made this a cross-origin POST that never actually
+                             reached this server. Same root cause as the Download Offer Letter bug. --}}
+                        url: "{{ route('service_company.cvtracker.fwd_offer_send', [], false) }}",
                         data: formData,
                         processData: false,
                         contentType: false,
