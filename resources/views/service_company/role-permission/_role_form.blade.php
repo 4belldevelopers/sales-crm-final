@@ -35,12 +35,12 @@
         'CRM / Sales' => [
             'icon'     => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
             'subtitle' => 'Lead & Client Management',
-            'groups'   => ['Clients', 'Team'],
+            'groups'   => ['Clients'],
         ],
         'Recruitment' => [
             'icon'     => '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
             'subtitle' => 'Jobs & Candidate Management',
-            'groups'   => ['Jobs', 'Job Applications', 'Requisition', 'Schedule', 'Offer', 'Joining', 'Team On Requisition'],
+            'groups'   => ['Jobs', 'Job Applications', 'Requisition', 'Schedule', 'Offer', 'Joining', 'Team On Requisition', 'Salary', 'Salary Break'],
         ],
         'Agencies' => [
             'icon'     => '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-3"/>',
@@ -55,7 +55,7 @@
         'Administrator' => [
             'icon'     => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
             'subtitle' => 'System & Security Management',
-            'groups'   => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Subscription', 'Salary', 'Salary Break'],
+            'groups'   => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Subscription', 'Team'],
         ],
         'Reports' => [
             'icon'     => '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
