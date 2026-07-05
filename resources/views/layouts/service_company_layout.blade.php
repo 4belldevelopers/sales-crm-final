@@ -1686,7 +1686,7 @@ $(document).on("click", "#shareBenchCandidateBtn", function () {
                     data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr,'mtype':mtype,'offerId':offerId},
                     cache		: false,
                     success 	: function (response) {
-                                        if (response.status == "success") {
+                                        if (response && response.status == "success") {
                                           const link = document.createElement('a');
                                           link.href = response.url; // URL to the PDF file
                                           link.download = ''; // Specify the filename for the download, or leave it empty to use the default file name
@@ -1694,11 +1694,16 @@ $(document).on("click", "#shareBenchCandidateBtn", function () {
                                           document.body.appendChild(link);
                                           link.click(); // Trigger the download
                                           document.body.removeChild(link); // Clean up
-                                        }else if(response.status == "error"){
-                                          Swal.fire("Warning",'Offer Letter not ready' , "warning");	
+                                        } else {
+                                          // Backend returns 'errors' (not 'error') on coin/package failures — catch
+                                          // any non-success status here instead of silently doing nothing.
+                                          Swal.fire("Warning", (response && response.message) ? response.message : 'Offer Letter not ready', "warning");
                                         }
+                            },
+                    error       : function () {
+                                        Swal.fire("Error", "Could not download the offer letter. Please try again.", "error");
                             }
-              });                       
+              });
       });
       
 
