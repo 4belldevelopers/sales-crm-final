@@ -158,14 +158,25 @@
             text-align: center;
         }
 
-        .signature-image {
-            width: 200px; /* Adjust the width of the signature image */
-            height: auto;
+        /* Wrapper spans the full signature column and is anchored just above the line;
+           text-align:center centers the signature regardless of its width. Keeping the
+           wrapper (not the image) absolutely positioned means the line/label never shift. */
+        .signature-image-wrap {
             position: absolute;
-            top: -55px;
-            left: 20%;
-            /* display: block;
-            margin: 0 auto; */
+            top: -58px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+        }
+        /* Constrain by BOTH dimensions (like the logo) so any signature — a tall scan or a
+           wide squiggle — fits the slot above the line instead of overflowing. */
+        .signature-image {
+            max-width: 180px;
+            max-height: 55px;
+            width: auto;
+            height: auto;
+            display: inline;
         }
 
         .signature-line {
@@ -194,6 +205,20 @@ $path = str_replace('index.php', '', url('storage/app/public/signatures/' . $fil
 $signaturePath = !empty($exits_offer->signature_candidate)
     ? storage_path('app/public/signatures/' . $exits_offer->signature_candidate)
     : null;
+
+// Embed the candidate signature as a base64 data URI — same proven approach the logo
+// above uses. This avoids dompdf's fragile file:// path handling (which silently fails
+// on some hosts / path formats) and works identically everywhere the file is readable.
+$signatureBase64 = null;
+if (!empty($signaturePath) && is_file($signaturePath)) {
+    $sigData = @file_get_contents($signaturePath);
+    if ($sigData !== false) {
+        $sigFinfo = @finfo_open(FILEINFO_MIME_TYPE);
+        $sigMime  = $sigFinfo ? @finfo_buffer($sigFinfo, $sigData) : 'image/png';
+        if ($sigFinfo) { finfo_close($sigFinfo); }
+        $signatureBase64 = 'data:' . ($sigMime ?: 'image/png') . ';base64,' . base64_encode($sigData);
+    }
+}
 $pathauthor = str_replace('index.php', '', url('storage/app/public/signatures/' . $filenameauthor . ''));
 $joined_date = date("d M Y", strtotime($exits_offer->joined_date));
 
@@ -263,9 +288,10 @@ if ($imageData && $httpCode === 200) {
 
     <div class="signature-section">
         <div class="signature-block">
-            @if(!empty($exits_offer->signature_candidate))
-            <!--<img src="{{ $path }}" alt="Signature" class="signature-image">-->
-            <img src="file://{{ $signaturePath }}" class="signature-image">
+            @if(!empty($signatureBase64))
+            <div class="signature-image-wrap">
+                <img src="{{ $signatureBase64 }}" class="signature-image">
+            </div>
             @endif
             <hr class="signature-line">
             <h4>Candidate Signature</h4>
