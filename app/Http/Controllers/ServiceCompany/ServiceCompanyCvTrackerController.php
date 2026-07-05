@@ -1012,6 +1012,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
+		// Joining Tracker tab filter (status_cus=6). Mapped to the same real Elasticsearch
+		// fields the joining counts aggregation uses (of_joined / of_joined_date /
+		// of_offer_acceptance) so the paginated rows always match the tab badge counts.
+		// Applied to the paginated hits ONLY; the badge/KPI aggregation runs on the base
+		// query below so every tab total stays visible regardless of the active tab.
+		$joining_tab_filter = request('joining_tab_filter');
+		$joiningTabFilterClause = null;
+		if ($status_cus == 6 && !empty($joining_tab_filter) && $joining_tab_filter !== 'all') {
+			switch ($joining_tab_filter) {
+				case 'joining_today': $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]; break;
+				case 'this_week':     $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]; break;
+				case 'delayed':       $joiningTabFilterClause = ['bool'  => ['must' => [['range' => ['of_joined_date' => ['lt' => 'now/d']]], ['term' => ['of_joined' => 0]]]]]; break;
+				case 'no_show':       $joiningTabFilterClause = ['term'  => ['of_offer_acceptance' => 3]]; break;
+				case 'pending_docs':  $joiningTabFilterClause = ['term'  => ['of_offer_acceptance' => 1]]; break;
+			}
+		}
+
 		// Activity filter
 		if (!empty($app_int_activity)) {
 			$activityFilter = $this->getActivityFilter(
@@ -1054,6 +1071,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$offerCountsBase = $boolQuery;
 		if ($offerTabFilterClause) {
 			$boolQuery['bool']['filter'][] = $offerTabFilterClause;
+		}
+		if ($joiningTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $joiningTabFilterClause;
 		}
 
 		// Build the final query
@@ -1161,12 +1181,53 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			];
 		}
 
+		// Joining Tracker KPI + tab counts — one size:0 aggregation over the base query
+		// (all joining-stage candidates for the current search/location, ignoring the active
+		// tab) so every card/tab number matches THIS result set. Uses only real ES fields
+		// (of_joined / of_joined_date / of_offer_acceptance) — see the tab-filter switch above
+		// for the matching clauses, keeping badges and paginated rows in agreement.
+		$joiningCounts = null;
+		if ($status_cus == 6 && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$jResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'joined'       => ['filter' => ['term'  => ['of_joined' => 1]]],
+						'today'        => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+						'this_week'    => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+						'delayed'      => ['filter' => ['bool'  => ['must' => [['range' => ['of_joined_date' => ['lt' => 'now/d']]], ['term' => ['of_joined' => 0]]]]]],
+						'no_show'      => ['filter' => ['term'  => ['of_offer_acceptance' => 3]]],
+						'pending_docs' => ['filter' => ['term'  => ['of_offer_acceptance' => 1]]],
+						'onboarded'    => ['filter' => ['bool'  => ['must' => [['term' => ['of_joined' => 1]], ['term' => ['of_offer_acceptance' => 2]]]]]],
+						'backed_out'   => ['filter' => ['bool'  => ['must' => [['term' => ['of_offer_acceptance' => 2]], ['term' => ['of_joined' => 0]], ['range' => ['of_joined_date' => ['lt' => 'now/d']]]]]]],
+					],
+				],
+			]);
+			$ja = $jResp['aggregations'] ?? [];
+			$joiningCounts = [
+				'total'        => (int) ($jResp['hits']['total']['value'] ?? 0),
+				'today'        => (int) ($ja['today']['doc_count'] ?? 0),
+				'joined'       => (int) ($ja['joined']['doc_count'] ?? 0),
+				'backed_out'   => (int) ($ja['backed_out']['doc_count'] ?? 0),
+				'onboarded'    => (int) ($ja['onboarded']['doc_count'] ?? 0),
+				'this_week'    => (int) ($ja['this_week']['doc_count'] ?? 0),
+				'delayed'      => (int) ($ja['delayed']['doc_count'] ?? 0),
+				'no_show'      => (int) ($ja['no_show']['doc_count'] ?? 0),
+				'pending_docs' => (int) ($ja['pending_docs']['doc_count'] ?? 0),
+			];
+		}
+
 		$responseData = [
 			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			'counts' => $offerCounts,
 			'pipelineCounts' => $offerPipelineCounts,
+			'joiningCounts' => $joiningCounts,
 		];
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CV_TRACKER_TIME));
