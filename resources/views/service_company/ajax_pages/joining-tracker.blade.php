@@ -198,12 +198,6 @@
                 <span class="jt-comp-type">{{ $employment_type }}</span>
             </td>
 
-            {{-- Joining Status (derived display) --}}
-            <td class="jt-td">
-                <span class="jt-status-pill" style="background:{{ $stBg }};color:{{ $stClr }}">{{ $stLabel }}</span>
-                <span class="jt-status-sub">{{ $stSub }}</span>
-            </td>
-
             {{-- Joining Date --}}
             <td class="jt-td">
                 @if($hasDate)
@@ -238,7 +232,7 @@
     @endforeach
 @else
     <tr class="jt-empty">
-        <td colspan="8">
+        <td colspan="7">
             <div class="jt-empty-inner">
                 <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 <p>No joining records found</p>
