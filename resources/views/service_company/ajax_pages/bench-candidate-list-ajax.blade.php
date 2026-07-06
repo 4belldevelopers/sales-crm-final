@@ -143,18 +143,26 @@
                 </div>
             </td>
 
-            {{-- Location --}}
+            {{-- Location: City & Country (1) · Work preference (2) · Education (3) --}}
             <td>
                 @php
                     $row_city_name = @$row->city_name;
-                    $row_state_name = @$row->state_name;
                     $row_country_name = @$row->country_name;
+                    $cityCountry = trim(ucwords($row_city_name) . ($row_country_name ? ', ' . strtoupper(mb_substr($row_country_name, 0, 3)) : ''), ', ');
+                    if ($cityCountry === '') { $cityCountry = '—'; }
+
+                    $wm = strtolower((string) @$row->wm);
+                    $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Onsite'];
+                    $wmClassMap = ['remote' => 'text-success', 'hybrid' => 'text-primary', 'office' => 'text-warning'];
+                    $wmLabel = $wmMap[$wm] ?? '—';
+                    $wmClass = $wmClassMap[$wm] ?? 'text-muted';
                 @endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6"
-                        data-toggle="tooltip" title="{{ ucwords($row_city_name) }}">{{ ucwords(mb_substr($row_city_name, 0, 12)) }}</a>
+                        data-toggle="tooltip" title="{{ ucwords($row_city_name) }} {{ strtoupper($row_country_name) }}">{{ mb_substr($cityCountry, 0, 16) }}</a>
+                    <span class="fw-bold d-block fs-7 {{ $wmClass }}">{{ $wmLabel }}</span>
                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip"
-                        title="{{ ucwords($row_state_name) }} | {{ strtoupper($row_country_name) }}">{{ ucfirst(mb_substr($row_state_name, 0, 6)) }} | {{ strtoupper(mb_substr($row_country_name, 0, 2)) }}</span>
+                        title="{{ @$row->qualification_name }}" style="text-transform:uppercase;">{{ mb_substr(@$row->qualification_name, 0, 12) }}</span>
                 </div>
             </td>
 
@@ -169,11 +177,13 @@
                     $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency];
                     $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode];
                     $outsourcing_type = $row->outsourcing_type == 2 ? 'Contract' : 'Full-time';
+                    $serviceType = @$row->comission_type == 2 ? 'Paid' : (@$row->comission_type == 1 ? 'Free' : '—');
+                    $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
                 @endphp
                 <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">{!! $bill_rate_currency !!}{{ $billFormatViewSalary->amount }}/{{ mb_substr($bill_rate_mode, 0, 1) }}</a>
-                    <span class="text-muted fw-bold d-block fs-7">{!! $pay_rate_currency !!}{{ $payFormatViewSalary->amount }}/{{ mb_substr($pay_rate_mode, 0, 1) }}</span>
-                    <span class="badge badge-light my-0">{{ $outsourcing_type }}</span>
+                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">{!! $bill_rate_currency !!}{{ $billFormatViewSalary->amount }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</a>
+                    <span class="text-muted fw-bold d-block fs-7"><i class="fa fa-briefcase" style="font-size:9px !important;"></i> {{ $outsourcing_type }}</span>
+                    <span class="fw-bold d-block fs-7 {{ $serviceClass }}"><i class="fa fa-circle-check" style="font-size:9px !important;"></i> {{ $serviceType }}</span>
                 </div>
             </td>
 
@@ -182,11 +192,19 @@
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
                     $subS = ($result->name) ?? '';
+                    // 3rd row: how long the talent has been on bench (only while status = Bench).
+                    $benchDays = '';
+                    if ($row->status == 2 && !empty($row->created_at)) {
+                        $benchDays = Carbon::parse($row->created_at)->diffInDays(Carbon::now()) . ' Days on bench';
+                    }
                 @endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
                         class="fw-bold fs-6 stage_sub_stage {{ $row->css_style }}" data-toggle="modal" data-target="#stage_sub_stage">{{ $row->master_status_name }}</a>
                     <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $subS }}">{{ $subS }}</span>
+                    @if ($benchDays !== '')
+                        <span class="fw-bolder d-block fs-7 text-warning">{{ $benchDays }}</span>
+                    @endif
                 </div>
             </td>
 
@@ -206,13 +224,14 @@
                         ->where('bench_assign.company_id', $company_id)
                         ->where('users.company_id', $company_id)
                         ->orderBy('users.name', 'ASC')->take(1)->first();
-                    $managerName = @$hmData->name ? ucwords($hmData->name) : '—';
+                    $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
                     $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                 @endphp
-                <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="d-flex flex-column hmb-listing text-hover-primary">
-                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="View managers">{{ mb_substr($managerName, 0, 14) }}{{ $extra }}</span>
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ $managerName }}">{{ mb_substr($managerName, 0, 14) }}{{ $extra }}</span>
                     <span class="text-muted fw-bold d-block fs-7">Relationship Mgr</span>
-                </a>
+                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing mt-1"><i class="fa fa-pen"></i> Change</a>
+                </div>
             </td>
 
             {{-- Hiring Pipeline Activity (mini stage grid) --}}
