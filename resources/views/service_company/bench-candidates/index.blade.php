@@ -151,7 +151,7 @@
         .bstatus-overlay { background-color: #eef0f4; z-index: 999998; }
         #bstatus_drawer { z-index: 999999; overflow: hidden; }
         .bstatus-overlay.show { display: block; }
-        #bstatus_drawer.show { display: flex; }
+        #bstatus_drawer.show { display: flex; flex-direction: column; }
         /* On collapsed viewports the sidebar becomes an off-canvas menu (not occupying layout width) */
         @media only screen and (max-width: 991px) {
             .bstatus-overlay, #bstatus_drawer { left: 0 !important; }
@@ -457,7 +457,7 @@
     {{-- Own flat-grey overlay (no third-party drawer plugin) so no page content shows through --}}
     <div id="bstatus_overlay" class="bstatus-overlay"></div>
     {{-- Plain fixed panel, anchored to the right of the sidebar (#kt_aside) so the sidebar stays visible --}}
-    <div id="bstatus_drawer" class="bstatus-drawer bg-white d-flex flex-column">
+    <div id="bstatus_drawer" class="bstatus-drawer bg-white">
         <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
             <div class="d-flex align-items-center gap-2">
                 <i class="fa fa-user-plus text-primary"></i>
@@ -649,7 +649,14 @@
             $.ajax({
                 type: 'GET', url: url,
                 success: function(response) {
-                    if (response.status == "success") { $('#stage_body_content').html(response.view); }
+                    if (response && response.status == "success") {
+                        $('#stage_body_content').html(response.view);
+                    } else {
+                        $('#stage_body_content').html('<div class="text-center py-20 text-danger">Could not load talent status. Please close and try again.</div>');
+                    }
+                },
+                error: function() {
+                    $('#stage_body_content').html('<div class="text-center py-20 text-danger">Something went wrong loading this talent. Please close and try again.</div>');
                 }
             });
         });
