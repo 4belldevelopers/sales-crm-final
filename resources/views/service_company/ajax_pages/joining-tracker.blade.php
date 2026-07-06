@@ -180,7 +180,7 @@
 
             {{-- Job Status --}}
             <td class="jt-td">
-                <span class="jt-jobstatus {{ $jobStatusClass }}">{{ $jobStatusLabel }}</span>
+                <span class="jt-jobstatus {{ strtolower($jobStatusLabel) === 'closed' ? 'jt-closed' : $jobStatusClass }}">{{ $jobStatusLabel }}</span>
                 <span class="jt-jobstatus-sub">{{ @$row->jobId }} · {{ $recTag }}</span>
             </td>
 

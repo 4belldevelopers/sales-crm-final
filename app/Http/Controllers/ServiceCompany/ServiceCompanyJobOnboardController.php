@@ -61,6 +61,7 @@ class ServiceCompanyJobOnboardController extends ServiceCompanyBaseController
 			'backed_out'   => 0,
 			'onboarded'    => 0,
 			'this_week'    => 0,
+			'this_month'   => 0,
 			'delayed'      => 0,
 			'no_show'      => 0,
 			'pending_docs' => 0,

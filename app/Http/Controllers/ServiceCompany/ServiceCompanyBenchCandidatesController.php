@@ -119,12 +119,81 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'exited'      => $response['aggregations']['exited']['doc_count'] ?? 0,
 		];
 
-		
+
 			$this->companies = DB::table('companies')->select('id','company_name')->where('id', auth()->user()->company_id)->first();
             // dd($this->counts);
 
+		/**
+		 * Bench Loss & Profit analytics (tenant-scoped, drives the redesigned dashboard).
+		 * Why: the redesign shows "Bench Cost (Loss)" and "Gross Profit" cards + charts.
+		 *  - Loss   = annual pay (ctc_yearly) committed to talents currently ON BENCH (status 2).
+		 *  - Profit = billing (ectc_yearly) earned on PLACED talents (status 3)
+		 *             minus the pay (ctc_yearly) of both bench + placed talents.
+		 * NOTE: raw DB::table is NOT auto tenant-scoped, so company_id is filtered explicitly.
+		 */
+		$companyId = auth()->user()->company_id;
+
+		$benchRows = DB::table('job_applications')
+			->select('id', 'ctc_yearly', 'created_at')
+			->where('company_id', $companyId)
+			->where('condidate_type', 'bench_condidate')
+			->where('status', 2)
+			->get();
+
+		$placedRows = DB::table('job_applications')
+			->select('id', 'ctc_yearly', 'ectc_yearly', 'created_at')
+			->where('company_id', $companyId)
+			->where('condidate_type', 'bench_condidate')
+			->where('status', 3)
+			->get();
+
+		$benchCost      = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);   // Loss
+		$placedPay      = (float) $placedRows->sum(fn ($r) => (float) $r->ctc_yearly);
+		$placedBilling  = (float) $placedRows->sum(fn ($r) => (float) $r->ectc_yearly);
+		$grossProfit    = $placedBilling - ($benchCost + $placedPay);                   // Profit
+
+		// Bench Aging buckets (days on bench, derived from created_at).
+		$aging = ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
+		$today = Carbon::today();
+		foreach ($benchRows as $r) {
+			$days = $r->created_at ? Carbon::parse($r->created_at)->diffInDays($today) : 0;
+			if ($days <= 15)      { $aging['b1']++; }
+			elseif ($days <= 30)  { $aging['b2']++; }
+			elseif ($days <= 45)  { $aging['b3']++; }
+			else                  { $aging['b4']++; }
+		}
+
+		// Daily Loss/Profit trend across the current month (cumulative by created_at).
+		$monthStart = Carbon::now()->startOfMonth();
+		$dayCount   = (int) Carbon::now()->format('j');
+		$labels = $lossSeries = $profitSeries = [];
+		for ($d = 1; $d <= $dayCount; $d++) {
+			$cursor = (clone $monthStart)->addDays($d - 1)->endOfDay();
+			$labels[] = $cursor->format('d M');
+
+			$lossToDate = (float) $benchRows
+				->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor))
+				->sum(fn ($r) => (float) $r->ctc_yearly);
+
+			$placedToDate = $placedRows->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor));
+			$profitToDate = (float) $placedToDate->sum(fn ($r) => (float) $r->ectc_yearly)
+				- ($lossToDate + (float) $placedToDate->sum(fn ($r) => (float) $r->ctc_yearly));
+
+			$lossSeries[]   = round($lossToDate, 2);
+			$profitSeries[] = round($profitToDate, 2);
+		}
+
+		$currencyMode = GeneralMethod::getCompanyCurrencyBenchshowMode($companyId);
+		$this->currencyCode = $currencyMode->currency_code ?? 'INR';
+		$this->benchCost    = $benchCost;
+		$this->grossProfit  = $grossProfit;
+		$this->benchAging   = (object) $aging;
+		$this->chartLabels  = $labels;
+		$this->lossSeries   = $lossSeries;
+		$this->profitSeries = $profitSeries;
+
 		return view('service_company.bench-candidates.index', $this->data);
-		
+
 	}
 	public function countDataGetBenchList(){
 

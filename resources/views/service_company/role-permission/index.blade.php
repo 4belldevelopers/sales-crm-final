@@ -58,8 +58,8 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-stat-icon svg { width: 22px; height: 22px; }
 .rp-stat-val { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1; }
-.rp-stat-lbl { font-size: 11px; color: #5a6080; font-weight: 500; margin-top: 2px; }
-.rp-stat-sub { font-size: 10px; font-weight: 500; margin-top: 2px; }
+.rp-stat-lbl { font-size: 12px; color: #5a6080; font-weight: 500; margin-top: 2px; }
+.rp-stat-sub { font-size: 11px; font-weight: 500; margin-top: 2px; }
 
 /* ── Filter row ── */
 .rp-filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -112,7 +112,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-empty-icon svg { width: 22px; height: 22px; }
 .rp-empty-title { font-size: 12px; font-weight: 600; color: #5a6080; }
-.rp-empty-sub { font-size: 11px; color: #b0bbd8; }
+.rp-empty-sub { font-size: 12px; color: #b0bbd8; }
 
 /* ── Grid layout ── */
 .rp-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -134,33 +134,33 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 }
 .rp-card-icon svg { width: 20px; height: 20px; }
 .rp-card-role-name { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1.3; }
-.rp-card-role-type { font-size: 10px; color: #8b93b8; font-weight: 400; margin-top: 1px; }
+.rp-card-role-type { font-size: 12px; color: #8b93b8; font-weight: 400; margin-top: 1px; }
 .rp-card-role-type.custom { color: #5e72e4; }
 
 /* Access badges */
 .access-badge {
-    font-size: 10px; font-weight: 600; padding: 3px 9px;
+    font-size: 12px; font-weight: 600; padding: 3px 10px;
     border-radius: 20px; white-space: nowrap; flex-shrink: 0;
 }
 .badge-high { background: #fde8e8; color: #c0392b; }
 .badge-medium { background: #e3f1ff; color: #1a73e8; }
 .badge-low { background: #e8f8f0; color: #27ae60; }
 
-.rp-card-desc { font-size: 11px; color: #8b93b8; margin-bottom: 10px; line-height: 1.5; }
+.rp-card-desc { font-size: 12px; color: #8b93b8; margin-bottom: 10px; line-height: 1.5; }
 
 .rp-card-counts { display: flex; gap: 20px; margin-bottom: 10px; }
 .rp-count-val { font-size: 12px; font-weight: 700; color: #1e2640; line-height: 1; }
-.rp-count-lbl { font-size: 10px; color: #b0bbd8; font-weight: 400; margin-top: 1px; }
+.rp-count-lbl { font-size: 12px; color: #b0bbd8; font-weight: 400; margin-top: 1px; }
 
-.rp-perm-label { font-size: 10px; color: #b0bbd8; margin-bottom: 5px; font-weight: 500; }
+.rp-perm-label { font-size: 12px; color: #b0bbd8; margin-bottom: 5px; font-weight: 500; }
 .rp-perm-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
 .rp-perm-tag {
-    font-size: 10px; background: #f1f3fb; color: #5a6080;
-    padding: 2px 7px; border-radius: 5px; font-weight: 500;
+    font-size: 12px; background: #f1f3fb; color: #5a6080;
+    padding: 3px 8px; border-radius: 5px; font-weight: 500;
 }
 
 .rp-users-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-.rp-users-label { font-size: 10px; color: #b0bbd8; font-weight: 500; }
+.rp-users-label { font-size: 12px; color: #b0bbd8; font-weight: 500; }
 .rp-avatars-stack { display: flex; }
 .rp-mini-av {
     width: 22px; height: 22px; border-radius: 50%;
@@ -169,7 +169,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     color: #fff; margin-left: -5px; flex-shrink: 0;
 }
 .rp-mini-av:first-child { margin-left: 0; }
-.rp-more-users { font-size: 10px; color: #8b93b8; }
+.rp-more-users { font-size: 12px; color: #8b93b8; }
 
 .rp-card-actions {
     display: flex; align-items: center; justify-content: flex-start;
@@ -212,7 +212,7 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-add-card:hover .rp-add-plus { border-color: #5e72e4; color: #5e72e4; }
 .rp-add-plus svg { width: 16px; height: 16px; }
 .rp-add-title { font-size: 12px; font-weight: 600; color: #5a6080; }
-.rp-add-sub { font-size: 11px; color: #b0bbd8; text-align: center; line-height: 1.5; }
+.rp-add-sub { font-size: 12px; color: #b0bbd8; text-align: center; line-height: 1.5; }
 
 /* ── Hidden tab filter ── */
 .rp-role-card.tab-hidden { display: none; }
@@ -413,6 +413,8 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-badge-active { font-size: 9.5px; font-weight: 600; color: #27ae60; background: #e8f8f0; border-radius: 20px; padding: 2px 9px 2px 7px; display: inline-flex; align-items: center; gap: 4px; }
 .rpf-badge-active::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #27ae60; }
 .rpf-head-sub { font-size: 11px; color: #8b93b8; margin: 2px 0 0; }
+/* Action buttons live in the header (footer removed) */
+.rpf-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .rpf-head-close { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent; color: #8b93b8; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .rpf-head-close:hover { background: #f1f3f8; color: #5a6080; }
 .rpf-head-close svg { width: 16px; height: 16px; }
@@ -428,8 +430,15 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-body { flex: 1; overflow-y: auto; min-height: 0; }
 .rpf-body-inner { padding: 18px 24px 20px; }
 
-/* Summary card */
-.rpf-summary { background: #fff; border: 1px solid #eaf0fb; border-radius: 12px; box-shadow: 0 1px 3px rgba(20,26,46,.05); padding: 16px; margin-bottom: 14px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px 18px; }
+/* Hero / summary card — single row: Role Name | Description | Assigned Users | Access Level | Permissions */
+.rpf-summary { background: #fff; border: 1px solid #eaf0fb; border-radius: 12px; box-shadow: 0 1px 3px rgba(20,26,46,.05); padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 18px; }
+.rpf-sum-col { min-width: 0; }
+.rpf-sum-name  { flex: 1.6 1 160px; }
+.rpf-sum-desc  { flex: 2 1 180px; }
+.rpf-sum-users { flex: 1.1 1 120px; }
+.rpf-sum-access{ flex: 0.9 1 90px; }
+.rpf-sum-perms { flex: 1.5 1 150px; }
+.rpf-sum-col + .rpf-sum-col { border-left: 1px solid #f1f3f8; padding-left: 18px; }
 .rpf-field-label { font-size: 10px; font-weight: 600; color: #8b93b8; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 5px; display: block; }
 .rpf-field-label .req { color: #e74c3c; }
 .rpf-input { width: 100%; border: 1px solid #dde2f0; border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #1e2640; font-family: 'Poppins', sans-serif; background: #f8f9fc; outline: none; transition: border-color .15s, background .15s; }
@@ -592,13 +601,16 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     .rpf-grid { flex-direction: column; }
     .rpf-aside { flex-basis: auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
     .rpf-aside > .rpf-acard { flex: 1 1 240px; }
+    /* Hero row wraps to two lines but stays a "row" layout */
+    .rpf-summary { flex-wrap: wrap; }
+    .rpf-summary .rpf-sum-col + .rpf-sum-col { border-left: none; padding-left: 0; }
 }
 
 /* ── Tablet ── */
 @media (max-width: 992px) {
     .rp-cards-grid { grid-template-columns: repeat(2, 1fr); }
     .rp-page { padding: 14px 18px 20px; }
-    .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 16px; padding-right: 16px; }
+    .rpf-head-inner, .rpf-body-inner { padding-left: 16px; padding-right: 16px; }
     .rpf-ptable-head, .rpf-row { grid-template-columns: 1fr 64px 64px 64px; }
     .rpf-row-label { padding-left: 24px; }
 }
@@ -616,9 +628,11 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
     .rpf-grid { flex-direction: column; }
     .rpf-aside { flex-basis: auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
     .rpf-aside > .rpf-acard { flex: 1 1 200px; }
-    .rpf-summary { grid-template-columns: 1fr; }
-    .rpf-head-inner, .rpf-footer-inner, .rpf-body-inner { padding-left: 14px; padding-right: 14px; }
-    .rpf-footer-inner { flex-wrap: wrap; }
+    .rpf-summary { flex-direction: column; gap: 12px; }
+    .rpf-summary .rpf-sum-col + .rpf-sum-col { border-left: none; padding-left: 0; }
+    .rpf-head-inner, .rpf-body-inner { padding-left: 14px; padding-right: 14px; }
+    .rpf-head-inner { flex-wrap: wrap; }
+    .rpf-head-actions { order: 3; width: 100%; }
     .rpf-toolbar { gap: 6px; }
     .rpf-ptable-head, .rpf-row { grid-template-columns: 1fr 48px 48px 48px; }
     .rpf-th-action { font-size: 9px; }
@@ -992,7 +1006,7 @@ if (!function_exists('rpCardIcon')) {
                         <div class="rp-perm-label">Permission Groups</div>
                         <div class="rp-perm-tags">
                             @foreach($grpShown as $gk)
-                            <span class="rp-perm-tag">{{ ucwords($gk) }}</span>
+                            <span class="rp-perm-tag">{{ \App\Helper\GeneralMethod::roleGroupLabel($gk) }}</span>
                             @endforeach
                             @if($grpExtra > 0)
                             <span class="rp-perm-tag">+{{ $grpExtra }} more</span>
@@ -1014,7 +1028,7 @@ if (!function_exists('rpCardIcon')) {
                             <span class="rp-more-users">+{{ $uCount - 4 }} more</span>
                             @endif
                             @else
-                            <span style="font-size:11px;color:#b0bbd8;">No users assigned</span>
+                            <span style="font-size:12px;color:#b0bbd8;">No users assigned</span>
                             @endif
                         </div>
 
