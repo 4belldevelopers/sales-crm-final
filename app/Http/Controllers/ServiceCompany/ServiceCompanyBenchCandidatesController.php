@@ -569,6 +569,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$data = array_map(function ($hit) {
 				return $hit['_source'];
 			}, $response['hits']['hits']);
+
+			// Enrich rows with work-preference (wm), which is not part of the bench ES index.
+			// Why: the Location column shows Remote/Hybrid/Onsite; keep it live without a reindex.
+			$pageIds = array_filter(array_column($data, 'id'));
+			if (!empty($pageIds)) {
+				$wmMap = DB::table('job_applications')->whereIn('id', $pageIds)->pluck('wm', 'id');
+				foreach ($data as &$row) {
+					$row['wm'] = $wmMap[$row['id'] ?? null] ?? null;
+				}
+				unset($row);
+			}
 		}
 
 		$pagination = [

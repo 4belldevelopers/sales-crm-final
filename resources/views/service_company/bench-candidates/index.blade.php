@@ -125,6 +125,11 @@
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 600; color: #181c32; padding-top: 1px; }
         .bench-dash .pipe-grid a { font-size: 10px !important; }
         .bench-dash .pipe-foot { font-size: 9px !important; color: #7e8299; margin-top: 3px; }
+
+        /* Manager "Change" button */
+        .bench-dash .manager-change { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #eef0f4; background: #fff; border-radius: 6px; padding: 2px 8px; font-size: 9.5px !important; color: #3e97ff; width: fit-content; cursor: pointer; }
+        .bench-dash .manager-change:hover { border-color: #3e97ff; background: #f5f9ff; color: #3e97ff; }
+        .bench-dash .manager-change i { font-size: 8px !important; }
         .bench-dash .pipe-actions { display: flex; flex-direction: column; gap: 4px; }
         .bench-dash .pipe-btn { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; padding: 3px 7px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; color: #3f4254; font-size: 9.5px !important; }
         .bench-dash .pipe-btn:hover { border-color: #3e97ff; color: #3e97ff; }
@@ -213,7 +218,6 @@
                                     </div>
                                     <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
                                     {!! $deltaChip($k['d']) !!}
-                                    <div class="kpi-spark" data-color="{{ $k['color'] }}" id="{{ $k['spark'] }}"></div>
                                 </div>
                             </div>
                         @endforeach
@@ -227,20 +231,6 @@
                                 </div>
                                 <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
                                 {!! $deltaChip($dl->cost, true) !!}
-                                <div class="kpi-spark" data-color="#f8285a" id="sp6"></div>
-                            </div>
-                        </div>
-
-                        <!-- Gross Profit -->
-                        <div class="col">
-                            <div class="jw-card kpi">
-                                <div class="kpi-head">
-                                    <span class="kpi-ico sc-success"><i class="fa fa-coins"></i></span>
-                                    <span class="kpi-label">Gross Profit</span>
-                                </div>
-                                <span class="money {{ ($grossProfit ?? 0) < 0 ? 'text-danger' : 'text-success' }}">{{ $curSym }}{{ $fmtMoney($grossProfit ?? 0) }}</span>
-                                {!! $deltaChip($dl->profit) !!}
-                                <div class="kpi-spark" data-color="#17c653" id="sp7"></div>
                             </div>
                         </div>
                     </div>
@@ -792,18 +782,6 @@
                     tooltip: { style: { fontSize: '10px', fontFamily: 'Poppins' }, y: { formatter: fmtAxis } }
                 }).render();
             }
-
-            // KPI sparklines
-            document.querySelectorAll('.kpi-spark').forEach(function(el) {
-                var c = el.getAttribute('data-color') || '#3e97ff';
-                var seed = (el.id.charCodeAt(el.id.length - 1) || 5);
-                var d = Array.from({ length: 12 }, (_, i) => Math.round(20 + 15 * Math.sin((i + seed) / 2) + (i % 3) * 4));
-                new ApexCharts(el, {
-                    chart: { type: 'line', height: 24, sparkline: { enabled: true } },
-                    series: [{ data: d }], colors: [c], stroke: { curve: 'smooth', width: 1.5 },
-                    tooltip: { enabled: false }
-                }).render();
-            });
 
             function fmtAxis(v) {
                 v = Number(v) || 0; var a = Math.abs(v);
