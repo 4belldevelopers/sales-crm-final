@@ -137,6 +137,61 @@
             .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 10px !important; }
         }
         #kt_activitiesHMB { z-index: 999999; }
+
+        /* ===== Change Status drawer — Poppins, max 14px, white cards, grey-only backdrop ===== */
+        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; font-size: 13px; box-sizing: border-box; }
+        #bstatus_drawer { z-index: 999999; }
+        #bstatus_drawer .num, #bstatus_drawer .fw-bolder { font-size: 13px; }
+        /* Flat grey backdrop (own overlay, not Metronic's default translucent one) — no page content shows through */
+        .bstatus-overlay { position: fixed; inset: 0; background-color: #eef0f4; z-index: 999998; }
+
+        .bstatus-topbar { border-bottom: 1px solid #eef0f4; background: #fff; flex-wrap: nowrap; }
+        .bstatus-btn-cancel { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 16px; font-size: 12.5px !important; font-weight: 500; }
+        .bstatus-btn-cancel:hover { border-color: #d5dbe6; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 8px; padding: 7px 16px; font-size: 12.5px !important; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+        .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+        .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
+        .bstatus-close { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; }
+        .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
+        .bstatus-body { overflow-y: auto; background: #f8f9fb; padding: 16px; }
+
+        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
+        .bs-sub { background: #fff; border: 1px solid #f0f1f5; border-radius: 8px; }
+        .bs-tile { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+        .bs-tile .ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-tile .ico i { font-size: 13px !important; }
+        .bs-tile .val { font-size: 14px !important; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bs-tile .lbl { font-size: 10.5px !important; color: #7e8299; }
+
+        .bs-status-card { border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; height: 100%; }
+        .bs-status-card:hover { border-color: #d5dbe6; }
+        .bs-status-card .ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+        .bs-status-card .lbl { font-size: 13px !important; font-weight: 700; color: #181c32; }
+        .bs-status-card .desc { font-size: 10.5px !important; color: #7e8299; }
+        .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
+        .bs-status-card.is-current .lbl { color: #3e97ff; }
+        .bs-status-card.is-selected { border-color: #17c653; background: #f3fef8; box-shadow: 0 0 0 1px #17c653 inset; }
+        .bs-status-card.is-selected .lbl { color: #17c653; }
+        .bs-status-card .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #d5dbe6; margin-bottom: 6px; }
+        .bs-status-card.is-selected .radio-dot { border-color: #17c653; background: radial-gradient(#17c653 45%, transparent 50%); }
+        .bs-status-card.is-current .radio-dot { border-color: #3e97ff; }
+
+        .bs-impact { background: #f3fef8; border: 1px solid #d5f7e3; border-radius: 10px; padding: 12px; }
+        .bs-impact-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px !important; color: #275a3e; }
+        .bs-impact-item i { color: #17c653; font-size: 11px !important; }
+
+        .bs-job-table table { width: 100%; }
+        .bs-job-table th { font-size: 9.5px !important; text-transform: uppercase; color: #a1a5b7; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
+        .bs-job-table td { font-size: 11.5px !important; padding: 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 7px; padding: 5px 12px; font-size: 11px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .bs-place-btn:hover { border-color: #3e97ff; color: #3e97ff; }
+        .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
+        .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
+
+        @media only screen and (max-width: 1440px) {
+            #bstatus_drawer, #bstatus_drawer * { font-size: 12px; }
+            .bs-status-card .lbl { font-size: 12px !important; }
+        }
     </style>
 @endpush
 
@@ -386,22 +441,39 @@
         </div>
     </div>
 
-    <!-- Status modal -->
-    <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2 style="font-size:14px !important;">Inhouse Talent Status</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="stage_sub_stage_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
+    <!-- Change Status drawer (replaces the old centered modal) -->
+    {{-- Own flat-grey overlay (not Metronic's default translucent one) so no page content shows through --}}
+    <div id="bstatus_overlay" class="bstatus-overlay" style="display:none;"></div>
+    <div id="bstatus_drawer_toggle" style="display:none;"></div>
+    <div id="bstatus_drawer" class="bstatus-drawer bg-white" data-kt-drawer="true" data-kt-drawer-name="bench-status"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-width="{default:'100%', 'lg': '92%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#bstatus_drawer_toggle" data-kt-drawer-close=".bstatus-dismiss">
+        <div class="d-flex flex-column h-100">
+            <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-user-plus text-primary" style="font-size:16px !important;"></i>
+                    <span class="fw-bolder text-dark" style="font-size:15px !important;">Change Inhouse Talent Status</span>
+                </div>
+                <div class="d-flex flex-column align-items-center">
+                    <span class="xtiny text-muted">You are about to change the status</span>
+                    <div class="d-flex align-items-center gap-2 mt-1" id="bstatus_transition">
+                        <span class="fw-bolder text-primary" id="bstatus_from">—</span>
+                        <i class="fa fa-arrow-right text-muted" style="font-size:10px !important;"></i>
+                        <span class="fw-bolder text-muted" id="bstatus_to">Select a status</span>
                     </div>
                 </div>
-                <div class="stage_body_content" id="stage_body_content"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="bstatus-btn-cancel bstatus-dismiss" id="bstatus_cancel_btn">Cancel</button>
+                    <button type="button" class="bstatus-btn-confirm" id="bstatus_confirm_btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
+                    <span class="bstatus-close bstatus-dismiss" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end px-4 pb-2">
+                <span class="xtiny text-muted"><i class="fa fa-shield-halved text-success"></i> This action will be logged and cannot be undone.</span>
+            </div>
+            <div class="bstatus-body flex-grow-1" id="stage_body_content">
+                <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
             </div>
         </div>
     </div>
@@ -548,10 +620,17 @@
             });
         });
 
-        // ---- Status modal ----
+        // ---- Change Status drawer ----
+        // Own overlay (flat grey) shown/hidden alongside the drawer, since Metronic's
+        // built-in overlay is disabled for this instance (data-kt-drawer-overlay="false").
+        $(document).on('click', '#bstatus_drawer_toggle', function() { $('#bstatus_overlay').show(); });
+        $(document).on('click', '.bstatus-dismiss', function() { $('#bstatus_overlay').hide(); });
+        $(document).on('click', '#bstatus_overlay', function() { $('.bstatus-dismiss').first().trigger('click'); });
+
         $(document).on('click', '.stage_sub_stage', function() {
-            $('#stage_body_content').html('');
             var id = $(this).data('row-id');
+            $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+            $('#bstatus_drawer_toggle').trigger('click'); // open instantly, fill in once fetched
             var url = "{{ route('service_company.bench-candidates.bench_application_status', ':id') }}".replace(':id', id);
             $.ajax({
                 type: 'GET', url: url,
@@ -570,6 +649,147 @@
                 type: 'POST', url: inner_url,
                 data: { '_token': inner_token, 'candidateId': candidateId }
             });
+        });
+
+        // ============================================================
+        // Change Status drawer — one-time global wiring (per drawer instance)
+        // Content is re-fetched per talent, but the interaction logic below
+        // is defined once and rebound to whatever markup just loaded.
+        // ============================================================
+        var BS_IMPACT = {
+            1: ['Visible only to your internal team', 'Removed from the public Bench listing', 'Not visible to Marketplace companies'],
+            2: ['Listed on Bench for new opportunities', 'Visible to Marketplace companies', 'Available for client submissions'],
+            4: ['Temporarily hidden from Marketplace', 'Vendor submissions paused', 'Internal tracking continues'],
+            3: ['Removed from Bench Listing', 'Hidden from Marketplace', 'Not visible to Companies', 'Vendor cannot submit', 'Vendor tracking continues', 'Internal tracking continues'],
+            5: ['No longer available for hire', 'Removed from all active listings', 'Historical records are retained']
+        };
+
+        window.initBenchStatusDrawer = function(cfg) {
+            $('#bstatus_from').text(cfg.currentName || '—');
+            $('#bstatus_to').text('Select a status').removeClass('fw-bolder').addClass('text-muted');
+            $('#bstatus_confirm_btn').prop('disabled', true);
+            $('#bs_impact_wrap').hide();
+            $('#bs_job_card').hide();
+
+            $(document).off('click.bstatus', '.bs-status-card').on('click.bstatus', '.bs-status-card', function() {
+                var id = $(this).data('status-id');
+                var label = $(this).data('status-label');
+
+                $('.bs-status-card').removeClass('is-selected');
+                $(this).addClass('is-selected');
+                $(this).find('input[type="radio"]').prop('checked', true);
+
+                $('#bstatus_to').text(label).removeClass('text-muted').addClass('fw-bolder');
+                $('#bstatus_confirm_btn').prop('disabled', String(id) === String(cfg.currentId));
+
+                var items = BS_IMPACT[id] || [];
+                var html = '';
+                items.forEach(function(t) {
+                    html += '<div class="col-lg-4 col-6 bs-impact-item"><i class="fa fa-circle-check"></i> ' + t + '</div>';
+                });
+                $('#bs_impact_list').html(html);
+                $('#bs_impact_wrap').show();
+
+                if (String(id) === '3') {
+                    $('#bs_job_card').slideDown(150);
+                    loadBenchJobListing(cfg.benchId);
+                } else {
+                    $('#bs_job_card').slideUp(150);
+                }
+            });
+
+            $(document).off('click.bstatus', '#bstatus_confirm_btn').on('click.bstatus', '#bstatus_confirm_btn', function() {
+                var checked = $('input[name="bench_master_status"]:checked').val();
+                if (!checked) { return; }
+                if (String(checked) === String(cfg.currentId)) {
+                    Swal.fire('Warning', 'Same status cannot be updated, please select other option !', 'info');
+                    return;
+                }
+                if (String(checked) === '3' && $('input[name="chk_list_item"]:checked').length === 0) {
+                    Swal.fire('Info', 'Please select a job/project to mark this talent as Placed.', 'info');
+                    return;
+                }
+                var btn = $(this);
+                var originalHtml = btn.html();
+                btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating…');
+                $.ajax({
+                    url: '{{ route('service_company.bench-candidates.status_submit') }}',
+                    type: 'POST',
+                    data: $('#status_frm').serialize(),
+                    success: function(response) {
+                        btn.prop('disabled', false).html(originalHtml);
+                        if (response.status == 'success') {
+                            sweetAlert('Success', 'Status changed successfully!', 'success');
+                            $('#bstatus_close_x').trigger('click');
+                            fetchBenchBenchCandidatesCandidateList();
+                        } else if (response.message) {
+                            sweetAlert('Fail!', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            });
+        };
+
+        // ---- Card 2: Select the Job / Project (only for target status = Placed) ----
+        function loadBenchJobListing(benchId) {
+            $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
+            $.getJSON('{{ route('service_company.bench-candidates.bench_assign_to_job_listing') }}', { bench_id: benchId, stage: 'all' })
+                .done(function(resp) {
+                    var rows = (resp && resp.data) ? resp.data : [];
+                    if (!rows.length) {
+                        $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-muted py-4">No job applications found for this talent.</td></tr>');
+                        return;
+                    }
+                    var html = '';
+                    rows.forEach(function(r) {
+                        html += '<tr>' +
+                            '<td>' + (r.Requisition || '') + '</td>' +
+                            '<td>' + (r.Exp || '') + '</td>' +
+                            '<td>' + (r.Location || '') + '</td>' +
+                            '<td>' + (r.ContactPerson || '') + '</td>' +
+                            '<td>' + (r.offeramount || '') + '</td>' +
+                            '<td>' + (r.joindate || '') + '</td>' +
+                            '<td>' + (r.AddedDate || '') + '</td>' +
+                            '<td>' + (r.Stage || '') + '</td>' +
+                            '<td>' + buildBsPlaceAction(r.chkbox || '') + '</td>' +
+                            '</tr>';
+                    });
+                    $('#bs_job_body').html(html);
+                })
+                .fail(function() {
+                    $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
+                });
+        }
+
+        // Builds the "Placed on this Job" action button from the server-rendered chk_list_item radio,
+        // preserving its real name/value/checked/disabled state so submission wiring stays untouched.
+        function buildBsPlaceAction(chkboxHtml) {
+            var $tmp = $('<div>').html(chkboxHtml);
+            var $input = $tmp.find('input[name="chk_list_item"]');
+            var value = $input.attr('value') || '';
+            var isChecked = $input.is(':checked');
+            var isDisabled = $input.is(':disabled');
+            var label = isDisabled ? 'Placed' : (isChecked ? 'Selected' : 'Placed on this Job');
+            return '<div class="d-none">' + chkboxHtml + '</div>' +
+                '<button type="button" class="bs-place-btn' + (isChecked ? ' is-picked' : '') + '" data-job-id="' + value + '" ' + (isDisabled ? 'disabled' : '') + '>' +
+                '<i class="fa fa-check"></i> ' + label +
+                '</button>';
+        }
+
+        $(document).on('click', '.bs-place-btn:not(:disabled)', function() {
+            var $row = $(this).closest('tr');
+            $('#bs_job_body tr').each(function() {
+                var $radio = $(this).find('input[name="chk_list_item"]');
+                var $btn = $(this).find('.bs-place-btn');
+                if ($radio.is(':disabled')) { return; }
+                $radio.prop('checked', false);
+                $btn.removeClass('is-picked').html('<i class="fa fa-check"></i> Placed on this Job');
+            });
+            $row.find('input[name="chk_list_item"]').prop('checked', true);
+            $(this).addClass('is-picked').html('<i class="fa fa-check"></i> Selected');
         });
 
         // ---- Table fetch + pagination ----
