@@ -74,16 +74,6 @@
         /* Chart header dropdown */
         .bench-dash .chart-range { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; font-size: 9.5px !important; padding: 3px 8px; color: #7e8299; height: 24px; }
 
-        /* Filter chips */
-        .bench-dash .fchip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #eef0f4; background: #f9fafc; border-radius: 20px; padding: 4px 10px; font-size: 10px !important; color: #3f4254; }
-        .bench-dash .fchip b { font-weight: 600; }
-        .bench-dash .fchip .x { cursor: pointer; color: #a1a5b7; }
-        .bench-dash .fchip .x:hover { color: #f8285a; }
-        .bench-dash .fbtn { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed #d5dbe6; background: #fff; border-radius: 20px; padding: 4px 12px; font-size: 10px !important; color: #3e97ff; cursor: pointer; }
-        .bench-dash .flink { font-size: 11px !important; color: #7e8299; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-        .bench-dash .flink:hover { color: #3e97ff; }
-        .bench-dash .flink .badge-cnt { background: #3e97ff; color: #fff; border-radius: 5px; padding: 0 6px; font-size: 9px !important; }
-
         /* Soft color chips */
         .sc-primary { background: #eef3ff; color: #3e97ff; }
         .sc-success { background: #e8fff3; color: #17c653; }
@@ -115,15 +105,18 @@
         .bench-dash #benchListingTable .fs-7 { font-size: 10px !important; }
         .bench-dash #benchListingTable .fs-3 { font-size: 12px !important; }
         .bench-dash #benchListingTable .symbol-40px { width: 32px !important; height: 32px !important; }
+        .bench-dash #benchListingTable .symbol-label { line-height: 1; }
         .bench-dash .badge { font-size: 9px !important; padding: 2px 5px; }
 
-        /* Hiring pipeline mini-grid inside its column */
+        /* Clients Pipeline Activity mini-grid — bold throughout */
         .bench-dash .pipe { display: flex; align-items: flex-start; gap: 10px; }
         .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(24px, 1fr)); text-align: center; gap: 0; }
-        .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 600; }
-        .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 600; color: #181c32; padding-top: 1px; }
-        .bench-dash .pipe-grid a { font-size: 10px !important; }
-        .bench-dash .pipe-foot { font-size: 9px !important; color: #7e8299; margin-top: 3px; }
+        .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; }
+        .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
+        .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
+        .bench-dash .pipe-foot { font-size: 9px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .bench-dash .pipe-ico { display: inline-flex; align-items: center; gap: 3px; color: #7e8299; }
+        .bench-dash .pipe-ico i { font-size: 9px !important; }
 
         /* Manager "Change" — plain text link, no button chrome */
         .bench-dash .manager-change { color: #3e97ff; font-size: 9.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
@@ -153,7 +146,7 @@
             <div id="kt_content_container" class="container-fluid px-3">
 
                 <!-- Header -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap mb-1" style="background:#fff;">
                     <div class="d-flex flex-column">
                         <h5 class="text-dark fw-bolder my-0 d-flex align-items-center gap-2" style="font-size:15px !important;">
                             Inhouse Talents
@@ -302,13 +295,13 @@
                     </div>
 
                     <!-- Search + Sort row (directly below the graphs) -->
-                    <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div class="position-relative">
+                    <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
+                        <div class="position-relative flex-grow-1">
                             <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
-                            <input type="text" class="form-control dash-search w-300px" style="padding-left:30px;" name="inputJobSearch"
+                            <input type="text" class="form-control dash-search w-100" style="padding-left:30px;" name="inputJobSearch"
                                 placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="filtersdataget()" />
                         </div>
-                        <select class="form-select form-select-solid w-200px" data-hide-search="true" id="sortingfilter"
+                        <select class="form-select form-select-solid w-200px flex-shrink-0" data-hide-search="true" id="sortingfilter"
                             data-placeholder="Sort" onchange="filtersdataget()">
                             <option value="Show All" selected>Sort by</option>
                             <option value="1">Newest to Oldest (Upload Date)</option>
@@ -319,20 +312,6 @@
                             <option value="7">High to Low (Experience)</option>
                             <option value="8">Low to High (Experience)</option>
                         </select>
-                    </div>
-
-                    <!-- Filter chips row -->
-                    <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div class="d-flex align-items-center flex-wrap gap-2" id="filterChips">
-                            <span class="fchip" data-filter="availability"><b>Availability:</b> <span class="val">All</span> <span class="x">×</span></span>
-                            <span class="fchip" data-filter="benchage"><b>Bench Age:</b> <span class="val">&gt; 30 Days</span> <span class="x">×</span></span>
-                            <span class="fbtn" id="addFilter"><i class="fa fa-plus"></i> Add Filter</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="flink" id="filtersBtn"><i class="fa fa-sliders"></i> Filters <span class="badge-cnt" id="filtersCount">2</span></span>
-                            <span class="flink" id="clearAllFilters"><i class="fa fa-xmark"></i> Clear All</span>
-                            <span class="flink" id="saveViewBtn"><i class="fa fa-bookmark"></i> Save View</span>
-                        </div>
                     </div>
 
                     <!-- Tabs strip -->
@@ -393,8 +372,8 @@
                                         <th>Location</th>
                                         <th>Expected Salary</th>
                                         <th>Bench Status</th>
-                                        <th>Manager</th>
-                                        <th>Hiring Pipeline Activity</th>
+                                        <th>Relationship Manager</th>
+                                        <th>Clients Pipeline Activity</th>
                                     </tr>
                                 </thead>
                                 <tbody id="benchCandidateBenchCandidatesAjax"></tbody>
@@ -682,39 +661,11 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         });
 
-        // Filter chip removal + count.
-        function refreshFiltersCount() {
-            var n = $('#filterChips .fchip').length;
-            $('#filtersCount').text(n);
-            if (n === 0) $('#filtersBtn').hide(); else $('#filtersBtn').show();
-        }
-        $(document).on('click', '#filterChips .fchip .x', function() {
-            $(this).closest('.fchip').remove();
-            refreshFiltersCount();
-            fetchBenchBenchCandidatesCandidateList(1);
-        });
-
-        // Clear all: reset search, sort, tab and chips.
-        $(document).on('click', '#clearAllFilters', function() {
-            $('#kt_tagify_2').val('');
-            $('#inputSearch').val('');
-            $('#sortingfilter').val('Show All');
-            $('#filterChips .fchip').remove();
-            refreshFiltersCount();
-            $(".application_sttus_nav[rel='all']").trigger('click');
-        });
-
         // Saved views jump to the matching tab.
         $(document).on('click', '.saved-view', function() {
             var v = $(this).data('view');
             $(".application_sttus_nav[rel='" + v + "']").trigger('click');
         });
-
-        // Add Filter focuses the search; Save View acknowledges.
-        $(document).on('click', '#addFilter', function() { $('#kt_tagify_2').focus(); });
-        $(document).on('click', '#saveViewBtn', function() { sweetAlert('Saved', 'Current view has been saved.', 'success'); });
-
-        $(document).ready(refreshFiltersCount);
     </script>
 
     <!-- ===== Charts (ApexCharts) ===== -->
