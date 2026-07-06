@@ -85,11 +85,11 @@
         <div class="row g-3 align-items-stretch">
             <div class="col-lg-4 d-flex align-items-center gap-3 pe-lg-3" style="border-right: 1px solid #eef0f4;">
                 <div class="symbol symbol-circle symbol-60px overflow-hidden flex-shrink-0">
-                    <div class="symbol-label {{ $bgTextDecore }} fw-bolder d-flex align-items-center justify-content-center w-100 h-100" style="font-size:18px !important;">{{ strtoupper($strVal) }}</div>
+                    <div class="symbol-label {{ $bgTextDecore }} fw-bolder d-flex align-items-center justify-content-center w-100 h-100" style="font-size:12px !important;">{{ strtoupper($strVal) }}</div>
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="fw-bolder text-dark" style="font-size:14px !important;">{{ ucwords($benchApplication->full_name) }}</span>
+                        <span class="fw-bolder text-dark" style="font-size:12px !important;">{{ ucwords($benchApplication->full_name) }}</span>
                         <span class="badge {{ $availTitle == 'Immediate' ? 'badge-light-success' : 'badge-light-warning' }}">{{ $availTitle }}</span>
                     </div>
                     <div class="text-muted xtiny">{{ ucwords($benchApplication->current_designation) }} &middot; {{ $employmentLabel }}</div>
@@ -106,54 +106,54 @@
                 <div class="row g-2 mb-2">
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-wallet"></i></span>
-                            <div><div class="lbl">Expected Salary</div><div class="val">{!! $bill_rate_amount !!}</div><div class="xtiny text-muted">{!! $pay_rate_amount !!}</div></div>
+                            <div class="txt"><div class="lbl">Expected Salary</div><div class="val">{!! $bill_rate_amount !!}</div><div class="sub">{!! $pay_rate_amount !!}</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-clipboard-check"></i></span>
-                            <div><div class="lbl">Current Status</div><div class="val">{{ $benchApplication->master_status_name }}</div><div class="xtiny text-muted">{{ $currentStatusSub }}</div></div>
+                            <div class="txt"><div class="lbl">Current Status</div><div class="val">{{ $benchApplication->master_status_name }}</div><div class="sub">{{ $currentStatusSub }}</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#fff4de;color:#f6a609;"><i class="fa fa-hourglass-half"></i></span>
-                            <div><div class="lbl">Notice Period</div><div class="val">{{ $availTitle }}</div><div class="xtiny text-muted">{{ $npDate }}</div></div>
+                            <div class="txt"><div class="lbl">Notice Period</div><div class="val">{{ $availTitle }}</div><div class="sub">{{ $npDate }}</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#7239ea;"><i class="fa fa-graduation-cap"></i></span>
-                            <div><div class="lbl">Qualification</div><div class="val">{{ ucwords(optional($qualification)->name) ?: '—' }}</div><div class="xtiny text-muted">{{ $employmentType }}</div></div>
+                            <div class="txt"><div class="lbl">Qualification</div><div class="val">{{ ucwords(optional($qualification)->name) ?: '—' }}</div><div class="sub">{{ $employmentType }}</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#f1f2f6;color:#3f4254;"><i class="fa fa-calendar-days"></i></span>
-                            <div><div class="lbl">Employee Since</div><div class="val">{{ $sinceLabel }}</div><div class="xtiny text-muted">{{ $sinceDuration }}</div></div>
+                            <div class="txt"><div class="lbl">Employee Since</div><div class="val">{{ $sinceLabel }}</div><div class="sub">{{ $sinceDuration }}</div></div>
                         </div>
                     </div>
                 </div>
                 <div class="row g-2">
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-comments"></i></span>
-                            <div><div class="val">{{ $activeInterviews ?? 0 }}</div><div class="lbl">Active Interviews</div></div>
+                            <div class="txt"><div class="val">{{ $activeInterviews ?? 0 }}</div><div class="lbl">Active Interviews</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#fff4de;color:#f6a609;"><i class="fa fa-eye"></i></span>
-                            <div><div class="val">{{ $profileViewCount ?? 0 }}</div><div class="lbl">Profile View</div></div>
+                            <div class="txt"><div class="val">{{ $profileViewCount ?? 0 }}</div><div class="lbl">Profile View</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#7239ea;"><i class="fa fa-paper-plane"></i></span>
-                            <div><div class="val">{{ $clientSubmissions ?? 0 }}</div><div class="lbl">Client Submissions</div></div>
+                            <div class="txt"><div class="val">{{ $clientSubmissions ?? 0 }}</div><div class="lbl">Client Submissions</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#f1f2f6;color:#3f4254;"><i class="fa fa-clock"></i></span>
-                            <div><div class="val">{{ $benchDurationDays ?? 0 }} Days</div><div class="lbl">Bench Duration</div></div>
+                            <div class="txt"><div class="val">{{ $benchDurationDays ?? 0 }} Days</div><div class="lbl">Bench Duration</div></div>
                         </div>
                     </div>
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#e8fff3;color:#17c653;"><i class="fa fa-download"></i></span>
-                            <div><div class="val">{{ $resumeDownloadCount ?? 0 }}</div><div class="lbl">Resume Download</div></div>
+                            <div class="txt"><div class="val">{{ $resumeDownloadCount ?? 0 }}</div><div class="lbl">Resume Download</div></div>
                         </div>
                     </div>
                 </div>
@@ -165,7 +165,7 @@
     <div class="bs-card p-3 mb-2">
         <div class="d-flex align-items-center gap-2 mb-1">
             <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">1</span>
-            <span class="fw-bolder text-dark" style="font-size:13px !important;">Select New Status</span>
+            <span class="fw-bolder text-dark" style="font-size:12px !important;">Select New Status</span>
         </div>
         <div class="text-muted xtiny mb-3">Choose the new status for this inhouse talent</div>
         <div class="row g-2">
@@ -194,7 +194,7 @@
     <div class="bs-card p-3 mb-2" id="bs_job_card" style="display:none;">
         <div class="d-flex align-items-center gap-2 mb-1">
             <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">2</span>
-            <span class="fw-bolder text-dark" style="font-size:13px !important;">Select the Job / Project</span>
+            <span class="fw-bolder text-dark" style="font-size:12px !important;">Select the Job / Project</span>
         </div>
         <div class="text-muted xtiny mb-2">Jobs associated with this talent</div>
         <div class="bs-job-table table-responsive">

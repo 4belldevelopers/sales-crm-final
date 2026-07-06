@@ -138,60 +138,72 @@
         }
         #kt_activitiesHMB { z-index: 999999; }
 
-        /* ===== Change Status drawer — Poppins, max 14px, white cards, grey-only backdrop ===== */
-        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; font-size: 13px; box-sizing: border-box; }
-        #bstatus_drawer { z-index: 999999; }
-        #bstatus_drawer .num, #bstatus_drawer .fw-bolder { font-size: 13px; }
-        /* Flat grey backdrop (own overlay, not Metronic's default translucent one) — no page content shows through */
-        .bstatus-overlay { position: fixed; inset: 0; background-color: #eef0f4; z-index: 999998; }
+        /* ===== Change Status drawer — Poppins, max 12px everywhere, white cards ===== */
+        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; font-size: 12px; box-sizing: border-box; }
 
-        .bstatus-topbar { border-bottom: 1px solid #eef0f4; background: #fff; flex-wrap: nowrap; }
-        .bstatus-btn-cancel { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 16px; font-size: 12.5px !important; font-weight: 500; }
+        /* Fixed panel + backdrop anchored to the RIGHT of the sidebar (#kt_aside is 265px) —
+           the sidebar itself is never covered, only the content area to its right. */
+        .bstatus-overlay, #bstatus_drawer {
+            position: fixed; top: 0; bottom: 0; right: 0;
+            left: var(--bstatus-aside-w, 265px);
+            display: none;
+        }
+        .bstatus-overlay { background-color: #eef0f4; z-index: 999998; }
+        #bstatus_drawer { z-index: 999999; overflow: hidden; }
+        .bstatus-overlay.show { display: block; }
+        #bstatus_drawer.show { display: flex; }
+        /* On collapsed viewports the sidebar becomes an off-canvas menu (not occupying layout width) */
+        @media only screen and (max-width: 991px) {
+            .bstatus-overlay, #bstatus_drawer { left: 0 !important; }
+        }
+
+        .bstatus-topbar { border-bottom: 1px solid #eef0f4; background: #fff; flex-wrap: nowrap; flex-shrink: 0; }
+        .bstatus-topbar i { font-size: 12px !important; }
+        .bstatus-topbar .fw-bolder { font-size: 12px !important; }
+        .bstatus-btn-cancel { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 6px 14px; font-weight: 500; }
         .bstatus-btn-cancel:hover { border-color: #d5dbe6; }
-        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 8px; padding: 7px 16px; font-size: 12.5px !important; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
         .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
-        .bstatus-close { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; }
+        .bstatus-close { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; }
         .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
-        .bstatus-body { overflow-y: auto; background: #f8f9fb; padding: 16px; }
+        .bstatus-body { overflow-y: auto; background: #f8f9fb; padding: 16px; flex-grow: 1; }
 
         .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
         .bs-sub { background: #fff; border: 1px solid #f0f1f5; border-radius: 8px; }
-        .bs-tile { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
-        .bs-tile .ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .bs-tile .ico i { font-size: 13px !important; }
-        .bs-tile .val { font-size: 14px !important; font-weight: 700; color: #181c32; line-height: 1.1; }
-        .bs-tile .lbl { font-size: 10.5px !important; color: #7e8299; }
+        #bstatus_drawer .lbl { font-size: 10px !important; color: #7e8299; }
+        .bs-tile { display: flex; align-items: center; gap: 8px; padding: 10px; min-width: 0; }
+        .bs-tile .ico { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-tile .ico i { font-size: 12px !important; }
+        .bs-tile .txt { min-width: 0; flex: 1 1 auto; }
+        .bs-tile .val { font-size: 12px !important; font-weight: 700; color: #181c32; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bs-tile .lbl { font-size: 10px !important; color: #7e8299; white-space: nowrap; }
+        .bs-tile .sub { font-size: 9.5px !important; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .bs-status-card { border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; height: 100%; }
         .bs-status-card:hover { border-color: #d5dbe6; }
-        .bs-status-card .ico { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
-        .bs-status-card .lbl { font-size: 13px !important; font-weight: 700; color: #181c32; }
-        .bs-status-card .desc { font-size: 10.5px !important; color: #7e8299; }
+        .bs-status-card .ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+        .bs-status-card .lbl { font-size: 12px !important; font-weight: 700; color: #181c32; }
+        .bs-status-card .desc { font-size: 10px !important; color: #7e8299; }
         .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
         .bs-status-card.is-current .lbl { color: #3e97ff; }
         .bs-status-card.is-selected { border-color: #17c653; background: #f3fef8; box-shadow: 0 0 0 1px #17c653 inset; }
         .bs-status-card.is-selected .lbl { color: #17c653; }
-        .bs-status-card .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #d5dbe6; margin-bottom: 6px; }
+        .bs-status-card .radio-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #d5dbe6; margin-bottom: 6px; }
         .bs-status-card.is-selected .radio-dot { border-color: #17c653; background: radial-gradient(#17c653 45%, transparent 50%); }
         .bs-status-card.is-current .radio-dot { border-color: #3e97ff; }
 
         .bs-impact { background: #f3fef8; border: 1px solid #d5f7e3; border-radius: 10px; padding: 12px; }
-        .bs-impact-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px !important; color: #275a3e; }
-        .bs-impact-item i { color: #17c653; font-size: 11px !important; }
+        .bs-impact-item { display: flex; align-items: center; gap: 6px; font-size: 11px !important; color: #275a3e; }
+        .bs-impact-item i { color: #17c653; font-size: 10.5px !important; }
 
         .bs-job-table table { width: 100%; }
-        .bs-job-table th { font-size: 9.5px !important; text-transform: uppercase; color: #a1a5b7; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
-        .bs-job-table td { font-size: 11.5px !important; padding: 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
-        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 7px; padding: 5px 12px; font-size: 11px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .bs-job-table th { font-size: 9px !important; text-transform: uppercase; color: #a1a5b7; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
+        .bs-job-table td { font-size: 11px !important; padding: 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 7px; padding: 5px 12px; font-size: 10.5px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .bs-place-btn:hover { border-color: #3e97ff; color: #3e97ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
-
-        @media only screen and (max-width: 1440px) {
-            #bstatus_drawer, #bstatus_drawer * { font-size: 12px; }
-            .bs-status-card .lbl { font-size: 12px !important; }
-        }
     </style>
 @endpush
 
@@ -442,39 +454,34 @@
     </div>
 
     <!-- Change Status drawer (replaces the old centered modal) -->
-    {{-- Own flat-grey overlay (not Metronic's default translucent one) so no page content shows through --}}
-    <div id="bstatus_overlay" class="bstatus-overlay" style="display:none;"></div>
-    <div id="bstatus_drawer_toggle" style="display:none;"></div>
-    <div id="bstatus_drawer" class="bstatus-drawer bg-white" data-kt-drawer="true" data-kt-drawer-name="bench-status"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-        data-kt-drawer-width="{default:'100%', 'lg': '92%'}" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#bstatus_drawer_toggle" data-kt-drawer-close=".bstatus-dismiss">
-        <div class="d-flex flex-column h-100">
-            <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fa fa-user-plus text-primary" style="font-size:16px !important;"></i>
-                    <span class="fw-bolder text-dark" style="font-size:15px !important;">Change Inhouse Talent Status</span>
-                </div>
-                <div class="d-flex flex-column align-items-center">
-                    <span class="xtiny text-muted">You are about to change the status</span>
-                    <div class="d-flex align-items-center gap-2 mt-1" id="bstatus_transition">
-                        <span class="fw-bolder text-primary" id="bstatus_from">—</span>
-                        <i class="fa fa-arrow-right text-muted" style="font-size:10px !important;"></i>
-                        <span class="fw-bolder text-muted" id="bstatus_to">Select a status</span>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="bstatus-btn-cancel bstatus-dismiss" id="bstatus_cancel_btn">Cancel</button>
-                    <button type="button" class="bstatus-btn-confirm" id="bstatus_confirm_btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
-                    <span class="bstatus-close bstatus-dismiss" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
+    {{-- Own flat-grey overlay (no third-party drawer plugin) so no page content shows through --}}
+    <div id="bstatus_overlay" class="bstatus-overlay"></div>
+    {{-- Plain fixed panel, anchored to the right of the sidebar (#kt_aside) so the sidebar stays visible --}}
+    <div id="bstatus_drawer" class="bstatus-drawer bg-white d-flex flex-column">
+        <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa fa-user-plus text-primary"></i>
+                <span class="fw-bolder text-dark">Change Inhouse Talent Status</span>
+            </div>
+            <div class="d-flex flex-column align-items-center">
+                <span class="xtiny text-muted">You are about to change the status</span>
+                <div class="d-flex align-items-center gap-2 mt-1" id="bstatus_transition">
+                    <span class="fw-bolder text-primary" id="bstatus_from">—</span>
+                    <i class="fa fa-arrow-right text-muted"></i>
+                    <span class="fw-bolder text-muted" id="bstatus_to">Select a status</span>
                 </div>
             </div>
-            <div class="d-flex justify-content-end px-4 pb-2">
-                <span class="xtiny text-muted"><i class="fa fa-shield-halved text-success"></i> This action will be logged and cannot be undone.</span>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="bstatus-btn-cancel bstatus-dismiss" id="bstatus_cancel_btn">Cancel</button>
+                <button type="button" class="bstatus-btn-confirm" id="bstatus_confirm_btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
+                <span class="bstatus-close bstatus-dismiss" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
             </div>
-            <div class="bstatus-body flex-grow-1" id="stage_body_content">
-                <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
-            </div>
+        </div>
+        <div class="d-flex justify-content-end px-4 pb-2">
+            <span class="xtiny text-muted"><i class="fa fa-shield-halved text-success"></i> This action will be logged and cannot be undone.</span>
+        </div>
+        <div class="bstatus-body flex-grow-1" id="stage_body_content">
+            <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
         </div>
     </div>
 
@@ -621,16 +628,23 @@
         });
 
         // ---- Change Status drawer ----
-        // Own overlay (flat grey) shown/hidden alongside the drawer, since Metronic's
-        // built-in overlay is disabled for this instance (data-kt-drawer-overlay="false").
-        $(document).on('click', '#bstatus_drawer_toggle', function() { $('#bstatus_overlay').show(); });
-        $(document).on('click', '.bstatus-dismiss', function() { $('#bstatus_overlay').hide(); });
-        $(document).on('click', '#bstatus_overlay', function() { $('.bstatus-dismiss').first().trigger('click'); });
+        // Self-contained show/hide (no drawer plugin) so it can be pinned exactly to the
+        // right edge of the sidebar (#kt_aside), keeping the sidebar visible at all times.
+        function openBstatusDrawer() {
+            var asideW = $('#kt_aside').outerWidth() || 265;
+            document.documentElement.style.setProperty('--bstatus-aside-w', asideW + 'px');
+            $('#bstatus_overlay, #bstatus_drawer').addClass('show');
+        }
+        function closeBstatusDrawer() {
+            $('#bstatus_overlay, #bstatus_drawer').removeClass('show');
+        }
+        $(document).on('click', '.bstatus-dismiss', closeBstatusDrawer);
+        $(document).on('click', '#bstatus_overlay', closeBstatusDrawer);
 
         $(document).on('click', '.stage_sub_stage', function() {
             var id = $(this).data('row-id');
             $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
-            $('#bstatus_drawer_toggle').trigger('click'); // open instantly, fill in once fetched
+            openBstatusDrawer(); // open instantly, fill in once fetched
             var url = "{{ route('service_company.bench-candidates.bench_application_status', ':id') }}".replace(':id', id);
             $.ajax({
                 type: 'GET', url: url,
