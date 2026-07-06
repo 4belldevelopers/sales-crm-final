@@ -322,7 +322,9 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
 
                 	$this->permissions = $permissions;
 		
-					$this->role_row 				=	DB::table('roles')->select('roles.display_name')->where('roles.id', $id)->first();
+					/* manual_add/name/priority let the drawer lock the Role Name for SYSTEM roles
+					   (manual_add = 0) so built-in role names can't be renamed on the edit page. */
+					$this->role_row 				=	DB::table('roles')->select('roles.display_name', 'roles.name', 'roles.manual_add', 'roles.priority')->where('roles.id', $id)->first();
 
 					$Rawlist 						=	DB::table('role_has_permissions')->select('role_has_permissions.permission_id')->where('role_has_permissions.role_id', $id)->get()->toArray();
 

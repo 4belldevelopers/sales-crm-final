@@ -196,6 +196,16 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rp-edit-btn:hover { background: #eef0fb; border-color: #c5ccee; }
 .rp-edit-btn svg { width: 12px; height: 12px; }
 
+/* "Delete" text button (replaces the trash icon) */
+.rp-del-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: 1px solid #f5d5d0; border-radius: 7px;
+    padding: 5px 12px; font-size: 11px; font-weight: 600; color: #c0392b;
+    cursor: pointer; font-family: 'Poppins', sans-serif; transition: all .15s;
+}
+.rp-del-btn:hover { background: #fde8e8; border-color: #c0392b; }
+.rp-del-btn svg { width: 12px; height: 12px; }
+
 /* ── Add New Role card ── */
 .rp-add-card {
     background: #fff; border: 2px dashed #c5d0ea; border-radius: 12px;
@@ -443,7 +453,9 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 .rpf-field-label .req { color: #e74c3c; }
 .rpf-input { width: 100%; border: 1px solid #dde2f0; border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #1e2640; font-family: 'Poppins', sans-serif; background: #f8f9fc; outline: none; transition: border-color .15s, background .15s; }
 .rpf-input:focus { border-color: #5e72e4; background: #fff; }
-.rpf-input[readonly] { color: #8b93b8; cursor: not-allowed; }
+.rpf-input[readonly] { color: #8b93b8; cursor: not-allowed; background: #f1f3f8; }
+.rpf-lock-hint { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 9.5px; color: #a0a7c0; }
+.rpf-lock-hint svg { width: 11px; height: 11px; flex-shrink: 0; }
 .rpf-summary-users { display: flex; align-items: center; gap: 6px; }
 .rpf-uav { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; margin-left: -6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
 .rpf-uav:first-child { margin-left: 0; }
@@ -1042,14 +1054,14 @@ if (!function_exists('rpCardIcon')) {
                                     Edit
                                 </button>
                                 @if($rlist->manual_add)
-                                <button class="rp-action-btn danger role_delete" title="Delete Role"
-                                        data-id="{{ $roleId }}" onclick="event.stopPropagation()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <button class="rp-del-btn role_delete" data-id="{{ $roleId }}" onclick="event.stopPropagation()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="3 6 5 6 21 6"/>
                                         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
                                         <path d="M10 11v6"/><path d="M14 11v6"/>
                                         <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                                     </svg>
+                                    Delete
                                 </button>
                                 @endif
                             </div>

@@ -123,9 +123,11 @@
                 @php
                     $npArr = ['Notice period', 'Available from', 'Immediate'];
                     $npDate = $row->np_id;
-                    $titleNotic = $npArr[$row->serving_notice_period_mode];
+                    $titleNotic = $npArr[$row->serving_notice_period_mode] ?? 'Immediate';
                     if ($row->serving_notice_period_mode == 0) {
-                        $npDate = $row->np_id == 1 ? $row->np_id . ' Day' : $row->np_id . ' Days';
+                        // Notice period expressed in days.
+                        $days = (int) $row->np_id;
+                        $npDate = $days > 0 ? ($days == 1 ? '1 Day' : $days . ' Days') : '';
                     } elseif ($row->serving_notice_period_mode == 1) {
                         $npDate = date('d-M-y', strtotime($row->np_id));
                         if (date('Y-m-d', strtotime($npDate)) < date('Y-m-d')) { $titleNotic = 'Immediate'; $npDate = ''; }
@@ -179,9 +181,11 @@
                     $outsourcing_type = $row->outsourcing_type == 2 ? 'Contract' : 'Full-time';
                     $serviceType = @$row->comission_type == 2 ? 'Paid' : (@$row->comission_type == 1 ? 'Free' : '—');
                     $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
+                    // Whole-number display — no redundant ".00" decimals on the headline salary figure.
+                    $billAmountClean = number_format((float) $billFormatViewSalary->amount, 0);
                 @endphp
                 <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">{!! $bill_rate_currency !!}{{ $billFormatViewSalary->amount }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</a>
+                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</a>
                     <span class="text-muted fw-bold d-block fs-7"><i class="fa fa-briefcase" style="font-size:9px !important;"></i> {{ $outsourcing_type }}</span>
                     <span class="fw-bold d-block fs-7 {{ $serviceClass }}"><i class="fa fa-circle-check" style="font-size:9px !important;"></i> {{ $serviceType }}</span>
                 </div>
@@ -192,10 +196,10 @@
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
                     $subS = ($result->name) ?? '';
-                    // 3rd row: how long the talent has been on bench (only while status = Bench).
+                    // 3rd row: how long the talent has been on bench (whole days, only while status = Bench).
                     $benchDays = '';
                     if ($row->status == 2 && !empty($row->created_at)) {
-                        $benchDays = Carbon::parse($row->created_at)->diffInDays(Carbon::now()) . ' Days on bench';
+                        $benchDays = (int) Carbon::parse($row->created_at)->diffInDays(Carbon::now()) . ' Days on bench';
                     }
                 @endphp
                 <div class="d-flex flex-column">
@@ -230,7 +234,7 @@
                 <div class="d-flex flex-column">
                     <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ $managerName }}">{{ mb_substr($managerName, 0, 14) }}{{ $extra }}</span>
                     <span class="text-muted fw-bold d-block fs-7">Relationship Mgr</span>
-                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing mt-1"><i class="fa fa-pen"></i> Change</a>
+                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing">Change</a>
                 </div>
             </td>
 
