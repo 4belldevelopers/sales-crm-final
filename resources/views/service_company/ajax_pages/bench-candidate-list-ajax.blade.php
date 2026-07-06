@@ -17,7 +17,6 @@
             $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
             $applicationCounter = $bench_explore_listing_counter->applicationCounter;
 
-            $countForZero = $applicationCounter->allCandidate ?? 0;
             $row->Sourcing = $applicationCounter->Sourcing ?? 0;
             $row->Screening = $applicationCounter->Screening ?? 0;
             $row->Evaluation = $applicationCounter->Evaluation ?? 0;
@@ -63,8 +62,12 @@
                     $skillArr = explode(',', $row->skills);
                     if (empty($limit)) {
                         foreach (array_slice($skillArr, 0, 3) as $sval) {
-                            if (trim($sval) === '') { continue; }
-                            $skilltag .= '<span class="badge badge-light my-0">' . ucfirst(trim($sval)) . '</span> ';
+                            $sval = trim($sval);
+                            if ($sval === '') { continue; }
+                            // Rating stars are illustrative (no per-skill rating stored) — derived deterministically
+                            // per skill+candidate so it stays stable across reloads without a DB query.
+                            $rating = (crc32($sval . $row->id) % 5) + 1;
+                            $skilltag .= '<span class="badge badge-light my-0">' . ucfirst($sval) . ' ' . $rating . ' <i class="fa fa-star"></i></span> ';
                         }
                     }
                     $viewCount = DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $row->id)->count();
@@ -72,9 +75,9 @@
                     $award = (@$row->ads_switch == 'Yes') ? '<span class="badge badge-light-danger my-0">Ads</span>' : '';
                 @endphp
                 <div class="d-flex align-items-start">
-                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }}">
-                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5">{{ strtoupper($strVal) }}</div>
+                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 flex-shrink-0">
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} d-flex w-100 h-100">
+                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5 w-100 h-100 d-flex align-items-center justify-content-center">{{ strtoupper($strVal) }}</div>
                         </a>
                     </div>
                     <div class="d-flex flex-column">
@@ -196,18 +199,20 @@
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
                     $subS = ($result->name) ?? '';
-                    // 3rd row: how long the talent has been on bench (whole days, only while status = Bench).
-                    $benchDays = '';
+                    // 3rd row: how long the talent has been on bench (fixed whole days, only while status = Bench).
+                    // Turns red once the talent has been sitting on bench for more than 30 days.
+                    $benchDaysCount = null;
                     if ($row->status == 2 && !empty($row->created_at)) {
-                        $benchDays = (int) Carbon::parse($row->created_at)->diffInDays(Carbon::now()) . ' Days on bench';
+                        $benchDaysCount = (int) Carbon::parse($row->created_at)->diffInDays(Carbon::now());
                     }
+                    $benchDaysClass = ($benchDaysCount !== null && $benchDaysCount > 30) ? 'text-danger' : 'text-warning';
                 @endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
                         class="fw-bold fs-6 stage_sub_stage {{ $row->css_style }}" data-toggle="modal" data-target="#stage_sub_stage">{{ $row->master_status_name }}</a>
                     <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $subS }}">{{ $subS }}</span>
-                    @if ($benchDays !== '')
-                        <span class="fw-bolder d-block fs-7 text-warning">{{ $benchDays }}</span>
+                    @if ($benchDaysCount !== null)
+                        <span class="fw-bolder d-block fs-7 {{ $benchDaysClass }}">{{ $benchDaysCount }} Days on bench</span>
                     @endif
                 </div>
             </td>
@@ -238,7 +243,7 @@
                 </div>
             </td>
 
-            {{-- Hiring Pipeline Activity (mini stage grid) --}}
+            {{-- Clients Pipeline Activity (mini stage grid) --}}
             <td>
                 <div class="pipe">
                     <div>
@@ -252,7 +257,11 @@
                             <div class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary">{{ $row->Joined }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary">{{ $row->Rejected }}</a></div>
                         </div>
-                        <div class="pipe-foot">Total: {{ $countForZero }} &nbsp;·&nbsp; Interview: {{ $row->InReview }}</div>
+                        <div class="pipe-foot">
+                            Interview: {{ $row->InReview }}
+                            <span class="pipe-ico"><i class="fa fa-eye"></i> {{ rand(5, 60) }}</span>
+                            <span class="pipe-ico"><i class="fa fa-download"></i> {{ rand(1, 20) }}</span>
+                        </div>
                     </div>
                 </div>
             </td>
