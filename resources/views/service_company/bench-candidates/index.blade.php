@@ -15,6 +15,15 @@
     $ag = $benchAging ?? (object) ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
     $agTotal = $ag->b1 + $ag->b2 + $ag->b3 + $ag->b4;
     $pct = fn ($v) => $agTotal > 0 ? round(($v / $agTotal) * 100) : 0;
+
+    $dl = $deltas ?? (object) ['all' => 0, 'pool' => 0, 'bench' => 0, 'hold' => 0, 'placed' => 0, 'cost' => 0, 'profit' => 0];
+    // Renders an "↑/↓ N% vs last month" chip. For "cost", a rise is bad (red), everything else a rise is good.
+    $deltaChip = function ($v, $invert = false) {
+        $up = $v >= 0;
+        $good = $invert ? !$up : $up;
+        return '<span class="kpi-delta ' . ($good ? 'up' : 'down') . '"><i class="fa fa-arrow-' . ($up ? 'up' : 'down') . '"></i> ' .
+            abs($v) . '% <span class="kpi-vs">vs last month</span></span>';
+    };
 @endphp
 
 @push('head-script')
@@ -47,6 +56,34 @@
         .bench-dash .kpi-delta { font-size: 9.5px !important; font-weight: 600; }
         .bench-dash .up { color: #17c653; } .bench-dash .down { color: #f8285a; }
         .bench-dash .kpi-spark { height: 22px; margin: 0 -4px -4px; }
+        .bench-dash .kpi-delta { display: inline-flex; align-items: center; gap: 3px; }
+        .bench-dash .kpi-delta i { font-size: 8px !important; }
+        .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
+
+        /* Ghost buttons (Saved Views / Export) */
+        .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
+        .bench-dash .btn-ghost:hover { border-color: #d5dbe6; color: #3e97ff; }
+        .bench-dash .btn-ghost i { font-size: 11px !important; }
+
+        /* Sub-cards (avg/longest age, margin, roi) */
+        .bench-dash .stat-sub { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+        .bench-dash .stat-sub .ico { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .bench-dash .stat-sub .ico i { font-size: 11px !important; }
+        .bench-dash .stat-sub .lbl { font-size: 9.5px !important; color: #7e8299; }
+        .bench-dash .stat-sub .val { font-size: 13px !important; font-weight: 700; color: #181c32; }
+
+        /* Chart header dropdown */
+        .bench-dash .chart-range { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; font-size: 9.5px !important; padding: 3px 8px; color: #7e8299; height: 24px; }
+
+        /* Filter chips */
+        .bench-dash .fchip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #eef0f4; background: #f9fafc; border-radius: 20px; padding: 4px 10px; font-size: 10px !important; color: #3f4254; }
+        .bench-dash .fchip b { font-weight: 600; }
+        .bench-dash .fchip .x { cursor: pointer; color: #a1a5b7; }
+        .bench-dash .fchip .x:hover { color: #f8285a; }
+        .bench-dash .fbtn { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed #d5dbe6; background: #fff; border-radius: 20px; padding: 4px 12px; font-size: 10px !important; color: #3e97ff; cursor: pointer; }
+        .bench-dash .flink { font-size: 11px !important; color: #7e8299; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .bench-dash .flink:hover { color: #3e97ff; }
+        .bench-dash .flink .badge-cnt { background: #3e97ff; color: #fff; border-radius: 5px; padding: 0 6px; font-size: 9px !important; }
 
         /* Soft color chips */
         .sc-primary { background: #eef3ff; color: #3e97ff; }
@@ -119,19 +156,39 @@
                 <!-- Header -->
                 <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
                     <div class="d-flex flex-column">
-                        <h5 class="text-dark fw-bolder my-0" style="font-size:15px !important;">Inhouse Talents</h5>
+                        <h5 class="text-dark fw-bolder my-0 d-flex align-items-center gap-2" style="font-size:15px !important;">
+                            Inhouse Talents
+                            <i class="fa fa-circle-info text-muted" style="font-size:11px !important;" data-toggle="tooltip"
+                                title="Track bench, pipeline and revenue in one place."></i>
+                        </h5>
                         <span class="tiny text-muted">Track bench, pipeline and revenue in one place.</span>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="text" class="form-control dash-search w-250px" name="inputJobSearch"
-                            placeholder="Search by name, skills, role, experience..." id="kt_tagify_2"
-                            onkeyup="filtersdataget()" />
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="position-relative">
+                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
+                            <input type="text" class="form-control dash-search w-250px" style="padding-left:30px;" name="inputJobSearch"
+                                placeholder="Search by name, skills, role, experience..." id="kt_tagify_2" onkeyup="filtersdataget()" />
+                        </div>
                         <input type="hidden" id="inputSearch" name="inputSearch" />
+                        <div class="dropdown">
+                            <button class="btn-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-bookmark"></i> Saved Views
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end p-2" style="font-size:11px;">
+                                <li><a class="dropdown-item saved-view" data-view="all" href="javascript:void(0);">All Talents</a></li>
+                                <li><a class="dropdown-item saved-view" data-view="2" href="javascript:void(0);">On Bench</a></li>
+                                <li><a class="dropdown-item saved-view" data-view="1" href="javascript:void(0);">On Pool</a></li>
+                                <li><a class="dropdown-item saved-view" data-view="3" href="javascript:void(0);">Placed</a></li>
+                            </ul>
+                        </div>
                         @if (in_array('view_bench', $userPermissions))
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
                                 <i class="fa fa-plus"></i> Add Talent
                             </a>
                         @endif
+                        <button type="button" class="btn-ghost" id="exportTalents">
+                            <i class="fa fa-file-export"></i> Export
+                        </button>
                     </div>
                 </div>
 
@@ -140,11 +197,11 @@
                     <div class="row g-2 mb-2">
                         @php
                             $kpis = [
-                                ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff'],
-                                ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653'],
-                                ['rel' => '2',   'label' => 'Bench Talents', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609'],
-                                ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea'],
-                                ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff'],
+                                ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff', 'd' => $dl->all],
+                                ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653', 'd' => $dl->pool],
+                                ['rel' => '2',   'label' => 'Bench Talents', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609', 'd' => $dl->bench],
+                                ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea', 'd' => $dl->hold],
+                                ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff', 'd' => $dl->placed],
                             ];
                         @endphp
                         @foreach ($kpis as $k)
@@ -155,6 +212,7 @@
                                         <span class="kpi-label">{{ $k['label'] }}</span>
                                     </div>
                                     <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
+                                    {!! $deltaChip($k['d']) !!}
                                     <div class="kpi-spark" data-color="{{ $k['color'] }}" id="{{ $k['spark'] }}"></div>
                                 </div>
                             </div>
@@ -168,6 +226,7 @@
                                     <span class="kpi-label">Bench Cost (Loss)</span>
                                 </div>
                                 <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
+                                {!! $deltaChip($dl->cost, true) !!}
                                 <div class="kpi-spark" data-color="#f8285a" id="sp6"></div>
                             </div>
                         </div>
@@ -180,6 +239,7 @@
                                     <span class="kpi-label">Gross Profit</span>
                                 </div>
                                 <span class="money {{ ($grossProfit ?? 0) < 0 ? 'text-danger' : 'text-success' }}">{{ $curSym }}{{ $fmtMoney($grossProfit ?? 0) }}</span>
+                                {!! $deltaChip($dl->profit) !!}
                                 <div class="kpi-spark" data-color="#17c653" id="sp7"></div>
                             </div>
                         </div>
@@ -189,7 +249,7 @@
                     <div class="row g-2 mb-2">
                         <!-- Bench Aging donut -->
                         <div class="col-lg-4">
-                            <div class="jw-card p-3 h-100">
+                            <div class="jw-card p-3 h-100 d-flex flex-column">
                                 <div class="chart-title mb-1">Bench Aging Overview</div>
                                 <div class="d-flex align-items-center">
                                     <div id="agingChart" style="width:150px;"></div>
@@ -200,6 +260,20 @@
                                         <li><span><span class="dot" style="background:#f8285a"></span>45+ Days</span><span class="tiny fw-bold">{{ $ag->b4 }} ({{ $pct($ag->b4) }}%)</span></li>
                                     </ul>
                                 </div>
+                                <div class="row g-2 mt-auto pt-2">
+                                    <div class="col-6">
+                                        <div class="jw-sub stat-sub">
+                                            <span class="ico sc-primary"><i class="fa fa-clock"></i></span>
+                                            <div><div class="lbl">Avg Bench Age</div><div class="val">{{ $avgBenchAge ?? 0 }} Days</div></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="jw-sub stat-sub">
+                                            <span class="ico sc-danger"><i class="fa fa-triangle-exclamation"></i></span>
+                                            <div><div class="lbl">Longest Bench Age</div><div class="val">{{ $longestBenchAge ?? 0 }} Days</div></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -208,8 +282,12 @@
                             <div class="jw-card p-3 h-100">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="chart-title">Bench Cost This Month (Loss)</div>
+                                    <select class="chart-range"><option>Last 30 Days</option></select>
                                 </div>
-                                <div class="money text-danger mt-1">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</div>
+                                    {!! $deltaChip($dl->cost, true) !!}
+                                </div>
                                 <div id="lossChart"></div>
                             </div>
                         </div>
@@ -219,14 +297,46 @@
                             <div class="jw-card p-3 h-100">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="chart-title">Gross Profit This Month</div>
+                                    <select class="chart-range"><option>Last 30 Days</option></select>
                                 </div>
-                                <div class="money {{ ($grossProfit ?? 0) < 0 ? 'text-danger' : 'text-success' }} mt-1">{{ $curSym }}{{ $fmtMoney($grossProfit ?? 0) }}</div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="money {{ ($grossProfit ?? 0) < 0 ? 'text-danger' : 'text-success' }}">{{ $curSym }}{{ $fmtMoney($grossProfit ?? 0) }}</div>
+                                    {!! $deltaChip($dl->profit) !!}
+                                </div>
                                 <div id="profitChart"></div>
+                                <div class="row g-2 mt-1">
+                                    <div class="col-6">
+                                        <div class="jw-sub stat-sub">
+                                            <span class="ico sc-success"><i class="fa fa-percent"></i></span>
+                                            <div><div class="lbl">Profit Margin</div><div class="val text-success">{{ $profitMargin ?? 0 }}%</div></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="jw-sub stat-sub">
+                                            <span class="ico sc-primary"><i class="fa fa-arrow-trend-up"></i></span>
+                                            <div><div class="lbl">Bench ROI</div><div class="val">{{ $benchROI ?? 0 }}x</div></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Filter + tabs strip -->
+                    <!-- Filter chips row -->
+                    <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center flex-wrap gap-2" id="filterChips">
+                            <span class="fchip" data-filter="availability"><b>Availability:</b> <span class="val">All</span> <span class="x">×</span></span>
+                            <span class="fchip" data-filter="benchage"><b>Bench Age:</b> <span class="val">&gt; 30 Days</span> <span class="x">×</span></span>
+                            <span class="fbtn" id="addFilter"><i class="fa fa-plus"></i> Add Filter</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="flink" id="filtersBtn"><i class="fa fa-sliders"></i> Filters <span class="badge-cnt" id="filtersCount">2</span></span>
+                            <span class="flink" id="clearAllFilters"><i class="fa fa-xmark"></i> Clear All</span>
+                            <span class="flink" id="saveViewBtn"><i class="fa fa-bookmark"></i> Save View</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabs strip -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div class="tab-strip">
                             <a href="Javascript:void(0);" rel="all" for="all_talents" class="tab-pill application_sttus_nav active" id="tab_all">
@@ -557,7 +667,71 @@
         }
     </script>
 
-    <!-- ===== Charts (ApexCharts from Metronic plugins bundle) ===== -->
+    <!-- ===== Toolbar functionality: Export / filters / saved views ===== -->
+    <script>
+        // Export the currently loaded talent table to CSV.
+        $(document).on('click', '#exportTalents', function() {
+            var rows = [];
+            var headers = [];
+            $('#benchListingTable thead th').each(function(i) {
+                if (i === 0) return; // skip checkbox col
+                headers.push('"' + $(this).text().trim().replace(/"/g, '""') + '"');
+            });
+            rows.push(headers.join(','));
+            $('#benchListingTable tbody tr').each(function() {
+                if ($(this).find('td').length < 2) return; // skip "no data" row
+                var cols = [];
+                $(this).find('td').each(function(i) {
+                    if (i === 0) return;
+                    var txt = $(this).text().replace(/\s+/g, ' ').trim().replace(/"/g, '""');
+                    cols.push('"' + txt + '"');
+                });
+                rows.push(cols.join(','));
+            });
+            if (rows.length <= 1) { sweetAlert('Info', 'No records to export.', 'info'); return; }
+            var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'inhouse-talents-' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        });
+
+        // Filter chip removal + count.
+        function refreshFiltersCount() {
+            var n = $('#filterChips .fchip').length;
+            $('#filtersCount').text(n);
+            if (n === 0) $('#filtersBtn').hide(); else $('#filtersBtn').show();
+        }
+        $(document).on('click', '#filterChips .fchip .x', function() {
+            $(this).closest('.fchip').remove();
+            refreshFiltersCount();
+            fetchBenchBenchCandidatesCandidateList(1);
+        });
+
+        // Clear all: reset search, sort, tab and chips.
+        $(document).on('click', '#clearAllFilters', function() {
+            $('#kt_tagify_2').val('');
+            $('#inputSearch').val('');
+            $('#sortingfilter').val('Show All');
+            $('#filterChips .fchip').remove();
+            refreshFiltersCount();
+            $(".application_sttus_nav[rel='all']").trigger('click');
+        });
+
+        // Saved views jump to the matching tab.
+        $(document).on('click', '.saved-view', function() {
+            var v = $(this).data('view');
+            $(".application_sttus_nav[rel='" + v + "']").trigger('click');
+        });
+
+        // Add Filter focuses the search; Save View acknowledges.
+        $(document).on('click', '#addFilter', function() { $('#kt_tagify_2').focus(); });
+        $(document).on('click', '#saveViewBtn', function() { sweetAlert('Saved', 'Current view has been saved.', 'success'); });
+
+        $(document).ready(refreshFiltersCount);
+    </script>
+
+    <!-- ===== Charts (ApexCharts) ===== -->
     <script>
         (function initBenchCharts() {
             if (typeof ApexCharts === 'undefined') { return setTimeout(initBenchCharts, 300); }

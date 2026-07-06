@@ -200,14 +200,69 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$profitSeries[] = round($profitToDate, 2);
 		}
 
+		// Bench age summary (Avg / Longest) + profitability ratios shown as sub-cards.
+		$ages = $benchRows->map(fn ($r) => $r->created_at ? Carbon::parse($r->created_at)->diffInDays($today) : 0);
+		$avgBenchAge     = $ages->count() ? (int) round($ages->avg()) : 0;
+		$longestBenchAge = $ages->count() ? (int) $ages->max() : 0;
+		$profitMargin    = $placedClientPay > 0 ? round(($grossProfit / $placedClientPay) * 100, 1) : 0;
+		$benchROI        = $benchCost > 0 ? round($placedClientPay / $benchCost, 2) : 0;
+
+		/**
+		 * Month-over-month deltas that power the "vs last month" chips on each KPI card.
+		 * Approximated from records created in each month window (no historical snapshots exist).
+		 */
+		$thisStart = Carbon::now()->startOfMonth();
+		$lastStart = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+		$lastEnd   = Carbon::now()->subMonthNoOverflow()->endOfMonth();
+
+		$addsThis = DB::table('job_applications')->where('company_id', $companyId)->where('condidate_type', 'bench_condidate')
+			->where('created_at', '>=', $thisStart)->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
+		$addsLast = DB::table('job_applications')->where('company_id', $companyId)->where('condidate_type', 'bench_condidate')
+			->whereBetween('created_at', [$lastStart, $lastEnd])->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
+
+		$delta = function ($cur, $prev) {
+			if ($prev <= 0) { return $cur > 0 ? 100.0 : 0.0; }
+			return round((($cur - $prev) / $prev) * 100, 1);
+		};
+
+		// Money deltas: bench cost & profit contributed this month vs last month.
+		$sumBench = fn ($from, $to) => (float) $benchRows
+			->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => (float) $r->ctc_yearly);
+		$sumPlaceBill = fn ($from, $to) => (float) $placementRows
+			->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+		$sumPlacePay = fn ($from, $to) => (float) $placementRows
+			->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+
+		$costThis = $sumBench($thisStart, Carbon::now());
+		$costLast = $sumBench($lastStart, $lastEnd);
+		$profitThis = $sumPlaceBill($thisStart, Carbon::now()) - $costThis - $sumPlacePay($thisStart, Carbon::now());
+		$profitLast = $sumPlaceBill($lastStart, $lastEnd) - $costLast - $sumPlacePay($lastStart, $lastEnd);
+
+		$this->deltas = (object) [
+			'all'    => $delta($addsThis->sum(), $addsLast->sum()),
+			'pool'   => $delta($addsThis->get(1, 0), $addsLast->get(1, 0)),
+			'bench'  => $delta($addsThis->get(2, 0), $addsLast->get(2, 0)),
+			'hold'   => $delta($addsThis->get(4, 0), $addsLast->get(4, 0)),
+			'placed' => $delta($addsThis->get(3, 0), $addsLast->get(3, 0)),
+			'cost'   => $delta($costThis, $costLast),
+			'profit' => $delta($profitThis, $profitLast),
+		];
+
 		$currencyMode = GeneralMethod::getCompanyCurrencyBenchshowMode($companyId);
-		$this->currencyCode = $currencyMode->currency_code ?? 'INR';
-		$this->benchCost    = $benchCost;
-		$this->grossProfit  = $grossProfit;
-		$this->benchAging   = (object) $aging;
-		$this->chartLabels  = $labels;
-		$this->lossSeries   = $lossSeries;
-		$this->profitSeries = $profitSeries;
+		$this->currencyCode     = $currencyMode->currency_code ?? 'INR';
+		$this->benchCost        = $benchCost;
+		$this->grossProfit      = $grossProfit;
+		$this->benchAging       = (object) $aging;
+		$this->avgBenchAge      = $avgBenchAge;
+		$this->longestBenchAge  = $longestBenchAge;
+		$this->profitMargin     = $profitMargin;
+		$this->benchROI         = $benchROI;
+		$this->chartLabels      = $labels;
+		$this->lossSeries       = $lossSeries;
+		$this->profitSeries     = $profitSeries;
 
 		return view('service_company.bench-candidates.index', $this->data);
 

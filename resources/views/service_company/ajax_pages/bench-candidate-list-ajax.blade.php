@@ -215,7 +215,7 @@
                 </a>
             </td>
 
-            {{-- Hiring Pipeline Activity (mini grid + view profile + download resume) --}}
+            {{-- Hiring Pipeline Activity (mini stage grid) --}}
             <td>
                 <div class="pipe">
                     <div>
@@ -230,21 +230,6 @@
                             <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary">{{ $row->Rejected }}</a></div>
                         </div>
                         <div class="pipe-foot">Total: {{ $countForZero }} &nbsp;·&nbsp; Interview: {{ $row->InReview }}</div>
-                    </div>
-                    <div class="pipe-actions">
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-btn bench_show_application_detail" title="View bench profile">
-                            <i class="fa fa-user"></i> View
-                        </a>
-                        @if (!empty($row->resume))
-                            <a href="{{ route('download.resume', ['id' => $row->id, 'path' => urlencode($row->resume)]) }}"
-                                data-id="{{ $row->id }}" target="_blank" class="pipe-btn download-resume-bench" title="Download resume">
-                                <i class="fa fa-download"></i> Resume
-                            </a>
-                        @else
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-btn bench_show_application_detail" title="Open profile to download resume">
-                                <i class="fa fa-download"></i> Resume
-                            </a>
-                        @endif
                     </div>
                 </div>
             </td>
