@@ -1,6 +1,8 @@
 @extends('layouts.service_company_layout')
 
 @push('head-script')
+{{-- Font Awesome — required so the currency symbols (e.g. <i class="fa fa-inr">) render in the Compensation column. --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
 <style>
 /* ──────────────────────────────────────────────
    Joining Tracker — redesigned layout
@@ -96,7 +98,7 @@
 .jt-cand-name { font-size: 13px; font-weight: 600; color: #0f172a; display: block; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
 .jt-cand-name:hover { color: #6366f1; }
 .jt-cand-role { font-size: 11px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-.jt-bench { font-size: 9px; background: #dcfce7; color: #16a34a; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
+.jt-bench { font-size: 9px; background: #dbeafe; color: #2563eb; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
 .jt-owner-name { font-size: 13px; font-weight: 600; color: #0f172a; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 .jt-owner-role { font-size: 11px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 
@@ -110,8 +112,10 @@
 .jt-status-sub { font-size: 11px; color: #64748b; display: block; }
 
 /* Job Status */
-.jt-jobstatus { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
+.jt-jobstatus { font-size: 13px; font-weight: 600; color: #1e293b; display: inline-block; }
 .jt-jobstatus-sub { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+/* Closed requisitions read red (background + text) */
+.jt-jobstatus.jt-closed { background: #fee2e2; color: #dc2626; padding: 2px 9px; border-radius: 6px; }
 
 /* Offer Amount */
 .jt-comp-amount { font-size: 13px; font-weight: 600; color: #0f172a; display: block; white-space: nowrap; }
@@ -192,17 +196,19 @@
 
 {{-- ── KPI Stats (seeded server-side, refreshed live from ES counts) ── --}}
 @php
+    // Current month label for the "This Month's Joinings" card, e.g. "July 26".
+    $thisMonthLabel = date('F y');
     $statCards = [
-        ['label'=>'Total Joining','key'=>'total','bg'=>'#ede9fe','ic'=>'#7c3aed',
+        ['label'=>'Total Joined','key'=>'total','bg'=>'#ede9fe','ic'=>'#7c3aed','sub'=>'text','tone'=>'info','delta'=>'All joinings tracked',
          'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
-        ['label'=>"Today's Joinings",'key'=>'today','bg'=>'#dbeafe','ic'=>'#2563eb',
+        ['label'=>"Today's Joinings",'key'=>'today','bg'=>'#dbeafe','ic'=>'#2563eb','sub'=>'link',
          'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
-        ['label'=>'Joined','key'=>'joined','bg'=>'#dcfce7','ic'=>'#16a34a',
-         'icon'=>'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
-        ['label'=>'Joined & Backed Out','key'=>'backed_out','bg'=>'#fee2e2','ic'=>'#dc2626',
-         'icon'=>'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
-        ['label'=>'Onboarded','key'=>'onboarded','bg'=>'#d1fae5','ic'=>'#059669',
+        ['label'=>'Onboarded','key'=>'onboarded','bg'=>'#d1fae5','ic'=>'#059669','sub'=>'pct','tone'=>'up',
          'icon'=>'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632z'],
+        ['label'=>'Backed Out','key'=>'backed_out','bg'=>'#fee2e2','ic'=>'#dc2626','sub'=>'pct','tone'=>'down',
+         'icon'=>'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
+        ['label'=>"This Month's Joinings",'key'=>'this_month','bg'=>'#fef3c7','ic'=>'#d97706','sub'=>'text','tone'=>'info','delta'=>$thisMonthLabel,
+         'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5M9 15.75l1.75 1.75L14 13.5'],
     ];
 @endphp
 <div class="jt-stats-grid">
@@ -214,14 +220,14 @@
         <div class="jt-stat-body">
             <p class="jt-stat-label">{{ $card['label'] }}</p>
             <p class="jt-stat-value" data-kpi="{{ $card['key'] }}">{{ $joiningStats[$card['key']] ?? 0 }}</p>
-            @if($card['key'] === 'today')
+            @if($card['sub'] === 'link')
                 <span class="jt-stat-link" data-jump-tab="joining_today">View Today's List
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                 </span>
-            @elseif($card['key'] === 'total')
-                <div class="jt-stat-delta info"><span>All joinings tracked</span></div>
+            @elseif($card['sub'] === 'pct')
+                <div class="jt-stat-delta {{ $card['tone'] }}"><span data-kpi-pct="{{ $card['key'] }}">0% of total joining</span></div>
             @else
-                <div class="jt-stat-delta {{ $card['key']==='backed_out' ? 'down' : 'up' }}"><span data-kpi-pct="{{ $card['key'] }}">0% of total joining</span></div>
+                <div class="jt-stat-delta {{ $card['tone'] }}"><span>{{ $card['delta'] }}</span></div>
             @endif
         </div>
     </div>
@@ -245,10 +251,10 @@
         <div class="jt-sort-bar">
             <span class="jt-sort-label">Sort by:</span>
             <select class="jt-sort-select" id="jt_sort">
-                <option value="12">Joining Date</option>
-                <option value="13">Oldest (Join Date)</option>
-                <option value="15">High → Low (Amount)</option>
-                <option value="14">Low → High (Amount)</option>
+                <option value="12">Latest Joining Date</option>
+                <option value="13">Oldest Joining Date</option>
+                <option value="onboarded">Onboarded</option>
+                <option value="backed_out">Backed Out</option>
             </select>
         </div>
     </div>
@@ -280,10 +286,10 @@
             <thead>
                 <tr>
                     <th>Candidate</th>
-                    <th>Job &amp; Department</th>
+                    <th>Requisitions</th>
                     <th>Job Status</th>
-                    <th>HR Owner</th>
-                    <th class="jt-th-sort" data-asc="14" data-desc="15">Offer Amount <span class="jt-sort-ico">⇵</span></th>
+                    <th>Ownership</th>
+                    <th class="jt-th-sort" data-asc="14" data-desc="15">Compensation <span class="jt-sort-ico">⇵</span></th>
                     <th class="jt-th-sort" data-asc="13" data-desc="12">Joining Date <span class="jt-sort-ico">⇵</span></th>
                     <th>Stage</th>
                 </tr>
@@ -297,16 +303,6 @@
     </div>
 
     <div id="jt_pagination"></div>
-    <div class="jt-table-footer">
-        <div class="jt-rows-per">
-            Rows per page:
-            <select class="jt-rows-select" id="jt_size">
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-            </select>
-        </div>
-    </div>
     @else
     <div style="padding:40px;text-align:center;color:#ef4444;font-size:13px;font-weight:600;">
         ACCESS DENIED — Contact your administrator
@@ -420,7 +416,18 @@
     });
 
     document.getElementById('jt_sort').addEventListener('change', function () {
-        state.sort = this.value; clearHeaderSort(); fetchTable(true);
+        var v = this.value;
+        if (v === 'onboarded' || v === 'backed_out') {
+            // Status views: filter the table to those candidates, drop the tab-bar highlight,
+            // and fall back to the latest-joining-date order.
+            setTabsInactive();
+            state.tab  = v;
+            state.sort = '12';
+        } else {
+            state.sort = v;
+        }
+        clearHeaderSort();
+        fetchTable(true);
     });
 
     /* Column-header sort (mirrors the Sort-by dropdown) */
@@ -443,16 +450,18 @@
         });
     });
 
-    document.getElementById('jt_size').addEventListener('change', function () {
-        state.size = parseInt(this.value, 10); fetchTable(true);
-    });
-
     /* tab clicks */
+    function setTabsInactive() {
+        document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) { t.classList.remove('active'); });
+    }
     function activateTab(filter) {
         document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) {
             t.classList.toggle('active', t.dataset.filter === filter);
         });
         state.tab = filter;
+        // A real tab supersedes the Sort dropdown's status views — revert it to "Latest".
+        var sel = document.getElementById('jt_sort');
+        if (sel && (sel.value === 'onboarded' || sel.value === 'backed_out')) { sel.value = '12'; state.sort = '12'; }
         fetchTable(true);
     }
     document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (tab) {

@@ -1017,15 +1017,33 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// of_offer_acceptance) so the paginated rows always match the tab badge counts.
 		// Applied to the paginated hits ONLY; the badge/KPI aggregation runs on the base
 		// query below so every tab total stays visible regardless of the active tab.
+		// Compound joining filters pre-built as variables (reused by both the tab filter
+		// and the KPI aggregation) to keep the arrays flat and free of deep bracket nesting.
+		$fDelayed = ['bool' => ['must' => [
+			['range' => ['of_joined_date' => ['lt' => 'now/d']]],
+			['term'  => ['of_joined' => 0]],
+		]]];
+		$fOnboarded = ['bool' => ['must' => [
+			['term' => ['of_joined' => 1]],
+			['term' => ['of_offer_acceptance' => 2]],
+		]]];
+		$fBackedOut = ['bool' => ['must' => [
+			['term'  => ['of_offer_acceptance' => 2]],
+			['term'  => ['of_joined' => 0]],
+			['range' => ['of_joined_date' => ['lt' => 'now/d']]],
+		]]];
+
 		$joining_tab_filter = request('joining_tab_filter');
 		$joiningTabFilterClause = null;
 		if ($status_cus == 6 && !empty($joining_tab_filter) && $joining_tab_filter !== 'all') {
 			switch ($joining_tab_filter) {
 				case 'joining_today': $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]; break;
 				case 'this_week':     $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]; break;
-				case 'delayed':       $joiningTabFilterClause = ['bool'  => ['must' => [['range' => ['of_joined_date' => ['lt' => 'now/d']]], ['term' => ['of_joined' => 0]]]]]; break;
-				case 'no_show':       $joiningTabFilterClause = ['term'  => ['of_offer_acceptance' => 3]]; break;
-				case 'pending_docs':  $joiningTabFilterClause = ['term'  => ['of_offer_acceptance' => 1]]; break;
+				case 'delayed':       $joiningTabFilterClause = $fDelayed;   break;
+				case 'no_show':       $joiningTabFilterClause = ['term' => ['of_offer_acceptance' => 3]]; break;
+				case 'pending_docs':  $joiningTabFilterClause = ['term' => ['of_offer_acceptance' => 1]]; break;
+				case 'onboarded':     $joiningTabFilterClause = $fOnboarded; break;
+				case 'backed_out':    $joiningTabFilterClause = $fBackedOut; break;
 			}
 		}
 
@@ -1199,6 +1217,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 						'joined'       => ['filter' => ['term'  => ['of_joined' => 1]]],
 						'today'        => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
 						'this_week'    => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+						'this_month'   => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/M', 'lt' => 'now+1M/M']]]],
 						'delayed'      => ['filter' => ['bool'  => ['must' => [['range' => ['of_joined_date' => ['lt' => 'now/d']]], ['term' => ['of_joined' => 0]]]]]],
 						'no_show'      => ['filter' => ['term'  => ['of_offer_acceptance' => 3]]],
 						'pending_docs' => ['filter' => ['term'  => ['of_offer_acceptance' => 1]]],
@@ -1215,6 +1234,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				'backed_out'   => (int) ($ja['backed_out']['doc_count'] ?? 0),
 				'onboarded'    => (int) ($ja['onboarded']['doc_count'] ?? 0),
 				'this_week'    => (int) ($ja['this_week']['doc_count'] ?? 0),
+				'this_month'   => (int) ($ja['this_month']['doc_count'] ?? 0),
 				'delayed'      => (int) ($ja['delayed']['doc_count'] ?? 0),
 				'no_show'      => (int) ($ja['no_show']['doc_count'] ?? 0),
 				'pending_docs' => (int) ($ja['pending_docs']['doc_count'] ?? 0),

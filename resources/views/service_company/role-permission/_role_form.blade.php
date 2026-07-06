@@ -136,7 +136,7 @@
         <input type="hidden" name="role_id" id="role_id" value="{{ $id }}">
     @endif
 
-    {{-- ── Header (full-bleed bar, content centered/capped for 15.6" laptop → 4K) ── --}}
+    {{-- ── Header (full-bleed bar; Save / Discard / Cancel live here — the footer is removed) ── --}}
     <div class="rpf-head">
         <div class="rpf-head-inner rpf-container">
             <div class="rpf-head-icon">
@@ -151,6 +151,20 @@
                 </div>
                 <p class="rpf-head-sub">{{ $isEdit ? 'Manage permissions and access control for this role.' : 'Create a custom role with specific permissions for your team.' }}</p>
             </div>
+
+            {{-- Action buttons (moved from footer into the header) --}}
+            <div class="rpf-head-actions">
+                <button type="button" class="rpf-fbtn" onclick="closeRoleForm()">Cancel</button>
+                <button type="reset" class="rpf-fbtn danger">Discard Changes</button>
+                <button type="button" id="submit-frm-btn" class="rpf-fbtn primary" data-kt-roles-modal-action="submit">
+                    <span class="indicator-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="20 6 9 17 4 12"/></svg>
+                        {{ $isEdit ? 'Save Role' : 'Create Role' }}
+                    </span>
+                    <span class="indicator-progress">Please wait…<span class="spinner-border spinner-border-sm align-middle"></span></span>
+                </button>
+            </div>
+
             <button type="button" class="rpf-head-close" onclick="closeRoleForm()" aria-label="Close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -169,9 +183,9 @@
         </div>
         @endif
 
-        {{-- Summary card --}}
+        {{-- Hero / summary card — one single row: Role Name | Description | Assigned Users | Access Level | Permissions --}}
         <div class="rpf-summary">
-            <div>
+            <div class="rpf-sum-col rpf-sum-name">
                 <label class="rpf-field-label">Role Name <span class="req">*</span></label>
                 @if($isSubAdmin)
                     <input class="rpf-input" value="{{ $roleName }}" readonly>
@@ -180,15 +194,11 @@
                     <input class="rpf-input" name="role_name" id="role_name" placeholder="Enter a role name" value="{{ $roleName }}">
                 @endif
             </div>
-            <div>
-                <label class="rpf-field-label">Access Level</label>
-                <div><span class="rpf-access-pill" style="color:#e67e22;background:#fff3e0;">Medium</span></div>
-            </div>
-            <div>
+            <div class="rpf-sum-col rpf-sum-desc">
                 <label class="rpf-field-label">Description</label>
                 <input class="rpf-input" disabled value="{{ $isEdit ? 'Limited access with the permissions selected below.' : 'Custom role with tailored permissions.' }}">
             </div>
-            <div>
+            <div class="rpf-sum-col rpf-sum-users">
                 <label class="rpf-field-label">Assigned Users</label>
                 @if($userCount > 0)
                     <div class="rpf-summary-users">
@@ -201,12 +211,17 @@
                     <div class="rpf-users-count" style="padding-top:6px;">No users assigned yet</div>
                 @endif
             </div>
-            <div style="grid-column:1 / -1;">
+            <div class="rpf-sum-col rpf-sum-access">
+                <label class="rpf-field-label">Access Level</label>
+                <div><span class="rpf-access-pill" style="color:#e67e22;background:#fff3e0;">Medium</span></div>
+            </div>
+            <div class="rpf-sum-col rpf-sum-perms">
                 <div class="rpf-prog-top">
                     <span class="rpf-field-label" style="margin:0;">Permissions</span>
-                    <span class="rpf-prog-frac"><span class="rpf-prog-enabled">0</span> <span>/ <span class="rpf-prog-total">0</span> Enabled</span> &nbsp; <span class="rpf-prog-pct">0%</span></span>
+                    <span class="rpf-prog-frac"><span class="rpf-prog-enabled">0</span> <span>/ <span class="rpf-prog-total">0</span> Enabled</span></span>
                 </div>
                 <div class="rpf-prog-track"><div class="rpf-prog-fill" style="width:0;"></div></div>
+                <div class="rpf-prog-pct" style="margin-top:4px;">0%</div>
             </div>
         </div>
 
@@ -273,7 +288,7 @@
                         <div class="rpf-sec-rows">
                             @foreach($sec['mods'] as $mod)
                             @php
-                                $modName = ucwords($mod['name']);
+                                $modName = \App\Helper\GeneralMethod::roleGroupLabel($mod['name']);
                                 [$buckets, $otherPerms] = $bucketModPerms($mod['perms']);
                             @endphp
                             <div class="rpf-row" data-mod-name="{{ strtolower($modName) }}">
@@ -394,22 +409,6 @@
             </div>
         </div>
     </div>
-    </div>
-
-    {{-- ── Footer ── --}}
-    <div class="rpf-footer">
-        <div class="rpf-footer-inner rpf-container">
-            <button type="button" class="rpf-fbtn" onclick="closeRoleForm()">Cancel</button>
-            <button type="reset" class="rpf-fbtn danger">Discard Changes</button>
-            <span class="rpf-foot-spacer">@if($isEdit && $role_row){{ 'Editing “' . $roleName . '”' }}@else{{ 'New role' }}@endif</span>
-            <button type="button" id="submit-frm-btn" class="rpf-fbtn primary" data-kt-roles-modal-action="submit">
-                <span class="indicator-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="20 6 9 17 4 12"/></svg>
-                    {{ $isEdit ? 'Save Role' : 'Create Role' }}
-                </span>
-                <span class="indicator-progress">Please wait…<span class="spinner-border spinner-border-sm align-middle"></span></span>
-            </button>
-        </div>
     </div>
 </form>
 

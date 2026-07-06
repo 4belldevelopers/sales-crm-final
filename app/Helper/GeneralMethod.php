@@ -148,6 +148,30 @@ END:VCALENDAR";
 		return  date("d M y", strtotime($originalDate));
 	
 	}	
+	/**
+	 * Human-friendly display label for a permission group_name on the Roles & Permissions
+	 * screens. Display-only remap agreed with the product owner — the underlying DB
+	 * group_name is unchanged, so permissions/saving are unaffected. Used by both the
+	 * main role cards and the Add/Edit role drawer so the labels never drift apart.
+	 */
+	public static function roleGroupLabel($groupName)
+	{
+		$map = [
+			'staffing partners' => 'Agencies',
+			'bench'             => 'Inhouse Talents',
+			'team'             => 'Team/Users',
+			'website'          => 'Career Website',
+			'salary break'     => 'Compensation',
+			'job applications' => 'Candidates',
+			'schedule'         => 'Interview Schedule',
+			'offer'            => 'Offers Tracker',
+			'joining'          => 'Joining Tracker',
+			'salary'           => 'Salary Details of Candidate',
+		];
+		$key = strtolower(trim($groupName));
+		return $map[$key] ?? ucwords($groupName);
+	}
+
 	public static function employmentType()
 	{
 		$array   	= array();
