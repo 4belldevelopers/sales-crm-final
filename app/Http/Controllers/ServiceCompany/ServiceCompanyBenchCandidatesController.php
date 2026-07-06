@@ -126,13 +126,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		/**
 		 * Bench Loss & Profit analytics (tenant-scoped, drives the redesigned dashboard).
 		 * Why: the redesign shows "Bench Cost (Loss)" and "Gross Profit" cards + charts.
-		 *  - Loss   = annual pay (ctc_yearly) committed to talents currently ON BENCH (status 2).
-		 *  - Profit = billing (ectc_yearly) earned on PLACED talents (status 3)
-		 *             minus the pay (ctc_yearly) of both bench + placed talents.
+		 *
+		 *  - Loss (Bench Cost) = annual salary (ctc_yearly) of talents still ON BENCH (status 2),
+		 *    i.e. people we pay for but who are NOT placed yet.
+		 *
+		 *  - Gross Profit = (what the CLIENT actually pays us on the placement)
+		 *                   − (bench cost of unplaced talents)
+		 *                   − (salary we pay the placed talents).
+		 *    IMPORTANT: the client-pay is the real placement billing recorded in `bench_place`
+		 *    (bill_rate_amount), NOT the ECTC captured on the candidate form. Placement rates are
+		 *    stored raw with a *_mode, so they are annualised via salaryDividedByMode().
+		 *
 		 * NOTE: raw DB::table is NOT auto tenant-scoped, so company_id is filtered explicitly.
 		 */
 		$companyId = auth()->user()->company_id;
 
+		// Talents still on bench (unplaced) — drives Bench Cost / Loss.
 		$benchRows = DB::table('job_applications')
 			->select('id', 'ctc_yearly', 'created_at')
 			->where('company_id', $companyId)
@@ -140,17 +149,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->where('status', 2)
 			->get();
 
-		$placedRows = DB::table('job_applications')
-			->select('id', 'ctc_yearly', 'ectc_yearly', 'created_at')
-			->where('company_id', $companyId)
-			->where('condidate_type', 'bench_condidate')
-			->where('status', 3)
+		// Actual placement records: what the client pays us (bill_rate) + what we pay the placed talent (pay_rate).
+		$placementRows = DB::table('bench_place')
+			->select('bench_id', 'pay_rate_amount', 'pay_rate_mode', 'bill_rate_amount', 'bill_rate_mode', 'create_at')
+			->where('source_comapny_id', $companyId)
 			->get();
 
-		$benchCost      = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);   // Loss
-		$placedPay      = (float) $placedRows->sum(fn ($r) => (float) $r->ctc_yearly);
-		$placedBilling  = (float) $placedRows->sum(fn ($r) => (float) $r->ectc_yearly);
-		$grossProfit    = $placedBilling - ($benchCost + $placedPay);                   // Profit
+		// Annualise a raw placement rate (mode: 0=Annual, 1=Monthly, 2=Hourly).
+		$annual = fn ($amount, $mode) => (float) GeneralMethod::salaryDividedByMode((int) $mode, (float) $amount)->yearly;
+
+		$benchCost       = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);                           // unplaced salary
+		$placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode)); // client pays us
+		$placedSalary    = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));   // we pay placed talents
+
+		// Gross Profit = client pay (placed) − bench cost (unplaced) − placed talent salary.
+		$grossProfit = $placedClientPay - $benchCost - $placedSalary;
 
 		// Bench Aging buckets (days on bench, derived from created_at).
 		$aging = ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
@@ -163,7 +176,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			else                  { $aging['b4']++; }
 		}
 
-		// Daily Loss/Profit trend across the current month (cumulative by created_at).
+		// Daily Loss/Profit trend across the current month (cumulative to each day).
 		$monthStart = Carbon::now()->startOfMonth();
 		$dayCount   = (int) Carbon::now()->format('j');
 		$labels = $lossSeries = $profitSeries = [];
@@ -171,13 +184,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$cursor = (clone $monthStart)->addDays($d - 1)->endOfDay();
 			$labels[] = $cursor->format('d M');
 
+			// Loss to date = salary of bench talents added on/before this day.
 			$lossToDate = (float) $benchRows
 				->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor))
 				->sum(fn ($r) => (float) $r->ctc_yearly);
 
-			$placedToDate = $placedRows->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor));
-			$profitToDate = (float) $placedToDate->sum(fn ($r) => (float) $r->ectc_yearly)
-				- ($lossToDate + (float) $placedToDate->sum(fn ($r) => (float) $r->ctc_yearly));
+			// Placements made on/before this day.
+			$placedToDate = $placementRows->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->lte($cursor));
+			$clientPayToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+			$placedSalToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+
+			$profitToDate = $clientPayToDate - $lossToDate - $placedSalToDate;
 
 			$lossSeries[]   = round($lossToDate, 2);
 			$profitSeries[] = round($profitToDate, 2);
