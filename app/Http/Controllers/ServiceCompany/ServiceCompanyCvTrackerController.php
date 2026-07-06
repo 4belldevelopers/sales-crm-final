@@ -1017,21 +1017,32 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// of_offer_acceptance) so the paginated rows always match the tab badge counts.
 		// Applied to the paginated hits ONLY; the badge/KPI aggregation runs on the base
 		// query below so every tab total stays visible regardless of the active tab.
-		// Compound joining filters pre-built as variables (reused by both the tab filter
-		// and the KPI aggregation) to keep the arrays flat and free of deep bracket nesting.
-		$fDelayed = ['bool' => ['must' => [
-			['range' => ['of_joined_date' => ['lt' => 'now/d']]],
-			['term'  => ['of_joined' => 0]],
-		]]];
-		$fOnboarded = ['bool' => ['must' => [
-			['term' => ['of_joined' => 1]],
-			['term' => ['of_offer_acceptance' => 2]],
-		]]];
-		$fBackedOut = ['bool' => ['must' => [
-			['term'  => ['of_offer_acceptance' => 2]],
-			['term'  => ['of_joined' => 0]],
-			['range' => ['of_joined_date' => ['lt' => 'now/d']]],
-		]]];
+		// Compound joining filters pre-built as variables (reused by the tab filter AND the
+		// KPI aggregation, so rows and badges always agree).
+		//
+		// Onboarded / Backed Out are keyed off the joining SUB-STAGE, not the of_joined flags:
+		// the main stage is already "Joined" for this whole set, and the company-defined
+		// sub-stage name ("Onboarded" / "Backedout") is what separates them. We resolve THIS
+		// company's candidate_status ids for those names and match the ES "childStatus" field
+		// (mapped integer = add_job_wise_condidates.child_status_id).
+		// Tenancy: candidate_status is a raw query, scoped explicitly by company_id (Rule 3).
+		$fDelayed = $fOnboarded = $fBackedOut = null;
+		if ($status_cus == 6) {
+			$fDelayed = ['bool' => ['must' => [
+				['range' => ['of_joined_date' => ['lt' => 'now/d']]],
+				['term'  => ['of_joined' => 0]],
+			]]];
+			$onboardedStatusIds = array_map('intval', DB::table('candidate_status')
+				->where('company_id', $company_id)
+				->whereRaw("REPLACE(LOWER(name), ' ', '') = 'onboarded'")
+				->pluck('id')->toArray());
+			$backedOutStatusIds = array_map('intval', DB::table('candidate_status')
+				->where('company_id', $company_id)
+				->whereRaw("REPLACE(LOWER(name), ' ', '') = 'backedout'")
+				->pluck('id')->toArray());
+			$fOnboarded = ['terms' => ['childStatus' => $onboardedStatusIds]];
+			$fBackedOut = ['terms' => ['childStatus' => $backedOutStatusIds]];
+		}
 
 		$joining_tab_filter = request('joining_tab_filter');
 		$joiningTabFilterClause = null;
@@ -1218,11 +1229,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 						'today'        => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
 						'this_week'    => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
 						'this_month'   => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/M', 'lt' => 'now+1M/M']]]],
-						'delayed'      => ['filter' => ['bool'  => ['must' => [['range' => ['of_joined_date' => ['lt' => 'now/d']]], ['term' => ['of_joined' => 0]]]]]],
+						'delayed'      => ['filter' => $fDelayed],
 						'no_show'      => ['filter' => ['term'  => ['of_offer_acceptance' => 3]]],
 						'pending_docs' => ['filter' => ['term'  => ['of_offer_acceptance' => 1]]],
-						'onboarded'    => ['filter' => ['bool'  => ['must' => [['term' => ['of_joined' => 1]], ['term' => ['of_offer_acceptance' => 2]]]]]],
-						'backed_out'   => ['filter' => ['bool'  => ['must' => [['term' => ['of_offer_acceptance' => 2]], ['term' => ['of_joined' => 0]], ['range' => ['of_joined_date' => ['lt' => 'now/d']]]]]]],
+						'onboarded'    => ['filter' => $fOnboarded],
+						'backed_out'   => ['filter' => $fBackedOut],
 					],
 				],
 			]);
