@@ -209,7 +209,7 @@
                 @endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                        class="fw-bold fs-6 stage_sub_stage {{ $row->css_style }}" data-toggle="modal" data-target="#stage_sub_stage">{{ $row->master_status_name }}</a>
+                        class="fw-bold fs-6 stage_sub_stage {{ $row->css_style }}">{{ $row->master_status_name }}</a>
                     <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $subS }}">{{ $subS }}</span>
                     @if ($benchDaysCount !== null)
                         <span class="fw-bolder d-block fs-7 {{ $benchDaysClass }}">{{ $benchDaysCount }} Days on bench</span>

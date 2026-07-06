@@ -1,516 +1,230 @@
-@php  
+@php
     use App\Helper\GeneralMethod;
-	use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\DB;
+    use Carbon\Carbon;
 
+    // Avatar initial + color (same convention used across the bench pages).
+    $bgTextDecore = $strVal = '';
+    $str = trim(@$benchApplication->full_name);
+    $str = $strVal = strtolower($str[0] ?? '?');
+    $ordVal = ord($str);
+    if ($ordVal >= 97 && $ordVal <= 101) {
+        $bgTextDecore = 'bg-light-danger text-danger';
+    } elseif ($ordVal >= 102 && $ordVal <= 106) {
+        $bgTextDecore = 'bg-light-warning text-warning';
+    } elseif ($ordVal >= 107 && $ordVal <= 111) {
+        $bgTextDecore = 'bg-light-primary text-primary';
+    } elseif ($ordVal >= 112 && $ordVal <= 116) {
+        $bgTextDecore = 'bg-light-success text-success';
+    } elseif ($ordVal >= 117 && $ordVal <= 121) {
+        $bgTextDecore = 'bg-dark text-secondary';
+    } else {
+        $bgTextDecore = 'bg-light-secondary text-dark';
+    }
 
-		$bgTextDecore			=	$strVal	= $cicon	 = $prevMasterStage = $prevSubStage = 	'';
-		$str						=	trim(@$benchApplication->full_name);
-		$str	= $strVal			=	strtolower($str[0]);
-		$str						=	ord($str);
-		if($str >=97 && $str <=101){
-				$bgTextDecore		=	'fs-3 bg-light-danger text-danger';	
-		}else if($str >=102 && $str <=106){
-				$bgTextDecore		=	'fs-3 bg-light-warning text-warning';	
-		}else if($str >=107 && $str <=111){
-				$bgTextDecore		=	'fs-3 bg-light-primary text-primary';	
-		}else if($str >=112 && $str <=116){
-				$bgTextDecore		=	'fs-3 bg-light-success text-success';	
-		}else if($str >=117 && $str <=121){
-				$bgTextDecore		=	'fs-3 bg-dark text-secondary';	
-		}else{
-				$bgTextDecore		=	'fs-3 bg-light-secondary text-dark';	
-		}	
-		$cicon	= '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-						<a href="javascript:void(0);" class="">
-							<div class="symbol-label '.$bgTextDecore.' border-radius-5">'.ucwords($strVal).'</div>
-						</a>
-				  </div>';  
-		$prevMasterStage 			=	@$benchApplication->status; 
-		$bgTextDecore				=	$strVal	=	'';
-		$str						=	trim(@$benchApplication->submitted_by_name);
-		$str	= $strVal			=	strtolower($str);
-		$str						=	ord($str);
-		if($str >=97 && $str <=101){
-				$bgTextDecore		=	'fs-3 bg-light-danger text-danger';	
-		}else if($str >=102 && $str <=106){
-				$bgTextDecore		=	'fs-3 bg-light-warning text-warning';	
-		}else if($str >=107 && $str <=111){
-				$bgTextDecore		=	'fs-3 bg-light-primary text-primary';	
-		}else if($str >=112 && $str <=116){
-				$bgTextDecore		=	'fs-3 bg-light-success text-success';	
-		}else if($str >=117 && $str <=121){
-				$bgTextDecore		=	'fs-3 bg-dark text-secondary';	
-		}else{
-				$bgTextDecore		=	'fs-3 bg-light-secondary text-dark';	
-		}	
-		$company_id = auth()->user()->company_id;
-		$id = $benchApplication->id;
-		$team = DB::table('users')
-			->leftjoin('bench_assign', function ($join) use ($id) {
-				$join->on('bench_assign.user_id', '=', 'users.id');
-				$join->on('bench_assign.bench_applications_id', '=', DB::raw("'" . $id . "'"));
-			})
-			->leftjoin('role_user', 'role_user.user_id', 'users.id')
-			->leftjoin('roles', 'roles.id', 'role_user.role_id')
-			->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-			->select(
-				'users.id',
-				'users.name',
-				'users.email',
-				'users.working_status',
-				'bench_assign.id as bench_assign_id',
-				'bench_assign.bench_applications_id',
-				'users_profile.designation as display_name'
-			)
-			->where('users.company_id', $company_id)
-			->where('bench_assign.bench_applications_id', $id)
-			->where('users.status', '=', 'active')
-			->orderByDesc('bench_assign.user_id')
-			->orderBy('users.name', 'asc')
-			->groupBy('users.id')
-			->get();
+    $company_id = auth()->user()->company_id;
+    $id = $benchApplication->id;
+    $currentStatusId = (int) $benchApplication->status;
 
-                $countMnager = count($team);
-			    $manager_name = $team[0]->name ?? '';
-				$strVal = '';
-				if($manager_name){
-                    $str = trim(@$manager_name);
-                    $strVal = ucwords(strtolower($str[0]));
-				}
-				if($countMnager > 1){
-                   $countMnager = ($countMnager)-(1).'+';
-				}
-				// dd($countMnager,$team);
+    // Relationship Manager assigned to this talent (view-computed, mirrors the pre-existing pattern).
+    $team = DB::table('users')
+        ->leftjoin('bench_assign', function ($join) use ($id) {
+            $join->on('bench_assign.user_id', '=', 'users.id');
+            $join->on('bench_assign.bench_applications_id', '=', DB::raw("'" . $id . "'"));
+        })
+        ->select('users.id', 'users.name')
+        ->where('users.company_id', $company_id)
+        ->where('bench_assign.bench_applications_id', $id)
+        ->where('users.status', '=', 'active')
+        ->orderByDesc('bench_assign.user_id')
+        ->orderBy('users.name', 'asc')
+        ->groupBy('users.id')
+        ->get();
+    $managerName = $team[0]->name ?? 'Unassigned';
 
-						$icon='<div class="d-flex flex-column">
-									<div data-row-id="1255" class="symbol-group symbol-hover">
-										<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="'.$manager_name.'">
-											<div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-												<a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="">
-													<div class="symbol-label fs-8 fs-8 bg-dark text-secondary border-radius-100">'.$strVal.'</div>
-												</a>
-											</div>
-										</div>
-										<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="'.$manager_name.'">
-											<span class="symbol-label font-weight-bold">'.$countMnager.'</span>
-										</div>
-									</div>
-						</div>';
+    // Availability badge (Immediate / Notice period N days / Available from date).
+    $npArr = ['Notice period', 'Available from', 'Immediate'];
+    $npDate = $benchApplication->np_id;
+    $availTitle = $npArr[$benchApplication->serving_notice_period_mode] ?? 'Immediate';
+    if ($benchApplication->serving_notice_period_mode == 0) {
+        $days = (int) $benchApplication->np_id;
+        $npDate = $days > 0 ? ($days == 1 ? '1 Day' : $days . ' Days') : '';
+    } elseif ($benchApplication->serving_notice_period_mode == 1) {
+        $npDate = date('d M Y', strtotime($benchApplication->np_id));
+    } else {
+        $npDate = '';
+    }
 
+    $employmentLabel = $benchApplication->outsourcing_type == 2 ? 'Contract Employee' : 'Internal Employee';
+    $employmentType = $benchApplication->outsourcing_type == 2 ? 'Contract' : 'Full-time';
 
-		// $icon	= '<div class="" style="float:left">
-		// 			<span href="javascript:void(0);" class="text-dark fw-bolder fs-6">
-		// 				<div class="symbol-label  border-radius-5 fw-bolder" style="font-size:13px!important;" data-toggle="tooltip" title="'.@$benchApplication->posted_by.'">'.ucwords($strVal).'</div>
-		// 			</span>
-				//   </div>';
-		
-		// if(!empty($company->logo_logical_path)){
-		// 	$icon	= '<div class="symbol symbol-circle symbol-25px overflow-hidden border-radius-0">
-		// 					<a href="javascript:void(0);">
-		// 						<div class="symbol-label border-radius-5">
-		// 							<img src="'.url('public/'.@$company->logo_logical_path).'" alt="Company Logo" class="border-radius-5 w-100">
-		// 						</div>
-		// 					</a>
-		// 			 </div>';
-		// }	
-    			  
-@endphp 
+    // "Employee Since" — since date + human duration (e.g. "1 Year 11 Months").
+    $sinceDt = !empty($benchApplication->created_at) ? Carbon::parse($benchApplication->created_at) : null;
+    $sinceLabel = $sinceDt ? $sinceDt->format('d M Y') : '—';
+    $sinceDuration = $sinceDt ? ucwords($sinceDt->diffForHumans(now(), Carbon::DIFF_ABSOLUTE, false, 2)) : '';
 
-<form class="form fv-plugins-bootstrap fv-plugins-framework" id="status_frm" name="status_frm" method="post" enctype="multipart/form-data">
-  <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <input type="hidden" name="_token" value="{{ csrf_token() }}">
-  <input type="hidden" name="bench_application_id" id="bench_application_id" value="{{ @$benchApplication->id }}" />
-  <input type="hidden" name="placedid" id="placedid" value="{{ @$placedid }}" />
-  <div class="modal-body scroll-y py-0 px-lg-7">
-    <div data-kt-element="options">
-      <div class="pb-5">
-        <table class="table align-middle table-row-dashed fs-6 mt-5" id="">
-          <thead>
-            <tr class="fw-bolder text-muted" role="row">
-              <th class="">Name</th>
-              <th class="">Contacts</th>
-              <th class="">Exp.</th>
-              <th class="">Salary</th>
-              <th class="">Notice Period</th>
-              <th class="">Qualification</th>
-              <th class="">Location</th>
-              <th class="">Manager</th>
-              {{-- <th class="">Requisition</th> --}}
-            </tr>
-          </thead>
-          <tbody class="text-gray-600 fw-bold">
-            <tr class="">
-              <td class="d-flex align-items-center border-bottom-0">
-			  		{!! @$cicon !!}
-                <div class="d-flex flex-column"> 
-					<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="{{ @$benchApplication->full_name }}"> 
-						{{ ucwords(substr(@$benchApplication->full_name, 0, 20)) }} 
-					</a> 
-					<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ @$benchApplication->current_designation }}">
-						{{ ucwords(substr(@$benchApplication->current_designation, 0, 20)) }}
-					</span> 
-				</div>
-              </td>
-			  <td class="">
-			  	<div class="d-flex flex-column"> 
-					<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">
-						{{ @$benchApplication->phone }}
-					</a> 
-					<a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary" data-toggle="tooltip" title="{{ @$benchApplication->email }}">
-						{{ substr(@$benchApplication->email, 0, 20) }}
-					</a> 
-				</div>
-			  </td>
-			  <td class="">
-			  	<div class="d-flex flex-column"> 
-					<span class="text-dark fw-bolder fs-6">{{ @$benchApplication->total_exp }}+</span> 
-					<span class="text-muted fw-bold d-block fs-7">{{ @$benchApplication->rel_exp }}+</span> 
-				</div>
-			  </td>
-			  <td class="">
-			  	<div class="d-flex flex-column"> 
-			  		<span class="text-dark fw-bolder fs-6">{!! @$bill_rate_amount !!}</span> 
-					<span class="text-muted fw-bold d-block fs-7"> {!! @$pay_rate_amount !!}</span> 
-				</div>
-			  </td>
-			  <td class="">
-				@php
-				$level = '';
-				$npDate = $benchApplication->np_id;
-				if ($benchApplication->serving_notice_period_mode == 0){
-					$npDate = $benchApplication->np_id." Days";
-					if($npDate==1){
-						$npDate = $benchApplication->np_id." Day";
-					}
-				}elseif($benchApplication->serving_notice_period_mode == 1) {
-					$originalDate = $benchApplication->np_id;
-					$npDate = '' . date("d M y", strtotime($originalDate));
-					$level = "Available from ";
-				}else{
-					$npDate=$benchApplication->np_id;
-				}
+    $currentStatusSub = optional(GeneralMethod::bench_status_subline($currentStatusId))->name ?? '';
 
-				@endphp
-			  	<div class="d-flex flex-column"> 
-					<span class="text-dark fw-bolder fs-6">{{ @$level }}</span> 
-					<span class="{{ ($level) ? 'text-muted fw-bold d-block fs-7' : 'text-dark fw-bolder fs-6'}}">{{ @$npDate }}</span> 
-					<span class="text-muted fw-bold d-block fs-7">{{ @$benchApplication->current_company }}</span> 
-				</div>
-			  </td>
-              <td class="">
-				@php
-				$employment_type = 'Full-time';
-                if($benchApplication->outsourcing_type==2){
-                    $employment_type = 'Contract';
-                }
-				@endphp
-			  	<div class="d-flex flex-column"> 
-					<span class="text-dark fw-bolder fs-6">{{ ucwords(@$qualification->name) }}</span> 
-					<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ @$employment_type }}">{{ @$employment_type }}</span> 
-				</div>
-			  </td>
-              <td class="">
-			  	<div class="d-flex flex-column"> 
-					<span class="text-dark fw-bolder fs-6">{{ @$row_city_name }}</span> 
-					<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ @$row_state_name }} | {{ strtoupper(@$row_country_name)}} ">
-						{{ substr(@$row_state_name, 0, 6) }} | {{ strtoupper(substr(@$row_country_name, 0, 2)) }}
-					</span> 
-				</div> 
-			  </td>
-              <td class="">
-			  	<div class="d-flex flex-column">
-                  <div class="symbol-hover"> {!! @$icon !!} </div>
-                  <span class="text-muted fw-bold d-block fs-7">{{ ucwords(@$company->company_name) }}</span> 
-				 </div>
-			  </td>
-              {{-- <td class="">
-			  	<div class="d-flex flex-column"> 
-					<span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ @$benchApplication->title }}">{{ substr(ucwords(@$benchApplication->title), 0, 10) }}</span> 
-					<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ @$benchApplication->client_name }}">{{ substr(ucwords(@$benchApplication->client_name), 0, 10) }}</span> 
-				</div>
-			  </td> --}}
-            </tr>
-          </tbody>
-        </table>
-   
-        <label class="text-dark mb-0 mt-3 fw-bolder fs-5">Status</label>
-        <div class="d-flex flex-column mb-8">
-			 <div class="row py-5 mb-3">
-						@php
-							if(!empty($master_status)){
-								foreach($master_status as $mstatus){
-									// dd($benchApplication->status);
-									$master_status_css = $chk	=	$text_name	= "";
-									if($mstatus->id == @$benchApplication->status ){
-										$master_status_css  = @$mstatus->css_style;	
-										$chk				= "checked";
-									} 
-									$text_name	= @$mstatus->text_name;   
-									$result = GeneralMethod::bench_status_subline($mstatus->id);
-									$subLine = ($result->name) ?? '';
-									$classname = ($result->classname) ?? '';
-						@endphp
+    // Status card icon/colour metadata (UI-only — not stored data).
+    $statusMeta = [
+        1 => ['icon' => 'fa-user', 'bg' => '#f1f2f6', 'color' => '#7e8299', 'desc' => 'Newly added to talent pool'],
+        2 => ['icon' => 'fa-user-plus', 'bg' => '#eef3ff', 'color' => '#3e97ff', 'desc' => 'Available for opportunities'],
+        4 => ['icon' => 'fa-pause', 'bg' => '#fff4de', 'color' => '#f6a609', 'desc' => 'Temporarily unavailable'],
+        3 => ['icon' => 'fa-circle-check', 'bg' => '#e8fff3', 'color' => '#17c653', 'desc' => 'Assigned to a client'],
+        5 => ['icon' => 'fa-circle-xmark', 'bg' => '#ffeef1', 'color' => '#f8285a', 'desc' => 'No longer with the company'],
+    ];
+@endphp
 
-						
-                                    <div class="col-lg-2 master_status_div app_process" data-master-status-id="{{ @$mstatus->id }}" style="width: 20% !important;">
-                                        <input type="radio" class="btn-check app_int_activity master_status" name="bench_master_status" value="{{ @$mstatus->id }}" id="chk_{{ @$mstatus->id }}" {{ @$chk }}>
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="chk_{{ @$mstatus->id }}">
-                                            <span class="d-block fw-bold text-center {{ $classname }}">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">{{ @$mstatus->name }}</span>
-												<span class="text-muted fw-bold d-block fs-7">{{ $subLine }}</span>
-                                            </span>
-                                        </label>
-                                    </div>
+<form id="status_frm" name="status_frm" method="post" class="p-3">
+    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="bench_application_id" id="bench_application_id" value="{{ $benchApplication->id }}" />
+    <input type="hidden" name="placedid" id="placedid" value="{{ $placedid ?? '' }}" />
 
-								         
-						@php
-									}
-								}	 
-						@endphp 
-				</div> 
-        </div> 
-
-
-        		
-<table id="bench_explore_listing" class="table align-middle table-row-dashed fs-6 gy-5" style="display:none">
-	<thead>
-			<tr class="fw-bolder text-muted">
-			<th class="w-10px pe-0">
-			<div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-			&nbsp;
-			</div>
-			</th>
-			<th class="d-flex align-items-center border-0">Jobs</th>
-			<th class="" data-bs-toggle="tooltip" title="Experience">Exp.</th>
-			<th class="">Salary</th>
-			<th class="">Location</th>
-			<th class="">Job Status</th>
-			<th class="">Offer Amount</th>
-			<th class="">Join Date</th>
-			<th class="">Added Date</th>
-			<th class="">Stage</th>
-			<th class="">Talent Status</th>
-			</tr>
-	</thead>            
-</table>
-
-   <label class="text-dark mb-0 mt-3 fw-bolder fs-5">Description</label>
-   <p>&nbsp;</p>
-	<div class="description"></div>
-       
-      </div>
+    {{-- Candidate summary + stat tiles --}}
+    <div class="bs-card p-3 mb-2">
+        <div class="row g-3 align-items-stretch">
+            <div class="col-lg-4 d-flex align-items-center gap-3 pe-lg-3" style="border-right: 1px solid #eef0f4;">
+                <div class="symbol symbol-circle symbol-60px overflow-hidden flex-shrink-0">
+                    <div class="symbol-label {{ $bgTextDecore }} fw-bolder d-flex align-items-center justify-content-center w-100 h-100" style="font-size:18px !important;">{{ strtoupper($strVal) }}</div>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bolder text-dark" style="font-size:14px !important;">{{ ucwords($benchApplication->full_name) }}</span>
+                        <span class="badge {{ $availTitle == 'Immediate' ? 'badge-light-success' : 'badge-light-warning' }}">{{ $availTitle }}</span>
+                    </div>
+                    <div class="text-muted xtiny">{{ ucwords($benchApplication->current_designation) }} &middot; {{ $employmentLabel }}</div>
+                    <div class="bs-sub d-inline-flex align-items-center gap-2 mt-2 px-2 py-1">
+                        <i class="fa fa-user-tie text-primary"></i>
+                        <div>
+                            <div class="lbl">Relationship Manager</div>
+                            <div class="fw-bolder" style="font-size:12px !important;">{{ ucwords($managerName) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="row g-2 mb-2">
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-wallet"></i></span>
+                            <div><div class="lbl">Expected Salary</div><div class="val">{!! $bill_rate_amount !!}</div><div class="xtiny text-muted">{!! $pay_rate_amount !!}</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-clipboard-check"></i></span>
+                            <div><div class="lbl">Current Status</div><div class="val">{{ $benchApplication->master_status_name }}</div><div class="xtiny text-muted">{{ $currentStatusSub }}</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#fff4de;color:#f6a609;"><i class="fa fa-hourglass-half"></i></span>
+                            <div><div class="lbl">Notice Period</div><div class="val">{{ $availTitle }}</div><div class="xtiny text-muted">{{ $npDate }}</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#7239ea;"><i class="fa fa-graduation-cap"></i></span>
+                            <div><div class="lbl">Qualification</div><div class="val">{{ ucwords(optional($qualification)->name) ?: '—' }}</div><div class="xtiny text-muted">{{ $employmentType }}</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#f1f2f6;color:#3f4254;"><i class="fa fa-calendar-days"></i></span>
+                            <div><div class="lbl">Employee Since</div><div class="val">{{ $sinceLabel }}</div><div class="xtiny text-muted">{{ $sinceDuration }}</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-comments"></i></span>
+                            <div><div class="val">{{ $activeInterviews ?? 0 }}</div><div class="lbl">Active Interviews</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#fff4de;color:#f6a609;"><i class="fa fa-eye"></i></span>
+                            <div><div class="val">{{ $profileViewCount ?? 0 }}</div><div class="lbl">Profile View</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#7239ea;"><i class="fa fa-paper-plane"></i></span>
+                            <div><div class="val">{{ $clientSubmissions ?? 0 }}</div><div class="lbl">Client Submissions</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#f1f2f6;color:#3f4254;"><i class="fa fa-clock"></i></span>
+                            <div><div class="val">{{ $benchDurationDays ?? 0 }} Days</div><div class="lbl">Bench Duration</div></div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bs-sub bs-tile"><span class="ico" style="background:#e8fff3;color:#17c653;"><i class="fa fa-download"></i></span>
+                            <div><div class="val">{{ $resumeDownloadCount ?? 0 }}</div><div class="lbl">Resume Download</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="modal-footer flex-center"> 
-    <div class="div1">
-      <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Cancel</button>      
-	   <button type="button" id="custom_bench_stage_submit" class="btn btn-primary custom_stage_submit custom_bench_stage_submit">Submit </button>
-    </div>   
-  </div>
+
+    {{-- Card 1: Select New Status --}}
+    <div class="bs-card p-3 mb-2">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">1</span>
+            <span class="fw-bolder text-dark" style="font-size:13px !important;">Select New Status</span>
+        </div>
+        <div class="text-muted xtiny mb-3">Choose the new status for this inhouse talent</div>
+        <div class="row g-2">
+            @foreach ($master_status as $mstatus)
+                @php $meta = $statusMeta[$mstatus->id] ?? ['icon' => 'fa-circle', 'bg' => '#f1f2f6', 'color' => '#7e8299', 'desc' => '']; @endphp
+                <div class="col">
+                    <div class="bs-status-card {{ $mstatus->id == $currentStatusId ? 'is-current' : '' }}"
+                        data-status-id="{{ $mstatus->id }}" data-status-label="{{ $mstatus->name }}">
+                        <input type="radio" name="bench_master_status" value="{{ $mstatus->id }}" class="d-none" {{ $mstatus->id == $currentStatusId ? 'checked' : '' }}>
+                        <div class="radio-dot"></div>
+                        <div class="ico" style="background:{{ $meta['bg'] }}; color:{{ $meta['color'] }};"><i class="fa {{ $meta['icon'] }}"></i></div>
+                        <div class="lbl">{{ $mstatus->name }}</div>
+                        <div class="desc">{{ $meta['desc'] }}</div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="bs-impact mt-3" id="bs_impact_wrap" style="display:none;">
+            <div class="fw-bolder text-success mb-2" style="font-size:11.5px !important;"><i class="fa fa-shield-halved"></i> Impact of changing status</div>
+            <div class="row g-2" id="bs_impact_list"></div>
+        </div>
+    </div>
+
+    {{-- Card 2: Select the Job / Project — only shown when target status = Placed --}}
+    <div class="bs-card p-3 mb-2" id="bs_job_card" style="display:none;">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">2</span>
+            <span class="fw-bolder text-dark" style="font-size:13px !important;">Select the Job / Project</span>
+        </div>
+        <div class="text-muted xtiny mb-2">Jobs associated with this talent</div>
+        <div class="bs-job-table table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Job / Company</th>
+                        <th>Experience</th>
+                        <th>Location</th>
+                        <th>Hiring Manager</th>
+                        <th>Offer Amount</th>
+                        <th>Join Date</th>
+                        <th>Added Date</th>
+                        <th>Stage</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="bs_job_body">
+                    <tr><td colspan="9" class="text-center text-muted py-4">Select &quot;Placed&quot; above to load jobs.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </form>
 
-<script>	
-	
-	$(document).ready(function(){
-	
-			var currentStatus	=	{{ @$benchApplication->status }};
-			description(currentStatus);
-			if(currentStatus == 3){
-					$('#bench_explore_listing').show();
-					statusTableLoad('load');
-			}
-		
-			$('.master_status_div').click(function(e){
-   
-					var id 			= $(this).data('master-status-id');
-					description(id);
-					$("#master_status_"+id).attr('checked', true);
-					$('#lbl_master_status_'+id).removeClass('placed_bg text-hover-primary');	
-					$('#lbl_master_status_'+id).removeClass('active-bg text-hover-success');	
-					$('#lbl_master_status_'+id).removeClass('hold-bg text-hover-warning');
-					$('#lbl_master_status_'+id).removeClass('benchleft-bg text-hover-benchleft');	
-					
-					if(id == 1){
-						$('#lbl_master_status_'+id).addClass('placed_bg text-hover-primary');	
-					}
-					else if(id == 2){
-						$('#lbl_master_status_'+id).addClass('placed_bg text-hover-primary');	
-					}
-					else if(id == 3){
-						$('#lbl_master_status_'+id).addClass('active-bg text-hover-success');	
-						
-					}
-					else if(id == 4){
-						$('#lbl_master_status_'+id).addClass('hold-bg text-hover-warning');	
-					}
-					else if(id == 5){
-						$('#lbl_master_status_'+id).addClass('benchleft-bg text-hover-benchleft');	
-					}		
-			 });	
-	});	
-</script> 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>	
 <script>
- 
-   $(document).ready(function(){
-   
-				$('#custom_bench_stage_submit').click(function(e){
-					
-								var prevMasterStage			=	{{ @$prevMasterStage }};
-								var currentMasterStatus		=	$('input[name="bench_master_status"]:checked').val();
-																				
-								if((prevMasterStage == currentMasterStatus )){
-										Swal.fire("Warning", 'Same status cannot be updated, please select other option !', "info");	 	
-								} 
-								else{
-									$('#custom_bench_stage_submit').prop('disabled',true);
-									$('#custom_bench_stage_submit').text('Waiting..');
-											$.ajax({
-															url				: '{{route('service_company.bench-candidates.status_submit')}}',
-															container		: '#status_frm',
-															beforeSend		: function() { 	},
-															type			: "POST",
-															data			: $('#status_frm').serialize(),
-															success			: function (response) {
-																$('#custom_bench_stage_submit').prop('disabled',false);
-									                           $('#custom_bench_stage_submit').text('Submit');
-																									
-																			if(response.status == 'success'){
-																									// sweetAlert("Success", 'Application stage update successfully !', "success");	
-																									
-																									//  tableLoad('load');
-																									
-																				swal({
-																				title: "Success",
-																				text: "Status changed successfully !",
-																				type: "success",
-																				showCancelButton: false,
-																				confirmButtonColor: '#DD6B55',
-																				confirmButtonText: 'Ok',
-																				cancelButtonText: "No, cancel it!",
-																				closeOnConfirm: true,
-																				closeOnCancel: false
-																				},
-																				function(isConfirm){
-
-																				if (isConfirm){
-																					$("#stage_sub_stage_close").click();
-																					fetchBenchBenchCandidatesCandidateList();
-																					}
-																				});
-
-																								}
-																								else if (response.status == "info"){   
-																									sweetAlert("Fail!", response.message, "error");	
-																								}else if(response.status == "candidatevalidation"){
-																									sweetAlert("Fail!", response.message, "error");	
-																								}else if(response.status == "cvpending"){
-																									sweetAlert("Fail!", response.message, "error");	
-																								}
-																						 
-																				}
-													}) 		
-								}			
-				});		 
-   })
-      
-</script>
-<script>
-			function statusTableLoad(type)
-			{
-				           
-									var bench_id       	=	{{ @$currentBenchId }};
-									var stage  			=	'all';
-									table 				=	$('#bench_explore_listing').dataTable({
-										        serverSide: true, // Enable server-side processing
-												responsive     	: 	true, 
-												processing      : 	true,
-												ordering		: 	false,     			
-												destroy       	: 	true,   
-												stateSave     	: 	true,      
-												"bLengthChange" : 	false,   
-												sDom			: 	'lrtip', 
-												"showNEntries" 	: 	false, 
-												"bInfo" 		: 	false,       
-												"bPaginate"		: 	false, 
-												ajax			: 	'{!! route('service_company.bench-candidates.bench_assign_to_job_listing') !!}?bench_id='+bench_id+'&stage='+stage,
-											   "fnDrawCallback" : 	function (oSettings) {
-																							$("body").tooltip({selector: '[data-toggle="tooltip"]' });
-																	},
-												"drawCallback"	:	function(settings) {}, 
-						        
-											  	"initComplete"	:	function( settings, json){ 
-																			$('.clientStatusLoader').html('');
-																			$('.jobLoader').html('');
-																			$('.sourceLoader').html('');
-																			$('.search_np_idLoader').html('');
-																			$('.search_passportLoader').html('');
-																			$('.statusLoader').html('');            
-																	  }, 
-												  "columnDefs"	:
-																  [ 
-																			{ "width": "50px", "targets": 0, "width": "4%", "class":""},
-																			{  "width": "200px", "targets": 1, "class":"d-flex align-items-center" },																				
-																			{  "width": "50px"  , "targets": 2},		
-																			{  "width": "100px", "targets": 3 },		
-																			{  "width": "200px", "targets": 4 },
-																			{  "width": "200px", "targets": 5 }, 
-																			{  "width": "200px", "targets": 6 },  																			
-																			{  "width": "50px" ,"targets": 7 },
-																			{  "width": "200px" , "targets": 8 },	
-																			{ "width": "20px", "targets": 9 },
-																			{ "width": "20px", "targets": 10 }  	
-																	  ], 
-
-												   columns		: 		[             
-																				{data: 'chkbox', name: 'chkbox', orderable: false, searchable: false},            
-																				{data: 'Requisition', name: 'Requisition',  orderable: false, searchable: false, width: '15%'},						
-																				{data: 'Exp', name: 'Exp', searchable : false, orderable : false, width: '15%'},						
-																				{data: 'Salary', name: 'Salary', searchable : false, orderable : false,  width: '5%'},
-																				{data: 'Location', name: 'Location',  searchable : false, orderable : false,  width: '10%'},  
-																				{data: 'Status', name: 'Status', searchable : false, orderable : false},
-																				{data: 'offeramount', name: 'offeramount', orderable : false},
-																				{data: 'joindate', name: 'joindate', orderable : false}, 
-																				{data: 'AddedDate', name: 'AddedDate',  searchable : false, orderable : false},   
-																				{data: 'Stage', name: 'Stage', orderable: false},
-																				{data: 'placed', name: 'placed', orderable: false}
-																		]         
-      
-             }); 
-           new $.fn.dataTable.FixedHeader(table); 		   
-			} 
-
-
-			function description(id){
-				    
-					if(id == 1){	
-						$('.description').html("<p>*In the pool status, the added candidate's status will only be visible to company executives. Please change the status to 'Bench' to make your candidate listings visible to other company hiring team.*</p>");
-					}
-					else if(id == 2){	
-						$('.description').html("<p>*In Bench Status, the added candidate will be listed on our Marketplace for job opportunities in other companies, either for contract positions on your company payroll or for full-time hiring on the hiring company's payroll.</p>");
-					}
-					else if(id == 3){	
-						$('.description').html("<p>*In Placed Status, if you change the status to Placed, the candidate will be removed from the Bench listing on our platform and will not be visible to any other companies.</p><p>*You have to select the company for which the candidate is hired, either on contract or full-time payroll.</p> <p>*Once the contract is over, you can change the status back to Bench so that the candidate will be listed again on our platform and available for hire by other companies.<p>");
-					}
-					else if(id == 4){
-						$('.description').html("<p>*In Pause Status, if the status is changed automatically, it means the candidate has been removed from the Bench listing on our platform after being shortlisted by up to 3 companies for job opportunities.</p> <p>*You can change the status back to Bench if you want to make the candidate available to more clients.</p>");		
-					}
-					else if(id == 5){
-						$('.description').html("<p>*Exited candidates are considered no longer associated with the bench talent pool and will not be available for hiring.</p>");		
-					}
-			}
-</script>
-<script>
-$(document).ready(function(){	
-				$('.master_status_div').click(function(e){
-								var checkedValue = $('.master_status:checked').val();
-								if(checkedValue == 3){
-									$('#bench_explore_listing').show();
-									statusTableLoad('load');
-								}else{
-									$('#bench_explore_listing').hide();
-								}																											
-				})									
-});
+    initBenchStatusDrawer({
+        currentId: {{ (int) $currentStatusId }},
+        currentName: @json($benchApplication->master_status_name),
+        benchId: {{ (int) $currentBenchId }},
+        placedId: {{ (int) ($placedid ?? 0) }}
+    });
 </script>

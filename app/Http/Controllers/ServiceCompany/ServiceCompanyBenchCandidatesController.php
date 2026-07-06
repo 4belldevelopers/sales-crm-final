@@ -1972,6 +1972,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'job_applications.offer_amount',
 			'job_applications.joined_date',
 			'job_applications.rating',
+			'job_applications.created_at',
 			'users.name as posted_by',
 			'bench_master_status.name as master_status_name',
 			'state_list.state as state_name',
@@ -2044,6 +2045,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		} else {
 			$this->row_city_name = @$this->application->city;
 		}
+
+		/**
+		 * Stat tiles for the "Change Status" drawer (Active Interviews / Profile View /
+		 * Client Submissions / Bench Duration / Resume Download). Reuses the same helper
+		 * and counter table already queried per-row on the listing page, so no new query shape.
+		 */
+		$pipelineCounter = GeneralMethod::bench_explore_listing_counter($id)->applicationCounter;
+		$this->activeInterviews = $pipelineCounter->Interview ?? 0;
+		$this->clientSubmissions = $pipelineCounter->allCandidate ?? 0;
+		$this->profileViewCount = DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count();
+		$this->resumeDownloadCount = DB::table('bench_count_view_download')->where('type', 2)->where('status', 0)->where('candidate_id', $id)->count();
+		$this->benchDurationDays = !empty($this->benchApplication->created_at)
+			? (int) \Carbon\Carbon::parse($this->benchApplication->created_at)->diffInDays(now())
+			: 0;
+
 		$view = view('service_company.bench-candidates.bench_application_status', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
