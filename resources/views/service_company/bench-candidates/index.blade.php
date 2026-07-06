@@ -44,18 +44,17 @@
         .bench-dash .jw-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
         .bench-dash .jw-sub { background: #fff; border: 1px solid #f0f1f5; border-radius: 8px; }
 
-        /* KPI cards */
-        .bench-dash .kpi { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-height: 82px; cursor: default; transition: box-shadow .15s, border-color .15s; }
+        /* KPI cards — icon on the left, label/value/delta stacked to its right (value sits directly under the label, not the icon) */
+        .bench-dash .kpi { padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; min-height: 82px; cursor: default; transition: box-shadow .15s, border-color .15s; }
         .bench-dash .kpi.kpi-filter { cursor: pointer; }
         .bench-dash .kpi.kpi-filter:hover { border-color: #d5dbe6; box-shadow: 0 3px 10px rgba(24,28,50,.06); }
         .bench-dash .kpi.active { border-color: #3e97ff; box-shadow: 0 0 0 1px #3e97ff inset; }
-        .bench-dash .kpi-ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+        .bench-dash .kpi-ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .bench-dash .kpi-ico i { font-size: 13px !important; }
-        .bench-dash .kpi-head { display: flex; align-items: center; gap: 7px; }
+        .bench-dash .kpi-text { display: flex; flex-direction: column; gap: 2px; }
         .bench-dash .kpi-label { font-size: 10.5px !important; color: #7e8299; font-weight: 500; }
         .bench-dash .kpi-delta { font-size: 9.5px !important; font-weight: 600; }
         .bench-dash .up { color: #17c653; } .bench-dash .down { color: #f8285a; }
-        .bench-dash .kpi-spark { height: 22px; margin: 0 -4px -4px; }
         .bench-dash .kpi-delta { display: inline-flex; align-items: center; gap: 3px; }
         .bench-dash .kpi-delta i { font-size: 8px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
@@ -126,14 +125,9 @@
         .bench-dash .pipe-grid a { font-size: 10px !important; }
         .bench-dash .pipe-foot { font-size: 9px !important; color: #7e8299; margin-top: 3px; }
 
-        /* Manager "Change" button */
-        .bench-dash .manager-change { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #eef0f4; background: #fff; border-radius: 6px; padding: 2px 8px; font-size: 9.5px !important; color: #3e97ff; width: fit-content; cursor: pointer; }
-        .bench-dash .manager-change:hover { border-color: #3e97ff; background: #f5f9ff; color: #3e97ff; }
-        .bench-dash .manager-change i { font-size: 8px !important; }
-        .bench-dash .pipe-actions { display: flex; flex-direction: column; gap: 4px; }
-        .bench-dash .pipe-btn { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; padding: 3px 7px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer; color: #3f4254; font-size: 9.5px !important; }
-        .bench-dash .pipe-btn:hover { border-color: #3e97ff; color: #3e97ff; }
-        .bench-dash .pipe-btn i { font-size: 9.5px !important; }
+        /* Manager "Change" — plain text link, no button chrome */
+        .bench-dash .manager-change { color: #3e97ff; font-size: 9.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
+        .bench-dash .manager-change:hover { text-decoration: underline; color: #3e97ff; }
 
         /* toolbar search */
         .bench-dash .dash-search { border: 1px solid #eef0f4; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; height: 34px; }
@@ -169,11 +163,6 @@
                         <span class="tiny text-muted">Track bench, pipeline and revenue in one place.</span>
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <div class="position-relative">
-                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
-                            <input type="text" class="form-control dash-search w-250px" style="padding-left:30px;" name="inputJobSearch"
-                                placeholder="Search by name, skills, role, experience..." id="kt_tagify_2" onkeyup="filtersdataget()" />
-                        </div>
                         <input type="hidden" id="inputSearch" name="inputSearch" />
                         <div class="dropdown">
                             <button class="btn-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -212,12 +201,12 @@
                         @foreach ($kpis as $k)
                             <div class="col">
                                 <div class="jw-card kpi kpi-filter" data-rel="{{ $k['rel'] }}" id="kpi_{{ $k['rel'] }}">
-                                    <div class="kpi-head">
-                                        <span class="kpi-ico {{ $k['sc'] }}"><i class="fa {{ $k['ico'] }}"></i></span>
+                                    <span class="kpi-ico {{ $k['sc'] }}"><i class="fa {{ $k['ico'] }}"></i></span>
+                                    <div class="kpi-text">
                                         <span class="kpi-label">{{ $k['label'] }}</span>
+                                        <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
+                                        {!! $deltaChip($k['d']) !!}
                                     </div>
-                                    <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
-                                    {!! $deltaChip($k['d']) !!}
                                 </div>
                             </div>
                         @endforeach
@@ -225,12 +214,12 @@
                         <!-- Bench Cost (Loss) -->
                         <div class="col">
                             <div class="jw-card kpi">
-                                <div class="kpi-head">
-                                    <span class="kpi-ico sc-danger"><i class="fa fa-rupee-sign"></i></span>
+                                <span class="kpi-ico sc-danger"><i class="fa fa-rupee-sign"></i></span>
+                                <div class="kpi-text">
                                     <span class="kpi-label">Bench Cost (Loss)</span>
+                                    <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
+                                    {!! $deltaChip($dl->cost, true) !!}
                                 </div>
-                                <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
-                                {!! $deltaChip($dl->cost, true) !!}
                             </div>
                         </div>
                     </div>
@@ -312,6 +301,26 @@
                         </div>
                     </div>
 
+                    <!-- Search + Sort row (directly below the graphs) -->
+                    <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="position-relative">
+                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
+                            <input type="text" class="form-control dash-search w-300px" style="padding-left:30px;" name="inputJobSearch"
+                                placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="filtersdataget()" />
+                        </div>
+                        <select class="form-select form-select-solid w-200px" data-hide-search="true" id="sortingfilter"
+                            data-placeholder="Sort" onchange="filtersdataget()">
+                            <option value="Show All" selected>Sort by</option>
+                            <option value="1">Newest to Oldest (Upload Date)</option>
+                            <option value="2">Oldest to Newest (Upload Date)</option>
+                            <option value="9">Notice Period (Immediate)</option>
+                            <option value="5">Low to High (Notice Period)</option>
+                            <option value="6">High to Low (Notice Period)</option>
+                            <option value="7">High to Low (Experience)</option>
+                            <option value="8">Low to High (Experience)</option>
+                        </select>
+                    </div>
+
                     <!-- Filter chips row -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div class="d-flex align-items-center flex-wrap gap-2" id="filterChips">
@@ -347,19 +356,6 @@
                             <a href="Javascript:void(0);" rel="5" for="bench_left" class="tab-pill application_sttus_nav">
                                 <span class="lbl">Exited</span><span class="cnt" id="bg_5">{{ $counts->exited ?? 0 }}</span>
                             </a>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <select class="form-select form-select-solid w-200px" data-hide-search="true" id="sortingfilter"
-                                data-placeholder="Sort" onchange="filtersdataget()">
-                                <option value="Show All" selected>Sort by</option>
-                                <option value="1">Newest to Oldest (Upload Date)</option>
-                                <option value="2">Oldest to Newest (Upload Date)</option>
-                                <option value="9">Notice Period (Immediate)</option>
-                                <option value="5">Low to High (Notice Period)</option>
-                                <option value="6">High to Low (Notice Period)</option>
-                                <option value="7">High to Low (Experience)</option>
-                                <option value="8">Low to High (Experience)</option>
-                            </select>
                         </div>
                         <!-- Hidden inputs preserved for existing fetch logic -->
                         <input type="hidden" id="filter_status" value="" />

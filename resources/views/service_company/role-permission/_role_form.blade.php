@@ -22,6 +22,10 @@
     $roleUsers       = $role_users      ?? collect();
     $roleName        = $role_row ? ucwords($role_row->display_name) : '';
     $isSubAdmin      = $role_row && $role_row->display_name === 'Sub Administrator';
+    /* System roles (manual_add = 0) are built-in — their names must not be editable. Custom
+       roles (manual_add = 1) and brand-new roles (add mode) keep an editable name field. */
+    $isSystemRole    = $isEdit && $role_row && empty($role_row->manual_add ?? 0);
+    $nameLocked      = $isSystemRole || $isSubAdmin;
 
     /* Helper: is a given permission id "on" for this role? (edit = assigned, add = default on) */
     $permOn = function ($pid) use ($isEdit, $permission_role) {
@@ -187,9 +191,13 @@
         <div class="rpf-summary">
             <div class="rpf-sum-col rpf-sum-name">
                 <label class="rpf-field-label">Role Name <span class="req">*</span></label>
-                @if($isSubAdmin)
-                    <input class="rpf-input" value="{{ $roleName }}" readonly>
+                @if($nameLocked)
+                    <input class="rpf-input" value="{{ $roleName }}" readonly title="System role names cannot be changed">
                     <input type="hidden" name="role_name" id="role_name" value="{{ $roleName }}">
+                    <div class="rpf-lock-hint">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        System role — name can't be changed
+                    </div>
                 @else
                     <input class="rpf-input" name="role_name" id="role_name" placeholder="Enter a role name" value="{{ $roleName }}">
                 @endif

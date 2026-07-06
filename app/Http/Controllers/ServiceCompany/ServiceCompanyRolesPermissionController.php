@@ -323,15 +323,24 @@ class ServiceCompanyRolesPermissionController extends ServiceCompanyBaseControll
 			}
 
                 	$this->permissions = $permissions;
-		
-					$this->role_row 				=	DB::table('roles')->select('roles.display_name')->where('roles.id', $id)->first();
+
+					/* Include manual_add so the drawer can lock the Role Name for system roles */
+					$this->role_row 				=	DB::table('roles')->select('roles.display_name', 'roles.name', 'roles.manual_add', 'roles.priority')->where('roles.id', $id)->first();
 
 					$Rawlist 						=	DB::table('role_has_permissions')->select('role_has_permissions.permission_id')->where('role_has_permissions.role_id', $id)->get()->toArray();
 
-					$array 							=	array_column($Rawlist, 'permission_id');	
+					$array 							=	array_column($Rawlist, 'permission_id');
 
 					$this->permission_role      	=	json_decode(json_encode($array), true);
-															
+
+					/* Users assigned to this role — powers the drawer's Assigned Users summary */
+					$this->role_users				=	DB::table('role_user')
+																->join('users', 'users.id', '=', 'role_user.user_id')
+																->where('role_user.role_id', $id)
+																->where('users.type', 0)
+																->select('users.id', 'users.name', 'users.email')
+																->get();
+
 					$this->id						=	$id;
 
 					$view 							=	view('service_company.role-permission.loadEditRole', $this->data)->render();
