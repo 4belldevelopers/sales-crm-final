@@ -138,72 +138,76 @@
         }
         #kt_activitiesHMB { z-index: 999999; }
 
-        /* ===== Change Status drawer — Poppins, max 12px everywhere, white cards ===== */
-        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; font-size: 12px; box-sizing: border-box; }
-
-        /* Fixed panel + backdrop anchored to the RIGHT of the sidebar (#kt_aside is 265px) —
-           the sidebar itself is never covered, only the content area to its right. */
-        .bstatus-overlay, #bstatus_drawer {
-            position: fixed; top: 0; bottom: 0; right: 0;
-            left: var(--bstatus-aside-w, 265px);
-            display: none;
-        }
-        .bstatus-overlay { background-color: #eef0f4; z-index: 999998; }
-        #bstatus_drawer { z-index: 999999; overflow: hidden; }
-        .bstatus-overlay.show { display: block; }
-        #bstatus_drawer.show { display: flex; flex-direction: column; }
-        /* On collapsed viewports the sidebar becomes an off-canvas menu (not occupying layout width) */
-        @media only screen and (max-width: 991px) {
-            .bstatus-overlay, #bstatus_drawer { left: 0 !important; }
-        }
+        /* ===== Change Status drawer — Poppins, enterprise typography scale, white cards =====
+           Positioning/overlay/width are owned entirely by the drawer plugin (same width
+           config as the Job / Relationship Manager drawers on this page) — no custom CSS
+           for that here. What follows is purely visual styling of the drawer's contents. */
+        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
+        #bstatus_drawer { z-index: 999999; font-size: 12.5px; } /* inherited base — specific rules below override with !important where a bigger/smaller size is intentional */
 
         .bstatus-topbar { border-bottom: 1px solid #eef0f4; background: #fff; flex-wrap: nowrap; flex-shrink: 0; }
-        .bstatus-topbar i { font-size: 12px !important; }
-        .bstatus-topbar .fw-bolder { font-size: 12px !important; }
-        .bstatus-btn-cancel { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 6px 14px; font-weight: 500; }
+        .bstatus-topbar > div:first-child i { font-size: 16px !important; }
+        .bstatus-topbar > div:first-child .fw-bolder { font-size: 16px !important; }
+        #bstatus_transition { font-size: 13px !important; }
+        #bstatus_transition i { font-size: 11px !important; }
+        .bstatus-topbar .xtiny { font-size: 10.5px !important; }
+        .bstatus-btn-cancel { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 16px; font-weight: 500; font-size: 13px !important; }
         .bstatus-btn-cancel:hover { border-color: #d5dbe6; }
-        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 8px; padding: 7px 16px; font-weight: 600; font-size: 13px !important; display: inline-flex; align-items: center; gap: 6px; }
         .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
         .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
-        .bstatus-close { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; }
+        .bstatus-close { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 13px; }
         .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
-        .bstatus-body { overflow-y: auto; background: #f8f9fb; padding: 16px; flex-grow: 1; }
+        .bstatus-body { overflow-y: auto; background: #f8f9fb; padding: 20px; flex-grow: 1; }
 
-        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
+        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; }
         .bs-sub { background: #fff; border: 1px solid #f0f1f5; border-radius: 8px; }
-        #bstatus_drawer .lbl { font-size: 10px !important; color: #7e8299; }
-        .bs-tile { display: flex; align-items: center; gap: 8px; padding: 10px; min-width: 0; }
-        .bs-tile .ico { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .bs-tile .ico i { font-size: 12px !important; }
-        .bs-tile .txt { min-width: 0; flex: 1 1 auto; }
-        .bs-tile .val { font-size: 12px !important; font-weight: 700; color: #181c32; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bs-tile .lbl { font-size: 10px !important; color: #7e8299; white-space: nowrap; }
-        .bs-tile .sub { font-size: 9.5px !important; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #bstatus_drawer .lbl { font-size: 11px !important; color: #7e8299; font-weight: 500; }
 
-        .bs-status-card { border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; height: 100%; }
+        /* Candidate identity block */
+        .bs-name { font-size: 17px !important; font-weight: 700; color: #181c32; }
+        .bs-designation { font-size: 12.5px !important; color: #7e8299; }
+        .bs-rm-name { font-size: 14px !important; font-weight: 700; color: #181c32; }
+
+        /* Stat tiles — value is the visual anchor, label/sub support it */
+        .bs-tile { display: flex; align-items: center; gap: 10px; padding: 12px; min-width: 0; }
+        .bs-tile .ico { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-tile .ico i { font-size: 14px !important; }
+        .bs-tile .txt { min-width: 0; flex: 1 1 auto; }
+        .bs-tile .val { font-size: 16px !important; font-weight: 700; color: #181c32; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bs-tile .lbl { font-size: 11px !important; color: #7e8299; white-space: nowrap; }
+        .bs-tile .sub { font-size: 11px !important; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 12px; padding: 16px; cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s; height: 100%; }
         .bs-status-card:hover { border-color: #d5dbe6; }
-        .bs-status-card .ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
-        .bs-status-card .lbl { font-size: 12px !important; font-weight: 700; color: #181c32; }
-        .bs-status-card .desc { font-size: 10px !important; color: #7e8299; }
+        .bs-status-card .ico { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .bs-status-card .ico i { font-size: 15px !important; }
+        .bs-status-card .lbl { font-size: 15px !important; font-weight: 700; color: #181c32; }
+        .bs-status-card .desc { font-size: 11.5px !important; color: #7e8299; margin-top: 2px; }
         .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
         .bs-status-card.is-current .lbl { color: #3e97ff; }
         .bs-status-card.is-selected { border-color: #17c653; background: #f3fef8; box-shadow: 0 0 0 1px #17c653 inset; }
         .bs-status-card.is-selected .lbl { color: #17c653; }
-        .bs-status-card .radio-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #d5dbe6; margin-bottom: 6px; }
+        .bs-status-card .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #d5dbe6; margin-bottom: 8px; }
         .bs-status-card.is-selected .radio-dot { border-color: #17c653; background: radial-gradient(#17c653 45%, transparent 50%); }
         .bs-status-card.is-current .radio-dot { border-color: #3e97ff; }
 
-        .bs-impact { background: #f3fef8; border: 1px solid #d5f7e3; border-radius: 10px; padding: 12px; }
-        .bs-impact-item { display: flex; align-items: center; gap: 6px; font-size: 11px !important; color: #275a3e; }
-        .bs-impact-item i { color: #17c653; font-size: 10.5px !important; }
+        .bs-impact { background: #f3fef8; border: 1px solid #d5f7e3; border-radius: 12px; padding: 14px 16px; }
+        .bs-impact-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px !important; font-weight: 500; color: #275a3e; }
+        .bs-impact-item i { color: #17c653; font-size: 12px !important; }
 
         .bs-job-table table { width: 100%; }
-        .bs-job-table th { font-size: 9px !important; text-transform: uppercase; color: #a1a5b7; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
-        .bs-job-table td { font-size: 11px !important; padding: 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
-        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 7px; padding: 5px 12px; font-size: 10.5px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .bs-job-table th { font-size: 10px !important; text-transform: uppercase; color: #a1a5b7; font-weight: 600; padding: 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
+        .bs-job-table td { font-size: 12.5px !important; padding: 10px 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 7px; padding: 6px 14px; font-size: 12px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .bs-place-btn:hover { border-color: #3e97ff; color: #3e97ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
+
+        /* Force exactly 5 tiles/cards per row without wrapping — Bootstrap's bare .col has
+           flex-shrink:0 by default, so long un-wrapped text (e.g. "Available from") would
+           otherwise push a 5th column onto a new line instead of truncating in place. */
+        .bs-grid-5 > .col { flex: 1 1 0; min-width: 0; }
     </style>
 @endpush
 
@@ -453,35 +457,38 @@
         </div>
     </div>
 
-    <!-- Change Status drawer (replaces the old centered modal) -->
-    {{-- Own flat-grey overlay (no third-party drawer plugin) so no page content shows through --}}
-    <div id="bstatus_overlay" class="bstatus-overlay"></div>
-    {{-- Plain fixed panel, anchored to the right of the sidebar (#kt_aside) so the sidebar stays visible --}}
-    <div id="bstatus_drawer" class="bstatus-drawer bg-white">
-        <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fa fa-user-plus text-primary"></i>
-                <span class="fw-bolder text-dark">Change Inhouse Talent Status</span>
-            </div>
-            <div class="d-flex flex-column align-items-center">
-                <span class="xtiny text-muted">You are about to change the status</span>
-                <div class="d-flex align-items-center gap-2 mt-1" id="bstatus_transition">
-                    <span class="fw-bolder text-primary" id="bstatus_from">—</span>
-                    <i class="fa fa-arrow-right text-muted"></i>
-                    <span class="fw-bolder text-muted" id="bstatus_to">Select a status</span>
+    <!-- Change Status drawer — same drawer mechanism/width as the Job drawer ({default:'500px','lg':'1200px'}) -->
+    <div id="bstatus_drawer_toggle" style="display:none;"></div>
+    <div id="bstatus_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-status"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#bstatus_drawer_toggle" data-kt-drawer-close="#bstatus_close_x">
+        <div class="d-flex flex-column h-100">
+            <div class="bstatus-topbar d-flex align-items-center justify-content-between flex-wrap px-4 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-user-plus text-primary"></i>
+                    <span class="fw-bolder text-dark">Change Inhouse Talent Status</span>
+                </div>
+                <div class="d-flex flex-column align-items-center">
+                    <span class="xtiny text-muted">You are about to change the status</span>
+                    <div class="d-flex align-items-center gap-2 mt-1" id="bstatus_transition">
+                        <span class="fw-bolder text-primary" id="bstatus_from">—</span>
+                        <i class="fa fa-arrow-right text-muted"></i>
+                        <span class="fw-bolder text-muted" id="bstatus_to">Select a status</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="bstatus-btn-cancel" id="bstatus_cancel_btn">Cancel</button>
+                    <button type="button" class="bstatus-btn-confirm" id="bstatus_confirm_btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
+                    <span class="bstatus-close" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="bstatus-btn-cancel bstatus-dismiss" id="bstatus_cancel_btn">Cancel</button>
-                <button type="button" class="bstatus-btn-confirm" id="bstatus_confirm_btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
-                <span class="bstatus-close bstatus-dismiss" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
+            <div class="d-flex justify-content-end px-4 pb-2">
+                <span class="xtiny text-muted"><i class="fa fa-shield-halved text-success"></i> This action will be logged and cannot be undone.</span>
             </div>
-        </div>
-        <div class="d-flex justify-content-end px-4 pb-2">
-            <span class="xtiny text-muted"><i class="fa fa-shield-halved text-success"></i> This action will be logged and cannot be undone.</span>
-        </div>
-        <div class="bstatus-body flex-grow-1" id="stage_body_content">
-            <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
+            <div class="bstatus-body flex-grow-1" id="stage_body_content">
+                <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
+            </div>
         </div>
     </div>
 
@@ -628,23 +635,14 @@
         });
 
         // ---- Change Status drawer ----
-        // Self-contained show/hide (no drawer plugin) so it can be pinned exactly to the
-        // right edge of the sidebar (#kt_aside), keeping the sidebar visible at all times.
-        function openBstatusDrawer() {
-            var asideW = $('#kt_aside').outerWidth() || 265;
-            document.documentElement.style.setProperty('--bstatus-aside-w', asideW + 'px');
-            $('#bstatus_overlay, #bstatus_drawer').addClass('show');
-        }
-        function closeBstatusDrawer() {
-            $('#bstatus_overlay, #bstatus_drawer').removeClass('show');
-        }
-        $(document).on('click', '.bstatus-dismiss', closeBstatusDrawer);
-        $(document).on('click', '#bstatus_overlay', closeBstatusDrawer);
+        // Uses the same drawer mechanism/width as the Job & Relationship Manager drawers
+        // on this page ({default:'500px','lg':'1200px'}) — no custom positioning logic.
+        $(document).on('click', '#bstatus_cancel_btn', function() { $('#bstatus_close_x').trigger('click'); });
 
         $(document).on('click', '.stage_sub_stage', function() {
             var id = $(this).data('row-id');
             $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
-            openBstatusDrawer(); // open instantly, fill in once fetched
+            $('#bstatus_drawer_toggle').trigger('click'); // open instantly, fill in once fetched
             var url = "{{ route('service_company.bench-candidates.bench_application_status', ':id') }}".replace(':id', id);
             $.ajax({
                 type: 'GET', url: url,

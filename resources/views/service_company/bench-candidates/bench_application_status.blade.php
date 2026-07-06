@@ -82,28 +82,29 @@
 
     {{-- Candidate summary + stat tiles --}}
     <div class="bs-card p-3 mb-2">
-        <div class="row g-3 align-items-stretch">
-            <div class="col-lg-4 d-flex align-items-center gap-3 pe-lg-3" style="border-right: 1px solid #eef0f4;">
+        <div class="row g-3">
+            <div class="col-lg-4 d-flex align-items-start gap-3 pe-lg-3" style="border-right: 1px solid #eef0f4;">
                 <div class="symbol symbol-circle symbol-60px overflow-hidden flex-shrink-0">
-                    <div class="symbol-label {{ $bgTextDecore }} fw-bolder d-flex align-items-center justify-content-center w-100 h-100" style="font-size:12px !important;">{{ strtoupper($strVal) }}</div>
+                    <div class="symbol-label {{ $bgTextDecore }} fw-bolder d-flex align-items-center justify-content-center w-100 h-100" style="font-size:18px !important;">{{ strtoupper($strVal) }}</div>
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="fw-bolder text-dark" style="font-size:12px !important;">{{ ucwords($benchApplication->full_name) }}</span>
+                        <span class="bs-name">{{ ucwords($benchApplication->full_name) }}</span>
                         <span class="badge {{ $availTitle == 'Immediate' ? 'badge-light-success' : 'badge-light-warning' }}">{{ $availTitle }}</span>
                     </div>
-                    <div class="text-muted xtiny">{{ ucwords($benchApplication->current_designation) }} &middot; {{ $employmentLabel }}</div>
-                    <div class="bs-sub d-inline-flex align-items-center gap-2 mt-2 px-2 py-1">
-                        <i class="fa fa-user-tie text-primary"></i>
+                    <div class="bs-designation">{{ ucwords($benchApplication->current_designation) }} &middot; {{ $employmentLabel }}</div>
+                    <div class="lbl mt-2">Talent ID <span class="text-dark fw-bolder">#{{ $benchApplication->id }}</span></div>
+                    <div class="bs-sub d-inline-flex align-items-center gap-2 mt-2 px-3 py-2">
+                        <i class="fa fa-user-tie text-primary" style="font-size:14px;"></i>
                         <div>
                             <div class="lbl">Relationship Manager</div>
-                            <div class="fw-bolder" style="font-size:12px !important;">{{ ucwords($managerName) }}</div>
+                            <div class="bs-rm-name">{{ ucwords($managerName) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-8">
-                <div class="row g-2 mb-2">
+                <div class="row g-2 mb-2 bs-grid-5">
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-wallet"></i></span>
                             <div class="txt"><div class="lbl">Expected Salary</div><div class="val">{!! $bill_rate_amount !!}</div><div class="sub">{!! $pay_rate_amount !!}</div></div>
@@ -130,7 +131,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row g-2">
+                <div class="row g-2 bs-grid-5">
                     <div class="col">
                         <div class="bs-sub bs-tile"><span class="ico" style="background:#eef3ff;color:#3e97ff;"><i class="fa fa-comments"></i></span>
                             <div class="txt"><div class="val">{{ $activeInterviews ?? 0 }}</div><div class="lbl">Active Interviews</div></div>
@@ -164,11 +165,11 @@
     {{-- Card 1: Select New Status --}}
     <div class="bs-card p-3 mb-2">
         <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">1</span>
-            <span class="fw-bolder text-dark" style="font-size:12px !important;">Select New Status</span>
+            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:12px !important;">1</span>
+            <span class="fw-bolder text-dark" style="font-size:14px !important;">Select New Status</span>
         </div>
-        <div class="text-muted xtiny mb-3">Choose the new status for this inhouse talent</div>
-        <div class="row g-2">
+        <div class="lbl mb-3">Choose the new status for this inhouse talent</div>
+        <div class="row g-2 bs-grid-5">
             @foreach ($master_status as $mstatus)
                 @php $meta = $statusMeta[$mstatus->id] ?? ['icon' => 'fa-circle', 'bg' => '#f1f2f6', 'color' => '#7e8299', 'desc' => '']; @endphp
                 <div class="col">
@@ -185,7 +186,7 @@
         </div>
 
         <div class="bs-impact mt-3" id="bs_impact_wrap" style="display:none;">
-            <div class="fw-bolder text-success mb-2" style="font-size:11.5px !important;"><i class="fa fa-shield-halved"></i> Impact of changing status</div>
+            <div class="fw-bolder text-success mb-2" style="font-size:13px !important;"><i class="fa fa-shield-halved"></i> Impact of changing status</div>
             <div class="row g-2" id="bs_impact_list"></div>
         </div>
     </div>
@@ -193,10 +194,10 @@
     {{-- Card 2: Select the Job / Project — only shown when target status = Placed --}}
     <div class="bs-card p-3 mb-2" id="bs_job_card" style="display:none;">
         <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:22px;height:22px;font-size:11px !important;">2</span>
-            <span class="fw-bolder text-dark" style="font-size:12px !important;">Select the Job / Project</span>
+            <span class="badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:12px !important;">2</span>
+            <span class="fw-bolder text-dark" style="font-size:14px !important;">Select the Job / Project</span>
         </div>
-        <div class="text-muted xtiny mb-2">Jobs associated with this talent</div>
+        <div class="lbl mb-2">Jobs associated with this talent</div>
         <div class="bs-job-table table-responsive">
             <table class="table mb-0">
                 <thead>
