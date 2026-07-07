@@ -123,25 +123,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$this->companies = DB::table('companies')->select('id','company_name')->where('id', auth()->user()->company_id)->first();
             // dd($this->counts);
 
-		/**
-		 * Bench Loss & Profit analytics (tenant-scoped, drives the redesigned dashboard).
-		 * Why: the redesign shows "Bench Cost (Loss)" and "Gross Profit" cards + charts.
-		 *
-		 *  - Loss (Bench Cost) = annual salary (ctc_yearly) of talents still ON BENCH (status 2),
-		 *    i.e. people we pay for but who are NOT placed yet.
-		 *
-		 *  - Gross Profit = (what the CLIENT actually pays us on the placement)
-		 *                   − (bench cost of unplaced talents)
-		 *                   − (salary we pay the placed talents).
-		 *    IMPORTANT: the client-pay is the real placement billing recorded in `bench_place`
-		 *    (bill_rate_amount), NOT the ECTC captured on the candidate form. Placement rates are
-		 *    stored raw with a *_mode, so they are annualised via salaryDividedByMode().
-		 *
-		 * NOTE: raw DB::table is NOT auto tenant-scoped, so company_id is filtered explicitly.
-		 */
+		// Inhouse Talents page keeps only its hero KPI chips (counts + MoM deltas + Bench Cost);
+		// the Bench-Aging / Loss / Profit charts now live on the Staffing Dashboard.
 		$companyId = auth()->user()->company_id;
+		$analytics = $this->benchStaffingAnalytics($companyId);
+		$this->currencyCode = $analytics->currencyCode;
+		$this->deltas       = $analytics->deltas;
+		$this->benchCost    = $analytics->benchCost;
 
-		// Talents still on bench (unplaced) — drives Bench Cost / Loss.
+		return view('service_company.bench-candidates.index', $this->data);
+
+	}
+
+	/**
+	 * Staffing Dashboard — Bench Aging, Bench Cost (Loss) and Gross Profit analytics,
+	 * moved out of the Inhouse Talents page into a dedicated Talent-Marketplace sub-page.
+	 */
+	public function staffingDashboard()
+	{
+		abort_if(Gate::denies('view_job_applications'), 403);
+		$this->pageTitle = __('Staffing Dashboard');
+
+		$companyId = auth()->user()->company_id;
+		$a = $this->benchStaffingAnalytics($companyId);
+
+		$this->currencyCode    = $a->currencyCode;
+		$this->benchCost       = $a->benchCost;
+		$this->grossProfit     = $a->grossProfit;
+		$this->benchAging      = $a->benchAging;
+		$this->benchCount      = $a->benchCount;
+		$this->avgBenchAge     = $a->avgBenchAge;
+		$this->longestBenchAge = $a->longestBenchAge;
+		$this->profitMargin    = $a->profitMargin;
+		$this->benchROI        = $a->benchROI;
+		$this->chartLabels     = $a->chartLabels;
+		$this->lossSeries      = $a->lossSeries;
+		$this->profitSeries    = $a->profitSeries;
+		$this->deltas          = $a->deltas;
+
+		return view('service_company.bench-candidates.staffing-dashboard', $this->data);
+	}
+
+	/**
+	 * Shared bench financial analytics (tenant-scoped). Returns everything the
+	 * Staffing Dashboard needs; the Inhouse page consumes only a subset.
+	 *
+	 *  - Loss (Bench Cost) = annual salary (ctc_yearly) of talents still ON BENCH (status 2).
+	 *  - Gross Profit = (client pay on placements, bench_place.bill_rate_amount, annualised)
+	 *                   − (bench cost of unplaced) − (salary we pay placed talents).
+	 * NOTE: raw DB::table is NOT auto tenant-scoped, so company_id is filtered explicitly.
+	 */
+	private function benchStaffingAnalytics(int $companyId): object
+	{
+		// Talents still on bench (unplaced) — drives Bench Cost / Loss + aging.
 		$benchRows = DB::table('job_applications')
 			->select('id', 'ctc_yearly', 'created_at')
 			->where('company_id', $companyId)
@@ -158,12 +192,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		// Annualise a raw placement rate (mode: 0=Annual, 1=Monthly, 2=Hourly).
 		$annual = fn ($amount, $mode) => (float) GeneralMethod::salaryDividedByMode((int) $mode, (float) $amount)->yearly;
 
-		$benchCost       = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);                           // unplaced salary
-		$placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode)); // client pays us
-		$placedSalary    = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));   // we pay placed talents
-
-		// Gross Profit = client pay (placed) − bench cost (unplaced) − placed talent salary.
-		$grossProfit = $placedClientPay - $benchCost - $placedSalary;
+		$benchCost       = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);
+		$placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+		$placedSalary    = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+		$grossProfit     = $placedClientPay - $benchCost - $placedSalary;
 
 		// Bench Aging buckets (days on bench, derived from created_at).
 		$aging = ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
@@ -184,33 +216,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$cursor = (clone $monthStart)->addDays($d - 1)->endOfDay();
 			$labels[] = $cursor->format('d M');
 
-			// Loss to date = salary of bench talents added on/before this day.
 			$lossToDate = (float) $benchRows
 				->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor))
 				->sum(fn ($r) => (float) $r->ctc_yearly);
 
-			// Placements made on/before this day.
 			$placedToDate = $placementRows->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->lte($cursor));
 			$clientPayToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
 			$placedSalToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
 
-			$profitToDate = $clientPayToDate - $lossToDate - $placedSalToDate;
-
 			$lossSeries[]   = round($lossToDate, 2);
-			$profitSeries[] = round($profitToDate, 2);
+			$profitSeries[] = round($clientPayToDate - $lossToDate - $placedSalToDate, 2);
 		}
 
-		// Bench age summary (Avg / Longest) + profitability ratios shown as sub-cards.
 		$ages = $benchRows->map(fn ($r) => $r->created_at ? Carbon::parse($r->created_at)->diffInDays($today) : 0);
 		$avgBenchAge     = $ages->count() ? (int) round($ages->avg()) : 0;
 		$longestBenchAge = $ages->count() ? (int) $ages->max() : 0;
 		$profitMargin    = $placedClientPay > 0 ? round(($grossProfit / $placedClientPay) * 100, 1) : 0;
 		$benchROI        = $benchCost > 0 ? round($placedClientPay / $benchCost, 2) : 0;
 
-		/**
-		 * Month-over-month deltas that power the "vs last month" chips on each KPI card.
-		 * Approximated from records created in each month window (no historical snapshots exist).
-		 */
+		// Month-over-month deltas ("vs last month" chips), from records created in each window.
 		$thisStart = Carbon::now()->startOfMonth();
 		$lastStart = Carbon::now()->subMonthNoOverflow()->startOfMonth();
 		$lastEnd   = Carbon::now()->subMonthNoOverflow()->endOfMonth();
@@ -225,7 +249,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			return round((($cur - $prev) / $prev) * 100, 1);
 		};
 
-		// Money deltas: bench cost & profit contributed this month vs last month.
 		$sumBench = fn ($from, $to) => (float) $benchRows
 			->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->betweenIncluded($from, $to))
 			->sum(fn ($r) => (float) $r->ctc_yearly);
@@ -241,7 +264,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$profitThis = $sumPlaceBill($thisStart, Carbon::now()) - $costThis - $sumPlacePay($thisStart, Carbon::now());
 		$profitLast = $sumPlaceBill($lastStart, $lastEnd) - $costLast - $sumPlacePay($lastStart, $lastEnd);
 
-		$this->deltas = (object) [
+		$deltas = (object) [
 			'all'    => $delta($addsThis->sum(), $addsLast->sum()),
 			'pool'   => $delta($addsThis->get(1, 0), $addsLast->get(1, 0)),
 			'bench'  => $delta($addsThis->get(2, 0), $addsLast->get(2, 0)),
@@ -252,20 +275,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		];
 
 		$currencyMode = GeneralMethod::getCompanyCurrencyBenchshowMode($companyId);
-		$this->currencyCode     = $currencyMode->currency_code ?? 'INR';
-		$this->benchCost        = $benchCost;
-		$this->grossProfit      = $grossProfit;
-		$this->benchAging       = (object) $aging;
-		$this->avgBenchAge      = $avgBenchAge;
-		$this->longestBenchAge  = $longestBenchAge;
-		$this->profitMargin     = $profitMargin;
-		$this->benchROI         = $benchROI;
-		$this->chartLabels      = $labels;
-		$this->lossSeries       = $lossSeries;
-		$this->profitSeries     = $profitSeries;
 
-		return view('service_company.bench-candidates.index', $this->data);
-
+		return (object) [
+			'currencyCode'    => $currencyMode->currency_code ?? 'INR',
+			'benchCost'       => $benchCost,
+			'grossProfit'     => $grossProfit,
+			'benchAging'      => (object) $aging,
+			'benchCount'      => $benchRows->count(),
+			'avgBenchAge'     => $avgBenchAge,
+			'longestBenchAge' => $longestBenchAge,
+			'profitMargin'    => $profitMargin,
+			'benchROI'        => $benchROI,
+			'chartLabels'     => $labels,
+			'lossSeries'      => $lossSeries,
+			'profitSeries'    => $profitSeries,
+			'deltas'          => $deltas,
+		];
 	}
 	public function countDataGetBenchList(){
 

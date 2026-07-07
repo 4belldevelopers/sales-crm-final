@@ -368,7 +368,8 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('bench-candidates/offerListing', [ServiceCompanyBenchCandidatesController::class,'offerListing'])->name('bench-candidates.offerListing'); 
 						Route::get('bench-candidates/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData'])->name('bench-candidates.offerListingData');  
 						Route::get('bench-candidates_ajax/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData_ajax'])->name('bench-candidates.offerListingData_ajax');  
-						Route::get('bench-candidates/data', [ServiceCompanyBenchCandidatesController::class,'data'])->name('bench-candidates.data'); 
+						Route::get('bench-candidates/staffing-dashboard', [ServiceCompanyBenchCandidatesController::class,'staffingDashboard'])->name('bench-candidates.staffingDashboard');
+						Route::get('bench-candidates/data', [ServiceCompanyBenchCandidatesController::class,'data'])->name('bench-candidates.data');
 						Route::get('bench-candidates_ajax/data', [ServiceCompanyBenchCandidatesController::class,'data_ajax'])->name('bench-candidates.data_ajax'); 
 						Route::get('countDataGetBenchList', [ServiceCompanyBenchCandidatesController::class,'countDataGetBenchList'])->name('bench-candidates.countDataGetBenchList'); 
 						Route::get('bench-candidates/bench_explore_listing', [ServiceCompanyBenchCandidatesController::class,'bench_explore_listing'])->name('bench-candidates.bench_explore_listing'); 
