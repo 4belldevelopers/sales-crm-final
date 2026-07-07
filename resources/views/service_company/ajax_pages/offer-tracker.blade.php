@@ -178,6 +178,9 @@
         if (($row->thirdparty_company_id ?? 0) > 0 && $row->thirdparty_company_id == $company_id) {
             $stageClass = ($row->master_status_id ?? 0) == 8 ? 'stage_sub_stage' : '';
         }
+        // "Offered" stage gets an orange box instead of the default purple, whether or not
+        // the button is clickable in this row's context.
+        $stageIsOffered = strtolower(trim($row->name ?? '')) === 'offered';
     @endphp
 
     <tr class="ot-row">
@@ -264,9 +267,9 @@
         <td class="ot-td ot-td-stage">
             @if(!empty($stageClass))
                 <a href="javascript:void(0);" data-row-id="{{ $row->wiseId }}"
-                   class="ot-stage-btn {{ $stageClass }}" data-toggle="modal" data-target="#{{ $stageClass }}">{{ $masterStatusName }}</a>
+                   class="ot-stage-btn {{ $stageClass }} {{ $stageIsOffered ? 'ot-stage-offered' : '' }}" data-toggle="modal" data-target="#{{ $stageClass }}">{{ $masterStatusName }}</a>
             @else
-                <span class="ot-stage-btn ot-stage-disabled">{{ $masterStatusName }}</span>
+                <span class="ot-stage-btn ot-stage-disabled {{ $stageIsOffered ? 'ot-stage-offered' : '' }}">{{ $masterStatusName }}</span>
             @endif
         </td>
     </tr>
