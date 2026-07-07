@@ -88,12 +88,12 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th>Job / Company</th><th>Experience</th><th>Location</th><th>Hiring Manager</th>
+                        <th>Job / Company</th><th>Experience</th><th>Hiring Manager</th>
                         <th>Offer Amount</th><th>Join Date</th><th>Stage</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="bs_job_body">
-                    <tr><td colspan="8" class="text-center text-muted py-4">Loading jobs…</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Loading jobs…</td></tr>
                 </tbody>
             </table>
         </div>

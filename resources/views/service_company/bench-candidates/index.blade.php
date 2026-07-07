@@ -210,9 +210,17 @@
 
         /* ---- Job/Project section ---- */
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
-        .bs-job-table table { width: 100%; margin: 0; }
+        .bs-job-table table { width: 100%; margin: 0; table-layout: fixed; }
         .bs-job-table thead th { font-size: 10px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
         .bs-job-table td { font-size: 11.5px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        /* Fixed proportional widths (Location removed) so columns always line up the same way row to row */
+        .bs-job-table th:nth-child(1), .bs-job-table td:nth-child(1) { width: 22%; }
+        .bs-job-table th:nth-child(2), .bs-job-table td:nth-child(2) { width: 20%; }
+        .bs-job-table th:nth-child(3), .bs-job-table td:nth-child(3) { width: 16%; }
+        .bs-job-table th:nth-child(4), .bs-job-table td:nth-child(4) { width: 14%; }
+        .bs-job-table th:nth-child(5), .bs-job-table td:nth-child(5) { width: 12%; }
+        .bs-job-table th:nth-child(6), .bs-job-table td:nth-child(6) { width: 8%; }
+        .bs-job-table th:nth-child(7), .bs-job-table td:nth-child(7) { width: 8%; }
         .bs-job-table tbody tr:last-child td { border-bottom: none; }
         .bs-job-table tbody tr:hover td { background: #fafbfc; }
         /* Normalise the server-rendered cell typography to the design's hierarchy */
@@ -646,10 +654,15 @@
             5: { color: '#f8285a', bg: '#ffeef1', border: '#ffd3da' }
         };
 
+        // Single source of truth for the confirm button's resting label — reused whenever it needs
+        // to be reset (drawer open, status re-selected, submit failed) so it never gets stuck on
+        // "Updating…" from a previous selection or a request that was already in flight.
+        var BSTATUS_CONFIRM_DEFAULT_HTML = '<i class="fa fa-circle-check"></i> Confirm Status Change';
+
         window.initBenchStatusDrawer = function(cfg) {
             $('#bstatus_cur_name').text(cfg.currentName || '—');
             $('#bstatus_new_name').text('Select status').removeClass('filled').css({ background: '', color: '', borderColor: '' });
-            $('.bstatus-confirm-btn').prop('disabled', true);
+            $('.bstatus-confirm-btn').prop('disabled', true).html(BSTATUS_CONFIRM_DEFAULT_HTML);
             $('#bs_impact').hide();
             $('#bs_job_card').hide();
 
@@ -670,9 +683,10 @@
                     $('#bstatus_new_name').text(label).addClass('filled')
                         .css({ background: c.bg, color: c.color, borderColor: c.border });
 
-                    // Confirm button (enabled only when target differs from current)
+                    // Confirm button — always reset to its resting label when a status is (re-)picked,
+                    // then enabled only when the target differs from the current status.
                     var same = (id === String(cfg.currentId));
-                    $('.bstatus-confirm-btn').prop('disabled', same);
+                    $('.bstatus-confirm-btn').html(BSTATUS_CONFIRM_DEFAULT_HTML).prop('disabled', same);
 
                     // Impact strip — same colour treatment
                     $('#bs_impact_title').text('Impact of changing status to ' + label);
@@ -707,7 +721,6 @@
                     return;
                 }
                 var $btns = $('.bstatus-confirm-btn');
-                var original = $btns.first().html();
                 $btns.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating…');
                 $.ajax({
                     url: '{{ route('service_company.bench-candidates.status_submit') }}',
@@ -719,12 +732,12 @@
                             $('#bstatus_close_x').trigger('click');
                             fetchBenchBenchCandidatesCandidateList();
                         } else {
-                            $btns.prop('disabled', false).html(original);
+                            $btns.prop('disabled', false).html(BSTATUS_CONFIRM_DEFAULT_HTML);
                             if (response.message) { sweetAlert('Fail!', response.message, 'error'); }
                         }
                     },
                     error: function() {
-                        $btns.prop('disabled', false).html(original);
+                        $btns.prop('disabled', false).html(BSTATUS_CONFIRM_DEFAULT_HTML);
                     }
                 });
             });
@@ -740,12 +753,12 @@
         }
 
         function loadBenchJobListing(benchId) {
-            $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
+            $('#bs_job_body').html('<tr><td colspan="7" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
             $.getJSON('{{ route('service_company.bench-candidates.bench_assign_to_job_listing') }}', { bench_id: benchId, stage: 'all' })
                 .done(function(resp) {
                     var rows = (resp && resp.data) ? resp.data : [];
                     if (!rows.length) {
-                        $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-muted py-4">No job applications found for this talent.</td></tr>');
+                        $('#bs_job_body').html('<tr><td colspan="7" class="text-center text-muted py-4">No job applications found for this talent.</td></tr>');
                         return;
                     }
                     var html = '';
@@ -753,23 +766,27 @@
                         // Job / Company — keep the server's logo/initial avatar in front of the title.
                         var jobHtml = r.Requisition || '';
 
-                        // Experience column redesigned into 3 rows: experience range, budget range, client type.
+                        // The exact job id used for the "Select Job" radio — the single reliable
+                        // source of truth, reused below as the JID reference (same one Job pages show).
+                        var jobId = $('<div>').html(r.chkbox || '').find('input[name="chk_list_item"]').attr('value') || '';
+
+                        // Experience column redesigned into 3 rows: experience range, budget range (in K), client type + JID.
                         var exp = bsTwoLineText(r.Exp);       // bold = max_exp+'+', muted = min_exp+'+'
                         var expRange = (exp.muted || '0').replace('+', '') + ' - ' + (exp.bold || '0').replace('+', '') + ' Years';
 
                         var sal = bsTwoLineText(r.Salary);    // bold = top of range, muted = bottom of range
-                        var budgetRange = (sal.muted || sal.bold) ? ((sal.muted || '—') + ' - ' + (sal.bold || '—')) : '—';
+                        var minK = toKFormat(sal.muted);
+                        var maxK = toKFormat(sal.bold);
+                        var budgetRange = (minK && maxK) ? (minK + ' - ' + maxK) : '—';
 
-                        var status = bsTwoLineText(r.Status); // muted = "{jobId}-{Internal|Client}"
-                        var statusParts = (status.muted || '').split('-');
-                        var jobRef = statusParts[0] || '';
-                        var isInternal = (statusParts[1] || '').toLowerCase().indexOf('internal') !== -1;
+                        var status = bsTwoLineText(r.Status); // muted contains "Internal"/"Client" somewhere in its text
+                        var isInternal = (status.muted || '').toLowerCase().indexOf('internal') !== -1;
                         var clientLabel = isInternal ? 'Internal Client' : 'Direct Client';
 
                         var expCellHtml =
                             '<div class="bs-exp-row"><i class="fa fa-clock"></i> ' + expRange + '</div>' +
                             '<div class="bs-exp-row"><i class="fa fa-wallet"></i> ' + budgetRange + '</div>' +
-                            '<div class="bs-exp-row client"><i class="fa fa-building"></i> ' + clientLabel + (jobRef ? ' <span class="ref">&middot; ' + jobRef + '</span>' : '') + '</div>';
+                            '<div class="bs-exp-row client"><i class="fa fa-building"></i> ' + clientLabel + (jobId ? ' <span class="ref">&middot; JID-' + jobId + '</span>' : '') + '</div>';
 
                         // Offer Amount — strip the redundant ".00" from the headline figure.
                         var offerHtml = (r.offeramount || '').replace(/\.00(?=[^\d]|$)/g, '');
@@ -787,7 +804,6 @@
                         html += '<tr>' +
                             '<td>' + jobHtml + '</td>' +
                             '<td>' + expCellHtml + '</td>' +
-                            '<td>' + (r.Location || '') + '</td>' +
                             '<td>' + (r.ContactPerson || '') + '</td>' +
                             '<td>' + offerHtml + '</td>' +
                             '<td>' + (r.joindate || '') + '</td>' +
@@ -798,8 +814,15 @@
                     $('#bs_job_body').html(html);
                 })
                 .fail(function() {
-                    $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
+                    $('#bs_job_body').html('<tr><td colspan="7" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
                 });
+        }
+
+        // Converts a raw amount string (with currency/commas/mode suffix stripped) into "NNNK" notation.
+        function toKFormat(text) {
+            var num = parseFloat((text || '').replace(/[^0-9.]/g, ''));
+            if (!num || isNaN(num)) { return ''; }
+            return Math.round(num / 1000) + 'K';
         }
 
         // Builds the "Select Job" action button from the server-rendered chk_list_item radio.
