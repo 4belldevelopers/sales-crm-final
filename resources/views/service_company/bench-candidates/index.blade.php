@@ -203,8 +203,6 @@
         .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
         .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: #3f4254; font-weight: 500; }
         .bs-impact-item i { color: #17c653; font-size: 11.5px; margin-top: 1px; flex-shrink: 0; }
-        /* Auto-distribute the impact bullets evenly across the full row width, whatever the count (4 or 5) */
-        .bs-impact .row > .col { flex: 1 1 0; min-width: 0; }
 
         /* ---- Job/Project section ---- */
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
@@ -217,7 +215,12 @@
         .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 11.5px !important; font-weight: 700 !important; color: #181c32 !important; }
         .bs-job-table .fs-7 { font-size: 10px !important; color: #7e8299 !important; font-weight: 500 !important; }
         .bs-job-table .badge { font-size: 10px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
-        .bs-job-table .bs-jid { font-size: 10px; color: #a1a5b7; margin-top: 3px; }
+        /* Experience column redesign — experience range / budget range / client type, each its own row */
+        .bs-exp-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #181c32; }
+        .bs-exp-row + .bs-exp-row { margin-top: 4px; }
+        .bs-exp-row i { width: 12px; text-align: center; color: #a1a5b7; font-size: 10px; flex-shrink: 0; }
+        .bs-exp-row.client { color: #3e97ff; }
+        .bs-exp-row.client .ref { color: #a1a5b7; font-weight: 500; }
         .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
         .bs-place-btn:hover { background: #eef5ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
@@ -674,9 +677,10 @@
                     var items = BS_IMPACT[id] || [];
                     var html = '';
                     items.forEach(function(t) {
-                        // Plain "col" auto-distributes evenly across however many items exist
-                        // (4 or 5), so the row always stretches edge-to-edge instead of leaving gaps.
-                        html += '<div class="col mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check" style="color:' + c.color + ';"></i> ' + t + '</div></div>';
+                        // Fixed 3-per-row (33%) so both 4-item and 5-item lists wrap into exactly
+                        // 2 rows, giving longer bullets (e.g. "Removed from Bench listing &
+                        // marketplace") enough width to read cleanly instead of cramming a line.
+                        html += '<div class="col-lg-4 col-md-6 col-12 mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check" style="color:' + c.color + ';"></i> ' + t + '</div></div>';
                     });
                     $('#bs_impact_list').html(html);
                     $('#bs_impact').show();
@@ -722,7 +726,15 @@
             });
         };
 
-        // ---- Card 2: Select the Job / Project (only for target status = Placed) ----
+        // ---- Card 2: Shortlisted on the Job (only for target status = Placed) ----
+
+        // Reads the bold/muted two-line cells the server already renders (fs-6/fs-7 spans)
+        // and returns their plain text, so we can recombine them into the new layouts below.
+        function bsTwoLineText(html) {
+            var spans = $('<div>').html(html || '').find('span');
+            return { bold: $(spans.get(0)).text().trim(), muted: $(spans.get(1)).text().trim() };
+        }
+
         function loadBenchJobListing(benchId) {
             $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
             $.getJSON('{{ route('service_company.bench-candidates.bench_assign_to_job_listing') }}', { bench_id: benchId, stage: 'all' })
@@ -734,23 +746,48 @@
                     }
                     var html = '';
                     rows.forEach(function(r) {
-                        // Job / Company — drop the server logo/avatar so the cell is text-only (per design).
-                        var $req = $('<div>').html(r.Requisition || '');
-                        $req.find('.symbol').remove();
-                        var jobHtml = $.trim($req.html());
+                        // Job / Company — keep the server's logo/initial avatar in front of the title.
+                        var jobHtml = r.Requisition || '';
 
-                        // Job id (from the server radio) drives the JID line + the Select button value.
-                        var jobId = $('<div>').html(r.chkbox || '').find('input[name="chk_list_item"]').attr('value') || '';
-                        var expHtml = (r.Exp || '').replace(/(\d+\+)/g, '$1 Years') + (jobId ? '<div class="bs-jid">JID-' + jobId + '</div>' : '');
+                        // Experience column redesigned into 3 rows: experience range, budget range, client type.
+                        var exp = bsTwoLineText(r.Exp);       // bold = max_exp+'+', muted = min_exp+'+'
+                        var expRange = (exp.muted || '0').replace('+', '') + ' - ' + (exp.bold || '0').replace('+', '') + ' Years';
+
+                        var sal = bsTwoLineText(r.Salary);    // bold = top of range, muted = bottom of range
+                        var budgetRange = (sal.muted || sal.bold) ? ((sal.muted || '—') + ' - ' + (sal.bold || '—')) : '—';
+
+                        var status = bsTwoLineText(r.Status); // muted = "{jobId}-{Internal|Client}"
+                        var statusParts = (status.muted || '').split('-');
+                        var jobRef = statusParts[0] || '';
+                        var isInternal = (statusParts[1] || '').toLowerCase().indexOf('internal') !== -1;
+                        var clientLabel = isInternal ? 'Internal Client' : 'Direct Client';
+
+                        var expCellHtml =
+                            '<div class="bs-exp-row"><i class="fa fa-clock"></i> ' + expRange + '</div>' +
+                            '<div class="bs-exp-row"><i class="fa fa-wallet"></i> ' + budgetRange + '</div>' +
+                            '<div class="bs-exp-row client"><i class="fa fa-building"></i> ' + clientLabel + (jobRef ? ' <span class="ref">&middot; ' + jobRef + '</span>' : '') + '</div>';
+
+                        // Offer Amount — strip the redundant ".00" from the headline figure.
+                        var offerHtml = (r.offeramount || '').replace(/\.00(?=[^\d]|$)/g, '');
+
+                        // Stage — force Joined = green, Offered = orange, regardless of the server's own CSS class.
+                        var $stage = $('<div>').html(r.Stage || '');
+                        var $badge = $stage.find('.badge').first();
+                        var stageTxt = $badge.text().trim().toLowerCase();
+                        if (stageTxt.indexOf('join') !== -1) {
+                            $badge.css({ background: '#e8fff3', color: '#17c653' });
+                        } else if (stageTxt.indexOf('offer') !== -1) {
+                            $badge.css({ background: '#fff4de', color: '#f6a609' });
+                        }
 
                         html += '<tr>' +
                             '<td>' + jobHtml + '</td>' +
-                            '<td>' + expHtml + '</td>' +
+                            '<td>' + expCellHtml + '</td>' +
                             '<td>' + (r.Location || '') + '</td>' +
                             '<td>' + (r.ContactPerson || '') + '</td>' +
-                            '<td>' + (r.offeramount || '') + '</td>' +
+                            '<td>' + offerHtml + '</td>' +
                             '<td>' + (r.joindate || '') + '</td>' +
-                            '<td>' + (r.Stage || '') + '</td>' +
+                            '<td>' + $stage.html() + '</td>' +
                             '<td>' + buildBsPlaceAction(r.chkbox || '') + '</td>' +
                             '</tr>';
                     });
