@@ -58,8 +58,10 @@
                 <div class="bs-status-cell">
                     <div class="bs-status-card {{ $sid == $currentStatusId ? 'is-current' : '' }}"
                         data-status-id="{{ $sid }}" data-status-label="{{ $m['name'] }}">
-                        <span class="ic" style="background:{{ $m['bg'] }};color:{{ $m['color'] }};"><i class="fa {{ $m['icon'] }}"></i></span>
-                        <div class="nm" style="color:{{ $m['color'] }};">{{ $m['name'] }}</div>
+                        <div class="bs-status-card-top">
+                            <span class="ic" style="background:{{ $m['bg'] }};color:{{ $m['color'] }};"><i class="fa {{ $m['icon'] }}"></i></span>
+                            <div class="nm" style="color:{{ $m['color'] }};">{{ $m['name'] }}</div>
+                        </div>
                         <div class="sb">{{ $m['desc'] }}</div>
                     </div>
                 </div>
@@ -80,7 +82,7 @@
     <div class="bs-card" id="bs_job_card" style="display:none;">
         <div class="bs-sec-head">
             <span class="bs-sec-num">2</span>
-            <span class="bs-sec-title">Select the Job / Project</span>
+            <span class="bs-sec-title">Shortlisted on the Job</span>
         </div>
         <div class="bs-job-table table-responsive">
             <table class="table mb-0">
