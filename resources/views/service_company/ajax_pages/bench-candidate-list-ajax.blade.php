@@ -179,7 +179,7 @@
                 @endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">{!! $bill_rate_currency !!}{{ $billAmountClean }} /{{ mb_substr($bill_rate_mode, 0, 1) }}</a>
-                    <span class="fw-bold d-block fs-7 {{ $serviceClass }}"><i class="fa fa-circle-check" style="font-size:9px !important;"></i> {{ $serviceType }}</span>
+                    <span class="fw-bold d-block fs-7 {{ $serviceClass }}"><i class="fa fa-circle-check" style="font-size:10px !important;"></i> {{ $serviceType }}</span>
                 </div>
             </td>
 
