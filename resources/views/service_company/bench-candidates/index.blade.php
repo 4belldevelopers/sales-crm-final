@@ -142,130 +142,84 @@
         #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
         #bstatus_drawer { z-index: 999999; font-size: 12px; }
         #bstatus_drawer .min-w-0 { min-width: 0; }
-        #bstatus_drawer .bs-cand-name, #bstatus_drawer .bs-cand-role { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ---- Header ---- */
-        .bstatus-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px 20px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
+        .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
         .bstatus-topbar-left { display: flex; align-items: center; gap: 12px; }
-        .bstatus-title-ico { width: 42px; height: 42px; border-radius: 11px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .bstatus-title { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .bstatus-subtitle { font-size: 12px; color: #7e8299; }
-        .bstatus-topbar-center { display: flex; align-items: center; gap: 12px; padding-top: 2px; }
-        .bstatus-statebox-label { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; color: #a1a5b7; font-weight: 700; margin-bottom: 4px; text-align: center; }
-        .bstatus-statebox-card { border-radius: 10px; padding: 7px 16px; min-width: 130px; text-align: center; }
-        .bstatus-statebox-card.cur { background: #eef3ff; border: 1px solid #dce8ff; }
-        .bstatus-statebox-card.new { background: #f8f9fb; border: 1px dashed #d5dbe6; }
-        .bstatus-statebox-card.new.filled { background: #eef3ff; border: 1px solid #dce8ff; }
-        .bstatus-statebox-card .name { font-size: 13px; font-weight: 700; color: #3e97ff; line-height: 1.2; }
-        .bstatus-statebox-card.new .name { color: #a1a5b7; }
-        .bstatus-statebox-card.new.filled .name { color: #3e97ff; }
-        .bstatus-statebox-card .sub { font-size: 10px; color: #7e8299; }
-        .bstatus-arrow { color: #b5b9c8; font-size: 13px; margin-top: 16px; }
-        .bstatus-topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .bstatus-secure-note { font-size: 11px; color: #7e8299; display: flex; align-items: center; gap: 6px; }
+        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+        .bstatus-title { font-size: 19px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bstatus-topbar-center { display: flex; flex-direction: column; align-items: center; }
+        .bstatus-changing { font-size: 12px; color: #7e8299; }
+        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 14px; font-weight: 700; }
+        .bstatus-pill.cur { background: #eef3ff; color: #3e97ff; border: 1px solid #dce8ff; }
+        .bstatus-pill.new { background: #f6f7f9; color: #a1a5b7; border: 1px solid #e4e6ef; }
+        .bstatus-pill.new.filled { background: #e8fff3; color: #17c653; border-color: #c8f4dc; }
+        .bstatus-arrow { color: #b5b9c8; font-size: 14px; }
+        .bstatus-topbar-right { display: flex; align-items: center; gap: 10px; }
 
-        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 8px 18px; font-weight: 600; font-size: 13px; }
+        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13px; }
         .bstatus-btn-cancel:hover { border-color: #d5dbe6; background: #f9fafc; }
-        .bstatus-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 9px; padding: 8px 18px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
         .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
-        .bstatus-btn-confirm:not(:disabled):hover { background: #2f86ec; }
-        .bstatus-close { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #e4e6ef; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 14px; }
+        .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
+        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 16px; }
         .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
 
-        /* ---- Body + footer ---- */
-        .bstatus-body { overflow-y: auto; background: #f5f6fa; padding: 16px 20px; flex-grow: 1; }
-        .bstatus-footer { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #fff; border-top: 1px solid #eef0f4; }
+        /* ---- Body ---- */
+        .bstatus-body { overflow-y: auto; background: #f5f6fa; padding: 16px 22px; flex-grow: 1; }
+        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 14px; padding: 18px 22px; }
+        .bs-card + .bs-card { margin-top: 14px; }
 
-        /* ---- Two-column layout ---- */
-        .bs-layout { display: flex; gap: 14px; align-items: flex-start; }
-        .bs-side { width: 290px; flex-shrink: 0; }
-        .bs-main { flex: 1 1 auto; min-width: 0; }
-        @media (max-width: 1100px) { .bs-layout { flex-direction: column; } .bs-side { width: 100%; } }
+        /* ---- Candidate summary bar ---- */
+        .bs-cand-bar { display: flex; align-items: center; gap: 0; }
+        .bs-cand-id { display: flex; align-items: center; gap: 14px; padding-right: 26px; }
+        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700; flex-shrink: 0; }
+        .bs-cand-name { font-size: 19px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bs-cand-role { font-size: 13px; color: #7e8299; }
+        .bs-cand-stat { flex: 1 1 0; min-width: 0; text-align: center; padding: 0 12px; border-left: 1px solid #eef0f4; }
+        .bs-cand-stat .v { font-size: 20px; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bs-cand-stat .l { font-size: 11.5px; color: #7e8299; margin-top: 2px; }
 
-        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px; }
-        .bs-card + .bs-card, .bs-row + .bs-row { margin-top: 12px; }
-        .bs-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-        .bs-card-head .ic { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .bs-card-head .tt { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; font-weight: 700; color: #7e8299; }
+        /* ---- Numbered section headers ---- */
+        .bs-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-sec-title { font-size: 16px; font-weight: 700; color: #181c32; }
 
-        /* ---- Candidate card (left) ---- */
-        .bs-cand { background: linear-gradient(180deg,#f4f9ff,#ffffff); border: 1px solid #e3effe; border-radius: 12px; padding: 16px; }
-        .bs-cand-avatar { position: relative; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg,#5aa9ff,#3e6fff); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
-        .bs-cand-dot { position: absolute; right: 1px; bottom: 1px; width: 13px; height: 13px; border-radius: 50%; border: 2px solid #fff; }
-        .bs-cand-dot.on { background: #17c653; } .bs-cand-dot.off { background: #f6a609; }
-        .bs-cand-name { font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .bs-cand-role { font-size: 12px; color: #7e8299; }
-        .bs-cand-type { font-size: 11.5px; color: #5e6278; display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; }
-        .bs-rm { background: #fff; border: 1px solid #e3effe; border-radius: 10px; padding: 9px 12px; display: flex; align-items: center; gap: 9px; margin-top: 14px; }
-        .bs-rm .rm-ic { width: 30px; height: 30px; border-radius: 8px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .bs-rm .rm-l { font-size: 10px; color: #7e8299; }
-        .bs-rm .rm-n { font-size: 13px; font-weight: 700; color: #181c32; }
-
-        /* ---- Status journey (vertical stepper) ---- */
-        .bs-journey-title { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: #a1a5b7; font-weight: 700; margin-bottom: 8px; }
-        .bs-journey-item { display: flex; gap: 11px; padding: 8px; border-radius: 9px; cursor: pointer; position: relative; }
-        .bs-journey-item:hover { background: #f8f9fb; }
-        .bs-journey-item:not(:last-child)::before { content: ''; position: absolute; left: 16px; top: 30px; bottom: -6px; width: 2px; background: #eef0f4; }
-        .bs-journey-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d5dbe6; flex-shrink: 0; margin-top: 1px; z-index: 1; background: #fff; }
-        .bs-journey-item.is-current .bs-journey-radio { border-color: #3e97ff; background: radial-gradient(#3e97ff 42%, #fff 46%); }
-        .bs-journey-item.is-selected .bs-journey-radio { border-color: #17c653; background: radial-gradient(#17c653 42%, #fff 46%); }
-        .bs-journey-item .nm { font-size: 13px; font-weight: 700; color: #181c32; }
-        .bs-journey-item.is-current .nm { color: #3e97ff; }
-        .bs-journey-item .sb { font-size: 11px; color: #7e8299; }
-        .bs-journey-badge { font-size: 9px; font-weight: 700; color: #3e97ff; background: #eef3ff; border-radius: 5px; padding: 1px 7px; height: fit-content; align-self: center; }
-
-        /* ---- Info-card stat columns ---- */
-        .bs-stat .v { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bs-stat .l { font-size: 10.5px; color: #7e8299; margin-top: 3px; }
-        .bs-stat .s { font-size: 10.5px; color: #a1a5b7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bs-badge-status { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 2px 9px; }
-
-        /* ---- Recruitment mini stats ---- */
-        .bs-rec .ic { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 6px; }
-        .bs-rec .v { font-size: 17px; font-weight: 700; color: #181c32; line-height: 1; }
-        .bs-rec .l { font-size: 10px; color: #7e8299; margin-top: 3px; }
-
-        /* ---- Status transition preview ---- */
-        .bs-prev { display: flex; align-items: center; gap: 12px; }
-        .bs-prev-box { flex: 1 1 0; min-width: 0; border: 1px solid #eef0f4; border-radius: 10px; padding: 12px; text-align: center; }
-        .bs-prev-box.cur { background: #eef3ff; border-color: #dce8ff; }
-        .bs-prev-box.new { background: #eefdf4; border-color: #cdf3dd; }
-        .bs-prev-box .nm { font-size: 14px; font-weight: 700; }
-        .bs-prev-box.cur .nm { color: #3e97ff; }
-        .bs-prev-box.new .nm { color: #17c653; }
-        .bs-prev-box .sb { font-size: 10.5px; color: #7e8299; }
-        .bs-prev-arrow { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #eef0f4; display: flex; align-items: center; justify-content: center; color: #a1a5b7; flex-shrink: 0; background: #fff; }
-
-        /* ---- What will happen ---- */
-        .bs-wh { background: linear-gradient(180deg,#f2fdf7,#ffffff); border: 1px solid #d5f2e2; }
-        .bs-wh-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #3f4254; font-weight: 500; padding: 5px 0; }
-        .bs-wh-item i { color: #17c653; font-size: 12px; margin-top: 2px; flex-shrink: 0; }
-
-        /* ---- Choose new status cards ---- */
-        .bs-choose-title { font-size: 15px; font-weight: 700; color: #181c32; }
-        .bs-choose-sub { font-size: 12px; color: #7e8299; margin-bottom: 12px; }
-        .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 12px; padding: 14px; cursor: pointer; background: #fff; height: 100%; display: flex; flex-direction: column; transition: border-color .15s, background .15s; }
+        /* ---- Status cards row (with arrows) ---- */
+        .bs-status-row { display: flex; align-items: stretch; gap: 0; }
+        .bs-status-cell { flex: 1 1 0; min-width: 0; }
+        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 14px; padding: 0 8px; flex-shrink: 0; }
+        .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 14px; padding: 18px; cursor: pointer; background: #fff; height: 100%; transition: border-color .15s, background .15s, box-shadow .15s; }
         .bs-status-card:hover { border-color: #cdd4e0; }
-        .bs-status-card .ic { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 9px; }
-        .bs-status-card .nm { font-size: 13px; font-weight: 700; letter-spacing: .3px; }
-        .bs-status-card .sb { font-size: 10.5px; color: #7e8299; margin-bottom: 9px; }
-        .bs-status-card .bl { font-size: 11px; color: #5e6278; display: flex; align-items: center; gap: 6px; padding: 2px 0; }
-        .bs-status-card .bl i { font-size: 10px; }
-        .bs-status-card .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d5dbe6; margin: 10px auto 0; }
-        .bs-status-card.is-selected { border-color: #3e97ff; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset; }
-        .bs-status-card.is-selected .radio { border-color: #3e97ff; background: radial-gradient(#3e97ff 42%, transparent 46%); }
+        .bs-status-card .ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 12px; }
+        .bs-status-card .nm { font-size: 16px; font-weight: 700; }
+        .bs-status-card .sb { font-size: 12px; color: #7e8299; line-height: 1.4; margin-top: 3px; }
+        .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
+        .bs-status-card.is-selected { border-color: #17c653; background: #f2fdf7; box-shadow: 0 0 0 1px #17c653 inset; }
 
-        /* ---- Job/Project table (Placed) ---- */
+        /* ---- Impact strip ---- */
+        .bs-impact { background: #f2fdf7; border: 1px solid #d5f2e2; border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
+        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
+        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #3f4254; font-weight: 500; }
+        .bs-impact-item i { color: #17c653; font-size: 13px; margin-top: 1px; flex-shrink: 0; }
+
+        /* ---- Job/Project section ---- */
+        .bs-job-search { position: relative; margin-bottom: 14px; }
+        .bs-job-search input { width: 100%; border: 1px solid #eef0f4; border-radius: 10px; padding: 11px 14px 11px 38px; font-size: 13px; background: #fff; }
+        .bs-job-search i { position: absolute; left: 14px; top: 13px; color: #a1a5b7; font-size: 13px; }
         .bs-job-table table { width: 100%; }
-        .bs-job-table th { font-size: 9.5px; text-transform: uppercase; color: #a1a5b7; font-weight: 700; padding: 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; }
-        .bs-job-table td { font-size: 12px; padding: 10px 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
-        .bs-place-btn { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .bs-place-btn:hover { border-color: #3e97ff; color: #3e97ff; }
+        .bs-job-table th { font-size: 11px; color: #a1a5b7; font-weight: 600; padding: 10px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 13px; padding: 12px 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-place-btn { border: 1px solid #dce8ff; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .bs-place-btn:hover { background: #3e97ff; color: #fff; border-color: #3e97ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
 
-        /* Force N tiles per row without wrapping (Bootstrap .col defaults to flex-shrink:0) */
-        .bs-eqcols > .col { flex: 1 1 0; min-width: 0; }
+        @media (max-width: 1100px) {
+            .bs-status-row { flex-wrap: wrap; }
+            .bs-status-arrow { display: none; }
+            .bs-status-cell { flex: 1 1 30%; }
+        }
     </style>
 @endpush
 
@@ -449,44 +403,26 @@
             <div class="bstatus-topbar">
                 <div class="bstatus-topbar-left">
                     <span class="bstatus-title-ico"><i class="fa fa-user-group"></i></span>
-                    <div>
-                        <div class="bstatus-title">Change Talent Status</div>
-                        <div class="bstatus-subtitle">Update the status and availability of this employee</div>
-                    </div>
+                    <div class="bstatus-title">Change Inhouse Talent Status</div>
                 </div>
                 <div class="bstatus-topbar-center">
-                    <div class="bstatus-statebox">
-                        <div class="bstatus-statebox-label">Current Status</div>
-                        <div class="bstatus-statebox-card cur"><div class="name" id="bstatus_cur_name">—</div><div class="sub" id="bstatus_cur_sub"></div></div>
-                    </div>
-                    <i class="fa fa-arrow-right bstatus-arrow"></i>
-                    <div class="bstatus-statebox">
-                        <div class="bstatus-statebox-label">New Status</div>
-                        <div class="bstatus-statebox-card new" id="bstatus_new_box"><div class="name" id="bstatus_new_name">Select status</div><div class="sub" id="bstatus_new_sub">Choose below</div></div>
+                    <div class="bstatus-changing">You are about to change the status</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="bstatus-pill cur" id="bstatus_cur_name">—</span>
+                        <i class="fa fa-arrow-right bstatus-arrow"></i>
+                        <span class="bstatus-pill new" id="bstatus_new_name">Select status</span>
                     </div>
                 </div>
                 <div class="bstatus-topbar-right">
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="bstatus-btn-cancel bstatus-cancel-btn">Cancel</button>
-                        <button type="button" class="bstatus-btn-confirm bstatus-confirm-btn" disabled><span class="btn-label">Select New Status</span> <i class="fa fa-arrow-right"></i></button>
-                        <span class="bstatus-close" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
-                    </div>
-                    <div class="bstatus-secure-note"><i class="fa fa-shield-halved text-success"></i> This action will be logged and can be reversed</div>
+                    <button type="button" class="bstatus-btn-cancel bstatus-cancel-btn">Cancel</button>
+                    <button type="button" class="bstatus-btn-confirm bstatus-confirm-btn" disabled><i class="fa fa-circle-check"></i> Confirm Status Change</button>
+                    <span class="bstatus-close" id="bstatus_close_x"><i class="fa fa-xmark"></i></span>
                 </div>
             </div>
 
             <!-- Body (AJAX content) -->
             <div class="bstatus-body flex-grow-1" id="stage_body_content">
                 <div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>
-            </div>
-
-            <!-- Footer -->
-            <div class="bstatus-footer">
-                <div class="bstatus-secure-note"><i class="fa fa-shield-halved text-primary"></i> This action is secure, logged and can be reversed if needed.</div>
-                <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="bstatus-btn-cancel bstatus-cancel-btn">Cancel</button>
-                    <button type="button" class="bstatus-btn-confirm bstatus-confirm-btn" disabled><span class="btn-label">Select New Status</span> <i class="fa fa-arrow-right"></i></button>
-                </div>
             </div>
         </div>
     </div>
@@ -674,71 +610,57 @@
         // Content is re-fetched per talent, but the interaction logic below
         // is defined once and rebound to whatever markup just loaded.
         // ============================================================
-        // "What will happen?" bullet copy per target status (UI content, 8 bullets → 2 columns).
+        // "Impact of changing status" bullets per target status (6 short items → single row).
         var BS_IMPACT = {
-            1: ['Moved to internal talent pool', 'Not visible in marketplace searches', 'Only visible to your company', 'Bench counter stops', 'Team & Manager will be notified', 'Activity will be logged in audit trail', 'Profile remains on record', 'This action can be reversed anytime'],
-            2: ['Candidate becomes available for new opportunities', 'Appears in Bench Dashboard & Marketplace', 'Removed from active client assignment', 'Bench counter starts from today', 'Team & Manager will be notified', 'Activity will be logged in audit trail', 'Profile remains active & searchable', 'This action can be reversed anytime'],
-            4: ['Temporarily marked unavailable', 'Hidden from marketplace searches', 'Bench counter is paused', 'Existing submissions are retained', 'Team & Manager will be notified', 'Activity will be logged in audit trail', 'Profile remains on record', 'This action can be reversed anytime'],
-            3: ['Marked as assigned to a client', 'Removed from Bench listing & marketplace', 'Not visible to other companies', 'Work-in-progress tracking begins', 'Team & Manager will be notified', 'Activity will be logged in audit trail', 'Vendor tracking continues internally', 'This action can be reversed anytime'],
-            5: ['Marked as no longer with company', 'Removed from all active listings', 'Access to opportunities revoked', 'Historical records are retained', 'Team & Manager will be notified', 'Activity will be logged in audit trail', 'Profile archived for compliance', 'This action can be reversed anytime']
+            1: ['Removed from Bench Listing', 'Hidden from Marketplace', 'Visible to internal team', 'Bench counter stops', 'Vendor tracking paused', 'Internal tracking continues'],
+            2: ['Listed on Bench for work', 'Visible in Marketplace', 'Searchable by clients', 'Bench counter starts', 'Vendors can submit', 'Internal tracking continues'],
+            4: ['Hidden from Marketplace', 'Bench counter paused', 'Not visible to clients', 'Submissions are retained', 'Vendor submissions paused', 'Internal tracking continues'],
+            3: ['Removed from Bench Listing', 'Hidden from Marketplace', 'Not visible to Companies', 'Vendor cannot submit', 'Vendor tracking continues', 'Internal tracking continues'],
+            5: ['Removed from all Listings', 'Access to opportunities revoked', 'Not visible to clients', 'Historical records retained', 'Vendor tracking stopped', 'Profile archived']
         };
 
         window.initBenchStatusDrawer = function(cfg) {
-            // Header current-status box
             $('#bstatus_cur_name').text(cfg.currentName || '—');
-            $('#bstatus_cur_sub').text(cfg.currentSub || '');
-            // Reset "new status" affordances
-            $('#bstatus_new_name').text('Select status');
-            $('#bstatus_new_sub').text('Choose below');
-            $('#bstatus_new_box').removeClass('filled');
-            $('.bstatus-confirm-btn').prop('disabled', true).find('.btn-label').text('Select New Status');
-            // Reset transition preview
-            $('#bs_prev_new_name').text('—');
-            $('#bs_prev_new_sub').text('');
-            $('#bs_whathappen').hide();
-            $('#bs_whathappen_placeholder').show();
+            $('#bstatus_new_name').text('Select status').removeClass('filled');
+            $('.bstatus-confirm-btn').prop('disabled', true);
+            $('#bs_impact').hide();
             $('#bs_job_card').hide();
 
-            // Select a target status (from a Choose-status card OR a journey step — single source of truth = the hidden radios)
-            $(document).off('click.bstatus', '.bs-status-card, .bs-journey-item')
-                .on('click.bstatus', '.bs-status-card, .bs-journey-item', function() {
+            // Select a target status (from a status card) — single source of truth = the hidden radios.
+            $(document).off('click.bstatus', '.bs-status-card')
+                .on('click.bstatus', '.bs-status-card', function() {
                     var id = String($(this).data('status-id'));
                     var label = $(this).data('status-label');
-                    var sub = $(this).data('status-sub') || '';
 
                     $('input[name="bench_master_status"]').prop('checked', false);
                     $('input[name="bench_master_status"][value="' + id + '"]').prop('checked', true);
 
                     $('.bs-status-card').removeClass('is-selected');
                     $('.bs-status-card[data-status-id="' + id + '"]').addClass('is-selected');
-                    $('.bs-journey-item').removeClass('is-selected');
-                    $('.bs-journey-item[data-status-id="' + id + '"]').addClass('is-selected');
 
-                    // Header + preview
-                    $('#bstatus_new_name').text(label);
-                    $('#bstatus_new_sub').text(sub);
-                    $('#bstatus_new_box').addClass('filled');
-                    $('#bs_prev_new_name').text(label);
-                    $('#bs_prev_new_sub').text(sub);
+                    // Header transition pill
+                    $('#bstatus_new_name').text(label).addClass('filled');
 
-                    // Confirm buttons (header + footer)
+                    // Confirm button (enabled only when target differs from current)
                     var same = (id === String(cfg.currentId));
-                    $('.bstatus-confirm-btn').prop('disabled', same).find('.btn-label').text('Move to ' + label);
+                    $('.bstatus-confirm-btn').prop('disabled', same);
 
-                    // What will happen
+                    // Impact strip
+                    $('#bs_impact_title').text('Impact of changing status to ' + label);
                     var items = BS_IMPACT[id] || [];
                     var html = '';
-                    items.forEach(function(t) { html += '<div class="col-6 bs-wh-item"><i class="fa fa-circle-check"></i> ' + t + '</div>'; });
-                    $('#bs_wh_list').html(html);
-                    $('#bs_whathappen_placeholder').hide();
-                    $('#bs_whathappen').show();
+                    items.forEach(function(t) {
+                        html += '<div class="col-lg-2 col-md-4 col-6 mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check"></i> ' + t + '</div></div>';
+                    });
+                    $('#bs_impact_list').html(html);
+                    $('#bs_impact').show();
 
                     // Job/Project selection only when target = Placed (id 3)
                     if (id === '3') { $('#bs_job_card').slideDown(150); loadBenchJobListing(cfg.benchId); }
                     else { $('#bs_job_card').slideUp(150); }
                 });
 
-            // Confirm (both header + footer buttons share the .bstatus-confirm-btn class)
+            // Confirm
             $(document).off('click.bstatus', '.bstatus-confirm-btn').on('click.bstatus', '.bstatus-confirm-btn', function() {
                 var checked = $('input[name="bench_master_status"]:checked').val();
                 if (!checked) { return; }
@@ -751,7 +673,8 @@
                     return;
                 }
                 var $btns = $('.bstatus-confirm-btn');
-                $btns.prop('disabled', true).find('.btn-label').text('Updating…');
+                var original = $btns.first().html();
+                $btns.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating…');
                 $.ajax({
                     url: '{{ route('service_company.bench-candidates.status_submit') }}',
                     type: 'POST',
@@ -762,12 +685,12 @@
                             $('#bstatus_close_x').trigger('click');
                             fetchBenchBenchCandidatesCandidateList();
                         } else {
-                            $btns.prop('disabled', false).find('.btn-label').text('Move to Status');
+                            $btns.prop('disabled', false).html(original);
                             if (response.message) { sweetAlert('Fail!', response.message, 'error'); }
                         }
                     },
                     error: function() {
-                        $btns.prop('disabled', false).find('.btn-label').text('Move to Status');
+                        $btns.prop('disabled', false).html(original);
                     }
                 });
             });
@@ -785,26 +708,28 @@
                     }
                     var html = '';
                     rows.forEach(function(r) {
-                        html += '<tr>' +
+                        // data-search holds concatenated text for the client-side search box.
+                        var searchText = $('<div>').html((r.Requisition || '') + ' ' + (r.ContactPerson || '')).text().toLowerCase();
+                        html += '<tr data-search="' + searchText.replace(/"/g, '') + '">' +
                             '<td>' + (r.Requisition || '') + '</td>' +
                             '<td>' + (r.Exp || '') + '</td>' +
                             '<td>' + (r.Location || '') + '</td>' +
                             '<td>' + (r.ContactPerson || '') + '</td>' +
                             '<td>' + (r.offeramount || '') + '</td>' +
                             '<td>' + (r.joindate || '') + '</td>' +
-                            '<td>' + (r.AddedDate || '') + '</td>' +
                             '<td>' + (r.Stage || '') + '</td>' +
                             '<td>' + buildBsPlaceAction(r.chkbox || '') + '</td>' +
                             '</tr>';
                     });
                     $('#bs_job_body').html(html);
+                    $('#bs_job_search_input').val('');
                 })
                 .fail(function() {
-                    $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
+                    $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
                 });
         }
 
-        // Builds the "Placed on this Job" action button from the server-rendered chk_list_item radio,
+        // Builds the "Select Job" action button from the server-rendered chk_list_item radio,
         // preserving its real name/value/checked/disabled state so submission wiring stays untouched.
         function buildBsPlaceAction(chkboxHtml) {
             var $tmp = $('<div>').html(chkboxHtml);
@@ -812,24 +737,32 @@
             var value = $input.attr('value') || '';
             var isChecked = $input.is(':checked');
             var isDisabled = $input.is(':disabled');
-            var label = isDisabled ? 'Placed' : (isChecked ? 'Selected' : 'Placed on this Job');
+            var label = isDisabled ? 'Placed' : (isChecked ? 'Selected' : 'Select Job');
             return '<div class="d-none">' + chkboxHtml + '</div>' +
                 '<button type="button" class="bs-place-btn' + (isChecked ? ' is-picked' : '') + '" data-job-id="' + value + '" ' + (isDisabled ? 'disabled' : '') + '>' +
-                '<i class="fa fa-check"></i> ' + label +
+                label +
                 '</button>';
         }
 
         $(document).on('click', '.bs-place-btn:not(:disabled)', function() {
-            var $row = $(this).closest('tr');
             $('#bs_job_body tr').each(function() {
                 var $radio = $(this).find('input[name="chk_list_item"]');
                 var $btn = $(this).find('.bs-place-btn');
                 if ($radio.is(':disabled')) { return; }
                 $radio.prop('checked', false);
-                $btn.removeClass('is-picked').html('<i class="fa fa-check"></i> Placed on this Job');
+                $btn.removeClass('is-picked').text('Select Job');
             });
-            $row.find('input[name="chk_list_item"]').prop('checked', true);
-            $(this).addClass('is-picked').html('<i class="fa fa-check"></i> Selected');
+            $(this).closest('tr').find('input[name="chk_list_item"]').prop('checked', true);
+            $(this).addClass('is-picked').text('Selected');
+        });
+
+        // Client-side search over the job/project table (job, company, hiring manager).
+        $(document).on('keyup', '#bs_job_search_input', function() {
+            var q = $(this).val().toLowerCase().trim();
+            $('#bs_job_body tr').each(function() {
+                var hay = $(this).data('search') || '';
+                $(this).toggle(q === '' || String(hay).indexOf(q) !== -1);
+            });
         });
 
         // ---- Table fetch + pagination ----
