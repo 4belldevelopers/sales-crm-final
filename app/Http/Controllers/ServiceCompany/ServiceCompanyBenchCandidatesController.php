@@ -3809,24 +3809,38 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		$this->pageTitle = __('Offer Listing');
 		$this->allBenchApplication = BenchApplication::count();
-		$this->benchOfferHeroStats = $this->benchOfferHeroStats();
+		$stats = $this->benchOfferStats();
+		$this->benchOfferHeroStats = $stats['hero'];
+		$this->benchOfferTabStats = $stats['tabs'];
+		$this->benchOfferLocations = $stats['locations'];
 		return view('service_company.bench-candidates.offerListing', $this->data);
 	}
 
 	/**
-	 * Hero KPI counts for the Shortlisted Bench Candidates listing (Total Shortlisted,
-	 * Joining This Week, Offer Released, Offer Accepted, Joined) — computed with a single
-	 * Elasticsearch `filters` aggregation (candidates index) and cached per-company, so the
-	 * page load stays a single ES round trip instead of five separate counts.
+	 * Hero KPI cards, status-tab counts (All/Pending/Offer Released/Accepted/Joining Soon/
+	 * Expired) and the "All Locations" filter options for the Shortlisted Bench Candidates
+	 * listing — computed with a single Elasticsearch `filters` + `terms` aggregation call
+	 * (candidates index) and cached per-company, so the page load stays one ES round trip.
 	 */
-	private function benchOfferHeroStats(): array
+	private function benchOfferStats(): array
 	{
 		$default = [
-			'total_shortlisted' => 0,
-			'joining_this_week' => 0,
-			'offer_released' => 0,
-			'offer_accepted' => 0,
-			'joined' => 0,
+			'hero' => [
+				'total_shortlisted' => 0,
+				'joining_this_week' => 0,
+				'offer_released' => 0,
+				'offer_accepted' => 0,
+				'joined' => 0,
+			],
+			'tabs' => [
+				'all' => 0,
+				'pending' => 0,
+				'released' => 0,
+				'accepted' => 0,
+				'joining_soon' => 0,
+				'expired' => 0,
+			],
+			'locations' => [],
 		];
 
 		$company_id = auth()->user()->company_id;
@@ -3837,7 +3851,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 		$versionKey = 'allbenchofferListing_version_user_' . $this->user->id;
 		$version = cache()->get($versionKey, 1);
-		$cacheKeySet = 'ats:benchofferHeroStats:' . $company_id . ':' . $version;
+		$cacheKeySet = 'ats:benchofferStats:' . $company_id . ':' . $version;
 
 		if (cache()->has($cacheKeySet)) {
 			return cache()->get($cacheKeySet);
@@ -3845,6 +3859,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 		$activeMust = ['terms' => ['job_master_status_id' => [5, 6]]];
 		$activeMustNot = ['term' => ['status' => 3]];
+		$noOfferShould = [
+			'bool' => [
+				'should' => [
+					['bool' => ['must_not' => [['exists' => ['field' => 'of_offer_amount']]]]],
+					['bool' => ['must_not' => [['exists' => ['field' => 'of_joined_date']]]]],
+				],
+				'minimum_should_match' => 1,
+			],
+		];
 
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
@@ -3895,6 +3918,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 										],
 									],
 								],
+								'pending' => [
+									'bool' => ['must' => [$activeMust, $noOfferShould], 'must_not' => [$activeMustNot]],
+								],
+								'expired' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 4]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+							],
+						],
+					],
+					'active_locations' => [
+						'filter' => ['bool' => ['must' => [$activeMust], 'must_not' => [$activeMustNot]]],
+						'aggs' => [
+							'by_city' => [
+								'terms' => ['field' => 'city_name', 'size' => 30, 'order' => ['_count' => 'desc']],
 							],
 						],
 					],
@@ -3908,13 +3948,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			return $default;
 		}
 		$buckets = $response['aggregations']['hero_stats']['buckets'] ?? [];
+		$cityBuckets = $response['aggregations']['active_locations']['by_city']['buckets'] ?? [];
 
 		$stats = [
-			'total_shortlisted' => $buckets['total_shortlisted']['doc_count'] ?? 0,
-			'joining_this_week' => $buckets['joining_this_week']['doc_count'] ?? 0,
-			'offer_released' => $buckets['offer_released']['doc_count'] ?? 0,
-			'offer_accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
-			'joined' => $buckets['joined']['doc_count'] ?? 0,
+			'hero' => [
+				'total_shortlisted' => $buckets['total_shortlisted']['doc_count'] ?? 0,
+				'joining_this_week' => $buckets['joining_this_week']['doc_count'] ?? 0,
+				'offer_released' => $buckets['offer_released']['doc_count'] ?? 0,
+				'offer_accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
+				'joined' => $buckets['joined']['doc_count'] ?? 0,
+			],
+			'tabs' => [
+				'all' => $buckets['total_shortlisted']['doc_count'] ?? 0,
+				'pending' => $buckets['pending']['doc_count'] ?? 0,
+				'released' => $buckets['offer_released']['doc_count'] ?? 0,
+				'accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
+				'joining_soon' => $buckets['joining_this_week']['doc_count'] ?? 0,
+				'expired' => $buckets['expired']['doc_count'] ?? 0,
+			],
+			'locations' => array_map(fn ($b) => $b['key'], $cityBuckets),
 		];
 
 		cache()->put($cacheKeySet, $stats, now()->addMinutes(ALL_BENCH_OFFER_LISTING_TIME));
@@ -3940,12 +3992,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			  $from = ($page - 1) * $size;
 			  $sort = [];
 
+			  $searchTerm = trim((string) ($request->input('search') ?: $request->input('cus_search')));
+			  $tab = (string) $request->input('tab', 'all');
+			  $location = trim((string) $request->input('country'));
+
 			  $cachePayload = [
 					'page' => $page,
 					'size' => $size,
 					'q' => $searchQuery,
 					'company' => $company_id,
 					'cus_search' => $request->input('cus_search'),
+					'search' => $searchTerm,
+					'tab' => $tab,
+					'location' => $location,
 					'country' => $request->input('country'),
 					'user_id' => $this->user->id,
 					'sortingfilter' => $valCheck
@@ -4189,6 +4248,53 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 						]
 					]
 				];
+
+				// Search box: "candidate name, job or offer ID"
+				if ($searchTerm !== '') {
+					$searchShould = [
+						['match_phrase_prefix' => ['full_name' => $searchTerm]],
+						['match_phrase_prefix' => ['title' => $searchTerm]],
+					];
+					if (is_numeric($searchTerm)) {
+						$searchShould[] = ['term' => ['offer_id' => (int) $searchTerm]];
+					}
+					$boolQuery['bool']['must'][] = ['bool' => ['should' => $searchShould, 'minimum_should_match' => 1]];
+				}
+
+				// Location filter ("All Locations" dropdown)
+				if ($location !== '' && strtolower($location) !== 'all') {
+					$boolQuery['bool']['must'][] = ['term' => ['city_name' => $location]];
+				}
+
+				// Status tabs: All / Pending / Offer Released / Accepted / Joining Soon / Expired
+				switch ($tab) {
+					case 'pending':
+						$boolQuery['bool']['must'][] = [
+							'bool' => [
+								'should' => [
+									['bool' => ['must_not' => [['exists' => ['field' => 'of_offer_amount']]]]],
+									['bool' => ['must_not' => [['exists' => ['field' => 'of_joined_date']]]]],
+								],
+								'minimum_should_match' => 1,
+							],
+						];
+						break;
+					case 'released':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 1]];
+						break;
+					case 'accepted':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 2]];
+						break;
+					case 'joining_soon':
+						$boolQuery['bool']['must'][] = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]];
+						break;
+					case 'expired':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 4]];
+						break;
+					default:
+						break; // 'all'
+				}
+
 				$params = [
 					'index' => ELASTIC_CANDIDATES,
 					'request_cache' => true,

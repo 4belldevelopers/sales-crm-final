@@ -166,6 +166,324 @@
                 font-size: 14px;
             }
         }
+
+        /* Search / Location / Sort bar */
+        .bo-filterbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 12px;
+        }
+
+        .bo-search {
+            position: relative;
+            flex: 1 1 320px;
+            min-width: 220px;
+        }
+
+        .bo-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9aa3b2;
+            font-size: 13px;
+        }
+
+        .bo-search input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #e7ecf4;
+            border-radius: 10px;
+            padding: 0 14px 0 36px;
+            font-size: 13px;
+            font-weight: 400;
+            font-family: 'Poppins', sans-serif;
+            color: #1f2a44;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .bo-search input:focus {
+            outline: none;
+            border-color: #2b59ff;
+        }
+
+        .bo-select-wrap {
+            flex: 0 0 auto;
+        }
+
+        .bo-select-wrap select {
+            height: 40px;
+            border: 1px solid #e7ecf4;
+            border-radius: 10px;
+            padding: 0 30px 0 12px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            color: #3b4a66;
+            background: #fff;
+        }
+
+        .bo-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bo-sort-wrap .bo-sort-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #8a93a8;
+            white-space: nowrap;
+        }
+
+        .bo-sort-wrap select {
+            border-color: #2b59ff;
+            color: #1f2a44;
+            font-weight: 600;
+        }
+
+        /* Status tabs row */
+        .bo-tabsbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-family: 'Poppins', sans-serif;
+            border-bottom: 1px solid #eef1f7;
+            margin-bottom: 12px;
+        }
+
+        .bo-tabs {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .bo-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            background: transparent;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            color: #8a93a8;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .bo-tab .cnt {
+            font-size: 11px;
+            font-weight: 600;
+            background: #eef1f7;
+            color: #6b7488;
+            border-radius: 20px;
+            padding: 1px 8px;
+        }
+
+        .bo-tab.active {
+            color: #1f2a44;
+            font-weight: 700;
+            border-bottom-color: #2b59ff;
+        }
+
+        .bo-tab.active .cnt {
+            background: #e9f0ff;
+            color: #2b59ff;
+        }
+
+        .bo-viewtoggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: none;
+            padding-bottom: 8px;
+        }
+
+        .bo-viewtoggle button {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid #e7ecf4;
+            background: #fff;
+            color: #8a93a8;
+            font-size: 12px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .bo-viewtoggle button.active {
+            background: #eef1ff;
+            border-color: #2b59ff;
+            color: #2b59ff;
+        }
+
+        .bo-viewtoggle button:disabled {
+            cursor: not-allowed;
+            opacity: .55;
+        }
+
+        /* Table redesign */
+        #myTable {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #myTable thead th {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #8a93a8;
+            text-transform: none;
+            border-bottom: 1px solid #eef1f7 !important;
+            white-space: nowrap;
+        }
+
+        #myTable thead th .sort-ic {
+            color: #c3cad6;
+            cursor: pointer;
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        #myTable thead th .sort-ic:hover {
+            color: #2b59ff;
+        }
+
+        #myTable tbody td {
+            vertical-align: middle;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .bo-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex: none;
+        }
+
+        .bo-avatar.dup {
+            box-shadow: 0 0 0 2px #ffb3b3;
+        }
+
+        .bo-cell-flex {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .bo-cell-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.35;
+        }
+
+        .bo-cell-col .t1 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2a44;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .bo-cell-col .t2 {
+            font-size: 11.5px;
+            font-weight: 400;
+            color: #8a93a8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .bo-cell-col .t3 {
+            font-size: 11px;
+            font-weight: 400;
+            color: #9aa3b2;
+        }
+
+        .bo-cell-col .link {
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #2b59ff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .bo-cell-col .link:hover {
+            text-decoration: underline;
+        }
+
+        .bo-cell-col .link.accent {
+            color: #f5a623;
+        }
+
+        .bo-pill {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .bo-pill-green { background: #e6f9ee; color: #16a34a; }
+        .bo-pill-red { background: #fdecef; color: #e5484d; }
+        .bo-pill-amber { background: #fff3e2; color: #b46b00; }
+        .bo-pill-indigo { background: #eef0ff; color: #5b3df5; }
+        .bo-pill-blue { background: #e9f0ff; color: #2b59ff; }
+        .bo-pill-gray { background: #f3f5f9; color: #6b7488; }
+
+        .bo-pill-outline {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid #f5a623;
+            color: #f5a623;
+            background: #fff;
+            white-space: nowrap;
+        }
+
+        .bo-joining-rel {
+            font-size: 10.5px;
+            font-weight: 600;
+        }
+
+        .bo-joining-rel.future { color: #f5a623; }
+        .bo-joining-rel.past,
+        .bo-joining-rel.none { color: #9aa3b2; }
+
+        @media only screen and (max-width: 1366px) {
+            .bo-cell-col .t1,
+            .bo-cell-col .t2 {
+                max-width: 160px;
+            }
+        }
+
+        @media only screen and (max-width: 992px) {
+            .bo-tabsbar {
+                overflow-x: auto;
+            }
+        }
     </style>
 @endpush
 
@@ -185,6 +503,15 @@
             'offer_accepted' => 0,
             'joined' => 0,
         ];
+        $benchOfferTabStats = $benchOfferTabStats ?? [
+            'all' => 0,
+            'pending' => 0,
+            'released' => 0,
+            'accepted' => 0,
+            'joining_soon' => 0,
+            'expired' => 0,
+        ];
+        $benchOfferLocations = $benchOfferLocations ?? [];
     @endphp
     @if (in_array('view_bench', $userPermissions))
         <!--begin::Content-->
@@ -247,17 +574,25 @@
                     <!--end::Bench offer hero-->
 
 
-                    <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                        <div class="col-lg-4 d-flex align-items-center px-2" style="width:70%">
-                            <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
+                    <!--begin::Search / Location / Sort-->
+                    <div class="bo-filterbar">
+                        <div class="bo-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="kt_tagify_2" name="inputJobSearch"
+                                placeholder="Search by candidate name, job or offer ID..." />
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 30%;">
-                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                id="sortingfilter" data-dropdown-css-class="w-150px"
-                                data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                onchange="filtersdataget()">
-                                <option value="Show All" selected="">Sort</option>
+                        <div class="bo-select-wrap">
+                            <select id="country" onchange="filtersdataget()">
+                                <option value="all" selected>All Locations</option>
+                                @foreach ($benchOfferLocations as $loc)
+                                    <option value="{{ $loc }}">{{ $loc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="bo-sort-wrap">
+                            <span class="bo-sort-lbl">Sort by:</span>
+                            <select id="sortingfilter" onchange="filtersdataget()">
+                                <option value="Show All" selected>Latest Updated</option>
                                 <option value="10">Newest to Oldest (Offer Date)</option>
                                 <option value="11">Oldest to Newest (Offer Date)</option>
                                 <option value="12">Newest to Oldest (Join Date)</option>
@@ -266,31 +601,26 @@
                                 <option value="15">High to Low (Offer Amount)</option>
                             </select>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                id="country" data-dropdown-css-class="w-150px"
-                                data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
-                                style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                                <option value="110" selected="selected">Location</option>
-                            </select>
+                    </div>
+                    <!--end::Search / Location / Sort-->
+
+                    <!--begin::Status tabs-->
+                    <div class="bo-tabsbar">
+                        <div class="bo-tabs" id="boTabs">
+                            <button type="button" class="bo-tab active" data-tab="all">All <span class="cnt">{{ number_format($benchOfferTabStats['all']) }}</span></button>
+                            <button type="button" class="bo-tab" data-tab="pending">Pending <span class="cnt">{{ number_format($benchOfferTabStats['pending']) }}</span></button>
+                            <button type="button" class="bo-tab" data-tab="released">Offer Released <span class="cnt">{{ number_format($benchOfferTabStats['released']) }}</span></button>
+                            <button type="button" class="bo-tab" data-tab="accepted">Accepted <span class="cnt">{{ number_format($benchOfferTabStats['accepted']) }}</span></button>
+                            <button type="button" class="bo-tab" data-tab="joining_soon">Joining Soon <span class="cnt">{{ number_format($benchOfferTabStats['joining_soon']) }}</span></button>
+                            <button type="button" class="bo-tab" data-tab="expired">Expired <span class="cnt">{{ number_format($benchOfferTabStats['expired']) }}</span></button>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                            <button type="button"
-                                class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                                data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
-                                data-kt-menu-flip="top-end">
-                                <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                        viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                            fill="black"></path>
-                                    </svg>
-                                </span>
-                                Filter
-                            </button>
+                        <div class="bo-viewtoggle">
+                            <button type="button" class="active" title="List view"><i class="fa-solid fa-list"></i></button>
+                            <button type="button" disabled title="Grid view (coming soon)"><i class="fa-solid fa-table-cells-large"></i></button>
                         </div>
                     </div>
+                    <input type="hidden" id="tabFilter" value="all" />
+                    <!--end::Status tabs-->
 
                     <div class="card">
                         <div class="card-body pt-3 px-5">
@@ -299,19 +629,13 @@
                             <table class="table align-middle table-row-dashed fs-6 gy-5" id="myTable">
                                 <thead>
                                     <tr class="fw-bolder text-muted" role="row">
-                                        <th class="w-10px pe-0">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input" type="checkbox" value="1"></div>
-                                        </th>
-                                        <th class="">Talent Name</th>
-                                        <th class="">Jobs</th>
-                                        <th class="">Job Status</th>
-                                        <th class="">Source</th>
-                                        <th class="">Offer Amount</th>
-                                        <th class="">Joining</th>
-                                        <th class="">Offer Status</th>
+                                        <th class="">Candidate</th>
+                                        <th class="">Job</th>
+                                        <th class="">Job Status, ID &amp; Client</th>
+                                        <th class="">Compensation <i class="fa-solid fa-arrow-up-wide-short sort-ic" data-sort-asc="14" data-sort-desc="15" title="Sort by compensation"></i></th>
+                                        <th class="">Offer Status <i class="fa-solid fa-arrow-up-wide-short sort-ic" data-sort-asc="11" data-sort-desc="10" title="Sort by offer date"></i></th>
+                                        <th class="">Joining <i class="fa-solid fa-arrow-up-wide-short sort-ic" data-sort-asc="13" data-sort-desc="12" title="Sort by joining date"></i></th>
                                         <th class="">Stage</th>
-                                        <th class="">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="benchCandidateOfferAjax"> </tbody>
@@ -634,6 +958,21 @@
         });
 
 
+        $(document).on('click', '.bo-tab', function() {
+            $('.bo-tab').removeClass('active');
+            $(this).addClass('active');
+            $('#tabFilter').val($(this).data('tab'));
+            fetchBenchBenchCandidatesCandidateList();
+        });
+        $(document).on('click', '.sort-ic', function() {
+            var $el = $(this);
+            var asc = String($el.data('sort-asc'));
+            var desc = String($el.data('sort-desc'));
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter').val(current === desc ? asc : desc);
+            filtersdataget();
+        });
+
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
             $(document).on('click', '#paginationbenchCandidateOffer .page-link', function(e) {
@@ -676,7 +1015,8 @@
 						search: $('#inputSearch').val(),
 						cus_search: $('#kt_tagify_2').val(),
 						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
+						sortingfilter: $('#sortingfilter').val(),
+						tab: $('#tabFilter').val()
 					},
 					success: function(response) {
 						$('.loadingMessagebenchCandidateOfferAjax').css({ display: 'none' });
