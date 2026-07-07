@@ -28,15 +28,18 @@
     {{-- ApexCharts (not bundled in Metronic global plugins) — drives the aging donut + loss/profit charts --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
     <style>
-        /* ===== Inhouse Talents — redesigned dashboard (white / Poppins / max 12px) ===== */
-        .bench-dash, .bench-dash * { font-family: 'Poppins', sans-serif !important; font-size: 12px; }
+        /* ===== Inhouse Talents — redesigned dashboard (white / Poppins / max 13px body) ===== */
+        /* +10% pass applied to every size below; page-title/.num/.money were already at/above the
+           project's hard 16px ceiling (docs/UI_UX_STANDARDS.md) so they're clamped at 16px instead
+           of growing further. */
+        .bench-dash, .bench-dash * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
         .bench-dash { color: #3f4254; }
-        .bench-dash .tiny { font-size: 10px !important; }
-        .bench-dash .xtiny { font-size: 9px !important; }
-        /* Page title stands out clearly above the compact 10-12px body text used everywhere else */
-        .bench-dash .page-title { font-size: 20px !important; line-height: 1.25; }
-        .bench-dash .num { font-size: 17px !important; font-weight: 700; color: #181c32; line-height: 1.1; }
-        .bench-dash .money { font-size: 15px !important; font-weight: 700; color: #181c32; }
+        .bench-dash .tiny { font-size: 11px !important; }
+        .bench-dash .xtiny { font-size: 10px !important; }
+        /* Page title stands out clearly above the compact body text used everywhere else */
+        .bench-dash .page-title { font-size: 16px !important; line-height: 1.25; }
+        .bench-dash .num { font-size: 16px !important; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bench-dash .money { font-size: 16px !important; font-weight: 700; color: #181c32; }
 
         /* Card + sub-card system */
         .bench-dash .jw-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
@@ -48,29 +51,29 @@
         .bench-dash .kpi.kpi-filter:hover { border-color: #d5dbe6; box-shadow: 0 3px 10px rgba(24,28,50,.06); }
         .bench-dash .kpi.active { border-color: #3e97ff; box-shadow: 0 0 0 1px #3e97ff inset; }
         .bench-dash .kpi-ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .bench-dash .kpi-ico i { font-size: 13px !important; }
+        .bench-dash .kpi-ico i { font-size: 14px !important; }
         .bench-dash .kpi-text { display: flex; flex-direction: column; gap: 2px; }
-        .bench-dash .kpi-label { font-size: 10.5px !important; color: #7e8299; font-weight: 500; }
-        .bench-dash .kpi-delta { font-size: 9.5px !important; font-weight: 600; }
+        .bench-dash .kpi-label { font-size: 11.5px !important; color: #7e8299; font-weight: 500; }
+        .bench-dash .kpi-delta { font-size: 10.5px !important; font-weight: 600; }
         .bench-dash .up { color: #17c653; } .bench-dash .down { color: #f8285a; }
         .bench-dash .kpi-delta { display: inline-flex; align-items: center; gap: 3px; }
-        .bench-dash .kpi-delta i { font-size: 8px !important; }
+        .bench-dash .kpi-delta i { font-size: 9px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
         /* Ghost buttons (Saved Views / Export) */
-        .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
+        .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 12px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
         .bench-dash .btn-ghost:hover { border-color: #d5dbe6; color: #3e97ff; }
-        .bench-dash .btn-ghost i { font-size: 11px !important; }
+        .bench-dash .btn-ghost i { font-size: 12px !important; }
 
         /* Sub-cards (avg/longest age, margin, roi) */
         .bench-dash .stat-sub { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
         .bench-dash .stat-sub .ico { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-        .bench-dash .stat-sub .ico i { font-size: 11px !important; }
-        .bench-dash .stat-sub .lbl { font-size: 9.5px !important; color: #7e8299; }
-        .bench-dash .stat-sub .val { font-size: 13px !important; font-weight: 700; color: #181c32; }
+        .bench-dash .stat-sub .ico i { font-size: 12px !important; }
+        .bench-dash .stat-sub .lbl { font-size: 10.5px !important; color: #7e8299; }
+        .bench-dash .stat-sub .val { font-size: 14px !important; font-weight: 700; color: #181c32; }
 
         /* Chart header dropdown */
-        .bench-dash .chart-range { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; font-size: 9.5px !important; padding: 3px 8px; color: #7e8299; height: 24px; }
+        .bench-dash .chart-range { border: 1px solid #eef0f4; background: #fff; border-radius: 6px; font-size: 10.5px !important; padding: 3px 8px; color: #7e8299; height: 24px; }
 
         /* Soft color chips */
         .sc-primary { background: #eef3ff; color: #3e97ff; }
@@ -81,44 +84,44 @@
         .sc-dark    { background: #f1f2f6; color: #3f4254; }
 
         /* Charts */
-        .bench-dash .chart-title { font-size: 12px !important; font-weight: 600; color: #181c32; }
+        .bench-dash .chart-title { font-size: 13px !important; font-weight: 600; color: #181c32; }
         .bench-dash .aging-legend li { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; }
         .bench-dash .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
 
         /* Filter / tabs strip */
         .bench-dash .tab-strip { display: flex; gap: 6px; flex-wrap: wrap; }
         .bench-dash .tab-pill { border: 1px solid #eef0f4; background: #fff; border-radius: 7px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 7px; }
-        .bench-dash .tab-pill .cnt { background: #f1f2f6; color: #3f4254; border-radius: 5px; padding: 1px 6px; font-size: 10px !important; font-weight: 600; }
+        .bench-dash .tab-pill .cnt { background: #f1f2f6; color: #3f4254; border-radius: 5px; padding: 1px 6px; font-size: 11px !important; font-weight: 600; }
         .bench-dash .tab-pill.active { border-color: #3e97ff; background: #f5f9ff; }
         .bench-dash .tab-pill.active .lbl { color: #3e97ff; font-weight: 600; }
         .bench-dash .tab-pill.active .cnt { background: #3e97ff; color: #fff; }
 
         /* Table */
         .bench-dash #benchListingTable { width: 100% !important; margin: 0; }
-        .bench-dash #benchListingTable thead th { font-size: 10px !important; text-transform: uppercase; letter-spacing: .3px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 8px 8px !important; white-space: nowrap; background: #fff; }
-        .bench-dash #benchListingTable tbody td { font-size: 11px !important; border-bottom: 1px solid #f4f5f8; padding: 8px 8px !important; vertical-align: middle; }
+        .bench-dash #benchListingTable thead th { font-size: 11px !important; text-transform: uppercase; letter-spacing: .3px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 8px 8px !important; white-space: nowrap; background: #fff; }
+        .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 8px 8px !important; vertical-align: middle; }
         .bench-dash #benchListingTable tbody tr:hover td { background: #fafbfc; }
-        .bench-dash #benchListingTable a { font-size: 11px !important; }
-        .bench-dash #benchListingTable .fs-6 { font-size: 11px !important; }
-        .bench-dash #benchListingTable .fs-7 { font-size: 10px !important; }
-        .bench-dash #benchListingTable .fs-3 { font-size: 12px !important; }
+        .bench-dash #benchListingTable a { font-size: 12px !important; }
+        .bench-dash #benchListingTable .fs-6 { font-size: 12px !important; }
+        .bench-dash #benchListingTable .fs-7 { font-size: 11px !important; }
+        .bench-dash #benchListingTable .fs-3 { font-size: 13px !important; }
         .bench-dash #benchListingTable .symbol-40px { width: 32px !important; height: 32px !important; }
         .bench-dash #benchListingTable .symbol-label { line-height: 1; }
-        .bench-dash .badge { font-size: 9px !important; padding: 2px 5px; }
+        .bench-dash .badge { font-size: 10px !important; padding: 2px 5px; }
 
         /* Clients Pipeline Activity mini-grid — bold throughout */
         .bench-dash .pipe { display: flex; align-items: flex-start; gap: 10px; }
         .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(24px, 1fr)); text-align: center; gap: 0; }
-        .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; }
-        .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
-        .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
-        .bench-dash .pipe-foot { font-size: 9px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; line-height: 1; }
+        .bench-dash .pipe-grid .h { font-size: 9.5px !important; color: #a1a5b7; font-weight: 700; }
+        .bench-dash .pipe-grid .v { font-size: 11px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
+        .bench-dash .pipe-grid a { font-size: 11px !important; font-weight: 700; }
+        .bench-dash .pipe-foot { font-size: 10px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; line-height: 1; }
         /* "View" — plain text link (same size as the Interview label it sits next to), opens the profile */
-        .bench-dash .pipe-view { color: #3e97ff !important; font-size: 9px !important; font-weight: 700; cursor: pointer; }
+        .bench-dash .pipe-view { color: #3e97ff !important; font-size: 10px !important; font-weight: 700; cursor: pointer; }
         .bench-dash .pipe-view:hover { text-decoration: underline; }
 
         /* Manager "Change" — plain text link, no button chrome */
-        .bench-dash .manager-change { color: #3e97ff; font-size: 9.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
+        .bench-dash .manager-change { color: #3e97ff; font-size: 10.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
         .bench-dash .manager-change:hover { text-decoration: underline; color: #3e97ff; }
 
         /* Pool status — same purple used for Pool in the Change Status drawer */
@@ -129,18 +132,18 @@
         .bench-dash .wrap-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal !important; word-break: break-word; line-height: 1.3; }
 
         /* toolbar search */
-        .bench-dash .dash-search { border: 1px solid #eef0f4; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; height: 34px; }
-        .bench-dash .form-select-solid, .bench-dash .form-select { font-size: 11px !important; height: 34px; padding: 5px 10px; border: 1px solid #eef0f4 !important; background: #fff !important; }
-        .bench-dash .btn-add { background: #3e97ff; color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 11px !important; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+        .bench-dash .dash-search { border: 1px solid #eef0f4; border-radius: 8px; padding: 7px 12px; font-size: 12px !important; height: 34px; }
+        .bench-dash .form-select-solid, .bench-dash .form-select { font-size: 12px !important; height: 34px; padding: 5px 10px; border: 1px solid #eef0f4 !important; background: #fff !important; }
+        .bench-dash .btn-add { background: #3e97ff; color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 12px !important; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
         .bench-dash .btn-add:hover { color: #fff; background: #2f86ec; }
 
-        .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 11px !important; }
+        .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 12px !important; }
 
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
-            .bench-dash .num { font-size: 15px !important; }
-            .bench-dash .money { font-size: 13px !important; }
-            .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 10px !important; }
+            .bench-dash .num { font-size: 16px !important; }
+            .bench-dash .money { font-size: 14px !important; }
+            .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 11px !important; }
         }
         #kt_activitiesHMB { z-index: 999999; }
 
@@ -267,7 +270,7 @@
                     <div class="d-flex flex-column">
                         <h5 class="page-title text-dark fw-bolder my-0 d-flex align-items-center gap-2">
                             Inhouse Talents
-                            <i class="fa fa-circle-info text-muted" style="font-size:12px !important;" data-toggle="tooltip"
+                            <i class="fa fa-circle-info text-muted" style="font-size:13px !important;" data-toggle="tooltip"
                                 title="Track bench, pipeline and revenue in one place."></i>
                         </h5>
                         <span class="tiny text-muted">Track bench, pipeline and revenue in one place.</span>
@@ -278,7 +281,7 @@
                             <button class="btn-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa fa-bookmark"></i> Saved Views
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end p-2" style="font-size:11px;">
+                            <ul class="dropdown-menu dropdown-menu-end p-2" style="font-size:12px;">
                                 <li><a class="dropdown-item saved-view" data-view="all" href="javascript:void(0);">All Talents</a></li>
                                 <li><a class="dropdown-item saved-view" data-view="2" href="javascript:void(0);">On Bench</a></li>
                                 <li><a class="dropdown-item saved-view" data-view="1" href="javascript:void(0);">On Pool</a></li>
@@ -337,7 +340,7 @@
                     <!-- Search + Sort row -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
                         <div class="position-relative flex-grow-1">
-                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
+                            <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:12px !important;"></i>
                             <input type="text" class="form-control dash-search w-100" style="padding-left:30px;" name="inputJobSearch"
                                 placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="filtersdataget()" />
                         </div>
