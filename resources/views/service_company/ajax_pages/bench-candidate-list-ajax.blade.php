@@ -106,7 +106,9 @@
                     $experience = trim((string) @$row->total_exp);
                     if (strpos($experience, '.') !== false) {
                         $parts = explode('.', $experience);
-                        $formattedExperience = (isset($parts[1]) && $parts[1] === '00') ? $parts[0] : $experience;
+                        // Drop the decimal entirely when it's ".00" OR simply empty (e.g. a stray
+                        // trailing dot like "3." from older records) — both should just read "3".
+                        $formattedExperience = (empty($parts[1]) || $parts[1] === '00') ? $parts[0] : $experience;
                     } else {
                         $formattedExperience = $experience;
                     }
@@ -125,7 +127,7 @@
                         $availClass = 'text-success';
                     } elseif ($row->serving_notice_period_mode == 0) {
                         $days = (int) $row->np_id;
-                        $availLine = ($days > 0 ? $days : 0) . ' Days Joining';
+                        $availLine = ($days > 0 ? $days : 0) . ' Days';
                         $availClass = 'text-warning';
                     } elseif ($row->serving_notice_period_mode == 1) {
                         $lwdDate = $row->np_id ? date('d M y', strtotime($row->np_id)) : '';
@@ -156,10 +158,10 @@
                     if ($cityCountry === '') { $cityCountry = '—'; }
                 @endphp
                 <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6"
-                        data-toggle="tooltip" title="{{ $cityCountry }}">{{ mb_substr($cityCountry, 0, 20) }}</a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip"
-                        title="{{ @$row->qualification_name }}" style="text-transform:uppercase;">{{ mb_substr(@$row->qualification_name, 0, 16) }}</span>
+                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6 wrap-2"
+                        data-toggle="tooltip" title="{{ $cityCountry }}">{{ $cityCountry }}</a>
+                    <span class="text-muted fw-bold d-block fs-7 wrap-2" data-toggle="tooltip"
+                        title="{{ @$row->qualification_name }}" style="text-transform:uppercase;">{{ @$row->qualification_name }}</span>
                 </div>
             </td>
 
@@ -252,8 +254,7 @@
                         </div>
                         <div class="pipe-foot">
                             Interview: {{ $row->InReview }}
-                            <span class="pipe-ico"><i class="fa fa-eye"></i> {{ rand(5, 60) }}</span>
-                            <span class="pipe-ico"><i class="fa fa-download"></i> {{ rand(1, 20) }}</span>
+                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-view bench_show_application_detail">View</a>
                         </div>
                     </div>
                 </div>

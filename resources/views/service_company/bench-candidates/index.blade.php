@@ -33,6 +33,8 @@
         .bench-dash { color: #3f4254; }
         .bench-dash .tiny { font-size: 10px !important; }
         .bench-dash .xtiny { font-size: 9px !important; }
+        /* Page title stands out clearly above the compact 10-12px body text used everywhere else */
+        .bench-dash .page-title { font-size: 20px !important; line-height: 1.25; }
         .bench-dash .num { font-size: 17px !important; font-weight: 700; color: #181c32; line-height: 1.1; }
         .bench-dash .money { font-size: 15px !important; font-weight: 700; color: #181c32; }
 
@@ -111,9 +113,9 @@
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
         .bench-dash .pipe-foot { font-size: 9px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; line-height: 1; }
-        /* Eye/download icon+count widgets sized to match the "Interview: N" text exactly, for aligned baselines */
-        .bench-dash .pipe-ico { display: inline-flex; align-items: center; gap: 3px; color: #7e8299; font-size: 9px !important; line-height: 1; }
-        .bench-dash .pipe-ico i { font-size: 9px !important; line-height: 1; }
+        /* "View" — plain text link (same size as the Interview label it sits next to), opens the profile */
+        .bench-dash .pipe-view { color: #3e97ff !important; font-size: 9px !important; font-weight: 700; cursor: pointer; }
+        .bench-dash .pipe-view:hover { text-decoration: underline; }
 
         /* Manager "Change" — plain text link, no button chrome */
         .bench-dash .manager-change { color: #3e97ff; font-size: 9.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
@@ -121,6 +123,10 @@
 
         /* Pool status — same purple used for Pool in the Change Status drawer */
         .bench-dash .text-Apool { color: #7239ea !important; }
+
+        /* Let long text (e.g. "Bangalore, India") wrap onto a 2nd line instead of being hard-truncated;
+           clamps at 2 lines with an ellipsis so an unusually long value still can't blow out row height. */
+        .bench-dash .wrap-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal !important; word-break: break-word; line-height: 1.3; }
 
         /* toolbar search */
         .bench-dash .dash-search { border: 1px solid #eef0f4; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; height: 34px; }
@@ -247,16 +253,16 @@
 @endpush
 
 @section('content')
-    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-3" id="kt_content">
+    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-1" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
 
                 <!-- Header -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-1" style="background:#fff;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap mb-2" style="background:#fff;">
                     <div class="d-flex flex-column">
-                        <h5 class="text-dark fw-bolder my-0 d-flex align-items-center gap-2" style="font-size:15px !important;">
+                        <h5 class="page-title text-dark fw-bolder my-0 d-flex align-items-center gap-2">
                             Inhouse Talents
-                            <i class="fa fa-circle-info text-muted" style="font-size:11px !important;" data-toggle="tooltip"
+                            <i class="fa fa-circle-info text-muted" style="font-size:12px !important;" data-toggle="tooltip"
                                 title="Track bench, pipeline and revenue in one place."></i>
                         </h5>
                         <span class="tiny text-muted">Track bench, pipeline and revenue in one place.</span>
