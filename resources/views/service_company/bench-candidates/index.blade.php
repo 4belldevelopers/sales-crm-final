@@ -140,29 +140,29 @@
            width config as the Job drawer). Below is content styling only.
            ============================================================ */
         #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
-        #bstatus_drawer { z-index: 999999; font-size: 9.5px; } /* base reduced 20% from 12px */
+        #bstatus_drawer { z-index: 999999; font-size: 10.5px; } /* base: -20% then +10% from original 12px */
         #bstatus_drawer .min-w-0 { min-width: 0; }
 
         /* ---- Header ---- */
         .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
         .bstatus-topbar-left { display: flex; align-items: center; gap: 12px; }
-        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
-        .bstatus-title { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+        .bstatus-title { font-size: 16.5px; font-weight: 700; color: #181c32; line-height: 1.2; }
         .bstatus-topbar-center { display: flex; flex-direction: column; align-items: center; }
-        .bstatus-changing { font-size: 9.5px; color: #7e8299; }
-        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 11px; font-weight: 700; }
+        .bstatus-changing { font-size: 10.5px; color: #7e8299; }
+        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 12px; font-weight: 700; }
         .bstatus-pill.cur { background: #eef3ff; color: #3e97ff; border: 1px solid #dce8ff; }
         .bstatus-pill.new { background: #f6f7f9; color: #a1a5b7; border: 1px solid #e4e6ef; }
         .bstatus-pill.new.filled { background: #e8fff3; color: #17c653; border-color: #c8f4dc; }
-        .bstatus-arrow { color: #b5b9c8; font-size: 11px; }
+        .bstatus-arrow { color: #b5b9c8; font-size: 12px; }
         .bstatus-topbar-right { display: flex; align-items: center; gap: 10px; }
 
-        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 10.5px; }
+        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 11.5px; }
         .bstatus-btn-cancel:hover { border-color: #d5dbe6; background: #f9fafc; }
-        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 10.5px; display: inline-flex; align-items: center; gap: 8px; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 11.5px; display: inline-flex; align-items: center; gap: 8px; }
         .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
         .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
-        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 13px; }
+        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 14px; }
         .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
 
         /* ---- Body ---- */
@@ -173,49 +173,52 @@
         /* ---- Candidate summary bar ---- */
         .bs-cand-bar { display: flex; align-items: center; gap: 0; }
         .bs-cand-id { display: flex; align-items: center; gap: 14px; padding-right: 26px; }
-        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
-        .bs-cand-name { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .bs-cand-role { font-size: 10.5px; color: #7e8299; }
+        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 16.5px; font-weight: 700; flex-shrink: 0; }
+        .bs-cand-name { font-size: 16.5px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bs-cand-role { font-size: 11.5px; color: #7e8299; }
         .bs-cand-stat { flex: 1 1 0; min-width: 0; text-align: center; padding: 0 12px; border-left: 1px solid #eef0f4; }
-        .bs-cand-stat .v { font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.1; }
-        .bs-cand-stat .l { font-size: 9px; color: #7e8299; margin-top: 2px; }
+        .bs-cand-stat .v { font-size: 17.5px; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bs-cand-stat .l { font-size: 10px; color: #7e8299; margin-top: 2px; }
 
         /* ---- Numbered section headers ---- */
         .bs-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .bs-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
+        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-sec-title { font-size: 14px; font-weight: 700; color: #181c32; }
 
         /* ---- Status cards row (with arrows) ---- */
         .bs-status-row { display: flex; align-items: stretch; gap: 0; }
         .bs-status-cell { flex: 1 1 0; min-width: 0; }
-        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 11px; padding: 0 8px; flex-shrink: 0; }
+        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 12px; padding: 0 8px; flex-shrink: 0; }
         .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 14px; padding: 18px; cursor: pointer; background: #fff; height: 100%; transition: border-color .15s, background .15s, box-shadow .15s; }
         .bs-status-card:hover { border-color: #cdd4e0; }
-        .bs-status-card .ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 12px; }
-        .bs-status-card .nm { font-size: 13px; font-weight: 700; }
-        .bs-status-card .sb { font-size: 9.5px; color: #7e8299; line-height: 1.4; margin-top: 3px; }
+        .bs-status-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .bs-status-card .ic { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .bs-status-card .nm { font-size: 14px; font-weight: 700; }
+        .bs-status-card .sb { font-size: 10.5px; color: #7e8299; line-height: 1.4; }
         .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
         .bs-status-card.is-selected { border-color: #17c653; background: #f2fdf7; box-shadow: 0 0 0 1px #17c653 inset; }
 
         /* ---- Impact strip ---- */
         .bs-impact { background: #f2fdf7; border: 1px solid #d5f2e2; border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
-        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
-        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 10px; color: #3f4254; font-weight: 500; }
-        .bs-impact-item i { color: #17c653; font-size: 10.5px; margin-top: 1px; flex-shrink: 0; }
+        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
+        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: #3f4254; font-weight: 500; }
+        .bs-impact-item i { color: #17c653; font-size: 11.5px; margin-top: 1px; flex-shrink: 0; }
+        /* Auto-distribute the impact bullets evenly across the full row width, whatever the count (4 or 5) */
+        .bs-impact .row > .col { flex: 1 1 0; min-width: 0; }
 
         /* ---- Job/Project section ---- */
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
         .bs-job-table table { width: 100%; margin: 0; }
-        .bs-job-table thead th { font-size: 9px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
-        .bs-job-table td { font-size: 10.5px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-job-table thead th { font-size: 10px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 11.5px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
         .bs-job-table tbody tr:last-child td { border-bottom: none; }
         .bs-job-table tbody tr:hover td { background: #fafbfc; }
         /* Normalise the server-rendered cell typography to the design's hierarchy */
-        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 10.5px !important; font-weight: 700 !important; color: #181c32 !important; }
-        .bs-job-table .fs-7 { font-size: 9px !important; color: #7e8299 !important; font-weight: 500 !important; }
-        .bs-job-table .badge { font-size: 9px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
-        .bs-job-table .bs-jid { font-size: 9px; color: #a1a5b7; margin-top: 3px; }
-        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 11.5px !important; font-weight: 700 !important; color: #181c32 !important; }
+        .bs-job-table .fs-7 { font-size: 10px !important; color: #7e8299 !important; font-weight: 500 !important; }
+        .bs-job-table .badge { font-size: 10px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
+        .bs-job-table .bs-jid { font-size: 10px; color: #a1a5b7; margin-top: 3px; }
+        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
         .bs-place-btn:hover { background: #eef5ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
@@ -397,11 +400,13 @@
         </div>
     </div>
 
-    <!-- Change Talent Status drawer — same drawer mechanism/width as the Job drawer ({default:'500px','lg':'1200px'}) -->
+    <!-- Change Talent Status drawer — same drawer plugin as the Job drawer, but narrower so a
+         column of the Inhouse Talents table stays visible behind it (feels like a slide-in panel,
+         not a near-fullscreen takeover). -->
     <div id="bstatus_drawer_toggle" style="display:none;"></div>
     <div id="bstatus_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-status"
         data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-width="{default:'500px', 'lg': '950px'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#bstatus_drawer_toggle" data-kt-drawer-close="#bstatus_close_x">
         <div class="d-flex flex-column h-100 w-100">
             <!-- Header -->
@@ -669,7 +674,9 @@
                     var items = BS_IMPACT[id] || [];
                     var html = '';
                     items.forEach(function(t) {
-                        html += '<div class="col-lg-2 col-md-4 col-6 mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check" style="color:' + c.color + ';"></i> ' + t + '</div></div>';
+                        // Plain "col" auto-distributes evenly across however many items exist
+                        // (4 or 5), so the row always stretches edge-to-edge instead of leaving gaps.
+                        html += '<div class="col mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check" style="color:' + c.color + ';"></i> ' + t + '</div></div>';
                     });
                     $('#bs_impact_list').html(html);
                     $('#bs_impact').show();
