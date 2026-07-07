@@ -406,7 +406,7 @@
     <div id="bstatus_drawer_toggle" style="display:none;"></div>
     <div id="bstatus_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-status"
         data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'500px', 'lg': '950px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-width="{default:'550px', 'lg': '1050px'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#bstatus_drawer_toggle" data-kt-drawer-close="#bstatus_close_x">
         <div class="d-flex flex-column h-100 w-100">
             <!-- Header -->
