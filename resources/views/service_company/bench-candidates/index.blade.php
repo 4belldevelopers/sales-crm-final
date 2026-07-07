@@ -140,29 +140,29 @@
            width config as the Job drawer). Below is content styling only.
            ============================================================ */
         #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
-        #bstatus_drawer { z-index: 999999; font-size: 12px; }
+        #bstatus_drawer { z-index: 999999; font-size: 9.5px; } /* base reduced 20% from 12px */
         #bstatus_drawer .min-w-0 { min-width: 0; }
 
         /* ---- Header ---- */
         .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
         .bstatus-topbar-left { display: flex; align-items: center; gap: 12px; }
-        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; }
-        .bstatus-title { font-size: 19px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+        .bstatus-title { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; }
         .bstatus-topbar-center { display: flex; flex-direction: column; align-items: center; }
-        .bstatus-changing { font-size: 12px; color: #7e8299; }
-        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 14px; font-weight: 700; }
+        .bstatus-changing { font-size: 9.5px; color: #7e8299; }
+        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 11px; font-weight: 700; }
         .bstatus-pill.cur { background: #eef3ff; color: #3e97ff; border: 1px solid #dce8ff; }
         .bstatus-pill.new { background: #f6f7f9; color: #a1a5b7; border: 1px solid #e4e6ef; }
         .bstatus-pill.new.filled { background: #e8fff3; color: #17c653; border-color: #c8f4dc; }
-        .bstatus-arrow { color: #b5b9c8; font-size: 14px; }
+        .bstatus-arrow { color: #b5b9c8; font-size: 11px; }
         .bstatus-topbar-right { display: flex; align-items: center; gap: 10px; }
 
-        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13px; }
+        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 10.5px; }
         .bstatus-btn-cancel:hover { border-color: #d5dbe6; background: #f9fafc; }
-        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 10.5px; display: inline-flex; align-items: center; gap: 8px; }
         .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
         .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
-        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 16px; }
+        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 13px; }
         .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
 
         /* ---- Body ---- */
@@ -173,49 +173,49 @@
         /* ---- Candidate summary bar ---- */
         .bs-cand-bar { display: flex; align-items: center; gap: 0; }
         .bs-cand-id { display: flex; align-items: center; gap: 14px; padding-right: 26px; }
-        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 700; flex-shrink: 0; }
-        .bs-cand-name { font-size: 19px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .bs-cand-role { font-size: 13px; color: #7e8299; }
+        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+        .bs-cand-name { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bs-cand-role { font-size: 10.5px; color: #7e8299; }
         .bs-cand-stat { flex: 1 1 0; min-width: 0; text-align: center; padding: 0 12px; border-left: 1px solid #eef0f4; }
-        .bs-cand-stat .v { font-size: 20px; font-weight: 700; color: #181c32; line-height: 1.1; }
-        .bs-cand-stat .l { font-size: 11.5px; color: #7e8299; margin-top: 2px; }
+        .bs-cand-stat .v { font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bs-cand-stat .l { font-size: 9px; color: #7e8299; margin-top: 2px; }
 
         /* ---- Numbered section headers ---- */
         .bs-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .bs-sec-title { font-size: 16px; font-weight: 700; color: #181c32; }
+        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
 
         /* ---- Status cards row (with arrows) ---- */
         .bs-status-row { display: flex; align-items: stretch; gap: 0; }
         .bs-status-cell { flex: 1 1 0; min-width: 0; }
-        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 14px; padding: 0 8px; flex-shrink: 0; }
+        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 11px; padding: 0 8px; flex-shrink: 0; }
         .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 14px; padding: 18px; cursor: pointer; background: #fff; height: 100%; transition: border-color .15s, background .15s, box-shadow .15s; }
         .bs-status-card:hover { border-color: #cdd4e0; }
-        .bs-status-card .ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 12px; }
-        .bs-status-card .nm { font-size: 16px; font-weight: 700; }
-        .bs-status-card .sb { font-size: 12px; color: #7e8299; line-height: 1.4; margin-top: 3px; }
+        .bs-status-card .ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; margin-bottom: 12px; }
+        .bs-status-card .nm { font-size: 13px; font-weight: 700; }
+        .bs-status-card .sb { font-size: 9.5px; color: #7e8299; line-height: 1.4; margin-top: 3px; }
         .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
         .bs-status-card.is-selected { border-color: #17c653; background: #f2fdf7; box-shadow: 0 0 0 1px #17c653 inset; }
 
         /* ---- Impact strip ---- */
         .bs-impact { background: #f2fdf7; border: 1px solid #d5f2e2; border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
-        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
-        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #3f4254; font-weight: 500; }
-        .bs-impact-item i { color: #17c653; font-size: 13px; margin-top: 1px; flex-shrink: 0; }
+        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 10.5px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
+        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 10px; color: #3f4254; font-weight: 500; }
+        .bs-impact-item i { color: #17c653; font-size: 10.5px; margin-top: 1px; flex-shrink: 0; }
 
         /* ---- Job/Project section ---- */
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
         .bs-job-table table { width: 100%; margin: 0; }
-        .bs-job-table thead th { font-size: 11px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
-        .bs-job-table td { font-size: 13px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-job-table thead th { font-size: 9px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 10.5px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
         .bs-job-table tbody tr:last-child td { border-bottom: none; }
         .bs-job-table tbody tr:hover td { background: #fafbfc; }
         /* Normalise the server-rendered cell typography to the design's hierarchy */
-        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 13px !important; font-weight: 700 !important; color: #181c32 !important; }
-        .bs-job-table .fs-7 { font-size: 11.5px !important; color: #7e8299 !important; font-weight: 500 !important; }
-        .bs-job-table .badge { font-size: 11px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
-        .bs-job-table .bs-jid { font-size: 11px; color: #a1a5b7; margin-top: 3px; }
-        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 10.5px !important; font-weight: 700 !important; color: #181c32 !important; }
+        .bs-job-table .fs-7 { font-size: 9px !important; color: #7e8299 !important; font-weight: 500 !important; }
+        .bs-job-table .badge { font-size: 9px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
+        .bs-job-table .bs-jid { font-size: 9px; color: #a1a5b7; margin-top: 3px; }
+        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
         .bs-place-btn:hover { background: #eef5ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
@@ -615,18 +615,28 @@
         // Content is re-fetched per talent, but the interaction logic below
         // is defined once and rebound to whatever markup just loaded.
         // ============================================================
-        // "Impact of changing status" bullets per target status (6 short items → single row).
+        // "Impact of changing status" bullets per target status.
         var BS_IMPACT = {
-            1: ['Removed from Bench Listing', 'Hidden from Marketplace', 'Visible to internal team', 'Bench counter stops', 'Vendor tracking paused', 'Internal tracking continues'],
-            2: ['Listed on Bench for work', 'Visible in Marketplace', 'Searchable by clients', 'Bench counter starts', 'Vendors can submit', 'Internal tracking continues'],
-            4: ['Hidden from Marketplace', 'Bench counter paused', 'Not visible to clients', 'Submissions are retained', 'Vendor submissions paused', 'Internal tracking continues'],
-            3: ['Removed from Bench Listing', 'Hidden from Marketplace', 'Not visible to Companies', 'Vendor cannot submit', 'Vendor tracking continues', 'Internal tracking continues'],
-            5: ['Removed from all Listings', 'Access to opportunities revoked', 'Not visible to clients', 'Historical records retained', 'Vendor tracking stopped', 'Profile archived']
+            1: ['Moved to internal talent pool', 'Not visible in marketplace searches', 'Only visible to your company', 'Bench counter stops', 'Profile remains on record'],
+            2: ['Candidate becomes available for new opportunities', 'Appears in Bench Dashboard & Marketplace', 'Bench counter starts from today', 'Profile remains active & searchable'],
+            4: ['Temporarily marked unavailable', 'Hidden from marketplace searches', 'Bench counter is paused', 'Existing submissions are retained', 'Profile remains on record'],
+            3: ['Marked as assigned to a Job/Project', 'Removed from Bench listing & marketplace', 'Not visible to other companies', 'Work-in-progress tracking begins'],
+            5: ['Marked as no longer with company', 'Removed from all active listings', 'Access to opportunities revoked', 'Historical records are retained', 'Profile archived for compliance']
+        };
+
+        // Same semantic colours as the "Choose New Status" cards — reused for the "New Status"
+        // pill and the Impact strip so the whole flow reads as one coherent colour per status.
+        var BS_STATUS_COLORS = {
+            1: { color: '#7239ea', bg: '#f3effe', border: '#e3d7fb' },
+            2: { color: '#3e97ff', bg: '#eef3ff', border: '#dce8ff' },
+            4: { color: '#f6a609', bg: '#fff4de', border: '#ffe3ad' },
+            3: { color: '#17c653', bg: '#e8fff3', border: '#c8f4dc' },
+            5: { color: '#f8285a', bg: '#ffeef1', border: '#ffd3da' }
         };
 
         window.initBenchStatusDrawer = function(cfg) {
             $('#bstatus_cur_name').text(cfg.currentName || '—');
-            $('#bstatus_new_name').text('Select status').removeClass('filled');
+            $('#bstatus_new_name').text('Select status').removeClass('filled').css({ background: '', color: '', borderColor: '' });
             $('.bstatus-confirm-btn').prop('disabled', true);
             $('#bs_impact').hide();
             $('#bs_job_card').hide();
@@ -636,6 +646,7 @@
                 .on('click.bstatus', '.bs-status-card', function() {
                     var id = String($(this).data('status-id'));
                     var label = $(this).data('status-label');
+                    var c = BS_STATUS_COLORS[id] || BS_STATUS_COLORS[2];
 
                     $('input[name="bench_master_status"]').prop('checked', false);
                     $('input[name="bench_master_status"][value="' + id + '"]').prop('checked', true);
@@ -643,19 +654,22 @@
                     $('.bs-status-card').removeClass('is-selected');
                     $('.bs-status-card[data-status-id="' + id + '"]').addClass('is-selected');
 
-                    // Header transition pill
-                    $('#bstatus_new_name').text(label).addClass('filled');
+                    // Header transition pill — tinted to match the chosen status
+                    $('#bstatus_new_name').text(label).addClass('filled')
+                        .css({ background: c.bg, color: c.color, borderColor: c.border });
 
                     // Confirm button (enabled only when target differs from current)
                     var same = (id === String(cfg.currentId));
                     $('.bstatus-confirm-btn').prop('disabled', same);
 
-                    // Impact strip
+                    // Impact strip — same colour treatment
                     $('#bs_impact_title').text('Impact of changing status to ' + label);
+                    $('#bs_impact').css({ background: c.bg, borderColor: c.border });
+                    $('#bs_impact_head').css('color', c.color);
                     var items = BS_IMPACT[id] || [];
                     var html = '';
                     items.forEach(function(t) {
-                        html += '<div class="col-lg-2 col-md-4 col-6 mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check"></i> ' + t + '</div></div>';
+                        html += '<div class="col-lg-2 col-md-4 col-6 mb-2"><div class="bs-impact-item"><i class="fa fa-circle-check" style="color:' + c.color + ';"></i> ' + t + '</div></div>';
                     });
                     $('#bs_impact_list').html(html);
                     $('#bs_impact').show();
