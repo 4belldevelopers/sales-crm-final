@@ -203,7 +203,7 @@ body { overflow-x: hidden; }
 .ot-row:hover { background: #fafbff; }
 .ot-td { padding: 12px 14px; vertical-align: middle; }
 
-/* Candidate cell */
+/* Candidate cell — listing font sizes reduced ~10% per request (header/Stage untouched) */
 .ot-cand { display: flex; align-items: center; gap: 10px; }
 .ot-avatar {
     width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
@@ -212,49 +212,49 @@ body { overflow-x: hidden; }
 .ot-avatar-img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
 .ot-cand-info { min-width: 0; }
 .ot-cand-name {
-    font-size: 13px; font-weight: 600; color: #0f172a; display: block; text-decoration: none;
+    font-size: 12px; font-weight: 600; color: #0f172a; display: block; text-decoration: none;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
 }
 .ot-cand-name:hover { color: #6366f1; }
-.ot-cand-role { font-size: 11px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
-.ot-bench { font-size: 9px; background: #fef3c7; color: #d97706; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+.ot-cand-role { font-size: 10px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.ot-bench { font-size: 8px; background: #fef3c7; color: #d97706; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
 
 /* Job cell */
-.ot-job-title { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
-.ot-job-type  { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+.ot-job-title { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
+.ot-job-type  { font-size: 10px; color: #94a3b8; display: block; margin-top: 2px; }
 
-/* Status pill */
+/* Job Status, ID & Client pill */
 .ot-status-pill {
-    display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; margin-bottom: 3px;
+    display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 600; margin-bottom: 3px;
 }
-.ot-job-meta { font-size: 11px; color: #64748b; display: block; margin-top: 2px; }
+.ot-job-meta { font-size: 10px; color: #64748b; display: block; margin-top: 2px; }
 
 /* Compensation */
-.ot-comp-amount { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
-.ot-comp-type   { font-size: 11px; color: #94a3b8; display: block; margin-top: 1px; }
-.ot-comp-change { font-size: 11px; color: #6366f1; font-weight: 600; display: block; margin-top: 2px; }
+.ot-comp-amount { font-size: 12px; font-weight: 600; color: #0f172a; display: block; }
+.ot-comp-type   { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-comp-change { font-size: 10px; color: #6366f1; font-weight: 600; display: block; margin-top: 2px; }
 a:hover .ot-comp-change { text-decoration: underline; }
-.ot-pending-badge { font-size: 11px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
-.ot-create-btn { font-size: 12px; color: #f59e0b; font-weight: 700; text-decoration: none; }
+.ot-pending-badge { font-size: 10px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.ot-create-btn { font-size: 11px; color: #f59e0b; font-weight: 700; text-decoration: none; }
 .ot-create-btn:hover { color: #d97706; text-decoration: underline; }
 
 /* Offer Status badge with icon */
 .ot-offer-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 3px;
+    padding: 3px 10px 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-bottom: 3px;
 }
 .ot-offer-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
-.ot-offer-sub { font-size: 11px; color: #64748b; display: block; }
-.ot-offer-date { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-offer-sub { font-size: 10px; color: #64748b; display: block; }
+.ot-offer-date { font-size: 9px; color: #94a3b8; display: block; margin-top: 1px; }
 
 /* Joining */
-.ot-join-date      { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
-.ot-join-time      { font-size: 11px; color: #94a3b8; display: block; margin-top: 1px; }
-.ot-join-countdown { font-size: 11px; font-weight: 600; display: block; margin-top: 2px; }
-.ot-na             { font-size: 14px; color: #cbd5e1; }
-.ot-na-sub         { font-size: 11px; color: #94a3b8; display: block; }
+.ot-join-date      { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
+.ot-join-time      { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-join-countdown { font-size: 10px; font-weight: 600; display: block; margin-top: 2px; }
+.ot-na             { font-size: 13px; color: #cbd5e1; }
+.ot-na-sub         { font-size: 10px; color: #94a3b8; display: block; }
 
-/* Stage — outlined button */
+/* Stage — outlined button (font size intentionally unchanged — not part of this request) */
 .ot-td-stage { text-align: center; }
 .ot-stage-btn {
     display: inline-block; padding: 5px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
@@ -266,6 +266,9 @@ a:hover .ot-comp-change { text-decoration: underline; }
     background: transparent; color: #94a3b8; border: 1.5px solid #e2e8f0; cursor: default;
 }
 .ot-stage-disabled:hover { background: transparent; border-color: #e2e8f0; }
+/* "Offered" stage — orange instead of the default purple */
+.ot-stage-btn.ot-stage-offered { color: #ea580c; border-color: #fdba74; }
+.ot-stage-btn.ot-stage-offered:hover { background: #ffedd5; border-color: #ea580c; color: #ea580c; }
 
 /* Empty state */
 .ot-empty td { padding: 60px 14px; text-align: center; }
