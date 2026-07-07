@@ -204,10 +204,6 @@
         .bs-impact-item i { color: #17c653; font-size: 13px; margin-top: 1px; flex-shrink: 0; }
 
         /* ---- Job/Project section ---- */
-        .bs-job-search { position: relative; margin-bottom: 14px; }
-        .bs-job-search input { width: 100%; border: 1px solid #eef0f4; border-radius: 10px; padding: 11px 14px 11px 38px; font-size: 13px; background: #fff; }
-        .bs-job-search input:focus { outline: none; border-color: #cdd9f7; }
-        .bs-job-search i { position: absolute; left: 14px; top: 13px; color: #a1a5b7; font-size: 13px; }
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
         .bs-job-table table { width: 100%; margin: 0; }
         .bs-job-table thead th { font-size: 11px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
@@ -724,10 +720,9 @@
 
                         // Job id (from the server radio) drives the JID line + the Select button value.
                         var jobId = $('<div>').html(r.chkbox || '').find('input[name="chk_list_item"]').attr('value') || '';
-                        var expHtml = (r.Exp || '') + (jobId ? '<div class="bs-jid">JID-' + jobId + '</div>' : '');
+                        var expHtml = (r.Exp || '').replace(/(\d+\+)/g, '$1 Years') + (jobId ? '<div class="bs-jid">JID-' + jobId + '</div>' : '');
 
-                        var searchText = $('<div>').html((r.Requisition || '') + ' ' + (r.ContactPerson || '')).text().toLowerCase().replace(/"/g, '');
-                        html += '<tr data-search="' + searchText + '">' +
+                        html += '<tr>' +
                             '<td>' + jobHtml + '</td>' +
                             '<td>' + expHtml + '</td>' +
                             '<td>' + (r.Location || '') + '</td>' +
@@ -739,7 +734,6 @@
                             '</tr>';
                     });
                     $('#bs_job_body').html(html);
-                    $('#bs_job_search_input').val('');
                 })
                 .fail(function() {
                     $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-danger py-4">Could not load jobs. Please try again.</td></tr>');
@@ -748,6 +742,8 @@
 
         // Builds the "Select Job" action button from the server-rendered chk_list_item radio.
         // IMPORTANT: force the radio UNCHECKED so no job is pre-selected — the user must pick one.
+        // "Placed" (grey, disabled) only appears when this exact bench+job pair is a REAL existing
+        // placement record; everything else starts as a plain toggleable "Select Job".
         function buildBsPlaceAction(chkboxHtml) {
             var $tmp = $('<div>').html(chkboxHtml);
             var $input = $tmp.find('input[name="chk_list_item"]');
@@ -762,26 +758,25 @@
                 '</button>';
         }
 
-        // Only ONE job selectable at a time — selecting one clears the rest.
+        // Only ONE job selectable at a time. Clicking the already-selected job again undoes it.
         $(document).on('click', '.bs-place-btn:not(:disabled)', function() {
+            var $btn = $(this);
+            var $row = $btn.closest('tr');
+            var alreadyPicked = $btn.hasClass('is-picked');
+
             $('#bs_job_body tr').each(function() {
                 var $radio = $(this).find('input[name="chk_list_item"]');
-                var $btn = $(this).find('.bs-place-btn');
+                var $b = $(this).find('.bs-place-btn');
                 if ($radio.is(':disabled')) { return; }
                 $radio.prop('checked', false);
-                $btn.removeClass('is-picked').text('Select Job');
+                $b.removeClass('is-picked').text('Select Job');
             });
-            $(this).closest('tr').find('input[name="chk_list_item"]').prop('checked', true);
-            $(this).addClass('is-picked').html('<i class="fa fa-check"></i> Selected');
-        });
 
-        // Client-side search over the job/project table (job, company, hiring manager).
-        $(document).on('keyup', '#bs_job_search_input', function() {
-            var q = $(this).val().toLowerCase().trim();
-            $('#bs_job_body tr').each(function() {
-                var hay = $(this).data('search') || '';
-                $(this).toggle(q === '' || String(hay).indexOf(q) !== -1);
-            });
+            if (!alreadyPicked) {
+                $row.find('input[name="chk_list_item"]').prop('checked', true);
+                $btn.addClass('is-picked').html('<i class="fa fa-check"></i> Selected');
+            }
+            // If it WAS already picked, the loop above already cleared it back to "Select Job" (undo).
         });
 
         // ---- Table fetch + pagination ----

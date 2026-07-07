@@ -82,10 +82,6 @@
             <span class="bs-sec-num">2</span>
             <span class="bs-sec-title">Select the Job / Project</span>
         </div>
-        <div class="bs-job-search">
-            <i class="fa fa-search"></i>
-            <input type="text" id="bs_job_search_input" placeholder="Search by job, company, or hiring manager..." autocomplete="off" />
-        </div>
         <div class="bs-job-table table-responsive">
             <table class="table mb-0">
                 <thead>
