@@ -217,29 +217,34 @@
         /* ---- Job/Project section ---- */
         .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
         .bs-job-table table { width: 100%; margin: 0; table-layout: fixed; }
-        .bs-job-table thead th { font-size: 10px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
-        .bs-job-table td { font-size: 11.5px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
-        /* Fixed proportional widths (Location removed) so columns always line up the same way row to row */
-        .bs-job-table th:nth-child(1), .bs-job-table td:nth-child(1) { width: 22%; }
+        .bs-job-table thead th { font-size: 10px; color: #a1a5b7; font-weight: 600; padding: 12px 10px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 11.5px; padding: 14px 10px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        /* Fixed proportional widths, sized so the Action button always has room to sit fully inside the card */
+        .bs-job-table th:nth-child(1), .bs-job-table td:nth-child(1) { width: 21%; }
         .bs-job-table th:nth-child(2), .bs-job-table td:nth-child(2) { width: 20%; }
-        .bs-job-table th:nth-child(3), .bs-job-table td:nth-child(3) { width: 16%; }
-        .bs-job-table th:nth-child(4), .bs-job-table td:nth-child(4) { width: 14%; }
-        .bs-job-table th:nth-child(5), .bs-job-table td:nth-child(5) { width: 12%; }
+        .bs-job-table th:nth-child(3), .bs-job-table td:nth-child(3) { width: 15%; }
+        .bs-job-table th:nth-child(4), .bs-job-table td:nth-child(4) { width: 13%; }
+        .bs-job-table th:nth-child(5), .bs-job-table td:nth-child(5) { width: 11%; }
         .bs-job-table th:nth-child(6), .bs-job-table td:nth-child(6) { width: 8%; }
-        .bs-job-table th:nth-child(7), .bs-job-table td:nth-child(7) { width: 8%; }
+        .bs-job-table th:nth-child(7), .bs-job-table td:nth-child(7) { width: 12%; }
         .bs-job-table tbody tr:last-child td { border-bottom: none; }
         .bs-job-table tbody tr:hover td { background: #fafbfc; }
         /* Normalise the server-rendered cell typography to the design's hierarchy */
         .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 11.5px !important; font-weight: 700 !important; color: #181c32 !important; }
         .bs-job-table .fs-7 { font-size: 10px !important; color: #7e8299 !important; font-weight: 500 !important; }
         .bs-job-table .badge { font-size: 10px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
+        /* Job / Company — logo beside the title/company text, never stacked */
+        .bs-job-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .bs-job-cell .symbol { margin: 0 !important; flex-shrink: 0; }
+        .bs-job-cell .d-flex.flex-column { min-width: 0; }
         /* Experience column redesign — experience range / budget range / client type, each its own row */
         .bs-exp-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #181c32; }
         .bs-exp-row + .bs-exp-row { margin-top: 4px; }
         .bs-exp-row i { width: 12px; text-align: center; color: #a1a5b7; font-size: 10px; flex-shrink: 0; }
         .bs-exp-row.client { color: #3e97ff; }
         .bs-exp-row.client .ref { color: #a1a5b7; font-weight: 500; }
-        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        /* Snug padding so the button always fits fully inside its column (and the card) without clipping */
+        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 10px; font-size: 10.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; width: 100%; justify-content: center; }
         .bs-place-btn:hover { background: #eef5ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
@@ -769,8 +774,13 @@
                     }
                     var html = '';
                     rows.forEach(function(r) {
-                        // Job / Company — keep the server's logo/initial avatar in front of the title.
-                        var jobHtml = r.Requisition || '';
+                        // Job / Company — the server marks the logo up with an old float:left layout,
+                        // which can end up stacking (logo above title) once the column narrows. Rebuild
+                        // it as an explicit flex row so the logo always sits beside the title/company text.
+                        var $req = $('<div>').html(r.Requisition || '');
+                        var $reqSymbol = $req.find('.symbol').first().removeAttr('style').css('float', 'none');
+                        var $reqText = $req.find('.d-flex.flex-column').first();
+                        var jobHtml = '<div class="bs-job-cell">' + $reqSymbol.prop('outerHTML') + $reqText.prop('outerHTML') + '</div>';
 
                         // The exact job id used for the "Select Job" radio — the single reliable
                         // source of truth, reused below as the JID reference (same one Job pages show).
