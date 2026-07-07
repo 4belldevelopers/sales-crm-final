@@ -77,6 +77,18 @@
 
 .ac-actions .btn { flex: 1 1 0; padding: 7px 10px !important; font-size: 11px !important; }
 
+/* Workload mini-stats (Active Jobs / Captain Jobs / TRM Talents) */
+.wl-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 14px; }
+.wl-item { min-width: 0; }
+.wl-top { display: flex; align-items: center; gap: 5px; }
+.wl-ic { font-size: 13px; flex-shrink: 0; }
+.wl-ic-blue { color: #3e97ff; }
+.wl-ic-purple { color: #7239ea; }
+.wl-ic-green { color: #17c653; }
+.wl-num { font-weight: 700; color: #181c32; font-size: 13px; line-height: 1; }
+.wl-lbl { color: #a1a5b7; font-size: 10px; margin-top: 3px; white-space: nowrap; }
+.wl-grid.wl-grid-card { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
 /* Royal-blue palette scoped to this drawer */
 #kt_activities_body .btn-light.btn-active-light-primary, #kt_activities_body .btn-light-primary { border: 1px solid #d6e4ff !important; color: #2563eb !important; background-color: #fff !important; font-weight: 500; }
 #kt_activities_body .btn-light.btn-active-light-primary:hover, #kt_activities_body .btn-light-primary:hover { background-color: #eef4ff !important; border-color: #2563eb !important; color: #1d4ed8 !important; }
@@ -87,11 +99,78 @@
 </style>
 
 @php
-    // Build a view-model per team member once, reusing the exact same queries/logic as before (no business-logic change).
+    // Build a view-model per team member. Active Jobs / Captain Jobs / TRM Talents are read from
+    // Elasticsearch (the designated read-store) via ONE batch terms-aggregation per metric for the
+    // whole team, instead of N MySQL queries per member — this is the low-load path the user asked for.
+    // job_assign is embedded per-job in ELASTIC_JOBS (synced by app/Jobs/ElasticJobsIndex.php); TRM
+    // (submitted_by) is top-level on ELASTIC_CANDIDATES + ELASTIC_CANDIDATES_BENCH (synced by
+    // app/Jobs/ElasticCandidateIndex.php / ElasticBenchCandidateIndex.php), so both indices are summed.
+    // Talents/assigned-status (bench_assign) stays on MySQL: hmlistingupdate() below only writes to
+    // MySQL, never to ELASTIC_BENCH_ASSIGN (which also has its own user_id/users_id field mismatch) —
+    // reading that from ES would show stale Add/Remove state right after this drawer's own action.
+    $rmCompanyId = auth()->user()->company_id;
+    $rmElastic = app(\App\Services\ElasticService::class)->getClient();
+
+    $activeJobsByUser = [];
+    try {
+        $resp = $rmElastic->search([
+            'index' => ELASTIC_JOBS,
+            'body' => [
+                'size' => 0,
+                'query' => ['term' => ['status' => 'active']],
+                'aggs' => ['by_user' => ['terms' => ['field' => 'job_assign.user_id', 'size' => 2000]]],
+            ],
+        ]);
+        foreach (($resp['aggregations']['by_user']['buckets'] ?? []) as $b) {
+            $activeJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
+        }
+    } catch (\Throwable $e) {
+        $activeJobsByUser = [];
+    }
+
+    $captainJobsByUser = [];
+    try {
+        $resp = $rmElastic->search([
+            'index' => ELASTIC_JOBS,
+            'body' => [
+                'size' => 0,
+                'query' => ['term' => ['job_assign.company_id' => $rmCompanyId]],
+                'aggs' => ['by_captain' => ['terms' => ['field' => 'job_assign.spok_user_id', 'size' => 2000]]],
+            ],
+        ]);
+        foreach (($resp['aggregations']['by_captain']['buckets'] ?? []) as $b) {
+            $captainJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
+        }
+    } catch (\Throwable $e) {
+        $captainJobsByUser = [];
+    }
+
+    $trmTalentsByUser = [];
+    foreach ([ELASTIC_CANDIDATES, ELASTIC_CANDIDATES_BENCH] as $rmTrmIndex) {
+        try {
+            $resp = $rmElastic->search([
+                'index' => $rmTrmIndex,
+                'body' => [
+                    'size' => 0,
+                    'query' => ['term' => ['company_id' => $rmCompanyId]],
+                    'aggs' => ['by_submitter' => ['terms' => ['field' => 'submitted_by', 'size' => 2000]]],
+                ],
+            ]);
+            foreach (($resp['aggregations']['by_submitter']['buckets'] ?? []) as $b) {
+                $uid = (int) $b['key'];
+                $trmTalentsByUser[$uid] = ($trmTalentsByUser[$uid] ?? 0) + (int) $b['doc_count'];
+            }
+        } catch (\Throwable $e) {
+            // Missing/unreachable index shouldn't break the drawer — counts just fall back to 0.
+        }
+    }
+
     $rmRows = [];
     foreach ($team as $teamVal) {
-        $activeJobs = DB::table('job_assign')->join('jobs', 'jobs.id', '=', 'job_assign.job_id')->where('jobs.status', '=', 'active')->where('job_assign.user_id', $teamVal->id)->count();
+        $activeJobs = $activeJobsByUser[$teamVal->id] ?? 0;
         $candidateCount = DB::table('bench_assign')->where('bench_assign.user_id', $teamVal->id)->count();
+        $captainJobs = $captainJobsByUser[$teamVal->id] ?? 0;
+        $trmTalents = $trmTalentsByUser[$teamVal->id] ?? 0;
 
         $name = trim(@$teamVal->name) ?: '?';
         $firstChar = strtolower($name[0]);
@@ -122,6 +201,8 @@
             'avatarClass' => $avatarClass,
             'activeJobs' => $activeJobs,
             'candidateCount' => $candidateCount,
+            'captainJobs' => $captainJobs,
+            'trmTalents' => $trmTalents,
             'assigned' => $isAssigned,
             'workingActive' => (@$teamVal->working_status == 1),
         ];
@@ -138,6 +219,8 @@
             'avatarClass' => $r['avatarClass'],
             'jobs' => $r['activeJobs'],
             'talents' => $r['candidateCount'],
+            'captainJobs' => $r['captainJobs'],
+            'trmTalents' => $r['trmTalents'],
         ];
     }, $rmRows);
 @endphp
@@ -178,9 +261,19 @@
                     @endif
                   </div>
                 </div>
-                <div class="d-flex align-items-center gap-3 text-muted mb-3" style="font-size:11px;">
-                  <span><i class="la la-briefcase me-1"></i>{{ $r['activeJobs'] }} Active Jobs</span>
-                  <span><i class="la la-users me-1"></i>{{ $r['candidateCount'] }} Talents</span>
+                <div class="wl-grid wl-grid-card mb-3">
+                  <div class="wl-item">
+                    <div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">{{ $r['activeJobs'] }}</span></div>
+                    <div class="wl-lbl">Active Jobs</div>
+                  </div>
+                  <div class="wl-item">
+                    <div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">{{ $r['captainJobs'] }}</span></div>
+                    <div class="wl-lbl">Captain Jobs</div>
+                  </div>
+                  <div class="wl-item">
+                    <div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">{{ $r['trmTalents'] }}</span></div>
+                    <div class="wl-lbl">TRM Talents</div>
+                  </div>
                 </div>
                 <div class="d-flex gap-2 ac-actions">
                   <button type="button" class="btn btn-sm btn-light-danger rm-remove" data-rmid="{{ $r['id'] }}">Remove</button>
@@ -237,7 +330,7 @@
                 <tr class="fw-bolder text-muted bg-light">
                   <th class="min-w-200px">Name</th>
                   <th class="min-w-100px">Contact</th>
-                  <th class="min-w-150px">Workload</th>
+                  <th class="min-w-220px">Workload</th>
                   <th class="min-w-100px">Status</th>
                   <th class="min-w-120px text-end">Action</th>
                 </tr>
@@ -264,9 +357,19 @@
                       @endif
                     </td>
                     <td>
-                      <div class="d-flex align-items-center gap-3 text-muted" style="font-size:11px;">
-                        <span><i class="la la-briefcase me-1"></i>{{ $r['activeJobs'] }}</span>
-                        <span><i class="la la-users me-1"></i>{{ $r['candidateCount'] }}</span>
+                      <div class="wl-grid">
+                        <div class="wl-item">
+                          <div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">{{ $r['activeJobs'] }}</span></div>
+                          <div class="wl-lbl">Active Jobs</div>
+                        </div>
+                        <div class="wl-item">
+                          <div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">{{ $r['captainJobs'] }}</span></div>
+                          <div class="wl-lbl">Captain Jobs</div>
+                        </div>
+                        <div class="wl-item">
+                          <div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">{{ $r['trmTalents'] }}</span></div>
+                          <div class="wl-lbl">TRM Talents</div>
+                        </div>
                       </div>
                     </td>
                     <td><span class="status-dot {{ $r['workingActive'] ? 'active' : 'inactive' }}">{{ $r['workingActive'] ? 'Active' : 'Inactive' }}</span></td>
@@ -313,9 +416,10 @@ function rmCardHtml(u) {
         +       '</div></div>' : '')
         +   '</div>'
         + '</div>'
-        + '<div class="d-flex align-items-center gap-3 text-muted mb-3" style="font-size:11px;">'
-        +   '<span><i class="la la-briefcase me-1"></i>' + u.jobs + ' Active Jobs</span>'
-        +   '<span><i class="la la-users me-1"></i>' + u.talents + ' Talents</span>'
+        + '<div class="wl-grid wl-grid-card mb-3">'
+        +   '<div class="wl-item"><div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">' + u.jobs + '</span></div><div class="wl-lbl">Active Jobs</div></div>'
+        +   '<div class="wl-item"><div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">' + u.captainJobs + '</span></div><div class="wl-lbl">Captain Jobs</div></div>'
+        +   '<div class="wl-item"><div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">' + u.trmTalents + '</span></div><div class="wl-lbl">TRM Talents</div></div>'
         + '</div>'
         + '<div class="d-flex gap-2 ac-actions">'
         +   '<button type="button" class="btn btn-sm btn-light-danger rm-remove" data-rmid="' + u.id + '">Remove</button>'
