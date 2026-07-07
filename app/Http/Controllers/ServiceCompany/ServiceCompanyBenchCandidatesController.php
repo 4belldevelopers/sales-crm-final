@@ -3809,7 +3809,117 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		$this->pageTitle = __('Offer Listing');
 		$this->allBenchApplication = BenchApplication::count();
+		$this->benchOfferHeroStats = $this->benchOfferHeroStats();
 		return view('service_company.bench-candidates.offerListing', $this->data);
+	}
+
+	/**
+	 * Hero KPI counts for the Shortlisted Bench Candidates listing (Total Shortlisted,
+	 * Joining This Week, Offer Released, Offer Accepted, Joined) — computed with a single
+	 * Elasticsearch `filters` aggregation (candidates index) and cached per-company, so the
+	 * page load stays a single ES round trip instead of five separate counts.
+	 */
+	private function benchOfferHeroStats(): array
+	{
+		$default = [
+			'total_shortlisted' => 0,
+			'joining_this_week' => 0,
+			'offer_released' => 0,
+			'offer_accepted' => 0,
+			'joined' => 0,
+		];
+
+		$company_id = auth()->user()->company_id;
+
+		if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			return $default;
+		}
+
+		$versionKey = 'allbenchofferListing_version_user_' . $this->user->id;
+		$version = cache()->get($versionKey, 1);
+		$cacheKeySet = 'ats:benchofferHeroStats:' . $company_id . ':' . $version;
+
+		if (cache()->has($cacheKeySet)) {
+			return cache()->get($cacheKeySet);
+		}
+
+		$activeMust = ['terms' => ['job_master_status_id' => [5, 6]]];
+		$activeMustNot = ['term' => ['status' => 3]];
+
+		$params = [
+			'index' => ELASTIC_CANDIDATES,
+			'request_cache' => true,
+			'body' => [
+				'size' => 0,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term' => ['other_company' => $company_id]],
+							['term' => ['condidate_type' => 'bench_condidate']],
+						],
+					],
+				],
+				'aggs' => [
+					'hero_stats' => [
+						'filters' => [
+							'filters' => [
+								'total_shortlisted' => [
+									'bool' => ['must' => [$activeMust], 'must_not' => [$activeMustNot]],
+								],
+								'joining_this_week' => [
+									'bool' => [
+										'must' => [
+											$activeMust,
+											['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]],
+										],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'offer_released' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 1]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'offer_accepted' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 2]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'joined' => [
+									'bool' => [
+										'must' => [
+											['term' => ['job_master_status_id' => 6]],
+											['term' => ['status' => 3]],
+										],
+									],
+								],
+							],
+						],
+					],
+				],
+			],
+		];
+
+		try {
+			$response = $this->elasticService->getClient()->search($params);
+		} catch (\Exception $e) {
+			return $default;
+		}
+		$buckets = $response['aggregations']['hero_stats']['buckets'] ?? [];
+
+		$stats = [
+			'total_shortlisted' => $buckets['total_shortlisted']['doc_count'] ?? 0,
+			'joining_this_week' => $buckets['joining_this_week']['doc_count'] ?? 0,
+			'offer_released' => $buckets['offer_released']['doc_count'] ?? 0,
+			'offer_accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
+			'joined' => $buckets['joined']['doc_count'] ?? 0,
+		];
+
+		cache()->put($cacheKeySet, $stats, now()->addMinutes(ALL_BENCH_OFFER_LISTING_TIME));
+
+		return $stats;
 	}
 	public function offerListingData_ajax(Request $request)
 	{
