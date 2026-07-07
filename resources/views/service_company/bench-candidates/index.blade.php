@@ -110,13 +110,17 @@
         .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; }
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
-        .bench-dash .pipe-foot { font-size: 9px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .bench-dash .pipe-ico { display: inline-flex; align-items: center; gap: 3px; color: #7e8299; }
-        .bench-dash .pipe-ico i { font-size: 9px !important; }
+        .bench-dash .pipe-foot { font-size: 9px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; line-height: 1; }
+        /* Eye/download icon+count widgets sized to match the "Interview: N" text exactly, for aligned baselines */
+        .bench-dash .pipe-ico { display: inline-flex; align-items: center; gap: 3px; color: #7e8299; font-size: 9px !important; line-height: 1; }
+        .bench-dash .pipe-ico i { font-size: 9px !important; line-height: 1; }
 
         /* Manager "Change" — plain text link, no button chrome */
         .bench-dash .manager-change { color: #3e97ff; font-size: 9.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
         .bench-dash .manager-change:hover { text-decoration: underline; color: #3e97ff; }
+
+        /* Pool status — same purple used for Pool in the Change Status drawer */
+        .bench-dash .text-Apool { color: #7239ea !important; }
 
         /* toolbar search */
         .bench-dash .dash-search { border: 1px solid #eef0f4; border-radius: 8px; padding: 7px 12px; font-size: 11px !important; height: 34px; }
