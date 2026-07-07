@@ -206,12 +206,21 @@
         /* ---- Job/Project section ---- */
         .bs-job-search { position: relative; margin-bottom: 14px; }
         .bs-job-search input { width: 100%; border: 1px solid #eef0f4; border-radius: 10px; padding: 11px 14px 11px 38px; font-size: 13px; background: #fff; }
+        .bs-job-search input:focus { outline: none; border-color: #cdd9f7; }
         .bs-job-search i { position: absolute; left: 14px; top: 13px; color: #a1a5b7; font-size: 13px; }
-        .bs-job-table table { width: 100%; }
-        .bs-job-table th { font-size: 11px; color: #a1a5b7; font-weight: 600; padding: 10px 8px; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
-        .bs-job-table td { font-size: 13px; padding: 12px 8px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
-        .bs-place-btn { border: 1px solid #dce8ff; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .bs-place-btn:hover { background: #3e97ff; color: #fff; border-color: #3e97ff; }
+        .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
+        .bs-job-table table { width: 100%; margin: 0; }
+        .bs-job-table thead th { font-size: 11px; color: #a1a5b7; font-weight: 600; padding: 12px 14px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 13px; padding: 14px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-job-table tbody tr:last-child td { border-bottom: none; }
+        .bs-job-table tbody tr:hover td { background: #fafbfc; }
+        /* Normalise the server-rendered cell typography to the design's hierarchy */
+        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 13px !important; font-weight: 700 !important; color: #181c32 !important; }
+        .bs-job-table .fs-7 { font-size: 11.5px !important; color: #7e8299 !important; font-weight: 500 !important; }
+        .bs-job-table .badge { font-size: 11px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
+        .bs-job-table .bs-jid { font-size: 11px; color: #a1a5b7; margin-top: 3px; }
+        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+        .bs-place-btn:hover { background: #eef5ff; }
         .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
         .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
 
@@ -698,21 +707,29 @@
 
         // ---- Card 2: Select the Job / Project (only for target status = Placed) ----
         function loadBenchJobListing(benchId) {
-            $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
+            $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa fa-spinner fa-spin"></i> Loading jobs…</td></tr>');
             $.getJSON('{{ route('service_company.bench-candidates.bench_assign_to_job_listing') }}', { bench_id: benchId, stage: 'all' })
                 .done(function(resp) {
                     var rows = (resp && resp.data) ? resp.data : [];
                     if (!rows.length) {
-                        $('#bs_job_body').html('<tr><td colspan="9" class="text-center text-muted py-4">No job applications found for this talent.</td></tr>');
+                        $('#bs_job_body').html('<tr><td colspan="8" class="text-center text-muted py-4">No job applications found for this talent.</td></tr>');
                         return;
                     }
                     var html = '';
                     rows.forEach(function(r) {
-                        // data-search holds concatenated text for the client-side search box.
-                        var searchText = $('<div>').html((r.Requisition || '') + ' ' + (r.ContactPerson || '')).text().toLowerCase();
-                        html += '<tr data-search="' + searchText.replace(/"/g, '') + '">' +
-                            '<td>' + (r.Requisition || '') + '</td>' +
-                            '<td>' + (r.Exp || '') + '</td>' +
+                        // Job / Company — drop the server logo/avatar so the cell is text-only (per design).
+                        var $req = $('<div>').html(r.Requisition || '');
+                        $req.find('.symbol').remove();
+                        var jobHtml = $.trim($req.html());
+
+                        // Job id (from the server radio) drives the JID line + the Select button value.
+                        var jobId = $('<div>').html(r.chkbox || '').find('input[name="chk_list_item"]').attr('value') || '';
+                        var expHtml = (r.Exp || '') + (jobId ? '<div class="bs-jid">JID-' + jobId + '</div>' : '');
+
+                        var searchText = $('<div>').html((r.Requisition || '') + ' ' + (r.ContactPerson || '')).text().toLowerCase().replace(/"/g, '');
+                        html += '<tr data-search="' + searchText + '">' +
+                            '<td>' + jobHtml + '</td>' +
+                            '<td>' + expHtml + '</td>' +
                             '<td>' + (r.Location || '') + '</td>' +
                             '<td>' + (r.ContactPerson || '') + '</td>' +
                             '<td>' + (r.offeramount || '') + '</td>' +
@@ -729,21 +746,23 @@
                 });
         }
 
-        // Builds the "Select Job" action button from the server-rendered chk_list_item radio,
-        // preserving its real name/value/checked/disabled state so submission wiring stays untouched.
+        // Builds the "Select Job" action button from the server-rendered chk_list_item radio.
+        // IMPORTANT: force the radio UNCHECKED so no job is pre-selected — the user must pick one.
         function buildBsPlaceAction(chkboxHtml) {
             var $tmp = $('<div>').html(chkboxHtml);
             var $input = $tmp.find('input[name="chk_list_item"]');
             var value = $input.attr('value') || '';
-            var isChecked = $input.is(':checked');
             var isDisabled = $input.is(':disabled');
-            var label = isDisabled ? 'Placed' : (isChecked ? 'Selected' : 'Select Job');
-            return '<div class="d-none">' + chkboxHtml + '</div>' +
-                '<button type="button" class="bs-place-btn' + (isChecked ? ' is-picked' : '') + '" data-job-id="' + value + '" ' + (isDisabled ? 'disabled' : '') + '>' +
+            $input.prop('checked', false).removeAttr('checked'); // no default selection
+            var cleanRadio = $tmp.html();
+            var label = isDisabled ? 'Placed' : 'Select Job';
+            return '<div class="d-none">' + cleanRadio + '</div>' +
+                '<button type="button" class="bs-place-btn" data-job-id="' + value + '" ' + (isDisabled ? 'disabled' : '') + '>' +
                 label +
                 '</button>';
         }
 
+        // Only ONE job selectable at a time — selecting one clears the rest.
         $(document).on('click', '.bs-place-btn:not(:disabled)', function() {
             $('#bs_job_body tr').each(function() {
                 var $radio = $(this).find('input[name="chk_list_item"]');
@@ -753,7 +772,7 @@
                 $btn.removeClass('is-picked').text('Select Job');
             });
             $(this).closest('tr').find('input[name="chk_list_item"]').prop('checked', true);
-            $(this).addClass('is-picked').text('Selected');
+            $(this).addClass('is-picked').html('<i class="fa fa-check"></i> Selected');
         });
 
         // Client-side search over the job/project table (job, company, hiring manager).
