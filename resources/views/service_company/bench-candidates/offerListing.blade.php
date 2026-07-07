@@ -53,37 +53,189 @@
                 width: 1200px;
             }
         }
+
+        /* Shortlisted Bench Candidates hero */
+        .bo-hero {
+            font-family: 'Poppins', sans-serif;
+            background: #fff;
+            border: 1px solid #eef1f7;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .bo-hero-head {
+            margin-bottom: 16px;
+        }
+
+        .bo-hero-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bo-hero-title-ic {
+            color: #2b59ff;
+            font-size: 14px;
+        }
+
+        .bo-hero-title h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2a44;
+        }
+
+        .bo-hero-sub {
+            margin: 4px 0 0;
+            font-size: 12px;
+            font-weight: 400;
+            color: #8a93a8;
+        }
+
+        .bo-hero-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .bo-stat {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #eef1f7;
+            border-radius: 12px;
+            padding: 12px 14px;
+            background: #fbfcfe;
+            min-width: 0;
+        }
+
+        .bo-stat .ic {
+            width: 40px;
+            height: 40px;
+            flex: none;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+        }
+
+        .bo-stat .txt {
+            min-width: 0;
+        }
+
+        .bo-stat .num {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2a44;
+            line-height: 1.25;
+        }
+
+        .bo-stat .lbl {
+            font-size: 12px;
+            font-weight: 600;
+            color: #3b4a66;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bo-stat .sub {
+            font-size: 11px;
+            font-weight: 400;
+            color: #9aa3b2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media only screen and (max-width: 1440px) {
+            .bo-hero-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media only screen and (max-width: 992px) {
+            .bo-hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media only screen and (max-width: 576px) {
+            .bo-hero-stats {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endpush
 
 @section('content')
     <!--begin::Toolbar-->
     <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                        <a href="javascript:void(0);" class="text-primary">Talent Shortlisted</a>
-                    </h5>
-                    <span class="text-gray-600" id="totalBenchShortlist"></span>
-                    {{-- {{ @$allBenchApplication }} --}}
+        <div id="kt_toolbar_container" class="container-fluid">
+            @php
+                $benchOfferHeroStats = $benchOfferHeroStats ?? [
+                    'total_shortlisted' => 0,
+                    'joining_this_week' => 0,
+                    'offer_released' => 0,
+                    'offer_accepted' => 0,
+                    'joined' => 0,
+                ];
+            @endphp
+            <!--begin::Bench offer hero-->
+            <div class="bo-hero">
+                <div class="bo-hero-head">
+                    <div class="bo-hero-title">
+                        <span class="bo-hero-title-ic"><i class="fa-solid fa-bookmark"></i></span>
+                        <h2>Shortlisted Bench Candidates</h2>
+                    </div>
+                    <p class="bo-hero-sub">Track and manage your bench candidates who are shortlisted/selected with external companies/projects.</p>
                 </div>
-            </div>
-            <div class="d-flex align-items-center py-1">
-                <div class="d-flex align-items-center position-relative my-1 me-3">
-
-                    <input type="hidden" id="inputSearch" name="inputSearch"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
-                </div>
-                <div class="card-toolbar d-none">
-                    <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
+                <div class="bo-hero-stats">
+                    <div class="bo-stat">
+                        <span class="ic" style="background:#e9f0ff;color:#2b59ff"><i class="fa-solid fa-users"></i></span>
+                        <div class="txt">
+                            <div class="num" id="totalBenchShortlist">{{ number_format($benchOfferHeroStats['total_shortlisted']) }}</div>
+                            <div class="lbl">Total Shortlisted</div>
+                            <div class="sub">All Shortlisted Candidates</div>
+                        </div>
+                    </div>
+                    <div class="bo-stat">
+                        <span class="ic" style="background:#f1ecff;color:#7c3aed"><i class="fa-solid fa-calendar-days"></i></span>
+                        <div class="txt">
+                            <div class="num">{{ number_format($benchOfferHeroStats['joining_this_week']) }}</div>
+                            <div class="lbl">Joining This Week</div>
+                            <div class="sub">Next 7 Days</div>
+                        </div>
+                    </div>
+                    <div class="bo-stat">
+                        <span class="ic" style="background:#fff3e2;color:#f5a623"><i class="fa-solid fa-paper-plane"></i></span>
+                        <div class="txt">
+                            <div class="num">{{ number_format($benchOfferHeroStats['offer_released']) }}</div>
+                            <div class="lbl">Offer Released</div>
+                            <div class="sub">Waiting for Acceptance</div>
+                        </div>
+                    </div>
+                    <div class="bo-stat">
+                        <span class="ic" style="background:#e6f9ee;color:#16a34a"><i class="fa-solid fa-circle-check"></i></span>
+                        <div class="txt">
+                            <div class="num">{{ number_format($benchOfferHeroStats['offer_accepted']) }}</div>
+                            <div class="lbl">Offer Accepted</div>
+                            <div class="sub">Candidate Accepted</div>
+                        </div>
+                    </div>
+                    <div class="bo-stat">
+                        <span class="ic" style="background:#e6fbf8;color:#14b8a6"><i class="fa-solid fa-check-double"></i></span>
+                        <div class="txt">
+                            <div class="num">{{ number_format($benchOfferHeroStats['joined']) }}</div>
+                            <div class="lbl">Joined</div>
+                            <div class="sub">Successfully Joined</div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <!--end::Bench offer hero-->
+            <input type="hidden" id="inputSearch" name="inputSearch" />
         </div>
     </div>
     <!--end::Toolbar-->
