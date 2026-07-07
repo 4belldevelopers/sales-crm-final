@@ -12,10 +12,6 @@
         if ($a >= 1000) return $neg . round($a / 1000, 1) . 'K';
         return $neg . round($a);
     };
-    $ag = $benchAging ?? (object) ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
-    $agTotal = $ag->b1 + $ag->b2 + $ag->b3 + $ag->b4;
-    $pct = fn ($v) => $agTotal > 0 ? round(($v / $agTotal) * 100) : 0;
-
     $dl = $deltas ?? (object) ['all' => 0, 'pool' => 0, 'bench' => 0, 'hold' => 0, 'placed' => 0, 'cost' => 0, 'profit' => 0];
     // Renders an "↑/↓ N% vs last month" chip. For "cost", a rise is bad (red), everything else a rise is good.
     $deltaChip = function ($v, $invert = false) {
@@ -350,84 +346,7 @@
                         </div>
                     </div>
 
-                    <!-- Charts row -->
-                    <div class="row g-2 mb-2">
-                        <!-- Bench Aging donut -->
-                        <div class="col-lg-4">
-                            <div class="jw-card p-3 h-100 d-flex flex-column">
-                                <div class="chart-title mb-1">Bench Aging Overview</div>
-                                <div class="d-flex align-items-center">
-                                    <div id="agingChart" style="width:150px;"></div>
-                                    <ul class="aging-legend list-unstyled mb-0 flex-grow-1 ms-2">
-                                        <li><span><span class="dot" style="background:#17c653"></span>0 – 15 Days</span><span class="tiny fw-bold">{{ $ag->b1 }} ({{ $pct($ag->b1) }}%)</span></li>
-                                        <li><span><span class="dot" style="background:#f6a609"></span>15 – 30 Days</span><span class="tiny fw-bold">{{ $ag->b2 }} ({{ $pct($ag->b2) }}%)</span></li>
-                                        <li><span><span class="dot" style="background:#f6903f"></span>30 – 45 Days</span><span class="tiny fw-bold">{{ $ag->b3 }} ({{ $pct($ag->b3) }}%)</span></li>
-                                        <li><span><span class="dot" style="background:#f8285a"></span>45+ Days</span><span class="tiny fw-bold">{{ $ag->b4 }} ({{ $pct($ag->b4) }}%)</span></li>
-                                    </ul>
-                                </div>
-                                <div class="row g-2 mt-auto pt-2">
-                                    <div class="col-6">
-                                        <div class="jw-sub stat-sub">
-                                            <span class="ico sc-primary"><i class="fa fa-clock"></i></span>
-                                            <div><div class="lbl">Avg Bench Age</div><div class="val">{{ $avgBenchAge ?? 0 }} Days</div></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="jw-sub stat-sub">
-                                            <span class="ico sc-danger"><i class="fa fa-triangle-exclamation"></i></span>
-                                            <div><div class="lbl">Longest Bench Age</div><div class="val">{{ $longestBenchAge ?? 0 }} Days</div></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bench Cost / Loss chart -->
-                        <div class="col-lg-4">
-                            <div class="jw-card p-3 h-100">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="chart-title">Bench Cost This Month (Loss)</div>
-                                    <select class="chart-range"><option>Last 30 Days</option></select>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 mt-1">
-                                    <div class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</div>
-                                    {!! $deltaChip($dl->cost, true) !!}
-                                </div>
-                                <div id="lossChart"></div>
-                            </div>
-                        </div>
-
-                        <!-- Gross Profit chart -->
-                        <div class="col-lg-4">
-                            <div class="jw-card p-3 h-100">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="chart-title">Gross Profit This Month</div>
-                                    <select class="chart-range"><option>Last 30 Days</option></select>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 mt-1">
-                                    <div class="money {{ ($grossProfit ?? 0) < 0 ? 'text-danger' : 'text-success' }}">{{ $curSym }}{{ $fmtMoney($grossProfit ?? 0) }}</div>
-                                    {!! $deltaChip($dl->profit) !!}
-                                </div>
-                                <div id="profitChart"></div>
-                                <div class="row g-2 mt-1">
-                                    <div class="col-6">
-                                        <div class="jw-sub stat-sub">
-                                            <span class="ico sc-success"><i class="fa fa-percent"></i></span>
-                                            <div><div class="lbl">Profit Margin</div><div class="val text-success">{{ $profitMargin ?? 0 }}%</div></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="jw-sub stat-sub">
-                                            <span class="ico sc-primary"><i class="fa fa-arrow-trend-up"></i></span>
-                                            <div><div class="lbl">Bench ROI</div><div class="val">{{ $benchROI ?? 0 }}x</div></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Search + Sort row (directly below the graphs) -->
+                    <!-- Search + Sort row -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
                         <div class="position-relative flex-grow-1">
                             <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:11px !important;"></i>
@@ -1007,77 +926,5 @@
             var v = $(this).data('view');
             $(".application_sttus_nav[rel='" + v + "']").trigger('click');
         });
-    </script>
-
-    <!-- ===== Charts (ApexCharts) ===== -->
-    <script>
-        (function initBenchCharts() {
-            if (typeof ApexCharts === 'undefined') { return setTimeout(initBenchCharts, 300); }
-
-            var labels = @json($chartLabels ?? []);
-            var lossSeries = @json($lossSeries ?? []);
-            var profitSeries = @json($profitSeries ?? []);
-            var aging = [{{ $ag->b1 }}, {{ $ag->b2 }}, {{ $ag->b3 }}, {{ $ag->b4 }}];
-
-            // Donut — Bench Aging
-            if (document.querySelector('#agingChart')) {
-                new ApexCharts(document.querySelector('#agingChart'), {
-                    chart: { type: 'donut', height: 150 },
-                    series: aging.some(v => v > 0) ? aging : [1, 0, 0, 0],
-                    labels: ['0-15 Days', '15-30 Days', '30-45 Days', '45+ Days'],
-                    colors: ['#17c653', '#f6a609', '#f6903f', '#f8285a'],
-                    legend: { show: false },
-                    dataLabels: { enabled: false },
-                    plotOptions: { pie: { donut: { size: '68%', labels: {
-                        show: true,
-                        total: { show: true, label: 'On Bench', fontSize: '10px', fontFamily: 'Poppins',
-                                 formatter: function() { return {{ $counts->bench ?? 0 }}; } },
-                        value: { fontSize: '15px', fontFamily: 'Poppins', fontWeight: 700 },
-                        name: { fontSize: '9px', fontFamily: 'Poppins' }
-                    } } } },
-                    tooltip: { style: { fontSize: '10px', fontFamily: 'Poppins' } },
-                    stroke: { width: 2 }
-                }).render();
-            }
-
-            // Line — Bench Cost (Loss)
-            if (document.querySelector('#lossChart')) {
-                new ApexCharts(document.querySelector('#lossChart'), {
-                    chart: { type: 'line', height: 140, toolbar: { show: false }, fontFamily: 'Poppins' },
-                    series: [{ name: 'Loss', data: lossSeries }],
-                    colors: ['#f8285a'],
-                    stroke: { curve: 'smooth', width: 2 },
-                    xaxis: { categories: labels, labels: { rotate: 0, hideOverlappingLabels: true, style: { fontSize: '8px', fontFamily: 'Poppins' } }, tickAmount: 6 },
-                    yaxis: { labels: { style: { fontSize: '8px', fontFamily: 'Poppins' }, formatter: fmtAxis } },
-                    grid: { borderColor: '#f4f5f8' },
-                    dataLabels: { enabled: false },
-                    tooltip: { style: { fontSize: '10px', fontFamily: 'Poppins' }, y: { formatter: fmtAxis } }
-                }).render();
-            }
-
-            // Area — Gross Profit
-            if (document.querySelector('#profitChart')) {
-                new ApexCharts(document.querySelector('#profitChart'), {
-                    chart: { type: 'area', height: 140, toolbar: { show: false }, fontFamily: 'Poppins' },
-                    series: [{ name: 'Profit', data: profitSeries }],
-                    colors: ['#17c653'],
-                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.02 } },
-                    stroke: { curve: 'smooth', width: 2 },
-                    xaxis: { categories: labels, labels: { rotate: 0, hideOverlappingLabels: true, style: { fontSize: '8px', fontFamily: 'Poppins' } }, tickAmount: 6 },
-                    yaxis: { labels: { style: { fontSize: '8px', fontFamily: 'Poppins' }, formatter: fmtAxis } },
-                    grid: { borderColor: '#f4f5f8' },
-                    dataLabels: { enabled: false },
-                    tooltip: { style: { fontSize: '10px', fontFamily: 'Poppins' }, y: { formatter: fmtAxis } }
-                }).render();
-            }
-
-            function fmtAxis(v) {
-                v = Number(v) || 0; var a = Math.abs(v);
-                if (a >= 10000000) return (v / 10000000).toFixed(1) + 'Cr';
-                if (a >= 100000) return (v / 100000).toFixed(1) + 'L';
-                if (a >= 1000) return (v / 1000).toFixed(0) + 'K';
-                return Math.round(v);
-            }
-        })();
     </script>
 @endpush
