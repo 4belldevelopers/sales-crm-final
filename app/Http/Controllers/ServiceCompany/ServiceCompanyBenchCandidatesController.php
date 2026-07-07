@@ -2184,21 +2184,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 		return DataTables::of($benchAppOnJob)
 			->setRowClass(function ($row) {
-				$exists = (($row->status ?? null) === 3) ? 1 : 0;
-
-				return $exists ? 'classname' : '';
+				// Real "already placed on this job" check (bench_id + jobID exist in ELASTIC_BENCH_PLACED),
+				// computed above into $row->exists — NOT the job's own recruitment stage.
+				return ($row->exists ?? 0) ? 'classname' : '';
 			})->setRowAttr([
 				'style' => function ($row) {
-					$exists = (($row->status ?? null) === 3) ? 1 : 0;
-					return $exists
+					return ($row->exists ?? 0)
 						? 'background-color:#e8f9f6a6;'
 						: '';
 				}
 			])
 			->editColumn('chkbox', function ($row) {
 
-			   // ELASTIC_BENCH_PLACED
-			   $exists = (($row->status ?? null) === 3) ? 1 : 0;
+			   $exists = $row->exists ?? 0;
                 $disabled = '';
 				$checked = 'checked';
 				if($exists){
@@ -2516,39 +2514,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 							'index' => ELASTIC_JOBS,
 							'id'    =>(int) $row->jobId,
 					];
-				
+
 				$response = $this->elasticService->getClient()->get($params);
 				$thisjob = (object) $response['_source'];
-				// dd($thisjob->job_assign);
 				$job_assign = $thisjob->job_assign;
 				$partnersCount = collect($job_assign)->where('company_id',$row->company_id)->count();
-
-				// $partnersCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.id', 'users.name', 'users.image')->where('job_assign.job_id', '=', $row->jobId)->where('job_assign.company_id', '=', $row->company_id)->where('users.company_id', '=', $row->company_id)->count();
-
 				$partnersData = collect($job_assign)->where('company_id',$row->company_id)->map(fn ($item) => (object) $item)->take(1);
 
-				// dd($partnersData);
+				// Plain bold-name + muted-subtitle text (no avatar widget) to match the
+				// "Hiring Manager" cell style used in the Change Status drawer's job table.
+				$first = $partnersData->first();
+				$name = $first ? ucwords($first->user_name) : 'Unassigned';
+				$extra = $partnersCount > 1 ? ' +' . ($partnersCount - 1) : '';
 
-				// $partnersData = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.id', 'users.name', 'users.image')->where('job_assign.job_id', '=', $row->jobId)->where('job_assign.company_id', '=', $row->company_id)->where('users.company_id', '=', $row->company_id)->orderBy('users.name', 'ASC')->skip(0)->take(3)->get();
-
-				$jobId = $row->jobId;
-				$html = $temp = '';
-				$html .= '<div class="d-flex flex-column"><div class="symbol-group symbol-hover">';
-				
-				foreach ($partnersData as $pval) {
-					$image_path = '';
-					if (!empty(@$pval->image) && strlen(@$pval->image) > 10)
-						$image_path = url('public/user-uploads/team_profile_img/' . @$pval->image);
-					$html .= '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' . @$pval->user_name . '"> <div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-                            <a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-                                <div class="symbol-label fs-8 fs-8 bg-dark text-secondary border-radius-100">'.mb_substr($pval->user_name, 0, 1).'</div>
-                            </a>		 
-                            </div></div>';
-				}
-				$html .= '<div data-row-id="' . $row->jobId . '"   class="symbol symbol-30 symbol-circle symbol-light hm-listing" data-bs-placement="top" data-toggle="tooltip2" title="More users list.."><span class="symbol-label font-weight-bold">' . $partnersCount . '+</span></div>';
-				$html .= '</div></div>';
-
-				return $html;
+				return '<div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">' . $name . $extra . '</span>
+                    <span class="text-muted fw-bold d-block fs-7">Assigned Recruiter</span>
+                  </div>';
 
 			})
 			->editColumn('Interview', function ($row) use ($feedback_status) {
