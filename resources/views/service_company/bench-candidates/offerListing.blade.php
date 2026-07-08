@@ -178,44 +178,51 @@
         }
 
         .bo-search {
-            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             flex: 1 1 320px;
             min-width: 220px;
-        }
-
-        .bo-search i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9aa3b2;
-            font-size: 13px;
-        }
-
-        .bo-search input {
-            width: 100%;
             height: 40px;
             border: 1px solid #e7ecf4;
             border-radius: 10px;
-            padding: 0 14px 0 36px;
-            font-size: 13px;
-            font-weight: 400;
-            font-family: 'Poppins', sans-serif;
-            color: #1f2a44;
+            padding: 0 14px;
             background: #fff;
             box-sizing: border-box;
         }
 
-        .bo-search input:focus {
-            outline: none;
+        .bo-search:focus-within {
             border-color: #2b59ff;
         }
 
-        .bo-select-wrap {
+        .bo-search i {
+            flex: none;
+            color: #9aa3b2;
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .bo-search input {
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            border: none;
+            outline: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 400;
+            font-family: 'Poppins', sans-serif;
+            color: #1f2a44;
+            background: transparent;
+        }
+
+        .bo-select-wrap,
+        .bo-sort-wrap {
             flex: 0 0 auto;
         }
 
-        .bo-select-wrap select {
+        .bo-select-wrap select,
+        .bo-sort-wrap select {
             height: 40px;
             border: 1px solid #e7ecf4;
             border-radius: 10px;
@@ -225,6 +232,7 @@
             font-family: 'Poppins', sans-serif;
             color: #3b4a66;
             background: #fff;
+            box-sizing: border-box;
         }
 
         .bo-sort-wrap {
@@ -361,7 +369,7 @@
             vertical-align: middle;
             padding-top: 10px;
             padding-bottom: 10px;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .bo-avatar {
@@ -370,7 +378,7 @@
             border-radius: 8px;
             display: inline-grid;
             place-items: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             flex: none;
         }
@@ -394,7 +402,7 @@
         }
 
         .bo-cell-col .t1 {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #1f2a44;
             white-space: nowrap;
@@ -404,7 +412,7 @@
         }
 
         .bo-cell-col .t2 {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 400;
             color: #8a93a8;
             white-space: nowrap;
@@ -414,13 +422,13 @@
         }
 
         .bo-cell-col .t3 {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 400;
             color: #9aa3b2;
         }
 
         .bo-cell-col .link {
-            font-size: 11.5px;
+            font-size: 10.5px;
             font-weight: 500;
             color: #2b59ff;
             text-decoration: none;
@@ -437,7 +445,7 @@
 
         .bo-pill {
             display: inline-block;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             padding: 3px 10px;
             border-radius: 20px;
@@ -453,7 +461,7 @@
 
         .bo-pill-outline {
             display: inline-block;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             padding: 3px 10px;
             border-radius: 20px;
@@ -464,7 +472,7 @@
         }
 
         .bo-joining-rel {
-            font-size: 10.5px;
+            font-size: 9.5px;
             font-weight: 600;
         }
 
