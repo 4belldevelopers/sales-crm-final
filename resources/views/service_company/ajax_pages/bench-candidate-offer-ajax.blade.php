@@ -14,6 +14,11 @@
             $row->placedID = $row->wiseId;
             $row->id = $row->candidate_id;
 
+            // ---- Status column (bench-level status + subline, opens the Inhouse Talent Status modal) ----
+            $benchMasterStatus = DB::table('bench_master_status')->where('id', $row->status)->first();
+            $row->master_status_name = $benchMasterStatus->name ?? '';
+            $statusSubline = GeneralMethod::bench_status_subline($row->status)->name ?? '';
+
             // ---- Candidate avatar (first-letter colour bucket, same palette used site-wide) ----
             $name = trim((string) @$row->full_name);
             $initial = $name !== '' ? strtoupper($name[0]) : '?';
@@ -190,14 +195,20 @@
                 </div>
             </td>
             <td>
-                <a href="javascript:void(0);" class="bo-pill-outline stage_sub_stage" data-row-id="{{ $row->id }}"
-                    data-placedid="{{ $row->placedID }}" data-toggle="modal" data-target="#stage_sub_stage">Offered</a>
+                <span class="bo-pill-outline">Offered</span>
+            </td>
+            <td>
+                <div class="bo-cell-col">
+                    <a href="javascript:void(0);" class="t1 link stage_sub_stage" data-row-id="{{ $row->id }}"
+                        data-placedid="{{ $row->placedID }}" data-toggle="modal" data-target="#stage_sub_stage">{{ $row->master_status_name }}</a>
+                    <span class="t3" data-toggle="tooltip" title="{{ $statusSubline }}">{{ $statusSubline }}</span>
+                </div>
             </td>
         </tr>
     @endforeach
 @else
     <tr>
-        <td colspan="7" style="text-align: center; color: #8a93a8; padding: 40px 0;">
+        <td colspan="8" style="text-align: center; color: #8a93a8; padding: 40px 0;">
             No data available
         </td>
     </tr>

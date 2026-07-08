@@ -644,6 +644,7 @@
                                         <th class="">Offer Status <i class="fa-solid fa-arrow-up-wide-short sort-ic" data-sort-asc="11" data-sort-desc="10" title="Sort by offer date"></i></th>
                                         <th class="">Joining <i class="fa-solid fa-arrow-up-wide-short sort-ic" data-sort-asc="13" data-sort-desc="12" title="Sort by joining date"></i></th>
                                         <th class="">Stage</th>
+                                        <th class="">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="benchCandidateOfferAjax"> </tbody>
