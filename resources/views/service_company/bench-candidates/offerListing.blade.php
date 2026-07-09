@@ -492,6 +492,106 @@
                 overflow-x: auto;
             }
         }
+
+        /* ============================================================
+           Change Talent Status drawer — same drawer used on the main
+           Inhouse Talents (bench-candidates) page, so clicking Status
+           here opens the identical UI. Positioning/overlay/width owned
+           by the drawer plugin; below is content styling only.
+           ============================================================ */
+        #bstatus_drawer, #bstatus_drawer * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
+        #bstatus_drawer { z-index: 999999; font-size: 10.5px; }
+        #bstatus_drawer .min-w-0 { min-width: 0; }
+
+        .bstatus-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
+        .bstatus-topbar-left { display: flex; align-items: center; gap: 12px; }
+        .bstatus-title-ico { width: 40px; height: 40px; border-radius: 10px; background: #eef3ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+        .bstatus-title { font-size: 16.5px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bstatus-topbar-center { display: flex; flex-direction: column; align-items: center; }
+        .bstatus-changing { font-size: 10.5px; color: #7e8299; }
+        .bstatus-pill { border-radius: 8px; padding: 6px 18px; font-size: 12px; font-weight: 700; }
+        .bstatus-pill.cur { background: #eef3ff; color: #3e97ff; border: 1px solid #dce8ff; }
+        .bstatus-pill.new { background: #f6f7f9; color: #a1a5b7; border: 1px solid #e4e6ef; }
+        .bstatus-pill.new.filled { background: #e8fff3; color: #17c653; border-color: #c8f4dc; }
+        .bstatus-arrow { color: #b5b9c8; font-size: 12px; }
+        .bstatus-topbar-right { display: flex; align-items: center; gap: 10px; }
+
+        .bstatus-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 11.5px; }
+        .bstatus-btn-cancel:hover { border-color: #d5dbe6; background: #f9fafc; }
+        .bstatus-btn-confirm { border: none; background: #17c653; color: #fff; border-radius: 9px; padding: 9px 20px; font-weight: 600; font-size: 11.5px; display: inline-flex; align-items: center; gap: 8px; }
+        .bstatus-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+        .bstatus-btn-confirm:not(:disabled):hover { background: #14b04a; }
+        .bstatus-close { width: 36px; height: 36px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 14px; }
+        .bstatus-close:hover { background: #f4f5f8; color: #181c32; }
+
+        .bstatus-body { overflow-y: auto; background: #f5f6fa; padding: 16px 22px; flex-grow: 1; }
+        .bs-card { background: #fff; border: 1px solid #eef0f4; border-radius: 14px; padding: 18px 22px; }
+        .bs-card + .bs-card { margin-top: 14px; }
+
+        .bs-cand-bar { display: flex; align-items: center; gap: 0; }
+        .bs-cand-id { display: flex; align-items: center; gap: 14px; padding-right: 26px; }
+        .bs-cand-avatar { width: 56px; height: 56px; border-radius: 50%; background: #efeafe; color: #7239ea; display: flex; align-items: center; justify-content: center; font-size: 16.5px; font-weight: 700; flex-shrink: 0; }
+        .bs-cand-name { font-size: 16.5px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .bs-cand-role { font-size: 11.5px; color: #7e8299; }
+        .bs-cand-stat { flex: 1 1 0; min-width: 0; text-align: center; padding: 0 12px; border-left: 1px solid #eef0f4; }
+        .bs-cand-stat .v { font-size: 17.5px; font-weight: 700; color: #181c32; line-height: 1.1; }
+        .bs-cand-stat .l { font-size: 10px; color: #7e8299; margin-top: 2px; }
+
+        .bs-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .bs-sec-num { width: 26px; height: 26px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bs-sec-title { font-size: 14px; font-weight: 700; color: #181c32; }
+
+        .bs-status-row { display: flex; align-items: stretch; gap: 0; }
+        .bs-status-cell { flex: 1 1 0; min-width: 0; }
+        .bs-status-arrow { display: flex; align-items: center; justify-content: center; color: #c2c9d6; font-size: 12px; padding: 0 8px; flex-shrink: 0; }
+        .bs-status-card { border: 1.5px solid #eef0f4; border-radius: 14px; padding: 18px; cursor: pointer; background: #fff; height: 100%; transition: border-color .15s, background .15s, box-shadow .15s; }
+        .bs-status-card:hover { border-color: #cdd4e0; }
+        .bs-status-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .bs-status-card .ic { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .bs-status-card .nm { font-size: 14px; font-weight: 700; }
+        .bs-status-card .sb { font-size: 10.5px; color: #7e8299; line-height: 1.4; }
+        .bs-status-card.is-current { border-color: #3e97ff; background: #f5f9ff; }
+        .bs-status-card.is-selected { border-color: #17c653; background: #f2fdf7; box-shadow: 0 0 0 1px #17c653 inset; }
+
+        .bs-impact { background: #f2fdf7; border: 1px solid #d5f2e2; border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
+        .bs-impact-head { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: #17845a; margin-bottom: 12px; }
+        .bs-impact-item { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: #3f4254; font-weight: 500; }
+        .bs-impact-item i { color: #17c653; font-size: 11.5px; margin-top: 1px; flex-shrink: 0; }
+
+        .bs-job-table { border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; }
+        .bs-job-table table { width: 100%; margin: 0; table-layout: fixed; }
+        .bs-job-table thead th { font-size: 10px; color: #a1a5b7; font-weight: 600; padding: 12px 10px; background: #f8f9fb; border-bottom: 1px solid #eef0f4; white-space: nowrap; text-align: left; }
+        .bs-job-table td { font-size: 11.5px; padding: 14px 10px; border-bottom: 1px solid #f4f5f8; vertical-align: middle; }
+        .bs-job-table th:nth-child(1), .bs-job-table td:nth-child(1) { width: 21%; }
+        .bs-job-table th:nth-child(2), .bs-job-table td:nth-child(2) { width: 20%; }
+        .bs-job-table th:nth-child(3), .bs-job-table td:nth-child(3) { width: 15%; }
+        .bs-job-table th:nth-child(4), .bs-job-table td:nth-child(4) { width: 13%; }
+        .bs-job-table th:nth-child(5), .bs-job-table td:nth-child(5) { width: 11%; }
+        .bs-job-table th:nth-child(6), .bs-job-table td:nth-child(6) { width: 8%; }
+        .bs-job-table th:nth-child(7), .bs-job-table td:nth-child(7) { width: 12%; }
+        .bs-job-table tbody tr:last-child td { border-bottom: none; }
+        .bs-job-table tbody tr:hover td { background: #fafbfc; }
+        .bs-job-table .fs-6, .bs-job-table .fw-bolder { font-size: 11.5px !important; font-weight: 700 !important; color: #181c32 !important; }
+        .bs-job-table .fs-7 { font-size: 10px !important; color: #7e8299 !important; font-weight: 500 !important; }
+        .bs-job-table .badge { font-size: 10px !important; font-weight: 700 !important; padding: 4px 11px !important; border-radius: 7px !important; }
+        .bs-job-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .bs-job-cell .symbol { margin: 0 !important; flex-shrink: 0; }
+        .bs-job-cell .d-flex.flex-column { min-width: 0; }
+        .bs-exp-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #181c32; }
+        .bs-exp-row + .bs-exp-row { margin-top: 4px; }
+        .bs-exp-row i { width: 12px; text-align: center; color: #a1a5b7; font-size: 10px; flex-shrink: 0; }
+        .bs-exp-row.client { color: #3e97ff; }
+        .bs-exp-row.client .ref { color: #a1a5b7; font-weight: 500; }
+        .bs-place-btn { border: 1px solid #cdd9f7; background: #fff; color: #3e97ff; border-radius: 8px; padding: 7px 10px; font-size: 10.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; width: 100%; justify-content: center; }
+        .bs-place-btn:hover { background: #eef5ff; }
+        .bs-place-btn.is-picked { border-color: #3e97ff; background: #3e97ff; color: #fff; }
+        .bs-place-btn:disabled { background: #f1f2f6; color: #a1a5b7; border-color: #eef0f4; cursor: not-allowed; }
+
+        @media (max-width: 1100px) {
+            .bs-status-row { flex-wrap: wrap; }
+            .bs-status-arrow { display: none; }
+            .bs-status-cell { flex: 1 1 30%; }
+        }
     </style>
 @endpush
 
