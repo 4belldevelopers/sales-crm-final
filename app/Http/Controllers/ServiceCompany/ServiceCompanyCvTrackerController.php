@@ -2787,9 +2787,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		if ($request->id >= 1) {
 
 			$client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-			// CLIENT CONTACT INFO
-			$ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-			$ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+			// CLIENT CONTACT INFO — job may have no client (direct/internal hire)
+			$ccInfoCount = 0;
+			$ccInfo = collect();
+			if ($client_row && $client_row->client_id) {
+				$ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
+				$ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+			}
 			if ($ccInfoCount > 0) {
 				$i = 0;
 				foreach ($ccInfo as $ccVal) {
@@ -6291,9 +6295,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 	public function previewOfferLettetr(Request $request)
 	{
 
-				// dd($request->all());
-				//echo $request->id; exit; 
-		        $offerId = $request->offerId;
+			        $offerId = $request->offerId;
 
 				$exits_offer = DB::table('offer_create_main_tds')->where('offer_id','=',$offerId)->where('status','=',1)->first();
 				$rowDataOfferDetails = GeneralMethod::offerLetterdetails($offerId);
