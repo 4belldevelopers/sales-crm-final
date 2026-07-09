@@ -115,62 +115,86 @@ use Carbon\Carbon;
           @media (max-width:1200px){ .cd-hero .kpi-row { grid-template-columns:repeat(3,1fr); } }
           @media (max-width:768px){ .cd-hero .kpi-row { grid-template-columns:repeat(2,1fr); } .cd-hero .profile-top { flex-direction:column; } }
 
-          /* ── Jobs table redesign ── */
-          #allreq { border-collapse: separate; border-spacing: 0; width: 100%; }
-          #allreq thead tr th {
-            font-size: 11px; font-weight: 700; color: #7e8299; letter-spacing: .5px;
-            text-transform: uppercase; padding: 9px 10px; white-space: nowrap;
-            background: #f8f9fb; border-bottom: 2px solid #eef0f8;
-          }
-          #allreq thead tr th:first-child { padding-left: 16px; border-radius: 8px 0 0 8px; }
-          #allreq thead tr th:last-child { border-radius: 0 8px 8px 0; }
-          #allreq tbody tr { transition: background .12s; }
-          #allreq tbody tr:hover td { background: #f5f8ff; }
-          #allreq tbody td { padding: 10px; vertical-align: middle; border-bottom: 1px solid #f1f3fa; }
-          #allreq tbody tr:first-child td { padding-top: 14px; }
-          #allreq tbody tr:last-child td { border-bottom: none; }
-          /* Pipeline stage header colors */
-          .cjt-th-tot { color: #009ef7 !important; }
-          .cjt-th-sou { color: #7e8299 !important; }
-          .cjt-th-scr { color: #7239ea !important; }
-          .cjt-th-eva { color: #0095e8 !important; }
-          .cjt-th-neo { color: #f64e60 !important; }
-          .cjt-th-off { color: #f6a723 !important; }
-          .cjt-th-joi { color: #50cd89 !important; }
-          .cjt-th-rej { color: #f1416c !important; }
-          /* Job status badge pills */
-          .cjb-status-pill {
-            display:inline-flex; align-items:center; gap:5px;
-            padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; line-height:1.4;
-          }
-          .cjb-status-pill::before {
-            content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0;
-          }
-          .cjb-status-hiring  { background:#e8fff3; border:1px solid #b8f0d4; color:#17a75a; }
-          .cjb-status-hiring::before  { background:#17a75a; }
-          .cjb-status-closed  { background:#fff0f0; border:1px solid #ffd5d5; color:#d9534f; }
-          .cjb-status-closed::before  { background:#d9534f; }
-          .cjb-status-hold    { background:#fff8e8; border:1px solid #fde4a0; color:#d98d00; }
-          .cjb-status-hold::before    { background:#d98d00; }
-          /* Job/Internal mini-tags */
-          .cjb-mini-tag {
-            display:inline-flex; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600; line-height:1.6;
-          }
-          .cjb-tag-id       { background:#f1f3fa; color:#7e8299; }
-          .cjb-tag-internal { background:#e8f0fe; color:#3b5fc8; }
-          .cjb-tag-client   { background:#e8fff3; color:#17a75a; }
-          /* Pipeline counter anchors */
-          .cjp-link { font-weight:700; font-size:13px; text-decoration:none; display:block; text-align:center; }
-          .cjp-link:hover { opacity:.75; }
-          .cjp-tot { color:#009ef7 !important; font-size:14px; font-weight:800; }
-          .cjp-sou { color:#7e8299 !important; }
-          .cjp-scr { color:#7239ea !important; }
-          .cjp-eva { color:#0095e8 !important; }
-          .cjp-neo { color:#f64e60 !important; }
-          .cjp-off { color:#f6a723 !important; }
-          .cjp-joi { color:#50cd89 !important; }
-          .cjp-rej { color:#f1416c !important; }
-          .cjp-zero { color:#c5c8d8 !important; font-weight:500; }
+          /* ── Jobs card list (.jobx) ── */
+          .jobx, .jobx * { font-family:'Poppins',sans-serif; box-sizing:border-box; }
+          .jobx .table-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); border:1px solid #e4e6ef; overflow:hidden; }
+          .jobx .table-header, .jobx .job-row { display:grid; grid-template-columns:2.5fr 1fr 1.1fr 1.2fr .9fr .9fr 2.6fr; align-items:start; column-gap:12px; }
+          .jobx .table-header { padding:9px 12px; background:#f7f8fc; border-bottom:1.5px solid #e4e6ef; align-items:center; }
+          .jobx .th { font-size:10.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; gap:4px; }
+          .jobx .job-row { padding:12px; border-bottom:1px solid #e4e6ef; transition:background .12s; }
+          .jobx .job-row:last-of-type { border-bottom:none; }
+          .jobx .job-row:hover { background:#fafbff; }
+          /* Col: Job Details */
+          .jobx .col-job { display:flex; gap:9px; align-items:flex-start; }
+          .jobx .drag-col { display:flex; align-items:center; padding-top:14px; flex-shrink:0; color:#a1a5b7; cursor:grab; }
+          .jobx .job-logo { width:46px; height:46px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; overflow:hidden; }
+          .jobx .job-logo img { width:100%; height:100%; object-fit:cover; }
+          .jobx .job-info { flex:1; min-width:0; }
+          .jobx .job-title a { font-size:12.5px; font-weight:700; color:#181c32; text-decoration:none; display:block; line-height:1.35; }
+          .jobx .job-title a:hover { color:#3b55e6; }
+          .jobx .job-dept { font-size:11px; color:#6d7284; margin-top:1px; }
+          .jobx .job-client { font-size:11px; color:#6d7284; font-weight:500; margin-top:1px; margin-bottom:5px; }
+          .jobx .job-meta-line { display:flex; align-items:center; flex-wrap:wrap; gap:4px; font-size:10.5px; }
+          .jobx .it-job-id { font-size:10px; color:#6a6b70; font-weight:500; }
+          .jobx .it-dot-separator { width:3px; height:3px; border-radius:50%; background:#a1a5b7; }
+          .jobx .badge-type { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
+          .jobx .badge-internal { background:#eef2ff; color:#3b55e6; }
+          .jobx .badge-client   { background:#eefff6; color:#09b760; }
+          .jobx .badge-direct   { background:#fff4ee; color:#f4682a; }
+          .jobx .skills-inline .badge { font-size:9.5px; padding:1px 5px; margin:0 1px 0 0; border-radius:4px; }
+          /* Col: Experience */
+          .jobx .col-exp { display:flex; flex-direction:column; gap:5px; padding-top:2px; }
+          .jobx .exp-row, .jobx .sal-row { display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:#181c32; white-space:nowrap; }
+          .jobx .exp-row svg, .jobx .sal-row svg { width:13px; height:13px; color:#a1a5b7; flex-shrink:0; }
+          /* Col: Hiring & Location */
+          .jobx .col-hl { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
+          .jobx .badge-hiring { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:600; width:fit-content; cursor:default; }
+          .jobx .badge-hiring::before { content:""; width:6px; height:6px; border-radius:50%; }
+          .jobx .badge-hiring.active-bg { background:#eafff3; color:#17c653; border:1px solid #b8f0d4; }
+          .jobx .badge-hiring.active-bg::before { background:#17c653; }
+          .jobx .badge-hiring.hold-bg   { background:#fff8e1; color:#ffa800; border:1px solid #fde4a0; }
+          .jobx .badge-hiring.hold-bg::before   { background:#ffa800; }
+          .jobx .badge-hiring.closed-bg { background:#ffeef1; color:#f1416c; border:1px solid #ffd5d5; }
+          .jobx .badge-hiring.closed-bg::before { background:#f1416c; }
+          .jobx .loc-row, .jobx .mode-row { display:flex; align-items:center; gap:4px; font-size:11px; color:#6d7284; font-weight:500; }
+          .jobx .loc-row svg, .jobx .mode-row svg { width:12px; height:12px; color:#a1a5b7; flex-shrink:0; }
+          /* Col: Hiring Manager */
+          .jobx .col-hm { font-size:11.5px; padding-top:2px; }
+          .jobx .hm-name  { font-size:12px; font-weight:600; color:#181c32; margin-bottom:2px; }
+          .jobx .hm-title { font-size:11px; color:#6d7284; margin-bottom:1px; }
+          .jobx .hm-company { font-size:11px; color:#a1a5b7; }
+          /* Col: Team / Agency */
+          .jobx .col-action { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
+          .jobx .action-more { font-size:10.5px; color:#3b55e6; cursor:pointer; font-weight:500; }
+          .jobx .jobx-add-link { font-size:11px; color:#5e6278; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border:1.5px dashed #d1d3e0; border-radius:7px; background:#fafbfc; transition:all .15s; }
+          .jobx .jobx-add-link:hover { border-color:#3b55e6; color:#3b55e6; background:#f0f3ff; }
+          /* Col: Pipeline */
+          .jobx .col-pipeline { display:flex; flex-direction:column; gap:4px; padding-left:10px; border-left:1px solid #eef0f5; }
+          .jobx .pipeline-stages { display:flex; align-items:flex-start; gap:2px; flex-wrap:nowrap; padding-bottom:2px; }
+          .jobx .stage { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; min-width:0; }
+          .jobx .stage-label { font-size:8.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.3px; }
+          .jobx .stage-badge { min-width:22px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+          .jobx .stage-badge a { font-size:9px; font-weight:700; color:inherit; text-decoration:none; }
+          .jobx .stage-badge a:hover { opacity:.75; }
+          .jobx .s-inw { background:#ffffde; color:#bdbd26; } .jobx .s-inw a { color:#bdbd26; }
+          .jobx .s-sou { background:#efefef; color:#000; }   .jobx .s-sou a { color:#000; }
+          .jobx .s-scr { background:#f7deff; color:#c000ff; }.jobx .s-scr a { color:#c000ff; }
+          .jobx .s-eva { background:#f0f8ff; color:#2896ff; }.jobx .s-eva a { color:#2896ff; }
+          .jobx .s-neg { background:#ffe6f2; color:#ff4098; }.jobx .s-neg a { color:#ff4098; }
+          .jobx .s-off { background:#fff9ed; color:#ffab00; }.jobx .s-off a { color:#ffab00; }
+          .jobx .s-joi { background:#d4ffde; color:#06c732; }.jobx .s-joi a { color:#06c732; }
+          .jobx .s-rej { background:#ffe2e5; color:#ff0202; }.jobx .s-rej a { color:#ff0202; }
+          .jobx .pipeline-total { font-size:10px; font-weight:600; color:#6d7284; display:flex; flex-wrap:wrap; gap:4px; }
+          .jobx .pipeline-total strong { color:#181c32; }
+          .jobx .add-date { font-size:10px; color:#a1a5b7; display:flex; align-items:center; gap:4px; }
+          .jobx .job-empty { padding:34px 12px; text-align:center; color:#a1a5b7; font-size:12px; }
+          /* Skills sub-row (below each job-row, indented to clear drag+logo) */
+          .jobx .job-row-skills { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:3px 12px 10px 83px; border-bottom:1px solid #e4e6ef; font-size:10.5px; }
+          .jobx .job-row-skills .sk-label { font-weight:600; color:#6d7284; flex-shrink:0; }
+          .jobx .job-row-skills .sk-tag { display:inline-flex; padding:1px 7px; border-radius:4px; background:#f1f3fa; color:#5e6278; font-size:9.5px; font-weight:600; }
+          .jobx .job-row:last-of-type + .job-row-skills { border-bottom:none; }
+          @media (max-width:1366px){ .jobx .table-header, .jobx .job-row { grid-template-columns:2.2fr .95fr 1fr 1.1fr .85fr .85fr 2.1fr; } }
+          @media (max-width:1024px){ .jobx .table-card { overflow-x:auto; } .jobx .table-header, .jobx .job-row { min-width:980px; } }
 
           /* ── Interview Tracker table redesign ── */
           #interview_tracker table { border-collapse:separate; border-spacing:0; width:100%; }
@@ -210,6 +234,54 @@ use Carbon\Carbon;
           .cit-stars .cit-star-fill  { color:#f6a723; font-size:12px; }
           .cit-stars .cit-star-empty { color:#e4e6ef; font-size:12px; }
           .cit-rating-label { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:2px; }
+
+          /* ── Follow-Up dropdown (Interview Tracker tab) ── */
+          #interview_tracker {
+            --cit-primary   : #3b5fc8;
+            --cit-success   : #17a75a;
+            --cit-danger    : #d9534f;
+            --cit-border    : #e4e6ef;
+            --cit-radius    : 6px;
+            --cit-radius-lg : 8px;
+            --cit-text-muted: #a1a5b7;
+            --cit-text-main : #181c32;
+            --cit-bg-main   : #f5f8ff;
+            --cit-transition: all .15s ease;
+            --cit-shadow-lg : 0 8px 24px rgba(17,28,68,.10);
+          }
+          .cit-followup-dropdown { position:relative; display:inline-block; margin-top:3px; }
+          .cit-followup-btn {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:3px 8px; border-radius:var(--cit-radius);
+            font-size:10px; font-weight:500; font-family:'Poppins',sans-serif;
+            border:1px solid var(--cit-border); background:#fff;
+            color:var(--cit-text-muted); cursor:pointer;
+            transition:var(--cit-transition);
+          }
+          .cit-followup-btn:hover { background:var(--cit-bg-main); color:var(--cit-primary); border-color:var(--cit-primary); }
+          .cit-followup-btn svg  { width:10px; height:10px; }
+          .cit-followup-menu {
+            position:absolute; top:calc(100% + 4px); left:0;
+            background:#fff; border:1px solid var(--cit-border);
+            border-radius:var(--cit-radius-lg); box-shadow:var(--cit-shadow-lg);
+            z-index:9999; display:none; min-width:150px; overflow:hidden;
+          }
+          .cit-followup-menu.open { display:block; }
+          .cit-followup-item {
+            padding:7px 10px; font-size:10px; cursor:pointer;
+            transition:var(--cit-transition); display:flex; align-items:center;
+            gap:6px; color:var(--cit-text-main);
+          }
+          .cit-followup-item:hover { background:var(--cit-bg-main); color:var(--cit-primary); }
+          .cit-followup-item svg  { width:10px; height:10px; }
+
+          /* ── Job type + ID tags (Interview Tracker) ── */
+          .cit-job-tags        { display:flex; align-items:center; gap:5px; margin-top:3px; flex-wrap:wrap; }
+          .cit-job-type-badge  { display:inline-flex; align-items:center; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
+          .cit-badge-internal  { background:#eef2ff; color:#3b55e6; }
+          .cit-badge-client    { background:#eefff6; color:#09b760; }
+          .cit-job-id-tag      { font-size:10px; color:#6a6b70; font-weight:500; }
+          .cit-dot-sep         { width:3px; height:3px; border-radius:50%; background:#a1a5b7; display:inline-block; }
         </style>
         @php
             // KPI counts for the internal-client detail header (read-only ES helpers).
@@ -1240,40 +1312,23 @@ use Carbon\Carbon;
                                 </div>
                                 <!--end::All Req. header-->
                                 <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-7">
+                                <div class="card-body px-0 py-4">
                                     @if (in_array('view_jobs', $userPermissions))
-                                        <table class="table align-middle table-row-dashed fs-6 gy-5" id="allreq">
-                                            <thead>
-                                                <tr class="fw-bolder text-muted">
-                                                    <th class="w-10px pe-0">
-                                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                data-kt-check="true"
-                                                                data-kt-check-target="#kt_table_users .form-check-input1"
-                                                                value="1" />
-                                                        </div>
-                                                    </th>
-                                                    <th>Jobs</th>
-                                                    <th>Exp.</th>
-                                                    <th>Salary</th>
-                                                    <th>Location</th>
-                                                    <th>Status</th>
-                                                    <th>Date</th>
-                                                    <th style="text-align:center"><i class="fa fa-users" style="font-size:15px"></i><br><span style="font-size:9px;letter-spacing:.3px">TEAM</span></th>
-                                                    <th style="text-align:center"><i class="fa fa-handshake" style="font-size:15px"></i><br><span style="font-size:9px;letter-spacing:.3px">AGCY</span></th>
-                                                    <th class="cjt-th-tot text-center">TOT</th>
-                                                    <th class="cjt-th-sou text-center">SOU</th>
-                                                    <th class="cjt-th-scr text-center">SCR</th>
-                                                    <th class="cjt-th-eva text-center">EVA</th>
-                                                    <th class="cjt-th-neo text-center">NEO</th>
-                                                    <th class="cjt-th-off text-center">OFF</th>
-                                                    <th class="cjt-th-joi text-center">JOI</th>
-                                                    <th class="cjt-th-rej text-center">REJ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="clientJobsListajax"> </tbody>
-                                        </table>
-                                        <div id="paginationclientjobs"></div>
+                                        <div class="jobx">
+                                            <div class="table-card">
+                                                <div class="table-header">
+                                                    <div class="th">Job Details</div>
+                                                    <div class="th">Experience</div>
+                                                    <div class="th">Hiring &amp; Location</div>
+                                                    <div class="th">Hiring Manager</div>
+                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
+                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
+                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
+                                                </div>
+                                                <div id="clientJobsListajax"></div>
+                                            </div>
+                                        </div>
+                                        <div id="paginationclientjobs" class="mt-3"></div>
                                     @endif
                                 </div>
                                 <!--end::All Req. Content-->
@@ -2406,6 +2461,51 @@ use Carbon\Carbon;
             }
         });
     }
+
+    // ── Follow-Up actions for the Interview Tracker (client show page) ──
+    function citToggleFollowUp(btn) {
+        var menu   = btn.nextElementSibling;
+        var isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        if (!isOpen) { menu.classList.add('open'); }
+    }
+
+    function citSetFollowUp(el, id, status) {
+        document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        var dropdown = el.closest('.cit-followup-dropdown');
+        var trigger  = dropdown ? dropdown.querySelector('.cit-followup-trigger') : null;
+        var labels   = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
+        var colors   = { 'confirmed': 'var(--cit-success)', 'no-response': 'var(--cit-danger)', 'rescheduled': 'var(--cit-primary)' };
+        $.ajax({
+            url  : '{{ route("service_company.interview-schedule.followup_update") }}',
+            type : 'POST',
+            data : { _token: '{{ csrf_token() }}', id: id, status: status },
+            success: function (resp) {
+                if (resp && resp.status === 'success') {
+                    if (trigger) {
+                        var lbl = trigger.querySelector('.cit-fu-label');
+                        if (lbl) { lbl.textContent = labels[status] || 'Follow Up'; }
+                        trigger.style.color       = colors[status] || '';
+                        trigger.style.borderColor = colors[status] || '';
+                        var ctaIcon = trigger.querySelector('.cit-cta-icon');
+                        if (ctaIcon) { ctaIcon.remove(); }
+                    }
+                } else {
+                    Swal.fire({ text: (resp && resp.msg) ? resp.msg : 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
+                }
+            },
+            error: function () {
+                Swal.fire({ text: 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
+            }
+        });
+    }
+
+    // Close any open cit follow-up menu on outside click
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.cit-followup-dropdown').length) {
+            document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        }
+    });
 
     function fetchJobsClient(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
