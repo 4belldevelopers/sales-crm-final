@@ -2665,7 +2665,7 @@
                                     {{-- Direct download: navigates to a route that streams the PDF as an
                                          attachment (no AJAX/JSON/storage-URL — those all failed silently on
                                          the live host). target=_blank so the current drawer stays put. --}}
-                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}"
+                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id) }}"
                                        target="_blank" rel="noopener"
                                        class="btn co-btn-close co-step3-download">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
@@ -2752,8 +2752,7 @@
                                                 <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
                                                 <button type="button" data-jobId="{{ @$application->job_id }}"
                                                     data-candidate="{{ @$application->id }}" data-mtype="2"
-                                                    data-offerId="{{ $offer_id }}" data-toggle="modal"
-                                                    data-target="#fwd_offer"
+                                                    data-offerId="{{ $offer_id }}"
                                                     class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
                                                     data-wizard-type="action-next">+ Add Approver</button>
                                             </div>
@@ -2791,8 +2790,7 @@
                                             <div style="text-align:center; margin-top:12px;">
                                                 <button type="button" data-jobId="{{ @$application->job_id }}"
                                                     data-candidate="{{ @$application->id }}" data-mtype="2"
-                                                    data-offerId="{{ $offer_id }}" data-toggle="modal"
-                                                    data-target="#fwd_offer"
+                                                    data-offerId="{{ $offer_id }}"
                                                     class="btn co-btn-close fwd_offer"
                                                     data-wizard-type="action-next">{{ $co_mgmt_status == 1 ? 'Resend / Choose a Different Approver' : 'Send to Another Approver' }}</button>
                                             </div>
@@ -3140,9 +3138,7 @@
                     event.preventDefault(); // Prevent form submission
                     if (currentStep == 2) {
                         var id = "{{ $offer_id }}";
-                        // Relative URL — see the note on the Send Offer Letter AJAX call further down
-                        // for why route()'s default absolute URL is unsafe here.
-                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id', false) }}";
+                        var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id') }}";
                         url = url.replace(':id', id);
                         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                         var token = "{{ csrf_token() }}";
@@ -5455,7 +5451,7 @@
                     // placeholders in the template using the real offer/candidate data server-side.
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
+                        url: "{{ route('service_company.cvtracker.email_template') }}",
                         data: {
                             '_token': "{{ csrf_token() }}",
                             'template': template,
@@ -5548,11 +5544,7 @@
                     $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
                     $.ajax({
                         type: 'POST',
-                        {{-- Relative URL, not route()'s default absolute one — the deployed .env's
-                             APP_URL points at a different, unrelated domain (hire.jero.works), so an
-                             absolute URL here silently made this a cross-origin POST that never actually
-                             reached this server. Same root cause as the Download Offer Letter bug. --}}
-                        url: "{{ route('service_company.cvtracker.fwd_offer_send', [], false) }}",
+                        url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
                         data: formData,
                         processData: false,
                         contentType: false,
