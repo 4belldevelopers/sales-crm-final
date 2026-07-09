@@ -9,6 +9,7 @@
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
     // dd(count($data));
+    $_pipelineClsMap = [1=>'cjp-sou',2=>'cjp-scr',3=>'cjp-eva',4=>'cjp-neo',5=>'cjp-off',6=>'cjp-joi',7=>'cjp-rej'];
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -44,7 +45,7 @@
     $jobAssign = collect($job_assign);
 
     @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr>
             <td>
                 @php
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -310,17 +311,17 @@
                     if ($status == 'Inactive') {
                         $status = 'Closed';
                     }
-                    echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="fs-6 ' .
-                        @$class .
-                        ' text-hover-success">' .
-                        $status .
-                        '</a>
-                      <span class="fw-bold text-muted d-block fs-7">' .
-                        @$row->id .
-                        ' -' .
-                        $recommendation_text .
-                        '</span>
+                    $statusPillClass = 'cjb-status-pill cjb-status-hiring';
+                    if ($status == 'Closed') $statusPillClass = 'cjb-status-pill cjb-status-closed';
+                    elseif ($status == 'Hold') $statusPillClass = 'cjb-status-pill cjb-status-hold';
+                    $tagClass = ($row->comId == $company_id) ? 'cjb-mini-tag cjb-tag-internal' : 'cjb-mini-tag cjb-tag-client';
+
+                    echo '<div class="d-flex flex-column gap-1">
+                        <span class="' . $statusPillClass . '">' . $status . '</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="cjb-mini-tag cjb-tag-id">#' . @$row->id . '</span>
+                            <span class="' . $tagClass . '">' . $recommendation_text . '</span>
+                        </div>
                     </div>';
                 @endphp
             </td>
@@ -639,19 +640,9 @@
 
 
 
-                    // $applicationCounter = number_format($applicationCounter);
-                    // $inreview_counter = number_format($inreview_counter);
-                    echo '<div class="d-flex flex-column">
-                        <a href="' .
-                        $url_path .
-                        '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                        @$applicationCounter .
-                        '</a>
-                        <a href="' .
-                        $url_path .
-                        '" class="text-muted fw-bold d-block fs-7 text-hover-primary">' .
-                        $inreview_counter .
-                        '</a>
+                    $totClass = ($applicationCounter == 0) ? 'cjp-link cjp-tot cjp-zero' : 'cjp-link cjp-tot';
+                    echo '<div class="text-center">
+                        <a href="' . $url_path . '" class="' . $totClass . '">' . $applicationCounter . '</a>
                     </div>';
                 @endphp
             </td>
@@ -686,17 +677,9 @@
                     }
 
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
 
                 @endphp
             </td>
@@ -731,18 +714,9 @@
                         );
                     }
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
                 @endphp
             </td>
             <td>
@@ -776,18 +750,9 @@
                         );
                     }
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
                 @endphp
             </td>
             <td>
@@ -820,18 +785,9 @@
                         );
                     }
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
 
                 @endphp
             </td>
@@ -865,18 +821,9 @@
                         );
                     }
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
                 @endphp
             </td>
             <td>
@@ -910,18 +857,9 @@
                         );
                     }
                     $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-sou';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
                 @endphp
             </td>
             <td>
@@ -953,29 +891,20 @@
                                 $master_status_id,
                         );
                     }
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
+                    $cnt = number_format($cnt);
+                    $_cc = $_pipelineClsMap[$master_status_id] ?? 'cjp-rej';
+                    $_lc = ($cnt == 0) ? 'cjp-link ' . $_cc . ' cjp-zero' : 'cjp-link ' . $_cc;
+                    echo '<div class="text-center"><a href="' . $url_path . '" class="' . $_lc . '">' . $cnt . '</a></div>';
 
                 @endphp
             </td>
         </tr>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="17" style="text-align: center; color: black;">
-            No data available in table
+    <tr>
+        <td colspan="17" style="text-align:center; padding:40px 20px; color:#a1a5b7; font-size:13px;">
+            <i class="fas fa-briefcase" style="font-size:32px; color:#e4e6ef; display:block; margin-bottom:10px;"></i>
+            No jobs found for this client.
         </td>
-
     </tr>
 @endif
