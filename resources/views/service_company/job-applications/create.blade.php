@@ -230,10 +230,21 @@
                             </div>
 
                             <!-- Selected File -->
+                            @php
+                                // basename() can return just a number when the path uses date-based
+                                // directories (e.g. resumes/2024/07/candidatename.pdf → "07" is wrong).
+                                // Walk the path segments and pick the first one that has a valid extension.
+                                $displayResumeName = '';
+                                if (!empty($application->resume)) {
+                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx))/i', $application->resume, $_rm);
+                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
+                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                                        $displayResumeName = 'Resume (uploaded)';
+                                    }
+                                }
+                            @endphp
                             <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
-                                <span class="file-name" id="fileName">
-                                  {{ !empty($application->resume) ? basename($application->resume) : '' }}
-                                </span>
+                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
                                 @if(!empty($resume_url))
                                  <button type="button"
                                         class="download-file"

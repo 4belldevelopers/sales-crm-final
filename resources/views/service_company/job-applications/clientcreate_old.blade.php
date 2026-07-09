@@ -2191,13 +2191,14 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
               var existingFileUrl = "{{ $url }}";
               var resume_url = "{{ $resume_url }}";
               if (resume_url && resume_url.trim() !== "") {
-                  // Decode URI components so stored paths like "07%2C05" display as real filename
-                  var rawName = existingFileUrl.split('/').pop();
-                  var existingFileName = decodeURIComponent(rawName);
+                  // Find the first path segment that has a valid resume extension.
+                  // .split('/').pop() can return a bare number (e.g. "07") when the
+                  // path uses date-based directories like resumes/2024/07/file.pdf.
+                  var extMatch = decodeURIComponent(existingFileUrl).match(/([^\/\\]+\.(pdf|doc|docx))/i);
+                  var existingFileName = extMatch ? extMatch[1] : (decodeURIComponent(existingFileUrl.split('/').pop()) || 'Resume (uploaded)');
                   if (existingFileName) {
                       existingFileNameFunc(existingFileName);
-                      // Populate uploaded_file_path so the server keeps the existing resume
-                      // when the form is submitted without uploading a new file
+                      // Keep existing path so server preserves the resume on submit
                       document.querySelector('#uploaded_file_path').value = existingFileUrl;
                   } else {
                       console.error("Filename is empty or not present in the URL.");
