@@ -24,8 +24,9 @@
 }
 .tbl-h, .tbl-r {
   display: grid;
-  grid-template-columns: 40px 1.7fr 1.2fr 0.85fr 2.5fr 1fr 0.85fr;
+  grid-template-columns: 40px 1.4fr 1fr 0.85fr 2.5fr 1fr 0.85fr;
   align-items: center;
+  column-gap: 8px;
   padding: 12px 16px;
 }
 /* 4-column variant for the Client Requests page (Name / Location / Request Date / Action) */
@@ -55,7 +56,7 @@
 .tbl-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue); }
 
 /* agency / name cell */
-.tbl-a { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tbl-a { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; }
 .tbl-av {
   width: 40px; height: 40px;
   border-radius: 50%;
@@ -68,7 +69,7 @@
 }
 .tbl-av:hover { transform: scale(1.08); }
 .tbl-av img { width: 100%; height: 100%; object-fit: cover; }
-.tbl-ai { min-width: 0; }
+.tbl-ai { min-width: 0; overflow: hidden; }
 .tbl-n {
   font-size: 13px; font-weight: 600; color: var(--text-dark);
   margin-bottom: 2px;
@@ -77,14 +78,16 @@
 .tbl-t {
   display: flex; align-items: center; gap: 6px;
   font-size: 11.5px; color: var(--text-gray); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
 }
 .tbl-t svg { width: 14px; height: 14px; color: var(--green); flex-shrink: 0; }
 
 /* location cell */
-.tbl-l { display: flex; align-items: center; gap: 6px; }
-.tbl-l > svg { width: 15px; height: 15px; color: var(--text-light); flex-shrink: 0; }
-.tbl-lc { font-size: 12.5px; color: var(--text-dark); font-weight: 600; }
-.tbl-ls { font-size: 11px; color: var(--text-gray); font-weight: 400; }
+.tbl-l { display: flex; align-items: flex-start; gap: 5px; min-width: 0; }
+.tbl-l > svg { width: 14px; height: 14px; color: var(--text-light); flex-shrink: 0; margin-top: 2px; }
+.tbl-lc { font-size: 12.5px; color: var(--text-dark); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbl-ls { font-size: 11px; color: var(--text-gray); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* jobs (active / closed / hold) */
 .tbl-j { display: flex; flex-direction: column; gap: 3px; }
