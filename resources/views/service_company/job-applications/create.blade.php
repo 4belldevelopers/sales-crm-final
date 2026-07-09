@@ -230,10 +230,21 @@
                             </div>
 
                             <!-- Selected File -->
+                            @php
+                                // basename() can return just a number when the path uses date-based
+                                // directories (e.g. resumes/2024/07/candidatename.pdf → "07" is wrong).
+                                // Walk the path segments and pick the first one that has a valid extension.
+                                $displayResumeName = '';
+                                if (!empty($application->resume)) {
+                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx))/i', $application->resume, $_rm);
+                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
+                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                                        $displayResumeName = 'Resume (uploaded)';
+                                    }
+                                }
+                            @endphp
                             <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
-                                <span class="file-name" id="fileName">
-                                  {{ !empty($application->resume) ? basename($application->resume) : '' }}
-                                </span>
+                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
                                 @if(!empty($resume_url))
                                  <button type="button"
                                         class="download-file"
@@ -1213,17 +1224,18 @@ $(document).ready(function () {
             return;
         }
 
-        $('#fileName').text(
-            file.name + ' (' + sizeMB.toFixed(2) + ' MB)'
-        );
+        // Show human-readable size: KB for small files (avoids "0.07 MB" display)
+        const sizeStr = sizeMB >= 1
+            ? sizeMB.toFixed(2) + ' MB'
+            : Math.round(file.size / 1024) + ' KB';
+
+        $('#fileName').text(file.name + ' (' + sizeStr + ')');
 
         $('#fileInfo').css('display', 'flex');
 
         $('#resumeCheck').val('1');
 
         $('.download-file').addClass('d-none');
-
-        console.log('Selected File:', file.name);
 
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
@@ -1232,8 +1244,10 @@ $(document).ready(function () {
 
     // ==========================
     // Choose File Button
+    // Direct binding so stopPropagation() fires BEFORE the click reaches
+    // #uploadBox — prevents resumeInput.click() from being called twice.
     // ==========================
-    $(document).on('click', '#chooseFileBtn', function (e) {
+    document.getElementById('chooseFileBtn').addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         resumeInput.click();
