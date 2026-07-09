@@ -1213,17 +1213,18 @@ $(document).ready(function () {
             return;
         }
 
-        $('#fileName').text(
-            file.name + ' (' + sizeMB.toFixed(2) + ' MB)'
-        );
+        // Show human-readable size: KB for small files (avoids "0.07 MB" display)
+        const sizeStr = sizeMB >= 1
+            ? sizeMB.toFixed(2) + ' MB'
+            : Math.round(file.size / 1024) + ' KB';
+
+        $('#fileName').text(file.name + ' (' + sizeStr + ')');
 
         $('#fileInfo').css('display', 'flex');
 
         $('#resumeCheck').val('1');
 
         $('.download-file').addClass('d-none');
-
-        console.log('Selected File:', file.name);
 
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
@@ -1232,8 +1233,10 @@ $(document).ready(function () {
 
     // ==========================
     // Choose File Button
+    // Direct binding so stopPropagation() fires BEFORE the click reaches
+    // #uploadBox — prevents resumeInput.click() from being called twice.
     // ==========================
-    $(document).on('click', '#chooseFileBtn', function (e) {
+    document.getElementById('chooseFileBtn').addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         resumeInput.click();

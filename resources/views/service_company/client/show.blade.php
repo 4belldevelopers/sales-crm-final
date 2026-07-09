@@ -45,47 +45,171 @@ use Carbon\Carbon;
         {{-- ── Redesigned detail header (Agency-style): profile card + KPI cards ── --}}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
-          .cd-hero .profile-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; margin:0 8px 16px; }
+          /* ── Profile card ── */
+          .cd-hero .profile-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; margin:0 8px 16px; box-shadow:0 2px 12px rgba(17,28,68,.04); }
           .cd-hero .profile-top { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
           .cd-hero .profile-left { display:flex; gap:18px; flex:1; min-width:0; }
           .cd-hero .logo-wrap { position:relative; flex-shrink:0; }
-          .cd-hero .logo-circle { width:88px; height:88px; border-radius:50%; background:#f8f9fa; border:1px solid #e4e6ef; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; font-weight:700; color:#5e6278; }
+          .cd-hero .logo-circle { width:88px; height:88px; border-radius:50%; background:#f8f9fa; border:2px solid #e4e6ef; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; font-weight:700; color:#5e6278; }
           .cd-hero .logo-circle img { width:100%; height:100%; object-fit:cover; }
           .cd-hero .verified-check { position:absolute; top:-2px; right:-2px; width:24px; height:24px; background:#50cd89; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2.5px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.08); }
           .cd-hero .verified-check i { color:#fff; font-size:10px; }
           .cd-hero .profile-info { flex:1; min-width:0; }
           .cd-hero .profile-name-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
           .cd-hero .profile-name { font-size:20px; font-weight:700; color:#181c32; }
-          .cd-hero .verified-badge { display:inline-flex; align-items:center; gap:4px; background:#e8fff3; color:#47be7d; font-size:11px; font-weight:600; padding:4px 10px; border-radius:50px; }
+          .cd-hero .verified-badge { display:inline-flex; align-items:center; gap:4px; background:#e8fff3; color:#47be7d; font-size:11px; font-weight:600; padding:4px 10px; border-radius:50px; border:1px solid rgba(71,190,125,.2); }
           .cd-hero .verified-badge i { font-size:9px; }
-          .cd-hero .profile-meta { display:flex; align-items:center; gap:4px 16px; flex-wrap:wrap; font-size:13px; color:#a1a5b7; margin-bottom:12px; }
+          .cd-hero .profile-meta { display:flex; align-items:center; gap:4px 16px; flex-wrap:wrap; font-size:12.5px; color:#7e8299; margin-bottom:12px; }
           .cd-hero .meta-item { display:flex; align-items:center; gap:6px; }
-          .cd-hero .meta-item i { font-size:11px; color:#b5b5c3; }
-          .cd-hero .meta-divider { color:#e4e6ef; font-size:10px; }
+          .cd-hero .meta-item i { font-size:11px; color:#a1a5b7; }
+          .cd-hero .meta-divider { color:#d6dae6; }
           .cd-hero .meta-link { color:#009ef7; text-decoration:none; display:flex; align-items:center; gap:4px; }
           .cd-hero .meta-link:hover { text-decoration:underline; }
           .cd-hero .meta-link i.fa-external-link-alt { font-size:9px; }
-          .cd-hero .service-tags { display:flex; flex-wrap:wrap; gap:8px; }
-          .cd-hero .tag { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:#f5f8fa; border:1px solid #e4e6ef; border-radius:6px; font-size:12px; font-weight:500; color:#5e6278; }
+          /* ── Service/skill tags — colored ATS pills ── */
+          .cd-hero .service-tags { display:flex; flex-wrap:wrap; gap:7px; margin-top:2px; }
+          .cd-hero .tag {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:4px 11px;
+            background:linear-gradient(135deg,#eef3ff 0%,#e8f0fe 100%);
+            border:1px solid #c8d8f8;
+            border-radius:20px;
+            font-size:11.5px; font-weight:600; color:#3b5fc8;
+            letter-spacing:.2px;
+          }
+          .cd-hero .tag::before { content:"\f02b"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:9px; color:#7ca0f0; }
+          /* ── Status / edit right column ── */
           .cd-hero .profile-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; flex-shrink:0; }
-          .cd-hero .status-badge { display:inline-flex; align-items:center; gap:6px; background:#e8fff3; color:#47be7d; font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:1px solid rgba(80,205,137,.15); }
+          .cd-hero .status-badge { display:inline-flex; align-items:center; gap:6px; background:#e8fff3; color:#17a96a; font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:6px; border:1px solid rgba(80,205,137,.25); }
           .cd-hero .status-dot { width:8px; height:8px; background:#50cd89; border-radius:50%; position:relative; }
           .cd-hero .status-dot::after { content:""; position:absolute; inset:-3px; border-radius:50%; border:1px solid #50cd89; animation:cdpulse 2s infinite; }
-          @keyframes cdpulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0; } }
-          .cd-hero .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin:0 8px 16px; }
-          .cd-hero .kpi-box { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:13px; transition:all .2s; }
-          .cd-hero .kpi-box:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.04); }
-          .cd-hero .kpi-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-          .cd-hero .kpi-icon-box { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-          .cd-hero .kpi-icon-blue { background:#f1faff; color:#009ef7; }
-          .cd-hero .kpi-icon-green { background:#e8fff3; color:#50cd89; }
-          .cd-hero .kpi-icon-purple { background:#f8f5ff; color:#7239ea; }
-          .cd-hero .kpi-icon-orange { background:#fff8dd; color:#f6a723; }
-          .cd-hero .kpi-icon-teal { background:#f0fdfa; color:#14b8a6; }
-          .cd-hero .kpi-label { font-size:12px; font-weight:600; color:#7e8299; line-height:1.3; }
-          .cd-hero .kpi-number { font-size:28px; font-weight:700; color:#181c32; line-height:1; }
+          @keyframes cdpulse { 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.35); opacity:0; } }
+
+          /* ── KPI counter cards ── */
+          .cd-hero .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:0 8px 16px; }
+          .cd-hero .kpi-box {
+            background:#fff; border-radius:12px;
+            border:1px solid #eff2f5;
+            border-left:4px solid #e4e6ef;
+            padding:16px 18px;
+            transition:all .22s;
+            position:relative; overflow:hidden;
+          }
+          .cd-hero .kpi-box:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(17,28,68,.07); }
+          /* Color-coded left accent per metric */
+          .cd-hero .kpi-box:nth-child(1) { border-left-color:#009ef7; }
+          .cd-hero .kpi-box:nth-child(2) { border-left-color:#50cd89; }
+          .cd-hero .kpi-box:nth-child(3) { border-left-color:#7239ea; }
+          .cd-hero .kpi-box:nth-child(4) { border-left-color:#f6a723; }
+          .cd-hero .kpi-box:nth-child(5) { border-left-color:#14b8a6; }
+          .cd-hero .kpi-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+          .cd-hero .kpi-icon-box { width:42px; height:42px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+          .cd-hero .kpi-icon-blue   { background:#e8f6ff; color:#009ef7; }
+          .cd-hero .kpi-icon-green  { background:#e2f9ee; color:#1fad70; }
+          .cd-hero .kpi-icon-purple { background:#f3eeff; color:#7239ea; }
+          .cd-hero .kpi-icon-orange { background:#fff4d6; color:#d98d00; }
+          .cd-hero .kpi-icon-teal   { background:#e5faf7; color:#0d9488; }
+          .cd-hero .kpi-label { font-size:11.5px; font-weight:700; color:#5e6278; line-height:1.35; flex:1; min-width:0; }
+          .cd-hero .kpi-number { font-size:30px; font-weight:800; color:#181c32; line-height:1; letter-spacing:-0.5px; }
+          .cd-hero .kpi-number-sub { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:3px; }
           @media (max-width:1200px){ .cd-hero .kpi-row { grid-template-columns:repeat(3,1fr); } }
           @media (max-width:768px){ .cd-hero .kpi-row { grid-template-columns:repeat(2,1fr); } .cd-hero .profile-top { flex-direction:column; } }
+
+          /* ── Jobs table redesign ── */
+          #allreq { border-collapse: separate; border-spacing: 0; width: 100%; }
+          #allreq thead tr th {
+            font-size: 11px; font-weight: 700; color: #7e8299; letter-spacing: .5px;
+            text-transform: uppercase; padding: 9px 10px; white-space: nowrap;
+            background: #f8f9fb; border-bottom: 2px solid #eef0f8;
+          }
+          #allreq thead tr th:first-child { padding-left: 16px; border-radius: 8px 0 0 8px; }
+          #allreq thead tr th:last-child { border-radius: 0 8px 8px 0; }
+          #allreq tbody tr { transition: background .12s; }
+          #allreq tbody tr:hover td { background: #f5f8ff; }
+          #allreq tbody td { padding: 10px; vertical-align: middle; border-bottom: 1px solid #f1f3fa; }
+          #allreq tbody tr:first-child td { padding-top: 14px; }
+          #allreq tbody tr:last-child td { border-bottom: none; }
+          /* Pipeline stage header colors */
+          .cjt-th-tot { color: #009ef7 !important; }
+          .cjt-th-sou { color: #7e8299 !important; }
+          .cjt-th-scr { color: #7239ea !important; }
+          .cjt-th-eva { color: #0095e8 !important; }
+          .cjt-th-neo { color: #f64e60 !important; }
+          .cjt-th-off { color: #f6a723 !important; }
+          .cjt-th-joi { color: #50cd89 !important; }
+          .cjt-th-rej { color: #f1416c !important; }
+          /* Job status badge pills */
+          .cjb-status-pill {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; line-height:1.4;
+          }
+          .cjb-status-pill::before {
+            content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0;
+          }
+          .cjb-status-hiring  { background:#e8fff3; border:1px solid #b8f0d4; color:#17a75a; }
+          .cjb-status-hiring::before  { background:#17a75a; }
+          .cjb-status-closed  { background:#fff0f0; border:1px solid #ffd5d5; color:#d9534f; }
+          .cjb-status-closed::before  { background:#d9534f; }
+          .cjb-status-hold    { background:#fff8e8; border:1px solid #fde4a0; color:#d98d00; }
+          .cjb-status-hold::before    { background:#d98d00; }
+          /* Job/Internal mini-tags */
+          .cjb-mini-tag {
+            display:inline-flex; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600; line-height:1.6;
+          }
+          .cjb-tag-id       { background:#f1f3fa; color:#7e8299; }
+          .cjb-tag-internal { background:#e8f0fe; color:#3b5fc8; }
+          .cjb-tag-client   { background:#e8fff3; color:#17a75a; }
+          /* Pipeline counter anchors */
+          .cjp-link { font-weight:700; font-size:13px; text-decoration:none; display:block; text-align:center; }
+          .cjp-link:hover { opacity:.75; }
+          .cjp-tot { color:#009ef7 !important; font-size:14px; font-weight:800; }
+          .cjp-sou { color:#7e8299 !important; }
+          .cjp-scr { color:#7239ea !important; }
+          .cjp-eva { color:#0095e8 !important; }
+          .cjp-neo { color:#f64e60 !important; }
+          .cjp-off { color:#f6a723 !important; }
+          .cjp-joi { color:#50cd89 !important; }
+          .cjp-rej { color:#f1416c !important; }
+          .cjp-zero { color:#c5c8d8 !important; font-weight:500; }
+
+          /* ── Interview Tracker table redesign ── */
+          #interview_tracker table { border-collapse:separate; border-spacing:0; width:100%; }
+          #interview_tracker table thead tr th {
+            font-size:11px; font-weight:700; color:#7e8299; letter-spacing:.5px;
+            text-transform:uppercase; padding:9px 12px; white-space:nowrap;
+            background:#f8f9fb; border-bottom:2px solid #eef0f8;
+          }
+          #interview_tracker table thead tr th:first-child { border-radius:8px 0 0 8px; }
+          #interview_tracker table thead tr th:last-child  { border-radius:0 8px 8px 0; }
+          #interview_tracker table tbody tr { transition:background .12s; }
+          #interview_tracker table tbody tr:hover td { background:#f5f8ff; }
+          #interview_tracker table tbody td { padding:10px 12px; vertical-align:middle; border-bottom:1px solid #f1f3fa; }
+          #interview_tracker table tbody tr:last-child td { border-bottom:none; }
+          /* Mode pills */
+          .cit-mode-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+          .cit-mode-online  { background:#e8f0fe; color:#3b5fc8; border:1px solid #c8d8f8; }
+          .cit-mode-offline { background:#f3eeff; color:#7239ea; border:1px solid #d9c8f8; }
+          .cit-mode-phone   { background:#e8fff3; color:#17a75a; border:1px solid #b8f0d4; }
+          .cit-mode-default { background:#f1f3fa; color:#5e6278; border:1px solid #e4e6ef; }
+          /* Level tag under mode */
+          .cit-level-tag { display:inline-flex; padding:1px 7px; border-radius:5px; font-size:10px; font-weight:600; background:#f1f3fa; color:#7e8299; margin-top:3px; }
+          /* Source badge */
+          .cit-source-badge { display:inline-flex; padding:3px 9px; border-radius:20px; background:#f8f9fb; border:1px solid #e4e6ef; font-size:11px; font-weight:600; color:#5e6278; }
+          /* Date cell */
+          .cit-date-bold { font-size:13px; font-weight:700; color:#181c32; }
+          .cit-date-time { font-size:11px; color:#a1a5b7; font-weight:500; }
+          /* Feedback status pills */
+          .cit-fb-pill { display:inline-flex; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+          .cit-fb-selected   { background:#e8fff3; color:#17a75a; border:1px solid #b8f0d4; }
+          .cit-fb-rejected   { background:#fff0f0; color:#d9534f; border:1px solid #ffd5d5; }
+          .cit-fb-hold       { background:#fff8e8; color:#d98d00; border:1px solid #fde4a0; }
+          .cit-fb-next       { background:#e8f0fe; color:#3b5fc8; border:1px solid #c8d8f8; }
+          .cit-fb-default    { background:#f1f3fa; color:#7e8299; border:1px solid #e4e6ef; }
+          /* Star rating */
+          .cit-stars { display:inline-flex; gap:2px; }
+          .cit-stars .cit-star-fill  { color:#f6a723; font-size:12px; }
+          .cit-stars .cit-star-empty { color:#e4e6ef; font-size:12px; }
+          .cit-rating-label { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:2px; }
         </style>
         @php
             // KPI counts for the internal-client detail header (read-only ES helpers).
@@ -156,37 +280,82 @@ use Carbon\Carbon;
           </div>
           <div class="kpi-row">
             <div class="kpi-box">
-              <div class="kpi-header"><div class="kpi-icon-box kpi-icon-blue"><i class="fas fa-file-alt"></i></div><span class="kpi-label">Active Jobs</span></div>
+              <div class="kpi-header">
+                <div class="kpi-icon-box kpi-icon-blue"><i class="fas fa-briefcase"></i></div>
+                <span class="kpi-label">Active Jobs</span>
+              </div>
               <div class="kpi-number">{{ $kpiActive }}</div>
+              <div class="kpi-number-sub">Open positions</div>
             </div>
             <div class="kpi-box">
-              <div class="kpi-header"><div class="kpi-icon-box kpi-icon-green"><i class="fas fa-id-badge"></i></div><span class="kpi-label">Candidates Submitted</span></div>
+              <div class="kpi-header">
+                <div class="kpi-icon-box kpi-icon-green"><i class="fas fa-user-check"></i></div>
+                <span class="kpi-label">Candidates Submitted</span>
+              </div>
               <div class="kpi-number">{{ $kpiSubmitted }}</div>
+              <div class="kpi-number-sub">Total in pipeline</div>
             </div>
             <div class="kpi-box">
-              <div class="kpi-header"><div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-people-arrows"></i></div><span class="kpi-label">Interviews Scheduled</span></div>
+              <div class="kpi-header">
+                <div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-calendar-alt"></i></div>
+                <span class="kpi-label">Interviews Scheduled</span>
+              </div>
               <div class="kpi-number">{{ $kpiInterviews }}</div>
+              <div class="kpi-number-sub">Scheduled rounds</div>
             </div>
             <div class="kpi-box">
-              <div class="kpi-header"><div class="kpi-icon-box kpi-icon-orange"><i class="fas fa-gift"></i></div><span class="kpi-label">Offers Generated</span></div>
+              <div class="kpi-header">
+                <div class="kpi-icon-box kpi-icon-orange"><i class="fas fa-file-contract"></i></div>
+                <span class="kpi-label">Offers Generated</span>
+              </div>
               <div class="kpi-number">{{ $kpiOffers }}</div>
+              <div class="kpi-number-sub">Offer letters sent</div>
             </div>
             <div class="kpi-box">
-              <div class="kpi-header"><div class="kpi-icon-box kpi-icon-teal"><i class="fas fa-calendar-check"></i></div><span class="kpi-label">Successful Joins</span></div>
+              <div class="kpi-header">
+                <div class="kpi-icon-box kpi-icon-teal"><i class="fas fa-user-tie"></i></div>
+                <span class="kpi-label">Successful Joins</span>
+              </div>
               <div class="kpi-number">{{ $kpiJoins }}</div>
+              <div class="kpi-number-sub">Placements closed</div>
             </div>
           </div>
         </div>
         <!--end::candidate details-->
         {{-- ── Redesigned tab bar + Overview (Agency-style); scoped to .cd-maintabs / cd-* classes ── --}}
         <style>
-          .cd-maintabs { border-bottom:none !important; flex-wrap:wrap; }
+          /* ── Tab navigation ── */
+          .cd-maintabs { border-bottom:none !important; flex-wrap:wrap; gap:2px; }
           .cd-maintabs .nav-item { margin-right:0 !important; }
-          .cd-maintabs .nav-link { padding:14px 20px; border:none !important; position:relative; background:none !important; }
-          .cd-maintabs .nav-link .nav-text { font-size:13px; font-weight:500 !important; color:#a1a5b7; transition:color .2s; }
+          .cd-maintabs .nav-link {
+            padding:12px 18px; border:none !important;
+            position:relative; background:none !important;
+            border-radius:8px 8px 0 0;
+            transition:background .15s;
+          }
+          .cd-maintabs .nav-link:hover { background:rgba(0,158,247,.06) !important; }
+          .cd-maintabs .nav-link .nav-text {
+            font-size:13px; font-weight:600 !important;
+            color:#5e6278;
+            transition:color .15s;
+            display:inline-flex; align-items:center; gap:6px;
+          }
           .cd-maintabs .nav-link:hover .nav-text { color:#009ef7; }
-          .cd-maintabs .nav-link.active .nav-text { color:#009ef7; font-weight:600 !important; }
-          .cd-maintabs .nav-link.active::after { content:""; position:absolute; bottom:0; left:20px; right:20px; height:2.5px; background:#009ef7; border-radius:2px 2px 0 0; }
+          .cd-maintabs .nav-link.active { background:rgba(0,158,247,.07) !important; }
+          .cd-maintabs .nav-link.active .nav-text { color:#009ef7; font-weight:700 !important; }
+          .cd-maintabs .nav-link.active::after {
+            content:""; position:absolute; bottom:0; left:12px; right:12px;
+            height:3px; background:#009ef7; border-radius:3px 3px 0 0;
+          }
+          /* Tab count badge */
+          .cd-tab-badge {
+            display:inline-flex; align-items:center; justify-content:center;
+            min-width:20px; height:18px; padding:0 5px;
+            background:#009ef7; color:#fff;
+            font-size:10px; font-weight:700; border-radius:10px;
+            line-height:1;
+          }
+          .cd-maintabs .nav-link:not(.active) .cd-tab-badge { background:#e4e6ef; color:#5e6278; }
           .cd-content-grid { display:grid; grid-template-columns:1.2fr 0.8fr; gap:16px; align-items:start; }
           @media (max-width:992px){ .cd-content-grid { grid-template-columns:1fr; } }
           .cd-card { background:#fff; border-radius:12px; border:1px solid #eff2f5; padding:24px; }
@@ -245,26 +414,51 @@ use Carbon\Carbon;
                 <div class="card-toolbar">
                     <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x cd-maintabs"
                         role="tablist">
-                        <li class="nav-item me-3"> <a class="nav-link active" data-toggle="tab" href="#overview">
-                                <span class="nav-text font-weight-bold">Overview</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#overview">
+                                <span class="nav-text"><i class="fas fa-th-large" style="font-size:11px;opacity:.7;"></i>Overview</span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#contacts">
-                                <span class="nav-text font-weight-bold">Contacts</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#contacts">
+                                <span class="nav-text"><i class="fas fa-address-book" style="font-size:11px;opacity:.7;"></i>Contacts</span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#requisitions">
-                                <span class="nav-text font-weight-bold">Jobs</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#requisitions">
+                                <span class="nav-text">
+                                    <i class="fas fa-briefcase" style="font-size:11px;opacity:.7;"></i>Jobs
+                                    @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
+                                </span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                                <span class="nav-text font-weight-bold">Candidate</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidate_list">
+                                <span class="nav-text"><i class="fas fa-users" style="font-size:11px;opacity:.7;"></i>Candidate
+                                    @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
+                                </span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                                <span class="nav-text font-weight-bold">Interview Tracker</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#interview_tracker">
+                                <span class="nav-text">
+                                    <i class="fas fa-calendar-alt" style="font-size:11px;opacity:.7;"></i>Interview Tracker
+                                    @if($kpiInterviews > 0)<span class="cd-tab-badge">{{ $kpiInterviews }}</span>@endif
+                                </span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                                <span class="nav-text font-weight-bold">Joinings</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidate_joining">
+                                <span class="nav-text"><i class="fas fa-user-check" style="font-size:11px;opacity:.7;"></i>Joinings
+                                    @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
+                                </span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">Client Dashboard</span> </a> </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
+                                <span class="nav-text"><i class="fas fa-chart-bar" style="font-size:11px;opacity:.7;"></i>Client Dashboard</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -433,16 +627,15 @@ use Carbon\Carbon;
                                     <!--begin::Table row-->
 
                                     <tr class="fw-bolder text-muted">
-
-                                        <th class="min-w-150px">Name</th>
-                                        <th class="min-w-15px">Job</th>
-                                        <th class="min-w-15px">Mode</th>
-                                        <th class="min-w-15px">Interviewers</th>
-                                        <th class="min-w-15px">Source</th>
-                                        <th class="min-w-15px">Interview Date</th>
-                                        <th class="min-w-15px">Feedback</th>
-                                        <th class="min-w-15px">Rating</th>
-                                        <th class="min-w-15px">Stage</th>
+                                        <th>Candidate</th>
+                                        <th>Job</th>
+                                        <th>Mode</th>
+                                        <th><i class="fa fa-users" style="font-size:13px"></i> Interviewers</th>
+                                        <th>Source</th>
+                                        <th><i class="fas fa-calendar-alt" style="font-size:11px; opacity:.7"></i> Date</th>
+                                        <th>Feedback</th>
+                                        <th><i class="fas fa-star" style="font-size:11px; color:#f6a723"></i> Rating</th>
+                                        <th>Stage</th>
                                     </tr>
                                     <!--end::Table row-->
                                 </thead>
@@ -1053,32 +1246,29 @@ use Carbon\Carbon;
                                             <thead>
                                                 <tr class="fw-bolder text-muted">
                                                     <th class="w-10px pe-0">
-                                                        <div
-                                                            class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
                                                             <input class="form-check-input" type="checkbox"
                                                                 data-kt-check="true"
                                                                 data-kt-check-target="#kt_table_users .form-check-input1"
                                                                 value="1" />
                                                         </div>
                                                     </th>
-                                                    <th class="">Jobs</th>
-                                                    <th class="">Exp.</th>
-                                                    <th class="">Salary</th>
-                                                    <th class="">Location</th>
-                                                    <th class="">Status</th>
-                                                    <th class="">Date</th>
-                                                    <th class=""><i class="fa fa-users" aria-hidden="true"
-                                                            style="font-size:17px"></i></th>
-                                                    <th class=""><i class="fa fa-handshake" aria-hidden="true"
-                                                            style="font-size:17px"></i></th>
-                                                    <th class="">TOT</th>
-                                                    <th class="">SOU</th>
-                                                    <th class="">SCR</th>
-                                                    <th class="">EVA</th>
-                                                    <th class="">NEO</th>
-                                                    <th class="">OFF</th>
-                                                    <th class="">JOI</th>
-                                                    <th class="">REJ</th>
+                                                    <th>Jobs</th>
+                                                    <th>Exp.</th>
+                                                    <th>Salary</th>
+                                                    <th>Location</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                    <th style="text-align:center"><i class="fa fa-users" style="font-size:15px"></i><br><span style="font-size:9px;letter-spacing:.3px">TEAM</span></th>
+                                                    <th style="text-align:center"><i class="fa fa-handshake" style="font-size:15px"></i><br><span style="font-size:9px;letter-spacing:.3px">AGCY</span></th>
+                                                    <th class="cjt-th-tot text-center">TOT</th>
+                                                    <th class="cjt-th-sou text-center">SOU</th>
+                                                    <th class="cjt-th-scr text-center">SCR</th>
+                                                    <th class="cjt-th-eva text-center">EVA</th>
+                                                    <th class="cjt-th-neo text-center">NEO</th>
+                                                    <th class="cjt-th-off text-center">OFF</th>
+                                                    <th class="cjt-th-joi text-center">JOI</th>
+                                                    <th class="cjt-th-rej text-center">REJ</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="clientJobsListajax"> </tbody>

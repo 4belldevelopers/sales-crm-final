@@ -269,6 +269,97 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-service-chip {display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 10px; border: 1px solid #dce3ee; border-radius: 8px; background: #fff; font-size: 11px; color: var(--client-ink);}
   .client-service-chip i.la-grip-vertical {color: #b8c0d0; cursor: grab;}
   .client-add-service {width: 100%; min-height: 40px; border: 1px dashed #b9c7de; border-radius: 8px; background: #fbfdff; color: var(--client-primary); font-size: 11px; font-weight: 600;}
+  /* ── Service Offerings Tagify container (class added via JS after init) ── */
+  .client-service-tagify {
+    display: flex !important; flex-wrap: wrap !important; align-items: center !important;
+    border: 1px solid #dce3ee !important; border-radius: 8px !important;
+    background: #fff !important; padding: 4px 6px !important; min-height: 44px !important;
+    cursor: text; gap: 4px !important;
+  }
+  .client-service-tagify:focus-within {
+    border-color: var(--client-primary) !important;
+    box-shadow: 0 0 0 3px rgba(23,105,245,.1) !important;
+  }
+  /* Individual tag pill */
+  .client-service-tagify .tagify__tag {
+    background: #fff !important;
+    border: 1.5px solid var(--client-primary) !important;
+    border-radius: 20px !important;
+    margin: 2px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 26px !important;
+  }
+  /* Tag inner div (wraps text + remove btn) */
+  .client-service-tagify .tagify__tag > div {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0 4px 0 10px !important;
+    gap: 0 !important;
+  }
+  /* Remove the default blue/grey background overlay Tagify puts via ::before */
+  .client-service-tagify .tagify__tag > div::before {
+    display: none !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  /* Tag text */
+  .client-service-tagify .tagify__tag-text {
+    color: var(--client-primary) !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+  }
+  /* Remove (×) button — inline-flex so ::after pseudo-element centers inside the circle */
+  .client-service-tagify .tagify__tag__removeBtn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important; height: 18px !important; min-width: 18px !important;
+    border-radius: 50% !important;
+    background: var(--client-primary) !important;
+    margin: 0 5px 0 5px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    opacity: 1 !important;
+    font-size: 0 !important;
+  }
+  .client-service-tagify .tagify__tag__removeBtn::after {
+    content: "×" !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    display: block !important;
+  }
+  .client-service-tagify .tagify__tag__removeBtn:hover {
+    background: #1e4fd4 !important;
+  }
+  /* Placeholder text inside the tagify input area */
+  .client-service-tagify .tagify__input { line-height: 26px !important; }
+  .client-service-tagify .tagify__input::before { color: #aab4c8 !important; font-size: 11.5px !important; }
+
+  /* ── Suggested services row ── */
+  .client-suggested-label {font-size: 10.5px; color: var(--client-muted); display: block; margin-bottom: 6px;}
+  .client-suggested-list {display: flex; flex-wrap: wrap; gap: 7px;}
+  .client-suggested-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 8px 4px 12px;
+    border: 1px solid #d0d8e8; border-radius: 20px;
+    background: #fff; font-size: 11px; color: var(--client-ink);
+    cursor: pointer; transition: border-color .15s, color .15s; user-select: none;
+  }
+  .client-suggested-tag:hover { border-color: var(--client-primary); color: var(--client-primary); }
+  .client-suggested-tag.is-added { opacity: .38; pointer-events: none; cursor: default; }
+  .client-suggest-add {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #e4eaf5; border: none; color: #53607e;
+    font-size: 11px; cursor: pointer; padding: 0; flex-shrink: 0;
+    transition: background .15s, color .15s; pointer-events: none;
+  }
+  .client-suggested-tag:hover .client-suggest-add { background: var(--client-primary); color: #fff; }
   .client-preview-box {border: 1px solid #dce3ee; border-radius: 8px; padding: 12px; background: #fff;}
   .client-preview-box .preview-title {font-size: 12px; font-weight: 600; color: var(--client-ink); margin-bottom: 6px;}
   .client-preview-box .preview-body {font-size: 10.5px; color: #53607e; min-height: 48px;}
@@ -301,16 +392,104 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
   .client-table-actions button:hover {border-color: var(--client-primary); color: var(--client-primary);}
   .client-table-actions button.is-delete:hover {border-color: #f5c2cb; color: #e5484d;}
   .client-contact-fields {position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;}
-  .client-contact-drawer-backdrop {position: fixed; inset: 0; background: rgba(15, 25, 77, .35); z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .2s ease;}
+  /* ── Contact Person Drawer ── */
+  .client-contact-drawer-backdrop {position: fixed; inset: 0; background: rgba(15,25,77,.38); z-index: 1050; opacity: 0; visibility: hidden; transition: opacity .25s ease; backdrop-filter: blur(2px);}
   .client-contact-drawer-backdrop.is-open {opacity: 1; visibility: visible;}
-  .client-contact-drawer {position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh; background: #fff; z-index: 1051; box-shadow: -8px 0 30px rgba(17, 28, 68, .12); transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column;}
+  .client-contact-drawer {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    width: min(500px, 100vw);
+    background: #fff; z-index: 1051;
+    box-shadow: -12px 0 48px rgba(17,28,68,.14);
+    border-left: 1px solid #e2e8f4;
+    transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
+  }
   .client-contact-drawer.is-open {transform: translateX(0);}
-  .client-drawer-head {padding: 18px 20px; border-bottom: 1px solid var(--client-border); display: flex; align-items: center; justify-content: space-between;}
-  .client-drawer-head h4 {margin: 0; font-size: 14px; font-weight: 600; color: var(--client-ink);}
-  .client-drawer-body {padding: 18px 20px; overflow-y: auto; flex: 1;}
-  .client-drawer-foot {padding: 14px 20px; border-top: 1px solid var(--client-border); display: flex; justify-content: flex-end; gap: 8px;}
-  .client-drawer-field {margin-bottom: 14px;}
-  .client-drawer-field .form-label {margin-bottom: 6px !important;}
+  @media (max-width: 767px) { .client-contact-drawer { width: 100vw; } }
+  @media (min-width: 768px) and (max-width: 1024px) { .client-contact-drawer { width: min(420px, 100vw); } }
+
+  /* Header */
+  .client-drawer-head {
+    padding: 20px 24px; border-bottom: 1px solid #edf0f7;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0;
+  }
+  .client-drawer-head-info {flex: 1; min-width: 0;}
+  .client-drawer-head h4 {margin: 0 0 3px; font-size: 17px; font-weight: 700; color: #0f1940; line-height: 1.3;}
+  .client-drawer-head-subtitle {margin: 0; font-size: 12px; color: #7889a8; line-height: 1.5;}
+  .client-drawer-close-btn {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px;
+    border: 1px solid #e2e8f4; background: #f5f7fb;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #64748b; font-size: 15px; padding: 0;
+    transition: background .15s, border-color .15s, color .15s; margin-top: 1px;
+  }
+  .client-drawer-close-btn:hover {background: #fff0f2; border-color: #fca5a5; color: #dc2626;}
+
+  /* Body */
+  .client-drawer-body {padding: 24px; overflow-y: auto; flex: 1;}
+
+  /* Fields */
+  .client-drawer-field {margin-bottom: 18px;}
+  .client-drawer-field .cdf-label {
+    display: block; margin-bottom: 7px;
+    font-size: 13px; font-weight: 600; color: #0f1940; line-height: 1;
+  }
+  .client-drawer-field .cdf-label .cdf-required {color: #e5484d; margin-left: 2px;}
+
+  /* Input wrapper */
+  .cdf-input-wrap {position: relative; display: flex; align-items: center;}
+  .cdf-input-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: #94a3b8; pointer-events: none; line-height: 1; z-index: 2;
+  }
+  .cdf-input-wrap input {
+    width: 100%; height: 44px;
+    padding: 0 14px 0 40px;
+    border: 1px solid #d8e2f0; border-radius: 8px;
+    background: #fff; color: #1e2d4f;
+    font-size: 13px; font-family: inherit;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none;
+  }
+  .cdf-input-wrap input::placeholder {color: #94a3b8; font-size: 12.5px;}
+  .cdf-input-wrap input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+  }
+  .cdf-input-wrap input.is-invalid {border-color: #ef4444;}
+  .cdf-input-wrap input.is-invalid:focus {border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.10);}
+  .cdf-error {display: none; margin-top: 5px; font-size: 11.5px; color: #dc2626; line-height: 1.4;}
+  .cdf-error.visible {display: block;}
+
+  /* Footer */
+  .client-drawer-foot {
+    padding: 16px 24px; border-top: 1px solid #edf0f7;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
+    background: #fff;
+  }
+  .client-drawer-foot .cdf-cancel-btn {
+    height: 42px; padding: 0 20px; border-radius: 8px;
+    border: 1px solid #d0d8e8; background: #fff;
+    color: #0f1940; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .client-drawer-foot .cdf-cancel-btn:hover {background: #f5f7fb; border-color: #b6c2d6;}
+  .client-drawer-foot .cdf-save-btn {
+    height: 42px; padding: 0 22px; border-radius: 8px;
+    background: var(--client-primary); border: none;
+    color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s, opacity .15s;
+  }
+  .client-drawer-foot .cdf-save-btn:hover {background: #1e4fd4;}
+  .client-drawer-foot .cdf-save-btn:disabled {opacity: .7; cursor: not-allowed;}
+  .client-drawer-foot .cdf-save-btn .cdf-spinner {
+    width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff; border-radius: 50%; animation: cdf-spin .7s linear infinite; display: none;
+  }
+  .client-drawer-foot .cdf-save-btn.is-loading .cdf-spinner {display: block;}
+  .client-drawer-foot .cdf-save-btn.is-loading .cdf-btn-text {opacity: .8;}
+  @keyframes cdf-spin { to { transform: rotate(360deg); } }
   .client-review-layout {display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: start;}
   .client-review-card {background: #fff; border: 1px solid var(--client-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(17, 28, 68, .03);}
   .client-review-card-head {display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;}
@@ -715,13 +894,26 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                         <section class="client-section-card">
                           <div class="client-step-header">
                             <div>
-                              <h3>Services Offerings</h3>
-                              <p>Add the services this client provides or is known for.</p>
+                              <h3>Service Offerings</h3>
+                              <p>Add the services this client provides or is known for (press Enter or comma to add).</p>
                             </div>
                           </div>
-                          <div id="client_services_preview" class="client-services-grid"></div>
-                          <input class="form-control form-control-solid" name="tags" id="tags" placeholder="Type a service and press Enter" value="<?php echo @$tags; ?>">
-                          <button type="button" class="client-add-service mt-3" id="client_focus_tags"><i class="la la-plus" aria-hidden="true"></i> Add Another Service</button>
+                          <input class="form-control form-control-solid" name="tags" id="tags" placeholder="e.g. Software Development, IT Consulting..." value="<?php echo @$tags; ?>">
+                          <div class="mt-3">
+                            <span class="client-suggested-label">Suggested:</span>
+                            <div class="client-suggested-list" id="client_suggested_services">
+                              <?php
+                              $suggestedServices = ['Software Development','IT Consulting','Cloud Solutions','Digital Transformation','Data Analytics','Cybersecurity','UI/UX Design','Project Management','DevOps','Quality Assurance'];
+                              foreach ($suggestedServices as $svc): ?>
+                              <span class="client-suggested-tag" data-value="<?php echo htmlspecialchars($svc); ?>">
+                                <?php echo htmlspecialchars($svc); ?>
+                                <button type="button" class="client-suggest-add" title="Add <?php echo htmlspecialchars($svc); ?>"><i class="la la-plus" aria-hidden="true"></i></button>
+                              </span>
+                              <?php endforeach; ?>
+                            </div>
+                          </div>
+                          <!-- hidden: keeps live-preview in sidebar in sync -->
+                          <div id="client_services_preview" class="client-services-grid" style="display:none"></div>
                         </section>
                       </div>
 
@@ -1003,32 +1195,64 @@ if ($page_event == 'EDIT') {
                   </div>
                   <div class="client-contact-drawer-backdrop" id="client_contact_drawer_backdrop"></div>
                   <div class="client-contact-drawer" id="client_contact_drawer" aria-hidden="true">
+                    <!-- Header -->
                     <div class="client-drawer-head">
-                      <h4 id="client_contact_drawer_title">Add Contact Person</h4>
-                      <button type="button" class="btn btn-sm btn-light" id="client_close_contact_drawer"><i class="la la-times"></i></button>
+                      <div class="client-drawer-head-info">
+                        <h4 id="client_contact_drawer_title">Add Contact Person</h4>
+                        <p class="client-drawer-head-subtitle" id="client_contact_drawer_subtitle">Add the primary or secondary contact details for this client.</p>
+                      </div>
+                      <button type="button" class="client-drawer-close-btn" id="client_close_contact_drawer" title="Close" aria-label="Close drawer">
+                        <i class="la la-times" aria-hidden="true"></i>
+                      </button>
                     </div>
+                    <!-- Body -->
                     <div class="client-drawer-body">
                       <input type="hidden" id="client_drawer_edit_index" value="">
+
                       <div class="client-drawer-field">
-                        <label class="form-label required" for="client_drawer_name">Contact Name</label>
-                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-user"></i></span><input type="text" class="form-control form-control-solid" id="client_drawer_name" placeholder="Enter contact name"></div>
+                        <label class="cdf-label" for="client_drawer_name">Contact Name<span class="cdf-required">*</span></label>
+                        <div class="cdf-input-wrap">
+                          <i class="la la-user cdf-input-icon" aria-hidden="true"></i>
+                          <input type="text" id="client_drawer_name" placeholder="Enter contact name" autocomplete="off">
+                        </div>
+                        <div class="cdf-error" id="cdf_err_name">Contact name is required.</div>
                       </div>
+
                       <div class="client-drawer-field">
-                        <label class="form-label required" for="client_drawer_designation">Designation</label>
-                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-id-badge"></i></span><input type="text" class="form-control form-control-solid" id="client_drawer_designation" placeholder="Enter designation"></div>
+                        <label class="cdf-label" for="client_drawer_designation">Designation<span class="cdf-required">*</span></label>
+                        <div class="cdf-input-wrap">
+                          <i class="la la-id-badge cdf-input-icon" aria-hidden="true"></i>
+                          <input type="text" id="client_drawer_designation" placeholder="Enter designation" autocomplete="off">
+                        </div>
+                        <div class="cdf-error" id="cdf_err_designation">Designation is required.</div>
                       </div>
+
                       <div class="client-drawer-field">
-                        <label class="form-label required" for="client_drawer_email">Email Address</label>
-                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-envelope"></i></span><input type="email" class="form-control form-control-solid" id="client_drawer_email" placeholder="name@company.com"></div>
+                        <label class="cdf-label" for="client_drawer_email">Email Address<span class="cdf-required">*</span></label>
+                        <div class="cdf-input-wrap">
+                          <i class="la la-envelope cdf-input-icon" aria-hidden="true"></i>
+                          <input type="email" id="client_drawer_email" placeholder="name@company.com" autocomplete="off">
+                        </div>
+                        <div class="cdf-error" id="cdf_err_email">Please enter a valid email address.</div>
                       </div>
+
                       <div class="client-drawer-field">
-                        <label class="form-label required" for="client_drawer_phone">Phone Number</label>
-                        <div class="input-group input-group-solid"><span class="input-group-text"><i class="la la-phone"></i></span><input type="number" class="form-control form-control-solid" id="client_drawer_phone" placeholder="Enter phone number"></div>
+                        <label class="cdf-label" for="client_drawer_phone">Phone Number<span class="cdf-required">*</span></label>
+                        <div class="cdf-input-wrap">
+                          <i class="la la-phone cdf-input-icon" aria-hidden="true"></i>
+                          <input type="number" id="client_drawer_phone" placeholder="Enter 10-digit phone number" autocomplete="off">
+                        </div>
+                        <div class="cdf-error" id="cdf_err_phone">Please enter a valid 10-digit phone number.</div>
                       </div>
                     </div>
+                    <!-- Footer -->
                     <div class="client-drawer-foot">
-                      <button type="button" class="btn client-cancel-btn" id="client_cancel_contact_drawer">Cancel</button>
-                      <button type="button" class="btn btn-primary" id="client_save_contact_drawer">Save Contact</button>
+                      <button type="button" class="cdf-cancel-btn" id="client_cancel_contact_drawer">Cancel</button>
+                      <button type="button" class="cdf-save-btn" id="client_save_contact_drawer">
+                        <span class="cdf-spinner"></span>
+                        <i class="la la-user-plus cdf-btn-icon" aria-hidden="true"></i>
+                        <span class="cdf-btn-text">Add Contact Person</span>
+                      </button>
                     </div>
                   </div>
                   <!--end::Contact Person-->
@@ -1331,10 +1555,73 @@ if ($page_event == 'EDIT') {
 
 
 
-   // The DOM element you wish to replace with Tagify
-   var input = document.querySelector('input[name=tags]'); 
-   // initialize Tagify on the above input node reference
-   window.clientTagsTagify = new Tagify(input)
+   // Service Offerings Tagify — initialised inside document.ready so Tagify lib is guaranteed loaded
+   $(document).ready(function () {
+     var tagsEl = document.querySelector('input[name="tags"]');
+     if (!tagsEl) return;
+
+     // Prevent double-init if something else already ran Tagify on this element
+     if (!tagsEl._tagify) {
+       window.clientTagsTagify = new Tagify(tagsEl, {
+         delimiters: ',',
+         editTags: false,
+         maxTags: 30
+       });
+     } else {
+       window.clientTagsTagify = tagsEl._tagify;
+     }
+
+     // Add a stable CSS hook to the Tagify container element
+     if (window.clientTagsTagify && window.clientTagsTagify.DOM && window.clientTagsTagify.DOM.scope) {
+       window.clientTagsTagify.DOM.scope.classList.add('client-service-tagify');
+     }
+
+     // Reflect currently-added tags onto the suggested chips (e.g. on EDIT load)
+     function syncSuggestedHighlight() {
+       var added = (window.clientTagsTagify.value || []).map(function (t) {
+         return t.value.toLowerCase();
+       });
+       $('#client_suggested_services .client-suggested-tag').each(function () {
+         var v = $(this).data('value') || '';
+         $(this).toggleClass('is-added', added.indexOf(v.toLowerCase()) > -1);
+       });
+     }
+
+     // When a tag is added or removed manually, keep chips in sync
+     window.clientTagsTagify.on('add', function () {
+       syncSuggestedHighlight();
+       if (window.clientWizardUi) window.clientWizardUi.updateCompletion();
+     });
+     window.clientTagsTagify.on('remove', function () {
+       syncSuggestedHighlight();
+       if (window.clientWizardUi) window.clientWizardUi.updateCompletion();
+     });
+
+     syncSuggestedHighlight();
+
+     // Suggested chip click — delegate from document so dynamic chips also work
+     // pointer-events on inner <i> are off; the whole <span.client-suggested-tag> is the click target
+     $(document).off('click.serviceChip').on('click.serviceChip', '.client-suggested-tag', function (e) {
+       e.preventDefault();
+       e.stopPropagation();
+       var $chip = $(this);
+       if ($chip.hasClass('is-added')) return;
+       var value = $chip.data('value');
+       if (!value || !window.clientTagsTagify) return;
+
+       // Duplicate guard
+       var existing = (window.clientTagsTagify.value || []).map(function (t) {
+         return t.value.toLowerCase();
+       });
+       if (existing.indexOf(value.toLowerCase()) !== -1) {
+         $chip.addClass('is-added');
+         return;
+       }
+
+       window.clientTagsTagify.addTags([{ value: value }]);
+       // syncSuggestedHighlight is called by the 'add' event listener above
+     });
+   });
    
    const cities = @json($cities);
    var countAddrees  = "{{ $countAddrees }}";
@@ -2089,10 +2376,20 @@ for (let i = 0; i < countAddrees; i++) {
     });
   }
 
+  function _cdfClearErrors() {
+    $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').removeClass('is-invalid');
+    $('.cdf-error').removeClass('visible');
+  }
+
   function openContactDrawer(index) {
+    _cdfClearErrors();
     $('#client_drawer_edit_index').val(index === null ? '' : index);
-    $('#client_contact_drawer_title').text(index === null ? 'Add Contact Person' : 'Edit Contact Person');
-    if (index === null) {
+    var isEdit = index !== null;
+    $('#client_contact_drawer_title').text(isEdit ? 'Edit Contact Person' : 'Add Contact Person');
+    $('#client_contact_drawer_subtitle').text(isEdit ? 'Update the contact details below.' : 'Add the primary or secondary contact details for this client.');
+    $('#client_save_contact_drawer .cdf-btn-text').text(isEdit ? 'Save Changes' : 'Add Contact Person');
+    $('#client_save_contact_drawer .cdf-btn-icon').toggleClass('la-user-plus', !isEdit).toggleClass('la-save', isEdit);
+    if (!isEdit) {
       $('#client_drawer_name, #client_drawer_designation, #client_drawer_email, #client_drawer_phone').val('');
     } else {
       $('#client_drawer_name').val($('#cp_name_' + index).val());
@@ -2101,55 +2398,96 @@ for (let i = 0; i < countAddrees; i++) {
       $('#client_drawer_phone').val($('#cp_number_' + index).val());
     }
     $('#client_contact_drawer, #client_contact_drawer_backdrop').addClass('is-open').attr('aria-hidden', 'false');
+    setTimeout(function () { $('#client_drawer_name').focus(); }, 280);
   }
 
   function closeContactDrawer() {
     $('#client_contact_drawer, #client_contact_drawer_backdrop').removeClass('is-open').attr('aria-hidden', 'true');
+    _cdfClearErrors();
   }
 
   function saveContactDrawer() {
-    var name = $('#client_drawer_name').val().trim();
+    _cdfClearErrors();
+    var name        = $('#client_drawer_name').val().trim();
     var designation = $('#client_drawer_designation').val().trim();
-    var email = $('#client_drawer_email').val().trim();
-    var phone = $('#client_drawer_phone').val().trim();
-    if (!name || !designation || !email || !phone) {
-      Swal.fire({ text: 'Please fill all required contact fields.', icon: 'warning', confirmButtonText: 'Ok' });
-      return;
+    var email       = $('#client_drawer_email').val().trim();
+    var phone       = $('#client_drawer_phone').val().trim();
+    var emailRe     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var valid       = true;
+    var $firstBad   = null;
+
+    if (!name) {
+      $('#client_drawer_name').addClass('is-invalid');
+      $('#cdf_err_name').addClass('visible');
+      $firstBad = $firstBad || $('#client_drawer_name');
+      valid = false;
     }
-    if (phone.length !== 10 || isNaN(phone)) {
-      Swal.fire({ text: 'Please enter a valid 10-digit phone number.', icon: 'warning', confirmButtonText: 'Ok' });
+    if (!designation) {
+      $('#client_drawer_designation').addClass('is-invalid');
+      $('#cdf_err_designation').addClass('visible');
+      $firstBad = $firstBad || $('#client_drawer_designation');
+      valid = false;
+    }
+    if (!email || !emailRe.test(email)) {
+      $('#client_drawer_email').addClass('is-invalid');
+      $('#cdf_err_email').text(!email ? 'Email address is required.' : 'Please enter a valid email address.').addClass('visible');
+      $firstBad = $firstBad || $('#client_drawer_email');
+      valid = false;
+    }
+    if (!phone || phone.length !== 10 || isNaN(phone)) {
+      $('#client_drawer_phone').addClass('is-invalid');
+      $('#cdf_err_phone').text(!phone ? 'Phone number is required.' : 'Please enter a valid 10-digit phone number.').addClass('visible');
+      $firstBad = $firstBad || $('#client_drawer_phone');
+      valid = false;
+    }
+    if (!valid) {
+      if ($firstBad) { $firstBad.focus(); $('.client-drawer-body').animate({ scrollTop: $firstBad.closest('.client-drawer-field').position().top - 10 }, 200); }
       return;
     }
 
-    var editIndex = $('#client_drawer_edit_index').val();
-    if (editIndex === '') {
-      var targetIndex = null;
-      $('.client-cperson-container').each(function () {
-        var idx = $(this).data('contact-index');
-        if (!$('#cp_name_' + idx).val().trim()) {
-          targetIndex = idx;
-          return false;
+    /* Loading state */
+    var $btn = $('#client_save_contact_drawer');
+    $btn.prop('disabled', true).addClass('is-loading');
+    var origText = $btn.find('.cdf-btn-text').text();
+    $btn.find('.cdf-btn-text').text('Saving…');
+
+    /* Simulate brief async so UI updates (save is synchronous/local — restore immediately) */
+    setTimeout(function () {
+      var editIndex = $('#client_drawer_edit_index').val();
+      if (editIndex === '') {
+        var targetIndex = null;
+        $('.client-cperson-container').each(function () {
+          var idx = $(this).data('contact-index');
+          if (!$('#cp_name_' + idx).val().trim()) { targetIndex = idx; return false; }
+        });
+        if (targetIndex === null) {
+          $('.add_cperson').trigger('click');
+          targetIndex = parseInt($('#contactPersonId').val(), 10);
+          $('.client-cperson-container').last().attr('data-contact-index', targetIndex);
         }
-      });
-      if (targetIndex === null) {
-        $('.add_cperson').trigger('click');
-        targetIndex = parseInt($('#contactPersonId').val(), 10);
-        $('.client-cperson-container').last().attr('data-contact-index', targetIndex);
+        $('#cp_name_' + targetIndex).val(name);
+        $('#cp_desigination_' + targetIndex).val(designation);
+        $('#cp_email_' + targetIndex).val(email);
+        $('#cp_number_' + targetIndex).val(phone);
+      } else {
+        $('#cp_name_' + editIndex).val(name);
+        $('#cp_desigination_' + editIndex).val(designation);
+        $('#cp_email_' + editIndex).val(email);
+        $('#cp_number_' + editIndex).val(phone);
       }
-      $('#cp_name_' + targetIndex).val(name);
-      $('#cp_desigination_' + targetIndex).val(designation);
-      $('#cp_email_' + targetIndex).val(email);
-      $('#cp_number_' + targetIndex).val(phone);
-    } else {
-      $('#cp_name_' + editIndex).val(name);
-      $('#cp_desigination_' + editIndex).val(designation);
-      $('#cp_email_' + editIndex).val(email);
-      $('#cp_number_' + editIndex).val(phone);
-    }
-    renderContactTable();
-    updateCompletion();
-    closeContactDrawer();
+      renderContactTable();
+      updateCompletion();
+      closeContactDrawer();
+      $btn.prop('disabled', false).removeClass('is-loading');
+      $btn.find('.cdf-btn-text').text(origText);
+    }, 180);
   }
+
+  /* Clear individual field error on input */
+  $(document).on('input', '#client_drawer_name', function () { $(this).removeClass('is-invalid'); $('#cdf_err_name').removeClass('visible'); });
+  $(document).on('input', '#client_drawer_designation', function () { $(this).removeClass('is-invalid'); $('#cdf_err_designation').removeClass('visible'); });
+  $(document).on('input', '#client_drawer_email', function () { $(this).removeClass('is-invalid'); $('#cdf_err_email').removeClass('visible'); });
+  $(document).on('input', '#client_drawer_phone', function () { $(this).removeClass('is-invalid'); $('#cdf_err_phone').removeClass('visible'); });
 
   function populateReviewSummaries() {
     $('.client_summary_name').text($('#client_id').val() || '—');
@@ -2244,7 +2582,7 @@ for (let i = 0; i < countAddrees; i++) {
       } catch (e) {}
     }
 
-    if (tagsInput && window.clientTagsTagify) {
+    if (window.clientTagsTagify) {
       var refreshTags = function () {
         renderServicePreview((window.clientTagsTagify.value || []).map(function (t) { return t.value; }));
       };
