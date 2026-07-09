@@ -1821,21 +1821,21 @@ body
             <!--begin::candidateDashboard Content-->
                 <div class="tab-pane" id="candidateDashboard" role="tabpanel">
                   @php
-                    // Dashboard cards show OVERALL (all-time) figures — same source as the profile header
-                    // stat cards ($scp_*), so they match. No date-range window.
-                    $sdbActive   = (int)($scp_active ?? $active_count ?? 0);
+                    // Dashboard cards mirror the profile header stat cards ($scp_*) exactly —
+                    // never use alternative fallback variables for the 4 shared metrics.
+                    $sdbActive   = $scp_active;   // same as top card
                     $sdbHold     = (int)($hold_count ?? 0);
                     $sdbClosed   = (int)($inactive_count ?? 0);
-                    $sdbAdded    = (int)($scp_cand ?? $total_candidates ?? 0);
+                    $sdbAdded    = $scp_cand;      // same as top card
                     $sdbInReview = (int)($inreview_count ?? 0);
                     $sdbSourcing = (int)($sourcing_count ?? 0);
                     $sdbScreen   = (int)($screening_count ?? 0);
                     $sdbEval     = (int)($evaluation_count ?? 0);
                     $sdbNego     = (int)($negotiation_count ?? 0);
                     $sdbOffer    = (int)($scpOffersTotal ?? $offer_count ?? 0);
-                    $sdbJoined   = (int)($scp_join ?? $joined_count ?? 0);
+                    $sdbJoined   = $scp_join;      // same as top card
                     $sdbReject   = (int)($Rejected_count ?? 0);
-                    $sdbInterviews = (int)($scp_intv ?? $scpInterviewsTotal ?? 0);
+                    $sdbInterviews = $scp_intv;    // same as top card
                     $sdbConv     = $sdbAdded>0 ? round($sdbJoined/$sdbAdded*100,1) : 0;
                     $sdbWin = '';   // date-range window removed — cards show overall data
                     $sdbStages = [
