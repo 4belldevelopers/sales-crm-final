@@ -1,10 +1,19 @@
 @php
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
-    $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
+    $salaryMode       = GeneralMethod::salaryMode();
+    $currencySymbole  = GeneralMethod::currencySymbole();
+    $feedback_status  = GeneralMethod::feedback_status();
     $available_status = GeneralMethod::available_status();
+
+    // Follow-up statuses — read-only display only (no actions)
+    $followupMap = collect();
+    if (\Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
+        $followupMap = DB::table('interview_schedules')
+            ->whereIn('id', collect($data)->pluck('id')->all())
+            ->get(['id', 'followup_status', 'followup_status_at'])
+            ->keyBy('id');
+    }
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -12,7 +21,7 @@
       $row = (object) $rowArr;
     @endphp
         <tr>
-            {{-- Candidate name + avatar --}}
+            {{-- Candidate name + avatar + follow-up status (view-only, no dropdown) --}}
             <td>
                 @php
                     $bgTextDecore = $strVal = '';
@@ -26,93 +35,146 @@
                     elseif ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
                     else                                { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
 
-                    echo '<div class="d-flex align-items-center gap-2">
-                        <div class="symbol symbol-circle symbol-38px overflow-hidden flex-shrink-0 custom-show-application-detail" data-row-id="' . $row->job_application_id . '">
-                          <a href="javascript:void(0);" data-row-id="' . $row->job_application_id . '" class="custom-show-application-detail">
-                            <div class="symbol-label ' . $bgTextDecore . ' border-radius-5 custom-show-application-detail">' . ucwords($strVal) . '</div>
-                          </a>
-                        </div>
-                        <div class="d-flex flex-column">
-                          <a href="javascript:void(0);" data-row-id="' . $row->job_application_id . '" class="text-dark fw-bolder text-hover-primary fs-6 custom-show-application-detail" data-toggle="tooltip" title="' . ucwords(@$row->full_name) . '">'
-                          . ucwords(mb_substr(@$row->full_name, 0, 22)) . '</a>
-                          <span class="text-muted fw-bold d-block fs-7">' . ucwords(mb_substr(@$row->current_designation, 0, 22)) . '</span>
-                        </div>
-                    </div>';
+                    // Follow-up read-only status badge
+                    $fuRow    = $followupMap->get($row->id);
+                    $fuStatus = is_object($fuRow) ? ($fuRow->followup_status ?? null) : null;
+                    $fuAt     = is_object($fuRow) ? ($fuRow->followup_status_at ?? null) : null;
+                    $fuLabels = ['confirmed' => 'Confirmed', 'no-response' => 'No Response', 'rescheduled' => 'Rescheduled'];
+                    $fuLabel  = $fuLabels[$fuStatus] ?? null;
+                    $fuStyle  = '';
+                    if ($fuStatus === 'confirmed')    { $fuStyle = 'background:#e8fff3;color:#17a75a;border:1px solid #b8f0d4;'; }
+                    elseif ($fuStatus === 'no-response')  { $fuStyle = 'background:#fff0f0;color:#d9534f;border:1px solid #ffd5d5;'; }
+                    elseif ($fuStatus === 'rescheduled')  { $fuStyle = 'background:#eef2ff;color:#3b5fc8;border:1px solid #c8d8f8;'; }
                 @endphp
+                <div class="d-flex align-items-center gap-2">
+                    <div class="symbol symbol-circle symbol-38px overflow-hidden flex-shrink-0">
+                        <div class="symbol-label {{ $bgTextDecore }} border-radius-5">{{ ucwords($strVal) }}</div>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">
+                            {{ ucwords(mb_substr(@$row->full_name, 0, 22)) }}
+                        </span>
+                        <span class="text-muted fw-bold d-block fs-7">
+                            {{ ucwords(mb_substr(@$row->current_designation, 0, 22)) }}
+                        </span>
+                        {{-- Follow-up: show current status as a plain read-only pill, or nothing --}}
+                        @if ($fuLabel)
+                            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;margin-top:3px;width:fit-content;{{ $fuStyle }}">
+                                {{ $fuLabel }}
+                            </span>
+                            @if ($fuAt)
+                                <span style="font-size:10px;color:#a1a5b7;margin-top:2px;">
+                                    {{ Carbon::parse($fuAt)->format('d M, h:i A') }}
+                                </span>
+                            @endif
+                        @endif
+                    </div>
+                </div>
             </td>
-            {{-- Job + client --}}
+
+            {{-- Job title + company + Internal/Client badge + Job ID (view-only) --}}
             <td>
                 @php
                     $company_client_name = $row->company_name;
                     if (auth()->user()->company_id == $row->job_company_id) {
                         $company_client_name = $row->client_name;
                     }
-                    echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' . ucwords($row->job_title) . '">'
-                        . ucwords(mb_substr($row->job_title, 0, 20)) . '</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . ucwords(mb_substr($company_client_name, 0, 20)) . '</span>
-                    </div>';
+                    $jobTypeLabel = 'Internal';
+                    $jobTypeCls   = 'cit-badge-internal';
+                    if (!empty($row->recommendation_id) && $row->recommendation_id > 0
+                        && isset($row->to_company_id) && $row->to_company_id == auth()->user()->company_id) {
+                        $jobTypeLabel = 'Client';
+                        $jobTypeCls   = 'cit-badge-client';
+                    }
                 @endphp
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
+                        {{ ucwords(mb_substr($row->job_title, 0, 20)) }}
+                    </span>
+                    <span class="text-muted fw-bold d-block fs-7">
+                        {{ ucwords(mb_substr($company_client_name, 0, 20)) }}
+                    </span>
+                    <div class="cit-job-tags">
+                        <span class="cit-job-type-badge {{ $jobTypeCls }}">{{ $jobTypeLabel }}</span>
+                        <span class="cit-dot-sep"></span>
+                        <span class="cit-job-id-tag">{{ @$row->job_id }}</span>
+                    </div>
+                </div>
             </td>
-            {{-- Mode pill --}}
+
+            {{-- Mode pill (view-only) --}}
             <td>
                 @php
                     $modeLower = strtolower(trim(@$row->mode_name ?? ''));
-                    if (str_contains($modeLower, 'video') || str_contains($modeLower, 'online'))                                    { $modeCls = 'cit-mode-online'; }
-                    elseif (str_contains($modeLower, 'phone') || str_contains($modeLower, 'call'))                                  { $modeCls = 'cit-mode-phone'; }
+                    if (str_contains($modeLower, 'video') || str_contains($modeLower, 'online'))                                            { $modeCls = 'cit-mode-online'; }
+                    elseif (str_contains($modeLower, 'phone') || str_contains($modeLower, 'call'))                                          { $modeCls = 'cit-mode-phone'; }
                     elseif (str_contains($modeLower, 'person') || str_contains($modeLower, 'office') || str_contains($modeLower, 'offline')) { $modeCls = 'cit-mode-offline'; }
                     else { $modeCls = 'cit-mode-default'; }
-
-                    $levelTag = !empty($row->mode_lavel_name)
-                        ? '<span class="cit-level-tag">' . ucwords(mb_substr($row->mode_lavel_name, 0, 14)) . '</span>'
-                        : '';
-                    echo '<div class="d-flex flex-column align-items-start gap-1">
-                        <span class="cit-mode-pill ' . $modeCls . '">' . ucwords(mb_substr(@$row->mode_name, 0, 12)) . '</span>
-                        ' . $levelTag . '
-                    </div>';
                 @endphp
+                <div class="d-flex flex-column align-items-start gap-1">
+                    <span class="cit-mode-pill {{ $modeCls }}">{{ ucwords(mb_substr(@$row->mode_name, 0, 12)) }}</span>
+                    @if (!empty($row->mode_lavel_name))
+                        <span class="cit-level-tag">{{ ucwords(mb_substr($row->mode_lavel_name, 0, 14)) }}</span>
+                    @endif
+                </div>
             </td>
-            {{-- Interviewers avatar stack (preserve JS, DB query unchanged) --}}
+
+            {{-- Interviewers: name + company (view-only, matches screenshot layout) --}}
             <td>
                 @php
-                    $html = '';
-                    $interviewers = $row->interviewers;
-                    if (!empty($interviewers)) {
-                        $interviewersArr = explode(',', $interviewers);
-                        $interviewersData = DB::table('users')
-                            ->select('users.id', 'users.name', 'users.image')
+                    $interviewerRows = collect();
+                    if (!empty($row->interviewers)) {
+                        $interviewersArr = array_filter(array_map('trim', explode(',', $row->interviewers)));
+                        $interviewerRows = DB::table('users')
+                            ->select('users.id', 'users.name')
                             ->where('users.company_id', '=', $row->company_id)
                             ->whereIn('users.name', $interviewersArr)
                             ->get();
-                        foreach ($interviewersData as $intVal) {
-                            $bgd = GeneralMethod::icoinText($intVal->name);
-                            if (!empty($intVal->image)) {
-                                $html .= '<div class="symbol symbol-30 symbol-circle" data-toggle="tooltip" title="' . $intVal->name . '"><img alt="image" src="' . $intVal->image . '"></div>';
-                            } else {
-                                $html .= '<div class="symbol symbol-30 symbol-circle" data-toggle="tooltip" title="' . ucwords($intVal->name) . '"><div class="symbol-label fs-8 ' . $bgd . '">' . mb_substr($intVal->name, 0, 1) . '</div></div>';
-                            }
-                        }
                     }
-                    echo '<div class="symbol-group symbol-hover">' . ($html ?: '<span class="text-muted fs-7">—</span>') . '</div>';
+                    $companyShort = ucwords(mb_substr(@$row->company_name, 0, 14));
                 @endphp
+                <div class="d-flex flex-column gap-1">
+                    @if ($interviewerRows->isNotEmpty())
+                        @foreach ($interviewerRows as $intVal)
+                            <div class="d-flex flex-column" style="line-height:1.4;">
+                                <span class="fw-bold text-dark" style="font-size:12.5px;">
+                                    {{ ucwords($intVal->name) }}
+                                </span>
+                                <span style="font-size:11px; color:#009ef7; font-weight:500;">
+                                    {{ $companyShort }}
+                                </span>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="d-flex flex-column" style="line-height:1.4;">
+                            <span class="fw-bold text-dark" style="font-size:12.5px;">N/A</span>
+                            <span style="font-size:11px; color:#009ef7; font-weight:500;">
+                                {{ $companyShort }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
             </td>
-            {{-- Source badge --}}
+
+            {{-- Source badge (view-only) --}}
             <td>
-                @php
-                    $src = trim(@$row->source ?? '');
-                    echo '<span class="cit-source-badge" data-toggle="tooltip" title="' . $src . '">' . (mb_strlen($src) ? mb_substr($src, 0, 14) : '—') . '</span>';
-                @endphp
+                @php $src = trim(@$row->source ?? ''); @endphp
+                <span class="cit-source-badge" data-toggle="tooltip" title="{{ $src }}">
+                    {{ mb_strlen($src) ? mb_substr($src, 0, 14) : '—' }}
+                </span>
             </td>
-            {{-- Interview date + time --}}
+
+            {{-- Interview date + time (view-only) --}}
             <td>
-                @php
-                    echo '<div class="d-flex flex-column">
-                        <span class="cit-date-bold">' . Carbon::parse($row->schedule_date)->format('d M, Y') . '</span>
-                        <span class="cit-date-time">' . $row->schedule_to_time . ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '') . '</span>
-                    </div>';
-                @endphp
+                <div class="d-flex flex-column">
+                    <span class="cit-date-bold">{{ Carbon::parse($row->schedule_date)->format('d M, Y') }}</span>
+                    <span class="cit-date-time">
+                        {{ $row->schedule_to_time }}{{ $row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '' }}
+                    </span>
+                </div>
             </td>
-            {{-- Feedback status pill (preserve show-feedback JS hook) --}}
+
+            {{-- Feedback status pill (view-only) --}}
             <td>
                 @php
                     $available_status_name = '';
@@ -120,58 +182,56 @@
                         $available_status_name = @$available_status[@$row->available_status]['name'];
                     }
                     $feedback = ucwords(mb_substr(@$feedback_status[@$row->feedback]['name'], 0, 22));
-                    $asLower = strtolower($available_status_name);
-                    if (str_contains($asLower, 'select'))                              { $fbCls = 'cit-fb-selected'; }
-                    elseif (str_contains($asLower, 'reject'))                          { $fbCls = 'cit-fb-rejected'; }
-                    elseif (str_contains($asLower, 'hold'))                            { $fbCls = 'cit-fb-hold'; }
+                    $asLower  = strtolower($available_status_name);
+                    if (str_contains($asLower, 'select'))                                      { $fbCls = 'cit-fb-selected'; }
+                    elseif (str_contains($asLower, 'reject'))                                  { $fbCls = 'cit-fb-rejected'; }
+                    elseif (str_contains($asLower, 'hold'))                                    { $fbCls = 'cit-fb-hold'; }
                     elseif (str_contains($asLower, 'next') || str_contains($asLower, 'round')) { $fbCls = 'cit-fb-next'; }
-                    else                                                               { $fbCls = 'cit-fb-default'; }
-
+                    else                                                                       { $fbCls = 'cit-fb-default'; }
                     $fbLabel = $available_status_name ? ucwords(mb_substr($available_status_name, 0, 14)) : '—';
-                    $fbSub   = $feedback ? '<span class="cit-date-time">' . mb_substr($feedback, 0, 14) . '</span>' : '';
-                    echo '<div class="d-flex flex-column align-items-start gap-1">
-                        <a href="javascript:void(0);" data-row-id="' . $row->id . '" class="cit-fb-pill ' . $fbCls . ' show-feedback">' . $fbLabel . '</a>
-                        ' . $fbSub . '
-                    </div>';
                 @endphp
+                <div class="d-flex flex-column align-items-start gap-1">
+                    <span class="cit-fb-pill {{ $fbCls }}">{{ $fbLabel }}</span>
+                    @if ($feedback)
+                        <span class="cit-date-time">{{ mb_substr($feedback, 0, 14) }}</span>
+                    @endif
+                </div>
             </td>
-            {{-- Star rating CSS (no img dependency) --}}
+
+            {{-- Star rating (view-only) --}}
             <td>
                 @php
                     $average_star_rating = (int) ($row->average_star_rating ?? 0);
-                    $ratingLabels = [1=>'Bad', 2=>'Poor', 3=>'Average', 4=>'Good', 5=>'Excellent'];
-                    $starsHtml = '<div class="cit-stars">';
-                    for ($s = 1; $s <= 5; $s++) {
-                        $starsHtml .= $s <= $average_star_rating
-                            ? '<i class="fas fa-star cit-star-fill"></i>'
-                            : '<i class="fas fa-star cit-star-empty"></i>';
-                    }
-                    $starsHtml .= '</div>';
-                    echo $starsHtml;
-                    if ($average_star_rating > 0) {
-                        echo '<div class="cit-rating-label">' . ($ratingLabels[$average_star_rating] ?? '') . '</div>';
-                    }
+                    $ratingLabels = [1 => 'Bad', 2 => 'Poor', 3 => 'Average', 4 => 'Good', 5 => 'Excellent'];
                 @endphp
+                <div class="cit-stars">
+                    @for ($s = 1; $s <= 5; $s++)
+                        <i class="fas fa-star {{ $s <= $average_star_rating ? 'cit-star-fill' : 'cit-star-empty' }}"></i>
+                    @endfor
+                </div>
+                @if ($average_star_rating > 0)
+                    <div class="cit-rating-label">{{ $ratingLabels[$average_star_rating] ?? '' }}</div>
+                @endif
             </td>
-            {{-- Stage badge (preserve interview_stage_sub_stage / interview_client_stage_sub_stage JS selectors) --}}
+
+            {{-- Stage badge (view-only) --}}
             <td>
                 @php
-                    $stage_default_css = 'interview_stage_sub_stage';
-                    if ($row->thirdparty_company_id > 0) {
-                        $stage_default_css = 'interview_client_stage_sub_stage';
-                    }
                     $stageSub = '';
                     if ($row->master_status_id == 8) { $stageSub = 'Private'; }
                     if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
                         $childStatus = DB::table('candidate_status')->select('*')->where('id', $row->child_status_id)->first();
                         if (!empty($childStatus)) { $stageSub = @$childStatus->name; }
                     }
-                    $stageSubHtml = $stageSub ? '<span class="text-muted fw-bold d-block fs-7 mt-1">' . $stageSub . '</span>' : '';
-                    echo '<a href="javascript:void(0);" data-row-id="' . @$row->job_application_id . '" class="d-flex flex-column align-items-start ' . $stage_default_css . '" data-toggle="modal">
-                        <span class="badge fw-bolder ' . @$row->css_style . ' px-2 py-1" style="font-size:11px">' . mb_substr(@$row->master_status_name, 0, 12) . '</span>
-                        ' . $stageSubHtml . '
-                    </a>';
                 @endphp
+                <div class="d-flex flex-column align-items-start">
+                    <span class="badge fw-bolder {{ @$row->css_style }} px-2 py-1" style="font-size:11px">
+                        {{ mb_substr(@$row->master_status_name, 0, 12) }}
+                    </span>
+                    @if ($stageSub)
+                        <span class="text-muted fw-bold d-block fs-7 mt-1">{{ $stageSub }}</span>
+                    @endif
+                </div>
             </td>
         </tr>
     @endforeach

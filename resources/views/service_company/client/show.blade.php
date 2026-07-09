@@ -234,6 +234,54 @@ use Carbon\Carbon;
           .cit-stars .cit-star-fill  { color:#f6a723; font-size:12px; }
           .cit-stars .cit-star-empty { color:#e4e6ef; font-size:12px; }
           .cit-rating-label { font-size:10.5px; color:#a1a5b7; font-weight:500; margin-top:2px; }
+
+          /* ── Follow-Up dropdown (Interview Tracker tab) ── */
+          #interview_tracker {
+            --cit-primary   : #3b5fc8;
+            --cit-success   : #17a75a;
+            --cit-danger    : #d9534f;
+            --cit-border    : #e4e6ef;
+            --cit-radius    : 6px;
+            --cit-radius-lg : 8px;
+            --cit-text-muted: #a1a5b7;
+            --cit-text-main : #181c32;
+            --cit-bg-main   : #f5f8ff;
+            --cit-transition: all .15s ease;
+            --cit-shadow-lg : 0 8px 24px rgba(17,28,68,.10);
+          }
+          .cit-followup-dropdown { position:relative; display:inline-block; margin-top:3px; }
+          .cit-followup-btn {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:3px 8px; border-radius:var(--cit-radius);
+            font-size:10px; font-weight:500; font-family:'Poppins',sans-serif;
+            border:1px solid var(--cit-border); background:#fff;
+            color:var(--cit-text-muted); cursor:pointer;
+            transition:var(--cit-transition);
+          }
+          .cit-followup-btn:hover { background:var(--cit-bg-main); color:var(--cit-primary); border-color:var(--cit-primary); }
+          .cit-followup-btn svg  { width:10px; height:10px; }
+          .cit-followup-menu {
+            position:absolute; top:calc(100% + 4px); left:0;
+            background:#fff; border:1px solid var(--cit-border);
+            border-radius:var(--cit-radius-lg); box-shadow:var(--cit-shadow-lg);
+            z-index:9999; display:none; min-width:150px; overflow:hidden;
+          }
+          .cit-followup-menu.open { display:block; }
+          .cit-followup-item {
+            padding:7px 10px; font-size:10px; cursor:pointer;
+            transition:var(--cit-transition); display:flex; align-items:center;
+            gap:6px; color:var(--cit-text-main);
+          }
+          .cit-followup-item:hover { background:var(--cit-bg-main); color:var(--cit-primary); }
+          .cit-followup-item svg  { width:10px; height:10px; }
+
+          /* ── Job type + ID tags (Interview Tracker) ── */
+          .cit-job-tags        { display:flex; align-items:center; gap:5px; margin-top:3px; flex-wrap:wrap; }
+          .cit-job-type-badge  { display:inline-flex; align-items:center; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
+          .cit-badge-internal  { background:#eef2ff; color:#3b55e6; }
+          .cit-badge-client    { background:#eefff6; color:#09b760; }
+          .cit-job-id-tag      { font-size:10px; color:#6a6b70; font-weight:500; }
+          .cit-dot-sep         { width:3px; height:3px; border-radius:50%; background:#a1a5b7; display:inline-block; }
         </style>
         @php
             // KPI counts for the internal-client detail header (read-only ES helpers).
@@ -2413,6 +2461,51 @@ use Carbon\Carbon;
             }
         });
     }
+
+    // ── Follow-Up actions for the Interview Tracker (client show page) ──
+    function citToggleFollowUp(btn) {
+        var menu   = btn.nextElementSibling;
+        var isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        if (!isOpen) { menu.classList.add('open'); }
+    }
+
+    function citSetFollowUp(el, id, status) {
+        document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        var dropdown = el.closest('.cit-followup-dropdown');
+        var trigger  = dropdown ? dropdown.querySelector('.cit-followup-trigger') : null;
+        var labels   = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
+        var colors   = { 'confirmed': 'var(--cit-success)', 'no-response': 'var(--cit-danger)', 'rescheduled': 'var(--cit-primary)' };
+        $.ajax({
+            url  : '{{ route("service_company.interview-schedule.followup_update") }}',
+            type : 'POST',
+            data : { _token: '{{ csrf_token() }}', id: id, status: status },
+            success: function (resp) {
+                if (resp && resp.status === 'success') {
+                    if (trigger) {
+                        var lbl = trigger.querySelector('.cit-fu-label');
+                        if (lbl) { lbl.textContent = labels[status] || 'Follow Up'; }
+                        trigger.style.color       = colors[status] || '';
+                        trigger.style.borderColor = colors[status] || '';
+                        var ctaIcon = trigger.querySelector('.cit-cta-icon');
+                        if (ctaIcon) { ctaIcon.remove(); }
+                    }
+                } else {
+                    Swal.fire({ text: (resp && resp.msg) ? resp.msg : 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
+                }
+            },
+            error: function () {
+                Swal.fire({ text: 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
+            }
+        });
+    }
+
+    // Close any open cit follow-up menu on outside click
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.cit-followup-dropdown').length) {
+            document.querySelectorAll('.cit-followup-menu.open').forEach(function (m) { m.classList.remove('open'); });
+        }
+    });
 
     function fetchJobsClient(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
