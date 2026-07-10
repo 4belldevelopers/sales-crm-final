@@ -182,11 +182,14 @@
                  Bench date = job_applications.created_at (the table backing this ES index),
                  looked up by the candidate's own primary key — one indexed PK lookup, same
                  cost profile as the duplicate-check / job_assign lookups already done per row
-                 above. Joined date = of_joined_date (already real). There is no dedicated
-                 "offer released" timestamp anywhere in the schema (only offer_release/
-                 offer_acceptance flags), so that node is shown without a fabricated date.
-                 Placed = same event as Joined in this data model (there is no separate
-                 "placed" timestamp distinct from joining), so it reuses the joined date. --}}
+                 above. Joined date = of_joined_date (already real). Offer date comes from the
+                 Offer Tracker module: offer_job_applications.application_id -> offer_id, then
+                 the offer_create_main_tds row for that offer with candidate_status = 1
+                 ("release", per the schema comment / the same enum ServiceCompanyApplicationOfferController
+                 already relies on for its Released KPI) — its created_at is the moment that
+                 offer version was released to the candidate. Placed = same event as Joined in
+                 this data model (there is no separate "placed" timestamp distinct from
+                 joining), so it reuses the joined date. --}}
             <td>
                 @php
                     $joinedRaw = @$row->of_joined_date;
@@ -198,22 +201,38 @@
                     }
                     $hasBench = !empty($benchRaw);
 
-                    $benchLabel = $hasBench ? date('d M', strtotime($benchRaw)) : '--';
-                    $joinedLabel = $hasJoined ? date('d M', strtotime($joinedRaw)) : '--';
+                    $offerRaw = null;
+                    if (!empty(@$row->candidate_id)) {
+                        $offerAppId = DB::table('offer_job_applications')->where('application_id', $row->candidate_id)->value('id');
+                        if ($offerAppId) {
+                            $offerRaw = DB::table('offer_create_main_tds')
+                                ->where('offer_id', $offerAppId)
+                                ->where('candidate_status', 1)
+                                ->orderByDesc('id')
+                                ->value('created_at');
+                        }
+                    }
+                    $hasOffer = !empty($offerRaw);
+
+                    $dateFmt = 'd M y'; // e.g. 02 May 26
+                    $benchLabel = $hasBench ? date($dateFmt, strtotime($benchRaw)) : '--';
+                    $offerLabel = $hasOffer ? date($dateFmt, strtotime($offerRaw)) : '--';
+                    $joinedLabel = $hasJoined ? date($dateFmt, strtotime($joinedRaw)) : '--';
 
                     $durationText = '';
                     if ($hasBench && $hasJoined) {
-                        $durationDays = abs(\Carbon\Carbon::parse($benchRaw)->diffInDays(\Carbon\Carbon::parse($joinedRaw)));
+                        $durationDays = (int) floor(abs(\Carbon\Carbon::parse($benchRaw)->diffInSeconds(\Carbon\Carbon::parse($joinedRaw))) / 86400);
                         $durationText = 'Total Duration: ' . $durationDays . ' Days';
                     }
 
                     $benchNodeCls = $hasBench ? 'is-done' : 'is-static';
+                    $offerNodeCls = $hasOffer ? 'is-done' : 'is-static';
                     $joinedNodeCls = $hasJoined ? 'is-done' : 'is-static';
                     // "Placed" only makes sense once joining is confirmed, and there is no
                     // separate placed-timestamp in the schema — it reuses the joined date.
                     $placedNodeCls = $hasJoined ? 'is-done' : 'is-static';
                     $lineAfterBench = $hasBench ? 'is-done' : '';
-                    $lineAfterOffer = $hasJoined ? 'is-done' : '';
+                    $lineAfterOffer = $hasOffer ? 'is-done' : '';
                     $lineAfterJoined = $hasJoined ? 'is-done' : '';
 
                     echo '<div class="placed-timeline">
@@ -224,8 +243,8 @@
                                 </div>
                                 <span class="placed-timeline-line ' . $lineAfterBench . '"></span>
                                 <div class="placed-timeline-node-wrap">
-                                    <div class="placed-timeline-node is-static" data-toggle="tooltip" title="Offer"></div>
-                                    <span class="placed-timeline-node-label">--</span>
+                                    <div class="placed-timeline-node ' . $offerNodeCls . '" data-toggle="tooltip" title="Offer"></div>
+                                    <span class="placed-timeline-node-label">' . $offerLabel . '</span>
                                 </div>
                                 <span class="placed-timeline-line ' . $lineAfterOffer . '"></span>
                                 <div class="placed-timeline-node-wrap">
@@ -266,11 +285,15 @@
                     // translation strings (messages.internal_client_tag / direct_clinet_tag),
                     // the same ones the client-listing pages already use for this exact concept.
                     $recommendation_text = __('messages.direct_clinet_tag');
+                    $recommendation_icon = 'fa-handshake';
+                    $recommendation_cls = 'text-warning';
                     if (
                         ($recommendation_id > 0 && @$row->client_comapny_id == auth()->user()->company_id) ||
                         @$row->client_comapny_id == auth()->user()->company_id
                     ) {
                         $recommendation_text = __('messages.internal_client_tag');
+                        $recommendation_icon = 'fa-building-shield';
+                        $recommendation_cls = 'text-primary';
                     }
 
                     // job location — reuses the $job_status_get document already fetched above
@@ -288,7 +311,9 @@
                             ($jobLocationLine ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i>
                                 <span class="text-muted fw-semibold fs-9">' . $jobLocationLine . '</span>
                             </span>' : '') . '
-                            <span class="fw-bold fs-9 text-muted mt-1">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
+                            <span class="placed-detail-line mt-1"><i class="fa-solid ' . $recommendation_icon . ' ' . $recommendation_cls . '"></i>
+                                <span class="fw-bold fs-9 text-muted">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
+                            </span>
                           </div>';
                 @endphp
             </td>
@@ -322,6 +347,8 @@
                     $employment_type = $row->of_employment_type ?? '-----';
                     $offer_currency = $currencySymbole[$row->of_offer_currency ? @$row->of_offer_currency : 0];
                     $offer_amount = GeneralMethod::thousandsCurrencyFormat($row->of_offer_amount ? @$row->of_offer_amount : 0);
+                    // display-only: drop the decimal remainder (e.g. "1,730,242.80" -> "1,730,242")
+                    $offer_amount = explode('.', $offer_amount)[0];
                     $offer_mode = $salaryModeOffer[$row->of_offer_mode ? @$row->of_offer_mode : 0];
 
                     if (@$row->confidential == 1) {
