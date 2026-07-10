@@ -4502,8 +4502,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					? ($currency[$job_applications->offer_mode] ?? 0)
 					: 0;
 				// $SALARY_AMOUNT= $job_applications->offer_amount;
-				$SALARY_AMOUNT = $job_applications->offer_amount ?? 0;
-				$JOB_TYPE = ($job_applications->employment_type==1) ? 'Contract' : 'Full-time';
+				$SALARY_AMOUNT = @$job_applications->offer_amount ?? 0;
+				$JOB_TYPE = (@$job_applications->employment_type == 1) ? 'Contract' : 'Full-time';
 			// dd($offerId,$job_applications->full_name);
 			$designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
 			$template_description = str_replace(["[{COMPANY_NAME}]","[{CANDIDATE_NAME}]","[{JOB_TITLE}]","[{OFFER_LETTER_LINK}]","[{OFFER_LETTER_LINK_COPY}]","[{CANDIDATE_ID}]","[{JOB_ID}]","[{START_DATE_TIME}]","[{CURRENCY}]","[{SALARY_AMOUNT}]","[{SALARY_MODE}]","[{JOB_TYPE}]","[{MANAGER_NAME}]"],[$companyDetails->company_name, @$job_applications->full_name,@$designation,@$Url,@$Urlcopy,@$job_applications->id,@$job_applications->jobId, date("d M Y",strtotime(@$job_applications->joined_date)),$CURRENCY_SELCT,$SALARY_AMOUNT,$SALARY_MODE,$JOB_TYPE,@$users->contact_person_name], $template_description);
@@ -5812,6 +5812,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 						// if($result){
 						    $Offertimelime = OfferJobApplication::find($offerId);
+							if (!$Offertimelime) { return Reply::dataOnly(['status' => 'success', 'view' => '']); }
 							$exists = $this->elasticService->getClient()->exists([
 									'index' => ELASTIC_CANDIDATES,
 									'id' => $Offertimelime->joined
@@ -5915,13 +5916,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$values['designation_offer'] = @$exits_offer->designation_offer;
 			$values['offer_currency'] = @$exits_offer->currency;
 			$values['offer_amount'] = @$exits_offer->salary_ctc; $values['joined_date'] = @$exits_offer->joined_date;
-			$values['offer_mode'] = @$exits_offer->salary_mode; 
+			$values['offer_mode'] = @$exits_offer->salary_mode;
 			$values['candidate_status'] = ($mtypeId==1) ? 1 : ''; $values['management_status'] =  ($mtypeId==2) ? 1 : ''; $values['accept_date_time'] = '';
-			$values['approved_date_time'] =''; 
-			$values['send_approved_date_time'] = $send_approved_date_time; 
-			$values['send_accept_date_time'] =$send_accept_date_time; 
+			$values['approved_date_time'] ='';
+			$values['send_approved_date_time'] = $send_approved_date_time;
+			$values['send_accept_date_time'] =$send_accept_date_time;
 			$values['email_id_hr'] = $email_id_hr; $values['name_hr'] = $name_hr;
-			$values['yearly_gross'] = $exits_offer->yearly_gross; $values['yearly_final_gross'] = $exits_offer->yearly_final_gross; $values['mtypeSection'] = $mtypeId;
+			$values['yearly_gross'] = @$exits_offer->yearly_gross; $values['yearly_final_gross'] = @$exits_offer->yearly_final_gross; $values['mtypeSection'] = $mtypeId;
 			GeneralMethod::UpdateTimeline($values);
 
 

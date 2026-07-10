@@ -657,11 +657,10 @@
             <h2 style="color: green;">Offer Accepted</h2>
             <p>You have successfully accepted the offer. Please proceed with the next steps or go back to the previous page.</p>
             {{-- @if(session('success')) --}}
-            <button type="button" data-jobId="{{ @$job_id }}"
-                data-candidate="{{ @$application_id }}" data-mtype="{{ $mtypeSection }}"
-                data-offerId="{{ $offerId }}"
-                class="btn btn-success font-weight-bolder px-9 py-4 download_offer"
-                data-wizard-type="action-next" style="width: 17%; padding: 6px; border-radius: 7px;">Download <i class="fa fa-download"></i></button>
+            <button type="button"
+                onclick="window.open('{{ route('offer.letter.public.stream', $offerId) }}','_blank')"
+                class="btn btn-success font-weight-bolder px-9 py-4"
+                style="width: 17%; padding: 6px; border-radius: 7px;">Download <i class="fa fa-download"></i></button>
             {{-- @endif --}}
             @elseif($candidate_status==3)
 

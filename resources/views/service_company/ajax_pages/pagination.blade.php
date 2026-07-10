@@ -2,15 +2,13 @@
     .custom-pagination {
         display: flex;
         gap: 5px;
-        justify-content: flex-end; /* Align pagination to the left */
+        justify-content: flex-end;
         margin-top: 0px;
     }
 
     .custom-pagination .page-link {
         padding: 0.375rem 0.75rem;
-        /* border: 1px solid #ddd; */
         cursor: pointer;
-        /* background-color: #f8f9fa; */
         color: #333;
         display: flex;
         justify-content: center;
@@ -20,7 +18,6 @@
         min-width: 2.5rem;
         font-weight: 500;
         font-size: 1.075rem;
-        /* border-radius: 5px; */
     }
 
     .custom-pagination .page-link.active {
@@ -30,52 +27,80 @@
     }
 
     .pagination-info {
-        text-align: left; /* Align info to the left */
+        text-align: left;
         margin-bottom: 0px;
-        font-weight: bold;
+        font-weight: 500;
+        color: #5e6278;
+        font-size: 13px;
     }
 
     .pagination-wrapper {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end; /* Align entire pagination block to the left */
-        width: 80%;    
+        align-items: center;
         gap: 14px;
     }
     .previous_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
+        pointer-events: none;
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     .next_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
+        pointer-events: none;
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     .active_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
+        pointer-events: none;
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     .pagination-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
         padding: 11px 14px;
         border-top: 1px solid #e4e6ef;
-        border-bottom: 1px solid #e4e6ef;
         background: #ffffff;
+    }
+    /* rows-per-page selector: cosmetic only where no backend size-change is wired elsewhere */
+    .rows-per-page-select {
+        border: 1px solid #e4e6ef;
+        border-radius: 0.475rem;
+        padding: 0.35rem 0.75rem;
+        font-size: 13px;
+        font-weight: 500;
+        color: #5e6278;
+        background-color: #f9f9f9;
     }
 </style>
 @if($pagination['total'] >0)
+@php
+    // per_page falls back to 10 for the ~70 other controller actions that render this
+    // shared partial without passing it, so this change is backward compatible.
+    $perPage = $pagination['per_page'] ?? 10;
+@endphp
 <div class="pagination-bar">
-    <div class="pagination-info">
-        Showing {{ ($pagination['current_page'] - 1) * 10 + 1 }} 
-        to {{ min($pagination['current_page'] * 10, $pagination['total']) }} 
-        of {{ $pagination['total'] }} records.
+    <div class="d-flex align-items-center gap-4">
+        <div class="pagination-info">
+            Showing {{ ($pagination['current_page'] - 1) * $perPage + 1 }}
+            to {{ min($pagination['current_page'] * $perPage, $pagination['total']) }}
+            of {{ $pagination['total'] }} records.
+        </div>
+        @if(isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
+            <div class="d-flex align-items-center gap-2">
+                <span class="pagination-info mb-0">Rows per page</span>
+                <select class="rows-per-page-select" id="rowsPerPageSelect">
+                    <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                    <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                </select>
+            </div>
+        @endif
     </div>
     <div class="pagination-wrapper">
-        
+
         <div class="custom-pagination">
             @php
                 $totalPages = $pagination['last_page'];
@@ -97,7 +122,7 @@
                     @if($i<=1000)
                         <button class="page-link {{ $i == $currentPage ? 'active active_disabled' : '' }} " data-page="{{ $i }}" data-listType="{{ $listType }}">{{ $i }}</button>
                         @else
-                        
+
                     @endif
 
                 @elseif ($i == $currentPage - 3 || $i == $currentPage + 3)

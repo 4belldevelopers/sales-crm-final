@@ -4,55 +4,117 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
     <style>
-        #send_email .modal-dialog {
-            margin: .3rem auto !important;
-        }
-
-        #fwd_resume .modal-dialog {
-            margin: .3rem auto !important;
-        }
+        /* ---------------------------------------------------------------
+           Talent Placed — placement-tracker redesign.
+           All rules are scoped under #kt_post so nothing leaks to other
+           pages that share the same layout/theme.
+        ----------------------------------------------------------------*/
+        #send_email .modal-dialog { margin: .3rem auto !important; }
+        #fwd_resume .modal-dialog { margin: .3rem auto !important; }
 
         @media only screen and (min-width: 900px) and (max-width: 2560px) {
-
-            .table td,
-            .table th,
-            .table tr {
-                width: max-content !important;
-            }
-
-            .table> :not(caption)>*>* {
-                padding: 0rem;
-            }
-
-            td:nth-child(n+2),
-            th:nth-child(n+2) {
-                width: revert !important;
-            }
+            .table td, .table th, .table tr { width: max-content !important; }
+            .table > :not(caption) > * > * { padding: 0rem; }
+            td:nth-child(n+2), th:nth-child(n+2) { width: revert !important; }
         }
-
         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesBenchApplication {
-                width: 1025px;
-            }
+            #kt_activitiesBenchApplication { width: 1025px; }
         }
-
         @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesBenchApplication {
-                width: 1200px;
-            }
+            #kt_activitiesBenchApplication { width: 1200px; }
         }
-
         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesCopy {
-                width: 1025px;
-            }
+            #kt_activitiesCopy { width: 1025px; }
+        }
+        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
+            #kt_activitiesCopy { width: 1200px; }
         }
 
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesCopy {
-                width: 1200px;
-            }
+        #kt_post * { font-family: 'Poppins', sans-serif; }
+
+        /* ---- stat cards ---- */
+        .placed-stat-card {
+            border: 1px solid #eef0f4;
+            border-radius: .75rem;
+            padding: .85rem 1rem;
+            display: flex;
+            gap: .75rem;
+            align-items: flex-start;
+            height: 100%;
+            background: #fff;
         }
+        .placed-stat-icon {
+            width: 40px; height: 40px; min-width: 40px;
+            border-radius: .6rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+        .placed-stat-label { font-size: 12px; font-weight: 500; color: #7e8299; }
+        .placed-stat-value { font-size: 20px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .placed-stat-caption { font-size: 11px; color: #a1a5b7; }
+        .placed-stat-delta { font-size: 11px; font-weight: 600; }
+        .placed-stat-delta.up { color: #17c653; }
+        .placed-stat-delta.down { color: #f1416c; }
+
+        /* ---- placement funnel ---- */
+        .placed-funnel-card { border: 1px solid #eef0f4; border-radius: .75rem; background: #fff; }
+        .placed-funnel-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35rem; min-width: 84px; }
+        .placed-funnel-icon {
+            width: 46px; height: 46px; border-radius: .6rem;
+            display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+        }
+        .placed-funnel-value { font-size: 17px; font-weight: 700; color: #181c32; }
+        .placed-funnel-label { font-size: 11px; font-weight: 500; color: #7e8299; }
+        .placed-funnel-chevron { color: #d7dae1; font-size: 1rem; }
+        .placed-funnel-toggle .btn { font-size: 12px; font-weight: 500; padding: .35rem .75rem; }
+
+        /* ---- filter bar ---- */
+        .placed-filter-bar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+            padding: .6rem .25rem;
+        }
+        .placed-filter-btn {
+            border: 1px solid #e4e6ef; background: #f9f9f9; color: #3f4254;
+            border-radius: .5rem; font-size: 12.5px; font-weight: 500;
+            padding: .45rem .75rem; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: .35rem;
+        }
+        .placed-filter-btn:hover { background: #f1f1f4; }
+
+        /* ---- table ---- */
+        #placedTableWrap { overflow-x: auto; }
+        #myTable thead th {
+            position: sticky; top: 0; z-index: 2;
+            background: #fff; font-size: 12px; font-weight: 500; color: #7e8299;
+            border-bottom: 1px solid #eef0f4; white-space: nowrap; padding: .75rem .6rem;
+        }
+        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 13px; }
+        #myTable tbody tr { border-bottom: 1px solid #f4f4f8; }
+
+        .placed-avatar {
+            width: 40px; height: 40px; border-radius: .55rem;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        .placed-skill-badge {
+            background: #f4f4f8; color: #5e6278; font-weight: 400; font-size: 10.5px;
+            margin-right: 2px;
+        }
+        .fs-8 { font-size: 11.5px !important; }
+        .fs-9 { font-size: 10.5px !important; }
+
+        .placed-timeline-track { display: flex; align-items: center; }
+        .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .placed-timeline-node.is-static { background: #e4e6ef; border: 2px solid #e4e6ef; }
+        .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
+        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 26px; margin: 0 2px; }
+
+        .placed-status-pill {
+            display: inline-flex; align-items: center; width: fit-content;
+            font-size: 11.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
+        }
+        .placed-action-btn { width: 30px; height: 30px; }
+
+        .rows-per-page-select { cursor: pointer; }
     </style>
 @endpush
 
@@ -66,22 +128,19 @@
                     <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
                         <a href="javascript:void(0);" class="text-primary">Talent Placed</a>
                     </h5>
-                    <span class="text-gray-600" id="totalPlace"></span>
-                    {{-- {{ @$allBenchApplication }} --}}
+                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.</span>
                 </div>
             </div>
-            <div class="d-flex align-items-center py-1">
-                <div class="d-flex align-items-center position-relative my-1 me-3">
-
-                    <input type="hidden" id="inputSearch" name="inputSearch"
-                        class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;"
-                        placeholder="Search..." />
+            <div class="d-flex align-items-center py-1 gap-2">
+                {{-- Date range display — placeholder only, no backend date-range filter exists yet --}}
+                <div class="placed-filter-btn">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span id="placedDateRangeLabel">This Month</span>
                 </div>
-                <div class="card-toolbar">
-                    <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-
-                    </div>
-                </div>
+                {{-- Export — placeholder only, no export endpoint exists yet for this page --}}
+                <button type="button" class="btn btn-sm btn-light-primary placed-filter-btn" disabled title="Coming soon">
+                    <i class="fa-solid fa-download"></i> Export
+                </button>
             </div>
         </div>
     </div>
@@ -90,73 +149,203 @@
             <div class="post d-flex flex-column-fluid" id="kt_post">
                 <div id="kt_content_container" class="container-fluid px-3">
 
-                    <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                        <div class="col-lg-4 d-flex align-items-center px-2" style="width:70%">
-                            <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
+                    {{-- =====================================================
+                         Overview stat cards.
+                         No aggregation endpoint exists for these yet, so the
+                         values below are static placeholders — swap for real
+                         numbers once a backend summary API is available.
+                    ====================================================== --}}
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-primary text-primary"><i class="fa-solid fa-user-check"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Currently Working</div>
+                                    <div class="placed-stat-value">186</div>
+                                    <div class="placed-stat-caption">Active Assignments</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 14 vs Apr 2025 (172)</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2" style="width: 30%;">
-                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                id="sortingfilter" data-dropdown-css-class="w-150px"
-                                data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                onchange="filtersdataget()">
-                                <option value="Show All" selected="">Sort</option>
-                                <option value="10">Newest to Oldest (Offer Date)</option>
-                                <option value="11">Oldest to Newest (Offer Date)</option>
-                                <option value="12">Newest to Oldest (Join Date)</option>
-                                <option value="13">Oldest to Newest (Join Date)</option>
-                                <option value="14">Low to High (Offer Amount)</option>
-                                <option value="15">High to Low (Offer Amount)</option>
-                            </select>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Projects Completed</div>
+                                    <div class="placed-stat-value">34</div>
+                                    <div class="placed-stat-caption">This Month</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 6 vs Apr 2025 (28)</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                            <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                id="country" data-dropdown-css-class="w-150px"
-                                data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
-                                style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                                <option value="110" selected="selected">Location</option>
-                            </select>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-purple text-purple" style="background:#f8f5ff;color:#7239ea;"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Replacement Active</div>
+                                    <div class="placed-stat-value">18</div>
+                                    <div class="placed-stat-caption">Permanent Hiring</div>
+                                    <div class="placed-stat-delta down mt-1"><i class="fa-solid fa-arrow-down"></i> 2 vs Apr 2025 (20)</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                            <button type="button"
-                                class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                                data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
-                                data-kt-menu-flip="top-end">
-                                <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                        viewBox="0 0 24 24" fill="none">
-                                        <path
-                                            d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                            fill="black"></path>
-                                    </svg>
-                                </span>
-                                Filter
-                            </button>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-warning text-warning"><i class="fa-solid fa-calendar-week"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Joining This Week</div>
+                                    <div class="placed-stat-value">6</div>
+                                    <div class="placed-stat-caption">Confirmed</div>
+                                    <div class="placed-stat-delta up mt-1">Next 7 Days</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-info text-info"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Available Soon</div>
+                                    <div class="placed-stat-value">12</div>
+                                    <div class="placed-stat-caption">Project Ending &lt; 30 Days</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 4 vs Apr 2025 (8)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="placed-stat-card">
+                                <div class="placed-stat-icon bg-light-danger text-danger"><i class="fa-solid fa-building"></i></div>
+                                <div>
+                                    <div class="placed-stat-label">Companies Served</div>
+                                    <div class="placed-stat-value">42</div>
+                                    <div class="placed-stat-caption">Active Clients</div>
+                                    <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 5 vs Apr 2025 (37)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- =====================================================
+                         Placement funnel.
+                         Static placeholder — stage counts need a new ES
+                         aggregation query per stage, not yet built.
+                    ====================================================== --}}
+                    <div class="placed-funnel-card p-4 mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                            <h6 class="fw-bolder text-dark mb-0">Placement Funnel</h6>
+                            <div class="placed-funnel-toggle btn-group" role="group">
+                                <button type="button" class="btn btn-light-primary active">May 2025</button>
+                                <button type="button" class="btn btn-light">Last 6 Months</button>
+                                <button type="button" class="btn btn-light">Last 1 Year</button>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-secondary text-dark"><i class="fa-solid fa-building"></i></div>
+                                <div class="placed-funnel-value">426</div>
+                                <div class="placed-funnel-label">Bench</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-primary text-primary"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div class="placed-funnel-value">161</div>
+                                <div class="placed-funnel-label">Shortlisted</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-warning text-warning"><i class="fa-solid fa-file-lines"></i></div>
+                                <div class="placed-funnel-value">44</div>
+                                <div class="placed-funnel-label">Offer Released</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
+                                <div class="placed-funnel-value">39</div>
+                                <div class="placed-funnel-label">Offer Accepted</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-info text-info"><i class="fa-solid fa-user-check"></i></div>
+                                <div class="placed-funnel-value">37</div>
+                                <div class="placed-funnel-label">Joined</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
+                            <div class="placed-funnel-step">
+                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-user-check"></i></div>
+                                <div class="placed-funnel-value" id="totalPlace">62</div>
+                                <div class="placed-funnel-label">Placed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- =====================================================
+                         Filter bar — Search and Sort are real and wired to
+                         the existing AJAX endpoint. Placed Date / Recruiter /
+                         Client / Job / Location / More Filters / Saved Views /
+                         Group By have no backend support yet, so they render
+                         as inert HTML controls for now.
+                    ====================================================== --}}
+                    <div class="card mb-3">
+                        <div class="card-body py-3 px-4">
+                            <div class="placed-filter-bar">
+                                <div class="flex-grow-1" style="min-width: 220px; max-width: 340px;">
+                                    <input type="text" class="form-control form-control-solid" name="inputJobSearch"
+                                        value="" placeholder="Search by name, job, client, skills..." id="kt_tagify_2" onchange="filtersdataget()" />
+                                </div>
+                                <select class="form-select form-select-solid w-auto" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="10">Newest to Oldest (Offer Date)</option>
+                                    <option value="11">Oldest to Newest (Offer Date)</option>
+                                    <option value="12">Newest to Oldest (Join Date)</option>
+                                    <option value="13">Oldest to Newest (Join Date)</option>
+                                    <option value="14">Low to High (Offer Amount)</option>
+                                    <option value="15">High to Low (Offer Amount)</option>
+                                </select>
+
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-calendar-days"></i> Placed Date</button>
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-id-badge"></i> Recruiter</button>
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-building"></i> Client</button>
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-briefcase"></i> Job / Designation</button>
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-location-dot"></i> Location</button>
+                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-sliders"></i> More Filters</button>
+
+                                <div class="ms-auto d-flex align-items-center gap-2">
+                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-star"></i> Saved Views</button>
+                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-table-columns"></i> Group By</button>
+                                </div>
+
+                                {{-- kept for functional parity with the old country/location filter (hidden, unused today) --}}
+                                <select class="d-none" id="country">
+                                    <option value="110" selected="selected">Location</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="card-body pt-3 px-5">
+                        <div class="card-body pt-3 px-0">
                             <div class="loadingMessage loadingMessagebenchCandidatePlaceAjax" style="display: none; position: absolute;">Processing...</div>
-                            <table class="table align-middle table-row-dashed fs-6 gy-5" id="myTable">
-                                <thead>
-                                    <tr class="fw-bolder text-muted" role="row">
-                                        <th class="w-10px pe-0">
-                                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                <input class="form-check-input" type="checkbox" value="1"></div>
-                                        </th>
-                                        <th class="">Talent Name</th>
-                                        <th class="">Jobs</th>
-                                        <th class="">Job Status</th>
-                                        <th class="">Source</th>
-                                        <th class="">Offer Amount</th>
-                                        <th class="">Joining Date</th>
-                                        <th class="">Stage</th>
-                                        <th class="">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="benchCandidatePlaceAjax"> </tbody>
-                            </table>
+                            <div id="placedTableWrap">
+                                <table class="table align-middle table-row-dashed fs-6 gy-4 mb-0" id="myTable">
+                                    <thead>
+                                        <tr class="fw-bolder text-muted" role="row">
+                                            <th class="w-10px pe-0">
+                                                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                                                    <input class="form-check-input" type="checkbox" value="1"></div>
+                                            </th>
+                                            <th>Candidate</th>
+                                            <th>Placement Timeline</th>
+                                            <th>Client &amp; Job Details</th>
+                                            <th>Recruiter</th>
+                                            <th>Commercials</th>
+                                            <th>Current Assignment</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="benchCandidatePlaceAjax"> </tbody>
+                                </table>
+                            </div>
                             <div id="paginationbenchCandidatePlace"></div>
                         </div>
                     </div>
@@ -226,180 +415,21 @@
 
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
-    <script>
-        // var input2 = document.querySelector("#kt_tagify_2");
-        // new Tagify(input2);
-    </script>
-    <script>
-        function showAlert(bench_app_id, placeid) {
-            Swal.fire({
-                title: "Placed End Date",
-                html: '<input type="date" id="swal-input-date" value="" class="swal2-input" placeholder="Placed End Date...">',
-                icon: "info",
-                showCancelButton: true,
-                confirmButtonText: 'Submit',
-                preConfirm: () => {
-                    const dateValue = document.getElementById('swal-input-date').value;
-                    if (!dateValue) {
-                        Swal.showValidationMessage('Please select a date');
-                    }
-                    return dateValue;
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    console.log('Selected date:', result.value);
-                    var bench_placed_end_date = result.value;
-                    var url = '{!! route('service_company.bench-candidates.update_placed_end_date') !!}';
-                    //url 							= 	url.replace(':id', id);
-                    var token = '{{ csrf_token() }}';
-                    $.ajax({
-                        type: 'POST',
-                        url: url,
-                        data: {
-                            '_token': token,
-                            '_method': 'POST',
-                            'bench_app_id': bench_app_id,
-                            'bench_placed_end_date': bench_placed_end_date,
-                            'placeid': placeid
-                        },
-                        success: function(response) {
-                            if (response.status == "success") {
-                                Swal.fire("success", 'End date has been updated successfully', "success");
-                            }
-                            fetchBenchBenchCandidatesCandidateList();
-                        }
-                    });
-                }
-            });
-        }
 
-
+    <script>
         $(document).ready(function() {
-
-
             $('#kt_tagify_2').keyup(function() {
-                // tableLoad('load');
                 fetchBenchBenchCandidatesCandidateList();
             });
         });
 
-        var table;
-        // tableLoad('load');
-
         function filtersdataget() {
-            // tableLoad('load');
             fetchBenchBenchCandidatesCandidateList();
         }
-
-        // function tableLoad(type) {
-        //     var status = 'all';
-        //     var jobs = 'all';
-        //     var clients = 'all';
-        //     var source = 'all';
-        //     var search_passport = 'all';
-        //     var search_np_id = 'all';
-        //     var inputSearch = $('#inputSearch').val();
-        //     var sortingfilter = $('#sortingfilter').val();
-        //     var country = $('#country').val();
-        //     var cus_search = $('#kt_tagify_2').val();
-        //     table = $('#myTable').dataTable({
-        //         serverSide: true, // Enable server-side processing
-        //         responsive: true,
-        //         processing: true,
-        //         ordering: false,
-        //         destroy: true,
-        //         stateSave: true,
-        //         "bLengthChange": false,
-        //         sDom: 'lrtip',
-        //         ajax: '{!! route('service_company.bench-candidates.placedListingData') !!}?search=' + inputSearch + '&sortingfilter=' + sortingfilter +
-        //             '&country=' + country + '&cus_search=' + cus_search,
-
-        //         "fnDrawCallback": function(oSettings) {
-        //             $("body").tooltip({
-        //                 selector: '[data-toggle="tooltip"]'
-        //             });
-        //         },  		  		
-        //         columns: [{
-        //                 data: 'chkbox',
-        //                 name: 'chkbox',
-        //                 width: '1%',
-        //                 searchable: false,
-        //                 orderable: false
-        //             },
-        //             {
-        //                 data: 'Name',
-        //                 name: 'Name',
-        //                 width: '10%',
-        //                 orderable: true
-        //             },
-        //             // { data: 'Contacts', name: 'Contacts', width: '7%', orderable: true },
-        //             {
-        //                 data: 'Exp',
-        //                 name: 'Exp',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Salary',
-        //                 name: 'Salary',
-        //                 width: '5%',
-        //                 orderable: true
-        //             },
-
-        //             // { data: 'Qualifaction', name: 'Qualifaction', width: '2%', orderable: true },
-
-        //             {
-        //                 data: 'Location',
-        //                 name: 'Location',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Assigned',
-        //                 name: 'Assigned',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'JoiningDate',
-        //                 name: 'JoiningDate',
-        //                 width: '7%',
-        //                 orderable: true
-        //             },
-
-        //             // { data: 'Placed_End_Date', name: 'Placed_End_Date', width: '8%', orderable: true },
-
-        //             {
-        //                 data: 'OfferAmount',
-        //                 name: 'OfferAmount',
-        //                 width: '7%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Requisitions',
-        //                 name: 'Requisitions',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Status',
-        //                 name: 'Status',
-        //                 width: '2%',
-        //                 orderable: true
-        //             }
-        //         ]
-
-
-        //     });
-        //     new $.fn.dataTable.FixedHeader(table);
-
-
-        // }
     </script>
 
     <script>
         $(document).on('click', '.hm-listing', function() {
-
             $('#kt_activitiesHM_toggle').trigger('click');
             var id = $(this).data('row-id');
             var url = "{{ route('service_company.bench-candidates.hmlisting', ':id') }}";
@@ -434,93 +464,55 @@
                 success: function(response) {
                     if (response.status == "success") {
                         $('#stage_body_content').html(response.view);
-                    }
-                }
-            });
-
-
-
-        });
-
-        $(document).on('change', '.placed_end_date', function() {
-
-            var bench_app_id = $(this).data('id');
-            var placeid = $(this).data('placeid');
-            var bench_placed_end_date = $(this).val();
-            var url = '{!! route('service_company.bench-candidates.update_placed_end_date') !!}';
-            //url 							= 	url.replace(':id', id);
-            var token = '{{ csrf_token() }}';
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'bench_app_id': bench_app_id,
-                    'bench_placed_end_date': bench_placed_end_date,
-                    'placeid': placeid
-                },
-                success: function(response) {
-                    if (response.status == "success") {
-                        //$('#right-sidebar-content').html(response.view);
+                        $('#stage_sub_stage').modal('show');
                     }
                 }
             });
         });
 
         $(document).ready(function() {
-				fetchBenchBenchCandidatesCandidateList();
-				$(document).on('click', '#paginationbenchCandidatePlace .page-link', function(e) {
-						e.preventDefault();
+            fetchBenchBenchCandidatesCandidateList();
 
-						const page = $(this).data('page');
-						if (!page || $(this).hasClass('disabled')) return;
+            $(document).on('click', '#paginationbenchCandidatePlace .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                $(this).addClass('disabled');
+                fetchBenchBenchCandidatesCandidateList(page).then(() => {
+                    $('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
+                }).catch(() => {
+                    $('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
+                });
+            });
 
-						// Disable the clicked pagination link
-						$(this).addClass('disabled');
+            $(document).on('change', '#paginationbenchCandidatePlace #rowsPerPageSelect', function() {
+                fetchBenchBenchCandidatesCandidateList(1);
+            });
+        });
 
-						// Fetch data
-						fetchBenchBenchCandidatesCandidateList(page, $('#search').val()).then(() => {
-							// Re-enable the links after successful data fetch
-							$('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
-						}).catch(() => {
-							// Re-enable the links even if there's an error
-							$('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
-						});
-						
-				});
-		});   
+        function fetchBenchBenchCandidatesCandidateList(page = 1) {
+            var sortingfilter = $('#sortingfilter').val();
+            var country = $('#country').val();
+            var cus_search = $('#kt_tagify_2').val();
+            var size = $('#rowsPerPageSelect').val() || 10;
 
-		function fetchBenchBenchCandidatesCandidateList(page = 1, search = '') {
-                var status = 'all';
-                var jobs = 'all';
-                var clients = 'all';
-                var source = 'all';
-                var search_passport = 'all';
-                var search_np_id = 'all';
-                var inputSearch = $('#inputSearch').val();
-                var sortingfilter = $('#sortingfilter').val();
-                var country = $('#country').val();
-                var cus_search = $('#kt_tagify_2').val();
-				$('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'block' });
-				$.ajax({
-					url: `{!! route('service_company.bench-candidates.placedListingData_ajax') !!}?page=${page}`,
-					type: 'GET',
-					data: {
-						search: $('#inputSearch').val(),
-						cus_search: $('#kt_tagify_2').val(),
-						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
-					},
-					success: function(response) {
-						$('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });
-                        $('#totalPlace').html(response.total);
-						$('#benchCandidatePlaceAjax').html(response.html);
-						$('#paginationbenchCandidatePlace').html(response.pagination);
-					}
-				});
-		}
-
-
+            $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'block' });
+            return $.ajax({
+                url: `{!! route('service_company.bench-candidates.placedListingData_ajax') !!}?page=${page}`,
+                type: 'GET',
+                data: {
+                    cus_search: cus_search,
+                    country: country,
+                    sortingfilter: sortingfilter,
+                    size: size
+                },
+                success: function(response) {
+                    $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });
+                    $('#totalPlace').html(response.total);
+                    $('#benchCandidatePlaceAjax').html(response.html);
+                    $('#paginationbenchCandidatePlace').html(response.pagination);
+                }
+            });
+        }
     </script>
 @endpush

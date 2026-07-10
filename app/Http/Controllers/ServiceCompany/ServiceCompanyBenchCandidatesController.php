@@ -4687,6 +4687,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
 			'listType' => 'allcandidate',
+			'per_page' => $size, // lets pagination partial show the real page size instead of assuming 10
 		];
 
 		$userPermissions = $this->userPermissions;
