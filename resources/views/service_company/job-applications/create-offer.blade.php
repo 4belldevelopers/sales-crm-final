@@ -540,20 +540,60 @@
         .co-appr-detail-label { color: #7e8299; }
         .co-appr-detail-value { color: #181c32; font-weight: 600; text-align: right; }
 
-        /* Real approval status (pending/approved/rejected), sourced from offer_create_main_tds.management_status */
-        .co-appr-status-card { border-radius: 12px; padding: 16px; text-align: center; }
-        .co-appr-status-card--pending { background: #fff8e1; border: 1px solid #f6e6b8; }
-        .co-appr-status-card--approved { background: #e3f7e9; border: 1px solid #b7ebc6; }
-        .co-appr-status-card--rejected { background: #fff0f3; border: 1px solid #ffd6de; }
-        .co-appr-status-icon { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-        .co-appr-status-card--pending .co-appr-status-icon { background: #ffeb0066; color: #8a6d00; }
-        .co-appr-status-card--approved .co-appr-status-icon { background: #d7f3e0; color: #0f7a3d; }
-        .co-appr-status-card--rejected .co-appr-status-icon { background: #ffd9e1; color: #d1224b; }
-        .co-appr-status-icon svg { width: 22px; height: 22px; }
-        .co-appr-status-title { font-size: 13px !important; font-weight: 700; color: #181c32; }
-        .co-appr-status-approver { font-size: 11px; color: #3f4254; font-weight: 600; margin-top: 4px; }
-        .co-appr-status-meta { font-size: 10px; color: #7e8299; margin-top: 2px; }
-        .co-appr-status-note { font-size: 10px; color: #5e6278; font-style: italic; margin-top: 8px; background: rgba(255,255,255,.6); border-radius: 8px; padding: 6px 10px; }
+        /* ── Approval Timeline ── */
+        /* Shared column widths — used by BOTH the header row and each data card */
+        .co-appr-tl-grid { display: grid; grid-template-columns: 1fr 130px 160px 190px; align-items: center; gap: 0; }
+        /* Header row: same flex shell as data rows but no card styling */
+        .co-appr-tl-cols { display: flex; align-items: center; padding-bottom: 10px; }
+        .co-appr-tl-cols-spacer { width: 52px; flex-shrink: 0; }
+        .co-appr-tl-col-hd { font-size: 10px; font-weight: 700; color: #a1a5b7; text-transform: uppercase; letter-spacing: .5px; padding: 0 14px 0 0; }
+        .co-appr-tl-col-hd:first-child { padding-left: 0; }
+        /* Card — fills the space right of the dot column */
+        .co-appr-tl-card { background: #fff; border: 1.5px solid #eef1f7; border-radius: 12px; padding: 12px 14px; }
+        .co-appr-tl-card--active   { border-color: #f59e0b; background: #fffbf3; }
+        .co-appr-tl-card--approved { border-color: #eef1f7; background: #fff; }
+        .co-appr-tl-card--rejected { border-color: #fca5a5; background: #fff7f7; }
+        /* Dot column with connector line */
+        .co-appr-tl-dot-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; position: relative; padding: 0; }
+        .co-appr-tl-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
+        .co-appr-tl-dot svg { width: 18px; height: 18px; }
+        .co-appr-tl-dot--approved { background: #22c55e; color: #fff; box-shadow: 0 0 0 4px #bbf7d0; }
+        .co-appr-tl-dot--active   { background: #f59e0b; color: #fff; box-shadow: 0 0 0 4px #fde68a; }
+        .co-appr-tl-dot--waiting  { background: #3b82f6; color: #fff; box-shadow: 0 0 0 4px #bfdbfe; }
+        .co-appr-tl-dot--rejected { background: #ef4444; color: #fff; box-shadow: 0 0 0 4px #fca5a5; }
+        /* Dashed vertical connector between cards */
+        .co-appr-tl-connector { width: 2px; flex: 1; min-height: 14px; background: repeating-linear-gradient(to bottom, #d1d5db 0 4px, transparent 4px 8px); margin: 4px 0; }
+        /* Approver cell */
+        .co-appr-tl-appr { display: flex; align-items: center; gap: 10px; padding-right: 10px; }
+        .co-appr-tl-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e8ecf5; color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+        .co-appr-tl-name { font-size: 12px; font-weight: 700; color: #181c32; line-height: 1.3; }
+        .co-appr-tl-sub  { font-size: 10px; color: #7e8299; margin-top: 2px; }
+        /* Role */
+        .co-appr-tl-role { font-size: 11px; color: #5e6278; padding-right: 10px; }
+        /* Status cell */
+        .co-appr-tl-status { display: flex; flex-direction: column; gap: 4px; padding-right: 10px; }
+        .co-appr-tl-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 20px; white-space: nowrap; }
+        .co-appr-tl-badge--approved { background: #dcfce7; color: #15803d; }
+        .co-appr-tl-badge--active   { background: #fef3c7; color: #d97706; }
+        .co-appr-tl-badge--waiting  { background: #ede9fe; color: #7c3aed; }
+        .co-appr-tl-badge--rejected { background: #fee2e2; color: #dc2626; }
+        .co-appr-tl-date { font-size: 10px; color: #a1a5b7; }
+        /* Reminder cell */
+        .co-appr-tl-rem { display: flex; flex-direction: column; gap: 5px; }
+        .co-appr-tl-rem-row { display: flex; align-items: center; gap: 6px; }
+        .co-appr-tl-rem-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: #1b84ff; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+        .co-appr-tl-rem-btn:hover { background: #dbeafe; }
+        .co-appr-tl-rem-btn svg { width: 11px; height: 11px; }
+        .co-appr-tl-kebab { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; color: #a1a5b7; cursor: pointer; border: 1px solid #eef1f7; background: #fff; flex-shrink: 0; }
+        .co-appr-tl-kebab:hover { background: #f4f4f6; color: #181c32; }
+        .co-appr-tl-kebab svg { width: 13px; height: 13px; }
+        .co-appr-tl-last-sent { font-size: 10px; color: #a1a5b7; }
+        /* Add Approver dashed button */
+        .co-appr-add-dashed { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #1b84ff; background: transparent; border: 1.5px dashed #93c5fd; border-radius: 8px; padding: 6px 16px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+        .co-appr-add-dashed:hover { background: #eff6ff; border-color: #1b84ff; }
+        .co-appr-add-dashed svg { width: 13px; height: 13px; }
+        /* Rejection note */
+        .co-appr-status-note { font-size: 10px; color: #5e6278; font-style: italic; margin-top: 8px; background: #fff5f5; border-radius: 8px; padding: 6px 10px; border: 1px solid #fca5a5; }
 
         /* Activity log — real entries from the updatetimeline table */
         .co-appr-activity-item { padding: 8px 0; border-bottom: 1px solid #f4f4f6; }
@@ -885,7 +925,7 @@
     {{-- Header title "Compensation" removed — the 5-step timeline is the header. The close
          (X) button is floated to the top-right corner so the header bar takes NO height. --}}
     <div class="card-header border-0" id="kt_activities_header" style="min-height:0;padding:0;position:absolute;top:8px;right:12px;z-index:6;">
-
+          
         @php
             // Guard: $userPermissions is normally provided by middleware; default to []
             // so an undefined-variable warning can never become a 500 for this AJAX view.
@@ -2665,7 +2705,7 @@
                                     {{-- Direct download: navigates to a route that streams the PDF as an
                                          attachment (no AJAX/JSON/storage-URL — those all failed silently on
                                          the live host). target=_blank so the current drawer stays put. --}}
-                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id) }}"
+                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}"
                                        target="_blank" rel="noopener"
                                        class="btn co-btn-close co-step3-download">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
@@ -2738,67 +2778,124 @@
                                     // (Set by fwd_offer_send() when the request is emailed, and by the public
                                     // saveSignature() endpoint when the approver clicks Approve/Reject.)
                                     $co_mgmt_status = (int) (@$section_change_value->management_status ?? 0);
-                                    $co_approver_label = trim((string) (@$co_appr_timeline->name_hr ?: @$co_appr_timeline->email_id_hr ?? ''));
+                                    $_co_tl_latest = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline->first() : $co_appr_timeline;
+                                    $co_approver_label = trim((string) (@$_co_tl_latest->name_hr ?: @$_co_tl_latest->email_id_hr ?? ''));
                                 @endphp
 
                                 <div class="co-appr-layout">
                                     <div class="co-appr-main">
-                                        <h5 class="co-tpl-title" style="margin-bottom:14px;">Approval</h5>
+                                        {{-- ── Approval Timeline header ── --}}
+                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                                            <div>
+                                                <h5 class="co-tpl-title">Approval Timeline</h5>
+                                                <div style="font-size:10px;color:#7e8299;margin-top:3px;">
+                                                    @php $co_appr_all_tl = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline : collect(); @endphp
+                                                    @if($co_mgmt_status == 2) Offer approved — ready to send to candidate.
+                                                    @elseif($co_mgmt_status == 3) Offer rejected.
+                                                    @elseif($co_appr_all_tl->isNotEmpty()) Awaiting decision from approver.
+                                                    @else No approver assigned yet.
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <button type="button"
+                                                data-jobid="{{ @$application->job_id }}"
+                                                data-candidate="{{ @$application->id }}"
+                                                data-mtype="2"
+                                                data-offerId="{{ $offer_id }}"
+                                                class="co-appr-add-dashed fwd_offer {{ $section_change_value ? '' : 'd-none' }}">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                                Add Approver
+                                            </button>
+                                        </div>
 
-                                        @if($co_mgmt_status === 0)
+                                        @if($co_appr_all_tl->isEmpty())
+                                            {{-- Empty state --}}
                                             <div class="co-appr-empty-state">
                                                 <div class="co-appr-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M19 8v6M22 11h-6"/></svg></div>
-                                                <div class="co-appr-empty-title">Send this offer for approval</div>
+                                                <div class="co-appr-empty-title">No approver assigned yet</div>
                                                 <div class="co-appr-empty-sub">Choose an approver from your internal team, or the client's team if this job has one.</div>
-                                                <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                    data-candidate="{{ @$application->id }}" data-mtype="2"
-                                                    data-offerId="{{ $offer_id }}"
-                                                    class="btn co-btn-save fwd_offer section_change_value {{ $section_change_value ? '' : 'd-none' }}"
-                                                    data-wizard-type="action-next">+ Add Approver</button>
                                             </div>
                                         @else
-                                            <div class="co-appr-status-card co-appr-status-card--{{ $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'pending') }}">
-                                                <div class="co-appr-status-icon">
-                                                    @if($co_mgmt_status == 2)
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                                                    @elseif($co_mgmt_status == 3)
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                                    @else
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                                                    @endif
+                                            {{-- Column headers — same flex shell as rows, 52px spacer + 4-col grid --}}
+                                            <div class="co-appr-tl-cols">
+                                                <div class="co-appr-tl-cols-spacer"></div>
+                                                <div class="co-appr-tl-grid" style="flex:1;padding:0 14px;">
+                                                    <div class="co-appr-tl-col-hd">Approver</div>
+                                                    <div class="co-appr-tl-col-hd">Role</div>
+                                                    <div class="co-appr-tl-col-hd">Status (Date &amp; Time)</div>
+                                                    <div class="co-appr-tl-col-hd">Email Reminder</div>
                                                 </div>
-                                                <div class="co-appr-status-title">
-                                                    @if($co_mgmt_status == 2) Offer Approved
-                                                    @elseif($co_mgmt_status == 3) Offer Rejected
-                                                    @else Pending Approval
-                                                    @endif
-                                                </div>
-                                                @if(!empty($co_approver_label))
-                                                    <div class="co-appr-status-approver">{{ $co_mgmt_status == 1 ? 'Awaiting response from' : ($co_mgmt_status == 2 ? 'Approved by' : 'Rejected by') }} {{ $co_approver_label }}</div>
-                                                @endif
-                                                <div class="co-appr-status-meta">
-                                                    @if($co_mgmt_status == 1 && !empty(@$section_change_value->send_approved_date_time))
-                                                        Requested on {{ date('d M Y, h:i A', strtotime($section_change_value->send_approved_date_time)) }}
-                                                    @elseif($co_mgmt_status >= 2 && !empty(@$section_change_value->approved_date_time))
-                                                        {{ $co_mgmt_status == 2 ? 'Approved' : 'Rejected' }} on {{ date('d M Y, h:i A', strtotime($section_change_value->approved_date_time)) }}
-                                                    @endif
-                                                </div>
-                                                @if($co_mgmt_status == 3 && !empty(@$co_appr_timeline->note))
-                                                    <div class="co-appr-status-note">&ldquo;{{ $co_appr_timeline->note }}&rdquo;</div>
-                                                @endif
                                             </div>
-                                            <div style="text-align:center; margin-top:12px;">
-                                                <button type="button" data-jobId="{{ @$application->job_id }}"
-                                                    data-candidate="{{ @$application->id }}" data-mtype="2"
-                                                    data-offerId="{{ $offer_id }}"
-                                                    class="btn co-btn-close fwd_offer"
-                                                    data-wizard-type="action-next">{{ $co_mgmt_status == 1 ? 'Resend / Choose a Different Approver' : 'Send to Another Approver' }}</button>
+
+                                            {{-- Timeline rows (ASC: oldest first, last row = current status) --}}
+                                            @php $co_appr_asc = $co_appr_all_tl->reverse()->values(); @endphp
+                                            @foreach($co_appr_asc as $co_tl_row)
+                                            @php
+                                                $row_label   = trim((string)(@$co_tl_row->name_hr ?: @$co_tl_row->email_id_hr ?? ''));
+                                                $row_email   = trim((string)(@$co_tl_row->email_id_hr ?? ''));
+                                                $row_initial = $row_label ? strtoupper(substr($row_label,0,1)) : '?';
+                                                $row_role    = trim((string)(@$co_tl_row->designation_offer ?: @$co_tl_row->approver_designation ?? ''));
+                                                $row_date    = !empty($co_tl_row->create_at) ? date('d M Y, h:i A', strtotime($co_tl_row->create_at)) : '';
+                                                // Last row carries actual management_status; earlier rows = already-sent (waiting)
+                                                if ($loop->last) {
+                                                    $row_dot   = $co_mgmt_status == 2 ? 'approved' : ($co_mgmt_status == 3 ? 'rejected' : 'active');
+                                                    $row_badge = $row_dot;
+                                                    $row_card  = $row_dot;
+                                                    $row_label_status = $co_mgmt_status == 2 ? 'Approved' : ($co_mgmt_status == 3 ? 'Rejected' : 'Pending');
+                                                } else {
+                                                    $row_dot = $row_badge = 'waiting';
+                                                    $row_card = '';
+                                                    $row_label_status = 'Pending';
+                                                }
+                                            @endphp
+                                            {{-- Row: 52px dot column + flex-1 card --}}
+                                            <div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">
+                                                <div style="width:52px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
+                                                    <div class="co-appr-tl-dot co-appr-tl-dot--{{ $row_dot }}">
+                                                        @if($row_dot==='approved')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        @elseif($row_dot==='rejected')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                                        @elseif($row_dot==='active')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                                        @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                                        @endif
+                                                    </div>
+                                                    @if(!$loop->last)<div class="co-appr-tl-connector"></div>@endif
+                                                </div>
+                                                {{-- Card uses same 4-col grid as header --}}
+                                                <div class="co-appr-tl-card co-appr-tl-grid {{ $row_card ? 'co-appr-tl-card--'.$row_card : '' }}" style="flex:1;">
+                                                    <div class="co-appr-tl-appr">
+                                                        <div class="co-appr-tl-avatar">{{ $row_initial }}</div>
+                                                        <div>
+                                                            <div class="co-appr-tl-name">{{ $row_label ?: $row_email ?: '—' }}</div>
+                                                            @if($row_role)<div class="co-appr-tl-sub">{{ $row_role }}</div>@endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="co-appr-tl-role">{{ $row_role ?: '—' }}</div>
+                                                    <div class="co-appr-tl-status">
+                                                        <span class="co-appr-tl-badge co-appr-tl-badge--{{ $row_badge }}">{{ $row_label_status }}</span>
+                                                        <div class="co-appr-tl-date">{{ $row_date ?: '—' }}</div>
+                                                    </div>
+                                                    <div class="co-appr-tl-rem">
+                                                        <div class="co-appr-tl-rem-row">
+                                                            <button type="button" class="co-appr-tl-rem-btn co-appr-remind-send" data-email="{{ $row_email }}" data-name="{{ $row_label }}" data-offerid="{{ $offer_id }}">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                                                                Send Reminder
+                                                            </button>
+                                                            <span class="co-appr-tl-kebab" title="More options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span>
+                                                        </div>
+                                                        <div class="co-appr-tl-last-sent">Last sent: {{ $row_date ?: '—' }}</div>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            @endforeach
+
+                                            @if($co_mgmt_status == 3 && !empty(@$_co_tl_latest->note))
+                                                <div class="co-appr-status-note" style="margin-top:8px;">&ldquo;{{ $_co_tl_latest->note }}&rdquo;</div>
+                                            @endif
                                         @endif
 
-                                        <div class="co-appr-note">
+                                        <div class="co-appr-note" style="margin-top:14px;">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                                            <span>An approval request email will be sent to the recipient(s) you choose, with a link they can use to approve or reject &mdash; no login required. You can pick from your internal team, or the client's team when this job has one.</span>
+                                            <span>Approvals will be requested in the order shown above. You can reorder or remove approvers before sending the offer.</span>
                                         </div>
                                     </div>
 
@@ -2872,7 +2969,8 @@
                                     $so_join    = @$joined_date ?: @$co_joining_date;
                                     $so_join_fmt = ($so_join && strtotime($so_join)) ? date('d M Y', strtotime($so_join)) : '';
                                     $so_mgmt    = (int) (@$section_change_value->management_status ?? 0);
-                                    $so_appr_name = trim((string) (@$co_appr_timeline->name_hr ?: @$co_appr_timeline->email_id_hr ?? ''));
+                                    $_so_tl_latest = ($co_appr_timeline instanceof \Illuminate\Support\Collection) ? $co_appr_timeline->first() : $co_appr_timeline;
+                                    $so_appr_name = trim((string) (@$_so_tl_latest->name_hr ?: @$_so_tl_latest->email_id_hr ?? ''));
                                     $so_appr_date = @$section_change_value->approved_date_time;
                                     // Not a stored field (no expiry column exists on offer_create_main_tds) — a standard
                                     // 15-day acceptance window computed off the offer's creation date, display-only.
@@ -3172,6 +3270,92 @@
                     }
 
                 }
+
+                // Called by offerSendMail after each approval email is sent — adds a new row to the timeline
+                function co_updateStep4Timeline(email, name) {
+                    var displayName = (name && name !== email) ? name : email;
+                    var initial     = displayName ? displayName.charAt(0).toUpperCase() : '?';
+                    var safeEmail   = $('<span/>').text(email).html();
+                    var safeName    = $('<span/>').text(displayName).html();
+                    var offId       = '{{ $offer_id }}';
+
+                    var mailSvg  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+                    var kebabSvg = '<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>';
+                    var activeSvg= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+                    var connSvg  = '<div class="co-appr-tl-connector"></div>';
+                    var connectorHtml = '<div class="co-appr-tl-connector"></div>';
+
+                    var newEntry =
+                        '<div style="display:flex;align-items:stretch;margin-bottom:8px;" class="co-appr-tl-entry">' +
+                            '<div style="width:52px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
+                                '<div class="co-appr-tl-dot co-appr-tl-dot--active">' + activeSvg + '</div>' +
+                            '</div>' +
+                            '<div class="co-appr-tl-card co-appr-tl-card--active" style="flex:1;display:grid;grid-template-columns:1fr 130px 160px 190px;align-items:center;gap:0;padding:12px 14px;">' +
+                                '<div class="co-appr-tl-appr">' +
+                                    '<div class="co-appr-tl-avatar">' + initial + '</div>' +
+                                    '<div><div class="co-appr-tl-name">' + safeName + '</div></div>' +
+                                '</div>' +
+                                '<div class="co-appr-tl-role">—</div>' +
+                                '<div class="co-appr-tl-status">' +
+                                    '<span class="co-appr-tl-badge co-appr-tl-badge--active">Pending</span>' +
+                                    '<div class="co-appr-tl-date">Sent just now</div>' +
+                                '</div>' +
+                                '<div class="co-appr-tl-rem">' +
+                                    '<div class="co-appr-tl-rem-row">' +
+                                        '<button type="button" class="co-appr-tl-rem-btn co-appr-remind-send" data-email="' + safeEmail + '" data-name="' + safeName + '" data-offerid="' + offId + '">' + mailSvg + ' Send Reminder</button>' +
+                                        '<span class="co-appr-tl-kebab">' + kebabSvg + '</span>' +
+                                    '</div>' +
+                                    '<div class="co-appr-tl-last-sent">Last sent: just now</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+
+                    var $main = $('#step4 .co-appr-main');
+                    var $entries = $main.find('.co-appr-tl-entry');
+
+                    if ($entries.length) {
+                        // Add connector to previous last entry dot column before appending
+                        $entries.last().find('.co-appr-tl-dot').parent().append(connectorHtml);
+                        $entries.last().after(newEntry);
+                    } else {
+                        // Build full timeline layout for first add
+                        var colHdr =
+                            '<div class="co-appr-tl-cols" style="padding-left:52px;margin-bottom:4px;">' +
+                                '<div class="co-appr-tl-col-hd">Approver</div>' +
+                                '<div class="co-appr-tl-col-hd">Role</div>' +
+                                '<div class="co-appr-tl-col-hd">Status (Date &amp; Time)</div>' +
+                                '<div class="co-appr-tl-col-hd">Email Reminder</div>' +
+                            '</div>';
+                        var $emptyState = $main.find('.co-appr-empty-state');
+                        if ($emptyState.length) { $emptyState.replaceWith(colHdr + newEntry); }
+                        else { $main.find('.co-appr-tl-cols').length ? $main.find('.co-appr-note').before(newEntry) : $main.prepend(colHdr + newEntry); }
+                    }
+                    // Update header subtitle
+                    $main.find('[style*="font-size:10px;color:#7e8299"]').first().text('Awaiting decision from approver.');
+                }
+
+                // Send Reminder handler
+                $(document).on('click', '.co-appr-remind-send', function() {
+                    var $btn = $(this);
+                    var rEmail  = $btn.data('email');
+                    var rOffId  = $btn.data('offerid');
+                    if (!rEmail) return;
+                    var mailIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+                    $btn.html(mailIcon + ' Sending…').css({'pointer-events':'none','opacity':'0.6'});
+                    $.ajax({
+                        type:'POST', url:"{{ route('service_company.cvtracker.fwd_offer_send') }}",
+                        data:{ '_token':"{{ csrf_token() }}", 'template':'', 'from_email':"{{ auth()->user()->email ?? '' }}", 'to_email':rEmail, 'cc_email':'', 'subject':'', 'attached_cv':0, 'editor1':'', 'arr':[], 'mtypeId':8, 'offerId':rOffId, 'signature':0 },
+                        success:function(r) {
+                            $btn.html(mailIcon + ' Send Reminder').css({'pointer-events':'','opacity':'1'});
+                            if (r.status === 'rateLimited') { Swal.fire('Already Sent', r.message, 'info'); }
+                            else if (r.status === 'success') {
+                                $btn.closest('.co-appr-tl-rem').find('.co-appr-tl-last-sent').text('Last sent: just now');
+                                Swal.fire({icon:'success', title:'Reminder sent', timer:1500, showConfirmButton:false});
+                            } else { Swal.fire('Error', r.message || 'Could not send reminder.', 'error'); }
+                        },
+                        error:function() { $btn.html(mailIcon + ' Send Reminder').css({'pointer-events':'','opacity':'1'}); Swal.fire('Error','Could not send reminder.','error'); }
+                    });
+                });
 
                 // Function to move to the previous step
                 function prevStep(event, currentStep) {
@@ -5237,7 +5421,7 @@
                         var jobIdArr = [id];
                         $('.chk_list_item:checked').each(function() {
 
-                            var jobId = $(this).attr('data-jobId');
+                            var jobId = $(this).attr('data-jobid');
                             arr.push($(this).val());
                             jobIdArr.push(jobId);
                         });
@@ -5451,12 +5635,12 @@
                     // placeholders in the template using the real offer/candidate data server-side.
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.email_template') }}",
+                        url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
                         data: {
                             '_token': "{{ csrf_token() }}",
                             'template': template,
                             'selectedApplicantListing': [$('#co_send_appid').val()],
-                            'offerId': $('#co_send_offerid').val(),
+                            'offerId': $('#co_send_offerid').val(),  
                             'mailtype': 7,
                             'to_email': $('#co_send_candidateemail').val(),
                             'from_email': JSON.stringify([{ value: $('#co_send_fromemail').val() }])
@@ -5544,7 +5728,11 @@
                     $btn.find('.co-send-submit-label').hide(); $btn.find('.co-send-submit-wait').show();
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
+                        {{-- Relative URL, not route()'s default absolute one — the deployed .env's
+                             APP_URL points at a different, unrelated domain (hire.jero.works), so an
+                             absolute URL here silently made this a cross-origin POST that never actually
+                             reached this server. Same root cause as the Download Offer Letter bug. --}}
+                        url: "{{ route('service_company.cvtracker.fwd_offer_send', [], false) }}",
                         data: formData,
                         processData: false,
                         contentType: false,
