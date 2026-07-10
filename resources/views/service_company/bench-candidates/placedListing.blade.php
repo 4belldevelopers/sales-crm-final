@@ -136,6 +136,66 @@
         .placed-change-link:hover { color: #0077b5; }
 
         .rows-per-page-select { cursor: pointer; }
+
+        /* ---- commercial configuration drawer ---- */
+        #kt_commercialConfig .card-header { border-bottom: 1px solid #eef0f4; }
+        .cc-step-head { display: flex; align-items: center; gap: .5rem; margin-bottom: .85rem; }
+        .cc-step-num {
+            width: 22px; height: 22px; border-radius: 50%; background: #009ef7; color: #fff;
+            font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .cc-step-title { font-size: 14px; font-weight: 700; color: #181c32; }
+        .cc-step-title .cc-step-suffix { font-weight: 500; color: #7e8299; font-size: 12.5px; }
+
+        .cc-option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+        .cc-option-card {
+            display: flex; align-items: center; gap: .6rem; cursor: pointer;
+            border: 1.5px solid #e4e6ef; border-radius: .65rem; padding: .8rem .9rem;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .cc-option-card:hover { border-color: #b5d9f7; }
+        .cc-option-card.is-selected { border-color: #009ef7; background: #f1faff; }
+        .cc-option-icon {
+            width: 30px; height: 30px; border-radius: .5rem; background: #f4f4f8; color: #5e6278;
+            display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+        }
+        .cc-option-card.is-selected .cc-option-icon { background: #dbf3ff; color: #009ef7; }
+        .cc-option-label { font-size: 13px; font-weight: 600; color: #3f4254; flex-grow: 1; }
+        .cc-option-radio {
+            width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d7dae1; flex-shrink: 0; position: relative;
+        }
+        .cc-option-card.is-selected .cc-option-radio { border-color: #009ef7; }
+        .cc-option-card.is-selected .cc-option-radio::after {
+            content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #009ef7;
+        }
+
+        .cc-info-banner {
+            display: flex; align-items: center; gap: .5rem; background: #f1faff; color: #3f4254;
+            border-radius: .55rem; padding: .65rem .85rem; font-size: 12.5px; font-weight: 500;
+        }
+        .cc-info-banner i { color: #009ef7; }
+        .cc-info-banner.is-success { background: #eafff3; }
+        .cc-info-banner.is-success i { color: #17c653; }
+        .cc-info-banner.is-danger { background: #fff5f8; }
+        .cc-info-banner.is-danger i { color: #f1416c; }
+
+        .cc-tabs { display: flex; gap: 1.25rem; border-bottom: 1px solid #eef0f4; margin: 1.25rem 0 1.25rem; }
+        .cc-tab {
+            display: flex; align-items: center; gap: .4rem; padding-bottom: .6rem; cursor: pointer;
+            font-size: 12.5px; font-weight: 600; color: #7e8299; border-bottom: 2px solid transparent; margin-bottom: -1px;
+        }
+        .cc-tab.is-active { color: #009ef7; border-bottom-color: #009ef7; }
+
+        .cc-section { border: 1px solid #eef0f4; border-radius: .75rem; padding: 1.1rem 1.2rem; margin-bottom: 1rem; }
+        .cc-section-title { font-size: 13.5px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: .4rem; }
+        .cc-section-sub { font-size: 11.5px; color: #a1a5b7; margin: 2px 0 1rem; }
+        .cc-field-label { font-size: 12px; font-weight: 600; color: #3f4254; margin-bottom: .35rem; display: block; }
+        .cc-helper-text { font-size: 11.5px; color: #7e8299; margin-top: .35rem; }
+        .cc-auto-badge {
+            display: inline-block; font-size: 10px; font-weight: 700; color: #17c653; background: #eafff3;
+            border-radius: .35rem; padding: 1px 6px; margin-top: .35rem;
+        }
     </style>
 @endpush
 
@@ -415,6 +475,160 @@
             </div>
         </div>
     </div>
+
+    {{-- =====================================================
+         Commercial Configuration drawer — opened from the "Change" link
+         in the Commercials column. There is no backend endpoint to persist
+         these terms yet (no commercial_configuration table/route exists),
+         so this is a view-only calculator: every field, the Indian-numbering
+         amount-in-words line, and the margin math run entirely client-side
+         (no AJAX calls at all), and "Save Configuration" just closes the
+         drawer with a heads-up rather than pretending to persist anything.
+         Only the initial Billing Amount and the pre-selected Commercial
+         Model are real, seeded from the clicked row's actual offer amount
+         and employment type.
+    ====================================================== --}}
+    <div id="kt_commercialConfig_toggle"></div>
+    <div id="kt_commercialConfig" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="commercial-config"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '640px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_commercialConfig_toggle" data-kt-drawer-close="#kt_commercialConfig_close">
+        <div class="card shadow-none rounded-0 w-100 h-100" style="display:flex; flex-direction:column;">
+            <div class="card-header align-items-start px-6 py-5">
+                <div class="d-flex flex-column">
+                    <h2 class="fw-bolder text-dark mb-1">Commercial Configuration</h2>
+                    <div class="text-muted fs-8">Configure commercial terms for this placement.</div>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_commercialConfig_close">
+                        <i class="fa-solid fa-xmark fs-3"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body px-6 py-5" id="kt_commercialConfig_body" style="overflow-y:auto; flex-grow:1;">
+
+                {{-- Step 1: Service Type --}}
+                <div class="cc-step-head">
+                    <span class="cc-step-num">1</span>
+                    <span class="cc-step-title">Service Type</span>
+                </div>
+                <div class="cc-option-grid mb-5" id="ccServiceTypeGrid">
+                    <label class="cc-option-card" data-value="free">
+                        <span class="cc-option-icon"><i class="fa-regular fa-calendar"></i></span>
+                        <span class="cc-option-label">Free Service</span>
+                        <span class="cc-option-radio"></span>
+                    </label>
+                    <label class="cc-option-card is-selected" data-value="paid">
+                        <span class="cc-option-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                        <span class="cc-option-label">Paid Service</span>
+                        <span class="cc-option-radio"></span>
+                    </label>
+                </div>
+
+                <div id="ccPaidServiceSection">
+                    {{-- Step 2: Commercial Model --}}
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Commercial Model <span class="cc-step-suffix">(Paid Service)</span></span>
+                    </div>
+                    <div class="cc-option-grid mb-4" id="ccModelGrid">
+                        <label class="cc-option-card is-selected" data-value="contract">
+                            <span class="cc-option-icon"><i class="fa-solid fa-people-group"></i></span>
+                            <span class="cc-option-label">Contract Staffing</span>
+                            <span class="cc-option-radio"></span>
+                        </label>
+                        <label class="cc-option-card" data-value="fulltime">
+                            <span class="cc-option-icon"><i class="fa-regular fa-calendar-check"></i></span>
+                            <span class="cc-option-label">Full-time Hiring</span>
+                            <span class="cc-option-radio"></span>
+                        </label>
+                    </div>
+
+                    <div class="cc-info-banner mb-4">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>You are configuring terms for <strong id="ccModelBannerText">Contract Staffing</strong>.</span>
+                    </div>
+
+                    <div class="cc-tabs">
+                        <div class="cc-tab is-active" data-tab="general"><i class="fa-regular fa-user"></i> General</div>
+                        <div class="cc-tab" data-tab="notes"><i class="fa-regular fa-note-sticky"></i> Notes</div>
+                        <div class="cc-tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
+                    </div>
+
+                    <div id="ccTabGeneral">
+                        <div class="cc-section">
+                            <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
+                            <div class="cc-section-sub">Define the billing amount and billing cycle for this <span id="ccModelLower">contract</span>.</div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="cc-field-label">Billing Amount (₹) *</label>
+                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccBillingAmount" value="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="cc-field-label">Billing Cycle *</label>
+                                    <select class="form-select form-select-solid" id="ccBillingCycle">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="hourly">Hourly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="cc-helper-text" id="ccAmountWords">Zero Only</div>
+                            <div class="cc-info-banner mt-3">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span>This amount will be billed to the client as per the selected billing cycle.</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-section mb-0">
+                            <div class="cc-section-title"><i class="fa-solid fa-calculator"></i> 2. Commercial Details</div>
+                            <div class="cc-section-sub"><span id="ccMarginFieldLabel2">Margin</span> and profit are calculated automatically.</div>
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <label class="cc-field-label" id="ccMarginFieldLabel">Gross Margin (%) *</label>
+                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccMarginPct" value="20">
+                                </div>
+                                <div class="col-4">
+                                    <label class="cc-field-label">Profit (₹)</label>
+                                    <input type="text" class="form-control form-control-solid" id="ccProfitAmt" value="0" disabled>
+                                    <span class="cc-auto-badge">Auto Calculated</span>
+                                </div>
+                                <div class="col-4">
+                                    <label class="cc-field-label">Margin Amount (₹)</label>
+                                    <input type="text" class="form-control form-control-solid" id="ccMarginAmt" value="0" disabled>
+                                    <span class="cc-auto-badge">Auto Calculated</span>
+                                </div>
+                            </div>
+                            <div class="cc-info-banner is-success mt-3" id="ccMarginHealthBanner">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span id="ccMarginHealthText">Gross Margin is healthy (Above 20%).</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ccTabNotes" class="d-none text-center text-muted py-10 fs-8">
+                        <i class="fa-regular fa-note-sticky fs-2 d-block mb-2"></i>
+                        No notes yet for this placement's commercial terms.
+                    </div>
+                    <div id="ccTabHistory" class="d-none text-center text-muted py-10 fs-8">
+                        <i class="fa-solid fa-clock-rotate-left fs-2 d-block mb-2"></i>
+                        No configuration history yet.
+                    </div>
+                </div>
+
+                <div id="ccFreeServiceNote" class="d-none text-center text-muted py-10 fs-8">
+                    <i class="fa-regular fa-calendar fs-2 d-block mb-2"></i>
+                    Free Service placements have no billing terms to configure.
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
+                <button type="button" class="btn btn-light" id="kt_commercialConfig_cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="kt_commercialConfig_save">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
@@ -493,6 +707,155 @@
 
             $(document).on('change', '#paginationbenchCandidatePlace #rowsPerPageSelect', function() {
                 fetchBenchBenchCandidatesCandidateList(1);
+            });
+        });
+
+        // =====================================================
+        // Commercial Configuration drawer — pure client-side calculator.
+        // No AJAX calls here at all: opening the drawer, switching options,
+        // and recalculating margin/profit all happen instantly in-browser.
+        // =====================================================
+        function ccNumberToWordsIndian(num) {
+            num = Math.floor(Math.abs(num || 0));
+            if (num === 0) return 'Zero';
+            var ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+                'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            var tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+            function twoDigits(n) {
+                if (n < 20) return ones[n];
+                return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+            }
+            function threeDigits(n) {
+                var s = '';
+                if (n >= 100) {
+                    s += ones[Math.floor(n / 100)] + ' Hundred';
+                    n = n % 100;
+                    if (n) s += ' ';
+                }
+                if (n) s += twoDigits(n);
+                return s;
+            }
+
+            var crore = Math.floor(num / 10000000); num %= 10000000;
+            var lakh = Math.floor(num / 100000); num %= 100000;
+            var thousand = Math.floor(num / 1000); num %= 1000;
+            var rest = num;
+
+            var parts = [];
+            if (crore) parts.push(threeDigits(crore) + ' Crore');
+            if (lakh) parts.push(twoDigits(lakh) + ' Lakh');
+            if (thousand) parts.push(twoDigits(thousand) + ' Thousand');
+            if (rest) parts.push(threeDigits(rest));
+
+            return parts.join(' ') || 'Zero';
+        }
+
+        function ccRecalc() {
+            var amount = parseFloat(($('#ccBillingAmount').val() || '0').toString().replace(/,/g, '')) || 0;
+            var marginPct = parseFloat($('#ccMarginPct').val()) || 0;
+            var marginAmt = Math.round(amount * marginPct / 100);
+
+            $('#ccProfitAmt').val(marginAmt.toLocaleString('en-IN'));
+            $('#ccMarginAmt').val(marginAmt.toLocaleString('en-IN'));
+            $('#ccAmountWords').text(ccNumberToWordsIndian(amount) + ' Only');
+
+            var isContract = $('#ccModelGrid .cc-option-card[data-value="contract"]').hasClass('is-selected');
+            var termLabel = isContract ? 'Gross Margin' : 'Placement Fee';
+            var banner = $('#ccMarginHealthBanner');
+            if (marginPct >= 20) {
+                banner.removeClass('is-danger').addClass('is-success');
+                banner.find('i').attr('class', 'fa-solid fa-circle-check');
+                $('#ccMarginHealthText').text(termLabel + ' is healthy (Above 20%).');
+            } else {
+                banner.removeClass('is-success').addClass('is-danger');
+                banner.find('i').attr('class', 'fa-solid fa-triangle-exclamation');
+                $('#ccMarginHealthText').text(termLabel + ' is low (Below 20%).');
+            }
+        }
+
+        $(document).on('click', '#ccServiceTypeGrid .cc-option-card', function() {
+            $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            if ($(this).data('value') === 'free') {
+                $('#ccPaidServiceSection').addClass('d-none');
+                $('#ccFreeServiceNote').removeClass('d-none');
+            } else {
+                $('#ccPaidServiceSection').removeClass('d-none');
+                $('#ccFreeServiceNote').addClass('d-none');
+            }
+        });
+
+        $(document).on('click', '#ccModelGrid .cc-option-card', function() {
+            $('#ccModelGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            var isContract = $(this).data('value') === 'contract';
+            var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
+
+            $('#ccModelBannerText').text(modelName);
+            $('#ccModelLower').text(isContract ? 'contract' : 'placement');
+            $('#ccMarginFieldLabel').text((isContract ? 'Gross Margin' : 'Placement Fee') + ' (%) *');
+            $('#ccMarginFieldLabel2').text(isContract ? 'Gross Margin' : 'Placement Fee');
+
+            var cycleSelect = $('#ccBillingCycle').empty();
+            if (isContract) {
+                cycleSelect.append('<option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option>');
+            } else {
+                cycleSelect.append('<option value="onetime">One-time</option><option value="milestone">Milestone-based</option>');
+            }
+            ccRecalc();
+        });
+
+        $(document).on('click', '.cc-tab', function() {
+            $('.cc-tab').removeClass('is-active');
+            $(this).addClass('is-active');
+            var tab = $(this).data('tab');
+            $('#ccTabGeneral, #ccTabNotes, #ccTabHistory').addClass('d-none');
+            $('#ccTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).removeClass('d-none');
+        });
+
+        $(document).on('input', '#ccBillingAmount, #ccMarginPct', ccRecalc);
+        $(document).on('blur', '#ccBillingAmount', function() {
+            var amount = parseFloat(($(this).val() || '0').toString().replace(/,/g, '')) || 0;
+            $(this).val(amount.toLocaleString('en-IN'));
+        });
+
+        $(document).on('click', '.commercial-change-btn', function(e) {
+            e.preventDefault();
+            var amount = parseFloat($(this).data('amount')) || 0;
+            var empType = ($(this).data('employment-type') || '').toString().toLowerCase();
+            var isContract = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
+
+            $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
+            $('#ccServiceTypeGrid .cc-option-card[data-value="paid"]').addClass('is-selected');
+            $('#ccPaidServiceSection').removeClass('d-none');
+            $('#ccFreeServiceNote').addClass('d-none');
+
+            $('#ccMarginPct').val(20);
+            $('#ccBillingAmount').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+
+            $('#ccModelGrid .cc-option-card[data-value="' + (isContract ? 'contract' : 'fulltime') + '"]').click();
+
+            $('.cc-tab').removeClass('is-active');
+            $('.cc-tab[data-tab="general"]').addClass('is-active');
+            $('#ccTabGeneral').removeClass('d-none');
+            $('#ccTabNotes, #ccTabHistory').addClass('d-none');
+
+            $('#kt_commercialConfig_toggle').trigger('click');
+        });
+
+        $('#kt_commercialConfig_cancel').on('click', function() {
+            $('#kt_commercialConfig_close').trigger('click');
+        });
+
+        $('#kt_commercialConfig_save').on('click', function() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Preview Only',
+                text: 'Commercial terms captured for preview — connect this to a save endpoint to persist them.',
+                confirmButtonText: 'Got it'
+            }).then(function() {
+                $('#kt_commercialConfig_close').trigger('click');
             });
         });
 
