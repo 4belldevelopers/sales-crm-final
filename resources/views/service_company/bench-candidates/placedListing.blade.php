@@ -221,6 +221,12 @@
             display: flex; align-items: center; justify-content: space-between;
             border: 1px solid #e4e6ef; border-radius: .5rem; padding: .55rem .8rem; font-size: 12.5px; font-weight: 600; color: #3f4254;
         }
+
+        .cc-summary-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem;
+            background: #f9f9fb; border-radius: .6rem; padding: .9rem 1rem;
+        }
+        .cc-summary-cell { display: flex; flex-direction: column; gap: .2rem; }
     </style>
 @endpush
 
@@ -538,23 +544,24 @@
                     <span class="cc-step-title">Service Type</span>
                 </div>
                 <div class="cc-option-grid mb-5" id="ccServiceTypeGrid">
-                    <label class="cc-option-card" data-value="free">
+                    <label class="cc-option-card is-selected" data-value="free">
                         <span class="cc-option-icon"><i class="fa-regular fa-calendar"></i></span>
-                        <span class="cc-option-label">Free Service</span>
+                        <span class="cc-option-label">Free Service<br><small class="text-muted fw-normal">No charges for this placement</small></span>
                         <span class="cc-option-radio"></span>
                     </label>
-                    <label class="cc-option-card is-selected" data-value="paid">
+                    <label class="cc-option-card" data-value="paid">
                         <span class="cc-option-icon"><i class="fa-solid fa-sack-dollar"></i></span>
-                        <span class="cc-option-label">Paid Service</span>
+                        <span class="cc-option-label">Paid Service<br><small class="text-muted fw-normal">Charges applicable</small></span>
                         <span class="cc-option-radio"></span>
                     </label>
                 </div>
 
                 <div id="ccPaidServiceSection">
-                    {{-- Step 2: Commercial Model --}}
+                    {{-- Step 2: Commercial Model — stays visible regardless of Free/Paid, since the
+                         staffing model (contract vs full-time) is independent of whether it's billed. --}}
                     <div class="cc-step-head">
                         <span class="cc-step-num">2</span>
-                        <span class="cc-step-title">Commercial Model <span class="cc-step-suffix">(Paid Service)</span></span>
+                        <span class="cc-step-title">Commercial Model <span class="cc-step-suffix" id="ccModelStepSuffix">(Free Service)</span></span>
                     </div>
                     <div class="cc-option-grid mb-4" id="ccModelGrid">
                         <label class="cc-option-card is-selected" data-value="contract">
@@ -571,7 +578,7 @@
 
                     <div class="cc-info-banner mb-4">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>You are configuring terms for <strong id="ccModelBannerText">Contract Staffing</strong>.</span>
+                        <span id="ccModelBanner">You are configuring a <strong>Free Service</strong> for <strong id="ccModelBannerText">Contract Staffing</strong>.</span>
                     </div>
 
                     <div class="cc-tabs">
@@ -581,8 +588,69 @@
                     </div>
 
                     <div id="ccTabGeneral">
+                        {{-- Free Service fields: no billing, just a reason/effective-date record --}}
+                        <div id="ccFreeServiceFields">
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title">2. Commercial Configuration</div>
+                                <div class="cc-info-banner is-success mt-3 mb-4" style="display:block;">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fa-solid fa-circle-check mt-1"></i>
+                                        <div>
+                                            <div class="fw-bold">This placement is marked as a Free Service.</div>
+                                            <div>No fees or margin will be applicable.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="cc-section-title fs-8 mb-3">Service Details</div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Service Type *</label>
+                                        <select class="form-select form-select-solid" id="ccFreeServiceTypeField">
+                                            <option value="free" selected>Free Service</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Reason / Purpose *</label>
+                                        <select class="form-select form-select-solid" id="ccFreeReason">
+                                            <option>Goodwill</option>
+                                            <option>Internal Placement</option>
+                                            <option>Trial Period</option>
+                                            <option>Partner Referral</option>
+                                            <option>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label class="cc-field-label">Effective Date *</label>
+                                <input type="date" class="form-control form-control-solid mb-4" id="ccFreeEffectiveDate">
+
+                                <div class="cc-summary-grid">
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Service Fee</span>
+                                        <span class="cc-calc-value">₹0</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Gross Margin</span>
+                                        <span class="cc-calc-value">0%</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Billing Amount</span>
+                                        <span class="cc-calc-value">₹0</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Billing Cycle</span>
+                                        <span class="cc-calc-value">-</span>
+                                    </div>
+                                </div>
+                                <div class="cc-info-banner is-success mt-3">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>No billing or fees applicable for this placement.</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Contract Staffing fields: billed recurring, margin-based --}}
-                        <div id="ccContractFields">
+                        <div id="ccContractFields" class="d-none">
                             <div class="cc-section">
                                 <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
                                 <div class="cc-section-sub">Define the billing amount and billing cycle for this contract.</div>
@@ -786,11 +854,6 @@
                         No configuration history yet.
                     </div>
                 </div>
-
-                <div id="ccFreeServiceNote" class="d-none text-center text-muted py-10 fs-8">
-                    <i class="fa-regular fa-calendar fs-2 d-block mb-2"></i>
-                    Free Service placements have no billing terms to configure.
-                </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
                 <button type="button" class="btn btn-light" id="kt_commercialConfig_cancel">Cancel</button>
@@ -945,33 +1008,38 @@
             }
         }
 
+        // Service Type (Free/Paid) and Commercial Model (Contract/Full-time) are independent
+        // selections — the model stays pickable even for a Free Service, per the design.
+        // Together they decide which single General-tab field block is visible.
+        function ccUpdateGeneralTab() {
+            var isFree = $('#ccServiceTypeGrid .cc-option-card[data-value="free"]').hasClass('is-selected');
+            var isContract = $('#ccModelGrid .cc-option-card[data-value="contract"]').hasClass('is-selected');
+            var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
+
+            $('#ccFreeServiceFields').toggleClass('d-none', !isFree);
+            $('#ccContractFields').toggleClass('d-none', isFree || !isContract);
+            $('#ccFulltimeFields').toggleClass('d-none', isFree || isContract);
+
+            $('#ccModelStepSuffix').text('(' + (isFree ? 'Free Service' : 'Paid Service') + ')');
+            $('#ccModelBanner').html(isFree
+                ? 'You are configuring a <strong>Free Service</strong> for <strong id="ccModelBannerText">' + modelName + '</strong>.'
+                : 'You are configuring terms for <strong id="ccModelBannerText">' + modelName + '</strong>.');
+
+            if (!isFree) {
+                if (isContract) { ccRecalc(); } else { ccFulltimeRecalc(); }
+            }
+        }
+
         $(document).on('click', '#ccServiceTypeGrid .cc-option-card', function() {
             $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
             $(this).addClass('is-selected');
-            if ($(this).data('value') === 'free') {
-                $('#ccPaidServiceSection').addClass('d-none');
-                $('#ccFreeServiceNote').removeClass('d-none');
-            } else {
-                $('#ccPaidServiceSection').removeClass('d-none');
-                $('#ccFreeServiceNote').addClass('d-none');
-            }
+            ccUpdateGeneralTab();
         });
 
         $(document).on('click', '#ccModelGrid .cc-option-card', function() {
             $('#ccModelGrid .cc-option-card').removeClass('is-selected');
             $(this).addClass('is-selected');
-            var isContract = $(this).data('value') === 'contract';
-            var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
-
-            $('#ccModelBannerText').text(modelName);
-            $('#ccContractFields').toggleClass('d-none', !isContract);
-            $('#ccFulltimeFields').toggleClass('d-none', isContract);
-
-            if (isContract) {
-                ccRecalc();
-            } else {
-                ccFulltimeRecalc();
-            }
+            ccUpdateGeneralTab();
         });
 
         $(document).on('click', '.cc-tab', function() {
@@ -1059,8 +1127,10 @@
 
             $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
             $('#ccServiceTypeGrid .cc-option-card[data-value="paid"]').addClass('is-selected');
-            $('#ccPaidServiceSection').removeClass('d-none');
-            $('#ccFreeServiceNote').addClass('d-none');
+
+            // Free Service fields — reset to today's date / default reason
+            $('#ccFreeReason').val('Goodwill');
+            $('#ccFreeEffectiveDate').val(new Date().toISOString().slice(0, 10));
 
             // Contract Staffing fields
             $('#ccMarginPct').val(20);
