@@ -5633,9 +5633,10 @@
                     // mailtype 7 = candidate offer email (same code path offerSendMail() used for
                     // mtype==1) — it's what fills COMPANY_NAME/CANDIDATE_NAME/JOB_TITLE/OFFER_LETTER_LINK
                     // placeholders in the template using the real offer/candidate data server-side.
+                    //  url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
+                        url: "{{ route('service_company.cvtracker.email_template') }}",
                         data: {
                             '_token': "{{ csrf_token() }}",
                             'template': template,
