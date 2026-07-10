@@ -290,16 +290,13 @@
                     </div>
 
                     {{-- =====================================================
-                         Filter bar — Search and Sort are real and wired to
-                         the existing AJAX endpoint. Placed Date / Recruiter /
-                         Client / Job / Location / More Filters / Saved Views /
-                         Group By have no backend support yet, so they render
-                         as inert HTML controls for now.
+                         Filter bar — Search and Sort only; both are real and
+                         wired to the existing AJAX endpoint.
                     ====================================================== --}}
                     <div class="card mb-3">
                         <div class="card-body py-3 px-4">
                             <div class="placed-filter-bar">
-                                <div class="flex-grow-1" style="min-width: 220px; max-width: 340px;">
+                                <div class="flex-grow-1">
                                     <input type="text" class="form-control form-control-solid" name="inputJobSearch"
                                         value="" placeholder="Search by name, job, client, skills..." id="kt_tagify_2" onchange="filtersdataget()" />
                                 </div>
@@ -314,18 +311,6 @@
                                     <option value="14">Low to High (Offer Amount)</option>
                                     <option value="15">High to Low (Offer Amount)</option>
                                 </select>
-
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-calendar-days"></i> Placed Date</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-id-badge"></i> Recruiter</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-building"></i> Client</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-briefcase"></i> Job / Designation</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-location-dot"></i> Location</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-sliders"></i> More Filters</button>
-
-                                <div class="ms-auto d-flex align-items-center gap-2">
-                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-star"></i> Saved Views</button>
-                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-table-columns"></i> Group By</button>
-                                </div>
 
                                 {{-- kept for functional parity with the old country/location filter (hidden, unused today) --}}
                                 <select class="d-none" id="country">
