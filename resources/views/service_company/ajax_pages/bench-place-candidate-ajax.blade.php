@@ -150,6 +150,18 @@
                         $nameLinkClass = $flag == 1 ? 'text-danger' : 'text-dark';
                         $subLinkClass = $flag == 1 ? 'text-danger' : 'text-muted';
 
+                        // Experience + current city — both are real fields already stored on the
+                        // ES candidate document (job_applications.total_exp / .city), same source
+                        // used by the sort/filter logic elsewhere in this controller.
+                        $expLocBits = [];
+                        if (!empty(@$row->total_exp)) {
+                            $expLocBits[] = rtrim(@$row->total_exp, '.') . ' Yrs';
+                        }
+                        if (!empty(@$row->city)) {
+                            $expLocBits[] = ucwords(@$row->city);
+                        }
+                        $expLocLine = implode(' &middot; ', $expLocBits);
+
                         echo '<div class="d-flex align-items-start">
                                 <div class="symbol symbol-circle symbol-40px overflow-hidden me-3 position-relative flex-shrink-0">
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $profile_sidebar_css . '">' . $nameImg . '</a>
@@ -160,36 +172,77 @@
                                         '<sup class="text-warning fw-bold ms-1">' . $tredmark . '</sup></a>
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $subLinkClass . ' fw-bold d-block fs-8 text-hover-primary ' . $profile_sidebar_css . '" data-toggle="tooltip" title="' . ucwords(@$row->current_designation) . '">' .
                                         ucwords(mb_substr(@$row->current_designation, 0, 24)) . '</a>
+                                    <span class="text-muted fw-semibold fs-9 d-block">' . $expLocLine . '</span>
                                     <div class="mt-1">' . $skilltag . '</div>
                                 </div>
                               </div>';
                     }
                 @endphp
             </td>
-            {{-- Placement Timeline: only "Joined" is real (of_joined_date); Offer node is a static
-                 milestone marker since no offer-date field exists in the ES document yet. --}}
+            {{-- Placement Timeline: the full Bench -> Offer -> Joined -> Placed journey.
+                 Bench date = job_applications.created_at (the table backing this ES index),
+                 looked up by the candidate's own primary key — one indexed PK lookup, same
+                 cost profile as the duplicate-check / job_assign lookups already done per row
+                 above. Joined date = of_joined_date (already real). There is no dedicated
+                 "offer released" timestamp anywhere in the schema (only offer_release/
+                 offer_acceptance flags), so that node is shown without a fabricated date.
+                 Placed = same event as Joined in this data model (there is no separate
+                 "placed" timestamp distinct from joining), so it reuses the joined date. --}}
             <td>
                 @php
-                    $joined_date = $joined_time = $date = '';
-                    $date = @$row->of_joined_date;
-                    $sinceText = '';
-                    if ($date != '0000-00-00 00:00:00' && !empty($date)) {
-                        $joined_date = date('d M', strtotime($date));
-                        $joined_time = date('d M Y', strtotime($date));
-                        $days = now()->diffInDays(\Carbon\Carbon::parse($date), false);
-                        $sinceText = abs(round($days)) . ' days since joining';
+                    $joinedRaw = @$row->of_joined_date;
+                    $hasJoined = !empty($joinedRaw) && $joinedRaw != '0000-00-00 00:00:00';
+
+                    $benchRaw = null;
+                    if (!empty(@$row->candidate_id)) {
+                        $benchRaw = DB::table('job_applications')->where('id', $row->candidate_id)->value('created_at');
                     }
+                    $hasBench = !empty($benchRaw);
+
+                    $benchLabel = $hasBench ? date('d M', strtotime($benchRaw)) : '--';
+                    $joinedLabel = $hasJoined ? date('d M', strtotime($joinedRaw)) : '--';
+
+                    $durationText = '';
+                    if ($hasBench && $hasJoined) {
+                        $durationDays = abs(\Carbon\Carbon::parse($benchRaw)->diffInDays(\Carbon\Carbon::parse($joinedRaw)));
+                        $durationText = 'Total Duration: ' . $durationDays . ' Days';
+                    }
+
+                    $benchNodeCls = $hasBench ? 'is-done' : 'is-static';
+                    $joinedNodeCls = $hasJoined ? 'is-done' : 'is-static';
+                    // "Placed" only makes sense once joining is confirmed, and there is no
+                    // separate placed-timestamp in the schema — it reuses the joined date.
+                    $placedNodeCls = $hasJoined ? 'is-done' : 'is-static';
+                    $lineAfterBench = $hasBench ? 'is-done' : '';
+                    $lineAfterOffer = $hasJoined ? 'is-done' : '';
+                    $lineAfterJoined = $hasJoined ? 'is-done' : '';
 
                     echo '<div class="placed-timeline">
                             <div class="placed-timeline-track">
-                                <div class="placed-timeline-node is-static" data-toggle="tooltip" title="Offer stage"></div>
-                                <span class="placed-timeline-line"></span>
-                                <div class="placed-timeline-node is-done" data-toggle="tooltip" title="Joined ' . $joined_time . '"></div>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $benchNodeCls . '" data-toggle="tooltip" title="Bench"></div>
+                                    <span class="placed-timeline-node-label">' . $benchLabel . '</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterBench . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node is-static" data-toggle="tooltip" title="Offer"></div>
+                                    <span class="placed-timeline-node-label">--</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterOffer . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $joinedNodeCls . '" data-toggle="tooltip" title="Joined"></div>
+                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterJoined . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $placedNodeCls . '" data-toggle="tooltip" title="Placed"></div>
+                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
+                                </div>
                             </div>
-                            <div class="d-flex flex-column mt-1">
-                                <span class="text-dark fw-bolder fs-8">Joined ' . $joined_date . '</span>
-                                <span class="text-muted fw-bold fs-9">' . $sinceText . '</span>
+                            <div class="placed-timeline-labels">
+                                <span>Bench</span><span>Offer</span><span>Joined</span><span>Placed</span>
                             </div>
+                            <div class="text-muted fw-bold fs-9 mt-1">' . $durationText . '</div>
                           </div>';
                 @endphp
             </td>
@@ -227,10 +280,22 @@
                         $recommendation_text = __('messages.internal_tag');
                     }
 
+                    // job location — reuses the $job_status_get document already fetched above
+                    // for job status, so this adds no extra query.
+                    $jobLocationBits = array_filter([@$job_status_get->city, @$job_status_get->state]);
+                    $jobLocationLine = implode(', ', $jobLocationBits);
+
                     echo '<div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' . $row->title . '">' . $job_title . '</a>
-                            <span class="text-muted fw-bold d-block fs-8" data-toggle="tooltip" title="' . @$client_title_name . '">' . @$client_name . '</span>
-                            <span class="fw-bold fs-9 ' . @$class . '">' . $status . ' &middot; ' . $recommendation_text . '</span>
+                            <span class="placed-detail-line"><i class="fa-solid fa-building text-muted"></i>
+                                <span class="text-muted fw-bold fs-8" data-toggle="tooltip" title="' . @$client_title_name . '">' . @$client_name . '</span>
+                            </span>
+                            <span class="placed-detail-line"><i class="fa-solid fa-briefcase text-muted"></i>
+                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' . $row->title . '">' . $job_title . '</a>
+                            </span>' .
+                            ($jobLocationLine ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i>
+                                <span class="text-muted fw-semibold fs-9">' . $jobLocationLine . '</span>
+                            </span>' : '') . '
+                            <span class="fw-bold fs-9 ' . @$class . ' mt-1">' . $status . ' &middot; ' . $recommendation_text . '</span>
                           </div>';
                 @endphp
             </td>
@@ -245,11 +310,9 @@
                         $rowpostedby = $row->posted_by;
                     }
 
-                    $post_company_name = @$row->post_company_name ?: @$row->company_name;
-
                     echo '<div class="d-flex flex-column">
-                            <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' . @$rowpostedby . '">' . ucfirst(mb_substr($rowpostedby, 0, 14)) . '</span>
-                            <span class="text-muted fw-bold d-block fs-8" data-toggle="tooltip" title="' . @$post_company_name . '">' . mb_substr(@$post_company_name, 0, 16) . '</span>
+                            <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' . @$rowpostedby . '">' . ucfirst(mb_substr($rowpostedby, 0, 16)) . '</span>
+                            <span class="text-muted fw-semibold d-block fs-9">Recruiter</span>
                           </div>';
                 @endphp
             </td>
@@ -277,17 +340,22 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Current Assignment: real placed status + real sub-status from bench_status_subline() --}}
+            {{-- Current Assignment: this listing's ES query already hard-filters to status=3
+                 ("Work Assigned"), so bench_status_subline() always returns the same real
+                 sub-status here. Displaying it as "Currently Working" is a direct, honest
+                 relabel of that one real status — the same renaming the job-status column
+                 already does (Active -> "Hiring" etc), not a fabricated per-row distinction. --}}
             <td>
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
                     $subS = $result->name ?? '';
+                    $assignmentLabel = $row->status == 3 ? 'Currently Working' : ucwords($subS);
 
                     echo '<div class="d-flex flex-column">
-                            <span class="placed-status-pill ' . $row->css_style . '">
-                                <i class="fa-solid fa-circle-check fs-7 me-1"></i>Placed
+                            <span class="placed-status-pill is-success">
+                                <i class="fa-solid fa-circle-check me-1"></i>' . $assignmentLabel . '
                             </span>
-                            <span class="text-muted fw-bold d-block fs-8 mt-1">' . $subS . '</span>
+                            <span class="text-muted fw-bold d-block fs-9 mt-1">' . $subS . '</span>
                           </div>';
                 @endphp
             </td>

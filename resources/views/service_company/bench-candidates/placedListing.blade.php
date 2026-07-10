@@ -102,16 +102,28 @@
         .fs-8 { font-size: 11.5px !important; }
         .fs-9 { font-size: 10.5px !important; }
 
-        .placed-timeline-track { display: flex; align-items: center; }
+        .placed-timeline { min-width: 190px; }
+        .placed-timeline-track { display: flex; align-items: flex-start; }
+        .placed-timeline-node-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .placed-timeline-node.is-static { background: #e4e6ef; border: 2px solid #e4e6ef; }
+        .placed-timeline-node.is-static { background: #fff; border: 2px solid #e4e6ef; }
         .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
-        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 26px; margin: 0 2px; }
+        .placed-timeline-node-label { font-size: 9.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
+        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 14px; margin: 4px 1px 0; }
+        .placed-timeline-line.is-done { background: #17c653; }
+        .placed-timeline-labels { display: flex; justify-content: space-between; margin-top: 1px; }
+        .placed-timeline-labels span { font-size: 9px; color: #a1a5b7; }
+
+        .placed-detail-line { display: flex; align-items: center; gap: .35rem; margin-bottom: 1px; }
+        .placed-detail-line i { font-size: 10px; width: 12px; text-align: center; }
 
         .placed-status-pill {
             display: inline-flex; align-items: center; width: fit-content;
             font-size: 11.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
         }
+        .placed-status-pill.is-success { background: #e8fff3; color: #17c653; }
+        .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; }
+        .placed-status-pill.is-danger { background: #fff5f8; color: #f1416c; }
         .placed-action-btn { width: 30px; height: 30px; }
 
         .rows-per-page-select { cursor: pointer; }
@@ -339,7 +351,7 @@
                                             <th>Client &amp; Job Details</th>
                                             <th>Recruiter</th>
                                             <th>Commercials</th>
-                                            <th>Current Assignment</th>
+                                            <th>Current Assignment /<br>Replacement</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
