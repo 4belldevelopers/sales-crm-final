@@ -15024,7 +15024,7 @@ class HomeController extends Controller
                        // ✅ Store correctly
                         Storage::disk('public')->put($filename, $pdf->output());
                         //    $path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
-                        $path = asset('storage/' . $filename);
+                        $path = request()->getSchemeAndHttpHost() . '/storage/' . $filename;
                         //    dd($path);
 						if($coinnotdeduct){
 								$eventId = 36;
@@ -15156,9 +15156,73 @@ class HomeController extends Controller
 					
                 
     }
+    /** Stream offer-letter PDF directly to browser — no file storage, no URL dependency. Public route for candidate signature-pad page. */
+    public function streamPublicOfferLetter($offerId)
+    {
+        $exits_offer = DB::table('offer_create_main_tds')->where('offer_id', '=', $offerId)->where('status', '=', 1)->first();
+        if (!$exits_offer) { abort(404, 'Offer letter not found'); }
+
+        $rowDataOfferDetails = GeneralMethod::offerLetterdetails($offerId);
+        $address        = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->address : '';
+        $comapny_name   = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->comapny_name : '';
+        $logo           = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->logo : '';
+        $job_title      = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->job_title : '';
+        $candidate_name = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->full_name : '';
+
+        $offer_terms_conditions = DB::table('offer_terms_conditions')->where('offer_id', '=', $offerId)->orderByDesc('id')->first();
+        $offerDetails = DB::table('offer_create_main_tds')
+            ->join('offer_job_applications', 'offer_create_main_tds.offer_id', '=', 'offer_job_applications.id')
+            ->where('offer_job_applications.id', $offerId)
+            ->where('offer_create_main_tds.status', '=', 1)
+            ->select(
+                'offer_create_main_tds.offer_id',
+                'offer_create_main_tds.employment_type',
+                'offer_create_main_tds.id as of_main_td',
+                'offer_create_main_tds.currency',
+                'offer_create_main_tds.salary_ctc',
+                'offer_create_main_tds.accept_date_time',
+                'offer_create_main_tds.signature_candidate',
+                'offer_create_main_tds.salary_mode',
+                'offer_create_main_tds.designation',
+                'offer_create_main_tds.joined_date',
+                'offer_create_main_tds.monthly_gross',
+                'offer_create_main_tds.yearly_gross',
+                'offer_create_main_tds.monthly_bounus_gross',
+                'offer_create_main_tds.yearly_bonus_gross',
+                'offer_create_main_tds.monthly_insurence_gross',
+                'offer_create_main_tds.yearly_insurence_gross',
+                'offer_create_main_tds.yearly_final_gross',
+                'offer_create_main_tds.monthly_final_gross'
+            )->get()
+            ->map(function ($offer) {
+                $basicPoints = DB::table('basic_offer_points')->where('offer_create_main_td_id', $offer->of_main_td)
+                    ->select('id', 'poins as basic_poins', 'Percentage as basic_percentage', 'condition_s as basic_condition_s', 'monthly as basic_monthly', 'yearly as basic_yearly')->get()->toArray();
+                $bonusPoints = DB::table('bonus_offer_points')->where('offer_create_main_td_id', $offer->of_main_td)
+                    ->select('id', 'poins as bonus_poins', 'Percentage as bonus_percentage', 'condition_s as bonus_condition_s', 'monthly as bonus_monthly', 'yearly as bonus_yearly')->get()->toArray();
+                $insurancePoints = DB::table('insurence_offer_points')->where('offer_create_main_td_id', $offer->of_main_td)
+                    ->select('id', 'poins as insurence_poins', 'Percentage as insurence_percentage', 'condition_s as insurence_condition_s', 'monthly as insurence_monthly', 'yearly as insurence_yearly')->get()->toArray();
+                return [
+                    'offer_id' => $offer->offer_id, 'employment_type' => $offer->employment_type,
+                    'of_main_td' => $offer->of_main_td, 'accept_date_time' => $offer->accept_date_time,
+                    'signature_candidate' => $offer->signature_candidate, 'currency' => $offer->currency,
+                    'salary_ctc' => $offer->salary_ctc, 'salary_mode' => $offer->salary_mode,
+                    'designation' => $offer->designation, 'joined_date' => $offer->joined_date,
+                    'monthly_gross' => $offer->monthly_gross, 'yearly_gross' => $offer->yearly_gross,
+                    'monthly_bounus_gross' => $offer->monthly_bounus_gross, 'yearly_bonus_gross' => $offer->yearly_bonus_gross,
+                    'monthly_insurence_gross' => $offer->monthly_insurence_gross, 'yearly_insurence_gross' => $offer->yearly_insurence_gross,
+                    'yearly_final_gross' => $offer->yearly_final_gross, 'monthly_final_gross' => $offer->monthly_final_gross,
+                    'Basic_offer_points' => $basicPoints, 'Bonus_offer_points' => $bonusPoints, 'Insurance_offer_points' => $insurancePoints,
+                ];
+            });
+
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('offer-letter', compact('offerDetails', 'offer_terms_conditions', 'offerId', 'exits_offer', 'address', 'comapny_name', 'logo', 'job_title', 'candidate_name'));
+        return $pdf->download('Offer-Letter-' . $offerId . '.pdf');
+    }
+
     public function indexregister()
     {
-       
+
         return view('saas-front.registration_success');
     }
     public function truncateTables()
