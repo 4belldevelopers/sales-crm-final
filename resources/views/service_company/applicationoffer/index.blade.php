@@ -535,23 +535,55 @@ a:hover .ot-comp-change { text-decoration: underline; }
     @endif
 </div>
 
-{{-- Modals (kept from original) --}}
-<div class="modal fade" id="fwd_offer" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header flex-stack">
-                <h2 id="titleSet"></h2>
-                <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
-                    <span class="svg-icon svg-icon-1">
+{{-- Add Approver — right-side drawer (replaces #fwd_offer modal) --}}
+<style>
+/* Force the approver drawer above every other layer on this page
+   (Metronic default drawer z-index is 105; create-offer drawer is also ~105;
+   modal backdrops are 1050 in BS4. Using 1055 puts us safely above all of them.) */
+#kt_fwd_offer_drawer {
+    position: fixed !important;
+    top: 0; right: 0; bottom: 0;
+    width: 700px !important;
+    z-index: 1055 !important;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,.12);
+}
+#kt_fwd_offer_drawer.drawer-on {
+    transform: translateX(0) !important;
+}
+#kt_fwd_offer_overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1054;
+}
+#kt_fwd_offer_overlay.active { display: block; }
+/* Keep the body content area a fixed block so absolute-positioned inner pickers
+   don't expand it and create empty space below the form. */
+#application_fwd_offer_body_content {
+    overflow: hidden !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+}
+</style>
+
+<div id="kt_fwd_offer_overlay"></div>
+<div id="kt_fwd_offer_drawer" class="bg-body">
+    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="border-radius:0;">
+        <div class="card-header px-5 py-3 d-flex align-items-center justify-content-between flex-shrink-0" style="border-bottom:1px solid #e4e6ef; min-height:56px;">
+            <h3 class="fw-bold text-dark mb-0 fs-5" id="titleSet">Add Approver</h3>
+            <button type="button" id="kt_fwd_offer_close" class="btn btn-sm btn-icon btn-active-light-danger">
+                <span class="svg-icon svg-icon-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
                         <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
                     </svg>
-                    </span>
-                </div>
-            </div>
-            <div class="card-body position-relative px-0 py-0" id="application_fwd_offer_body_content"></div>
+                </span>
+            </button>
         </div>
+        <div id="application_fwd_offer_body_content" class="flex-grow-1 overflow-auto position-relative px-0 py-0"></div>
     </div>
 </div>
 
@@ -794,25 +826,41 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     });
 
-    /* Fwd offer */
+    /* ── Add Approver drawer helpers ── */
+    function openApproverDrawer() {
+        $('#kt_fwd_offer_drawer').addClass('drawer-on');
+        $('#kt_fwd_offer_overlay').addClass('active');
+        $('body').css('overflow', 'hidden');
+    }
+    function closeApproverDrawer() {
+        $('#kt_fwd_offer_drawer').removeClass('drawer-on');
+        $('#kt_fwd_offer_overlay').removeClass('active');
+        $('body').css('overflow', '');
+    }
+    $(document).on('click', '#kt_fwd_offer_close, #kt_fwd_offer_overlay', closeApproverDrawer);
+
+    /* Fwd offer — opens as right-side drawer */
     $(document).on('click', '.fwd_offer', function (e) {
         e.preventDefault();
-        var jobId     = $(this).data('jobId');
+        var jobId     = $(this).data('jobid');
         var candidate = $(this).data('candidate');
         var mtype     = $(this).data('mtype');
-        var offerId   = $(this).data('offerId');
+        var offerId   = $(this).data('offerid');
         var url = '{{ route('service_company.cvtracker.offer_send_mail', ':id') }}'.replace(':id', jobId);
+        $('#titleSet').text('Add Approver');
+        $('#application_fwd_offer_body_content').html('<div style="padding:60px;text-align:center;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="40" alt="Loading..."></div>');
+        openApproverDrawer();
         $.ajax({
             type:'POST', url:url,
             data:{_token:'{{ csrf_token() }}', _method:'POST', arr:[candidate], jobIdArr:[jobId], mtype:mtype, offerId:offerId},
             success:function(r){
                 if(r.status=='success'){
                     $('#titleSet').text(r.title);
-                    // For the approval flow (mtype 2) the approver picker drawer opens itself —
-                    // it's rendered already-open server-side (see offerSendMail.blade.php), so
-                    // there's no reliance on a script executing at just the right moment.
                     $('#application_fwd_offer_body_content').html(r.view);
                 }
+            },
+            error: function() {
+                $('#application_fwd_offer_body_content').html('<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load. Please try again.</div>');
             }
         });
     });
