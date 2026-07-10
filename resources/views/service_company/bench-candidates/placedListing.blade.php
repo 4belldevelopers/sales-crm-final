@@ -56,18 +56,6 @@
         .placed-stat-delta.up { color: #17c653; }
         .placed-stat-delta.down { color: #f1416c; }
 
-        /* ---- placement funnel ---- */
-        .placed-funnel-card { border: 1px solid #eef0f4; border-radius: .75rem; background: #fff; }
-        .placed-funnel-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35rem; min-width: 84px; }
-        .placed-funnel-icon {
-            width: 46px; height: 46px; border-radius: .6rem;
-            display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
-        }
-        .placed-funnel-value { font-size: 17px; font-weight: 700; color: #181c32; }
-        .placed-funnel-label { font-size: 11px; font-weight: 500; color: #7e8299; }
-        .placed-funnel-chevron { color: #d7dae1; font-size: 1rem; }
-        .placed-funnel-toggle .btn { font-size: 12px; font-weight: 500; padding: .35rem .75rem; }
-
         /* ---- filter bar ---- */
         .placed-filter-bar {
             display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
@@ -301,7 +289,8 @@
                     <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
                         <a href="javascript:void(0);" class="text-primary">Talent Placed</a>
                     </h5>
-                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.</span>
+                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.
+                        <span class="fw-bolder text-dark" id="totalPlace"></span> Placed</span>
                 </div>
             </div>
             <div class="d-flex align-items-center py-1 gap-2">
@@ -393,59 +382,6 @@
                                     <div class="placed-stat-caption">Active Clients</div>
                                     <div class="placed-stat-delta up mt-1"><i class="fa-solid fa-arrow-up"></i> 5 vs Apr 2025 (37)</div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- =====================================================
-                         Placement funnel.
-                         Static placeholder — stage counts need a new ES
-                         aggregation query per stage, not yet built.
-                    ====================================================== --}}
-                    <div class="placed-funnel-card p-4 mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-                            <h6 class="fw-bolder text-dark mb-0">Placement Funnel</h6>
-                            <div class="placed-funnel-toggle btn-group" role="group">
-                                <button type="button" class="btn btn-light-primary active">May 2025</button>
-                                <button type="button" class="btn btn-light">Last 6 Months</button>
-                                <button type="button" class="btn btn-light">Last 1 Year</button>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-secondary text-dark"><i class="fa-solid fa-building"></i></div>
-                                <div class="placed-funnel-value">426</div>
-                                <div class="placed-funnel-label">Bench</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-primary text-primary"><i class="fa-solid fa-shield-halved"></i></div>
-                                <div class="placed-funnel-value">161</div>
-                                <div class="placed-funnel-label">Shortlisted</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-warning text-warning"><i class="fa-solid fa-file-lines"></i></div>
-                                <div class="placed-funnel-value">44</div>
-                                <div class="placed-funnel-label">Offer Released</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
-                                <div class="placed-funnel-value">39</div>
-                                <div class="placed-funnel-label">Offer Accepted</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-info text-info"><i class="fa-solid fa-user-check"></i></div>
-                                <div class="placed-funnel-value">37</div>
-                                <div class="placed-funnel-label">Joined</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-user-check"></i></div>
-                                <div class="placed-funnel-value" id="totalPlace">62</div>
-                                <div class="placed-funnel-label">Placed</div>
                             </div>
                         </div>
                     </div>
