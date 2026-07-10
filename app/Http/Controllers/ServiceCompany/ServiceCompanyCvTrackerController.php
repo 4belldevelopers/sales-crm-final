@@ -5528,23 +5528,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// checked before anything else (coin deduction, mail dispatch) so a blocked attempt
 		// costs nothing. Counted from updatetimeline (mtypeSection=1 = candidate offer email),
 		// the same real, persisted send-history record the "Sent By"/activity log already use.
-		if ((int) $mtypeId === 1) {
-			$offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
-			if ($offerAppRow) {
-				$recentSendCount = DB::table('updatetimeline')
-					->where('application_id', $offerAppRow->application_id)
-					->where('job_id', $offerAppRow->job_id)
-					->where('mtypeSection', 1)
-					->where('create_at', '>=', now()->subHours(4))
-					->count();
-				if ($recentSendCount >= 3) {
-					return Reply::dataOnly([
-						'status' => 'rateLimited',
-						'message' => 'This offer letter has already been sent 3 times in the last 4 hours. Please wait before sending it again.',
-					]);
-				}
-			}
-		}
+		// if ((int) $mtypeId === 1) {
+		// 	$offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
+		// 	if ($offerAppRow) {
+		// 		$recentSendCount = DB::table('updatetimeline')
+		// 			->where('application_id', $offerAppRow->application_id)
+		// 			->where('job_id', $offerAppRow->job_id)
+		// 			->where('mtypeSection', 1)
+		// 			->where('create_at', '>=', now()->subHours(4))
+		// 			->count();
+		// 		if ($recentSendCount >= 3) {
+		// 			return Reply::dataOnly([
+		// 				'status' => 'rateLimited',
+		// 				'message' => 'This offer letter has already been sent 3 times in the last 4 hours. Please wait before sending it again.',
+		// 			]);
+		// 		}
+		// 	}
+		// }
 
 		// Rate limit: approval emails (mtypeId=8) — at most 1 send per recipient per hour.
 		// Prevents accidental spam when the user clicks "Add" or "Send Reminder" repeatedly.
