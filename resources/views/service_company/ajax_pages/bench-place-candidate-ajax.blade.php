@@ -387,6 +387,10 @@
                     $subS = $result->name ?? '';
                     $assignmentLabel = $row->status == 3 ? 'Currently Working' : ucwords($subS);
 
+                    $joinedRawForAssign = @$row->of_joined_date;
+                    $joinedIsoForAssign = (!empty($joinedRawForAssign) && $joinedRawForAssign != '0000-00-00 00:00:00')
+                        ? date('Y-m-d', strtotime($joinedRawForAssign)) : '';
+
                     echo '<div class="d-flex flex-column">
                             <span class="placed-status-pill is-success">
                                 <i class="fa-solid fa-circle-check me-1"></i>' . $assignmentLabel . '
@@ -396,7 +400,16 @@
                                 <i class="fa-solid fa-calendar-days text-muted"></i>
                                 <span class="text-dark fw-semibold fs-9">--</span>
                             </span>
-                            <a href="javascript:void(0);" class="placed-change-link"><i class="fa-solid fa-pen"></i>Change</a>
+                            <a href="javascript:void(0);" class="placed-change-link assignment-change-btn"
+                               data-name="' . e(@$row->full_name) . '"
+                               data-designation="' . e(@$row->current_designation) . '"
+                               data-exp-loc="' . e(@$expLocLine) . '"
+                               data-client="' . e(@$client_name) . '"
+                               data-employment-type="' . e(@$employment_type) . '"
+                               data-joined-date="' . $joinedIsoForAssign . '"
+                               data-avatar-class="' . @$bgTextDecore . '"
+                               data-avatar-letter="' . strtoupper(@$strVal) . '"
+                            ><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>

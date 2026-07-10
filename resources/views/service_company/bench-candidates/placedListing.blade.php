@@ -227,6 +227,67 @@
             background: #f9f9fb; border-radius: .6rem; padding: .9rem 1rem;
         }
         .cc-summary-cell { display: flex; flex-direction: column; gap: .2rem; }
+
+        /* ---- assignment details drawer ---- */
+        .ad-candidate-card {
+            display: flex; align-items: center; gap: .75rem;
+            border: 1px solid #eef0f4; border-radius: .7rem; padding: .85rem 1rem;
+        }
+        .ad-candidate-avatar { width: 44px; height: 44px; border-radius: .6rem; flex-shrink: 0; }
+
+        .ad-status-list { display: flex; flex-direction: column; gap: .6rem; }
+        .ad-status-card {
+            display: flex; align-items: flex-start; gap: .65rem; cursor: pointer;
+            border: 1.5px solid #e4e6ef; border-radius: .65rem; padding: .8rem .95rem;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .ad-status-card:hover { border-color: #d7dae1; }
+        .ad-status-radio {
+            width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d7dae1; flex-shrink: 0; margin-top: 2px; position: relative;
+        }
+        .ad-status-title { display: block; font-size: 13px; font-weight: 700; color: #181c32; }
+        .ad-status-sub { display: block; font-size: 11.5px; color: #a1a5b7; margin-top: 1px; }
+
+        .ad-status-card[data-tone="success"].is-selected { border-color: #17c653; background: #eafff3; }
+        .ad-status-card[data-tone="success"].is-selected .ad-status-radio { border-color: #17c653; }
+        .ad-status-card[data-tone="success"].is-selected .ad-status-radio::after { background: #17c653; }
+        .ad-status-card[data-tone="info"].is-selected { border-color: #009ef7; background: #f1faff; }
+        .ad-status-card[data-tone="info"].is-selected .ad-status-radio { border-color: #009ef7; }
+        .ad-status-card[data-tone="info"].is-selected .ad-status-radio::after { background: #009ef7; }
+        .ad-status-card[data-tone="danger"].is-selected { border-color: #f1416c; background: #fff5f8; }
+        .ad-status-card[data-tone="danger"].is-selected .ad-status-radio { border-color: #f1416c; }
+        .ad-status-card[data-tone="danger"].is-selected .ad-status-radio::after { background: #f1416c; }
+        .ad-status-card.is-selected .ad-status-radio::after {
+            content: ''; position: absolute; inset: 3px; border-radius: 50%;
+        }
+
+        .ad-summary-box {
+            display: flex; align-items: flex-start; gap: .65rem;
+            border-radius: .6rem; padding: .85rem 1rem; margin-top: 1rem; font-size: 12.5px;
+        }
+        .ad-summary-box i { font-size: 15px; margin-top: 2px; }
+        .ad-summary-box.is-success { background: #eafff3; color: #17c653; }
+        .ad-summary-box.is-info { background: #f1faff; color: #009ef7; }
+        .ad-summary-box.is-danger { background: #fff5f8; color: #f1416c; }
+        .ad-summary-box .fw-bold, .ad-summary-box .text-muted { color: inherit; }
+        .ad-summary-box .fs-9.text-muted, .ad-summary-box .text-muted { opacity: .85; }
+        .ad-summary-kv { display: flex; justify-content: space-between; gap: .75rem; font-size: 11.5px; color: #3f4254; padding: 1px 0; }
+        .ad-summary-kv span { color: #7e8299; }
+
+        .ad-yesno-group { display: flex; gap: .6rem; }
+        .ad-yesno-option {
+            display: flex; align-items: center; gap: .4rem; cursor: pointer;
+            border: 1.5px solid #e4e6ef; border-radius: .5rem; padding: .5rem .9rem; font-size: 12.5px; font-weight: 600; color: #3f4254;
+        }
+        .ad-yesno-radio { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #d7dae1; position: relative; }
+        .ad-yesno-option.is-selected.is-danger { border-color: #f1416c; background: #fff5f8; color: #f1416c; }
+        .ad-yesno-option.is-selected.is-danger .ad-yesno-radio { border-color: #f1416c; }
+        .ad-yesno-option.is-selected .ad-yesno-radio::after {
+            content: ''; position: absolute; inset: 2px; border-radius: 50%; background: #f1416c;
+        }
+        .ad-yesno-option.is-selected:not(.is-danger) { border-color: #009ef7; background: #f1faff; color: #009ef7; }
+        .ad-yesno-option.is-selected:not(.is-danger) .ad-yesno-radio { border-color: #009ef7; }
+        .ad-yesno-option.is-selected:not(.is-danger) .ad-yesno-radio::after { background: #009ef7; }
     </style>
 @endpush
 
@@ -863,6 +924,244 @@
             </div>
         </div>
     </div>
+
+    {{-- =====================================================
+         Assignment Details drawer — opened from the "Change" link in the
+         Current Assignment / Replacement column. No assignment_details /
+         replacement_request table or endpoint exists yet, so — same as the
+         Commercial Configuration drawer — this is a view-only calculator:
+         no AJAX calls, "Save Changes" just shows a heads-up and closes.
+         The candidate summary card, the pre-selected status, Employment
+         Type, Client Location, and the "Started On / Total Duration"
+         figures are real, seeded from the clicked row's actual data.
+    ====================================================== --}}
+    <div id="kt_assignmentDetails_toggle"></div>
+    <div id="kt_assignmentDetails" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="assignment-details"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '640px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_assignmentDetails_toggle" data-kt-drawer-close="#kt_assignmentDetails_close">
+        <div class="card shadow-none rounded-0 w-100 h-100" style="display:flex; flex-direction:column;">
+            <div class="card-header align-items-start px-6 py-5">
+                <div class="d-flex flex-column">
+                    <h2 class="fw-bolder text-dark mb-1">Assignment Details</h2>
+                    <div class="text-muted fs-8">Manage current project and assignment details.</div>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_assignmentDetails_close">
+                        <i class="fa-solid fa-xmark fs-3"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body px-6 py-5" id="kt_assignmentDetails_body" style="overflow-y:auto; flex-grow:1;">
+
+                <div class="ad-candidate-card mb-5">
+                    <div class="ad-candidate-avatar placed-avatar" id="adCandAvatar"></div>
+                    <div>
+                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6 text-hover-primary" id="adCandName">-</a>
+                        <div class="text-muted fs-8" id="adCandDesignation">-</div>
+                        <div class="d-flex align-items-center gap-3 mt-1 fs-9 text-muted">
+                            <span><i class="fa-solid fa-briefcase me-1"></i><span id="adCandExpLoc">-</span></span>
+                            <span><i class="fa-solid fa-building me-1"></i><span id="adCandClient">-</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 1: Assignment Status --}}
+                <div class="cc-step-head">
+                    <span class="cc-step-num">1</span>
+                    <span class="cc-step-title">Assignment Status</span>
+                </div>
+                <div class="ad-status-list mb-5" id="adStatusGrid">
+                    <label class="ad-status-card is-selected" data-value="working" data-tone="success">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Currently Working</span>
+                            <span class="ad-status-sub">Candidate is currently working with the client.</span>
+                        </span>
+                    </label>
+                    <label class="ad-status-card" data-value="completed" data-tone="info">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Project Completed</span>
+                            <span class="ad-status-sub">Project has been successfully completed.</span>
+                        </span>
+                    </label>
+                    <label class="ad-status-card" data-value="left" data-tone="danger">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Candidate Left</span>
+                            <span class="ad-status-sub">Candidate is no longer working with the client.</span>
+                        </span>
+                    </label>
+                </div>
+
+                {{-- Step 2: Currently Working fields --}}
+                <div id="adWorkingFields">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Expected End Date *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adExpectedEndDate">
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="cc-field-label">Employment Type</label>
+                                <select class="form-select form-select-solid" id="adEmploymentType">
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Contract">Contract</option>
+                                    <option value="Hourly">Hourly</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="cc-field-label">Client Location</label>
+                                <select class="form-select form-select-solid" id="adClientLocation">
+                                    <option>Bangalore</option>
+                                    <option>Pune</option>
+                                    <option>Hyderabad</option>
+                                    <option>Mumbai</option>
+                                    <option>Remote</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label class="cc-field-label">Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adWorkingRemarks" maxlength="300" rows="2" placeholder="Add any remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9 mb-3"><span id="adWorkingRemarksCount">0</span> / 300</div>
+
+                        <div class="ad-summary-box is-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Assignment Active</div>
+                                <div class="fs-9">Candidate is currently working at the client location.</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-9 text-muted">Started On</div>
+                                <div class="fw-bold" id="adStartedOn">-</div>
+                                <div class="fs-9 text-muted mt-1">Total Duration</div>
+                                <div class="fw-bold" id="adTotalDuration">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 2: Project Completed fields --}}
+                <div id="adCompletedFields" class="d-none">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Completed On *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adCompletedOn">
+                        <label class="cc-field-label">Project Outcome</label>
+                        <select class="form-select form-select-solid mb-3" id="adProjectOutcome">
+                            <option>Successful</option>
+                            <option>Partially Successful</option>
+                            <option>Ended Early</option>
+                        </select>
+                        <label class="cc-field-label">Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adCompletedRemarks" maxlength="300" rows="2" placeholder="Add any remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9 mb-3"><span id="adCompletedRemarksCount">0</span> / 300</div>
+
+                        <div class="ad-summary-box is-info">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Project Completed</div>
+                                <div class="fs-9">This assignment has been marked as completed.</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-9 text-muted">Started On</div>
+                                <div class="fw-bold" id="adCompletedStartedOn">-</div>
+                                <div class="fs-9 text-muted mt-1">Total Duration</div>
+                                <div class="fw-bold" id="adCompletedTotalDuration">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 2 + 3: Candidate Left fields + Replacement Management --}}
+                <div id="adLeftFields" class="d-none">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Last Working Day *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adLastWorkingDay">
+                        <label class="cc-field-label">Reason *</label>
+                        <select class="form-select form-select-solid mb-3" id="adExitReason">
+                            <option>Candidate Resigned</option>
+                            <option>Performance Issue</option>
+                            <option>Client Ended Contract</option>
+                            <option>Candidate Absconded</option>
+                            <option>Other</option>
+                        </select>
+                        <label class="cc-field-label">Exit Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adExitRemarks" maxlength="300" rows="2" placeholder="Add any exit remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9" id="adExitRemarksCountWrap"><span id="adExitRemarksCount">0</span> / 300</div>
+                    </div>
+
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">3</span>
+                        <span class="cc-step-title">Replacement Management</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Replacement Required *</label>
+                        <div class="ad-yesno-group mb-3" id="adReplacementRequired">
+                            <label class="ad-yesno-option" data-value="no">
+                                <span class="ad-yesno-radio"></span> No
+                            </label>
+                            <label class="ad-yesno-option is-selected is-danger" data-value="yes">
+                                <span class="ad-yesno-radio"></span> Yes
+                            </label>
+                        </div>
+
+                        <div id="adReplacementBlock">
+                            <label class="cc-field-label">Replacement Status *</label>
+                            <select class="form-select form-select-solid mb-3" id="adReplacementStatus">
+                                <option>Requested</option>
+                                <option selected>In Progress</option>
+                                <option>Fulfilled</option>
+                            </select>
+                            <label class="cc-field-label">Replacement Requested On *</label>
+                            <input type="date" class="form-control form-control-solid mb-3" id="adReplacementRequestedOn">
+                            <label class="cc-field-label">Replacement Reason (Optional)</label>
+                            <textarea class="form-control form-control-solid mb-1" id="adReplacementReason" maxlength="300" rows="2" placeholder="Add a replacement reason (optional)..."></textarea>
+                            <div class="text-end text-muted fs-9 mb-3"><span id="adReplacementReasonCount">0</span> / 300</div>
+                        </div>
+
+                        <div class="ad-summary-box is-danger">
+                            <i class="fa-solid fa-user-xmark"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold mb-1">Candidate Left</div>
+                                <div class="ad-summary-kv"><span>Last Working Day</span><strong id="adSummaryLastDay">-</strong></div>
+                                <div class="ad-summary-kv"><span>Reason</span><strong id="adSummaryReason">-</strong></div>
+                                <div class="ad-summary-kv" id="adSummaryReplacementStatusRow"><span>Replacement Status</span><strong id="adSummaryReplacementStatus">-</strong></div>
+                                <div class="ad-summary-kv" id="adSummaryReplacementDateRow"><span>Replacement Requested On</span><strong id="adSummaryReplacementDate">-</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Internal Notes — common to every status --}}
+                <div class="cc-step-head">
+                    <span class="cc-step-num" id="adNotesStepNum">3</span>
+                    <span class="cc-step-title">Internal Notes <span class="cc-step-suffix">(Optional)</span></span>
+                </div>
+                <div class="cc-section mb-0">
+                    <label class="cc-field-label">Internal Notes</label>
+                    <textarea class="form-control form-control-solid" id="adInternalNotes" maxlength="500" rows="3" placeholder="Add any internal notes..."></textarea>
+                    <div class="text-end text-muted fs-9 mt-1"><span id="adNotesCount">0</span> / 500</div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
+                <button type="button" class="btn btn-light" id="kt_assignmentDetails_cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="kt_assignmentDetails_save">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
@@ -1174,6 +1473,156 @@
                 confirmButtonText: 'Got it'
             }).then(function() {
                 $('#kt_commercialConfig_close').trigger('click');
+            });
+        });
+
+        // =====================================================
+        // Assignment Details drawer — pure client-side, no AJAX.
+        // Assignment Status / Replacement Management / Internal Notes have
+        // no backing table yet, so nothing here persists; "Save Changes"
+        // is an honest preview-only action, same as Commercial Configuration.
+        // =====================================================
+        function adDaysBetween(fromIso, toIso) {
+            var from = new Date(fromIso);
+            var to = toIso ? new Date(toIso) : new Date();
+            if (isNaN(from.getTime())) return null;
+            return Math.max(0, Math.round((to - from) / 86400000));
+        }
+
+        function adFormatDate(iso) {
+            if (!iso) return '-';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '-';
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return String(d.getDate()).padStart(2, '0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        function adRecalcSummaries() {
+            var joinedIso = $('#kt_assignmentDetails').data('joined-iso') || '';
+
+            // Currently Working summary
+            $('#adStartedOn').text(adFormatDate(joinedIso));
+            var workingDays = adDaysBetween(joinedIso, '');
+            $('#adTotalDuration').text(workingDays !== null ? workingDays + ' Days' : '-');
+
+            // Project Completed summary
+            $('#adCompletedStartedOn').text(adFormatDate(joinedIso));
+            var completedOnIso = $('#adCompletedOn').val();
+            var completedDays = adDaysBetween(joinedIso, completedOnIso || '');
+            $('#adCompletedTotalDuration').text(completedDays !== null ? completedDays + ' Days' : '-');
+
+            // Candidate Left summary
+            $('#adSummaryLastDay').text($('#adLastWorkingDay').val() ? adFormatDate($('#adLastWorkingDay').val()) : '-');
+            $('#adSummaryReason').text($('#adExitReason').val() || '-');
+            var replacementRequired = $('#adReplacementRequired .ad-yesno-option.is-selected').data('value') === 'yes';
+            $('#adSummaryReplacementStatusRow, #adSummaryReplacementDateRow').toggleClass('d-none', !replacementRequired);
+            $('#adSummaryReplacementStatus').text(replacementRequired ? ($('#adReplacementStatus').val() || '-') : '-');
+            $('#adSummaryReplacementDate').text(replacementRequired && $('#adReplacementRequestedOn').val() ? adFormatDate($('#adReplacementRequestedOn').val()) : '-');
+        }
+
+        $(document).on('click', '#adStatusGrid .ad-status-card', function() {
+            $('#adStatusGrid .ad-status-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            var status = $(this).data('value');
+
+            $('#adWorkingFields').toggleClass('d-none', status !== 'working');
+            $('#adCompletedFields').toggleClass('d-none', status !== 'completed');
+            $('#adLeftFields').toggleClass('d-none', status !== 'left');
+            $('#adNotesStepNum').text(status === 'left' ? '4' : '3');
+
+            adRecalcSummaries();
+        });
+
+        $(document).on('click', '#adReplacementRequired .ad-yesno-option', function() {
+            $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            $('#adReplacementBlock').toggleClass('d-none', $(this).data('value') !== 'yes');
+            adRecalcSummaries();
+        });
+
+        $(document).on('input change', '#adCompletedOn, #adLastWorkingDay, #adExitReason, #adReplacementStatus, #adReplacementRequestedOn', adRecalcSummaries);
+
+        // Character counters — shared pattern for every "(Optional)" textarea in this drawer.
+        [
+            ['#adWorkingRemarks', '#adWorkingRemarksCount'],
+            ['#adCompletedRemarks', '#adCompletedRemarksCount'],
+            ['#adExitRemarks', '#adExitRemarksCount'],
+            ['#adReplacementReason', '#adReplacementReasonCount'],
+            ['#adInternalNotes', '#adNotesCount']
+        ].forEach(function(pair) {
+            $(document).on('input', pair[0], function() {
+                $(pair[1]).text($(this).val().length);
+            });
+        });
+
+        $(document).on('click', '.assignment-change-btn', function(e) {
+            e.preventDefault();
+
+            var name = $(this).data('name') || '-';
+            var designation = $(this).data('designation') || '-';
+            var expLoc = $(this).data('exp-loc') || '-';
+            var client = $(this).data('client') || '-';
+            var employmentType = ($(this).data('employment-type') || '').toString();
+            var joinedIso = ($(this).data('joined-date') || '').toString();
+            var avatarClass = ($(this).data('avatar-class') || '').toString();
+            var avatarLetter = ($(this).data('avatar-letter') || '').toString();
+
+            $('#adCandName').text(name);
+            $('#adCandDesignation').text(designation);
+            $('#adCandExpLoc').text(expLoc || '-');
+            $('#adCandClient').text(client || '-');
+            $('#adCandAvatar').attr('class', 'ad-candidate-avatar placed-avatar ' + avatarClass).text(avatarLetter);
+            $('#kt_assignmentDetails').data('joined-iso', joinedIso);
+
+            // reset to the real, honest default: Currently Working (this listing only ever
+            // represents that one real status — see the note in the row partial).
+            $('#adStatusGrid .ad-status-card').removeClass('is-selected');
+            $('#adStatusGrid .ad-status-card[data-value="working"]').addClass('is-selected');
+            $('#adWorkingFields').removeClass('d-none');
+            $('#adCompletedFields, #adLeftFields').addClass('d-none');
+            $('#adNotesStepNum').text('3');
+
+            $('#adExpectedEndDate').val('');
+            if (employmentType && $('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).length) {
+                $('#adEmploymentType').val($('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).val());
+            } else {
+                $('#adEmploymentType').prop('selectedIndex', 0);
+            }
+            $('#adClientLocation').prop('selectedIndex', 0);
+            $('#adWorkingRemarks').val('').trigger('input');
+
+            $('#adCompletedOn').val('');
+            $('#adProjectOutcome').prop('selectedIndex', 0);
+            $('#adCompletedRemarks').val('').trigger('input');
+
+            $('#adLastWorkingDay').val('');
+            $('#adExitReason').prop('selectedIndex', 0);
+            $('#adExitRemarks').val('').trigger('input');
+            $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
+            $('#adReplacementRequired .ad-yesno-option[data-value="yes"]').addClass('is-selected');
+            $('#adReplacementBlock').removeClass('d-none');
+            $('#adReplacementStatus').prop('selectedIndex', 0);
+            $('#adReplacementRequestedOn').val('');
+            $('#adReplacementReason').val('').trigger('input');
+
+            $('#adInternalNotes').val('').trigger('input');
+
+            adRecalcSummaries();
+            $('#kt_assignmentDetails_toggle').trigger('click');
+        });
+
+        $('#kt_assignmentDetails_cancel').on('click', function() {
+            $('#kt_assignmentDetails_close').trigger('click');
+        });
+
+        $('#kt_assignmentDetails_save').on('click', function() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Preview Only',
+                text: 'Assignment details captured for preview — connect this to a save endpoint to persist them.',
+                confirmButtonText: 'Got it'
+            }).then(function() {
+                $('#kt_assignmentDetails_close').trigger('click');
             });
         });
 
