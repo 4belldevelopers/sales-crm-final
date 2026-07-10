@@ -131,7 +131,6 @@
 
                         $skilltag = '';
                         $skillArr = explode(',', $row->skills);
-                        $percentage = GeneralMethod::skill_percentage($row->job_id, $skillArr);
                         if (count($skillArr) > 0) {
                             $shown = 0;
                             foreach ($skillArr as $sval) {
@@ -195,10 +194,9 @@
                     $joinedRaw = @$row->of_joined_date;
                     $hasJoined = !empty($joinedRaw) && $joinedRaw != '0000-00-00 00:00:00';
 
-                    $benchRaw = null;
-                    if (!empty(@$row->candidate_id)) {
-                        $benchRaw = DB::table('job_applications')->where('id', $row->candidate_id)->value('created_at');
-                    }
+                    // created_at is already indexed on the ES candidate doc (see
+                    // ElasticCandidatesIndex.php), so no extra DB query is needed here.
+                    $benchRaw = @$row->created_at;
                     $hasBench = !empty($benchRaw);
 
                     $offerRaw = null;
@@ -269,12 +267,10 @@
                 @php
                     $removed_status = $icon = '';
                     $job_title = ucwords(mb_substr($row->title, 0, 18));
-                    $client_name_com = GeneralMethod::companyDetailsByClient($row->jobId);
-                    if (!empty($client_name_com)) {
-                        $client_title_name = $client_name_com;
-                    } else {
-                        $client_title_name = $row->client_name;
-                    }
+                    // client_name is already indexed on the ES candidate doc, so this reads
+                    // straight from it instead of the heavy companyDetailsByClient() aggregate
+                    // query (LEFT JOIN + ~15 SUM/CASE clauses) that used to run per row.
+                    $client_title_name = @$row->client_name;
                     $client_name = ucwords(mb_substr($client_title_name, 0, 18));
 
                     $job_status_get = GeneralMethod::jobDetails($row->jobId);
