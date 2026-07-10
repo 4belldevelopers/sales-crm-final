@@ -657,10 +657,11 @@
             <h2 style="color: green;">Offer Accepted</h2>
             <p>You have successfully accepted the offer. Please proceed with the next steps or go back to the previous page.</p>
             {{-- @if(session('success')) --}}
-            <button type="button"
-                onclick="window.open('{{ route('offer.letter.public.stream', $offerId) }}','_blank')"
-                class="btn btn-success font-weight-bolder px-9 py-4"
-                style="width: 17%; padding: 6px; border-radius: 7px;">Download <i class="fa fa-download"></i></button>
+            <button type="button" data-jobId="{{ @$job_id }}"
+                data-candidate="{{ @$application_id }}" data-mtype="{{ $mtypeSection }}"
+                data-offerId="{{ $offerId }}"
+                class="btn btn-success font-weight-bolder px-9 py-4 download_offer"
+                data-wizard-type="action-next" style="width: 17%; padding: 6px; border-radius: 7px;">Download <i class="fa fa-download"></i></button>
             {{-- @endif --}}
             @elseif($candidate_status==3)
 
@@ -1065,6 +1066,52 @@ removeBtn.addEventListener('click', function () {
         });
 
 
+        $(document).ready(function() {
+            $(document).on('click','.download_offer', function(e){
+        						
+                                e.preventDefault();	
+                    
+                                localStorage.setItem('toggleOpen', 'true');
+                                $('#application_mass_mail_body_content').html('');
+                                $('#application_fwd_offer_body_content').html('');
+                                var jobId = $(this).attr('data-jobId');
+                                var candidate = $(this).attr('data-candidate');
+                                var mtype = $(this).attr('data-mtype');
+                                var offerId = $(this).attr('data-offerId');
+                                var arr 		=	[candidate];
+                                var jobIdArr = [jobId];
+                    
+                                var id        	=	jobIdArr[0];
+                                var url       	=	"{{ route('get.offer_download_mail',':id') }}";
+                                url         	=	url.replace(':id', id);
+                                var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
+                                var token       =	"{{ csrf_token() }}";
+                              
+                               
+                                $.ajax({
+                                        type		: 'POST',
+                                        url			: url,
+                                        data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr,'mtype':mtype,'offerId':offerId,'coinnotdeduct':true},
+                                        cache		: false,
+                                        success 	: function (response) {
+                                                            if (response.status == "success") {
+                                                              const link = document.createElement('a');
+                                                              link.href = response.url; // URL to the PDF file
+                                                              link.download = ''; // Specify the filename for the download, or leave it empty to use the default file name
+                                                              link.target = '_blank'; // Open in a new window
+                                                              document.body.appendChild(link);
+                                                              link.click(); // Trigger the download
+                                                              document.body.removeChild(link); // Clean up
+                                                            }else if(response.status == "error"){
+                                                              Swal.fire("Warning",'Offer Letter not ready' , "warning");	
+                                                            }
+                                                }
+                                  });
+                                  
+                                  
+                                      
+                    });
+      });
     </script>
 
 </body>
