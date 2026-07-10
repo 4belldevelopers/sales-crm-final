@@ -196,6 +196,31 @@
             display: inline-block; font-size: 10px; font-weight: 700; color: #17c653; background: #eafff3;
             border-radius: .35rem; padding: 1px 6px; margin-top: .35rem;
         }
+
+        .cc-calc-preview { background: #f9f9fb; border-radius: .6rem; padding: .85rem 1rem; }
+        .cc-calc-preview-title { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: .6rem; }
+        .cc-calc-preview-row { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+        .cc-calc-cell { display: flex; flex-direction: column; }
+        .cc-calc-label { font-size: 10.5px; color: #a1a5b7; }
+        .cc-calc-value { font-size: 13px; font-weight: 700; color: #181c32; }
+        .cc-calc-op { font-size: 13px; color: #a1a5b7; font-weight: 600; }
+
+        .cc-total-box {
+            background: #f9f9fb; border-radius: .6rem; padding: .6rem .9rem;
+            display: flex; flex-direction: column; align-items: flex-end; justify-content: center; height: 100%;
+        }
+
+        .cc-toggle-link {
+            display: inline-flex; align-items: center; gap: .35rem;
+            font-size: 12px; font-weight: 600; color: #009ef7;
+        }
+        .cc-toggle-link:hover { color: #0077b5; }
+
+        .cc-subsection { background: #f9f9fb; border-radius: .65rem; padding: 1rem 1.1rem; }
+        .cc-progress-row {
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid #e4e6ef; border-radius: .5rem; padding: .55rem .8rem; font-size: 12.5px; font-weight: 600; color: #3f4254;
+        }
     </style>
 @endpush
 
@@ -556,52 +581,198 @@
                     </div>
 
                     <div id="ccTabGeneral">
-                        <div class="cc-section">
-                            <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
-                            <div class="cc-section-sub">Define the billing amount and billing cycle for this <span id="ccModelLower">contract</span>.</div>
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <label class="cc-field-label">Billing Amount (₹) *</label>
-                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccBillingAmount" value="0">
+                        {{-- Contract Staffing fields: billed recurring, margin-based --}}
+                        <div id="ccContractFields">
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
+                                <div class="cc-section-sub">Define the billing amount and billing cycle for this contract.</div>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Billing Amount (₹) *</label>
+                                        <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccBillingAmount" value="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Billing Cycle *</label>
+                                        <select class="form-select form-select-solid" id="ccBillingCycle">
+                                            <option value="monthly">Monthly</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="hourly">Hourly</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label class="cc-field-label">Billing Cycle *</label>
-                                    <select class="form-select form-select-solid" id="ccBillingCycle">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="hourly">Hourly</option>
-                                    </select>
+                                <div class="cc-helper-text" id="ccAmountWords">Zero Only</div>
+                                <div class="cc-info-banner mt-3">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <span>This amount will be billed to the client as per the selected billing cycle.</span>
                                 </div>
                             </div>
-                            <div class="cc-helper-text" id="ccAmountWords">Zero Only</div>
-                            <div class="cc-info-banner mt-3">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>This amount will be billed to the client as per the selected billing cycle.</span>
+
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title"><i class="fa-solid fa-calculator"></i> 2. Commercial Details</div>
+                                <div class="cc-section-sub">Margin and profit are calculated automatically.</div>
+                                <div class="row g-3">
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Gross Margin (%) *</label>
+                                        <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccMarginPct" value="20">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Profit (₹)</label>
+                                        <input type="text" class="form-control form-control-solid" id="ccProfitAmt" value="0" disabled>
+                                        <span class="cc-auto-badge">Auto Calculated</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Margin Amount (₹)</label>
+                                        <input type="text" class="form-control form-control-solid" id="ccMarginAmt" value="0" disabled>
+                                        <span class="cc-auto-badge">Auto Calculated</span>
+                                    </div>
+                                </div>
+                                <div class="cc-info-banner is-success mt-3" id="ccMarginHealthBanner">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span id="ccMarginHealthText">Gross Margin is healthy (Above 20%).</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="cc-section mb-0">
-                            <div class="cc-section-title"><i class="fa-solid fa-calculator"></i> 2. Commercial Details</div>
-                            <div class="cc-section-sub"><span id="ccMarginFieldLabel2">Margin</span> and profit are calculated automatically.</div>
-                            <div class="row g-3">
-                                <div class="col-4">
-                                    <label class="cc-field-label" id="ccMarginFieldLabel">Gross Margin (%) *</label>
-                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccMarginPct" value="20">
+                        {{-- Full-time Hiring fields: one-time placement fee + replacement policy --}}
+                        <div id="ccFulltimeFields" class="d-none">
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Placement Fee</div>
+                                <div class="cc-section-sub">Define the placement fee and how it will be calculated.</div>
+
+                                <label class="cc-field-label">Fee Method *</label>
+                                <div class="cc-option-grid mb-4" id="ccFeeMethodGrid">
+                                    <label class="cc-option-card is-selected" data-value="percentage">
+                                        <span class="cc-option-icon">%</span>
+                                        <span class="cc-option-label">Percentage<br><small class="text-muted fw-normal">Calculate fee as a percentage</small></span>
+                                        <span class="cc-option-radio"></span>
+                                    </label>
+                                    <label class="cc-option-card" data-value="fixed">
+                                        <span class="cc-option-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                                        <span class="cc-option-label">Fixed Amount<br><small class="text-muted fw-normal">Set a fixed placement fee</small></span>
+                                        <span class="cc-option-radio"></span>
+                                    </label>
                                 </div>
-                                <div class="col-4">
-                                    <label class="cc-field-label">Profit (₹)</label>
-                                    <input type="text" class="form-control form-control-solid" id="ccProfitAmt" value="0" disabled>
-                                    <span class="cc-auto-badge">Auto Calculated</span>
+
+                                <div id="ccFeePercentageBlock">
+                                    <label class="cc-field-label">Calculation Base *</label>
+                                    <div class="cc-option-grid mb-4" id="ccCalcBaseGrid">
+                                        <label class="cc-option-card is-selected" data-value="offered">
+                                            <span class="cc-option-label">Offered Amount<br><small class="text-muted fw-normal">Calculate on candidate offered amount</small></span>
+                                            <span class="cc-option-radio"></span>
+                                        </label>
+                                        <label class="cc-option-card" data-value="agreement">
+                                            <span class="cc-option-label">Agreement Amount<br><small class="text-muted fw-normal">Calculate on agreed amount</small></span>
+                                            <span class="cc-option-radio"></span>
+                                        </label>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label" id="ccCalcBaseLabel">Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span></label>
+                                            <input type="text" class="form-control form-control-solid" id="ccCalcBaseAmount" value="0" disabled>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Placement Fee (%) *</label>
+                                            <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccFeePct" value="15">
+                                        </div>
+                                    </div>
+                                    <div class="cc-calc-preview mt-3">
+                                        <div class="cc-calc-preview-title">Calculation Preview</div>
+                                        <div class="cc-calc-preview-row">
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Base Amount</span>
+                                                <span class="cc-calc-value">₹<span id="ccCalcBaseDisplay">0</span></span>
+                                            </div>
+                                            <span class="cc-calc-op">x</span>
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Fee %</span>
+                                                <span class="cc-calc-value"><span id="ccCalcPctDisplay">15</span>%</span>
+                                            </div>
+                                            <span class="cc-calc-op">=</span>
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Placement Fee</span>
+                                                <span class="cc-calc-value text-success" id="ccCalcResult">₹0</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-4">
-                                    <label class="cc-field-label">Margin Amount (₹)</label>
-                                    <input type="text" class="form-control form-control-solid" id="ccMarginAmt" value="0" disabled>
-                                    <span class="cc-auto-badge">Auto Calculated</span>
+
+                                <div id="ccFeeFixedBlock" class="d-none">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Placement Fee (₹) *</label>
+                                            <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccFixedFee" value="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="cc-total-box">
+                                                <span class="cc-field-label mb-1">Total Placement Fee</span>
+                                                <span class="text-success fw-bolder fs-4" id="ccFixedFeeTotal">₹0</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="cc-info-banner is-success mt-3" id="ccMarginHealthBanner">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span id="ccMarginHealthText">Gross Margin is healthy (Above 20%).</span>
+
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-shield-halved"></i> 2. Replacement Policy</div>
+                                <div class="cc-section-sub">Define the replacement period in case of early exit.</div>
+                                <label class="cc-field-label">Replacement Period *</label>
+                                <select class="form-select form-select-solid mb-3" id="ccReplacementPeriod">
+                                    <option value="30">30 Days</option>
+                                    <option value="60">60 Days</option>
+                                    <option value="90" selected>90 Days</option>
+                                    <option value="180">180 Days</option>
+                                </select>
+                                <div class="cc-info-banner is-success mb-3">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>If the candidate leaves within <strong id="ccReplacementPeriodText">90</strong> days, a free replacement will be provided.</span>
+                                </div>
+
+                                <a href="javascript:void(0);" class="cc-toggle-link" id="ccToggleReplacementRequest">
+                                    <i class="fa-solid fa-plus"></i> Log a Replacement Request
+                                </a>
+
+                                <div id="ccReplacementRequestBlock" class="cc-subsection d-none mt-3">
+                                    <div class="cc-section-title fs-8 mb-0">Replacement Request</div>
+                                    <div class="cc-section-sub">Manage replacement requests and track the status.</div>
+                                    <label class="cc-field-label">Replacement Status *</label>
+                                    <select class="form-select form-select-solid mb-3" id="ccReplacementStatus">
+                                        <option value="requested">Requested</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="completed">Completed</option>
+                                    </select>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Reason for Replacement *</label>
+                                            <select class="form-select form-select-solid" id="ccReplacementReason">
+                                                <option>Candidate Absconded</option>
+                                                <option>Performance Issue</option>
+                                                <option>Skill Mismatch</option>
+                                                <option>Personal Reasons</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Requested On *</label>
+                                            <input type="date" class="form-control form-control-solid" id="ccReplacementRequestedOn">
+                                        </div>
+                                    </div>
+                                    <label class="cc-field-label mt-3">Replacement Status (Progress)</label>
+                                    <div class="cc-progress-row">
+                                        <span>Request Received</span>
+                                        <span class="badge badge-light-warning">In Progress</span>
+                                    </div>
+                                    <div class="cc-info-banner mt-3">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>You will be able to manage the detailed replacement workflow from the Placement details page.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title">3. Additional Details <span class="cc-step-suffix">(Optional)</span></div>
+                                <div class="cc-section-sub">Add any optional notes related to this commercial configuration.</div>
+                                <label class="cc-field-label">Internal Note</label>
+                                <textarea class="form-control form-control-solid" id="ccInternalNote" maxlength="500" rows="3" placeholder="Add any internal notes here..."></textarea>
+                                <div class="text-end text-muted fs-9 mt-1"><span id="ccNoteCount">0</span> / 500</div>
                             </div>
                         </div>
                     </div>
@@ -793,17 +964,14 @@
             var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
 
             $('#ccModelBannerText').text(modelName);
-            $('#ccModelLower').text(isContract ? 'contract' : 'placement');
-            $('#ccMarginFieldLabel').text((isContract ? 'Gross Margin' : 'Placement Fee') + ' (%) *');
-            $('#ccMarginFieldLabel2').text(isContract ? 'Gross Margin' : 'Placement Fee');
+            $('#ccContractFields').toggleClass('d-none', !isContract);
+            $('#ccFulltimeFields').toggleClass('d-none', isContract);
 
-            var cycleSelect = $('#ccBillingCycle').empty();
             if (isContract) {
-                cycleSelect.append('<option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option>');
+                ccRecalc();
             } else {
-                cycleSelect.append('<option value="onetime">One-time</option><option value="milestone">Milestone-based</option>');
+                ccFulltimeRecalc();
             }
-            ccRecalc();
         });
 
         $(document).on('click', '.cc-tab', function() {
@@ -820,8 +988,71 @@
             $(this).val(amount.toLocaleString('en-IN'));
         });
 
+        // ---- Full-time Hiring: Placement Fee ----
+        function ccFulltimeRecalc() {
+            var isPercentage = $('#ccFeeMethodGrid .cc-option-card[data-value="percentage"]').hasClass('is-selected');
+            $('#ccFeePercentageBlock').toggleClass('d-none', !isPercentage);
+            $('#ccFeeFixedBlock').toggleClass('d-none', isPercentage);
+
+            if (isPercentage) {
+                var base = parseFloat(($('#ccCalcBaseAmount').val() || '0').toString().replace(/,/g, '')) || 0;
+                var pct = parseFloat($('#ccFeePct').val()) || 0;
+                var fee = Math.round(base * pct / 100);
+                $('#ccCalcBaseDisplay').text(base.toLocaleString('en-IN'));
+                $('#ccCalcPctDisplay').text(pct);
+                $('#ccCalcResult').text('₹' + fee.toLocaleString('en-IN'));
+            } else {
+                var fixed = parseFloat(($('#ccFixedFee').val() || '0').toString().replace(/,/g, '')) || 0;
+                $('#ccFixedFeeTotal').text('₹' + fixed.toLocaleString('en-IN'));
+            }
+        }
+
+        $(document).on('click', '#ccFeeMethodGrid .cc-option-card', function() {
+            $('#ccFeeMethodGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            ccFulltimeRecalc();
+        });
+
+        $(document).on('click', '#ccCalcBaseGrid .cc-option-card', function() {
+            $('#ccCalcBaseGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            var isOffered = $(this).data('value') === 'offered';
+            var amountField = $('#ccCalcBaseAmount');
+            if (isOffered) {
+                amountField.prop('disabled', true);
+                amountField.val($('.commercial-change-btn.is-active-row').data('amount') ? Math.round($('.commercial-change-btn.is-active-row').data('amount')).toLocaleString('en-IN') : amountField.val());
+                $('#ccCalcBaseLabel').html('Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span>');
+            } else {
+                amountField.prop('disabled', false);
+                $('#ccCalcBaseLabel').html('Agreement Amount (₹)');
+            }
+            ccFulltimeRecalc();
+        });
+
+        $(document).on('input', '#ccCalcBaseAmount, #ccFeePct, #ccFixedFee', ccFulltimeRecalc);
+
+        $(document).on('change', '#ccReplacementPeriod', function() {
+            $('#ccReplacementPeriodText').text($(this).find('option:selected').text().replace(' Days', ''));
+        });
+
+        $(document).on('click', '#ccToggleReplacementRequest', function() {
+            var block = $('#ccReplacementRequestBlock');
+            var isHidden = block.hasClass('d-none');
+            block.toggleClass('d-none');
+            $(this).html(isHidden
+                ? '<i class="fa-solid fa-minus"></i> Hide Replacement Request'
+                : '<i class="fa-solid fa-plus"></i> Log a Replacement Request');
+        });
+
+        $(document).on('input', '#ccInternalNote', function() {
+            $('#ccNoteCount').text($(this).val().length);
+        });
+
         $(document).on('click', '.commercial-change-btn', function(e) {
             e.preventDefault();
+            $('.commercial-change-btn').removeClass('is-active-row');
+            $(this).addClass('is-active-row');
+
             var amount = parseFloat($(this).data('amount')) || 0;
             var empType = ($(this).data('employment-type') || '').toString().toLowerCase();
             var isContract = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
@@ -831,8 +1062,25 @@
             $('#ccPaidServiceSection').removeClass('d-none');
             $('#ccFreeServiceNote').addClass('d-none');
 
+            // Contract Staffing fields
             $('#ccMarginPct').val(20);
             $('#ccBillingAmount').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+
+            // Full-time Hiring fields — reset to defaults, seeded with the real offer amount
+            $('#ccFeeMethodGrid .cc-option-card').removeClass('is-selected');
+            $('#ccFeeMethodGrid .cc-option-card[data-value="percentage"]').addClass('is-selected');
+            $('#ccCalcBaseGrid .cc-option-card').removeClass('is-selected');
+            $('#ccCalcBaseGrid .cc-option-card[data-value="offered"]').addClass('is-selected');
+            $('#ccCalcBaseLabel').html('Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span>');
+            $('#ccCalcBaseAmount').prop('disabled', true).val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+            $('#ccFeePct').val(15);
+            $('#ccFixedFee').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+            $('#ccReplacementPeriod').val('90');
+            $('#ccReplacementPeriodText').text('90');
+            $('#ccReplacementRequestBlock').addClass('d-none');
+            $('#ccToggleReplacementRequest').html('<i class="fa-solid fa-plus"></i> Log a Replacement Request');
+            $('#ccInternalNote').val('');
+            $('#ccNoteCount').text('0');
 
             $('#ccModelGrid .cc-option-card[data-value="' + (isContract ? 'contract' : 'fulltime') + '"]').click();
 
