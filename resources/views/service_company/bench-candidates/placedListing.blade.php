@@ -126,6 +126,15 @@
         .placed-status-pill.is-danger { background: #fff5f8; color: #f1416c; }
         .placed-action-btn { width: 30px; height: 30px; }
 
+        .placed-commercial-line { display: flex; align-items: center; gap: .35rem; margin-top: 3px; }
+        .placed-commercial-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-change-link {
+            display: inline-flex; align-items: center; gap: .3rem;
+            font-size: 11px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
+        }
+        .placed-change-link i { font-size: 9.5px; }
+        .placed-change-link:hover { color: #0077b5; }
+
         .rows-per-page-select { cursor: pointer; }
     </style>
 @endpush

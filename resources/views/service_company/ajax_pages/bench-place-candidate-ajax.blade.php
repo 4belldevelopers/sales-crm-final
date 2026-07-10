@@ -316,7 +316,14 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Commercials: real offer amount / employment type --}}
+            {{-- Commercials: offer amount + employment type are real. Gross Margin / Placement
+                 Fee has no backing field anywhere in the schema (no commission/margin column
+                 on job_applications, bench_applications or bench_place), so that figure is a
+                 view-only placeholder ("--") rather than an invented percentage. Which label
+                 to show (Gross Margin vs Placement Fee) IS driven by the real employment type,
+                 since contract/hourly placements are margin-billed and fulltime placements are
+                 fee-billed. "Change" is a static, unwired action per the requested view-only
+                 treatment — swap for a real handler once there's an endpoint to edit terms. --}}
             <td>
                 @php
                     $employment_type = $row->of_employment_type ?? '-----';
@@ -334,17 +341,30 @@
                         $offerAmont = @$offer_currency . ' ' . @$offer_amount . '/' . mb_substr(@$offer_mode, 0, 1);
                     }
 
+                    $isContractType = stripos($employment_type, 'contract') !== false || stripos($employment_type, 'hour') !== false;
+                    $marginLabel = $isContractType ? 'Gross Margin' : '(Placement Fee)';
+
                     echo '<div class="d-flex flex-column">
                             <span class="text-dark fw-bolder fs-6">' . $offerAmont . '</span>
-                            <span class="text-muted fw-bold d-block fs-8">' . $employment_type . '</span>
+                            <span class="placed-commercial-line">
+                                <i class="fa-solid fa-circle-check text-success"></i>
+                                <span class="text-dark fw-semibold fs-9">-- <span class="text-muted fw-normal">' . $marginLabel . '</span></span>
+                            </span>
+                            <span class="placed-commercial-line">
+                                <i class="fa-solid fa-user-tie text-muted"></i>
+                                <span class="text-muted fw-semibold fs-9">' . $employment_type . '</span>
+                            </span>
+                            <a href="javascript:void(0);" class="placed-change-link"><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
             {{-- Current Assignment: this listing's ES query already hard-filters to status=3
                  ("Work Assigned"), so bench_status_subline() always returns the same real
-                 sub-status here. Displaying it as "Currently Working" is a direct, honest
-                 relabel of that one real status — the same renaming the job-status column
-                 already does (Active -> "Hiring" etc), not a fabricated per-row distinction. --}}
+                 sub-status here — every row is honestly "Currently Working", not a fabricated
+                 mix. The Project Completed / Candidate Left pill styles are built and ready
+                 (placed-status-pill.is-info / .is-danger) for whenever the backend actually
+                 differentiates these states. Expected End date and "Change" have no backing
+                 field/endpoint yet, so they render as view-only placeholders. --}}
             <td>
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
@@ -355,7 +375,12 @@
                             <span class="placed-status-pill is-success">
                                 <i class="fa-solid fa-circle-check me-1"></i>' . $assignmentLabel . '
                             </span>
-                            <span class="text-muted fw-bold d-block fs-9 mt-1">' . $subS . '</span>
+                            <span class="text-muted fw-semibold fs-9 mt-2">Expected End</span>
+                            <span class="placed-commercial-line">
+                                <i class="fa-solid fa-calendar-days text-muted"></i>
+                                <span class="text-dark fw-semibold fs-9">--</span>
+                            </span>
+                            <a href="javascript:void(0);" class="placed-change-link"><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
