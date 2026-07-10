@@ -777,8 +777,7 @@ $('#template').change(function(){
 		if(template > 0)
 		{
 						var id        	=	$('#template').val();
-						var url       	=	"{{ route('service_company.cvtracker.email_template',':id') }}";
-						url         	=	url.replace(':id', id);
+						var url       	=	"{{ route('service_company.cvtracker.email_template') }}";
 						var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
 						var token       =	"{{ csrf_token() }}";
 						var to_email = $('#to_email').val();
@@ -1136,7 +1135,7 @@ $(function() {
         var offerId  = $('#offerId').val(); 
         var fromEmail = '{{ $userdata->email }}';
         var appIds   = <?php echo json_encode(collect($applicationData ?? [])->pluck('id')->toArray()); ?>;
-        var url      = "{{ route('service_company.cvtracker.email_template',':id') }}".replace(':id', tplId);
+        var url      = "{{ route('service_company.cvtracker.email_template') }}";
         $.ajax({
             type: 'POST',
             url: url,

@@ -3955,18 +3955,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$tracker_html .= '</tbody></table>';
                 
 
-		$jobQuestionCount = DB::table('job_additional_detail')
+		$appData = $appData ?? null;
+		$jobQuestionCount = isset($appData->jobId) ? DB::table('job_additional_detail')
 				->select('*')
 				->where('job_additional_detail.job_id', '=', $appData->jobId)
 				->where('job_additional_detail.detail_value', '!=', NULL)
-				->count();
+				->count() : 0;
 
-				$jobSkill = DB::table('job_metronics_skills')
+				$jobSkill = isset($appData->jobId) ? DB::table('job_metronics_skills')
 					->select('job_metronics_skills.*')
 					->where('job_metronics_skills.job_id', '=', $appData->jobId)
 					->where('job_metronics_skills.company_id', '=', $appData->company_id)
 					->orderBy('job_metronics_skills.id')
-					->get();
+					->get() : collect();
 
 
 		if(isset($request->WijobIdArr) && is_array($request->WijobIdArr)) {
