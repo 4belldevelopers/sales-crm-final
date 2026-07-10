@@ -266,11 +266,15 @@
                     // translation strings (messages.internal_client_tag / direct_clinet_tag),
                     // the same ones the client-listing pages already use for this exact concept.
                     $recommendation_text = __('messages.direct_clinet_tag');
+                    $recommendation_icon = 'fa-handshake';
+                    $recommendation_cls = 'text-warning';
                     if (
                         ($recommendation_id > 0 && @$row->client_comapny_id == auth()->user()->company_id) ||
                         @$row->client_comapny_id == auth()->user()->company_id
                     ) {
                         $recommendation_text = __('messages.internal_client_tag');
+                        $recommendation_icon = 'fa-building-shield';
+                        $recommendation_cls = 'text-primary';
                     }
 
                     // job location — reuses the $job_status_get document already fetched above
@@ -288,7 +292,9 @@
                             ($jobLocationLine ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i>
                                 <span class="text-muted fw-semibold fs-9">' . $jobLocationLine . '</span>
                             </span>' : '') . '
-                            <span class="fw-bold fs-9 text-muted mt-1">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
+                            <span class="placed-detail-line mt-1"><i class="fa-solid ' . $recommendation_icon . ' ' . $recommendation_cls . '"></i>
+                                <span class="fw-bold fs-9 text-muted">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
+                            </span>
                           </div>';
                 @endphp
             </td>
