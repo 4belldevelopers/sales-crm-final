@@ -329,6 +329,7 @@ Route::get('300', function () {
 });
 
 Route::post('/offer_download_mail/{id?}', [HomeController::class, 'fwd_offer_download'])->name('get.offer_download_mail');
+Route::get('/offer-letter-stream/{offerId}', [HomeController::class, 'streamPublicOfferLetter'])->name('offer.letter.public.stream');
 
 
 // Route::prefix('/')->group(function () {
