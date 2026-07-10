@@ -14485,12 +14485,11 @@ class HomeController extends Controller
 
             if($status==2){
                 $filename = "offer-letter-".$offerId.".pdf";
-                 $path = asset('storage/' . $filename);
-                 //$path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
-                
+                $path = storage_path('app/public/' . $filename);
+
                 $attachments[] = [
-                    'path' => $path,   
-                    'options' => []      
+                    'path' => $path,
+                    'options' => []
                 ];
                 
                 $notificationId = 30;
