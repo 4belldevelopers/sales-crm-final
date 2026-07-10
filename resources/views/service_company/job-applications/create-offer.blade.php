@@ -5635,7 +5635,7 @@
                     // placeholders in the template using the real offer/candidate data server-side.
                     $.ajax({
                         type: 'POST',
-                        url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
+                        url: "{{ route('service_company.cvtracker.email_template') }}",
                         data: {
                             '_token': "{{ csrf_token() }}",
                             'template': template,
@@ -5732,7 +5732,7 @@
                              APP_URL points at a different, unrelated domain (hire.jero.works), so an
                              absolute URL here silently made this a cross-origin POST that never actually
                              reached this server. Same root cause as the Download Offer Letter bug. --}}
-                        url: "{{ route('service_company.cvtracker.fwd_offer_send', [], false) }}",
+                        url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
                         data: formData,
                         processData: false,
                         contentType: false,
