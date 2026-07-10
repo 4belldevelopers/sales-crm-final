@@ -370,7 +370,7 @@
                                 <i class="fa-solid fa-user-tie text-muted"></i>
                                 <span class="text-muted fw-semibold fs-9">' . $employment_type . '</span>
                             </span>
-                            <a href="javascript:void(0);" class="placed-change-link"><i class="fa-solid fa-pen"></i>Change</a>
+                            <a href="javascript:void(0);" class="placed-change-link commercial-change-btn" data-amount="' . (float) @$row->of_offer_amount . '" data-employment-type="' . @$employment_type . '"><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
