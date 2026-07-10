@@ -132,8 +132,8 @@ if($cc_email_count > 0){
    to the (small, mid-page) modal box instead of the viewport and ends up invisible/off-screen.
    Anchoring to the already-positioned modal body sidesteps that entirely. */
 .co-appr-drawer {
-    position: absolute !important; top: 0 !important; right: -100% !important; left: auto !important;
-    width: 100% !important; min-height: 100%; background: #fff !important;
+    position: absolute !important; top: 0 !important; bottom: 0 !important; right: -100% !important; left: auto !important;
+    width: 100% !important; height: 100% !important; background: #fff !important;
     box-shadow: -6px 0 24px rgba(24,28,50,.18); z-index: 2147483000 !important;
     transition: right .25s ease; overflow-y: auto; display: block !important;
 }
@@ -207,7 +207,37 @@ if($cc_email_count > 0){
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
 
+@php
+// For the approval flow (mtype=2): auto-find the approval email template
+// so subject/body can be pre-populated without the user touching the form.
+$_approvalTpl = null;
+if ((int) @$mtype === 2 && !empty($templateData)) {
+    foreach ($templateData as $_t) {
+        if (stripos((string)@$_t->display_name, 'approval') !== false) { $_approvalTpl = $_t; break; }
+    }
+    if (!$_approvalTpl) {
+        $_approvalTpl = ($templateData instanceof \Illuminate\Support\Collection)
+            ? $templateData->first()
+            : ($templateData[0] ?? null);
+    }
+}
+@endphp
 <form id="form1">
+  {{-- For mtype=2 (approval): all visible form rows are hidden; only hidden fields remain.
+       The user picks approvers from the Select Approver drawer only. --}}
+  @if((int) @$mtype === 2)
+  <div style="display:none;">
+      <input type="hidden" id="mtypeId" name="mtype"     value="{{ $mtype }}">
+      <input type="hidden" id="offerId" name="offerId"   value="{{ $offerId }}">
+      <input type="hidden" id="to_email" name="to_email" value="">
+      <input type="hidden" id="from_email" name="from_email" value="{{ $userdata->email }}">
+      <input type="hidden" id="template"  name="template"  value="{{ @$_approvalTpl->id }}">
+      <input type="hidden" id="subject"   name="subject"    value="">
+      <input type="hidden" name="signature" value="0">
+      <textarea id="editor1" name="editor1"></textarea>
+      <input id="cc_email_panel" value="">
+  </div>
+  @else
   <!--begin::Modal body-->
   <div class="modal-body scroll-y py-0 px-lg-7 {{ (int) @$mtype === 1 ? 'co-sendoffer' : '' }}">
     <div data-kt-element="options">
@@ -383,6 +413,7 @@ if($cc_email_count > 0){
   <!--end::Modal footer-->
   <!--</form>-->
   </div>
+@endif {{-- end mtype !== 2 --}}
 </form>
 
 
@@ -649,16 +680,85 @@ function addEmailToList(rel) {
 	}
 }
 
-  // Attach event listeners
+  // Attach event listeners (only for single-select compose form, not approval flow)
+  @if((int) @$mtype !== 2)
 	document.getElementById('to_email').addEventListener('input', validateEmailInput);
 	document.getElementById('to_email').addEventListener('change', validateEmailInput);
+  @endif
 
-	$(document).on('click','.to_select',function(){
+	$(document).on('click', '.to_select', function() {
+		var rel = $(this).attr('rel');
 
-		    var rel						= 	$(this).attr('rel');
-			
-		  addEmailToList(rel);
-		// document.getElementById('to_team_select_'+id).addEventListener('change', addEmailToList);
+		@if((int) @$mtype === 2)
+		// Approval flow: "Add" sends the approval email immediately (1 at a time).
+		// The compose form is hidden — template/subject/body are auto-populated on load.
+		var $btn         = $(this);
+		var approverEmail = $('#to_team_select_' + rel).attr('data-email');
+		var approverName  = $('#to_team_select_' + rel).attr('data-title') || '';
+		if (!approverEmail) return;
+
+		$btn.text('Sending…').css({'pointer-events':'none','opacity':'0.6'});
+
+		var editorData = '';
+		try { editorData = CKEDITOR.instances.editor1.getData(); } catch(e) {
+		    editorData = $('#editor1').val() || '';
+		}
+
+		$.ajax({
+		    type: 'POST',
+		    url: "{{ route('service_company.cvtracker.fwd_offer_send') }}",
+		    data: {
+		        '_token':     "{{ csrf_token() }}",
+		        'template':   $('#template').val()    || '',
+		        'from_email': $('#from_email').val()  || '',
+		        'to_email':   approverEmail,
+		        'cc_email':   '',
+		        'subject':    $('#subject').val()     || '',
+		        'attached_cv': 0,
+		        'editor1':    editorData,
+		        'arr':        [],
+		        'mtypeId':    8,
+		        'offerId':    $('#offerId').val(),
+		        'signature':  0
+		    },
+		    success: function(r) {
+		        if (r.status === 'coinCheck') {
+		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            Swal.fire("Failed", r.message, "warning");
+		            return;
+		        }
+		        if (r.status === 'rateLimited') {
+		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            Swal.fire("Already Sent", r.message, "info");
+		            return;
+		        }
+		        if (r.status === 'success') {
+		            // Mark approval as sent so "Save & Next" just advances
+		            $('#step4').data('mgmt-status', 1);
+		            $btn.text('Sent ✓').addClass('co-appr-btn--remove').css({'pointer-events':'none','opacity':'0.7'});
+		            // Update the step-4 timeline
+		            if (typeof co_updateStep4Timeline === 'function') {
+		                co_updateStep4Timeline(approverEmail, approverName);
+		            }
+		            // Close inner pickers
+		            coApprCloseDrawers();
+		            // Close outer approval drawer (direct DOM — bypasses any reference issues)
+		            $('#kt_fwd_offer_drawer').removeClass('drawer-on');
+		            $('#kt_fwd_offer_overlay').removeClass('active');
+		            $('body').css('overflow', '');
+		        } else {
+		            $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		            Swal.fire("Error", r.message || "Could not send approval email.", "error");
+		        }
+		    },
+		    error: function() {
+		        $btn.text('Add').css({'pointer-events':'','opacity':'1'});
+		        Swal.fire("Error", "Could not send approval email. Please try again.", "error");
+		    }
+		});
+		@else
+		addEmailToList(rel);
+		@endif
 	});
 
 // document.getElementById('to_select').addEventListener('click', addEmailToList);
@@ -737,7 +837,8 @@ $('#template').change(function(){
 });
 
 
-document.getElementById("btnSubmit").addEventListener("click", ()=>{
+var _btnSubmitEl = document.getElementById("btnSubmit");
+if (_btnSubmitEl) _btnSubmitEl.addEventListener("click", ()=>{
 	
 		
 
@@ -869,31 +970,8 @@ document.getElementById("btnSubmit").addEventListener("click", ()=>{
 	});
 	
 	
-	$('.to_select').on('click', function(e) {
-   			
-			
-			var rel						= 	$(this).attr('rel');
-			var assign					=	$('#to_team_select_'+rel).attr("data-assign");
-			var title					=	$('#to_team_select_'+rel).attr("data-title");
-			var email					=	$('#to_team_select_'+rel).attr("data-email");
-			
-			if(assign ==0)
-			{
-				$(this).addClass("co-appr-btn--remove");
-				$(this).text('Remove');
-				$(this).attr("data-assign", 1);
-				AddEventTo(title, email);
-				if (typeof coApprCloseDrawers === 'function') { coApprCloseDrawers(); }
-			}
-			else if(assign ==1)
-			{
-				$(this).removeClass("co-appr-btn--remove");
-				$(this).text('Add');
-				$(this).attr("data-assign", 0);
-				DeleteEventTo(title, email);
-			}
-
-	});
+	// Note: .to_select click is handled by the delegated $(document).on above,
+	// which supports both the approval multi-select (mtype=2) and the legacy single-select flow.
 	
 	
 
@@ -1049,19 +1127,59 @@ $(document).on('input', '.co-appr-search-input', function() {
 	});
 });
 
+@if((int) @$mtype === 2)
+// For the approval flow (mtype=2) auto-open the approver picker immediately so
+// the user does not need to click a second "+ Add Approver" button inside the form.
+coApprOpenDrawer('to');
+
+// Auto-load approval template so subject/body are ready before "Add" fires.
+// The template change handler above fills #subject and CKEditor via AJAX.
+@if(!empty($_approvalTpl))
+$(function() {
+    setTimeout(function() {
+        var tplId    = '{{ @$_approvalTpl->id }}';
+        var offerId  = $('#offerId').val(); 
+        var fromEmail = '{{ $userdata->email }}';
+        var appIds   = <?php echo json_encode(collect($applicationData ?? [])->pluck('id')->toArray()); ?>;
+        var url      = "{{ route('service_company.cvtracker.email_template',':id') }}".replace(':id', tplId);
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                '_token': "{{ csrf_token() }}",
+                'template': tplId,
+                'selectedApplicantListing': appIds,
+                'to_email': fromEmail,
+                'from_email': fromEmail,
+                'mailtype': 8,
+                'offerId': offerId
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    $('#subject').val(res.subject || '');
+                    var body = res.template_description || '';
+                    try { CKEDITOR.instances.editor1.setData(body); } catch(e) {}
+                    $('#editor1').val(body);
+                }
+            }
+        });
+    }, 800);
+});
+@endif
+@endif
+
 </script>
 <script>
 	
 	// $.noConflict();
 	
+@if((int) @$mtype !== 2)
 	var from_email	=	document.querySelector('#from_email');
-	new Tagify(from_email);
-	
-// 	var to_email	=	document.querySelector('#to_email');
-// 	new Tagify(to_email);
-    
+	if (from_email) new Tagify(from_email);
+
 	var cc_email	=	document.querySelector('#cc_email');
-	new Tagify(cc_email);
+	if (cc_email) new Tagify(cc_email);
+@endif
 		 
 </script>
 

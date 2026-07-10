@@ -4451,7 +4451,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		}
 		if((int)$request->mailtype== 8){
 			$offerId = $request->offerId;
-			
+
 			$email = '0';
 			if(!empty($request->to_email)){
 				$emailall = explode(',',$request->to_email);
@@ -4460,11 +4460,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$from_email = '0';
 			if(!empty($request->from_email)){
 				$from = $request->from_email;
-				$from = json_decode($from, true);
-				$from = array_column($from, 'value');
-				$from = implode(',', $from);
-
-				$from_email = explode(',',$from);
+				$fromDecoded = json_decode($from, true);
+				if (is_array($fromDecoded)) {
+					// Tagify format: [{"value":"email@..."},...]
+					$from = implode(',', array_column($fromDecoded, 'value'));
+				}
+				// else: plain email string (approval flow) — use as-is
+				$from_email = explode(',', $from);
 				$from_email = $from_email[0];
 			}
 
@@ -4491,9 +4493,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				// dd($offer_create->designation);
 
              
-				$SALARY_MODE = $salaryMode[$job_applications->offer_currency];
-				$CURRENCY_SELCT = $currency[$job_applications->offer_mode];
-				$SALARY_AMOUNT= $job_applications->offer_amount;
+				$SALARY_MODE = $job_applications
+					? ($salaryMode[$job_applications->offer_currency] ?? 0)
+					: 0;
+
+				$CURRENCY_SELCT = $job_applications
+					? ($currency[$job_applications->offer_mode] ?? 0)
+					: 0;
+				// $SALARY_AMOUNT= $job_applications->offer_amount;
+				$SALARY_AMOUNT = $job_applications->offer_amount ?? 0;
 				$JOB_TYPE = ($job_applications->employment_type==1) ? 'Contract' : 'Full-time';
 			// dd($offerId,$job_applications->full_name);
 			$designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
@@ -5537,9 +5545,33 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
-		$from = json_decode($from, true);
-		$from = array_column($from, 'value');
-		$from = implode(',', $from);
+		// Rate limit: approval emails (mtypeId=8) — at most 1 send per recipient per hour.
+		// Prevents accidental spam when the user clicks "Add" or "Send Reminder" repeatedly.
+		if ((int) $mtypeId === 8 && !empty($request->to_email)) {
+			$approvalAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
+			if ($approvalAppRow) {
+				$recentApproval = DB::table('updatetimeline')
+					->where('application_id', $approvalAppRow->application_id)
+					->where('job_id', $approvalAppRow->job_id)
+					->whereIn('mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new flow
+					->where('email_id_hr', trim($request->to_email))
+					->where('create_at', '>=', now()->subHour())
+					->exists();
+				if ($recentApproval) {
+					return Reply::dataOnly([
+						'status'  => 'rateLimited',
+						'message' => 'An approval email was already sent to this approver within the last hour. Please wait before sending again.',
+					]);
+				}
+			}
+		}
+
+		$fromDecoded = json_decode($from, true);
+		if (is_array($fromDecoded)) {
+			// Tagify format: [{"value":"email@..."},...]
+			$from = implode(',', array_column($fromDecoded, 'value'));
+		}
+		// else: plain email string (approval flow) — use as-is
 
 		// 		$to = json_decode($to, true);
 		// 		$to = array_column($to, 'value');

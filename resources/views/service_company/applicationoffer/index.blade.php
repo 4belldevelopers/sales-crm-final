@@ -560,6 +560,13 @@ a:hover .ot-comp-change { text-decoration: underline; }
     z-index: 1054;
 }
 #kt_fwd_offer_overlay.active { display: block; }
+/* Keep the body content area a fixed block so absolute-positioned inner pickers
+   don't expand it and create empty space below the form. */
+#application_fwd_offer_body_content {
+    overflow: hidden !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+}
 </style>
 
 <div id="kt_fwd_offer_overlay"></div>
