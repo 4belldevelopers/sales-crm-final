@@ -6,7 +6,6 @@
     $currencySymbole = GeneralMethod::currencySymbole();
     $feedback_status = GeneralMethod::feedback_status();
     $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
     $salaryModeOffer = GeneralMethod::salaryModeOffer();
 @endphp
 @if (count($data) > 0)
@@ -260,24 +259,18 @@
                     $client_name = ucwords(mb_substr($client_title_name, 0, 18));
 
                     $job_status_get = GeneralMethod::jobDetails($row->jobId);
-                    $job_status = $job_status_get->status;
-                    $status = ucwords($job_status);
-                    $class = $job_status_arr[$job_status];
                     $recommendation_id = $row->recommendation_id;
 
-                    if ($status == 'Active') {
-                        $status = 'Hiring';
-                    }
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
-                    }
-
-                    $recommendation_text = __('messages.clinet_tag');
+                    // Internal Client / Direct Client — same real client-relationship check the
+                    // job-status logic used before, just relabeled with this app's own existing
+                    // translation strings (messages.internal_client_tag / direct_clinet_tag),
+                    // the same ones the client-listing pages already use for this exact concept.
+                    $recommendation_text = __('messages.direct_clinet_tag');
                     if (
                         ($recommendation_id > 0 && @$row->client_comapny_id == auth()->user()->company_id) ||
                         @$row->client_comapny_id == auth()->user()->company_id
                     ) {
-                        $recommendation_text = __('messages.internal_tag');
+                        $recommendation_text = __('messages.internal_client_tag');
                     }
 
                     // job location — reuses the $job_status_get document already fetched above
@@ -295,7 +288,7 @@
                             ($jobLocationLine ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i>
                                 <span class="text-muted fw-semibold fs-9">' . $jobLocationLine . '</span>
                             </span>' : '') . '
-                            <span class="fw-bold fs-9 ' . @$class . ' mt-1">' . $status . ' &middot; ' . $recommendation_text . '</span>
+                            <span class="fw-bold fs-9 text-muted mt-1">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
                           </div>';
                 @endphp
             </td>
