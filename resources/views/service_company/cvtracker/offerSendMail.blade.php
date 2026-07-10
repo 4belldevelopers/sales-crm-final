@@ -531,12 +531,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
     <!--begin::Team card-->
     <div class="card card-custom mx-2">
       <!--begin::Team header-->
-      <div id="kt_to_header" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #e4e6ef;background:#fff;min-height:48px;">
-          <span class="fw-bold text-dark" style="font-size:13px;">Select Approver</span>
-          <button type="button" id="kt_activitiesIntTeam_close_to" class="btn btn-sm btn-icon btn-active-light-danger" style="width:30px;height:30px;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-      </div>
+      <div id="kt_to_header" style="display:none;"></div>
       <!--end::Team header-->
       <!--begin::Team Content-->
       <div class="card-body py-7 co-appr-picker">
