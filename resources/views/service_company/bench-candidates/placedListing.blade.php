@@ -102,17 +102,38 @@
         .fs-8 { font-size: 11.5px !important; }
         .fs-9 { font-size: 10.5px !important; }
 
-        .placed-timeline-track { display: flex; align-items: center; }
+        .placed-timeline { min-width: 190px; }
+        .placed-timeline-track { display: flex; align-items: flex-start; }
+        .placed-timeline-node-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .placed-timeline-node.is-static { background: #e4e6ef; border: 2px solid #e4e6ef; }
+        .placed-timeline-node.is-static { background: #fff; border: 2px solid #e4e6ef; }
         .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
-        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 26px; margin: 0 2px; }
+        .placed-timeline-node-label { font-size: 9.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
+        .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 14px; margin: 4px 1px 0; }
+        .placed-timeline-line.is-done { background: #17c653; }
+        .placed-timeline-labels { display: flex; justify-content: space-between; margin-top: 1px; }
+        .placed-timeline-labels span { font-size: 9px; color: #a1a5b7; }
+
+        .placed-detail-line { display: flex; align-items: center; gap: .35rem; margin-bottom: 1px; }
+        .placed-detail-line i { font-size: 10px; width: 12px; text-align: center; }
 
         .placed-status-pill {
             display: inline-flex; align-items: center; width: fit-content;
             font-size: 11.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
         }
+        .placed-status-pill.is-success { background: #e8fff3; color: #17c653; }
+        .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; }
+        .placed-status-pill.is-danger { background: #fff5f8; color: #f1416c; }
         .placed-action-btn { width: 30px; height: 30px; }
+
+        .placed-commercial-line { display: flex; align-items: center; gap: .35rem; margin-top: 3px; }
+        .placed-commercial-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-change-link {
+            display: inline-flex; align-items: center; gap: .3rem;
+            font-size: 11px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
+        }
+        .placed-change-link i { font-size: 9.5px; }
+        .placed-change-link:hover { color: #0077b5; }
 
         .rows-per-page-select { cursor: pointer; }
     </style>
@@ -278,16 +299,13 @@
                     </div>
 
                     {{-- =====================================================
-                         Filter bar — Search and Sort are real and wired to
-                         the existing AJAX endpoint. Placed Date / Recruiter /
-                         Client / Job / Location / More Filters / Saved Views /
-                         Group By have no backend support yet, so they render
-                         as inert HTML controls for now.
+                         Filter bar — Search and Sort only; both are real and
+                         wired to the existing AJAX endpoint.
                     ====================================================== --}}
                     <div class="card mb-3">
                         <div class="card-body py-3 px-4">
                             <div class="placed-filter-bar">
-                                <div class="flex-grow-1" style="min-width: 220px; max-width: 340px;">
+                                <div class="flex-grow-1">
                                     <input type="text" class="form-control form-control-solid" name="inputJobSearch"
                                         value="" placeholder="Search by name, job, client, skills..." id="kt_tagify_2" onchange="filtersdataget()" />
                                 </div>
@@ -302,18 +320,6 @@
                                     <option value="14">Low to High (Offer Amount)</option>
                                     <option value="15">High to Low (Offer Amount)</option>
                                 </select>
-
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-calendar-days"></i> Placed Date</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-id-badge"></i> Recruiter</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-building"></i> Client</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-briefcase"></i> Job / Designation</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-location-dot"></i> Location</button>
-                                <button type="button" class="placed-filter-btn"><i class="fa-solid fa-sliders"></i> More Filters</button>
-
-                                <div class="ms-auto d-flex align-items-center gap-2">
-                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-star"></i> Saved Views</button>
-                                    <button type="button" class="placed-filter-btn"><i class="fa-solid fa-table-columns"></i> Group By</button>
-                                </div>
 
                                 {{-- kept for functional parity with the old country/location filter (hidden, unused today) --}}
                                 <select class="d-none" id="country">
@@ -339,7 +345,7 @@
                                             <th>Client &amp; Job Details</th>
                                             <th>Recruiter</th>
                                             <th>Commercials</th>
-                                            <th>Current Assignment</th>
+                                            <th>Current Assignment /<br>Replacement</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
