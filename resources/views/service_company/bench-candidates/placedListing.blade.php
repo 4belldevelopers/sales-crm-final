@@ -47,12 +47,12 @@
             width: 40px; height: 40px; min-width: 40px;
             border-radius: .6rem;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
-        .placed-stat-label { font-size: 12px; font-weight: 500; color: #7e8299; }
-        .placed-stat-value { font-size: 20px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .placed-stat-caption { font-size: 11px; color: #a1a5b7; }
-        .placed-stat-delta { font-size: 11px; font-weight: 600; }
+        .placed-stat-label { font-size: 10.8px; font-weight: 500; color: #7e8299; }
+        .placed-stat-value { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .placed-stat-caption { font-size: 10px; color: #a1a5b7; }
+        .placed-stat-delta { font-size: 10px; font-weight: 600; }
         .placed-stat-delta.up { color: #17c653; }
         .placed-stat-delta.down { color: #f1416c; }
 
@@ -63,7 +63,7 @@
         }
         .placed-filter-btn {
             border: 1px solid #e4e6ef; background: #f9f9f9; color: #3f4254;
-            border-radius: .5rem; font-size: 12.5px; font-weight: 500;
+            border-radius: .5rem; font-size: 11.5px; font-weight: 500;
             padding: .45rem .75rem; white-space: nowrap;
             display: inline-flex; align-items: center; gap: .35rem;
         }
@@ -73,10 +73,10 @@
         #placedTableWrap { overflow-x: auto; }
         #myTable thead th {
             position: sticky; top: 0; z-index: 2;
-            background: #fff; font-size: 12px; font-weight: 500; color: #7e8299;
+            background: #fff; font-size: 11px; font-weight: 500; color: #7e8299;
             border-bottom: 1px solid #eef0f4; white-space: nowrap; padding: .75rem .6rem;
         }
-        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 13px; }
+        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 11.5px; }
         #myTable tbody tr { border-bottom: 1px solid #f4f4f8; }
 
         .placed-avatar {
@@ -84,11 +84,11 @@
             display: flex; align-items: center; justify-content: center; font-weight: 700;
         }
         .placed-skill-badge {
-            background: #f4f4f8; color: #5e6278; font-weight: 400; font-size: 10.5px;
+            background: #f4f4f8; color: #5e6278; font-weight: 400; font-size: 9.5px;
             margin-right: 2px;
         }
-        .fs-8 { font-size: 11.5px !important; }
-        .fs-9 { font-size: 10.5px !important; }
+        .fs-8 { font-size: 10.5px !important; }
+        .fs-9 { font-size: 9.5px !important; }
 
         .placed-timeline { min-width: 190px; }
         .placed-timeline-track { display: flex; align-items: flex-start; }
@@ -96,18 +96,18 @@
         .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .placed-timeline-node.is-static { background: #fff; border: 2px solid #e4e6ef; }
         .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
-        .placed-timeline-node-label { font-size: 9.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
+        .placed-timeline-node-label { font-size: 8.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
         .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 14px; margin: 4px 1px 0; }
         .placed-timeline-line.is-done { background: #17c653; }
         .placed-timeline-labels { display: flex; justify-content: space-between; margin-top: 1px; }
-        .placed-timeline-labels span { font-size: 9px; color: #a1a5b7; }
+        .placed-timeline-labels span { font-size: 8px; color: #a1a5b7; }
 
         .placed-detail-line { display: flex; align-items: center; gap: .35rem; margin-bottom: 1px; }
-        .placed-detail-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-detail-line i { font-size: 9px; width: 12px; text-align: center; }
 
         .placed-status-pill {
             display: inline-flex; align-items: center; width: fit-content;
-            font-size: 11.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
+            font-size: 10.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
         }
         .placed-status-pill.is-success { background: #e8fff3; color: #17c653; }
         .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; }
@@ -115,12 +115,12 @@
         .placed-action-btn { width: 30px; height: 30px; }
 
         .placed-commercial-line { display: flex; align-items: center; gap: .35rem; margin-top: 3px; }
-        .placed-commercial-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-commercial-line i { font-size: 9px; width: 12px; text-align: center; }
         .placed-change-link {
             display: inline-flex; align-items: center; gap: .3rem;
-            font-size: 11px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
+            font-size: 10px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
         }
-        .placed-change-link i { font-size: 9.5px; }
+        .placed-change-link i { font-size: 8.5px; }
         .placed-change-link:hover { color: #0077b5; }
 
         .rows-per-page-select { cursor: pointer; }
@@ -433,7 +433,7 @@
                                             <th>Client &amp; Job Details</th>
                                             <th>Recruiter</th>
                                             <th>Commercials</th>
-                                            <th>Current Assignment /<br>Replacement</th>
+                                            <th>Work Status</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
@@ -1559,6 +1559,32 @@
                 confirmButtonText: 'Got it'
             }).then(function() {
                 $('#kt_assignmentDetails_close').trigger('click');
+            });
+        });
+
+        // Row delete — no delete route exists for this listing, so this confirms then shows
+        // an honest preview notice. It deliberately never removes the row from the table,
+        // since that would look like a real deletion succeeded when nothing was persisted.
+        $(document).on('click', '.placed-row-delete-btn', function(e) {
+            e.preventDefault();
+            var name = $(this).data('candidate-name') || 'this candidate';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Delete this placement record?',
+                text: 'This will permanently remove ' + name + ' from the Talent Placed list.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete',
+                confirmButtonColor: '#f1416c',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Preview Only',
+                        text: 'Delete captured for preview — connect this to a delete endpoint to remove it for real.',
+                        confirmButtonText: 'Got it'
+                    });
+                }
             });
         });
 
