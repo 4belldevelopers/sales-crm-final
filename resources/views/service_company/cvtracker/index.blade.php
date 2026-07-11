@@ -136,14 +136,14 @@
            second row only below that, so every tab always stays visible. */
         .cvh-tabs-card { margin-bottom: 14px; }
         .cvh-tabs-card .card-body { padding: 6px 8px; }
-        .cvh-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 0; font-family: 'Poppins', sans-serif; }
-        .cvh-tab { display: flex; align-items: center; gap: 5px; padding: 8px 8px; border: none; background: transparent; border-radius: 7px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+        .cvh-tabs { display: flex; align-items: stretch; flex-wrap: wrap; gap: 2px 4px; font-family: 'Poppins', sans-serif; }
+        .cvh-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 9px 12px; border: none; background: transparent; border-radius: 7px; font-size: 11px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
         .cvh-tab:hover { background: #f8fafc; color: #334155; }
         .cvh-tab.active { background: #eff6ff; color: #2563eb; font-weight: 700; }
-        .cvh-tab-count { font-size: 10px; font-weight: 700; color: inherit; background: #f1f5f9; border-radius: 99px; padding: 1px 6px; }
-        .cvh-tab.active .cvh-tab-count { background: #dbeafe; color: #2563eb; }
-        @media (min-width: 1200px) and (max-width: 1620px) { .cvh-tab { padding: 8px 6px; font-size: 11px; gap: 4px; } .cvh-tab-count { padding: 1px 5px; } }
-        @media (max-width: 768px) { .cvh-tab { padding: 7px 8px; font-size: 11px; } }
+        .cvh-tab-label { line-height: 1.1; }
+        .cvh-tab-count { font-size: 12px; font-weight: 700; line-height: 1.1; color: inherit; }
+        @media (min-width: 1200px) and (max-width: 1620px) { .cvh-tab { padding: 8px 9px; font-size: 10.5px; } .cvh-tab-count { font-size: 11px; } }
+        @media (max-width: 768px) { .cvh-tab { padding: 7px 8px; font-size: 10.5px; } }
 
         /* Search + filter — own card, separate from the tabs card above it */
         .cvh-search-card { margin-bottom: 14px; }
@@ -1224,7 +1224,7 @@
                                         : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
                                 @endphp
                                 <button type="button" class="cvh-tab {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}">
-                                    {{ $tab['label'] }}
+                                    <span class="cvh-tab-label">{{ $tab['label'] }}</span>
                                     <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
                                 </button>
                             @endforeach
