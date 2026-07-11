@@ -6,7 +6,6 @@
     $apthCards = [
         [
             'title' => 'Pool',
-            'caption' => 'Total Candidates',
             'url' => $tabactive['pool_url'],
             'id' => $tabactive['pool_id'],
             'value' => $tabactive['pool_counter'],
@@ -17,7 +16,6 @@
         ],
         [
             'title' => 'Similar Matching',
-            'caption' => 'High Match Candidates',
             'url' => $tabactive['similar_url'],
             'id' => $tabactive['similar_id'],
             'value' => $tabactive['existing_counter'],
@@ -28,7 +26,6 @@
         ],
         [
             'title' => 'In-house Bench Talents',
-            'caption' => 'From Internal Bench',
             'url' => $tabactive['inhouseBench_url'],
             'id' => $tabactive['inhouseBench_id'],
             'value' => $tabactive['internal_bench_counter'],
@@ -39,7 +36,6 @@
         ],
         [
             'title' => 'Agency Bench Talents',
-            'caption' => 'From Agencies',
             'url' => $tabactive['agencyBench_url'],
             'id' => $tabactive['agencyBench_id'],
             'value' => $tabactive['public_bench_counter'],
@@ -50,7 +46,6 @@
         ],
         [
             'title' => 'Bench Talent Requests',
-            'caption' => 'Requests Received',
             'url' => $tabactive['benchTalentReq_url'],
             'id' => $tabactive['benchTalentReq_id'],
             'value' => $tabactive['recomnded_counter'],
@@ -61,7 +56,6 @@
         ],
         [
             'title' => 'Website Candidates',
-            'caption' => 'From Career Website',
             'url' => $tabactive['career_url'],
             'id' => $tabactive['career_id'],
             'value' => $tabactive['career_counter'],
@@ -120,13 +114,15 @@
         min-width: 0;
     }
     .apth-title {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         color: #7e8299;
-        margin: 0 0 4px;
-        white-space: nowrap;
+        margin: 0 0 5px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
         overflow: hidden;
-        text-overflow: ellipsis;
         transition: color .15s, font-weight .15s;
     }
     .apth-card.active .apth-title {
@@ -164,15 +160,6 @@
         height: 11px;
         flex-shrink: 0;
     }
-    .apth-caption {
-        font-size: 11px;
-        font-weight: 400;
-        color: #7e8299;
-        margin: 2px 0 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
     @media (max-width: 992px) {
         .apth-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
@@ -207,7 +194,6 @@
                         </svg>
                     </span>
                 </div>
-                <p class="apth-caption">{{ $card['caption'] }}</p>
             </div>
         </a>
     @endforeach
