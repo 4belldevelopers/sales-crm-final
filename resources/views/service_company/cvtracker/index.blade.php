@@ -149,7 +149,7 @@
         .cvh-tab-label { line-height: 1.1; font-size: 11px; font-weight: 500; }
         .cvh-tab-count { font-size: 13px; font-weight: 700; line-height: 1.1; color: inherit; }
         .cvh-tab.active .cvh-tab-label { font-weight: 700; }
-        .cvh-tab.stage-all.active        { color: #2563eb; background: rgba(37,99,235,.10); }
+        .cvh-tab.stage-total.active       { color: #2563eb; background: rgba(37,99,235,.10); }
         .cvh-tab.stage-inreview.active    { color: #bdbd26; background: rgba(189,189,38,.14); }
         .cvh-tab.stage-sourcing.active    { color: #7e8299; background: rgba(126,130,153,.14); }
         .cvh-tab.stage-screening.active   { color: #c000ff; background: rgba(192,0,255,.10); }
