@@ -160,54 +160,11 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         $this->top_up_logs_op =   DB::table('top_up_logs')->select('top_up_logs.*')->leftJoin('carts','carts.id','=','top_up_logs.cart_id')->where('top_up_logs.event_type','=','operational')->where('top_up_logs.company_id','=',$company_id)->get();
 
         $this->top_up_logs_sal =   DB::table('top_up_logs')->select('top_up_logs.*')->leftJoin('carts','carts.id','=','top_up_logs.cart_id')->where('top_up_logs.event_type','=','sales')->where('top_up_logs.company_id','=',$company_id)->get();
-        
-        $transaction_history =   DB::table('cart_transaction_history')->select('cart_transaction_history.*')
-        ->where('company_id','=',$company_id)
-        ->where('payment_gateway', 'razorpay')
-        ->where(function ($query) {
-            $query->whereNull('payment_Id')
-                  ->orWhere('payment_Id', '=', '');
-        })->orderByDesc('id')->limit(5)->get();
 
-        $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
-        $key = $payment_settings->razorpay_key;
-        $secret = $payment_settings->razorpay_secret;
+        // Transaction history (with Razorpay status sync) now lives on its own
+        // page — see transactions() — so this heavy per-load query + curl
+        // sync no longer runs on every Subscription page visit.
 
-        foreach($transaction_history as $tr_val){
-            if($tr_val->payment_orderId !='' && $tr_val->payment_gateway=='razorpay'){
-        
-                $orderID = $tr_val->payment_orderId;
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, "https://api.razorpay.com/v1/orders/{$orderID}/payments");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_USERPWD, "{$key}:{$secret}");
-
-                // Execute the request
-                $response = curl_exec($ch);
-                if (curl_errno($ch)) {
-                  
-                } else {
-                   
-                    $payments = json_decode($response, true);
-
-                    if (!empty($payments['items'])) {
-                        foreach ($payments['items'] as $payment) {
-                            DB::table('cart_transaction_history')->where('payment_orderId','=',$orderID)->update(['status'=>$payment['status']]);
-                        }
-                    } 
-                }
-                curl_close($ch);
-            }
-
-        }
-
-
-        $this->cart_transaction_history =   DB::table('cart_transaction_history')->select('cart_transaction_history.*')->where('cart_transaction_history.company_id','=',$company_id)->orderByDesc('id')->paginate(50);
-
-        // dd($this->cart_transaction_history);   
-
- 
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $this->package_active_all = DB::table('package_active')->join('package_invoice','package_invoice.id','=','package_active.package_invoice_id')->join('package_order_items','package_order_items.invoice_id','=','package_invoice.id')->join('package_features','package_features.id','=','package_order_items.feature_id')->select('package_active.*','package_features.title','package_features.field_name','package_features.id as gg_is')->where('package_active.company_id', $company_id)->get();
 
@@ -331,6 +288,59 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         $this->remain_coins_sales = $remain_coins_sales->coins ?? 0;
 
         return view('service_company.subscription.newindex', $this->data);
+    }
+
+    /**
+     * Dedicated Transactions > Subscription page. Split out of newindex()
+     * so the main Subscription page no longer pays for this query + the
+     * blocking Razorpay status-sync curl calls on every visit.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function transactions()
+    {
+        $company_id = auth()->user()->company_id;
+
+        $transaction_history = DB::table('cart_transaction_history')->select('cart_transaction_history.*')
+        ->where('company_id','=',$company_id)
+        ->where('payment_gateway', 'razorpay')
+        ->where(function ($query) {
+            $query->whereNull('payment_Id')
+                  ->orWhere('payment_Id', '=', '');
+        })->orderByDesc('id')->limit(5)->get();
+
+        $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
+        $key = $payment_settings->razorpay_key;
+        $secret = $payment_settings->razorpay_secret;
+
+        foreach($transaction_history as $tr_val){
+            if($tr_val->payment_orderId !='' && $tr_val->payment_gateway=='razorpay'){
+
+                $orderID = $tr_val->payment_orderId;
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, "https://api.razorpay.com/v1/orders/{$orderID}/payments");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_USERPWD, "{$key}:{$secret}");
+
+                $response = curl_exec($ch);
+                if (!curl_errno($ch)) {
+                    $payments = json_decode($response, true);
+
+                    if (!empty($payments['items'])) {
+                        foreach ($payments['items'] as $payment) {
+                            DB::table('cart_transaction_history')->where('payment_orderId','=',$orderID)->update(['status'=>$payment['status']]);
+                        }
+                    }
+                }
+                curl_close($ch);
+            }
+        }
+
+        $this->company_id = $company_id;
+        $this->cart_transaction_history = DB::table('cart_transaction_history')->select('cart_transaction_history.*')->where('cart_transaction_history.company_id','=',$company_id)->orderByDesc('id')->paginate(50);
+
+        return view('service_company.transactions.subscription', $this->data);
     }
 
 

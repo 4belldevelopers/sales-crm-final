@@ -418,17 +418,17 @@
 					<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
                             @$ectc .
-                            '<sup style="font-size:.75em;font-weight:500;">/' .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ectc_mode .
-                            '</sup></a>
+                            '</span></a>
 						<span class="text-muted fw-bold d-block fs-7 ' .
                             $dnone .
                             '">' .
                             @$current_ctc_cur .
                             @$ctc .
-                            '<sup style="font-size:.75em;font-weight:500;">/' .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ctc_mode .
-                            '</sup></span>
+                            '</span></span>
 					</div>';
                     } else {
                         echo '<div class="d-flex flex-column">
