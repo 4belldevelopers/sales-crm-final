@@ -413,7 +413,10 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Actions: kebab menu — the only wired item reuses the existing stage/status modal --}}
+            {{-- Actions: kebab menu. "View Placement Status" reuses the existing stage/status
+                 modal. "Delete" has no backing endpoint (no delete route exists for this
+                 listing), so it's a view-only confirm-then-preview action — it never removes
+                 the row, to avoid anyone believing a real record was deleted. --}}
             <td>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-icon btn-light placed-action-btn" type="button" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -423,6 +426,11 @@
                         <li>
                             <a href="javascript:void(0);" class="dropdown-item stage_sub_stage" data-row-id="{{ @$row->wiseId }}">
                                 View Placement Status
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" class="dropdown-item text-danger placed-row-delete-btn" data-candidate-name="{{ e(@$row->full_name) }}">
+                                <i class="fa-solid fa-trash-can me-2"></i>Delete
                             </a>
                         </li>
                     </ul>
