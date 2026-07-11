@@ -160,16 +160,18 @@
         .cvh-tab.stage-rejected.active    { color: #ff0202; background: rgba(255,2,2,.10); }
         @media (max-width: 768px) { .cvh-tabs { flex-wrap: wrap; } .cvh-tab { flex: 1 1 33%; border-right: none; border-bottom: 1px solid #f1f5f9; padding: 8px 4px; } .cvh-tab-label { font-size: 10.5px; } }
 
-        /* Search + filter — own card, trimmed to hug the search/sort/filter row only.
-           The Sort <select> (form-select-lg) and Filter button (py-4 utility) are taller
-           than the search input itself and were dictating the whole row's height — both
-           get scoped down here to match. */
-        .cvh-search-card { margin-bottom: 14px; }
-        .cvh-search-card .card-body { padding: 10px 14px; }
-        .cvh-search-card .custm-bg { margin: 0 !important; }
+        /* Search + filter — own card, sized to match the compact search bar already used
+           on the Bench Candidates page (.jw-card/.dash-search there: 34px controls, 8px
+           card padding) rather than the taller Metronic "lg" defaults this row had. */
+        .cvh-search-card { margin-bottom: 14px; border-radius: 10px; }
+        .cvh-search-card .card-body { padding: 8px 10px; }
+        .cvh-search-card .custm-bg { margin: 0 !important; gap: 8px; }
         .cvh-search-card .form-control,
-        .cvh-search-card .form-select-lg { padding-top: .55rem !important; padding-bottom: .55rem !important; font-size: 13px !important; }
-        .cvh-search-card .btn.py-4 { padding-top: .55rem !important; padding-bottom: .55rem !important; }
+        .cvh-search-card .form-select,
+        .cvh-search-card .btn { height: 34px !important; min-height: 34px !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 12px !important; border-radius: 8px !important; }
+        .cvh-search-wrap { padding-left: 0 !important; }
+        .cvh-search-wrap .cvh-search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px; pointer-events: none; z-index: 2; }
+        .cvh-search-wrap .form-control { padding-left: 30px !important; }
 
         /* Selected-rows action bar */
         .cvh-selection-bar { display: none; align-items: center; gap: 14px; background: #fff; border: 1px solid #e5e9f2; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-family: 'Poppins', sans-serif; flex-wrap: wrap; }
@@ -1145,9 +1147,10 @@
                 <div class="card cvh-search-card">
                 <div class="card-body">
                 <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-4 d-flex align-items-center px-2" style="width:65%;position: relative;">
+                    <div class="col-lg-4 d-flex align-items-center px-2 cvh-search-wrap" style="width:65%;position: relative;">
+                        <i class="fa fa-search cvh-search-ico"></i>
                         <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
+                            value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onchange="filtersdataget()" />
                             <div style="position: absolute; top: 0px; right: 36px;">
                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
                             </div>
@@ -1174,7 +1177,7 @@
                         <button type="button"
                             class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
                             data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
-                            data-toggle="modal" data-target="#apptrackerfilter">
+                            data-bs-toggle="modal" data-bs-target="#apptrackerfilter">
                             <span class="svg-icon svg-icon-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                     viewBox="0 0 24 24" fill="none">
