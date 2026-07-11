@@ -131,16 +131,19 @@
         @media (max-width: 768px)  { .cvh-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
         @media (max-width: 480px)  { .cvh-grid { grid-template-columns: 1fr; } }
 
-        /* Stage tabs — own card, separate from the search/filter card below it */
+        /* Stage tabs — own card, sized to fit all 9 tabs on one row on a 15.6" laptop
+           (1366px and 1536px viewports) without clipping or a scrollbar; wraps to a
+           second row only below that, so every tab always stays visible. */
         .cvh-tabs-card { margin-bottom: 14px; }
-        .cvh-tabs-card .card-body { padding: 6px 10px; }
-        .cvh-tabs { display: flex; align-items: center; gap: 2px; overflow-x: auto; font-family: 'Poppins', sans-serif; }
-        .cvh-tab { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border: none; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+        .cvh-tabs-card .card-body { padding: 6px 8px; }
+        .cvh-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 0; font-family: 'Poppins', sans-serif; }
+        .cvh-tab { display: flex; align-items: center; gap: 5px; padding: 8px 8px; border: none; background: transparent; border-radius: 7px; font-size: 11.5px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
         .cvh-tab:hover { background: #f8fafc; color: #334155; }
         .cvh-tab.active { background: #eff6ff; color: #2563eb; font-weight: 700; }
-        .cvh-tab-count { font-size: 11px; font-weight: 700; color: inherit; background: #f1f5f9; border-radius: 99px; padding: 1px 8px; }
+        .cvh-tab-count { font-size: 10px; font-weight: 700; color: inherit; background: #f1f5f9; border-radius: 99px; padding: 1px 6px; }
         .cvh-tab.active .cvh-tab-count { background: #dbeafe; color: #2563eb; }
-        @media (max-width: 768px) { .cvh-tab { padding: 8px 10px; font-size: 11.5px; } }
+        @media (min-width: 1200px) and (max-width: 1620px) { .cvh-tab { padding: 8px 6px; font-size: 11px; gap: 4px; } .cvh-tab-count { padding: 1px 5px; } }
+        @media (max-width: 768px) { .cvh-tab { padding: 7px 8px; font-size: 11px; } }
 
         /* Search + filter — own card, separate from the tabs card above it */
         .cvh-search-card { margin-bottom: 14px; }
@@ -1114,41 +1117,6 @@
                     @endforeach
                 </div>
 
-                {{-- ── Stage Tabs (separate card, ES-backed counts) ── --}}
-                @php
-                    // Tab key => the ID(s) sent to the backend as `stage_tab` (comma-separated
-                    // for "Rejected", which spans two master_status rows both named "Rejected"),
-                    // and the matching key in $candidateStats['tabs'] for the live badge count.
-                    $cvStageTabs = [
-                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total'],
-                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview'],
-                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing'],
-                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening'],
-                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation'],
-                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation'],
-                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered'],
-                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined'],
-                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected'],
-                    ];
-                @endphp
-                <div class="card cvh-tabs-card">
-                    <div class="card-body">
-                        <div class="cvh-tabs">
-                            @foreach($cvStageTabs as $i => $tab)
-                                @php
-                                    $tabCount = $tab['countKey'] === 'total'
-                                        ? ($candidateStats['total'] ?? 0)
-                                        : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
-                                @endphp
-                                <button type="button" class="cvh-tab {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}">
-                                    {{ $tab['label'] }}
-                                    <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
                 {{-- ── Search + Filter (separate card) ── --}}
                 <div class="card cvh-search-card">
                 <div class="card-body">
@@ -1228,6 +1196,42 @@
                 </div>
                 </div>
 
+                {{-- ── Stage Tabs (separate card, ES-backed counts) — sits directly above
+                     the candidate list, below the search/filter bar. ── --}}
+                @php
+                    // Tab key => the ID(s) sent to the backend as `stage_tab` (comma-separated
+                    // for "Rejected", which spans two master_status rows both named "Rejected"),
+                    // and the matching key in $candidateStats['tabs'] for the live badge count.
+                    $cvStageTabs = [
+                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total'],
+                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview'],
+                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing'],
+                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening'],
+                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation'],
+                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation'],
+                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered'],
+                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined'],
+                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected'],
+                    ];
+                @endphp
+                <div class="card cvh-tabs-card">
+                    <div class="card-body">
+                        <div class="cvh-tabs">
+                            @foreach($cvStageTabs as $i => $tab)
+                                @php
+                                    $tabCount = $tab['countKey'] === 'total'
+                                        ? ($candidateStats['total'] ?? 0)
+                                        : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
+                                @endphp
+                                <button type="button" class="cvh-tab {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}">
+                                    {{ $tab['label'] }}
+                                    <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ── Row selection action bar — hidden until candidates are checked.
                      Reuses the exact same trigger classes/data-target attributes as the
                      legacy toolbar buttons (mass_mail / fwd_resume / application_copy /
@@ -1235,7 +1239,8 @@
                      only the presentation is new. ── --}}
                 <div class="cvh-selection-bar" id="cvh_selection_bar">
                     <div class="form-check form-check-sm form-check-custom form-check-solid">
-                        <input class="form-check-input" type="checkbox" checked disabled />
+                        <input class="form-check-input" type="checkbox" id="cvh_selection_master_chk" checked
+                            title="Clear selection" />
                     </div>
                     <span class="cvh-selection-count"><span id="cvh_selected_count">0</span> candidates selected</span>
                     <div class="cvh-selection-actions">
@@ -2241,17 +2246,22 @@
 
             });
 
-            /* Selection bar: live count + close/clear button */
+            /* Selection bar: live count + clear-selection controls (checkbox + close X) */
             function updateCvSelectionBar() {
                 var n = $('.chk_list_item:checked').length;
                 $('#cvh_selected_count').text(n);
                 $('#cvh_selection_bar').toggleClass('show', n > 0);
+                $('#cvh_selection_master_chk').prop('checked', n > 0);
             }
-            $(document).on('click', '#cvh_selection_close', function() {
+            function clearCvSelection() {
                 $('.chk_list, .chk_list_item').prop('checked', false);
                 $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                 $('.custom_hide').removeClass('d-none');
                 updateCvSelectionBar();
+            }
+            $(document).on('click', '#cvh_selection_close', clearCvSelection);
+            $(document).on('change', '#cvh_selection_master_chk', function() {
+                if (!$(this).is(':checked')) clearCvSelection();
             });
 
             //  $.noConflict();
