@@ -181,7 +181,21 @@
                         if(@$row->wiseId){
                             $percentage =  GeneralMethod::skill_percentage($row->jobId,$skillArr);
                         }
-                        
+
+                        // Match % badge — color reflects the numeric match score:
+                        // >90 green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
+                        $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                        if ($matchNum == 0) {
+                            $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                        } elseif ($matchNum < 50) {
+                            $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                        } elseif ($matchNum <= 90) {
+                            $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                        } else {
+                            $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                        }
+                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+
 
                         // dd($per,$job_skills,$skillArr);
 
@@ -237,7 +251,7 @@
 																				<div class="' .
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1"> '.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                                 $skilltag .
@@ -284,7 +298,7 @@
 																				<div class="' .
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1"> '.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                                 $skilltag .
@@ -379,14 +393,20 @@
                     if ($row->condidate_type == 'bench_condidate') {
                         $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
                     }
+                    // Drop the decimal portion for display only (thousandsCurrencyFormat
+                    // always returns 2 decimals, e.g. "5,328.00" -> "5,328").
+                    $ctc = explode('.', $ctc)[0];
+                    $ectc = explode('.', $ectc)[0];
 
+                    // Full mode word ("Annual"/"Monthly"/"Hourly") instead of a single
+                    // letter, rendered smaller (.75em) than the amount via <sup>.
                     $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $current_ctc_mode = @$salaryMode[@$jobMode];
 
                     $current_ectc_mode = '';
-                    $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $current_ectc_mode = @$salaryMode[@$jobMode];
                     if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                        $current_ectc_mode = @$salaryMode[@$jobMode];
                     }
                     $dnone = '';
                     if ($row->condidate_type == 'bench_condidate') {
@@ -398,17 +418,17 @@
 					<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
                             @$ectc .
-                            '/' .
+                            '<sup style="font-size:.75em;font-weight:500;">/' .
                             $current_ectc_mode .
-                            '</a>
+                            '</sup></a>
 						<span class="text-muted fw-bold d-block fs-7 ' .
                             $dnone .
                             '">' .
                             @$current_ctc_cur .
                             @$ctc .
-                            '/' .
+                            '<sup style="font-size:.75em;font-weight:500;">/' .
                             $current_ctc_mode .
-                            '</span>
+                            '</sup></span>
 					</div>';
                     } else {
                         echo '<div class="d-flex flex-column">
