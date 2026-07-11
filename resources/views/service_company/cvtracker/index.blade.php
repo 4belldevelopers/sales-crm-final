@@ -165,7 +165,7 @@
            card padding) rather than the taller Metronic "lg" defaults this row had. */
         .cvh-search-card { margin-bottom: 14px; border-radius: 10px; }
         .cvh-search-card .card-body { padding: 8px 10px; }
-        .cvh-search-card .custm-bg { margin: 0 !important; gap: 8px; }
+        .cvh-search-card .custm-bg { margin: 0 !important; flex-wrap: nowrap !important; }
         .cvh-search-card .form-control,
         .cvh-search-card .form-select,
         .cvh-search-card .btn { height: 34px !important; min-height: 34px !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 12px !important; border-radius: 8px !important; }
