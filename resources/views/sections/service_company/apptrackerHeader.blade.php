@@ -77,8 +77,7 @@
     }
     .apth-card {
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
+        flex-direction: column;
         min-width: 0;
         overflow: hidden;
         background: #fff;
@@ -97,8 +96,8 @@
         background: var(--apth-bg);
     }
     .apth-icon {
-        width: 32px;
-        height: 32px;
+        width: 19px;
+        height: 19px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -106,12 +105,8 @@
         flex-shrink: 0;
     }
     .apth-icon svg {
-        width: 16px;
-        height: 16px;
-    }
-    .apth-body {
-        flex: 1;
-        min-width: 0;
+        width: 10px;
+        height: 10px;
     }
     .apth-title {
         font-size: 13px;
@@ -131,9 +126,15 @@
     }
     .apth-row {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         justify-content: space-between;
         gap: 6px;
+    }
+    .apth-row-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
     }
     .apth-value {
         font-size: 16px;
@@ -176,24 +177,24 @@
         <a href="{{ $card['url'] }}"
             class="apth-card {{ $card['active'] ? 'active' : '' }}"
             style="--apth-color: {{ $card['ic'] }}; --apth-bg: {{ $card['bg'] }};">
-            <div class="apth-icon" style="background: {{ $card['bg'] }};">
-                <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.6"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="{{ $card['icon'] }}" />
-                </svg>
-            </div>
-            <div class="apth-body">
-                <p class="apth-title">{{ $card['title'] }}</p>
-                <div class="apth-row">
-                    <span class="apth-value" id="{{ $card['id'] }}">{{ $card['value'] }}</span>
-                    <span class="apth-viewlist">
-                        View List
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            <p class="apth-title">{{ $card['title'] }}</p>
+            <div class="apth-row">
+                <span class="apth-row-left">
+                    <span class="apth-icon" style="background: {{ $card['bg'] }};">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.6"
                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                            <path d="{{ $card['icon'] }}" />
                         </svg>
                     </span>
-                </div>
+                    <span class="apth-value" id="{{ $card['id'] }}">{{ $card['value'] }}</span>
+                </span>
+                <span class="apth-viewlist">
+                    View List
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                </span>
             </div>
         </a>
     @endforeach
