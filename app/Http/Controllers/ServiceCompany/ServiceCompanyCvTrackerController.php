@@ -185,6 +185,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'this_week'      => 0,
 			'immediate'      => 0,
 			'without_resume' => 0,
+			'tabs' => [
+				'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
+				'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
+			],
 		];
 		return view('service_company.cvtracker.index', $this->data);
 	}
@@ -374,6 +378,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			// returns a stale cached result set (the tab filter wasn't part of the key).
 			'offer_tab' => request('offer_tab_filter'),
 			'pipeline_range' => request('pipeline_range'),
+			// CV Tracker stage tab must also vary the cache key for the same reason.
+			'stage_tab' => request('stage_tab'),
 		];
 		
 		$versionKey = 'allcvtracker_version_user_'.$this->user->id;
@@ -1072,6 +1078,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
+		// CV Tracker stage tabs (All Candidates / InReview / Sourcing / Screening /
+		// Evaluation / Negotiation / Offered / Joined / Rejected) — default "All
+		// Candidates" tab only (status_cus empty). "Rejected" maps to TWO master_status
+		// ids (7 and 9 both named "Rejected" in this company's master_status table), so
+		// the client sends a comma-separated list and we match with a terms query.
+		// Applied to the paginated hits ONLY; the per-stage counts aggregation below runs
+		// on the base query so every tab's badge count stays visible regardless of the
+		// active tab (same convention as the Offer/Joining tracker tabs above).
+		$stage_tab = request('stage_tab');
+		$stageTabFilterClause = null;
+		if (empty($status_cus) && !empty($stage_tab) && $stage_tab !== 'all') {
+			$stageIds = array_filter(array_map('intval', explode(',', (string) $stage_tab)));
+			if (!empty($stageIds)) {
+				$stageTabFilterClause = ['terms' => ['job_master_status_id' => $stageIds]];
+			}
+		}
+
 		// Activity filter
 		if (!empty($app_int_activity)) {
 			$activityFilter = $this->getActivityFilter(
@@ -1117,6 +1140,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		}
 		if ($joiningTabFilterClause) {
 			$boolQuery['bool']['filter'][] = $joiningTabFilterClause;
+		}
+		if ($stageTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $stageTabFilterClause;
 		}
 
 		// Build the final query
@@ -1295,16 +1321,35 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 								'minimum_should_match' => 1,
 							],
 						]],
+						// Stage tab badge counts. IDs come from this company's master_status
+						// table (id => name): 8=InReview, 1=Sourcing, 2=Screening,
+						// 3=Evaluation, 4=Negotiation, 5=Offered, 6=Joined, 7&9=Rejected
+						// (two rows share the "Rejected" name).
+						'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
 					],
 				],
 			]);
 			$ca = $cResp['aggregations'] ?? [];
+			$statusBuckets = [];
+			foreach (($ca['by_status']['buckets'] ?? []) as $b) {
+				$statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
+			}
 			$candidateStats = [
 				'total'          => (int) ($cResp['hits']['total']['value'] ?? 0),
 				'today'          => (int) ($ca['today']['doc_count'] ?? 0),
 				'this_week'      => (int) ($ca['this_week']['doc_count'] ?? 0),
 				'immediate'      => (int) ($ca['immediate']['doc_count'] ?? 0),
 				'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+				'tabs' => [
+					'inreview'   => $statusBuckets[8] ?? 0,
+					'sourcing'   => $statusBuckets[1] ?? 0,
+					'screening'  => $statusBuckets[2] ?? 0,
+					'evaluation' => $statusBuckets[3] ?? 0,
+					'negotiation'=> $statusBuckets[4] ?? 0,
+					'offered'    => $statusBuckets[5] ?? 0,
+					'joined'     => $statusBuckets[6] ?? 0,
+					'rejected'   => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
+				],
 			];
 		}
 
