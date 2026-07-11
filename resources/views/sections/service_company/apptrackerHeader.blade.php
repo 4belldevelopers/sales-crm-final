@@ -5,7 +5,7 @@
     // here is decided entirely server-side per page — no JS tab-switch logic needed.
     $apthCards = [
         [
-            'title' => 'Pool',
+            'title' => 'Total Candidates In Job',
             'url' => $tabactive['pool_url'],
             'id' => $tabactive['pool_id'],
             'value' => $tabactive['pool_counter'],
@@ -15,7 +15,7 @@
             'icon' => 'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
         ],
         [
-            'title' => 'Similar Matching',
+            'title' => 'Similar Candidates',
             'url' => $tabactive['similar_url'],
             'id' => $tabactive['similar_id'],
             'value' => $tabactive['existing_counter'],
