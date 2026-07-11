@@ -76,19 +76,21 @@
 <style>
     .apth-grid {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
         width: 100%;
         font-family: 'Poppins', sans-serif;
     }
     .apth-card {
         display: flex;
         align-items: flex-start;
-        gap: 10px;
+        gap: 8px;
+        min-width: 0;
+        overflow: hidden;
         background: #fff;
         border: 1px solid #e4e6ef;
         border-radius: 10px;
-        padding: 12px 14px;
+        padding: 10px 12px;
         text-decoration: none;
         transition: border-color .15s, background-color .15s;
     }
@@ -101,8 +103,8 @@
         background: var(--apth-bg);
     }
     .apth-icon {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -110,8 +112,8 @@
         flex-shrink: 0;
     }
     .apth-icon svg {
-        width: 17px;
-        height: 17px;
+        width: 16px;
+        height: 16px;
     }
     .apth-body {
         flex: 1;
@@ -119,24 +121,33 @@
     }
     .apth-title {
         font-size: 14px;
-        font-weight: 600;
-        color: #181c32;
+        font-weight: 500;
+        color: #7e8299;
         margin: 0 0 4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        transition: color .15s, font-weight .15s;
+    }
+    .apth-card.active .apth-title {
+        font-weight: 700;
+        color: #181c32;
     }
     .apth-row {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        gap: 8px;
+        gap: 6px;
     }
     .apth-value {
         font-size: 16px;
         font-weight: 700;
         color: #181c32;
         line-height: 1.2;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .apth-viewlist {
         font-size: 11px;
@@ -146,10 +157,12 @@
         display: inline-flex;
         align-items: center;
         gap: 2px;
+        flex-shrink: 0;
     }
     .apth-viewlist svg {
         width: 11px;
         height: 11px;
+        flex-shrink: 0;
     }
     .apth-caption {
         font-size: 11px;
@@ -160,14 +173,14 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    @media (max-width: 1440px) {
-        .apth-grid { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 992px) {
+        .apth-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
-    @media (max-width: 768px) {
-        .apth-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 576px) {
+        .apth-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    @media (max-width: 480px) {
-        .apth-grid { grid-template-columns: 1fr; }
+    @media (max-width: 400px) {
+        .apth-grid { grid-template-columns: minmax(0, 1fr); }
     }
 </style>
 
