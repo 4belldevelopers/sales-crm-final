@@ -132,42 +132,52 @@
         @media (max-width: 480px)  { .cvh-grid { grid-template-columns: 1fr; } }
 
         /* Stage tabs — own card, full-width stretch row (each tab takes an equal share
-           of the row, edge to edge, per the approved design) with icon + label + count
-           stacked, colored per stage using the SAME hex codes as the Hiring Pipeline
-           "Stage" column (app/Helper/GeneralMethod.php candidateStatusColorCode()), so a
-           given stage always reads as the same color everywhere in the app. */
-        .cvh-tabs-card { margin-bottom: 14px; }
+           of the row, edge to edge) with icon + label on one line and the count below.
+           Colors match the app's own "Pipeline Stages" legend
+           (resources/views/sections/service_company/pipeline.blade.php) exactly, so a
+           given stage reads as the same color everywhere. Inactive tabs stay neutral
+           gray; a tab only takes on its stage color once it's the active/selected tab. */
+        .cvh-tabs-card { margin-bottom: 14px; border-width: 1px; transition: border-color .15s; }
         .cvh-tabs-card .card-body { padding: 4px 0; }
         .cvh-tabs { display: flex; align-items: stretch; font-family: 'Poppins', sans-serif; }
-        .cvh-tab { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 6px; border: none; border-right: 1px solid #f1f5f9; background: transparent; font-size: 11px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+        .cvh-tab { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 11px 6px; border: none; border-right: 1px solid #f1f5f9; background: transparent; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
         .cvh-tab:last-child { border-right: none; }
-        .cvh-tab-icon { display: flex; }
-        .cvh-tab-icon svg { width: 17px; height: 17px; }
-        .cvh-tab-label { line-height: 1.1; }
-        .cvh-tab-count { font-size: 12px; font-weight: 700; line-height: 1.1; color: inherit; }
         .cvh-tab:hover { background: #f8fafc; }
-        .cvh-tab.active { font-weight: 700; }
-        .cvh-tab.stage-all        { color: #2563eb; } .cvh-tab.stage-all.active        { background: #eff6ff; }
-        .cvh-tab.stage-inreview   { color: #000000; } .cvh-tab.stage-inreview.active   { background: #efefef; }
-        .cvh-tab.stage-sourcing   { color: #000000; } .cvh-tab.stage-sourcing.active   { background: #efefef; }
-        .cvh-tab.stage-screening  { color: #ffab00; } .cvh-tab.stage-screening.active  { background: #fff9ed; }
-        .cvh-tab.stage-evaluation { color: #2896ff; } .cvh-tab.stage-evaluation.active { background: #f0f8ff; }
-        .cvh-tab.stage-negotiation{ color: #ff4098; } .cvh-tab.stage-negotiation.active{ background: #ffe6f2; }
-        .cvh-tab.stage-offered    { color: #06c732; } .cvh-tab.stage-offered.active    { background: #d4ffde; }
-        .cvh-tab.stage-joined     { color: #c000ff; } .cvh-tab.stage-joined.active     { background: #f7deff; }
-        .cvh-tab.stage-rejected   { color: #ff0202; } .cvh-tab.stage-rejected.active   { background: #ffe2e5; }
-        @media (min-width: 1200px) and (max-width: 1620px) { .cvh-tab { padding: 10px 4px; font-size: 10.5px; } .cvh-tab-count { font-size: 11px; } .cvh-tab-icon svg { width: 15px; height: 15px; } }
-        @media (max-width: 768px) { .cvh-tabs { flex-wrap: wrap; } .cvh-tab { flex: 1 1 33%; border-right: none; border-bottom: 1px solid #f1f5f9; padding: 8px 4px; font-size: 10.5px; } }
+        .cvh-tab-top { display: flex; align-items: center; gap: 5px; }
+        .cvh-tab-icon { display: flex; }
+        .cvh-tab-icon svg { width: 14px; height: 14px; }
+        .cvh-tab-label { line-height: 1.1; font-size: 11px; font-weight: 500; }
+        .cvh-tab-count { font-size: 13px; font-weight: 700; line-height: 1.1; color: inherit; }
+        .cvh-tab.active .cvh-tab-label { font-weight: 700; }
+        .cvh-tab.stage-all.active        { color: #2563eb; background: rgba(37,99,235,.10); }
+        .cvh-tab.stage-inreview.active    { color: #bdbd26; background: rgba(189,189,38,.14); }
+        .cvh-tab.stage-sourcing.active    { color: #7e8299; background: rgba(126,130,153,.14); }
+        .cvh-tab.stage-screening.active   { color: #c000ff; background: rgba(192,0,255,.10); }
+        .cvh-tab.stage-evaluation.active  { color: #2896ff; background: rgba(40,150,255,.12); }
+        .cvh-tab.stage-negotiation.active { color: #ff4098; background: rgba(255,64,152,.12); }
+        .cvh-tab.stage-offered.active     { color: #ffab00; background: rgba(255,171,0,.14); }
+        .cvh-tab.stage-joined.active      { color: #06c732; background: rgba(6,199,50,.12); }
+        .cvh-tab.stage-rejected.active    { color: #ff0202; background: rgba(255,2,2,.10); }
+        @media (max-width: 768px) { .cvh-tabs { flex-wrap: wrap; } .cvh-tab { flex: 1 1 33%; border-right: none; border-bottom: 1px solid #f1f5f9; padding: 8px 4px; } .cvh-tab-label { font-size: 10.5px; } }
 
-        /* Search + filter — own card, separate from the tabs card above it */
+        /* Search + filter — own card, trimmed to hug the search/sort/filter row only.
+           The Sort <select> (form-select-lg) and Filter button (py-4 utility) are taller
+           than the search input itself and were dictating the whole row's height — both
+           get scoped down here to match. */
         .cvh-search-card { margin-bottom: 14px; }
+        .cvh-search-card .card-body { padding: 10px 14px; }
+        .cvh-search-card .custm-bg { margin: 0 !important; }
+        .cvh-search-card .form-control,
+        .cvh-search-card .form-select-lg { padding-top: .55rem !important; padding-bottom: .55rem !important; font-size: 13px !important; }
+        .cvh-search-card .btn.py-4 { padding-top: .55rem !important; padding-bottom: .55rem !important; }
 
         /* Selected-rows action bar */
         .cvh-selection-bar { display: none; align-items: center; gap: 14px; background: #fff; border: 1px solid #e5e9f2; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-family: 'Poppins', sans-serif; flex-wrap: wrap; }
         .cvh-selection-bar.show { display: flex; }
         .cvh-selection-count { font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap; }
-        .cvh-selection-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
-        .cvh-selection-actions .btn { font-size: 12px; background: #fff !important; border: 1px solid #e5e9f2; }
+        .cvh-selection-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+        .cvh-selection-actions .btn { font-size: 12px; font-weight: 500; background: #fff !important; border: 1px solid #bfdbfe !important; border-radius: 8px !important; padding: 6px 14px !important; box-shadow: none !important; }
+        .cvh-selection-actions .btn:hover { background: #eff6ff !important; border-color: #93c5fd !important; }
         .cvh-selection-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .cvh-selection-close:hover { background: #f1f5f9; color: #334155; }
 
@@ -1215,34 +1225,34 @@
                 @php
                     // Tab key => the ID(s) sent to the backend as `stage_tab` (comma-separated
                     // for "Rejected", which spans two master_status rows both named "Rejected"),
-                    // the matching key in $candidateStats['tabs'] for the live badge count, and
-                    // an SVG icon path (inline, not an icon-font class — see docs note below).
+                    // the matching key in $candidateStats['tabs'] for the live badge count, an
+                    // SVG icon path (inline, not an icon-font class — Keenicons is no longer
+                    // mandatory per docs/ENTERPRISE_PLAYBOOK.md §4.2), and the stage's solid
+                    // color — taken from the app's own "Pipeline Stages" legend
+                    // (resources/views/sections/service_company/pipeline.blade.php) so this
+                    // tab bar matches that legend exactly rather than inventing new colors.
                     $cvStageTabs = [
-                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total',
+                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total', 'color'=>'#2563eb',
                          'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
-                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview',
+                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview', 'color'=>'#bdbd26',
                          'icon'=>'M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
-                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing',
+                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing', 'color'=>'#7e8299',
                          'icon'=>'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening',
+                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening', 'color'=>'#c000ff',
                          'icon'=>'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation',
+                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation', 'color'=>'#2896ff',
                          'icon'=>'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
-                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation',
+                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation', 'color'=>'#ff4098',
                          'icon'=>'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered',
+                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered', 'color'=>'#ffab00',
                          'icon'=>'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined',
+                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined', 'color'=>'#06c732',
                          'icon'=>'M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4 4 0 0 0-7.533-2.348M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25-3 3-1.5-1.5'],
-                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected',
+                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected', 'color'=>'#ff0202',
                          'icon'=>'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
                     ];
                 @endphp
-                {{-- Icons are inline stroke SVGs (matching the hero cards above), not an
-                     icon-font class — the Keenicons font used elsewhere in this app isn't
-                     verifiable in this checkout (public/demo assets aren't in the repo), so
-                     inline SVG avoids the risk of a missing-glyph icon in production. --}}
-                <div class="card cvh-tabs-card">
+                <div class="card cvh-tabs-card" id="cvh_tabs_card">
                     <div class="card-body">
                         <div class="cvh-tabs">
                             @foreach($cvStageTabs as $i => $tab)
@@ -1251,11 +1261,13 @@
                                         ? ($candidateStats['total'] ?? 0)
                                         : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
                                 @endphp
-                                <button type="button" class="cvh-tab stage-{{ $tab['countKey'] }} {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}">
-                                    <span class="cvh-tab-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $tab['icon'] }}"/></svg>
+                                <button type="button" class="cvh-tab stage-{{ $tab['countKey'] }} {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}" data-color="{{ $tab['color'] }}">
+                                    <span class="cvh-tab-top">
+                                        <span class="cvh-tab-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $tab['icon'] }}"/></svg>
+                                        </span>
+                                        <span class="cvh-tab-label">{{ $tab['label'] }}</span>
                                     </span>
-                                    <span class="cvh-tab-label">{{ $tab['label'] }}</span>
                                     <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
                                 </button>
                             @endforeach
@@ -2324,12 +2336,17 @@
             localStorage.setItem('currentPage', page_no);
         }
         var activeStageTab = 'all';
+        function setCvTabsCardBorder(color) {
+            $('#cvh_tabs_card').css('border-color', color || '#e4e6ef');
+        }
         $(document).on('click', '.cvh-tab', function() {
             $('.cvh-tab').removeClass('active');
             $(this).addClass('active');
             activeStageTab = $(this).attr('data-stage');
+            setCvTabsCardBorder($(this).attr('data-color'));
             fetchCandidates();
         });
+        setCvTabsCardBorder($('.cvh-tab.active').attr('data-color'));
         function fetchCandidates(page = page_no, search = '') {
             var clientid = '1';
            
