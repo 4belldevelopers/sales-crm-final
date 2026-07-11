@@ -1342,14 +1342,14 @@
                                                     value="1" />
                                             </div>
                                         </th>
-                                        <th class="">Name</th>
+                                        <th class="">Candidate Name</th>
                                         {{-- <th class="">Contacts</th> --}}
                                         <th class="" data-toggle="tooltip" title="Experience">Exp.</th>
                                         <th class="">Salary</th>
                                         <th class="" data-toggle="tooltip" title="Notice Period">Notice</th>
-                                        <th class="">Qualification</th>
+                                        <th class="">Education</th>
                                         <th class="">Location</th>
-                                        <th class="">Source</th>
+                                        <th class="">Ownership</th>
                                         {{-- <th class="" data-toggle="tooltip" title="Upload Date">Date</th> --}}
                                         <th class="">Jobs</th>
                                         <th class="">Status</th>
