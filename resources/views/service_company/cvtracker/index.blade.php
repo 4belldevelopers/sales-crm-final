@@ -131,6 +131,34 @@
         @media (max-width: 768px)  { .cvh-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
         @media (max-width: 480px)  { .cvh-grid { grid-template-columns: 1fr; } }
 
+        /* Stage tabs — own card, separate from the search/filter card below it */
+        .cvh-tabs-card { margin-bottom: 14px; }
+        .cvh-tabs-card .card-body { padding: 6px 10px; }
+        .cvh-tabs { display: flex; align-items: center; gap: 2px; overflow-x: auto; font-family: 'Poppins', sans-serif; }
+        .cvh-tab { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border: none; background: transparent; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: #64748b; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s; }
+        .cvh-tab:hover { background: #f8fafc; color: #334155; }
+        .cvh-tab.active { background: #eff6ff; color: #2563eb; font-weight: 700; }
+        .cvh-tab-count { font-size: 11px; font-weight: 700; color: inherit; background: #f1f5f9; border-radius: 99px; padding: 1px 8px; }
+        .cvh-tab.active .cvh-tab-count { background: #dbeafe; color: #2563eb; }
+        @media (max-width: 768px) { .cvh-tab { padding: 8px 10px; font-size: 11.5px; } }
+
+        /* Search + filter — own card, separate from the tabs card above it */
+        .cvh-search-card { margin-bottom: 14px; }
+
+        /* Selected-rows action bar */
+        .cvh-selection-bar { display: none; align-items: center; gap: 14px; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-family: 'Poppins', sans-serif; flex-wrap: wrap; }
+        .cvh-selection-bar.show { display: flex; }
+        .cvh-selection-count { font-size: 13px; font-weight: 600; color: #1e3a8a; white-space: nowrap; }
+        .cvh-selection-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+        .cvh-selection-actions .btn { font-size: 12px; }
+        .cvh-selection-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cvh-selection-close:hover { background: #dbeafe; color: #1e3a8a; }
+
+        /* The original Mass Email/Fwd Resume/Copy/Export buttons stay in the DOM (so all
+           existing modal/ajax click handlers keep firing unmodified) but are permanently
+           hidden here — their restyled equivalents now live in #cvh_selection_bar. */
+        .cvh-legacy-hide { display: none !important; }
+
     </style>
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     
@@ -155,8 +183,13 @@
                     id="kt_daterangepicker" />
                 <!--</span> </a>-->
 
+                {{-- Mass Email / Fwd Resume / Copy / Export now live in #cvh_selection_bar
+                     (a dedicated selection card shown on row selection, styled per the
+                     approved design) — see just above the candidates table. Classes and
+                     data-target attributes are unchanged so every existing modal/ajax
+                     handler still fires from their new location. --}}
                 <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-3 d-none" data-toggle="modal"
+                    class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-3 d-none cvh-legacy-hide" data-toggle="modal"
                     data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
                             height="24px" viewBox="0 0 24 24" version="1.1">
@@ -174,7 +207,7 @@
 
 
                 <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary fwd_resume fw-bolder me-3 d-none" data-toggle="modal"
+                    class="btn btn-sm btn-flex btn-light-primary fwd_resume fw-bolder me-3 d-none cvh-legacy-hide" data-toggle="modal"
                     data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
                             height="24px" viewBox="0 0 24 24" version="1.1">
@@ -199,7 +232,7 @@
       </svg>
       </span> Send Email </a> --}}
                 <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 application_copy d-none" data-toggle="modal"
+                    class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 application_copy d-none cvh-legacy-hide" data-toggle="modal"
                     data-target="#application_copy">
                     <span class="svg-icon svg-icon-primary svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
@@ -217,7 +250,7 @@
                     </span>
                     Copy </a>
 
-                <div class="before-event downloadexcell d-flex align-items-center position-relative my-1 me-3 d-none">
+                <div class="before-event downloadexcell d-flex align-items-center position-relative my-1 me-3 d-none cvh-legacy-hide">
                    
                     <button type="button"
                         class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 exportRecord"
@@ -1081,6 +1114,44 @@
                     @endforeach
                 </div>
 
+                {{-- ── Stage Tabs (separate card, ES-backed counts) ── --}}
+                @php
+                    // Tab key => the ID(s) sent to the backend as `stage_tab` (comma-separated
+                    // for "Rejected", which spans two master_status rows both named "Rejected"),
+                    // and the matching key in $candidateStats['tabs'] for the live badge count.
+                    $cvStageTabs = [
+                        ['stage'=>'all', 'label'=>'All Candidates', 'countKey'=>'total'],
+                        ['stage'=>'8',   'label'=>'InReview',       'countKey'=>'inreview'],
+                        ['stage'=>'1',   'label'=>'Sourcing',       'countKey'=>'sourcing'],
+                        ['stage'=>'2',   'label'=>'Screening',      'countKey'=>'screening'],
+                        ['stage'=>'3',   'label'=>'Evaluation',     'countKey'=>'evaluation'],
+                        ['stage'=>'4',   'label'=>'Negotiation',    'countKey'=>'negotiation'],
+                        ['stage'=>'5',   'label'=>'Offered',        'countKey'=>'offered'],
+                        ['stage'=>'6',   'label'=>'Joined',         'countKey'=>'joined'],
+                        ['stage'=>'7,9', 'label'=>'Rejected',       'countKey'=>'rejected'],
+                    ];
+                @endphp
+                <div class="card cvh-tabs-card">
+                    <div class="card-body">
+                        <div class="cvh-tabs">
+                            @foreach($cvStageTabs as $i => $tab)
+                                @php
+                                    $tabCount = $tab['countKey'] === 'total'
+                                        ? ($candidateStats['total'] ?? 0)
+                                        : ($candidateStats['tabs'][$tab['countKey']] ?? 0);
+                                @endphp
+                                <button type="button" class="cvh-tab {{ $i === 0 ? 'active' : '' }}" data-stage="{{ $tab['stage'] }}">
+                                    {{ $tab['label'] }}
+                                    <span class="cvh-tab-count" data-cvh-tab="{{ $tab['countKey'] }}">{{ number_format($tabCount) }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── Search + Filter (separate card) ── --}}
+                <div class="card cvh-search-card">
+                <div class="card-body">
                 <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
                     <div class="col-lg-4 d-flex align-items-center px-2" style="width:65%;position: relative;">
                         <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
@@ -1154,7 +1225,47 @@
                         </button>
                     </div>
                 </div>
+                </div>
+                </div>
 
+                {{-- ── Row selection action bar — hidden until candidates are checked.
+                     Reuses the exact same trigger classes/data-target attributes as the
+                     legacy toolbar buttons (mass_mail / fwd_resume / application_copy /
+                     exportRecord), so every existing modal + ajax handler works unchanged;
+                     only the presentation is new. ── --}}
+                <div class="cvh-selection-bar" id="cvh_selection_bar">
+                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input" type="checkbox" checked disabled />
+                    </div>
+                    <span class="cvh-selection-count"><span id="cvh_selected_count">0</span> candidates selected</span>
+                    <div class="cvh-selection-actions">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                            </span> Send Email
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                            </span> Forward Resume
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
+                            </span> Copy
+                        </a>
+                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
+                                </svg>
+                            </span> Export
+                        </button>
+                    </div>
+                    <button type="button" class="cvh-selection-close" id="cvh_selection_close" title="Clear selection">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
 
                 <div class="card">
                     <div class="card-body pt-3 px-5" style="position: relative">
@@ -2096,6 +2207,7 @@
                     $('.application_copy').addClass("d-none");
                     $('.custom_hide').removeClass("d-none");
                 }
+                updateCvSelectionBar();
             });
 
             $(document).on('click', '.chk_list_item', function() {
@@ -2124,8 +2236,22 @@
                         $('.application_copy').addClass("d-none");
                         $('.custom_hide').removeClass("d-none");
                     }
+                    updateCvSelectionBar();
                 }, 500);
 
+            });
+
+            /* Selection bar: live count + close/clear button */
+            function updateCvSelectionBar() {
+                var n = $('.chk_list_item:checked').length;
+                $('#cvh_selected_count').text(n);
+                $('#cvh_selection_bar').toggleClass('show', n > 0);
+            }
+            $(document).on('click', '#cvh_selection_close', function() {
+                $('.chk_list, .chk_list_item').prop('checked', false);
+                $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                $('.custom_hide').removeClass('d-none');
+                updateCvSelectionBar();
             });
 
             //  $.noConflict();
@@ -2156,6 +2282,13 @@
             page_no = 1;
             localStorage.setItem('currentPage', page_no);
         }
+        var activeStageTab = 'all';
+        $(document).on('click', '.cvh-tab', function() {
+            $('.cvh-tab').removeClass('active');
+            $(this).addClass('active');
+            activeStageTab = $(this).attr('data-stage');
+            fetchCandidates();
+        });
         function fetchCandidates(page = page_no, search = '') {
             var clientid = '1';
            
@@ -2187,7 +2320,8 @@
                     kt_tagify_education : $('#kt_tagify_education').val(),
                     app_int_status : $('[name="app_int_status"]:checked').val(),
                     app_int_activity : $('[name="app_int_activity"]:checked').val(),
-                    app_int_notice : $('[name="app_int_notice"]:checked').val()
+                    app_int_notice : $('[name="app_int_notice"]:checked').val(),
+                    stage_tab : activeStageTab === 'all' ? '' : activeStageTab
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
@@ -2202,7 +2336,7 @@
             });
         }
 
-        /* Sync hero KPI cards from the same ES aggregation the table fetch already returns */
+        /* Sync hero KPI cards + stage tab badges from the same ES aggregation the table fetch already returns */
         function updateCvHeroStats(stats) {
             if (!stats) return;
             document.querySelectorAll('[data-cvh]').forEach(function (el) {
@@ -2211,6 +2345,14 @@
                     if (stats.this_week != null) el.textContent = stats.this_week.toLocaleString();
                 } else if (stats[k] != null) {
                     el.textContent = stats[k].toLocaleString();
+                }
+            });
+            document.querySelectorAll('[data-cvh-tab]').forEach(function (el) {
+                var k = el.getAttribute('data-cvh-tab');
+                if (k === 'total') {
+                    if (stats.total != null) el.textContent = stats.total.toLocaleString();
+                } else if (stats.tabs && stats.tabs[k] != null) {
+                    el.textContent = stats.tabs[k].toLocaleString();
                 }
             });
         }
