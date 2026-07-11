@@ -108,6 +108,29 @@
             color: #ef1632;
         }
 
+        /* ============================================================
+           CV Tracker — Hero KPI stats
+           Data source: Elasticsearch only, riding the existing
+           allcandidates() fetch (no extra request, no MySQL load).
+           Poppins per UI standard, 14px hard cap.
+        ============================================================ */
+        .cvh-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 14px 0; font-family: 'Poppins', sans-serif; }
+        .cvh-card { background: #fff; border-radius: 14px; padding: 13px 16px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+        .cvh-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .cvh-icon svg { width: 18px; height: 18px; }
+        .cvh-body { flex: 1; min-width: 0; }
+        .cvh-label { font-size: 11px; color: #64748b; font-weight: 500; margin: 0 0 4px; }
+        .cvh-value { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.15; }
+        .cvh-delta { font-size: 11px; margin-top: 4px; font-weight: 500; }
+        .cvh-delta.up   { color: #16a34a; }
+        .cvh-delta.info { color: #64748b; }
+        .cvh-delta.warn { color: #dc2626; }
+
+        @media (max-width: 1440px) { .cvh-value { font-size: 16px; } }
+        @media (max-width: 1200px) { .cvh-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px)  { .cvh-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+        @media (max-width: 480px)  { .cvh-grid { grid-template-columns: 1fr; } }
+
     </style>
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     
@@ -1023,6 +1046,40 @@
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
+
+                {{-- ── Hero KPI stats (ES-only, seeded server-side, refreshed live) ── --}}
+                @php
+                    $cvHeroCards = [
+                        ['key'=>'total','label'=>'Total Candidates','bg'=>'#dbeafe','ic'=>'#2563eb',
+                         'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
+                        ['key'=>'today','label'=>'Added Today','bg'=>'#dcfce7','ic'=>'#16a34a','tone'=>'info','text'=>'Since 12:00 AM',
+                         'icon'=>'M12 4.5v15m7.5-7.5h-15'],
+                        ['key'=>'this_week','label'=>'Added This Week','bg'=>'#ede9fe','ic'=>'#7c3aed','tone'=>'info','text'=>'Mon &ndash; Today',
+                         'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
+                        ['key'=>'immediate','label'=>'Immediate Joiners','bg'=>'#d1fae5','ic'=>'#059669','tone'=>'up','text'=>'Notice = 0 Days',
+                         'icon'=>'M13 2 3 14h7l-1 8 10-12h-7l1-8Z'],
+                        ['key'=>'without_resume','label'=>'Without Resume','bg'=>'#fee2e2','ic'=>'#dc2626','tone'=>'warn','text'=>'Needs Attention',
+                         'icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l4.414 4.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z'],
+                    ];
+                @endphp
+                <div class="cvh-grid">
+                    @foreach($cvHeroCards as $card)
+                    <div class="cvh-card">
+                        <div class="cvh-icon" style="background:{{ $card['bg'] }}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $card['icon'] }}"/></svg>
+                        </div>
+                        <div class="cvh-body">
+                            <p class="cvh-label">{{ $card['label'] }}</p>
+                            <p class="cvh-value" data-cvh="{{ $card['key'] }}">{{ number_format($candidateStats[$card['key']] ?? 0) }}</p>
+                            @if($card['key'] === 'total')
+                                <div class="cvh-delta up">&uarr; <span data-cvh="this_week_delta">{{ number_format($candidateStats['this_week'] ?? 0) }}</span> this week</div>
+                            @else
+                                <div class="cvh-delta {{ $card['tone'] }}">{!! $card['text'] !!}</div>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
 
                 <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
                     <div class="col-lg-4 d-flex align-items-center px-2" style="width:65%;position: relative;">
@@ -2140,6 +2197,20 @@
                     $('#candidatetList').html(response.html);
                     localStorage.setItem('currentPage', 1);
                     $('#paginationcandidate').html(response.pagination);
+                    updateCvHeroStats(response.candidateStats);
+                }
+            });
+        }
+
+        /* Sync hero KPI cards from the same ES aggregation the table fetch already returns */
+        function updateCvHeroStats(stats) {
+            if (!stats) return;
+            document.querySelectorAll('[data-cvh]').forEach(function (el) {
+                var k = el.getAttribute('data-cvh');
+                if (k === 'this_week_delta') {
+                    if (stats.this_week != null) el.textContent = stats.this_week.toLocaleString();
+                } else if (stats[k] != null) {
+                    el.textContent = stats[k].toLocaleString();
                 }
             });
         }

@@ -172,6 +172,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			});
 		$this->applicationCounter = $this->applicationCounter->count();
 		$this->countries = DB::table('countries')->get();
+
+		// Initial KPI seed for the CV Tracker hero cards. Only "total" is seeded from
+		// MySQL (reusing $applicationCounter, already company_id-scoped above) to avoid a
+		// flash of 0 on first paint. The live, authoritative numbers for every card come
+		// from ONE Elasticsearch aggregation returned by allcandidates() on the first
+		// table fetch (see $candidateStats there), so JS overrides these immediately —
+		// no extra MySQL/server load.
+		$this->candidateStats = [
+			'total'          => (int) $this->applicationCounter,
+			'today'          => 0,
+			'this_week'      => 0,
+			'immediate'      => 0,
+			'without_resume' => 0,
+		];
 		return view('service_company.cvtracker.index', $this->data);
 	}
 	public function allcandidates(Request $request)
@@ -1252,6 +1266,48 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			];
 		}
 
+		// CV Tracker hero KPI cards (Total / Added Today / Added This Week / Immediate
+		// Joiners / Without Resume) — one size:0 aggregation over the same base query
+		// (current search/location/skill/etc. filters, company_id-scoped) already built
+		// above for the default "All Candidates" tab. ES only, rides this same request —
+		// no extra HTTP call from the client, no MySQL involved.
+		$candidateStats = null;
+		if (empty($status_cus) && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$cResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'today'          => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+						'this_week'      => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+						'immediate'      => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
+						// "Without resume": field is either absent (candidate never uploaded
+						// one — most common) or present-but-empty string, so check both.
+						'without_resume' => ['filter' => [
+							'bool' => [
+								'should' => [
+									['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
+									['term' => ['resume.keyword' => '']],
+								],
+								'minimum_should_match' => 1,
+							],
+						]],
+					],
+				],
+			]);
+			$ca = $cResp['aggregations'] ?? [];
+			$candidateStats = [
+				'total'          => (int) ($cResp['hits']['total']['value'] ?? 0),
+				'today'          => (int) ($ca['today']['doc_count'] ?? 0),
+				'this_week'      => (int) ($ca['this_week']['doc_count'] ?? 0),
+				'immediate'      => (int) ($ca['immediate']['doc_count'] ?? 0),
+				'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+			];
+		}
+
 		$responseData = [
 			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
 			'total' => $total,
@@ -1259,6 +1315,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'counts' => $offerCounts,
 			'pipelineCounts' => $offerPipelineCounts,
 			'joiningCounts' => $joiningCounts,
+			'candidateStats' => $candidateStats,
 		];
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CV_TRACKER_TIME));
