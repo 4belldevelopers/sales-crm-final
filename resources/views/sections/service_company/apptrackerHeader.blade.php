@@ -109,7 +109,7 @@
         height: 10px;
     }
     .apth-title {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 500;
         color: #7e8299;
         margin: 0 0 5px;
@@ -137,7 +137,7 @@
         min-width: 0;
     }
     .apth-value {
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 700;
         color: #181c32;
         line-height: 1.2;
@@ -147,7 +147,7 @@
         white-space: nowrap;
     }
     .apth-viewlist {
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 500;
         color: var(--bs-primary, #3699ff);
         white-space: nowrap;

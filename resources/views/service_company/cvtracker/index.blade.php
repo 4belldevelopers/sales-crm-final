@@ -188,6 +188,11 @@
            hidden here — their restyled equivalents now live in #cvh_selection_bar. */
         .cvh-legacy-hide { display: none !important; }
 
+        /* Page header — title + subtext sized/worded to match the Offer Tracker page
+           (resources/views/service_company/applicationoffer/index.blade.php .ot-page-head) */
+        .cvh-page-title, .cvh-page-title a { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; font-family: 'Poppins', sans-serif; }
+        .cvh-page-sub { font-size: 11px; color: #64748b; margin: 2px 0 0; font-family: 'Poppins', sans-serif; }
+
     </style>
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     
@@ -200,9 +205,13 @@
                 data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
                 class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
                 <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1"> <a href="javascript:void(0);"
-                            class="text-primary-800">All Candidates</a> </h5>
-                    <span class="text-gray-600" id="total_record"></span>
+                    <h5 class="cvh-page-title d-flex align-items-center my-1"> <a href="javascript:void(0);"
+                            class="text-primary-800">All Candidates Tracker</a> </h5>
+                    <p class="cvh-page-sub">Track and Manage all your candidates of every job in one place</p>
+                    {{-- Kept in the DOM (hidden) — fetchCandidates() still writes the live
+                         total into it via $('#total_record').html(...); the number itself
+                         is already shown prominently in the "Total Candidates" hero card. --}}
+                    <span class="text-gray-600 d-none" id="total_record"></span>
                     {{-- {{ @$applicationCounter }} --}}
                 </div>
             </div>
