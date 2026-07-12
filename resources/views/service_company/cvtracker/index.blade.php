@@ -1347,7 +1347,6 @@
                                         <th class="" data-toggle="tooltip" title="Experience">Exp.</th>
                                         <th class="">Salary</th>
                                         <th class="" data-toggle="tooltip" title="Notice Period">Notice</th>
-                                        <th class="">Education</th>
                                         <th class="">Location</th>
                                         <th class="">Ownership</th>
                                         {{-- <th class="" data-toggle="tooltip" title="Upload Date">Date</th> --}}
