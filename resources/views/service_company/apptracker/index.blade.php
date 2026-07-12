@@ -80,30 +80,12 @@
         .hp-card .card-body {
             padding: 16px 20px;
         }
-        .hp-heading {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 6px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            color: #181c32;
-            margin-bottom: 12px;
-        }
-        .hp-info {
-            display: inline-flex;
-            color: #99a1b7;
-            cursor: help;
-        }
-        .hp-info svg {
-            width: 13px;
-            height: 13px;
-        }
         .hp-flow {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
+            width: 100%;
             flex-wrap: nowrap;
             overflow-x: auto;
             padding-bottom: 2px;
@@ -631,15 +613,6 @@
 
                 <div class="card hp-card mb-4">
                     <div class="card-body">
-                        <div class="hp-heading">
-                            <span>Hiring Pipeline</span>
-                            <span class="hp-info" title="Candidate flow from sourcing through joining. Rejected candidates are tracked separately.">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path d="M12 11v5m0-8h.01" />
-                                </svg>
-                            </span>
-                        </div>
                         <div class="hp-flow">
                             <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
                                 <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all">
