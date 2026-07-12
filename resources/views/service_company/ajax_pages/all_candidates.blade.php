@@ -447,28 +447,44 @@
                     if (empty(@$np)) {
                         $np = 'N/A';
                     }
+                    // Notice column color-coding: Immediate = green, a numeric "X Days"
+                    // notice = orange, Serving Notice Period (LWD date) = purple with an
+                    // "SNP LWD" prefix.
+                    $npColor = '#1e293b';
                     if (@$row->serving_notice_period_mode == 0) {
                         if (!empty(@$row->np_id)) {
                             $np = $row->np_id . '  Days';
+                            $npColor = '#d97706';
                         }
                     } elseif (@$row->serving_notice_period_mode == 1) {
                         $np = $row->np_id;
                         if ($np != 'Immediate') {
                             $np = GeneralMethod::ymdTodmyNotTime(@$row->np_id); //date("d-M-Y",strtotime(@$row->np_id));
-                            $today = date('Y-m-d'); 
+                            $today = date('Y-m-d');
                             if(date('Y-m-d', strtotime($row->np_id)) < $today){
                               $np = "Immediate";
+                              $npColor = '#16a34a';
+                            } else {
+                              $np = 'SNP LWD ' . $np;
+                              $npColor = '#9333ea';
                             }
+                        } else {
+                            $npColor = '#16a34a';
                         }
                     } else {
                         $np = $row->np_id;
+                        if ($np == 'Immediate') {
+                            $npColor = '#16a34a';
+                        }
                     }
 
                     if ($row->condidate_type === 'bench_condidate') {
                         $row->current_company = @$row->apl_company_name;
                     }
                     echo '<div class="d-flex flex-column">
-						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
+						<a href="javascript:void(0);" class="fw-bolder fs-6" style="color:' .
+                        $npColor .
+                        ';">' .
                         @$np .
                         '</a>
 						 <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
