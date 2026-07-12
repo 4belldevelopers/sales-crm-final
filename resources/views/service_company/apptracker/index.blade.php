@@ -73,6 +73,22 @@
             padding: 6px 6px 6px 6px !important;
         }
 
+        /* Mass Email / Fwd Resume / Copy / Export — same pill style as CV Tracker's
+           row-selection action buttons. */
+        .aptk-action-btn.btn {
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+        }
+        .aptk-action-btn.btn:hover {
+            background: #eff6ff !important;
+            border-color: #93c5fd !important;
+        }
+
         /* Hiring Pipeline card */
         .hp-toolbar-card .card-body {
             padding: 14px 16px;
@@ -300,81 +316,42 @@
                 <div class="d-flex align-items-center py-1">
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn d-none" data-toggle="modal"
-                        data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Mass Email 
+                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn d-none" data-toggle="modal"
+                        data-target="#mass_mail">
+                        <span class="svg-icon svg-icon-primary svg-icon-1x">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                        </span> Mass Email
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn d-none fwd_resume" data-toggle="modal"
-                        data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Fwd Resume 
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn d-none fwd_resume" data-toggle="modal"
+                        data-target="#fwd_resume">
+                        <span class="svg-icon svg-icon-primary svg-icon-1x">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                        </span> Fwd Resume
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn d-none application_copy"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn d-none application_copy"
                         data-toggle="modal" data-target="#application_copy">
                         <!--begin::Svg icon-->
                         <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z"
-                                        fill="#000000" fill-rule="nonzero" />
-                                    <path
-                                        d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z"
-                                        fill="#000000" opacity="0.3" />
-                                </g>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                         </span>
                         <!--end::Svg Icon-->
-                        Copy </a>
+                        Copy
+                    </a>
                     <!--end::Copy-->
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn d-none"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn aptk-action-btn d-none"
                         data-toggle="modal" data-target="#application_copy" style="width: 100px;">
-                        <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z"
-                                        fill="#000000" fill-rule="nonzero" />
-                                    <path
-                                        d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z"
-                                        fill="#000000" opacity="0.3" />
-                                </g>
+                        <span class="svg-icon svg-icon-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
                             </svg>
                         </span>
-                        Export 
+                        Export
                     </a>
 
                     <!--begin::Search-->
@@ -687,15 +664,15 @@
                                                     value="1" />
                                             </div>
                                         </th>
-                                        <th class="">Name</th>
+                                        <th class="">Candidate Name</th>
                                         {{-- <th class="">Contacts</th> --}}
                                         <th class="">Exp.</th>
                                         <th class="">Salary</th>
                                         <th class="">Notice</th>
-                                        <th class="">Qualification</th>
+                                        <th class="">Education</th>
                                         <th class="">Interview</th>
                                         <th class="">Location</th>
-                                        <th class="">Source</th>
+                                        <th class="">Ownership</th>
                                         <th class="">Stage</th>
                                     </tr>
                                 </thead>

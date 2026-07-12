@@ -154,7 +154,22 @@
                     $skillArr = explode(',', $row->skills);
 
                     $percentage =  GeneralMethod::skill_percentage($row->job_id,$skillArr);
-                    
+
+                    // Match % badge — color reflects the numeric match score, same
+                    // thresholds/colors as the CV Tracker page: >90 green, 50-90 orange,
+                    // 0<50 red, exactly 0 neutral grey.
+                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+
                     if (count($skillArr) > 0) {
                         foreach ($skillArr as $sval) {
                             $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
@@ -199,7 +214,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -247,7 +262,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -372,10 +387,15 @@
                     
                     $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$mod);
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$symbols,$mod);
-                     
-                    
-                    $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+
+                    // Drop the decimal portion for display only (thousandsCurrencyFormat
+                    // always returns 2 decimals), and use the full mode word ("Annual"/
+                    // "Monthly"/"Hourly") rendered smaller than the amount — same as CV Tracker.
+                    $payAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
+                    $billAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
+
+                    $current_ctc_mode = @$salaryMode[@$jobMode];
+                    $current_ectc_mode = @$salaryMode[@$jobMode];
 
                     $dnone = '';
                     $dnonetype = 'd-none';
@@ -389,18 +409,18 @@
                         echo '<div class="d-flex flex-column">
 						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
-                            $billFormatViewSalary->amount .
-                            '/' .
+                            $billAmountFormatted .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ectc_mode .
-                            '</a>
+                            '</span></a>
 						 <span class="text-muted fw-bold d-block fs-7 ' .
                             $dnone .
                             '">' .
                             @$current_ctc_cur .
-                            $payFormatViewSalary->amount .
-                            '/' .
+                            $payAmountFormatted .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ctc_mode .
-                            '</span>
+                            '</span></span>
 						 <span class="text-muted fw-bold text-muted d-block fs-7 ' .
                             $dnonetype .
                             '" data-toggle="tooltip">' .
