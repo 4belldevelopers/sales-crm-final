@@ -88,6 +88,74 @@
             background: #eff6ff !important;
             border-color: #93c5fd !important;
         }
+        /* The original toolbar buttons stay in the DOM (so the mass_mail/fwd_resume/
+           application_copy/exportRecord modal-trigger classes keep working unchanged)
+           but are permanently hidden now — their restyled equivalent lives in
+           #aptk_selection_bar below. */
+        .aptk-legacy-hide {
+            display: none !important;
+        }
+
+        /* Row selection action bar — same design/position as CV Tracker's
+           #cvh_selection_bar: hidden until candidates are checked, then sits directly
+           above the results table. */
+        .aptk-selection-bar {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border: 1px solid #e5e9f2;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            font-family: 'Poppins', sans-serif;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-bar.show {
+            display: flex;
+        }
+        .aptk-selection-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .aptk-selection-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-actions .btn {
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+        }
+        .aptk-selection-actions .btn:hover {
+            background: #eff6ff !important;
+            border-color: #93c5fd !important;
+        }
+        .aptk-selection-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .aptk-selection-close:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
 
         /* Hiring Pipeline card */
         .hp-toolbar-card .card-body {
@@ -316,7 +384,7 @@
                 <div class="d-flex align-items-center py-1">
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn d-none" data-toggle="modal"
+                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none" data-toggle="modal"
                         data-target="#mass_mail">
                         <span class="svg-icon svg-icon-primary svg-icon-1x">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
@@ -324,7 +392,7 @@
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn d-none fwd_resume" data-toggle="modal"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none fwd_resume" data-toggle="modal"
                         data-target="#fwd_resume">
                         <span class="svg-icon svg-icon-primary svg-icon-1x">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
@@ -332,7 +400,7 @@
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn d-none application_copy"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none application_copy"
                         data-toggle="modal" data-target="#application_copy">
                         <!--begin::Svg icon-->
                         <span class="svg-icon svg-icon-primary svg-icon-1x">
@@ -344,7 +412,7 @@
                     <!--end::Copy-->
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn aptk-action-btn d-none"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn aptk-action-btn aptk-legacy-hide d-none"
                         data-toggle="modal" data-target="#application_copy" style="width: 100px;">
                         <span class="svg-icon svg-icon-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -649,6 +717,47 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Row selection action bar — hidden until candidates are checked.
+                     Reuses the exact same trigger classes as the legacy toolbar buttons
+                     (mass_mail / fwd_resume / application_copy / exportRecord), so every
+                     existing modal + ajax handler works unchanged; only the presentation
+                     and position (directly above the results table) are new. --}}
+                <div class="aptk-selection-bar" id="aptk_selection_bar">
+                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked
+                            title="Clear selection" />
+                    </div>
+                    <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
+                    <div class="aptk-selection-actions">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                            </span> Send Email
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                            </span> Forward Resume
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
+                            </span> Copy
+                        </a>
+                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
+                                </svg>
+                            </span> Export
+                        </button>
+                    </div>
+                    <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
                 <div class="card">
                     <div class="card-body pt-3 px-5">
                         @if (in_array('view_job_applications', $userPermissions))
@@ -1488,6 +1597,7 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
             var i = 0;
@@ -1512,6 +1622,26 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
+        });
+
+        /* Selection bar: live count + clear-selection controls (checkbox + close X) —
+           same behavior as CV Tracker's #cvh_selection_bar. */
+        function updateAptkSelectionBar() {
+            var n = $('.chk_list_item:checked').length;
+            $('#aptk_selected_count').text(n);
+            $('#aptk_selection_bar').toggleClass('show', n > 0);
+            $('#aptk_selection_master_chk').prop('checked', n > 0);
+        }
+        function clearAptkSelection() {
+            $('.chk_list, .chk_list_item').prop('checked', false);
+            $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+            $('.custom_hide').removeClass('d-none');
+            updateAptkSelectionBar();
+        }
+        $(document).on('click', '#aptk_selection_close', clearAptkSelection);
+        $(document).on('change', '#aptk_selection_master_chk', function() {
+            if (!$(this).is(':checked')) clearAptkSelection();
         });
 
         $(document).on('click', '.fwd_resume', function() {
