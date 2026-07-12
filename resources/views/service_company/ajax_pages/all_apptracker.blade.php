@@ -467,20 +467,24 @@
 
                     // Notice period color: Immediate = green, numeric days notice =
                     // orange, a real serving last-working-day date = purple (prefixed
-                    // "SNP LWD" — Serving Notice Period / Last Working Day).
-                    $npColorStyle = '';
+                    // "SNP LWD" — Serving Notice Period / Last Working Day). !important
+                    // is required here because Bootstrap/Metronic's .text-dark utility
+                    // class sets color with !important, which otherwise beats a plain
+                    // inline style — so the class is dropped below and color is fully
+                    // inline-controlled instead.
+                    $npColorStyle = 'color:#181c32 !important;';
                     if ($np === 'Immediate') {
-                        $npColorStyle = 'color:#16a34a;';
+                        $npColorStyle = 'color:#16a34a !important;';
                     } elseif ($row->serving_notice_period_mode == 0) {
-                        $npColorStyle = 'color:#d97706;';
+                        $npColorStyle = 'color:#d97706 !important;';
                     } elseif ($row->serving_notice_period_mode == 1) {
                         $np = 'SNP LWD ' . $np;
-                        $npColorStyle = 'color:#7c3aed;';
+                        $npColorStyle = 'color:#7c3aed !important;';
                     }
 
                     $row->current_company = $row->current_company ? $row->current_company : @$row->apl_company_name;
                     echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" style="' .
+                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
                         $npColorStyle .
                         '">' .
                         @$np .
