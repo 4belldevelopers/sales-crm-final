@@ -495,7 +495,12 @@ $productAllowCompany = GeneralMethod::companiesType();
                                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
                                             class="menu-title">Subscription Packages</span> </span> </a>
 
-                                
+                                <a class="" href="{{ route('service_company.transactions.subscription') }}"> <span
+                                        class="menu-link {{ request()->is('service_company/transactions/subscription') ? 'active' : '' }}">
+                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Transactions</span> </span> </a>
+
+
                                     <a class="" href="{{ route('service_company.subscribe.transectionLog') }}?pagetype=operationaltab&page=1">
                                         <span
                                             class="menu-link {{ request()->is('subscribe/transection-log') ? 'active' : '' }}">
@@ -509,30 +514,6 @@ $productAllowCompany = GeneralMethod::companiesType();
                         </div>
                     </div>
                     <!--end::Subscription-->
-
-                    <!--begin::Transactions-->
-                    <div data-kt-menu-trigger="click"
-                        class="menu-item menu-accordion  {{ request()->is('service_company/transactions*') ? 'show' : '' }}">
-                        <span class="menu-link"> <span class="menu-icon">
-                                <!--begin::Svg Icon-->
-                               <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M4 4h16a1 1 0 0 1 1 1v3H3V5a1 1 0 0 1 1-1Zm17 6v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9h18ZM7 14a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H7Z"/>
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->
-                            </span> <span class="menu-title">Transactions</span><span class="menu-arrow"></span>
-                        </span>
-                        <div class="menu-sub menu-sub-accordion menu-active-bg">
-                            <div class="menu-item">
-                                <a class="" href="{{ route('service_company.transactions.subscription') }}"> <span
-                                        class="menu-link {{ request()->is('service_company/transactions/subscription') ? 'active' : '' }}">
-                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Subscription</span> </span> </a>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end::Transactions-->
                 @endif
 
 
