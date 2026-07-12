@@ -498,58 +498,6 @@
                     if ($intRowCount > 0) {
                         $schedule_date = @$intRow->schedule_date;
                         $schedule_date = date('d M, Y', strtotime($schedule_date));
-                        $schedule_time = Carbon::parse($intRow->schedule_date)->format('h:i A');
-                    } else {
-                        $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
-                    }
-
-                    if ($intRowCount > 0) {
-                        $feedback_status_name = '';
-                        if ($intRow->feedback >= 0) {
-                            $feedback_status_name = @$feedback_status[@$intRow->feedback]['name'];
-                            $className = @$feedback_status[@$intRow->feedback]['classname'];
-                        } else {
-                            $feedback_status_name = 'Pending';
-                            $className = 'pending-bg';
-                        }
-                    } else {
-                        $feedback_status_name = '';
-                    }
-
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7 ' .
-                        @$className .
-                        ' px-1">' .
-                        @$feedback_status_name .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $schedule_date = $className = '';
-                    $intRowCount = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->count();
-                    $intRow = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->first();
-                    $html = '';
-                    $schedule_time = '';
-                    if ($intRowCount > 0) {
-                        $schedule_date = @$intRow->schedule_date;
-                        $schedule_date = date('d M, Y', strtotime($schedule_date));
                         $timezone_abbreviation = ($intRow->timezone_abbreviation) ? ' ('.$intRow->timezone_abbreviation.')' : '';
                         $schedule_time = @$intRow->schedule_to_time. ' '.$timezone_abbreviation;
                     } else {
@@ -609,70 +557,25 @@
             <td>
                 @php
 
-                    $country = $row_country_name = '';
-
-                    if (empty($row->country)) {
-                        $row_country_name = '----';
-                    } else {
-                        if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = $row_state_name = '';
-
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state_name = @$row->state_name;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    $city = $row_city_name = '';
-
-                    if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
-                    } else {
-                        $row_city_name = @$row->city;
-                    }
                     $row_city_name = @$row->city_name;
-                    $row_state_name = @$row->state_name;
                     $row_country_name = @$row->country_name;
 
+                    // Row 2 is now Education (merged in from the removed Education column)
+                    // instead of state — same qualification_name field/truncation used there.
                     echo '<div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
                         ucwords($row_city_name) .
-                        '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
-                        '</a>
-                       <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
+                        ', ' .
                         strtoupper($row_country_name) .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
+                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ', ' .
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        '</a>
+                       <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
+                        @$row->qualification_name .
+                        '">' .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                 </div>';
 
@@ -754,7 +657,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="10" style="text-align: center; color: black;">
+        <td colspan="9" style="text-align: center; color: black;">
             No data available in table
         </td>
 
