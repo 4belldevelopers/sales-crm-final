@@ -142,6 +142,16 @@
             <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
             <!--begin::Actions-->
             <div class="d-flex align-items-center py-1">
+                @if (in_array('view_jobs', $userPermissions))
+                    {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                         defined once in the shared layout) that the job title/logo already
+                         uses elsewhere — .show-detail-open's click handler in
+                         service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+                    <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                        class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
+                        View Job
+                    </a>
+                @endif
                 <!--begin::Search-->
                 <div class="d-none d-flex align-items-center position-relative my-1 me-3">
                     <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
@@ -246,27 +256,48 @@
                 </div>
 
 
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-4 d-flex align-items-center px-2" style="width:75%; position: relative;">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="{{ @$default_skill }}" placeholder="Search..." id="kt_tagify_2" />
-                        <div style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 25%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <option value="3">Low to High (Salary)</option>
-                            <option value="4">High to Low (Salary)</option>
-                            <option value="21">Notice Period (Immediate)</option>
-                            <option value="22">Notice Period (Serving)</option>
-                            <option value="7">High to Low (Experience) </option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
+                <div class="card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
+                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
+                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" />
+                                <div data-toggle="modal" data-target="#apptrackerfilter"
+                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
+                            </div>
+                            <div style="width: 220px; flex-shrink: 0;">
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="3">Low to High (Salary)</option>
+                                    <option value="4">High to Low (Salary)</option>
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice Period (Serving)</option>
+                                    <option value="7">High to Low (Experience) </option>
+                                    <option value="8">Low to High (Experience)</option>
+                                </select>
+                            </div>
+                            <div style="width: 140px; flex-shrink: 0;">
+                                <button type="button"
+                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
+                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
+                                    data-toggle="modal" data-target="#apptrackerfilter">
+                                    <span class="svg-icon svg-icon-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
+                                                fill="black"></path>
+                                        </svg>
+                                    </span>
+                                    Filter
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1127,11 +1158,10 @@
                                                 data-kt-check-target="#kt_table_users .form-check-input" value="1" />
                                         </div>
                                     </th>
-                                    <th class="">Name</th>
+                                    <th class="">Candidate Name</th>
                                     <th class="">Exp.</th>
                                     <th class="">Salary</th>
                                     <th class="">Availability</th>
-                                    <th class="">Qualification</th>
                                     <th class="">Location</th>
                                     {{-- <th class="">Type</th> --}}
                                     <!--<th class="">Offer by</th>-->
