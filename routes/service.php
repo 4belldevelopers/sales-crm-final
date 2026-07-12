@@ -534,6 +534,7 @@ Route::group(['middleware' => 'auth'], function () {
 			Route::get('transection-log', [ManageSubscriptionController::class,'transectionLog'])->name('subscribe.transectionLog');
 			Route::get('new-subscribe/newindex', [ManageSubscriptionController::class,'newindex'])->name('subscribe.newindex');
 			Route::get('transactions/subscription', [ManageSubscriptionController::class,'transactions'])->name('transactions.subscription');
+			Route::get('transactions/subscription-ajax', [ManageSubscriptionController::class,'transactionsAjax'])->name('transactions.subscriptionAjax');
 			Route::get('checkout-subscribe', [ManageSubscriptionController::class,'checkoutSubscribeIist'])->name('subscribe.checkoutSubscribeIist');
 			Route::post('checkout-subscribe', [ManageSubscriptionController::class,'checkoutSubscribe'])->name('subscribe.checkoutSubscribe');
 

@@ -382,6 +382,35 @@
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center py-1">
+                    @if (in_array('view_jobs', $userPermissions))
+                        <a href="{{ route('service_company.jobs.viewmore', $job->id) }}"
+                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2">
+                            View Job
+                        </a>
+                    @endif
+                    @if (in_array('add_job_applications', $userPermissions))
+                        <a href="javascript:void(0);">
+                            <button type="button"
+                                class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3"
+                                id="addServiceCandidate">
+                                <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                            <polygon points="0 0 24 0 24 24 0 24" />
+                                            <path
+                                                d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
+                                                fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                                            <path
+                                                d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
+                                                fill="#000000" fill-rule="nonzero" />
+                                        </g>
+                                    </svg>
+                                </span>
+                                Add Candidate
+                            </button>
+                        </a>
+                    @endif
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
                         class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none" data-toggle="modal"
@@ -601,15 +630,15 @@
 
                 <div class="card hp-toolbar-card mb-4">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                            <div class="col-lg-4 d-flex align-items-center px-2" style="width:61%;position: relative;">
+                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
                                 <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                    value="" placeholder="Search..." id="kt_tagify_2" />
-                                    <div style="position: absolute; top: 0px; right: 36px;">
+                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
+                                    <div style="position: absolute; top: 0px; right: 12px;">
                                         <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
                                      </div>
                             </div>
-                            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 21%;">
+                            <div style="width: 220px; flex-shrink: 0;">
                                 <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
                                     id="sortingfilter" data-dropdown-css-class="w-150px"
                                     data-placeholder="Select an option" style="border: 1px solid #ffffff;"
@@ -625,32 +654,6 @@
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
-                            </div>
-                            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 18%;">
-
-                                @if (in_array('add_job_applications', $userPermissions))
-                                    <a href="javascript:void(0);">
-                                        <button type="button"
-                                            class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3 py-4"
-                                            id="addServiceCandidate">
-                                            <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                        <path
-                                                            d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                            fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                        <path
-                                                            d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                            fill="#000000" fill-rule="nonzero" />
-                                                    </g>
-                                                </svg>
-                                            </span>
-                                            Add Candidate
-                                        </button>
-                                    </a>
-                                @endif
                             </div>
                         </div>
                     </div>
