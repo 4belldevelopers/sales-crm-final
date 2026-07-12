@@ -202,15 +202,25 @@
             line-height: 1.2;
             transition: color .15s;
         }
+        .hp-circle,
+        .hp-total {
+            transition: transform .18s cubic-bezier(.4,0,.2,1), border-color .15s ease, background-color .15s ease, box-shadow .18s ease;
+        }
         .hp-circle.active {
+            border-width: 2.5px;
             border-color: var(--hp-color);
             background: var(--hp-bg);
+            transform: scale(1.06);
+            box-shadow: 0 0 0 4px rgba(var(--hp-rgb), .10), 0 8px 18px -6px rgba(var(--hp-rgb), .4);
         }
         .hp-circle.active .hp-icon {
             color: var(--hp-color);
         }
         .hp-circle.active .hp-count {
             color: var(--hp-color);
+        }
+        .hp-total.bg-total-active {
+            box-shadow: 0 0 0 4px rgba(var(--hp-rgb), .12), 0 8px 18px -6px rgba(var(--hp-rgb), .4);
         }
         .hp-label {
             font-size: 11px;
@@ -230,6 +240,76 @@
         }
         @media (max-width: 576px) {
             .hp-flow { justify-content: flex-start; }
+        }
+
+        /* Pipeline → Candidate List connector */
+        .hp-workflow {
+            position: relative;
+        }
+        .hp-connector {
+            position: absolute;
+            width: 4px;
+            border-radius: 2px;
+            background: var(--hp-color, #2563eb);
+            box-shadow: 0 2px 10px -1px rgba(var(--hp-rgb, 37,99,235), .4);
+            transform-origin: top;
+            transform: scaleY(0);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+            transition: transform .24s cubic-bezier(.4,0,.2,1), opacity .2s ease, background-color .2s ease;
+        }
+        .hp-connector.visible {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+        .hp-connector-arrow {
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 7px solid var(--hp-color, #2563eb);
+            transition: border-top-color .2s ease;
+        }
+        .hp-candlist-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .hp-candlist-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            color: var(--hp-color, #2563eb);
+            background: var(--hp-bg, #dbeafe);
+            transition: color .2s ease, background-color .2s ease;
+        }
+        .hp-candlist-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+        .hp-candlist-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #181c32;
+        }
+        .hp-candlist-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: #dbeafe;
+            color: #2563eb;
+            transition: color .2s ease, background-color .2s ease;
         }
 
     </style>
@@ -519,26 +599,32 @@
             ? $candStatusClass['Index']
             : null;
         $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
+        // The stage the browser should render as active before any ajax runs — drives
+        // the initial connector position/candidate-list header via updateHpWorkflow() below.
+        $hpInitialPage = !empty($mstatus_id) ? $mstatus_id : 'all';
 
         // Colors/icons reuse this app's existing "Pipeline Stages" legend
         // (resources/views/sections/service_company/pipeline.blade.php) rather than
         // inventing new ones, so this card matches every other pipeline-stage display.
+        // 'rgb' is the same color pre-split into r,g,b for the CSS glow (box-shadow can't
+        // convert a hex custom property to rgba() on its own).
         $hpStages = [
-            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2',
+            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2', 'rgb' => '126,130,153',
                 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
-            ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
+            ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff', 'rgb' => '192,0,255',
                 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
-            ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff',
+            ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff', 'rgb' => '40,150,255',
                 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
-            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
+            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2', 'rgb' => '255,64,152',
                 'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
-            ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0',
+            ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0', 'rgb' => '255,171,0',
                 'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
-            ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9',
+            ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9', 'rgb' => '6,199,50',
                 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
         ];
-        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3',
+        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3', 'rgb' => '255,2,2',
             'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
+        $hpTotal = ['label' => 'Total', 'color' => '#2563eb', 'bg' => '#dbeafe', 'rgb' => '37,99,235'];
     @endphp
 
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
@@ -611,11 +697,13 @@
                     </div>
                 </div>
 
-                <div class="card hp-card mb-4">
+                <div class="hp-workflow" id="hp_workflow">
+                <div class="card hp-card mb-4" id="hp_pipeline_card">
                     <div class="card-body">
                         <div class="hp-flow">
                             <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
-                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all">
+                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all"
+                                    style="--hp-color: {{ $hpTotal['color'] }}; --hp-bg: {{ $hpTotal['bg'] }}; --hp-rgb: {{ $hpTotal['rgb'] }};">
                                     <span class="hp-total-icon">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
@@ -630,7 +718,7 @@
                                 <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $stage['rel'] }}">
                                     <div class="hp-circle {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}"
                                         data-hp="{{ $stage['rel'] }}"
-                                        style="--hp-color: {{ $stage['color'] }}; --hp-bg: {{ $stage['bg'] }};">
+                                        style="--hp-color: {{ $stage['color'] }}; --hp-bg: {{ $stage['bg'] }}; --hp-rgb: {{ $stage['rgb'] }};">
                                         <span class="hp-icon">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                                 stroke-linecap="round" stroke-linejoin="round">
@@ -656,7 +744,7 @@
                             <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $hpRejected['rel'] }}">
                                 <div class="hp-circle {{ $hpActiveStage === $hpRejected['key'] ? 'active' : '' }}"
                                     data-hp="{{ $hpRejected['rel'] }}"
-                                    style="--hp-color: {{ $hpRejected['color'] }}; --hp-bg: {{ $hpRejected['bg'] }};">
+                                    style="--hp-color: {{ $hpRejected['color'] }}; --hp-bg: {{ $hpRejected['bg'] }}; --hp-rgb: {{ $hpRejected['rgb'] }};">
                                     <span class="hp-icon">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -672,8 +760,22 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="hp-connector" id="hp_connector">
+                    <span class="hp-connector-arrow"></span>
+                </div>
+
                 <div class="card">
                     <div class="card-body pt-3 px-5">
+                        <div class="hp-candlist-header" id="hp_candlist_header">
+                            <span class="hp-candlist-icon" id="hp_candlist_icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                </svg>
+                            </span>
+                            <span class="hp-candlist-title" id="hp_candlist_title">Total Candidates</span>
+                            <span class="hp-candlist-badge" id="hp_candlist_badge">0 Results</span>
+                        </div>
                         @if (in_array('view_job_applications', $userPermissions))
                            <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
                             <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
@@ -705,6 +807,7 @@
                             <div id="paginationcandidate"></div>
                         @endif
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -940,6 +1043,8 @@
 
                 var jobIdEncrypt = '{{ $jobIdEncrypt }}';
 
+                updateHpWorkflow(page, true);
+
                 if (page == 1) {
                     $('.hp-circle[data-hp="1"]').addClass('active');
                     $('#tx_1').addClass('active');
@@ -1008,7 +1113,94 @@
     </script>
 
     <script>
-        //  var table;   
+        // Hiring Pipeline → Candidate List connector. Mirrors the $hpStages/$hpTotal/
+        // $hpRejected PHP arrays above (colors/labels) so the connector pipe, badge and
+        // header title always match whichever stage circle is currently selected.
+        var hpStageMeta = {
+            'all': { label: 'Total', color: '#2563eb', bg: '#dbeafe', rgb: '37,99,235' },
+            '1': { label: 'Sourcing', color: '#7e8299', bg: '#eef0f2', rgb: '126,130,153' },
+            '2': { label: 'Screening', color: '#c000ff', bg: '#f9e6ff', rgb: '192,0,255' },
+            '3': { label: 'Evaluation', color: '#2896ff', bg: '#e8f4ff', rgb: '40,150,255' },
+            '4': { label: 'Negotiation', color: '#ff4098', bg: '#ffe6f2', rgb: '255,64,152' },
+            '5': { label: 'Offer', color: '#ffab00', bg: '#fff4e0', rgb: '255,171,0' },
+            '6': { label: 'Joined', color: '#06c732', bg: '#e3fbe9', rgb: '6,199,50' },
+            '7': { label: 'Rejected', color: '#ff0202', bg: '#ffe3e3', rgb: '255,2,2' }
+        };
+        var hpCurrentAnchorEl = null;
+        var hpCurrentMeta = hpStageMeta['all'];
+
+        function hpConnectorRect(anchorEl) {
+            var wrapper = document.getElementById('hp_workflow');
+            var header = document.getElementById('hp_candlist_header');
+            if (!wrapper || !header || !anchorEl) return null;
+            var wrapperRect = wrapper.getBoundingClientRect();
+            var anchorRect = anchorEl.getBoundingClientRect();
+            var headerRect = header.getBoundingClientRect();
+            return {
+                x: (anchorRect.left + anchorRect.width / 2) - wrapperRect.left,
+                top: anchorRect.bottom - wrapperRect.top,
+                height: Math.max(0, (headerRect.top + headerRect.height / 2) - wrapperRect.top - (anchorRect.bottom - wrapperRect.top))
+            };
+        }
+
+        function hpRenderConnector(anchorEl, meta, animate) {
+            var connector = document.getElementById('hp_connector');
+            var rect = hpConnectorRect(anchorEl);
+            if (!connector || !rect) return;
+            connector.style.setProperty('--hp-color', meta.color);
+            connector.style.setProperty('--hp-rgb', meta.rgb);
+            connector.style.left = rect.x + 'px';
+            connector.style.top = rect.top + 'px';
+            connector.style.height = rect.height + 'px';
+            if (animate) {
+                connector.classList.remove('visible');
+                void connector.offsetHeight;
+            }
+            connector.classList.add('visible');
+            hpCurrentAnchorEl = anchorEl;
+            hpCurrentMeta = meta;
+        }
+
+        function updateHpWorkflow(page, animate) {
+            var meta = hpStageMeta[page] || hpStageMeta['all'];
+            var anchorEl = (page == 'all')
+                ? document.getElementById('bg_all')
+                : document.querySelector('.hp-circle[data-hp="' + page + '"]');
+            var countEl = (page == 'all')
+                ? document.getElementById('totalcnt')
+                : document.getElementById('bg_' + page);
+            var count = countEl ? countEl.textContent : '0';
+
+            var titleEl = document.getElementById('hp_candlist_title');
+            var badgeEl = document.getElementById('hp_candlist_badge');
+            var iconEl = document.getElementById('hp_candlist_icon');
+            if (titleEl) titleEl.textContent = meta.label + ' Candidates';
+            if (badgeEl) {
+                badgeEl.textContent = count + ' Results';
+                badgeEl.style.color = meta.color;
+                badgeEl.style.background = meta.bg;
+            }
+            if (iconEl) {
+                iconEl.style.color = meta.color;
+                iconEl.style.background = meta.bg;
+            }
+
+            hpRenderConnector(anchorEl, meta, animate !== false);
+        }
+
+        $(window).on('resize', function() {
+            if (hpCurrentAnchorEl) {
+                hpRenderConnector(hpCurrentAnchorEl, hpCurrentMeta, false);
+            }
+        });
+
+        $(function() {
+            updateHpWorkflow('{{ $hpInitialPage }}', false);
+        });
+    </script>
+
+    <script>
+        //  var table;
         //    tableLoad('load');
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -1744,6 +1936,7 @@
                     
                     $('#paginationcandidate').html(response.pagination);
 
+                    updateHpWorkflow(mstatus_id, false);
 
                     $('.hp-circle').removeClass('active');
                     $('.hp-label').removeClass('active');
