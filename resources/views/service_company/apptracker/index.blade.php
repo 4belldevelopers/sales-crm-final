@@ -251,29 +251,34 @@
             width: 4px;
             border-radius: 2px;
             background: var(--hp-color, #2563eb);
-            box-shadow: 0 2px 10px -1px rgba(var(--hp-rgb, 37,99,235), .4);
+            box-shadow: 0 2px 8px -1px rgba(var(--hp-rgb, 37,99,235), .35);
             transform-origin: top;
             transform: scaleY(0);
             opacity: 0;
             pointer-events: none;
-            z-index: 3;
-            transition: transform .24s cubic-bezier(.4,0,.2,1), opacity .2s ease, background-color .2s ease;
+            z-index: 4;
+            transition: left .26s cubic-bezier(.4,0,.2,1), top .26s cubic-bezier(.4,0,.2,1),
+                height .26s cubic-bezier(.4,0,.2,1), transform .24s cubic-bezier(.4,0,.2,1),
+                opacity .2s ease, background-color .22s ease;
         }
         .hp-connector.visible {
             transform: scaleY(1);
             opacity: 1;
         }
-        .hp-connector-arrow {
+        /* Rounded flow anchor: a small dome sitting on the connector's end, sunk
+           slightly into the card below so the pipe reads as plugged into it rather
+           than pointing at it. */
+        .hp-connector-bridge {
             position: absolute;
             left: 50%;
-            bottom: -6px;
+            bottom: -10px;
             transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 7px solid var(--hp-color, #2563eb);
-            transition: border-top-color .2s ease;
+            width: 30px;
+            height: 20px;
+            background: var(--hp-color, #2563eb);
+            border-radius: 15px 15px 5px 5px;
+            box-shadow: 0 5px 12px -3px rgba(var(--hp-rgb, 37,99,235), .5);
+            transition: background-color .22s ease;
         }
         .hp-candlist-header {
             display: flex;
@@ -762,10 +767,10 @@
                 </div>
 
                 <div class="hp-connector" id="hp_connector">
-                    <span class="hp-connector-arrow"></span>
+                    <span class="hp-connector-bridge"></span>
                 </div>
 
-                <div class="card">
+                <div class="card" id="hp_candlist_card">
                     <div class="card-body pt-3 px-5">
                         <div class="hp-candlist-header" id="hp_candlist_header">
                             <span class="hp-candlist-icon" id="hp_candlist_icon">
@@ -1131,31 +1136,37 @@
 
         function hpConnectorRect(anchorEl) {
             var wrapper = document.getElementById('hp_workflow');
-            var header = document.getElementById('hp_candlist_header');
-            if (!wrapper || !header || !anchorEl) return null;
+            var card = document.getElementById('hp_candlist_card');
+            if (!wrapper || !card || !anchorEl) return null;
             var wrapperRect = wrapper.getBoundingClientRect();
             var anchorRect = anchorEl.getBoundingClientRect();
-            var headerRect = header.getBoundingClientRect();
+            var cardRect = card.getBoundingClientRect();
             return {
                 x: (anchorRect.left + anchorRect.width / 2) - wrapperRect.left,
                 top: anchorRect.bottom - wrapperRect.top,
-                height: Math.max(0, (headerRect.top + headerRect.height / 2) - wrapperRect.top - (anchorRect.bottom - wrapperRect.top))
+                // Stops right at the card's top edge — the rounded bridge (a child of
+                // this element, offset below it) is what visually sinks into the card.
+                height: Math.max(0, cardRect.top - wrapperRect.top - (anchorRect.bottom - wrapperRect.top))
             };
         }
 
-        function hpRenderConnector(anchorEl, meta, animate) {
+        function hpRenderConnector(anchorEl, meta, allowReveal) {
             var connector = document.getElementById('hp_connector');
             var rect = hpConnectorRect(anchorEl);
             if (!connector || !rect) return;
+            var wasVisible = connector.classList.contains('visible');
             connector.style.setProperty('--hp-color', meta.color);
             connector.style.setProperty('--hp-rgb', meta.rgb);
             connector.style.left = rect.x + 'px';
             connector.style.top = rect.top + 'px';
             connector.style.height = rect.height + 'px';
-            if (animate) {
+            if (!wasVisible && allowReveal) {
+                // First time it appears: start collapsed, then grow downward.
                 connector.classList.remove('visible');
                 void connector.offsetHeight;
             }
+            // Already visible → left/top/height/color transitions above make this a
+            // smooth slide + color crossfade to the newly selected stage, not a redraw.
             connector.classList.add('visible');
             hpCurrentAnchorEl = anchorEl;
             hpCurrentMeta = meta;
