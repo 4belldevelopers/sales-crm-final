@@ -556,26 +556,53 @@
                         $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
                     }
 
+                    // Row 3: interview mode (Face To Face / Video Call / Telecon) until
+                    // feedback has actually been recorded on the Interview Tracker page —
+                    // once $intRow->feedback is a real status (not the unset/-1 default),
+                    // that feedback replaces the mode here, using the same name/classname
+                    // lookup (GeneralMethod::feedback_status()) already used elsewhere.
+                    $feedbackGiven = false;
+                    $row3Text = '';
+                    $row3Class = '';
                     if ($intRowCount > 0) {
-                        $feedback_status_name = '';
                         if ($intRow->feedback >= 0) {
-                            $feedback_status_name = @$feedback_status[@$intRow->feedback]['name'];
-                            $className = @$feedback_status[@$intRow->feedback]['classname'];
+                            $feedbackGiven = true;
+                            $row3Text = @$feedback_status[@$intRow->feedback]['name'];
+                            $row3Class = @$feedback_status[@$intRow->feedback]['classname'];
                         } else {
-                            $feedback_status_name = 'Pending';
-                            $className = 'pending-bg';
+                            $interviewModeLabels = [1 => 'Telecon', 2 => 'Video Call', 3 => 'Face To Face', 4 => 'Other'];
+                            $row3Text = $interviewModeLabels[(int) @$intRow->interview_mode] ?? '';
                         }
-                    } else {
-                        $feedback_status_name = '';
+                    }
+
+                    $row3Html = '';
+                    if ($row3Text !== '') {
+                        if ($feedbackGiven) {
+                            $row3Html = '<span class="badge fw-bold ' . $row3Class . ' d-inline-flex align-items-center gap-1 mt-1" style="font-size:10.5px;width:fit-content;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                ' . $row3Text . '
+                            </span>';
+                        } else {
+                            $row3Html = '<span class="d-flex align-items-center gap-1 fw-bold fs-7 mt-1" style="color:#3699ff;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                                ' . $row3Text . '
+                            </span>';
+                        }
                     }
 
                     echo '<div class="d-flex flex-column">
-                        		<span class="text-dark fw-bolder fs-6">' .
+                        		<span class="text-dark fw-bolder fs-6 d-flex align-items-center gap-1">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                    ' .
                         @$schedule_date .
                         '</span>
-								<span class="text-muted fw-bold d-block fs-7">' .
+								<span class="text-muted fw-bold d-block fs-7 d-flex align-items-center gap-1">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                    ' .
                         $schedule_time .
-                        '</span>
+                        '</span>' .
+                        $row3Html .
+                        '
                     		</div>';
                 @endphp
             </td>
