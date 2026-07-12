@@ -92,6 +92,75 @@
         .tagify__tag .star.checked {
             color: #ef1632;
         }
+
+        /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
+           class keeps working unchanged) but is permanently hidden now — its restyled
+           equivalent lives in #aptk_selection_bar below. */
+        .aptk-legacy-hide {
+            display: none !important;
+        }
+
+        /* Row selection action bar — same design/position as CV Tracker's
+           #cvh_selection_bar: hidden until candidates are checked, then sits directly
+           above the results table. Only Send Email is offered here (this page has no
+           Forward Resume / Copy / Export functionality). */
+        .aptk-selection-bar {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border: 1px solid #e5e9f2;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            font-family: 'Poppins', sans-serif;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-bar.show {
+            display: flex;
+        }
+        .aptk-selection-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .aptk-selection-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-actions .btn {
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+        }
+        .aptk-selection-actions .btn:hover {
+            background: #eff6ff !important;
+            border-color: #93c5fd !important;
+        }
+        .aptk-selection-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .aptk-selection-close:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
     </style>
 @endpush
 @section('content')
@@ -158,9 +227,19 @@
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center py-1">
+                    @if (in_array('view_jobs', $userPermissions))
+                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                             defined once in the shared layout) that the job title/logo already
+                             uses elsewhere — .show-detail-open's click handler in
+                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+                        <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
+                            View Job
+                        </a>
+                    @endif
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn d-none" data-toggle="modal"
+                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-legacy-hide d-none" data-toggle="modal"
                         data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
                             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                                 width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
@@ -315,50 +394,48 @@
 
             </div>
 
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-6 d-flex align-items-center px-2" style="width:65%; position: relative;">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="{{ @$default_skill }}" placeholder="Search..." id="kt_tagify_2" />
-                        <div data-toggle="modal" data-target="#apptrackerfilter"
-                            style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <option value="3">Low to High (Salary)</option>
-                            <option value="4">High to Low (Salary)</option>
-                            <option value="21">Notice Period (Immediate)</option>
-                            <option value="22">Notice Period (Serving)</option>
-                            <option value="7">High to Low (Experience) </option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
-                    </div>
-                    {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-control="select2" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                        <option value="110" selected="selected">Location</option>
-                        <option value="111">India</option>
-                     </select>
-                  </div> --}}
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                        <button type="button"
-                            class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
-                            data-toggle="modal" data-target="#apptrackerfilter">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                        fill="black"></path>
-                                </svg>
-                            </span>
-                            Filter
-                        </button>
+                <div class="card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
+                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
+                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
+                                <div data-toggle="modal" data-target="#apptrackerfilter"
+                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
+                            </div>
+                            <div style="width: 220px; flex-shrink: 0;">
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="3">Low to High (Salary)</option>
+                                    <option value="4">High to Low (Salary)</option>
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice Period (Serving)</option>
+                                    <option value="7">High to Low (Experience) </option>
+                                    <option value="8">Low to High (Experience)</option>
+                                </select>
+                            </div>
+                            <div style="width: 140px; flex-shrink: 0;">
+                                <button type="button"
+                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
+                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
+                                    data-toggle="modal" data-target="#apptrackerfilter">
+                                    <span class="svg-icon svg-icon-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
+                                                fill="black"></path>
+                                        </svg>
+                                    </span>
+                                    Filter
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1141,7 +1218,29 @@
                 </div>
                 <!--End Popup-->
 
-
+                {{-- Row selection action bar — hidden until candidates are checked.
+                     Reuses the same mass_mail trigger class as the legacy toolbar button,
+                     so the existing modal/ajax handler works unchanged; only the
+                     presentation and position (directly above the results table) are
+                     new. Only Send Email is offered here (no Forward Resume / Copy /
+                     Export on this page). --}}
+                <div class="aptk-selection-bar" id="aptk_selection_bar">
+                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked
+                            title="Clear selection" />
+                    </div>
+                    <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
+                    <div class="aptk-selection-actions">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                            </span> Send Email
+                        </a>
+                    </div>
+                    <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
 
                 <!--begin::Card-->
                 <div class="card">
@@ -1159,16 +1258,15 @@
                                                 data-kt-check-target="#kt_table_users .form-check-input" value="1" />
                                         </div>
                                     </th>
-                                    <th class="">Name</th>
+                                    <th class="">Candidate Name</th>
                                     {{-- <th class="">Contacts</th> --}}
                                     <th class="">Exp.</th>
                                     <th class="">Salary</th>
                                     <th class="">Notice</th>
-                                    <th class="">Qualification</th>
                                     <th class="">Location</th>
                                     <th class="">Jobs</th>
                                     <th class="">Status</th>
-                                    <th class="">Recruiter</th>
+                                    <th class="">Ownership</th>
                                     {{-- <th class="">Date</th> --}}
                                     <th class="">Stage</th>
                                     <th class="">Action</th>
@@ -1314,6 +1412,7 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
             var i = 0;
@@ -1338,6 +1437,26 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
+        });
+
+        /* Selection bar: live count + clear-selection controls (checkbox + close X) —
+           same behavior as the Pool tab / CV Tracker's #cvh_selection_bar. */
+        function updateAptkSelectionBar() {
+            var n = $('.chk_list_item:checked').length;
+            $('#aptk_selected_count').text(n);
+            $('#aptk_selection_bar').toggleClass('show', n > 0);
+            $('#aptk_selection_master_chk').prop('checked', n > 0);
+        }
+        function clearAptkSelection() {
+            $('.chk_list, .chk_list_item').prop('checked', false);
+            $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+            $('.custom_hide').removeClass('d-none');
+            updateAptkSelectionBar();
+        }
+        $(document).on('click', '#aptk_selection_close', clearAptkSelection);
+        $(document).on('change', '#aptk_selection_master_chk', function() {
+            if (!$(this).is(':checked')) clearAptkSelection();
         });
 
         $(document).on('click', '.mass_mail', function() {
