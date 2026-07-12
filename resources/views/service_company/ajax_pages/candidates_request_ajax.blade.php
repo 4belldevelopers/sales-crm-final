@@ -115,6 +115,22 @@
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
                     $percentage =  GeneralMethod::skill_percentage($jobid,$skillArr);
+
+                    // Match % badge — color reflects the numeric match score, same
+                    // thresholds/colors used across the other apptracker tabs: >90
+                    // green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
+                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+
                     if (count($skillArr) > 0) {
                         foreach ($skillArr as $sval) {
                             $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
@@ -152,7 +168,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -193,7 +209,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.':</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -280,26 +296,29 @@
                     $ectc = '';
                     $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
 
-                    $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    // Drop the decimal portion for display only (thousandsCurrencyFormat
+                    // always returns 2 decimals), and use the full mode word ("Annual"/
+                    // "Monthly"/"Hourly") rendered smaller than the amount.
+                    $ctc = explode('.', $ctc)[0];
+                    $ectc = explode('.', $ectc)[0];
 
-                    $current_ectc_mode = '';
-                    $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $current_ctc_mode = @$salaryMode[@$jobMode];
+                    $current_ectc_mode = @$salaryMode[@$jobMode];
 
                     $outsourcing_type = $row->outsourcing_type == 1 ? 'Fulltime' : 'Contract';
                     echo '<div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder fs-6 d-none">' .
                         @$current_ctc_cur .
                         @$ctc .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $current_ctc_mode .
-                        '</a>
+                        '</span></a>
                     <span class="text-dark fw-bolder fs-6">' .
                         $current_ectc_cur .
                         @$ectc .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $current_ectc_mode .
-                        '</span>
+                        '</span></span>
 					<span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip">' .
                         $outsourcing_type .
                         '</span>
@@ -328,25 +347,31 @@
                     } else {
                         $np = $row->np_id;
                     }
+
+                    // Notice period color: Immediate = green, numeric days notice =
+                    // orange, a real serving last-working-day date = purple (prefixed
+                    // "SNP LWD"). !important is required because Bootstrap/Metronic's
+                    // .text-dark utility class sets color with !important, which
+                    // otherwise beats a plain inline style.
+                    $npColorStyle = 'color:#181c32 !important;';
+                    if ($np === 'Immediate') {
+                        $npColorStyle = 'color:#16a34a !important;';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColorStyle = 'color:#d97706 !important;';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $np = 'SNP LWD ' . $np;
+                        $npColorStyle = 'color:#7c3aed !important;';
+                    }
+
                     echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
+                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
+                        $npColorStyle .
+                        '">' .
                         @$np .
                         '</a>
                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
                         '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
                         '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title=""></span> 
                   </div>';
                 @endphp
             </td>
@@ -399,20 +424,23 @@
                         $row_city_name = @$row->city;
                     }
 
+                    // Row 2 is now Education (merged in from the removed Education
+                    // column) instead of state — same qualification_name field the
+                    // removed column used.
                     echo '<div class="d-flex flex-column">
                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
                         ucwords($row_city_name) .
-                        '">' .
-                        ucwords(mb_substr($row_city_name, 0, 20)) .
-                        '</a>
-                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
+                        ', ' .
                         strtoupper($row_country_name) .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 20)) .
-                        ' | ' .
+                        ucwords(mb_substr($row_city_name, 0, 20)) .
+                        ', ' .
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        '</a>
+                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
+                        @$row->qualification_name .
+                        '">' .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                     </div>';
                 @endphp
@@ -467,7 +495,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="9" style="text-align: center; color: black;">
+        <td colspan="8" style="text-align: center; color: black;">
             No data available in table
         </td>
 

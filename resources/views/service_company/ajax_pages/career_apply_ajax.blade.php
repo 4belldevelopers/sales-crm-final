@@ -66,6 +66,18 @@
                         }
                     }
 
+                    $matchNum = (float) $percentage;
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background-color:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . $percentage . '%</span>';
+
                     echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 			      <a href="javascript:void(0);"   data-row-id="' .
                         @$row->id .
@@ -102,7 +114,7 @@
                     <div class="' .
                         $skilltagclass .
                         '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                            <span class="badge badge-light my-1">'.$percentage.'%</span>
+                                            '.$matchBadge.'
                                         
                                         ' .
                         $skilltag .
@@ -211,30 +223,32 @@
 
 
                     $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
+                    $pay_rate_amount = explode('.', $pay_rate_amount)[0];
 
                     $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
+                    $bill_rate_amount = explode('.', $bill_rate_amount)[0];
                     // dd( $bill_rate_amount,$pay_rate_amount);
                     $pay_rate_mode = '';
-                    $pay_rate_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $pay_rate_mode = @$salaryMode[@$jobMode];
                     //$current_ctc_mode		= mb_substr($salaryMode[0], 0, 1);
 
                     $bill_rate_mode = '';
-                    $bill_rate_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $bill_rate_mode = @$salaryMode[@$jobMode];
                     //$current_ectc_mode		= mb_substr($salaryMode[0], 0, 1);
 
                     echo '<div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                         @$bill_rate_currency .
                         @$bill_rate_amount .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $bill_rate_mode .
-                        '</a>
+                        '</span></a>
                     <span class="text-muted fw-bold d-block fs-7">' .
                         $pay_rate_currency .
                         @$pay_rate_amount .
-                        '/' .
+                        '<span style="font-size:.85em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $pay_rate_mode .
-                        '</span>
+                        '</span></span>
                   </div>';
                 @endphp
             </td>
@@ -242,6 +256,7 @@
                 @php
                     $npArr = ['Notice period', 'Available from', 'Immediate'];
                     $npDate = $row->np_id;
+                    $npLabel = $npArr[$row->serving_notice_period_mode];
                     if ($row->serving_notice_period_mode == 0) {
                         $npDate = $row->np_id . ' Days';
                         if ($npDate == 1) {
@@ -250,17 +265,30 @@
                     } elseif ($row->serving_notice_period_mode == 1) {
                         $originalDate = $row->np_id;
                         $npDate = '' . date('d-M-y', strtotime($originalDate));
-                         $today = date('Y-m-d'); 
+                         $today = date('Y-m-d');
                             if(date('Y-m-d', strtotime($row->np_id)) < $today){
                               $npDate = "Immediate";
+                              $npLabel = 'Immediate';
                             }
                     } else {
                         $npDate = $row->np_id;
                     }
+
+                    if ($npLabel === 'Immediate') {
+                        $npColor = '#16a34a';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColor = '#d97706';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $npColor = '#7c3aed';
+                        $npDate = 'SNP LWD ' . $npDate;
+                    } else {
+                        $npColor = '#181c32';
+                    }
+
                     echo '<div class="d-flex flex-column">
-					  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        $npArr[$row->serving_notice_period_mode] .
-                        '</a> 
+					  <a href="javascript:void(0);" class="fw-bolder fs-6" style="color:' . $npColor . ' !important;">' .
+                        $npLabel .
+                        '</a>
 					  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
                         $row->np_id .
                         '">' .
@@ -271,89 +299,19 @@
             </td>
             <td>
                 @php
-                    echo ' <div class="d-flex flex-column">
-						  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        @$row->qualification_name .
-                        '</a>
-						  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                        $row->skills .
-                        '"></span> 
-						</div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $country = '';
-                    $row_country_name = '';
-
-                    if (empty($row->country)) {
-                        $row_country_name = '----';
-                    } else {
-                        if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = '';
-                    $row_state_name = '';
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state = DB::table('state_list')
-                                ->select('*')
-                                ->where('id', @$row->state)
-                                ->first();
-                            $row_state_name = @$row_state->state;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    $city = '';
-                    $row_city_name = '';
-
-                    if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
-                    } else {
-                        $row_city_name = @$row->city;
-                    }
                     $row_country_name = @$row->country_name;
                     $row_state_name = @$row->state_name;
                     $row_city_name = @$row->city_name;
                     echo '<div class="d-flex flex-column">
                     	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        ucwords($row_city_name) . ', ' . strtoupper($row_country_name) .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        @$row->qualification_name .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 20)) .
                         '</span>
                     </div>';
                 @endphp
@@ -411,7 +369,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="9" style="text-align: center; color: black;">
+        <td colspan="8" style="text-align: center; color: black;">
             No data available in table
         </td>
 
