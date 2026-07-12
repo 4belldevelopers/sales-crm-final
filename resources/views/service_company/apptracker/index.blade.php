@@ -669,7 +669,6 @@
                                         <th class="">Exp.</th>
                                         <th class="">Salary</th>
                                         <th class="">Notice</th>
-                                        <th class="">Education</th>
                                         <th class="">Interview</th>
                                         <th class="">Location</th>
                                         <th class="">Ownership</th>
