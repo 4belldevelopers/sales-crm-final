@@ -179,7 +179,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 		->where('company_coins.company_id',$company_id)
         ->where('company_coins.event_type','operational')
         ->where('coin_orders.status',1)
-        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id')
+        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id','coin_orders.price as order_price')
         ->get()
         ->map(function ($coinOrder) {
             $coinOrder->coin_order_events = DB::table('coin_order_events')
@@ -198,7 +198,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 		->where('company_coins.company_id',$company_id)
         ->where('company_coins.event_type','sales')
         ->where('coin_orders.status',1)
-        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id')
+        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id','coin_orders.price as order_price')
         ->get()
         ->map(function ($coinOrder) {
             $coinOrder->coin_order_events = DB::table('coin_order_events')
@@ -265,7 +265,16 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         })->first();
 		$this->actual_count = $actual_count->coins ?? 0;
         $this->remain_coins = $remain_coins->coins ?? 0;
-        
+
+        // Wallet summary stats for the Overview tab — derived entirely from
+        // $current_coins_operational (already fetched above), so this adds
+        // zero extra queries.
+        $this->op_total_purchased = collect($this->current_coins_operational)->sum('order_coins');
+        $this->op_total_spend     = collect($this->current_coins_operational)->sum('order_price');
+        $this->op_coins_used      = max(0, $this->op_total_purchased - $this->remain_coins);
+        $opExpiry = collect($this->current_coins_operational)->pluck('end_date')->filter()->max();
+        $this->op_plan_expiry = $opExpiry ? Carbon::parse($opExpiry) : null;
+        $this->op_days_left   = $this->op_plan_expiry ? max(0, (int) now()->diffInDays($this->op_plan_expiry, false)) : 0;
 
 
         $actual_count_sales  = DB::table('coin_transection_logs')
@@ -287,6 +296,14 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 		$this->actual_count_sales = $actual_count_sales->coins ?? 0;
         $this->remain_coins_sales = $remain_coins_sales->coins ?? 0;
 
+        // Same wallet summary stats, sales side — zero extra queries.
+        $this->sal_total_purchased = collect($this->current_coins_sales)->sum('order_coins');
+        $this->sal_total_spend     = collect($this->current_coins_sales)->sum('order_price');
+        $this->sal_coins_used      = max(0, $this->sal_total_purchased - $this->remain_coins_sales);
+        $salExpiry = collect($this->current_coins_sales)->pluck('end_date')->filter()->max();
+        $this->sal_plan_expiry = $salExpiry ? Carbon::parse($salExpiry) : null;
+        $this->sal_days_left   = $this->sal_plan_expiry ? max(0, (int) now()->diffInDays($this->sal_plan_expiry, false)) : 0;
+
         return view('service_company.subscription.newindex', $this->data);
     }
 
@@ -300,7 +317,43 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
     public function transactions()
     {
         $company_id = auth()->user()->company_id;
+        $this->company_id = $company_id;
+        $this->cart_transaction_history = $this->loadTransactionHistory($company_id);
 
+        return view('service_company.transactions.subscription', $this->data);
+    }
+
+    /**
+     * Lazy-load endpoint for the Transactions tab on the redesigned
+     * Subscription & Wallet Center page (newindex). Kept separate from
+     * newindex() itself so the tab's data — and its Razorpay status-sync
+     * calls — only run when the user actually opens the tab, not on every
+     * Subscription page load.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transactionsAjax()
+    {
+        $company_id = auth()->user()->company_id;
+        $cart_transaction_history = $this->loadTransactionHistory($company_id);
+
+        $html = view('service_company.ajax_pages.subscription_transactions', [
+            'cart_transaction_history' => $cart_transaction_history,
+        ])->render();
+
+        return response()->json(['html' => $html]);
+    }
+
+    /**
+     * Shared query behind both transactions() and transactionsAjax(): syncs
+     * pending Razorpay orders' status, then returns the paginated, tenant-
+     * scoped transaction history.
+     *
+     * @param int $company_id
+     * @return \Illuminate\Pagination\LengthAwarePaginator
+     */
+    private function loadTransactionHistory($company_id)
+    {
         $transaction_history = DB::table('cart_transaction_history')->select('cart_transaction_history.*')
         ->where('company_id','=',$company_id)
         ->where('payment_gateway', 'razorpay')
@@ -337,10 +390,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             }
         }
 
-        $this->company_id = $company_id;
-        $this->cart_transaction_history = DB::table('cart_transaction_history')->select('cart_transaction_history.*')->where('cart_transaction_history.company_id','=',$company_id)->orderByDesc('id')->paginate(50);
-
-        return view('service_company.transactions.subscription', $this->data);
+        return DB::table('cart_transaction_history')->select('cart_transaction_history.*')->where('cart_transaction_history.company_id','=',$company_id)->orderByDesc('id')->paginate(50);
     }
 
 

@@ -168,6 +168,84 @@
             font-weight: bold !important;
         }
 
+        /* ===== Subscription & Wallet Center redesign ===== */
+        .wallet-center-header * { box-sizing: border-box; }
+        .wallet-center-header h1 { font-size: 16px; }
+        .wallet-buy-coins-btn {
+            background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;
+            font-weight: 600; font-size: 12px; padding: 8px 16px; border-radius: 8px;
+        }
+        .wallet-buy-coins-btn:hover { background: #ede9fe; color: #6d28d9; }
+
+        .wallet-card {
+            border: 1px solid #e4e6ef; border-radius: 14px; padding: 20px 22px;
+            cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s;
+        }
+        .wallet-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+        .wallet-card .wallet-card-check { color: #d0d3dc; font-size: 20px; }
+        .wallet-card .wallet-card-icon {
+            width: 40px; height: 40px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 16px;
+        }
+        .wallet-card-operational .wallet-card-icon { background: rgba(109,40,217,.12); color: #6d28d9; }
+        .wallet-card-sales .wallet-card-icon { background: rgba(16,163,74,.12); color: #10a34a; }
+        .wallet-card .badge.badge-light-success { font-size: 9px; padding: 3px 8px; }
+        .wallet-card-balance { font-size: 26px; font-weight: 800; color: #181c32; margin-top: 14px; line-height: 1.2; }
+        .wallet-card-balance-label { font-size: 11px; color: #8a8fa3; margin-bottom: 14px; }
+        .wallet-card-stats { border-top: 1px dashed #e4e6ef; padding-top: 12px; }
+        .wallet-card-stat-label { font-size: 10px; color: #8a8fa3; }
+
+        .wallet-card.opra-tab-plan { border-color: #6d28d9; box-shadow: 0 0 0 1px #6d28d9; }
+        .wallet-card.opra-tab-plan .wallet-card-check { color: #6d28d9; }
+        .wallet-card.salse-tab-plan { border-color: #10a34a; box-shadow: 0 0 0 1px #10a34a; }
+        .wallet-card.salse-tab-plan .wallet-card-check { color: #10a34a; }
+
+        .wallet-info-banner {
+            background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px;
+            padding: 10px 16px; font-size: 12px; color: #4c1d95;
+        }
+        .wallet-center-header.wallet-mode-sales .wallet-info-banner {
+            background: #ecfdf3; border-color: #b7ebc6; color: #14532d;
+        }
+
+        .wallet-tab-nav {
+            list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0;
+            padding: 0; border-bottom: 1px solid #e4e6ef;
+        }
+        .wallet-tab-link {
+            display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px;
+            font-size: 12px; font-weight: 600; color: #7e8299; border-bottom: 2px solid transparent;
+            text-decoration: none; cursor: pointer;
+        }
+        .wallet-tab-link:hover { color: #4c1d95; text-decoration: none; }
+        .wallet-tab-link.active { color: #6d28d9; border-bottom-color: #6d28d9; }
+        .wallet-center-header.wallet-mode-sales .wallet-tab-link.active { color: #10a34a; border-bottom-color: #10a34a; }
+
+        .wallet-tab-pane { padding: 0 5px; }
+
+        .wallet-stat-card {
+            border: 1px solid #e4e6ef; border-radius: 10px; padding: 14px 16px; background: #fafaff;
+        }
+        .wallet-stat-value { font-size: 18px; font-weight: 800; color: #181c32; }
+        .wallet-stat-label { font-size: 11px; color: #8a8fa3; margin-top: 2px; }
+
+        .wallet-package-preview {
+            border: 1px solid #e4e6ef; border-radius: 10px; padding: 16px; height: 100%;
+        }
+
+        .wallet-coming-soon {
+            text-align: center; padding: 60px 10px; color: #8a8fa3;
+        }
+        .wallet-coming-soon i { font-size: 34px; display: block; margin-bottom: 10px; color: #c4c8d6; }
+
+        @media (max-width: 1366px) {
+            .wallet-card-balance { font-size: 22px; }
+            .wallet-stat-value { font-size: 16px; }
+        }
+        @media (max-width: 767px) {
+            .wallet-tab-nav { overflow-x: auto; flex-wrap: nowrap; }
+            .wallet-tab-link { white-space: nowrap; }
+        }
     </style>
 @endpush
 
@@ -212,29 +290,110 @@
             <div id="kt_content_container" class="container-fluid px-3">
                 <!--begin::Operations/Sales-->
                 <div class="card mt-2" id="kt_pricing">
-                    <!--begin::Nav group-->
-                    <div class="d-flex flex-column pt-10 pb-0">
-                        <div class="mb-8 text-center">
-                            <h1 class="text-gray-900 fs-2hx fw-normal mb-2">Welcome back,
-                                <span class=" fs-2hx fw-bolder me-2">{{ $username }}</span>
-                            </h1>
+                    <!--begin::Wallet Center header-->
+                    <div class="wallet-center-header px-5 px-xl-9 pt-8">
+                        <div class="d-flex flex-wrap flex-stack mb-6">
+                            <div class="d-flex flex-column mb-3 mb-md-0">
+                                <h1 class="d-flex align-items-center text-gray-900 fw-bold mb-1" style="font-size:16px;">
+                                    Subscription &amp; Wallet Center
+                                </h1>
+                                <div class="text-gray-500 fs-8">Manage all your wallets, packages, coins and transactions in one place.</div>
+                            </div>
+                            <a href="javascript:;" class="btn btn-sm wallet-buy-coins-btn"
+                                onclick="switchWalletCenterTab('packages'); return false;">
+                                <i class="fa fa-coins me-1"></i> <span id="walletBuyCoinsLabel">Buy Coins</span>
+                            </a>
                         </div>
-                        <div class="nav-group nav-group-outline mx-auto mb-15" data-kt-buttons="true">
-                            <button
-                                class="btn btn-color-gray-600 btn-active btn-active-secondary px-6 py-3 me-2 package-switch opra-tab-plan"
-                                data-kt-plan="operational">
-                                Operational Package
-                            </button>
 
-                            <button class="btn btn-color-gray-600 btn-active btn-active-secondary px-6 py-3 package-switch"
-                                data-kt-plan="sales">
-                                Sales Package
-                            </button>
+                        <!--begin::Wallet cards-->
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <div class="wallet-card wallet-card-operational package-switch opra-tab-plan wallet-card-active"
+                                    data-kt-plan="operational">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="wallet-card-icon"><i class="fa fa-cog"></i></span>
+                                            <div class="ms-3">
+                                                <div class="fw-bold fs-6 text-gray-900">Operational Wallet</div>
+                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
+                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="row text-center wallet-card-stats">
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($op_coins_used) }}</div>
+                                            <div class="wallet-card-stat-label">Used Coins</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($op_total_purchased) }}</div>
+                                            <div class="wallet-card-stat-label">Purchased</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ $op_days_left }}</div>
+                                            <div class="wallet-card-stat-label">Days Validity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="wallet-card wallet-card-sales package-switch"
+                                    data-kt-plan="sales">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="wallet-card-icon"><i class="fa fa-briefcase"></i></span>
+                                            <div class="ms-3">
+                                                <div class="fw-bold fs-6 text-gray-900">Sales Wallet</div>
+                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
+                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="row text-center wallet-card-stats">
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($sal_coins_used) }}</div>
+                                            <div class="wallet-card-stat-label">Used Coins</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($sal_total_purchased) }}</div>
+                                            <div class="wallet-card-stat-label">Purchased</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ $sal_days_left }}</div>
+                                            <div class="wallet-card-stat-label">Days Validity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <!--end::Wallet cards-->
+
+                        <!--begin::Info banner-->
+                        <div class="wallet-info-banner mb-5">
+                            <i class="fa fa-shield-alt me-2"></i>
+                            <span>Your wallets are secure and private. All transactions and usage are kept separate for each wallet.</span>
+                        </div>
+                        <!--end::Info banner-->
+
+                        <!--begin::Tab nav-->
+                        <ul class="wallet-tab-nav">
+                            <li><a href="javascript:;" class="wallet-tab-link active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="packages" onclick="switchWalletCenterTab('packages');return false;"><i class="fa fa-box"></i> Packages</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="invoices" onclick="switchWalletCenterTab('invoices');return false;"><i class="fa fa-file-invoice"></i> Invoices</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="billing" onclick="switchWalletCenterTab('billing');return false;"><i class="fa fa-credit-card"></i> Billing</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="settings" onclick="switchWalletCenterTab('settings');return false;"><i class="fa fa-cog"></i> Settings</a></li>
+                        </ul>
+                        <!--end::Tab nav-->
                     </div>
-                    <!--end::Nav group-->
+                    <!--end::Wallet Center header-->
                     <!--begin::Card body-->
                     <div class="card-body position-relative px-0 py-0" id="kt_activitiesApplication_body">
+                        <div id="wallet-pane-overview" class="wallet-tab-pane">
                         <div class="row g-5 g-xl-10 mb-5 mb-xl-10 px-5">
                             <div class="col-xl-12 col-lg-12">
                                 <!--<div class="card h-lg-100" style="background: linear-gradient(112.14deg, #FF8A00 0%, #E96922 100%)">-->
@@ -351,10 +510,9 @@
                                                         </div>
                                                     </div>
                                                     <div class="m-0">
-                                                        <a href="#"
+                                                        <a href="javascript:;"
                                                             class="btn btn-color-primary bg-primary bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#kt_modal_upgrade_plan">
+                                                            onclick="switchWalletCenterTab('packages');return false;">
                                                             Upgrade Plan
                                                         </a>
                                                     </div>
@@ -489,10 +647,9 @@
                                                         </div>
                                                     </div>
                                                     <div class="m-0">
-                                                        <a href="#"
+                                                        <a href="javascript:;"
                                                             class="btn btn-color-success bg-success bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#sales_kt_modal_upgrade_plan">
+                                                            onclick="switchWalletCenterTab('packages');return false;">
                                                             Upgrade Plan
                                                         </a>
                                                     </div>
@@ -513,51 +670,138 @@
                                     </div>
                                 </div>
 
+                                <!--begin::Overview extras - Operational-->
+                                <div class="row g-4 mt-1 operational-packages">
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($op_total_purchased) }}</div>
+                                            <div class="wallet-stat-label">Total Coins Purchased</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($remain_coins) }}</div>
+                                            <div class="wallet-stat-label">Coins Available</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($op_coins_used) }}</div>
+                                            <div class="wallet-stat-label">Coins Used</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($op_total_spend) }}</div>
+                                            <div class="wallet-stat-label">Total Spend</div>
+                                        </div>
+                                    </div>
+                                </div>
 
-
-
-
-                                <!--begin::Modal - Upgrade plan-->
-                                <div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
-                                    <!--begin::Modal dialog-->
-                                    <div class="modal-dialog modal-xl">
-                                        <!--begin::Modal content-->
-                                        <div class="modal-content rounded">
-                                            <!--begin::Modal header-->
-                                            <div class="modal-header justify-content-end border-0 pb-0">
-                                                <!--begin::Close-->
-                                                <div class="btn btn-sm btn-icon btn-active-color-primary closemodal"
-                                                    data-bs-dismiss="modal">
-                                                    <i class="fa fa-times ki-cross fs-1"><span class="path1"></span><span
-                                                            class="path2"></span></i>
-                                                </div>
-                                                <!--end::Close-->
-                                            </div>
-                                            <!--end::Modal header-->
-
-                                            <!--begin::Modal body-->
-                                            <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
-                                                <!--begin::Heading-->
-                                                <div class="mb-13 text-center">
-                                                    <h1 class="mb-3">Upgrade a Plan</h1>
-
-                                                    <div class="text-muted fw-semibold fs-5">
-                                                        If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
-                                                            class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
+                                <div class="mt-8 operational-packages">
+                                    <div class="d-flex flex-stack mb-4">
+                                        <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Operational Wallet</h4>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                    </div>
+                                    <div class="row g-4">
+                                        @foreach (collect($operational_package)->take(3) as $opr_preview)
+                                            <div class="col-md-4">
+                                                <div class="wallet-package-preview">
+                                                    <div class="fw-bold fs-6 text-gray-900">{{ $opr_preview['title'] }}</div>
+                                                    <div class="text-gray-500 fs-8 mb-2">{{ $opr_preview['days'] ? $opr_preview['days'] . ' Days' : 'Custom' }}</div>
+                                                    <div class="fs-3 fw-bolder text-primary">
+                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                        {{ $currency == 'INR' ? $opr_preview['price'] : $opr_preview['price_usd'] }}
                                                     </div>
+                                                    <div class="text-gray-500 fs-8">{{ $opr_preview['coins'] }} Coins</div>
                                                 </div>
-                                                <!--end::Heading-->
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <!--end::Overview extras - Operational-->
 
-                                                <!--begin::Plans-->
-                                                <div class="d-flex flex-column">
-                                                    <!--begin::Nav group-->
+                                <!--begin::Overview extras - Sales-->
+                                <div class="row g-4 mt-1 salse-packages" style="display:none">
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($sal_total_purchased) }}</div>
+                                            <div class="wallet-stat-label">Total Coins Purchased</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($remain_coins_sales) }}</div>
+                                            <div class="wallet-stat-label">Coins Available</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($sal_coins_used) }}</div>
+                                            <div class="wallet-stat-label">Coins Used</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($sal_total_spend) }}</div>
+                                            <div class="wallet-stat-label">Total Spend</div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                                    <!--begin::Row-->
-                                                    <div class="row">
-                                                            <!--begin::Col-->
-                                                            {{-- @dd($operational_package); --}}
-                                                            @if ($operational_package)
-                                                                @foreach ($operational_package as $opr_val)
+                                <div class="mt-8 salse-packages" style="display:none">
+                                    <div class="d-flex flex-stack mb-4">
+                                        <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Sales Wallet</h4>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                    </div>
+                                    <div class="row g-4">
+                                        @foreach (collect($sales_package)->take(3) as $sales_preview)
+                                            <div class="col-md-4">
+                                                <div class="wallet-package-preview">
+                                                    <div class="fw-bold fs-6 text-gray-900">{{ $sales_preview['title'] }}</div>
+                                                    <div class="text-gray-500 fs-8 mb-2">{{ $sales_preview['days'] ? $sales_preview['days'] . ' Days' : 'Custom' }}</div>
+                                                    <div class="fs-3 fw-bolder text-success">
+                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                        {{ $currency == 'INR' ? $sales_preview['price'] : $sales_preview['price_usd'] }}
+                                                    </div>
+                                                    <div class="text-gray-500 fs-8">{{ $sales_preview['coins'] }} Coins</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <!--end::Overview extras - Sales-->
+
+                                </div>
+                                <!--end::wallet-pane-overview-->
+
+                                <div id="wallet-pane-packages" class="wallet-tab-pane" style="display:none">
+
+
+
+                                <!--begin::Packages - Operational-->
+                                <div id="kt_modal_upgrade_plan" class="operational-packages">
+                                    <!--begin::Heading-->
+                                    <div class="mb-13 text-center">
+                                        <h1 class="mb-3">Choose an Operational Package</h1>
+
+                                        <div class="text-muted fw-semibold fs-5">
+                                            If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
+                                                class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
+                                        </div>
+                                    </div>
+                                    <!--end::Heading-->
+
+                                    <!--begin::Plans-->
+                                    <div class="d-flex flex-column">
+                                        <!--begin::Nav group-->
+
+                                        <!--begin::Row-->
+                                        <div class="row">
+                                                <!--begin::Col-->
+                                                {{-- @dd($operational_package); --}}
+                                                @if ($operational_package)
+                                                    @foreach ($operational_package as $opr_val)
 
                                                                 @php
                                                                  $visibility_coins = 1; 
@@ -780,39 +1024,14 @@
                                                     </button>
                                                 </div>
                                                 <!--end::Actions-->
-                                            </div>
-                                            <!--end::Modal body-->
-                                        </div>
-                                        <!--end::Modal content-->
-                                    </div>
-                                    <!--end::Modal dialog-->
                                 </div>
-                                <!--end::Modal - Upgrade plan--><!--begin::Modal - Create App-->
+                                <!--end::Packages - Operational-->
 
-                                <!--begin::Modal - sales_kt_modal_upgrade_plan Upgrade plan-->
-                                <div class="modal fade" id="sales_kt_modal_upgrade_plan" tabindex="-1"
-                                    aria-hidden="true">
-                                    <!--begin::Modal dialog-->
-                                    <div class="modal-dialog modal-xl">
-                                        <!--begin::Modal content-->
-                                        <div class="modal-content rounded">
-                                            <!--begin::Modal header-->
-                                            <div class="modal-header justify-content-end border-0 pb-0">
-                                                <!--begin::Close-->
-                                                <div class="btn btn-sm btn-icon btn-active-color-primary closemodal"
-                                                    data-bs-dismiss="modal">
-                                                    <i class="fa fa-times ki-cross fs-1"><span class="path1"></span><span
-                                                            class="path2"></span></i>
-                                                </div>
-                                                <!--end::Close-->
-                                            </div>
-                                            <!--end::Modal header-->
-
-                                            <!--begin::Modal body-->
-                                            <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
-                                                <!--begin::Heading-->
+                                <!--begin::Packages - Sales-->
+                                <div id="sales_kt_modal_upgrade_plan" class="salse-packages" style="display:none">
+                                    <!--begin::Heading-->
                                                 <div class="mb-13 text-center">
-                                                    <h1 class="mb-3">Upgrade a Plan</h1>
+                                                    <h1 class="mb-3">Choose a Sales Package</h1>
 
                                                     <div class="text-muted fw-semibold fs-5">
                                                         If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
@@ -1050,16 +1269,8 @@
                                                     </button>
                                                 </div>
                                                 <!--end::Actions-->
-                                            </div>
-                                            <!--end::Modal body-->
-                                        </div>
-                                        <!--end::Modal content-->
-                                    </div>
-                                    <!--end::Modal dialog-->
                                 </div>
-                                <!--end::Modal - sales_kt_modal_upgrade_plan Upgrade plan--><!--begin::Modal - Create App-->
-
-                            </div>
+                                <!--end::Packages - Sales-->
 
 
                            
@@ -1185,12 +1396,6 @@
                                         </div>
                                         <div class="py-2 bg-light px-0"></div>
                                         <!--Begin top up history-->
-                                        <div class="row px-5 py-5">
-                                            <a href="{{ route('service_company.transactions.subscription') }}"
-                                                class="btn btn-sm btn-color-primary bg-primary bg-opacity-15 bg-hover-opacity-25 fw-semibold">
-                                                View Transaction History
-                                            </a>
-                                        </div>
                                         <!--end top up history-->
                                     </div>
                                 </div>
@@ -1314,18 +1519,54 @@
                                         </div>
                                         <div class="py-2 bg-light px-0"></div>
                                         <!--Begin top up history-->
-                                        <div class="row px-5 py-5">
-                                            <a href="{{ route('service_company.transactions.subscription') }}"
-                                                class="btn btn-sm btn-color-success bg-success bg-opacity-15 bg-hover-opacity-25 fw-semibold">
-                                                View Transaction History
-                                            </a>
-                                        </div>
                                         <!--end top up history-->
                                     </div>
                                 </div>
                             </div>
 
+                                </div>
+                                <!--end::wallet-pane-packages-->
 
+                                <!--begin::wallet-pane-transactions-->
+                                <div id="wallet-pane-transactions" class="wallet-tab-pane" style="display:none">
+                                    <div id="walletTransactionsContent" class="text-center text-muted py-15">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        Loading transactions...
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-transactions-->
+
+                                <!--begin::wallet-pane-invoices-->
+                                <div id="wallet-pane-invoices" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-file-invoice"></i>
+                                        <div class="fw-bold fs-6 mt-3">Invoices</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-invoices-->
+
+                                <!--begin::wallet-pane-billing-->
+                                <div id="wallet-pane-billing" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-credit-card"></i>
+                                        <div class="fw-bold fs-6 mt-3">Billing</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-billing-->
+
+                                <!--begin::wallet-pane-settings-->
+                                <div id="wallet-pane-settings" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-cog"></i>
+                                        <div class="fw-bold fs-6 mt-3">Settings</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-settings-->
+
+                            </div>
 
                         </div>
                         <!--end::Card body-->
@@ -1425,8 +1666,62 @@
                 setTimeout(() => {
                     $(this).removeClass('active');
                 }, 100);
-                
+
             })
+
+            // Wallet Center: cosmetic-only wallet color mode + "Buy Coins" label.
+            // Added as a SEPARATE handler so the existing .package-switch click
+            // logic above (which drives the actual operational/sales content
+            // toggle) is never touched.
+            $('.package-switch').on('click', function() {
+                var plan = $(this).data('kt-plan');
+                if (plan === 'sales') {
+                    $('.wallet-center-header').addClass('wallet-mode-sales');
+                    $('#walletBuyCoinsLabel').text('Buy Sales Coins');
+                } else {
+                    $('.wallet-center-header').removeClass('wallet-mode-sales');
+                    $('#walletBuyCoinsLabel').text('Buy Coins');
+                }
+            });
+
+            // Wallet Center: top-level tab switching (Overview / Packages /
+            // Transactions / Invoices / Billing / Settings). Pure client-side
+            // show/hide — all tab content is already in the DOM except
+            // Transactions, which is lazy-loaded once via AJAX on first view.
+            var walletTransactionsLoaded = false;
+
+            window.switchWalletCenterTab = function(tab) {
+                $('.wallet-tab-pane').hide();
+                $('#wallet-pane-' + tab).show();
+                $('.wallet-tab-link').removeClass('active');
+                $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('active');
+
+                if (tab === 'transactions' && !walletTransactionsLoaded) {
+                    walletTransactionsLoaded = true;
+                    $.ajax({
+                        url: "{{ route('service_company.transactions.subscriptionAjax') }}",
+                        type: 'GET',
+                        success: function(response) {
+                            $('#walletTransactionsContent').html(response.html);
+                        },
+                        error: function() {
+                            walletTransactionsLoaded = false;
+                            $('#walletTransactionsContent').html(
+                                '<div class="text-center text-danger py-10">Could not load transactions. Please try again.</div>'
+                            );
+                        }
+                    });
+                }
+            };
+
+            // Deep-link support: sidebar links to this page can append
+            // #tab=packages (etc.) to open directly on that tab.
+            (function() {
+                var match = /tab=([a-z]+)/.exec(window.location.hash || '');
+                if (match && $('#wallet-pane-' + match[1]).length) {
+                    switchWalletCenterTab(match[1]);
+                }
+            })();
 
 
             $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {

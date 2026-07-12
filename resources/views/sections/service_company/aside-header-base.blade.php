@@ -482,34 +482,46 @@ $productAllowCompany = GeneralMethod::companiesType();
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->
-                            </span> <span class="menu-title">@lang('menu.subscription')</span><span class="menu-arrow"></span>
+                            </span> <span class="menu-title">Subscription &amp; Wallets</span><span class="menu-arrow"></span>
                         </span>
                         <div class="menu-sub menu-sub-accordion menu-active-bg">
-                            <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                                {{-- <a class="" href="{{ route('service_company.subscribe.index') }}"> <span
-                                        class="menu-link {{ request()->is('service_company/subscribe') ? 'active' : '' }}">
-                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Deductions</span> </span> </a> --}}
-                                <a class="" href="{{ route('service_company.subscribe.newindex') }}"> <span
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=overview"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Overview</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=packages"> <span
                                         class="menu-link {{ request()->is('service_company/new-subscribe/newindex') ? 'active' : '' }}">
                                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Subscription Packages</span> </span> </a>
-
-                                <a class="" href="{{ route('service_company.transactions.subscription') }}"> <span
-                                        class="menu-link {{ request()->is('service_company/transactions/subscription') ? 'active' : '' }}">
-                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Packages</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=transactions"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
                                             class="menu-title">Transactions</span> </span> </a>
-
-
-                                    <a class="" href="{{ route('service_company.subscribe.transectionLog') }}?pagetype=operationaltab&page=1">
-                                        <span
-                                            class="menu-link {{ request()->is('subscribe/transection-log') ? 'active' : '' }}">
-                                            <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                                class="menu-title">Coins Activity</span> </span> </a>            
-                                {{-- <a class="" href="{{ route('service_company.subscribe.history') }}"> <span
-                                        class="menu-link {{ request()->is('service_company/subscribe/history') ? 'active' : '' }}">
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=invoices"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Invoices</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=billing"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Billing</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=settings"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Settings</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.transectionLog') }}?pagetype=operationaltab&page=1">
+                                    <span
+                                        class="menu-link {{ request()->is('subscribe/transection-log') ? 'active' : '' }}">
                                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">History</span> </span> </a> --}}
+                                            class="menu-title">Coins Activity</span> </span> </a>
                             </div>
                         </div>
                     </div>
