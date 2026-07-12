@@ -383,8 +383,12 @@
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center py-1">
                     @if (in_array('view_jobs', $userPermissions))
-                        <a href="{{ route('service_company.jobs.viewmore', $job->id) }}"
-                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2">
+                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                             defined once in the shared layout) that the job title/logo already
+                             uses elsewhere — .show-detail-open's click handler in
+                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+                        <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
                             View Job
                         </a>
                     @endif
