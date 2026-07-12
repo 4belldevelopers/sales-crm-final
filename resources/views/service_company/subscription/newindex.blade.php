@@ -195,6 +195,18 @@
         .wallet-card-stats { border-top: 1px dashed #e4e6ef; padding-top: 12px; }
         .wallet-card-stat-label { font-size: 10px; color: #8a8fa3; }
 
+        /* .package-switch.opra-tab-plan / .salse-tab-plan are pre-existing
+           global rules meant for small pill buttons (solid bg + white bold
+           text). Reusing those class names on the wallet cards (needed so
+           the existing JS toggle still recognizes them) drags that styling
+           in too, so neutralize it before applying the wallet card's own
+           "active wallet" look. */
+        .wallet-card.package-switch.opra-tab-plan,
+        .wallet-card.package-switch.salse-tab-plan {
+            background-color: #fff !important;
+            color: #181c32 !important;
+            font-weight: 400 !important;
+        }
         .wallet-card.opra-tab-plan { border-color: #6d28d9; box-shadow: 0 0 0 1px #6d28d9; }
         .wallet-card.opra-tab-plan .wallet-card-check { color: #6d28d9; }
         .wallet-card.salse-tab-plan { border-color: #10a34a; box-shadow: 0 0 0 1px #10a34a; }
@@ -218,8 +230,11 @@
             text-decoration: none; cursor: pointer;
         }
         .wallet-tab-link:hover { color: #4c1d95; text-decoration: none; }
-        .wallet-tab-link.active { color: #6d28d9; border-bottom-color: #6d28d9; }
-        .wallet-center-header.wallet-mode-sales .wallet-tab-link.active { color: #10a34a; border-bottom-color: #10a34a; }
+        /* Named wt-active, not active — this codebase has a pre-existing
+           global ".active { color: white !important; }" rule that would
+           otherwise make the active tab's text invisible. */
+        .wallet-tab-link.wt-active { color: #6d28d9; border-bottom-color: #6d28d9; }
+        .wallet-center-header.wallet-mode-sales .wallet-tab-link.wt-active { color: #10a34a; border-bottom-color: #10a34a; }
 
         .wallet-tab-pane { padding: 0 5px; }
 
@@ -381,7 +396,7 @@
 
                         <!--begin::Tab nav-->
                         <ul class="wallet-tab-nav">
-                            <li><a href="javascript:;" class="wallet-tab-link active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link wt-active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
                             <li><a href="javascript:;" class="wallet-tab-link" data-tab="packages" onclick="switchWalletCenterTab('packages');return false;"><i class="fa fa-box"></i> Packages</a></li>
                             <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
                             <li><a href="javascript:;" class="wallet-tab-link" data-tab="invoices" onclick="switchWalletCenterTab('invoices');return false;"><i class="fa fa-file-invoice"></i> Invoices</a></li>
@@ -396,280 +411,6 @@
                         <div id="wallet-pane-overview" class="wallet-tab-pane">
                         <div class="row g-5 g-xl-10 mb-5 mb-xl-10 px-5">
                             <div class="col-xl-12 col-lg-12">
-                                <!--<div class="card h-lg-100" style="background: linear-gradient(112.14deg, #FF8A00 0%, #E96922 100%)">-->
-                                <div class="card h-lg-100 operational-packages"
-                                    style="background: dark;box-shadow: 0px 0px 3px 0px #cfcfcf;">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-sm-9 pe-0 mb-5 mb-sm-0">
-                                                <div
-                                                    class="d-flex justify-content-between h-100 flex-column pt-xl-5 pb-xl-2 ps-xl-7">
-                                                    <div class="mb-7">
-                                                        <div class="mb-6">
-                                                            <h4 class="fs-2 fw-semibold text-dark mb-0">Current Plan</h4>
-                                                        </div>
-
-                                                        <div class="d-flex align-items-center flex-wrap d-grid gap-2 ">
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Current
-                                                                        Plan</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? $current_coins_operational[0]['title'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Expiration
-                                                                        Date</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? date('d M Y ', strtotime($current_coins_operational[0]['end_date'])) : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Credit
-                                                                        Coins</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? $current_coins_operational[0]['actual_coins'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-                                                    <div class="m-0">
-                                                        <a href="javascript:;"
-                                                            class="btn btn-color-primary bg-primary bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            onclick="switchWalletCenterTab('packages');return false;">
-                                                            Upgrade Plan
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-3" style="height: 200px;width: 200px; display: flex;justify-content: center;align-items: center;text-align: center;position: relative;">
-                                                 <canvas id="gaugeChart" height="50" width="50" style="display: block; box-sizing: border-box; height: 50px; width: 50px;"></canvas> 
-                                                  <div style="position: absolute; top: 105px; text-align: center;">
-                                                        <text x="150" y="145" text-anchor="middle" dominant-baseline="auto" font-size="12px" font-family="inherit" font-weight="700" fill="#99a1b7" class="apexcharts-text apexcharts-datalabel-label" style="font-family: inherit;">Available Coins</text><br>
-                                                                        <text x="150" y="126" text-anchor="middle" dominant-baseline="auto" font-size="24px" font-family="inherit" font-weight="600" fill="#071437" class="apexcharts-text apexcharts-datalabel-value" style="font-family: inherit;">{{ $current_coins_operational ? $current_coins_operational[0]['coins'] : '' }}</text>
-                                                    </div>
-
-                                                <div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div class="card h-lg-100 salse-packages"
-                                    style="background: dark;box-shadow: 0px 0px 3px 0px #cfcfcf; display:none">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-sm-9 pe-0 mb-5 mb-sm-0">
-                                                <div
-                                                    class="d-flex justify-content-between h-100 flex-column pt-xl-5 pb-xl-2 ps-xl-7">
-                                                    <div class="mb-7">
-                                                        <div class="mb-6">
-                                                            <h4 class="fs-2 fw-semibold text-dark mb-0">Current Plan</h4>
-                                                        </div>
-
-                                                        <div class="d-flex align-items-center flex-wrap d-grid gap-2 ">
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: green !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Current
-                                                                        Plan</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? $current_coins_sales[0]['title'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                         opacity="0.3" style="fill: green !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Expiration
-                                                                        Date</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? date('d M Y ', strtotime($current_coins_sales[0]['end_date'])) : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                         opacity="0.3" style="fill: green !important;"/>
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Credit
-                                                                        Coins</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? $current_coins_sales[0]['actual_coins'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-                                                    <div class="m-0">
-                                                        <a href="javascript:;"
-                                                            class="btn btn-color-success bg-success bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            onclick="switchWalletCenterTab('packages');return false;">
-                                                            Upgrade Plan
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-3" style="height: 200px;width: 200px; display: flex; justify-content: center; align-items: center; text-align: center;position: relative;">
-
-                                                <canvas id="gaugeChartSales" height="50" width="50" style="display: block; box-sizing: border-box; height: 50px; width: 50px;"></canvas> 
-
-                                                 <div style="position: absolute; top: 105px; text-align: center;">
-                                                        <text x="150" y="145" text-anchor="middle" dominant-baseline="auto" font-size="12px" font-family="inherit" font-weight="700" fill="#99a1b7" class="apexcharts-text apexcharts-datalabel-label" style="font-family: inherit;">Available Coins</text><br>
-                                                                        <text x="150" y="126" text-anchor="middle" dominant-baseline="auto" font-size="24px" font-family="inherit" font-weight="600" fill="#071437" class="apexcharts-text apexcharts-datalabel-value" style="font-family: inherit;">{{ $current_coins_sales ? $current_coins_sales[0]['coins'] : '' }}</text>
-                                                    </div>
-                                                <div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!--begin::Overview extras - Operational-->
                                 <div class="row g-4 mt-1 operational-packages">
                                     <div class="col-6 col-md-3">
@@ -1583,56 +1324,6 @@
         <script src="https://js.stripe.com/v3/"></script>
         <script src="{{ asset('assets/node_modules/switchery/dist/switchery.min.js') }}<?php echo TM_VERSION; ?>"></script>
 
-        <script>
-        const vctx = document.getElementById('gaugeChart').getContext('2d');
-
-        new Chart(vctx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: ["{{$actual_count}}", "{{$remain_coins}}"], // 75% filled
-                    backgroundColor: ['#122ef5', '#E2E8F0'], // blue + light gray
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                rotation: -90,
-                circumference: 180,
-                cutout: '85%',
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                }
-            }
-        });
-        
-    </script>
-     <script>
-        const vctxs = document.getElementById('gaugeChartSales').getContext('2d');
-
-        new Chart(vctxs, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: ["{{$actual_count_sales}}", "{{$remain_coins_sales}}"], // 75% filled
-                    backgroundColor: ['#24ef21', '#E2E8F0'], // blue + light gray
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                rotation: -90,
-                circumference: 180,
-                cutout: '85%',
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                }
-            }
-        });
-        
-    </script>
 
         <script>
             var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
@@ -1693,8 +1384,8 @@
             window.switchWalletCenterTab = function(tab) {
                 $('.wallet-tab-pane').hide();
                 $('#wallet-pane-' + tab).show();
-                $('.wallet-tab-link').removeClass('active');
-                $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('active');
+                $('.wallet-tab-link').removeClass('wt-active');
+                $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('wt-active');
 
                 if (tab === 'transactions' && !walletTransactionsLoaded) {
                     walletTransactionsLoaded = true;
