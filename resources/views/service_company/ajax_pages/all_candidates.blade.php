@@ -479,20 +479,8 @@
             </td>
             <td>
                 @php
-                    echo ' <div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                            <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        strtoupper(@$row->skills) .
-                        '"></span> 
-                        </div>';
-                @endphp
-            </td>
-            <td>
-                @php
+                    // Location column — row 1: City, Country. Row 2: Education (merged in
+                    // from the old separate Qualification/Education column, now removed).
                     $country = '';
                     $row_country_name = '';
 
@@ -504,26 +492,6 @@
                                 $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
                                 foreach ($country_name_Arr as $cval) {
                                     $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = '';
-                    $row_state_name = '';
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state_name = @$row->state_name;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
                                 }
                             }
                         }
@@ -544,18 +512,14 @@
 
                     echo '<div class="d-flex flex-column">
                     	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        ucwords($row_city_name) . ', ' . ucwords($row_country_name) .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        htmlspecialchars(ucwords(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 10)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 15)) .
                         '</span>
                     </div>';
                 @endphp
