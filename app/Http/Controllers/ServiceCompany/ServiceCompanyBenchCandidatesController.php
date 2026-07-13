@@ -4816,6 +4816,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 					],
 				]);
 			} catch (\Exception $e) {
+				
 				\Log::error('ES commercial update failed for wiseId=' . $wiseId . ': ' . $e->getMessage());
 			}
 		}
