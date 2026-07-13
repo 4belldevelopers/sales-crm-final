@@ -355,6 +355,58 @@
                 @endphp
             </td>
             <!-- Salary end  -->
+            <!-- Notice start  -->
+            <td>
+                @php
+                    $np = $row->np_id;
+                    if (empty($np)) {
+                        $np = 'N/A';
+                    }
+                    if ($row->serving_notice_period_mode == 0) {
+                        if (!empty($row->np_id)) {
+                            $np = $row->np_id . '  Days';
+                        }
+                    } else {
+                        $np = $row->np_id;
+                    }
+
+                    if ($row->serving_notice_period_mode == 1) {
+                        $originalDate = $row->np_id;
+                        $np = 'SNP LWD ' . date('d-M-y', strtotime($originalDate));
+                        $today = date('Y-m-d');
+                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
+                              $np = "Immediate";
+                            }
+                    }
+
+                    // Notice period color: Immediate = green, numeric days notice =
+                    // orange, a real serving last-working-day date = purple. !important
+                    // is required because Bootstrap/Metronic's .text-dark utility class
+                    // sets color with !important, which otherwise beats a plain inline
+                    // style — so the class is dropped below and color is fully
+                    // inline-controlled instead.
+                    $npColorStyle = 'color:#181c32 !important;';
+                    if ($np === 'Immediate') {
+                        $npColorStyle = 'color:#16a34a !important;';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColorStyle = 'color:#d97706 !important;';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $npColorStyle = 'color:#7c3aed !important;';
+                    }
+
+                    echo '<div class="d-flex flex-column">
+                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
+                        $npColorStyle .
+                        '">' .
+                        @$np .
+                        '</a>
+                   <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
+                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
+                        '</span>
+                  </div>';
+                @endphp
+            </td>
+            <!-- Notice end  -->
             <!-- Location start  -->
             <td>
                 @php
@@ -427,58 +479,6 @@
                 @endphp
             </td>
             <!-- Location end  -->
-            <!-- Notice start  -->
-            <td>
-                @php
-                    $np = $row->np_id;
-                    if (empty($np)) {
-                        $np = 'N/A';
-                    }
-                    if ($row->serving_notice_period_mode == 0) {
-                        if (!empty($row->np_id)) {
-                            $np = $row->np_id . '  Days';
-                        }
-                    } else {
-                        $np = $row->np_id;
-                    }
-
-                    if ($row->serving_notice_period_mode == 1) {
-                        $originalDate = $row->np_id;
-                        $np = 'SNP LWD ' . date('d-M-y', strtotime($originalDate));
-                        $today = date('Y-m-d');
-                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                              $np = "Immediate";
-                            }
-                    }
-
-                    // Notice period color: Immediate = green, numeric days notice =
-                    // orange, a real serving last-working-day date = purple. !important
-                    // is required because Bootstrap/Metronic's .text-dark utility class
-                    // sets color with !important, which otherwise beats a plain inline
-                    // style — so the class is dropped below and color is fully
-                    // inline-controlled instead.
-                    $npColorStyle = 'color:#181c32 !important;';
-                    if ($np === 'Immediate') {
-                        $npColorStyle = 'color:#16a34a !important;';
-                    } elseif ($row->serving_notice_period_mode == 0) {
-                        $npColorStyle = 'color:#d97706 !important;';
-                    } elseif ($row->serving_notice_period_mode == 1) {
-                        $npColorStyle = 'color:#7c3aed !important;';
-                    }
-
-                    echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
-                        $npColorStyle .
-                        '">' .
-                        @$np .
-                        '</a>
-                   <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <!-- Notice end  -->
             <!-- Jobs start  -->
             <td>
                 @php
@@ -522,59 +522,54 @@
                 @endphp
             </td>
             <!-- Jobs end  -->
-            <!-- Stage start  -->
+            <!-- Date start  -->
+            {{-- <td>
+                @php
+
+                    $created_at = '';
+                    $created_at = $newDate = date('d M , Y', strtotime($row->created_at));
+
+                    echo '<div class="d-flex flex-column">
+                    			<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
+                        @$created_at .
+                        '</a> 
+                  			</div>';
+                @endphp
+            </td> --}}
+            <!-- Date end  -->
+            <!-- Status start  -->
             <td>
                 @php
-                    $stage_default_css = 'stage_sub_stage';
+                    // Job status: mirrors jobs.status ('active'/'hold'/'inactive') as
+                    // stored in Elasticsearch — only these 3 states are shown, as a
+                    // colored badge (green/orange/red), matching the Match% badge style
+                    // used elsewhere on this page.
+                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
+                    $rawStatus = strtolower(@$job_status_get->status);
 
-                    if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
-                        $stage_default_css = 'client_stage_sub_stage';
+                    if ($rawStatus == 'hold') {
+                        $status = 'Hold';
+                        $statusBg = '#fef3c7'; $statusColor = '#d97706';
+                    } elseif ($rawStatus == 'inactive') {
+                        $status = 'Closed';
+                        $statusBg = '#fee2e2'; $statusColor = '#dc2626';
+                    } else {
+                        $status = 'Hiring';
+                        $statusBg = '#dcfce7'; $statusColor = '#16a34a';
                     }
 
-                    if (
-                        $row->thirdparty_company_id > 0 &&
-                        $row->thirdparty_company_id == $company_id &&
-                        $row->master_status_id != 8
-                    ) {
-                        $stage_default_css = '';
-                    }
-
-                    $name = '';
-                    if ($row->master_status_id == 8) {
-                        $name = '';
-                    }
-                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->child_status_id)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
-                        }
-                    }
                     echo '<div class="d-flex flex-column">
-                        <a href="javascript.void(0);" data-row-id="' .
-                        @$row->id .
-                        '" class="d-flex flex-column ' .
-                        $stage_default_css .
-                        '" data-toggle="modal" data-target="#' .
-                        $stage_default_css .
-                        '">
-                            <span class="badge fw-bolder fs-6 ' .
-                        @$row->css_style .
-                        ' px-2 py-1">' .
-                        ucwords(mb_substr($row->name, 0, 10)) .
+                       <span class="badge my-1" style="background:' .
+                        $statusBg .
+                        ';color:' .
+                        $statusColor .
+                        ';font-weight:600;">' .
+                        $status .
                         '</span>
-                            <span class="text-muted fw-bold d-block fs-7">' .
-                        @$name .
-                        '</span>
-                        </a>
                     </div>';
-
                 @endphp
             </td>
-            <!-- Stage end  -->
+            <!-- Status end  -->
             <!-- Source start  -->
             <td>
                 @php
@@ -652,59 +647,59 @@
                 @endphp
             </td>
             <!-- Source end  -->
-            <!-- Date start  -->
-            {{-- <td>
-                @php
-
-                    $created_at = '';
-                    $created_at = $newDate = date('d M , Y', strtotime($row->created_at));
-
-                    echo '<div class="d-flex flex-column">
-                    			<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        @$created_at .
-                        '</a> 
-                  			</div>';
-                @endphp
-            </td> --}}
-            <!-- Date end  -->
-            <!-- Status start  -->
+            <!-- Stage start  -->
             <td>
                 @php
-                    $status = $active = $hold = $inactive = $class = $recommendation_id = '';
+                    $stage_default_css = 'stage_sub_stage';
 
-                    // $status = ucwords($row->job_status);
-                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
-                    $status = $job_status_get->status;
-
-                    $class = $job_status[$row->job_status];
-                    
-                    if ($status == 'Active') {
-                        $status = 'Hiring';
-                    }
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
+                    if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
+                        $stage_default_css = 'client_stage_sub_stage';
                     }
 
-                    $recommendation_text = __('messages.internal_tag');
-                    if ($row->client_comapny_id != $company_id) {
-                        $recommendation_text = __('messages.clinet_tag');
+                    if (
+                        $row->thirdparty_company_id > 0 &&
+                        $row->thirdparty_company_id == $company_id &&
+                        $row->master_status_id != 8
+                    ) {
+                        $stage_default_css = '';
                     }
 
+                    $name = '';
+                    if ($row->master_status_id == 8) {
+                        $name = '';
+                    }
+                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
+                        $childStatus = '';
+                        $childStatus = DB::table('candidate_status')
+                            ->select('*')
+                            ->where('id', $row->child_status_id)
+                            ->first();
+                        if (!empty($childStatus)) {
+                            $name = @$childStatus->name;
+                        }
+                    }
                     echo '<div class="d-flex flex-column">
-                       <a href="javascript:void(0);" class="fs-6 ' .
-                        @$class .
-                        ' text-hover-success">' .
-                        $status .
-                        '</a>
-                      <span class="fw-bold text-muted d-block fs-7">' .
-                        @$row->jobId .
-                        ' -' .
-                        $recommendation_text .
+                        <a href="javascript.void(0);" data-row-id="' .
+                        @$row->id .
+                        '" class="d-flex flex-column ' .
+                        $stage_default_css .
+                        '" data-toggle="modal" data-target="#' .
+                        $stage_default_css .
+                        '">
+                            <span class="badge fw-bolder fs-6 ' .
+                        @$row->css_style .
+                        ' px-2 py-1">' .
+                        ucwords(mb_substr($row->name, 0, 10)) .
                         '</span>
+                            <span class="text-muted fw-bold d-block fs-7">' .
+                        @$name .
+                        '</span>
+                        </a>
                     </div>';
+
                 @endphp
             </td>
-            <!-- Status end  -->
+            <!-- Stage end  -->
             <!-- Action start  -->
             <td>
                 @php

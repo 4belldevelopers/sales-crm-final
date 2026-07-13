@@ -1033,13 +1033,13 @@
                                     {{-- <th class="">Contacts</th> --}}
                                     <th class="">Exp.</th>
                                     <th class="">Salary</th>
-                                    <th class="">Location</th>
                                     <th class="">Notice</th>
+                                    <th class="">Location</th>
                                     <th class="">Jobs</th>
-                                    <th class="">Stage</th>
+                                    <th class="">Status</th>
                                     <th class="">Ownership</th>
                                     {{-- <th class="">Date</th> --}}
-                                    <th class="">Status</th>
+                                    <th class="">Stage</th>
                                     <th class="">Action</th>
                                 </tr>
                                 <!--end::Table row-->
