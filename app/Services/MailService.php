@@ -185,13 +185,14 @@ class MailService
     private function downloadAttachment($url)
     {
         try {
-            $response = Http::get($url);
             $filename = basename($url);
-            $attachment = [
-                'filename' => ($filename) ? $filename : '',
-                'data' => $response->body(),
-            ];
-            return $attachment;
+            // Read directly from disk when a file path is given — avoids self-referencing
+            // HTTP calls that break in queue workers when APP_URL doesn't match the server.
+            if (!filter_var($url, FILTER_VALIDATE_URL) && file_exists($url)) {
+                return ['filename' => $filename ?: '', 'data' => file_get_contents($url)];
+            }
+            $response = Http::get($url);
+            return ['filename' => $filename ?: '', 'data' => $response->body()];
         } catch (\Exception $e) {
             return null;
         }
