@@ -323,8 +323,8 @@
             background: #eef2ff;
             color: #3730a3;
             border: 1px solid #e0e7ff;
-            border-radius: 20px;
-            padding: 4px 6px 4px 10px;
+            border-radius: 8px;
+            padding: 5px 7px 5px 10px;
             font-size: 11.5px;
             font-weight: 500;
         }
@@ -986,8 +986,8 @@
                                                         return `
                                                     <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
                                                         <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                        <div>
-                                                            <span class="star ${isChecked}">${starGlyph}</span>
+                                                        <div style="display:flex;align-items:center;">
+                                                            <span class="star ${isChecked}" style="margin-right:7px;">${starGlyph}</span>
                                                             <span class="tagify__tag-text">${value}</span>
                                                         </div>
                                                     </tag>
@@ -2378,6 +2378,12 @@
                 bodyEl.style.setProperty('flex', '1 1 auto', 'important');
                 bodyEl.style.setProperty('min-height', '0', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
+            }
+            if (cardEl) {
+                cardEl.querySelectorAll('.simf-header, .simf-activebar, .simf-footer').forEach(function(el) {
+                    el.style.setProperty('flex-shrink', '0', 'important');
+                    el.style.setProperty('overflow', 'visible', 'important');
+                });
             }
         }
         $(document).ready(simfEnforceDrawerLayout);
