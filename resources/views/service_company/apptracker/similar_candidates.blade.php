@@ -1405,11 +1405,13 @@
                                                 <label class="simf-mini-label">Min Salary</label>
                                                 <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted minimum_salary_word"></span>
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Max Salary</label>
                                                 <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted maximum_salary_word"></span>
                                             </div>
                                             <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
                                         </div>
@@ -1725,6 +1727,17 @@
             });
             $(document).on("change", "#max_exp", function() {
                 experience_check()
+            });
+
+            $(document).on('keyup', '#min_sal', function() {
+                var number = parseInt($('#min_sal').val());
+                var result = convertToWords(number);
+                $('.minimum_salary_word').text(capitalizeFirstLetter(result));
+            });
+            $(document).on('keyup', '#max_sal', function() {
+                var number = parseInt($('#max_sal').val());
+                var result = convertToWords(number);
+                $('.maximum_salary_word').text(capitalizeFirstLetter(result));
             });
 
         $(document).on('click', '.chk_list', function() {
