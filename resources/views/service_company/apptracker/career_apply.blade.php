@@ -88,22 +88,63 @@
     <div class="toolbar" id="kt_toolbar">
          @php
           use App\Helper\GeneralMethod;
-            $req_path = url('/service_company/apptracker/' . GeneralMethod::value_encrypt(@$job->id) . '/all');
-            $public_bench_path = url(
-                '/service_company/apptracker/public_bench/' . GeneralMethod::value_encrypt(@$job->id),
-            );
-            $internal_bench_path = url(
-                '/service_company/apptracker/internal_bench/' . GeneralMethod::value_encrypt(@$job->id),
-            );
-            $existing_path = url(
-                '/service_company/apptracker/similar_candidates/' . GeneralMethod::value_encrypt(@$job->id),
-            );
             $career_url = url(
                 '/service_company/career-apptracker/career-apply/' . GeneralMethod::value_encrypt(@$job->id),
             );
-            $candidates_request_path = route('service_company.apptracker.candidates_request');
 
-             $tabactive = [
+            // This route is shared by both flows (an agency's own jobs AND jobs a
+            // direct client shared with this company), but the two flows have
+            // completely different sibling tabs — a direct-client job only has
+            // Total/Similar/In-house Bench/Website Candidates (the "d"-prefixed
+            // routes + clientappHeader), it has no Agency Bench or Bench Talent
+            // Request tabs at all. Reaching this page from a client job used to
+            // always render the full 6-tab apptrackerHeader with own-job URLs,
+            // which 404s the moment "Agency Bench Talents"/"Bench Talent Requests"
+            // is clicked for a job this company doesn't own. Same ownership check
+            // toolbar.blade.php already uses for the Internal/Client tag.
+            $isClientJob = @$job->company_id != auth()->user()->company_id;
+
+            if ($isClientJob) {
+                $req_path = url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt(@$job->id) . '/all');
+                $internal_bench_path = url(
+                    '/service_company/apptracker/dinternal_bench/' . GeneralMethod::value_encrypt(@$job->id),
+                );
+                $existing_path = url(
+                    '/service_company/apptracker/dsimilar_candidates/' . GeneralMethod::value_encrypt(@$job->id),
+                );
+
+                $tabactive = [
+                    'pool_active'=>'',
+                    'pool_url'=> $req_path,
+                    'pool_id'=>'pool_counter',
+                    'similar_active'=>'',
+                    'similar_url'=>$existing_path,
+                    'similar_id'=>'similar_counter',
+                    'inhouseBench_active'=>'',
+                    'inhouseBench_url'=> $internal_bench_path,
+                    'inhouseBench_id'=>'inhouseBench_counter',
+                    'career_active'=>'tabactive',
+                    'career_url'=>$career_url,
+                    'career_id'=>'career_counter',
+                    'career_counter' => @$career_counter,
+                    'pool_counter' => @$pool_counter,
+                    'existing_counter' =>@$existing_counter,
+                    'internal_bench_counter' =>@$internal_bench_counter,
+                    ];
+            } else {
+                $req_path = url('/service_company/apptracker/' . GeneralMethod::value_encrypt(@$job->id) . '/all');
+                $public_bench_path = url(
+                    '/service_company/apptracker/public_bench/' . GeneralMethod::value_encrypt(@$job->id),
+                );
+                $internal_bench_path = url(
+                    '/service_company/apptracker/internal_bench/' . GeneralMethod::value_encrypt(@$job->id),
+                );
+                $existing_path = url(
+                    '/service_company/apptracker/similar_candidates/' . GeneralMethod::value_encrypt(@$job->id),
+                );
+                $candidates_request_path = route('service_company.apptracker.candidates_request');
+
+                $tabactive = [
                     'pool_active'=>'',
                     'pool_url'=> $req_path,
                     'pool_id'=>'pool_counter',
@@ -129,6 +170,7 @@
                     'public_bench_counter' =>@$public_bench_counter,
                     'recomnded_counter' => @$recomnded_counter,
                     ];
+            }
 
         @endphp
         <!--begin::Container-->
@@ -252,7 +294,11 @@
             <div id="kt_content_container" class="container-fluid px-3">
 
                 <div id="" class="container-fluid d-flex flex-stack second_header">
-                    @include('sections.service_company.apptrackerHeader',['tabactive'=>$tabactive])
+                    @if ($isClientJob)
+                        @include('sections.service_company.clientappHeader',['tabactive'=>$tabactive])
+                    @else
+                        @include('sections.service_company.apptrackerHeader',['tabactive'=>$tabactive])
+                    @endif
                 </div>
 
 

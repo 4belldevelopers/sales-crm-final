@@ -1,9 +1,11 @@
 @php
     // Hero KPI cards for the client-job AppTracker header (Pool / Similar / In-house
-    // Bench / Website Candidates tabs only — this job source has no Agency Bench or
-    // Bench Talent Requests tabs). Same visual language as
-    // sections/service_company/apptrackerHeader.blade.php; titles/colors kept in sync
-    // with that partial's Pool/Similar/In-house Bench/Website Candidates cards.
+    // Bench tabs only — a direct-client job has no Agency Bench, Bench Talent
+    // Request, or Website Candidates tabs at all; those sourcing channels don't
+    // apply to a job this company doesn't own, and career_apply.blade.php isn't
+    // built to be reached from this flow. Same visual language as
+    // sections/service_company/apptrackerHeader.blade.php; titles/colors kept in
+    // sync with that partial's Pool/Similar/In-house Bench cards.
     $apthCards = [
         [
             'title' => 'Total Candidates In Job',
@@ -35,23 +37,13 @@
             'ic' => '#7c3aed',
             'icon' => 'M11.47 3.84a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.06l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.69ZM12 5.432l8.159 8.159a2.29 2.29 0 0 1 .091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 1 .091-.086L12 5.432Z',
         ],
-        [
-            'title' => 'Website Candidates',
-            'url' => $tabactive['career_url'],
-            'id' => $tabactive['career_id'],
-            'value' => $tabactive['career_counter'],
-            'active' => $tabactive['career_active'],
-            'bg' => '#ccfbf1',
-            'ic' => '#0d9488',
-            'icon' => 'M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A8.959 8.959 0 0 1 3 12c0-.778.099-1.533.284-2.253',
-        ],
     ];
 @endphp
 
 <style>
     .apth-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
         width: 100%;
         font-family: 'Poppins', sans-serif;
