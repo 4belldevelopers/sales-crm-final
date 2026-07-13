@@ -219,7 +219,9 @@ body { overflow-x: hidden; width: 100%; font-family: Poppins, sans-serif; }
 .acc-service-tagify .tagify__tag > div { padding: 0 6px; display: flex; align-items: center; gap: 4px; height: 24px; }
 .acc-service-tagify .tagify__tag > div::before { box-shadow: none !important; background: transparent !important; }
 .acc-service-tagify .tagify__tag-text { color: var(--acc-primary) !important; font-size: 11px !important; font-weight: 500; }
-.acc-service-tagify .tagify__tag__removeBtn { background: var(--acc-primary) !important; color: #fff !important; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+.acc-service-tagify .tagify__tag__removeBtn { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 18px !important; height: 18px !important; min-width: 18px !important; border-radius: 50% !important; background: var(--acc-primary) !important; margin: 0 5px 0 5px !important; cursor: pointer !important; flex-shrink: 0 !important; opacity: 1 !important; font-size: 0 !important; }
+.acc-service-tagify .tagify__tag__removeBtn::after { content: "×" !important; color: #fff !important; font-size: 14px !important; font-weight: 700 !important; line-height: 1 !important; display: block !important; }
+.acc-service-tagify .tagify__tag__removeBtn:hover { background: #1e4fd4 !important; }
 .acc-service-tagify .tagify__input { line-height: 26px !important; }
 .acc-service-tagify .tagify__input::before { color: #aab4c8 !important; font-size: 11.5px !important; }
 /* ── Suggested tags ── */

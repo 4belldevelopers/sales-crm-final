@@ -1360,41 +1360,65 @@
             $('.commercial-change-btn').removeClass('is-active-row');
             $(this).addClass('is-active-row');
 
-            $('#ccCandidateId').val($(this).attr('data-candidate-id') || 0);
-            $('#ccIsBench').val($(this).attr('data-is-bench') || 0);
+            var $btn        = $(this);
+            var amount      = parseFloat($btn.attr('data-amount')) || 0;
+            var empType     = ($btn.attr('data-employment-type') || '').toLowerCase();
+            var isContract  = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
 
-            var amount = parseFloat($(this).data('amount')) || 0;
-            var empType = ($(this).data('employment-type') || '').toString().toLowerCase();
-            var isContract = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
+            // Saved values from ES (empty string if not yet saved)
+            var savedServiceType  = $btn.attr('data-service-type') || '';
+            var savedModel        = $btn.attr('data-commercial-model') || '';
+            var savedFeeMethod    = $btn.attr('data-fee-method') || '';
+            var savedFeeBase      = $btn.attr('data-fee-base') || '';
+            var savedFeePct       = parseFloat($btn.attr('data-fee-pct')) || 0;
+            var savedFeeFixed     = parseFloat($btn.attr('data-fee-fixed')) || 0;
+            var savedBillingAmt   = parseFloat($btn.attr('data-billing-amount')) || 0;
+            var savedBillingCycle = $btn.attr('data-billing-cycle') || '';
+            var savedMarginPct    = parseFloat($btn.attr('data-margin-pct')) || 20;
+            var savedRepPeriod    = $btn.attr('data-replacement-period') || '90';
+            var savedNote         = $btn.attr('data-internal-note') || '';
 
+            $('#ccCandidateId').val($btn.attr('data-candidate-id') || 0);
+            $('#ccIsBench').val($btn.attr('data-is-bench') || 0);
+
+            // Service type
+            var serviceType = savedServiceType || 'paid';
             $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
-            $('#ccServiceTypeGrid .cc-option-card[data-value="paid"]').addClass('is-selected');
+            $('#ccServiceTypeGrid .cc-option-card[data-value="' + serviceType + '"]').addClass('is-selected');
 
-            // Free Service fields — reset to today's date / default reason
+            // Free Service fields
             $('#ccFreeReason').val('Goodwill');
             $('#ccFreeEffectiveDate').val(new Date().toISOString().slice(0, 10));
 
-            // Contract Staffing fields
-            $('#ccMarginPct').val(20);
-            $('#ccBillingAmount').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+            // Contract fields
+            $('#ccMarginPct').val(savedMarginPct || 20);
+            $('#ccBillingAmount').val(savedBillingAmt ? Math.round(savedBillingAmt).toLocaleString('en-IN') : (amount ? Math.round(amount).toLocaleString('en-IN') : '0'));
+            if (savedBillingCycle) { $('#ccBillingCycle').val(savedBillingCycle); }
 
-            // Full-time Hiring fields — reset to defaults, seeded with the real offer amount
+            // Full-time fields
+            var feeMethod = savedFeeMethod || 'percentage';
             $('#ccFeeMethodGrid .cc-option-card').removeClass('is-selected');
-            $('#ccFeeMethodGrid .cc-option-card[data-value="percentage"]').addClass('is-selected');
+            $('#ccFeeMethodGrid .cc-option-card[data-value="' + feeMethod + '"]').addClass('is-selected');
+
+            var feeBase = savedFeeBase || 'offered';
             $('#ccCalcBaseGrid .cc-option-card').removeClass('is-selected');
-            $('#ccCalcBaseGrid .cc-option-card[data-value="offered"]').addClass('is-selected');
+            $('#ccCalcBaseGrid .cc-option-card[data-value="' + feeBase + '"]').addClass('is-selected');
             $('#ccCalcBaseLabel').html('Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span>');
             $('#ccCalcBaseAmount').prop('disabled', true).val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
-            $('#ccFeePct').val(15);
-            $('#ccFixedFee').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
-            $('#ccReplacementPeriod').val('90');
-            $('#ccReplacementPeriodText').text('90');
+            $('#ccFeePct').val(savedFeePct || 15);
+            $('#ccFixedFee').val(savedFeeFixed ? Math.round(savedFeeFixed).toLocaleString('en-IN') : (amount ? Math.round(amount).toLocaleString('en-IN') : '0'));
+
+            $('#ccReplacementPeriod').val(savedRepPeriod || '90');
+            $('#ccReplacementPeriodText').text(savedRepPeriod || '90');
             $('#ccReplacementRequestBlock').addClass('d-none');
             $('#ccToggleReplacementRequest').html('<i class="fa-solid fa-plus"></i> Log a Replacement Request');
-            $('#ccInternalNote').val('');
-            $('#ccNoteCount').text('0');
 
-            $('#ccModelGrid .cc-option-card[data-value="' + (isContract ? 'contract' : 'fulltime') + '"]').click();
+            $('#ccInternalNote').val(savedNote);
+            $('#ccNoteCount').text(savedNote.length);
+
+            // Trigger model selection (contract/fulltime/etc.) using saved value or fallback
+            var modelToSelect = savedModel || (isContract ? 'contract' : 'fulltime');
+            $('#ccModelGrid .cc-option-card[data-value="' + modelToSelect + '"]').click();
 
             $('.cc-tab').removeClass('is-active');
             $('.cc-tab[data-tab="general"]').addClass('is-active');
@@ -1420,6 +1444,17 @@
             var feeBase = $('#ccCalcBaseGrid .cc-option-card.is-selected').attr('data-value') || 'offered';
             var feePct = $('#ccFeePct').val() || 0;
             var feeFixed = $('#ccFixedFee').val() || 0;
+            var billingAmount = $('#ccBillingAmount').val() || 0;
+            var billingCycle = $('#ccBillingCycle').val() || '';
+            var marginPct = $('#ccMarginPct').val() || 0;
+            var replacementPeriod = $('#ccReplacementPeriod').val() || '';
+            var replacementStatus = $('#ccReplacementStatus').val() || '';
+            var replacementRequestedOn = $('#ccReplacementRequestedOn').val() || '';
+            var replacementReason = $('#ccReplacementReason').val() || '';
+            var freeServiceType = $('#ccFreeServiceTypeField').val() || '';
+            var freeReason = $('#ccFreeReason').val() || '';
+            var freeEffectiveDate = $('#ccFreeEffectiveDate').val() || '';
+            var internalNote = $('#ccInternalNote').val() || '';
             var $btn = $(this);
             $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i>Saving...');
             $.ajax({
@@ -1434,11 +1469,40 @@
                     fee_method: feeMethod,
                     fee_base: feeBase,
                     fee_pct: feePct,
-                    fee_fixed: feeFixed
+                    fee_fixed: feeFixed,
+                    billing_amount: billingAmount,
+                    billing_cycle: billingCycle,
+                    margin_pct: marginPct,
+                    replacement_period: replacementPeriod,
+                    replacement_status: replacementStatus,
+                    replacement_requested_on: replacementRequestedOn,
+                    replacement_reason: replacementReason,
+                    free_service_type: freeServiceType,
+                    free_reason: freeReason,
+                    free_effective_date: freeEffectiveDate,
+                    internal_note: internalNote
                 },
                 success: function(res) {
                     $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration');
                     if (res.status === 'success') {
+                        // Update commercials cell in the matching row
+                        var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                        if ($row.length) {
+                            // Build fee label from saved values
+                            var feeLabel = '';
+                            if (serviceType === 'free') {
+                                feeLabel = 'Free Placement';
+                            } else if (feeMethod === 'percentage' && feePct) {
+                                feeLabel = feePct + '% (' + (feeBase === 'offered' ? 'CTC' : 'Billing') + ')';
+                            } else if (feeMethod === 'fixed' && feeFixed) {
+                                feeLabel = '₹' + parseInt(feeFixed).toLocaleString('en-IN') + ' Fixed Fee';
+                            } else {
+                                feeLabel = 'Fee Configured';
+                            }
+                            var modelLabel = commercialModel === 'contract' ? 'Contract' : (commercialModel === 'fulltime' ? 'Full-time' : commercialModel);
+                            $row.find('[data-cc-fee]').html(feeLabel + ' <span class="text-muted fw-normal">(Placement Fee)</span>');
+                            $row.find('[data-cc-model]').text(modelLabel);
+                        }
                         Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
                         setTimeout(function() { $('#kt_commercialConfig_close').trigger('click'); }, 1600);
                     } else {
@@ -1534,17 +1598,32 @@
         $(document).on('click', '.assignment-change-btn', function(e) {
             e.preventDefault();
 
-            $('#adCandidateId').val($(this).attr('data-candidate-id') || 0);
-            $('#adIsBench').val($(this).attr('data-is-bench') || 0);
+            var $btn = $(this);
 
-            var name = $(this).data('name') || '-';
-            var designation = $(this).data('designation') || '-';
-            var expLoc = $(this).data('exp-loc') || '-';
-            var client = $(this).data('client') || '-';
-            var employmentType = ($(this).data('employment-type') || '').toString();
-            var joinedIso = ($(this).data('joined-date') || '').toString();
-            var avatarClass = ($(this).data('avatar-class') || '').toString();
-            var avatarLetter = ($(this).data('avatar-letter') || '').toString();
+            $('#adCandidateId').val($btn.attr('data-candidate-id') || 0);
+            $('#adIsBench').val($btn.attr('data-is-bench') || 0);
+
+            var name           = $btn.attr('data-name') || '-';
+            var designation    = $btn.attr('data-designation') || '-';
+            var expLoc         = $btn.attr('data-exp-loc') || '-';
+            var client         = $btn.attr('data-client') || '-';
+            var employmentType = ($btn.attr('data-employment-type') || '').toString();
+            var joinedIso      = ($btn.attr('data-joined-date') || '').toString();
+            var avatarClass    = ($btn.attr('data-avatar-class') || '').toString();
+            var avatarLetter   = ($btn.attr('data-avatar-letter') || '').toString();
+
+            // Saved assignment values
+            var savedStatus           = $btn.attr('data-assignment-status') || 'working';
+            var savedEndDate          = $btn.attr('data-expected-end-date') || '';
+            var savedClientLocation   = $btn.attr('data-client-location') || '';
+            var savedExitReason       = $btn.attr('data-exit-reason') || '';
+            var savedProjectOutcome   = $btn.attr('data-project-outcome') || '';
+            var savedRemarks          = $btn.attr('data-remarks') || '';
+            var savedInternalNotes    = $btn.attr('data-internal-notes') || '';
+            var savedRepRequired      = parseInt($btn.attr('data-replacement-required')) || 0;
+            var savedRepStatus        = $btn.attr('data-replacement-status') || '';
+            var savedRepRequestedOn   = $btn.attr('data-replacement-requested-on') || '';
+            var savedRepReason        = $btn.attr('data-replacement-reason') || '';
 
             $('#adCandName').text(name);
             $('#adCandDesignation').text(designation);
@@ -1553,38 +1632,50 @@
             $('#adCandAvatar').attr('class', 'ad-candidate-avatar placed-avatar ' + avatarClass).text(avatarLetter);
             $('#kt_assignmentDetails').data('joined-iso', joinedIso);
 
-            // reset to the real, honest default: Currently Working (this listing only ever
-            // represents that one real status — see the note in the row partial).
+            // Select saved status tab
             $('#adStatusGrid .ad-status-card').removeClass('is-selected');
-            $('#adStatusGrid .ad-status-card[data-value="working"]').addClass('is-selected');
-            $('#adWorkingFields').removeClass('d-none');
-            $('#adCompletedFields, #adLeftFields').addClass('d-none');
+            $('#adStatusGrid .ad-status-card[data-value="' + savedStatus + '"]').addClass('is-selected');
+            $('#adWorkingFields, #adCompletedFields, #adLeftFields').addClass('d-none');
             $('#adNotesStepNum').text('3');
 
-            $('#adExpectedEndDate').val('');
-            if (employmentType && $('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).length) {
-                $('#adEmploymentType').val($('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).val());
+            if (savedStatus === 'working') {
+                $('#adWorkingFields').removeClass('d-none');
+                $('#adExpectedEndDate').val(savedEndDate);
+                if (employmentType && $('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).length) {
+                    $('#adEmploymentType').val($('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).val());
+                } else {
+                    $('#adEmploymentType').prop('selectedIndex', 0);
+                }
+                if (savedClientLocation) { $('#adClientLocation').val(savedClientLocation); } else { $('#adClientLocation').prop('selectedIndex', 0); }
+                $('#adWorkingRemarks').val(savedRemarks).trigger('input');
+
+            } else if (savedStatus === 'completed') {
+                $('#adCompletedFields').removeClass('d-none');
+                $('#adCompletedOn').val(savedEndDate);
+                if (savedProjectOutcome) { $('#adProjectOutcome').val(savedProjectOutcome); } else { $('#adProjectOutcome').prop('selectedIndex', 0); }
+                $('#adCompletedRemarks').val(savedRemarks).trigger('input');
+
+            } else if (savedStatus === 'left') {
+                $('#adLeftFields').removeClass('d-none');
+                $('#adLastWorkingDay').val(savedEndDate);
+                if (savedExitReason) { $('#adExitReason').val(savedExitReason); } else { $('#adExitReason').prop('selectedIndex', 0); }
+                $('#adExitRemarks').val(savedRemarks).trigger('input');
+                // Replacement
+                $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
+                $('#adReplacementRequired .ad-yesno-option[data-value="' + (savedRepRequired ? 'yes' : 'no') + '"]').addClass('is-selected');
+                if (savedRepRequired) {
+                    $('#adReplacementBlock').removeClass('d-none');
+                    if (savedRepStatus) { $('#adReplacementStatus').val(savedRepStatus); }
+                    $('#adReplacementRequestedOn').val(savedRepRequestedOn);
+                    $('#adReplacementReason').val(savedRepReason).trigger('input');
+                } else {
+                    $('#adReplacementBlock').addClass('d-none');
+                }
             } else {
-                $('#adEmploymentType').prop('selectedIndex', 0);
+                $('#adWorkingFields').removeClass('d-none');
             }
-            $('#adClientLocation').prop('selectedIndex', 0);
-            $('#adWorkingRemarks').val('').trigger('input');
 
-            $('#adCompletedOn').val('');
-            $('#adProjectOutcome').prop('selectedIndex', 0);
-            $('#adCompletedRemarks').val('').trigger('input');
-
-            $('#adLastWorkingDay').val('');
-            $('#adExitReason').prop('selectedIndex', 0);
-            $('#adExitRemarks').val('').trigger('input');
-            $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
-            $('#adReplacementRequired .ad-yesno-option[data-value="yes"]').addClass('is-selected');
-            $('#adReplacementBlock').removeClass('d-none');
-            $('#adReplacementStatus').prop('selectedIndex', 0);
-            $('#adReplacementRequestedOn').val('');
-            $('#adReplacementReason').val('').trigger('input');
-
-            $('#adInternalNotes').val('').trigger('input');
+            $('#adInternalNotes').val(savedInternalNotes).trigger('input');
 
             adRecalcSummaries();
             $('#kt_assignmentDetails_toggle').trigger('click');
@@ -1606,8 +1697,14 @@
             var remarks = '';
             var exitReason = '';
             var projectOutcome = '';
+            var employmentType = '';
+            var replacementRequired = 0;
+            var replacementStatus = '';
+            var replacementRequestedOn = '';
+            var replacementReason = '';
             if (assignmentStatus === 'working') {
                 expectedEndDate = $('#adExpectedEndDate').val() || '';
+                employmentType = $('#adEmploymentType').val() || '';
                 clientLocation = $('#adClientLocation').val() || '';
                 remarks = $('#adWorkingRemarks').val() || '';
             } else if (assignmentStatus === 'completed') {
@@ -1618,7 +1715,14 @@
                 expectedEndDate = $('#adLastWorkingDay').val() || '';
                 exitReason = $('#adExitReason').val() || '';
                 remarks = $('#adExitRemarks').val() || '';
+                replacementRequired = $('#adReplacementRequired .ad-yesno-btn.is-selected').attr('data-value') || 0;
+                if (parseInt(replacementRequired)) {
+                    replacementStatus = $('#adReplacementStatus').val() || '';
+                    replacementRequestedOn = $('#adReplacementRequestedOn').val() || '';
+                    replacementReason = $('#adReplacementReason').val() || '';
+                }
             }
+            var internalNotes = $('#adInternalNotes').val() || '';
             var $btn = $(this);
             $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i>Saving...');
             $.ajax({
@@ -1630,14 +1734,41 @@
                     is_bench: $('#adIsBench').val(),
                     expected_end_date: expectedEndDate,
                     assignment_status: assignmentStatus,
+                    employment_type: employmentType,
                     client_location: clientLocation,
                     exit_reason: exitReason,
                     project_outcome: projectOutcome,
-                    remarks: remarks
+                    remarks: remarks,
+                    internal_notes: internalNotes,
+                    replacement_required: replacementRequired,
+                    replacement_status: replacementStatus,
+                    replacement_requested_on: replacementRequestedOn,
+                    replacement_reason: replacementReason
                 },
                 success: function(res) {
                     $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Changes');
                     if (res.status === 'success') {
+                        // Update work status cell in the matching row
+                        var $row = $('tr.placed-row[data-candidate-id="' + candidateId + '"]');
+                        if ($row.length) {
+                            var statusMap = {
+                                working:   { label: 'Currently Working', icon: 'fa-circle-check', cls: 'is-success' },
+                                completed: { label: 'Project Completed',  icon: 'fa-check-double',  cls: 'is-info'    },
+                                left:      { label: 'Candidate Left',     icon: 'fa-circle-xmark', cls: 'is-danger'  }
+                            };
+                            var s = statusMap[assignmentStatus] || statusMap.working;
+                            var $pill = $row.find('[data-ad-status]');
+                            $pill.removeClass('is-success is-info is-danger').addClass(s.cls);
+                            $pill.find('[data-ad-status-icon]').removeClass('fa-circle-check fa-check-double fa-circle-xmark').addClass(s.icon);
+                            $pill.find('[data-ad-status-label]').text(s.label);
+                            // Update expected end date
+                            if (expectedEndDate) {
+                                var d = new Date(expectedEndDate);
+                                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                var formatted = String(d.getDate()).padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                                $row.find('[data-ad-end-date]').text(formatted);
+                            }
+                        }
                         Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
                         setTimeout(function() { $('#kt_assignmentDetails_close').trigger('click'); }, 1600);
                     } else {

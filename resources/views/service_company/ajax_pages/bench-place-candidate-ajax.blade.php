@@ -13,7 +13,7 @@
     @php
     $row = (object) $rowArr;
     @endphp
-        <tr class="placed-row">
+        <tr class="placed-row" data-candidate-id="{{ $row->id }}">
             <td>
                 @php
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -387,20 +387,56 @@
                         $offerAmont = @$offer_currency . ' ' . @$offer_amount . '/' . mb_substr(@$offer_mode, 0, 1);
                     }
 
-                    $isContractType = stripos($employment_type, 'contract') !== false || stripos($employment_type, 'hour') !== false;
-                    $marginLabel = $isContractType ? 'Gross Margin' : '(Placement Fee)';
+                    // Build fee label from saved commercial fields
+                    $ccServiceType = @$row->commercial_service_type;
+                    $ccFeeMethod   = @$row->commercial_fee_method;
+                    $ccFeeBase     = @$row->commercial_fee_base;
+                    $ccFeePct      = @$row->commercial_fee_pct;
+                    $ccFeeFixed    = @$row->commercial_fee_fixed;
+                    $ccModel       = @$row->commercial_model;
+
+                    if ($ccServiceType === 'free') {
+                        $ccFeeLabel = 'Free Placement';
+                    } elseif ($ccFeeMethod === 'percentage' && $ccFeePct) {
+                        $baseLabel  = $ccFeeBase === 'offered' ? 'CTC' : 'Billing';
+                        $ccFeeLabel = $ccFeePct . '% (' . $baseLabel . ')';
+                    } elseif ($ccFeeMethod === 'fixed' && $ccFeeFixed) {
+                        $ccFeeLabel = '₹' . number_format($ccFeeFixed, 0) . ' Fixed Fee';
+                    } else {
+                        $ccFeeLabel = '--';
+                    }
+
+                    $isContractType    = stripos($employment_type, 'contract') !== false || stripos($employment_type, 'hour') !== false;
+                    $marginLabel       = $isContractType ? 'Gross Margin' : '(Placement Fee)';
+                    $ccModelLabel      = $ccModel ? ucfirst($ccModel) : $employment_type;
 
                     echo '<div class="d-flex flex-column">
                             <span class="text-dark fw-bolder fs-6">' . $offerAmont . '</span>
                             <span class="placed-commercial-line">
                                 <i class="fa-solid fa-circle-check text-success"></i>
-                                <span class="text-dark fw-semibold fs-9">-- <span class="text-muted fw-normal">' . $marginLabel . '</span></span>
+                                <span class="text-dark fw-semibold fs-9" data-cc-fee>' . e($ccFeeLabel) . ' <span class="text-muted fw-normal">' . $marginLabel . '</span></span>
                             </span>
                             <span class="placed-commercial-line">
                                 <i class="fa-solid fa-user-tie text-muted"></i>
-                                <span class="text-muted fw-semibold fs-9">' . $employment_type . '</span>
+                                <span class="text-muted fw-semibold fs-9" data-cc-model>' . e($ccModelLabel) . '</span>
                             </span>
-                            <a href="javascript:void(0);" class="placed-change-link commercial-change-btn" data-candidate-id="' . (int)@$row->candidate_id . '" data-is-bench="' . (@$row->condidate_type == 'bench_condidate' ? 1 : 0) . '" data-amount="' . (float) @$row->of_offer_amount . '" data-employment-type="' . @$employment_type . '"><i class="fa-solid fa-pen"></i>Change</a>
+                            <a href="javascript:void(0);" class="placed-change-link commercial-change-btn"
+                               data-candidate-id="' . (int)@$row->id . '"
+                               data-is-bench="' . (@$row->condidate_type == 'bench_condidate' ? 1 : 0) . '"
+                               data-amount="' . (float)@$row->of_offer_amount . '"
+                               data-employment-type="' . e(@$employment_type) . '"
+                               data-service-type="' . e(@$row->commercial_service_type) . '"
+                               data-commercial-model="' . e(@$row->commercial_model) . '"
+                               data-fee-method="' . e(@$row->commercial_fee_method) . '"
+                               data-fee-base="' . e(@$row->commercial_fee_base) . '"
+                               data-fee-pct="' . (float)@$row->commercial_fee_pct . '"
+                               data-fee-fixed="' . (float)@$row->commercial_fee_fixed . '"
+                               data-billing-amount="' . (float)@$row->commercial_billing_amount . '"
+                               data-billing-cycle="' . e(@$row->commercial_billing_cycle) . '"
+                               data-margin-pct="' . (float)@$row->commercial_margin_pct . '"
+                               data-replacement-period="' . e(@$row->commercial_replacement_period) . '"
+                               data-internal-note="' . e(@$row->commercial_internal_note) . '"
+                            ><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
@@ -413,25 +449,33 @@
                  field/endpoint yet, so they render as view-only placeholders. --}}
             <td>
                 @php
-                    $result = GeneralMethod::bench_status_subline($row->status);
-                    $subS = $result->name ?? '';
-                    $assignmentLabel = ($row->status == 3 || @$row->condidate_type != 'bench_condidate') ? 'Currently Working' : ucwords($subS);
-
                     $joinedRawForAssign = @$row->of_joined_date;
                     $joinedIsoForAssign = (!empty($joinedRawForAssign) && $joinedRawForAssign != '0000-00-00 00:00:00')
                         ? date('Y-m-d', strtotime($joinedRawForAssign)) : '';
 
+                    // Read saved assignment status from ES (falls back to 'working' if not yet saved)
+                    $savedAssignStatus = @$row->assignment_status ?: 'working';
+                    $adStatusMap = [
+                        'working'   => ['label' => 'Currently Working', 'icon' => 'fa-circle-check',  'cls' => 'is-success'],
+                        'completed' => ['label' => 'Project Completed',  'icon' => 'fa-check-double',   'cls' => 'is-info'   ],
+                        'left'      => ['label' => 'Candidate Left',     'icon' => 'fa-circle-xmark',  'cls' => 'is-danger' ],
+                    ];
+                    $adStatus      = $adStatusMap[$savedAssignStatus] ?? $adStatusMap['working'];
+                    $adEndDateRaw  = @$row->assignment_expected_end_date;
+                    $adEndDateDisp = (!empty($adEndDateRaw) && $adEndDateRaw !== '0000-00-00')
+                        ? date('d M Y', strtotime($adEndDateRaw)) : '--';
+
                     echo '<div class="d-flex flex-column">
-                            <span class="placed-status-pill is-success">
-                                <i class="fa-solid fa-circle-check me-1"></i>' . $assignmentLabel . '
+                            <span class="placed-status-pill ' . $adStatus['cls'] . '" data-ad-status>
+                                <i class="fa-solid ' . $adStatus['icon'] . ' me-1" data-ad-status-icon></i><span data-ad-status-label>' . $adStatus['label'] . '</span>
                             </span>
                             <span class="text-muted fw-semibold fs-9 mt-2">Expected End</span>
                             <span class="placed-commercial-line">
                                 <i class="fa-solid fa-calendar-days text-muted"></i>
-                                <span class="text-dark fw-semibold fs-9">--</span>
+                                <span class="text-dark fw-semibold fs-9" data-ad-end-date>' . $adEndDateDisp . '</span>
                             </span>
                             <a href="javascript:void(0);" class="placed-change-link assignment-change-btn"
-                               data-candidate-id="' . (int)@$row->candidate_id . '"
+                               data-candidate-id="' . (int)@$row->id . '"
                                data-is-bench="' . (@$row->condidate_type == 'bench_condidate' ? 1 : 0) . '"
                                data-name="' . e(@$row->full_name) . '"
                                data-designation="' . e(@$row->current_designation) . '"
@@ -441,6 +485,17 @@
                                data-joined-date="' . $joinedIsoForAssign . '"
                                data-avatar-class="' . @$bgTextDecore . '"
                                data-avatar-letter="' . strtoupper(@$strVal) . '"
+                               data-assignment-status="' . e(@$row->assignment_status) . '"
+                               data-expected-end-date="' . e(@$row->assignment_expected_end_date) . '"
+                               data-client-location="' . e(@$row->assignment_client_location) . '"
+                               data-exit-reason="' . e(@$row->assignment_exit_reason) . '"
+                               data-project-outcome="' . e(@$row->assignment_project_outcome) . '"
+                               data-remarks="' . e(@$row->assignment_remarks) . '"
+                               data-internal-notes="' . e(@$row->assignment_internal_notes) . '"
+                               data-replacement-required="' . (int)@$row->assignment_replacement_required . '"
+                               data-replacement-status="' . e(@$row->assignment_replacement_status) . '"
+                               data-replacement-requested-on="' . e(@$row->assignment_replacement_requested_on) . '"
+                               data-replacement-reason="' . e(@$row->assignment_replacement_reason) . '"
                             ><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
