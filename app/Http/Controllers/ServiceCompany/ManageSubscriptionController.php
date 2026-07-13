@@ -304,6 +304,11 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         $this->sal_plan_expiry = $salExpiry ? Carbon::parse($salExpiry) : null;
         $this->sal_days_left   = $this->sal_plan_expiry ? max(0, (int) now()->diffInDays($this->sal_plan_expiry, false)) : 0;
 
+        // Used-coins percentage for the wallet cards' progress ring (pure
+        // arithmetic on values already computed above — no extra queries).
+        $this->op_used_pct  = $this->op_total_purchased > 0 ? min(100, round(($this->op_coins_used / $this->op_total_purchased) * 100)) : 0;
+        $this->sal_used_pct = $this->sal_total_purchased > 0 ? min(100, round(($this->sal_coins_used / $this->sal_total_purchased) * 100)) : 0;
+
         return view('service_company.subscription.newindex', $this->data);
     }
 

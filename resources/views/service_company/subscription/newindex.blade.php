@@ -179,20 +179,22 @@
 
         .wallet-card {
             border: 1px solid #e4e6ef; border-radius: 14px; padding: 20px 22px;
-            cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s;
+            cursor: pointer; transition: border-color .15s, box-shadow .15s;
         }
         .wallet-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+        .wallet-card-operational { background: linear-gradient(180deg, #f5f3ff 0%, #fff 55%); }
+        .wallet-card-sales { background: linear-gradient(180deg, #ecfdf3 0%, #fff 55%); }
         .wallet-card .wallet-card-check { color: #d0d3dc; font-size: 20px; }
         .wallet-card .wallet-card-icon {
             width: 40px; height: 40px; border-radius: 50%; display: flex;
             align-items: center; justify-content: center; font-size: 16px;
         }
-        .wallet-card-operational .wallet-card-icon { background: rgba(109,40,217,.12); color: #6d28d9; }
-        .wallet-card-sales .wallet-card-icon { background: rgba(16,163,74,.12); color: #10a34a; }
+        .wallet-card-operational .wallet-card-icon { background: rgba(109,40,217,.15); color: #6d28d9; }
+        .wallet-card-sales .wallet-card-icon { background: rgba(16,163,74,.15); color: #10a34a; }
         .wallet-card .badge.badge-light-success { font-size: 9px; padding: 3px 8px; }
         .wallet-card-balance { font-size: 26px; font-weight: 800; color: #181c32; margin-top: 14px; line-height: 1.2; }
-        .wallet-card-balance-label { font-size: 11px; color: #8a8fa3; margin-bottom: 14px; }
-        .wallet-card-stats { border-top: 1px dashed #e4e6ef; padding-top: 12px; }
+        .wallet-card-balance-label { font-size: 11px; color: #8a8fa3; }
+        .wallet-card-stats { border-top: 1px dashed rgba(0,0,0,.08); padding-top: 12px; margin-top: 14px; }
         .wallet-card-stat-label { font-size: 10px; color: #8a8fa3; }
 
         /* .package-switch.opra-tab-plan / .salse-tab-plan are pre-existing
@@ -200,17 +202,29 @@
            text). Reusing those class names on the wallet cards (needed so
            the existing JS toggle still recognizes them) drags that styling
            in too, so neutralize it before applying the wallet card's own
-           "active wallet" look. */
+           tinted "active wallet" look. */
         .wallet-card.package-switch.opra-tab-plan,
         .wallet-card.package-switch.salse-tab-plan {
-            background-color: #fff !important;
             color: #181c32 !important;
             font-weight: 400 !important;
         }
+        .wallet-card.package-switch.opra-tab-plan { background: linear-gradient(180deg, #f5f3ff 0%, #fff 55%) !important; }
+        .wallet-card.package-switch.salse-tab-plan { background: linear-gradient(180deg, #ecfdf3 0%, #fff 55%) !important; }
         .wallet-card.opra-tab-plan { border-color: #6d28d9; box-shadow: 0 0 0 1px #6d28d9; }
         .wallet-card.opra-tab-plan .wallet-card-check { color: #6d28d9; }
         .wallet-card.salse-tab-plan { border-color: #10a34a; box-shadow: 0 0 0 1px #10a34a; }
         .wallet-card.salse-tab-plan .wallet-card-check { color: #10a34a; }
+
+        .wallet-ring {
+            width: 64px; height: 64px; border-radius: 50%; position: relative;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .wallet-ring::before {
+            content: ''; position: absolute; inset: 7px; background: #fff; border-radius: 50%;
+        }
+        .wallet-ring-label { position: relative; z-index: 1; text-align: center; line-height: 1.15; }
+        .wallet-ring-pct { font-size: 12px; font-weight: 800; color: #181c32; display: block; }
+        .wallet-ring-sub { font-size: 8px; color: #8a8fa3; display: block; }
 
         .wallet-info-banner {
             background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px;
@@ -243,6 +257,49 @@
         }
         .wallet-stat-value { font-size: 18px; font-weight: 800; color: #181c32; }
         .wallet-stat-label { font-size: 11px; color: #8a8fa3; margin-top: 2px; }
+
+        .wallet-pkg-card {
+            border: 1px solid #e4e6ef; border-radius: 14px; padding: 22px 20px; height: 100%;
+            position: relative; background: #fff;
+        }
+        .wallet-pkg-card.is-popular { border-color: #6d28d9; border-width: 2px; }
+        .wallet-pkg-badge {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: #6d28d9; color: #fff; font-size: 9px; font-weight: 700;
+            padding: 3px 12px; border-radius: 20px; white-space: nowrap;
+        }
+        .wallet-pkg-icon { font-size: 20px; margin-bottom: 8px; }
+        .wallet-pkg-name { font-weight: 700; font-size: 13px; color: #181c32; }
+        .wallet-pkg-desc { font-size: 10px; color: #8a8fa3; margin-bottom: 10px; }
+        .wallet-pkg-price { font-size: 20px; font-weight: 800; color: #181c32; }
+        .wallet-pkg-price small { font-size: 11px; font-weight: 500; color: #8a8fa3; }
+        .wallet-pkg-coins { font-size: 14px; font-weight: 700; margin: 10px 0 14px; }
+        .wallet-pkg-features { list-style: none; padding: 0; margin: 0 0 16px; }
+        .wallet-pkg-features li { font-size: 11px; color: #4a4f63; padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+        .wallet-pkg-features li i { color: #10a34a; font-size: 11px; }
+        .wallet-pkg-btn { width: 100%; text-align: center; border-radius: 8px; padding: 9px; font-size: 12px; font-weight: 600; display: block; }
+        .wallet-pkg-btn-outline { color: #6d28d9; border: 1px solid #6d28d9; background: #fff; }
+        .wallet-pkg-btn-outline:hover { background: #f5f3ff; color: #6d28d9; }
+        .wallet-pkg-btn-solid { color: #fff; background: #6d28d9; border: 1px solid #6d28d9; }
+        .wallet-pkg-btn-solid:hover { background: #5b21b6; color: #fff; }
+        .wallet-pkg-btn-success { color: #fff; background: #10a34a; border: 1px solid #10a34a; }
+        .wallet-pkg-btn-success:hover { background: #0d8a3d; color: #fff; }
+
+        .wallet-feature-strip { border-top: 1px solid #e4e6ef; border-bottom: 1px solid #e4e6ef; padding: 16px 0; margin: 24px 0; }
+        .wallet-feature-strip-item { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+        .wallet-feature-strip-item i { font-size: 18px; color: #6d28d9; }
+        .wallet-feature-strip-item .t { font-weight: 700; color: #181c32; display: block; }
+        .wallet-feature-strip-item .d { color: #8a8fa3; }
+
+        .wallet-why-card, .wallet-custom-card { border-radius: 14px; padding: 22px; height: 100%; }
+        .wallet-why-card { background: #f8f7ff; }
+        .wallet-custom-card { background: #faf5ff; }
+
+        .wallet-earn-banner {
+            background: linear-gradient(90deg, #6d28d9, #8b5cf6); border-radius: 14px;
+            color: #fff; padding: 20px 24px;
+        }
+        .wallet-earn-banner .fs-8 { color: rgba(255,255,255,.8); }
 
         .wallet-package-preview {
             border: 1px solid #e4e6ef; border-radius: 10px; padding: 16px; height: 100%;
@@ -335,8 +392,15 @@
                                         </div>
                                         <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
                                     </div>
-                                    <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
-                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="d-flex align-items-end justify-content-between mt-3">
+                                        <div>
+                                            <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
+                                            <div class="wallet-card-balance-label">Coins Available</div>
+                                        </div>
+                                        <div class="wallet-ring" style="background: conic-gradient(#6d28d9 {{ $op_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
+                                            <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $op_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
+                                        </div>
+                                    </div>
                                     <div class="row text-center wallet-card-stats">
                                         <div class="col-4">
                                             <div class="fw-bold fs-6">{{ number_format($op_coins_used) }}</div>
@@ -366,8 +430,15 @@
                                         </div>
                                         <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
                                     </div>
-                                    <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
-                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="d-flex align-items-end justify-content-between mt-3">
+                                        <div>
+                                            <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
+                                            <div class="wallet-card-balance-label">Coins Available</div>
+                                        </div>
+                                        <div class="wallet-ring" style="background: conic-gradient(#10a34a {{ $sal_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
+                                            <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $sal_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
+                                        </div>
+                                    </div>
                                     <div class="row text-center wallet-card-stats">
                                         <div class="col-4">
                                             <div class="fw-bold fs-6">{{ number_format($sal_coins_used) }}</div>
@@ -445,20 +516,86 @@
                                         <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
-                                        @foreach (collect($operational_package)->take(3) as $opr_preview)
-                                            <div class="col-md-4">
-                                                <div class="wallet-package-preview">
-                                                    <div class="fw-bold fs-6 text-gray-900">{{ $opr_preview['title'] }}</div>
-                                                    <div class="text-gray-500 fs-8 mb-2">{{ $opr_preview['days'] ? $opr_preview['days'] . ' Days' : 'Custom' }}</div>
-                                                    <div class="fs-3 fw-bolder text-primary">
-                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
-                                                        {{ $currency == 'INR' ? $opr_preview['price'] : $opr_preview['price_usd'] }}
+                                        @php $opIcons = ['fa-star text-warning', 'fa-crown text-primary', 'fa-gem text-info']; @endphp
+                                        @foreach ($operational_package as $i => $opr_preview)
+                                            <div class="col-md-3">
+                                                <div class="wallet-pkg-card {{ $opr_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '' }}">
+                                                    @if($opr_preview['custome_pck'] != 2 && $i == 1)
+                                                        <span class="wallet-pkg-badge">MOST POPULAR</span>
+                                                    @endif
+                                                    <div class="wallet-pkg-icon">
+                                                        <i class="fa {{ $opr_preview['custome_pck'] == 2 ? 'fa-building text-success' : ($opIcons[$i % 3] ?? 'fa-star text-warning') }}"></i>
                                                     </div>
-                                                    <div class="text-gray-500 fs-8">{{ $opr_preview['coins'] }} Coins</div>
+                                                    <div class="wallet-pkg-name">{{ $opr_preview['title'] }}</div>
+                                                    <div class="wallet-pkg-desc">{{ $opr_preview['custome_pck'] == 2 ? 'Best for Enterprises' : ($opr_preview['days'] ? $opr_preview['days'] . ' Days' : 'Custom') }}</div>
+                                                    @if($opr_preview['custome_pck'] == 2)
+                                                        <div class="wallet-pkg-price text-success">Custom Pricing</div>
+                                                        <div class="wallet-pkg-coins text-success">Unlimited Coins</div>
+                                                    @else
+                                                        <div class="wallet-pkg-price">
+                                                            <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                            {{ $currency == 'INR' ? $opr_preview['price'] : $opr_preview['price_usd'] }}
+                                                        </div>
+                                                        <div class="wallet-pkg-coins text-primary">{{ $opr_preview['coins'] }} Coins</div>
+                                                    @endif
+                                                    <ul class="wallet-pkg-features">
+                                                        @foreach (collect($opr_preview['features'])->where('status', true)->take(3) as $feat)
+                                                            <li><i class="fa fa-check"></i> {{ $feat->title }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                    @if($opr_preview['custome_pck'] == 2)
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                    @else
+                                                        <a href="javascript:;" data-id="{{ encrypt($opr_preview['id']) }}"
+                                                            class="wallet-pkg-btn upgradeselect {{ $i == 1 ? 'wallet-pkg-btn-solid' : 'wallet-pkg-btn-outline' }}">
+                                                            <i class="fa fa-shopping-cart me-1"></i>Add to Cart
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
+                                </div>
+
+                                <div class="wallet-feature-strip row g-4 operational-packages">
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-bolt"></i><span><span class="t">Instant Activation</span><span class="d">Coins added instantly</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-briefcase"></i><span><span class="t">Secure Payments</span><span class="d">100% secure gateway</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-file-invoice"></i><span><span class="t">GST Invoices</span><span class="d">Invoice with every purchase</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-headset"></i><span><span class="t">24x7 Support</span><span class="d">We're always here</span></span></div>
+                                </div>
+
+                                <div class="row g-4 mb-5 operational-packages">
+                                    <div class="col-md-6">
+                                        <div class="wallet-why-card">
+                                            <h5 class="fw-bold mb-4">Why Choose Jero Coins?</h5>
+                                            <div class="row g-3">
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-search"></i><span><span class="t">AI Resume Search</span><span class="d">Unlock premium profiles</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-download"></i><span><span class="t">Resume Downloads</span><span class="d">Download unlimited resumes</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-magic"></i><span><span class="t">AI Matching</span><span class="d">Advanced AI-powered matching</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-tasks"></i><span><span class="t">Job Operations</span><span class="d">Post &amp; manage unlimited jobs</span></span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="wallet-custom-card">
+                                            <h5 class="fw-bold mb-2">Need a Custom Plan?</h5>
+                                            <div class="text-gray-600 fs-8 mb-3">Our team will help you find the perfect plan for your business needs.</div>
+                                            <ul class="wallet-pkg-features">
+                                                <li><i class="fa fa-check"></i> Custom Coin Packages</li>
+                                                <li><i class="fa fa-check"></i> Volume Discounts</li>
+                                                <li><i class="fa fa-check"></i> Dedicated Support</li>
+                                            </ul>
+                                            <a href="javascript:;" class="btn btn-primary btn-sm" onclick="switchWalletCenterTab('packages');return false;">Contact Sales Team</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="wallet-earn-banner d-flex flex-stack operational-packages mb-5">
+                                    <div>
+                                        <div class="fw-bold">Earn More. Save More.</div>
+                                        <div class="fs-8">Get exclusive discounts and bonus coins on higher packages.</div>
+                                    </div>
+                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="switchWalletCenterTab('packages');return false;">Buy Coins Now</a>
                                 </div>
                                 <!--end::Overview extras - Operational-->
 
@@ -496,20 +633,87 @@
                                         <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
-                                        @foreach (collect($sales_package)->take(3) as $sales_preview)
-                                            <div class="col-md-4">
-                                                <div class="wallet-package-preview">
-                                                    <div class="fw-bold fs-6 text-gray-900">{{ $sales_preview['title'] }}</div>
-                                                    <div class="text-gray-500 fs-8 mb-2">{{ $sales_preview['days'] ? $sales_preview['days'] . ' Days' : 'Custom' }}</div>
-                                                    <div class="fs-3 fw-bolder text-success">
-                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
-                                                        {{ $currency == 'INR' ? $sales_preview['price'] : $sales_preview['price_usd'] }}
+                                        @php $salIcons = ['fa-star text-warning', 'fa-crown text-success', 'fa-gem text-info']; @endphp
+                                        @foreach ($sales_package as $i => $sales_preview)
+                                            <div class="col-md-3">
+                                                <div class="wallet-pkg-card {{ $sales_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '' }}" style="{{ $sales_preview['custome_pck'] != 2 && $i == 1 ? 'border-color:#10a34a;' : '' }}">
+                                                    @if($sales_preview['custome_pck'] != 2 && $i == 1)
+                                                        <span class="wallet-pkg-badge" style="background:#10a34a;">MOST POPULAR</span>
+                                                    @endif
+                                                    <div class="wallet-pkg-icon">
+                                                        <i class="fa {{ $sales_preview['custome_pck'] == 2 ? 'fa-building text-success' : ($salIcons[$i % 3] ?? 'fa-star text-warning') }}"></i>
                                                     </div>
-                                                    <div class="text-gray-500 fs-8">{{ $sales_preview['coins'] }} Coins</div>
+                                                    <div class="wallet-pkg-name">{{ $sales_preview['title'] }}</div>
+                                                    <div class="wallet-pkg-desc">{{ $sales_preview['custome_pck'] == 2 ? 'Best for Large Agencies' : ($sales_preview['days'] ? $sales_preview['days'] . ' Days' : 'Custom') }}</div>
+                                                    @if($sales_preview['custome_pck'] == 2)
+                                                        <div class="wallet-pkg-price text-success">Custom Pricing</div>
+                                                        <div class="wallet-pkg-coins text-success">Unlimited Coins</div>
+                                                    @else
+                                                        <div class="wallet-pkg-price">
+                                                            <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                            {{ $currency == 'INR' ? $sales_preview['price'] : $sales_preview['price_usd'] }}
+                                                        </div>
+                                                        <div class="wallet-pkg-coins text-success">{{ $sales_preview['coins'] }} Coins</div>
+                                                    @endif
+                                                    <ul class="wallet-pkg-features">
+                                                        @foreach (collect($sales_preview['features'])->where('status', true)->take(3) as $feat)
+                                                            <li><i class="fa fa-check"></i> {{ $feat->title }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                    @if($sales_preview['custome_pck'] == 2)
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                    @else
+                                                        <a href="javascript:;" data-id="{{ encrypt($sales_preview['id']) }}"
+                                                            class="wallet-pkg-btn upgradeselect {{ $i == 1 ? 'wallet-pkg-btn-success' : '' }}"
+                                                            style="{{ $i != 1 ? 'color:#10a34a;border:1px solid #10a34a;background:#fff;' : '' }}">
+                                                            <i class="fa fa-shopping-cart me-1"></i>Add to Cart
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
+                                </div>
+
+                                <div class="wallet-feature-strip row g-4 salse-packages" style="display:none">
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-bolt" style="color:#10a34a;"></i><span><span class="t">Instant Activation</span><span class="d">Coins added instantly</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-briefcase" style="color:#10a34a;"></i><span><span class="t">Secure Payments</span><span class="d">100% secure gateway</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-file-invoice" style="color:#10a34a;"></i><span><span class="t">GST Invoices</span><span class="d">Invoice with every purchase</span></span></div>
+                                    <div class="col-md-3 wallet-feature-strip-item"><i class="fa fa-headset" style="color:#10a34a;"></i><span><span class="t">24x7 Support</span><span class="d">We're always here</span></span></div>
+                                </div>
+
+                                <div class="row g-4 mb-5 salse-packages" style="display:none">
+                                    <div class="col-md-6">
+                                        <div class="wallet-why-card" style="background:#f2fdf6;">
+                                            <h5 class="fw-bold mb-4">Why Choose Sales Coins?</h5>
+                                            <div class="row g-3">
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-chart-line" style="color:#10a34a;"></i><span><span class="t">Increase Visibility</span><span class="d">Get higher visibility in marketplace</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-bullhorn" style="color:#10a34a;"></i><span><span class="t">Generate More Leads</span><span class="d">Unlock premium leads</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-handshake" style="color:#10a34a;"></i><span><span class="t">Grow Your Agency</span><span class="d">Build trust and win clients</span></span></div>
+                                                <div class="col-6 wallet-feature-strip-item"><i class="fa fa-chart-bar" style="color:#10a34a;"></i><span><span class="t">Advanced Insights</span><span class="d">Track performance and optimize</span></span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="wallet-custom-card" style="background:#f2fdf6;">
+                                            <h5 class="fw-bold mb-2">Need a Custom Plan?</h5>
+                                            <div class="text-gray-600 fs-8 mb-3">Our team will help you find the perfect plan for your agency needs.</div>
+                                            <ul class="wallet-pkg-features">
+                                                <li><i class="fa fa-check"></i> Custom Coin Packages</li>
+                                                <li><i class="fa fa-check"></i> Volume Discounts</li>
+                                                <li><i class="fa fa-check"></i> Dedicated Support</li>
+                                            </ul>
+                                            <a href="javascript:;" class="btn btn-success btn-sm" onclick="switchWalletCenterTab('packages');return false;">Contact Sales Team</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="wallet-earn-banner d-flex flex-stack salse-packages mb-5" style="display:none;background:linear-gradient(90deg,#0d8a3d,#10a34a);">
+                                    <div>
+                                        <div class="fw-bold">Earn More. Save More.</div>
+                                        <div class="fs-8">Get exclusive discounts and bonus coins on higher packages.</div>
+                                    </div>
+                                    <a href="javascript:;" class="btn btn-light btn-sm" onclick="switchWalletCenterTab('packages');return false;">Buy Sales Coins Now</a>
                                 </div>
                                 <!--end::Overview extras - Sales-->
 
