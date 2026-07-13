@@ -369,13 +369,16 @@
             </a>
         @endif
         <?php
-        if ($final_status_job == 1) {
+        // Always render — hold/closed jobs used to hide this button outright (via
+        // $final_status_job == 1, which becomes 2 the moment a job auto-closes —
+        // see AutoCloseJobsService — and via the job->status=='active' check), which
+        // just confused agencies. The click handler itself (in footer-script below)
+        // now intercepts hold/closed jobs and explains why via a popup instead of
+        // silently disappearing. clientapp()'s own query already restricts $job to
+        // final_status IN (1,2), so no unauthorized-access case is being bypassed
+        // here — those are the only two values this page ever loads.
         ?>
         <a href="javascript:void(0);">
-            {{-- Always visible regardless of job status — hold/inactive jobs used to
-                 hide this button outright, which just confused agencies. Now the
-                 click handler itself (in footer-script below) intercepts hold/closed
-                 jobs and explains why via a popup instead of silently disappearing. --}}
             <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3" id="addServiceCandidate" data-job-status="{{ $job->status }}">
                 <span class="svg-icon svg-icon-primary svg-icon-1x">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
@@ -388,9 +391,6 @@
                 </span> Add Candidate
             </button>
         </a>
-        <?php
-        }
-        ?>
         <!--begin::Forward CV-->
 
 		<a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 custombtn aptk-action-btn aptk-legacy-hide  fwd_resume d-none" data-toggle="modal" data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
