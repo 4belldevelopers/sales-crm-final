@@ -558,13 +558,25 @@
                         $statusBg = '#dcfce7'; $statusColor = '#16a34a';
                     }
 
+                    // Row 2: Job ID + Internal/Client tag — same recommendation_text
+                    // logic this page already used.
+                    $recommendation_text = __('messages.internal_tag');
+                    if ($row->client_comapny_id != $company_id) {
+                        $recommendation_text = __('messages.clinet_tag');
+                    }
+
                     echo '<div class="d-flex flex-column">
                        <span class="badge my-1" style="background:' .
                         $statusBg .
                         ';color:' .
                         $statusColor .
-                        ';font-weight:600;">' .
+                        ';font-weight:600;width:fit-content;">' .
                         $status .
+                        '</span>
+                      <span class="fw-bold text-muted d-block fs-7">' .
+                        @$row->jobId .
+                        ' -' .
+                        $recommendation_text .
                         '</span>
                     </div>';
                 @endphp
