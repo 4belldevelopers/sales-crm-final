@@ -364,7 +364,9 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('bench-candidates/benchListingPoolData', [ServiceCompanyBenchCandidatesController::class,'benchListingPoolData'])->name('bench-candidates.benchListingPoolData');	
 						Route::get('bench-candidates/placedListing', [ServiceCompanyBenchCandidatesController::class,'placedListing'])->name('bench-candidates.placedListing');
 						Route::get('bench-candidates/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData'])->name('bench-candidates.placedListingData'); 
-						Route::get('bench-candidates_ajax/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData_ajax'])->name('bench-candidates.placedListingData_ajax'); 
+						Route::get('bench-candidates_ajax/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData_ajax'])->name('bench-candidates.placedListingData_ajax');
+						Route::post('bench-candidates/save-assignment-details', [ServiceCompanyBenchCandidatesController::class,'savePlacedAssignmentDetails'])->name('bench-candidates.savePlacedAssignmentDetails');
+						Route::post('bench-candidates/save-commercial-config', [ServiceCompanyBenchCandidatesController::class,'savePlacedCommercialConfig'])->name('bench-candidates.savePlacedCommercialConfig');
 						Route::get('bench-candidates/offerListing', [ServiceCompanyBenchCandidatesController::class,'offerListing'])->name('bench-candidates.offerListing'); 
 						Route::get('bench-candidates/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData'])->name('bench-candidates.offerListingData');  
 						Route::get('bench-candidates_ajax/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData_ajax'])->name('bench-candidates.offerListingData_ajax');  
