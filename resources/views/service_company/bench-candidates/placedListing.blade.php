@@ -853,6 +853,8 @@
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
+                <input type="hidden" id="ccCandidateId" value="">
+                <input type="hidden" id="ccIsBench" value="0">
                 <button type="button" class="btn btn-light" id="kt_commercialConfig_cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="kt_commercialConfig_save">
                     <i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration
@@ -1091,6 +1093,8 @@
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
+                <input type="hidden" id="adCandidateId" value="">
+                <input type="hidden" id="adIsBench" value="0">
                 <button type="button" class="btn btn-light" id="kt_assignmentDetails_cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="kt_assignmentDetails_save">
                     <i class="fa-solid fa-floppy-disk me-1"></i>Save Changes
@@ -1356,6 +1360,9 @@
             $('.commercial-change-btn').removeClass('is-active-row');
             $(this).addClass('is-active-row');
 
+            $('#ccCandidateId').val($(this).attr('data-candidate-id') || 0);
+            $('#ccIsBench').val($(this).attr('data-is-bench') || 0);
+
             var amount = parseFloat($(this).data('amount')) || 0;
             var empType = ($(this).data('employment-type') || '').toString().toLowerCase();
             var isContract = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
@@ -1402,13 +1409,46 @@
         });
 
         $('#kt_commercialConfig_save').on('click', function() {
-            Swal.fire({
-                icon: 'info',
-                title: 'Preview Only',
-                text: 'Commercial terms captured for preview — connect this to a save endpoint to persist them.',
-                confirmButtonText: 'Got it'
-            }).then(function() {
-                $('#kt_commercialConfig_close').trigger('click');
+            var candidateId = $('#ccCandidateId').val();
+            if (!candidateId || candidateId == '0') {
+                Swal.fire({ icon: 'warning', text: 'Could not identify candidate. Please try again.', confirmButtonText: 'OK' });
+                return;
+            }
+            var serviceType = $('#ccServiceTypeGrid .cc-option-card.is-selected').attr('data-value') || 'paid';
+            var commercialModel = $('#ccModelGrid .cc-option-card.is-selected').attr('data-value') || 'fulltime';
+            var feeMethod = $('#ccFeeMethodGrid .cc-option-card.is-selected').attr('data-value') || 'percentage';
+            var feeBase = $('#ccCalcBaseGrid .cc-option-card.is-selected').attr('data-value') || 'offered';
+            var feePct = $('#ccFeePct').val() || 0;
+            var feeFixed = $('#ccFixedFee').val() || 0;
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i>Saving...');
+            $.ajax({
+                url: '{!! route("service_company.bench-candidates.savePlacedCommercialConfig") !!}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    candidate_id: candidateId,
+                    is_bench: $('#ccIsBench').val(),
+                    service_type: serviceType,
+                    commercial_model: commercialModel,
+                    fee_method: feeMethod,
+                    fee_base: feeBase,
+                    fee_pct: feePct,
+                    fee_fixed: feeFixed
+                },
+                success: function(res) {
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration');
+                    if (res.status === 'success') {
+                        Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
+                        setTimeout(function() { $('#kt_commercialConfig_close').trigger('click'); }, 1600);
+                    } else {
+                        Swal.fire({ icon: 'error', text: res.message || 'Save failed.', confirmButtonText: 'OK' });
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration');
+                    Swal.fire({ icon: 'error', text: 'Server error. Please try again.', confirmButtonText: 'OK' });
+                }
             });
         });
 
@@ -1494,6 +1534,9 @@
         $(document).on('click', '.assignment-change-btn', function(e) {
             e.preventDefault();
 
+            $('#adCandidateId').val($(this).attr('data-candidate-id') || 0);
+            $('#adIsBench').val($(this).attr('data-is-bench') || 0);
+
             var name = $(this).data('name') || '-';
             var designation = $(this).data('designation') || '-';
             var expLoc = $(this).data('exp-loc') || '-';
@@ -1552,13 +1595,59 @@
         });
 
         $('#kt_assignmentDetails_save').on('click', function() {
-            Swal.fire({
-                icon: 'info',
-                title: 'Preview Only',
-                text: 'Assignment details captured for preview — connect this to a save endpoint to persist them.',
-                confirmButtonText: 'Got it'
-            }).then(function() {
-                $('#kt_assignmentDetails_close').trigger('click');
+            var candidateId = $('#adCandidateId').val();
+            if (!candidateId || candidateId == '0') {
+                Swal.fire({ icon: 'warning', text: 'Could not identify candidate. Please try again.', confirmButtonText: 'OK' });
+                return;
+            }
+            var assignmentStatus = $('#adStatusGrid .ad-status-card.is-selected').attr('data-value') || 'working';
+            var expectedEndDate = '';
+            var clientLocation = '';
+            var remarks = '';
+            var exitReason = '';
+            var projectOutcome = '';
+            if (assignmentStatus === 'working') {
+                expectedEndDate = $('#adExpectedEndDate').val() || '';
+                clientLocation = $('#adClientLocation').val() || '';
+                remarks = $('#adWorkingRemarks').val() || '';
+            } else if (assignmentStatus === 'completed') {
+                expectedEndDate = $('#adCompletedOn').val() || '';
+                projectOutcome = $('#adProjectOutcome').val() || '';
+                remarks = $('#adCompletedRemarks').val() || '';
+            } else if (assignmentStatus === 'left') {
+                expectedEndDate = $('#adLastWorkingDay').val() || '';
+                exitReason = $('#adExitReason').val() || '';
+                remarks = $('#adExitRemarks').val() || '';
+            }
+            var $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i>Saving...');
+            $.ajax({
+                url: '{!! route("service_company.bench-candidates.savePlacedAssignmentDetails") !!}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    candidate_id: candidateId,
+                    is_bench: $('#adIsBench').val(),
+                    expected_end_date: expectedEndDate,
+                    assignment_status: assignmentStatus,
+                    client_location: clientLocation,
+                    exit_reason: exitReason,
+                    project_outcome: projectOutcome,
+                    remarks: remarks
+                },
+                success: function(res) {
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Changes');
+                    if (res.status === 'success') {
+                        Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
+                        setTimeout(function() { $('#kt_assignmentDetails_close').trigger('click'); }, 1600);
+                    } else {
+                        Swal.fire({ icon: 'error', text: res.message || 'Save failed.', confirmButtonText: 'OK' });
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html('<i class="fa-solid fa-floppy-disk me-1"></i>Save Changes');
+                    Swal.fire({ icon: 'error', text: 'Server error. Please try again.', confirmButtonText: 'OK' });
+                }
             });
         });
 

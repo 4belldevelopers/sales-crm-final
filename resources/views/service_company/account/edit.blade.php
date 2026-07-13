@@ -193,6 +193,43 @@ body { overflow-x: hidden; width: 100%; font-family: Poppins, sans-serif; }
 .acc-submit-btn { min-width: 150px; background: linear-gradient(90deg,#315efb,#2557e7) !important; border: 0 !important; color: #fff !important; font-weight: 600; }
 .acc-submit-btn:hover, .acc-submit-btn:focus, .acc-submit-btn:active { background: linear-gradient(90deg,#2557e7,#1e4fd4) !important; color: #fff !important; }
 .tagify .tagify__tag div .tagify__tag-text { color: #0c0c0c !important; font-weight: 500 !important; font-size: 14px !important; }
+/* ── Helper cards (Step 2 sidebar) ── */
+.acc-helper-card { border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid transparent; }
+.acc-helper-card:last-child { margin-bottom: 0; }
+.acc-helper-card h4 { font-size: 12px; font-weight: 600; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.acc-helper-card p, .acc-helper-card li { font-size: 10.5px; color: #53607e; line-height: 1.55; }
+.acc-helper-card ul { margin: 0; padding-left: 0; list-style: none; }
+.acc-helper-card li { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; }
+.acc-helper-card li i { color: #10a66a; margin-top: 2px; }
+.acc-helper-blue { background: #eef5ff; border-color: #d7e6ff; }
+.acc-helper-purple { background: #f3f0ff; border-color: #e4dcff; }
+.acc-helper-green { background: #eefbf3; border-color: #d5f0de; }
+/* ── Live preview box ── */
+.acc-preview-box { border: 1px solid #dce3ee; border-radius: 8px; padding: 12px; background: #fff; }
+.acc-preview-box .preview-title { font-size: 12px; font-weight: 600; color: var(--acc-ink); margin-bottom: 6px; }
+.acc-preview-box .preview-body { font-size: 10.5px; color: #53607e; min-height: 48px; }
+.acc-preview-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.acc-preview-tag-chip { font-size: 10px; background: var(--acc-primary-soft); color: var(--acc-primary); border-radius: 4px; padding: 2px 7px; font-weight: 500; }
+/* ── Char count ── */
+.acc-char-count { font-size: 10px; color: #7b8497; }
+/* ── Service Offerings tagify ── */
+.acc-service-tagify { display: flex !important; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid #dce3ee !important; border-radius: 6px !important; padding: 5px 8px !important; background: #fff !important; min-height: 38px; cursor: text; }
+.acc-service-tagify:focus-within { border-color: var(--acc-primary) !important; box-shadow: 0 0 0 3px rgba(23,105,245,.1) !important; }
+.acc-service-tagify .tagify__tag { background: var(--acc-primary-soft); border-radius: 4px; margin: 2px; padding: 0; height: 24px; border: 0; }
+.acc-service-tagify .tagify__tag > div { padding: 0 6px; display: flex; align-items: center; gap: 4px; height: 24px; }
+.acc-service-tagify .tagify__tag > div::before { box-shadow: none !important; background: transparent !important; }
+.acc-service-tagify .tagify__tag-text { color: var(--acc-primary) !important; font-size: 11px !important; font-weight: 500; }
+.acc-service-tagify .tagify__tag__removeBtn { background: var(--acc-primary) !important; color: #fff !important; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+.acc-service-tagify .tagify__input { line-height: 26px !important; }
+.acc-service-tagify .tagify__input::before { color: #aab4c8 !important; font-size: 11.5px !important; }
+/* ── Suggested tags ── */
+.acc-suggested-label { font-size: 10.5px; color: var(--acc-muted); display: block; margin-bottom: 6px; }
+.acc-suggested-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.acc-suggested-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 20px; border: 1px solid #d5deeb; background: #fff; font-size: 10.5px; color: #53607e; cursor: pointer; transition: border-color .15s,color .15s; user-select: none; }
+.acc-suggested-tag:hover { border-color: var(--acc-primary); color: var(--acc-primary); }
+.acc-suggested-tag.is-added { opacity: .38; pointer-events: none; cursor: default; }
+.acc-suggest-add { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: #e7edf7; color: #53607e; font-size: 9px; border: 0; padding: 0; pointer-events: none; flex-shrink: 0; }
+.acc-suggested-tag:hover .acc-suggest-add { background: var(--acc-primary); color: #fff; }
 /* ── Responsive ── */
 @media (max-width:1199px) {
   #kt_contact_add .wizard-title::after { display: none; }
@@ -560,35 +597,68 @@ body { overflow-x: hidden; width: 100%; font-family: Poppins, sans-serif; }
                        STEP 2 — Company Description
                   ═══════════════════════════════════════════════════ -->
                   <div class="pb-5 acc-desc-step" data-wizard-type="step-content">
-                    <div class="acc-step-header">
-                      <div>
-                        <h3>Company Description</h3>
-                        <p>Write a compelling overview of your company — what you do, culture, and strengths.</p>
-                      </div>
-                    </div>
+                    <div class="acc-step-layout">
+                      <div class="acc-main-column">
 
-                    <div class="acc-section-card">
-                      <h3 class="acc-section-heading">About the Company</h3>
-                      <p class="acc-section-copy">This description appears on your public company profile and job postings.</p>
-                      <div class="acc-editor-wrap">
-                        <div class="acc-editor-toolbar">
-                          <span><i class="la la-edit"></i> Rich text editor</span>
-                          <span id="acc_char_count" style="font-size:10px;color:#7b8497;">0 characters</span>
+                        <section class="acc-section-card">
+                          <h3 class="acc-section-heading">About the Company</h3>
+                          <p class="acc-section-copy">This description appears on your public company profile and job postings.</p>
+                          <div class="acc-editor-wrap">
+                            <div class="acc-editor-toolbar">
+                              <span><i class="la la-edit"></i> Company Description</span>
+                              <span class="acc-char-count"><span id="acc_desc_count">0</span>/2000</span>
+                            </div>
+                            <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden"
+                                      class="tox-target" style="min-height:260px;">{{ @$account->description }}</textarea>
+                          </div>
+                        </section>
+
+                        <section class="acc-section-card">
+                          <h3 class="acc-section-heading">Service Offerings</h3>
+                          <p class="acc-section-copy">Add the services your company provides (press Enter or comma to add).</p>
+                          <input class="form-control form-control-solid" name="tags" id="tags"
+                                 placeholder="e.g. Software Development, IT Consulting..."
+                                 value="{{ @$tags ?? '' }}"/>
+                          <div class="mt-3">
+                            <span class="acc-suggested-label">Suggested:</span>
+                            <div class="acc-suggested-list" id="acc_suggested_services">
+                              @php
+                                $suggestedServices = ['Software Development','IT Consulting','Cloud Solutions','Digital Transformation','Data Analytics','Cybersecurity','UI/UX Design','Project Management','DevOps','Quality Assurance'];
+                              @endphp
+                              @foreach($suggestedServices as $svc)
+                              <span class="acc-suggested-tag" data-value="{{ htmlspecialchars($svc) }}">
+                                {{ htmlspecialchars($svc) }}
+                                <button type="button" class="acc-suggest-add" title="Add {{ htmlspecialchars($svc) }}"><i class="la la-plus" aria-hidden="true"></i></button>
+                              </span>
+                              @endforeach
+                            </div>
+                          </div>
+                        </section>
+
+                      </div>
+
+                      <aside class="acc-side-column">
+                        <div class="acc-helper-card acc-helper-blue">
+                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Writing Tips</h4>
+                          <ul>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include company mission, vision and background.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Mention key services, team culture, and market focus.</span></li>
+                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Keep the tone professional and concise.</span></li>
+                          </ul>
                         </div>
-                        <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden"
-                                  class="tox-target" style="min-height:260px;">{{ @$account->description }}</textarea>
-                      </div>
-                      <span class="form-text" style="display:block;margin-top:8px;">
-                        Aim for 150–500 words. Mention services, team culture, and what makes you unique.
-                      </span>
-                    </div>
-
-                    <!-- Tags — hidden per original design -->
-                    <div class="col-lg-12 mt-7 d-none">
-                      <label class="form-label fw-bolder">Enter Services:</label>
-                      <input class="form-control form-control-solid" name="tags"
-                             placeholder="Enter tags" value="{{ @$tags ?? 'java' }}" id="tags"/>
-                      <span class="form-text">Please select your tags</span>
+                        <div class="acc-helper-card acc-helper-purple">
+                          <h4><i class="la la-cube" aria-hidden="true"></i> Why add Services?</h4>
+                          <p>Services help match your company with relevant requirements and improve search visibility across the platform.</p>
+                        </div>
+                        <div class="acc-helper-card acc-helper-green">
+                          <h4><i class="la la-eye" aria-hidden="true"></i> Live Preview</h4>
+                          <div class="acc-preview-box">
+                            <div class="preview-title" id="acc_preview_company">{{ @$account->company_name ?: 'Company Name' }}</div>
+                            <div class="preview-body" id="acc_preview_description">Your company description will appear here.</div>
+                            <div class="acc-preview-tags" id="acc_preview_tags"></div>
+                          </div>
+                        </div>
+                      </aside>
                     </div>
                   </div>
                   <!--end::Step 2-->
@@ -834,9 +904,10 @@ var KTFormsTinyMCEHidden = {
       ],
       plugins: "advlist autolink link image lists charmap print preview code",
       setup: function(editor) {
-        editor.on('keyup change', function() {
-          var len = editor.getContent({format: 'text'}).length;
-          $('#acc_char_count').text(len + ' character' + (len === 1 ? '' : 's'));
+        editor.on('keyup change SetContent', function() {
+          var text = editor.getContent({format: 'text'}) || '';
+          $('#acc_desc_count').text(Math.min(text.trim().length, 2000));
+          $('#acc_preview_description').text(text.trim() ? text.trim().substring(0, 180) : 'Your company description will appear here.');
         });
       }
     });
@@ -895,8 +966,49 @@ $(document).ready(function() {
 </script>
 
 <script>
-var tagsInput = document.querySelector('input[name=tags]');
-if (tagsInput) { new Tagify(tagsInput); }
+// Service Offerings tagify with suggested chips + live preview
+var tagsInput = document.querySelector('#tags');
+if (tagsInput) {
+  window.accTagsTagify = new Tagify(tagsInput, { maxTags: 30 });
+  if (window.accTagsTagify.DOM && window.accTagsTagify.DOM.scope) {
+    window.accTagsTagify.DOM.scope.classList.add('acc-service-tagify');
+  }
+
+  function renderAccServicePreview(values) {
+    var $cont = $('#acc_preview_tags');
+    $cont.empty();
+    (values || []).forEach(function(v) {
+      $cont.append($('<span class="acc-preview-tag-chip"></span>').text(v));
+    });
+  }
+
+  function syncAccSuggestedHighlight() {
+    var added = (window.accTagsTagify.value || []).map(function(t) { return t.value.toLowerCase(); });
+    $('#acc_suggested_services .acc-suggested-tag').each(function() {
+      var v = $(this).data('value') || '';
+      $(this).toggleClass('is-added', added.indexOf(v.toLowerCase()) > -1);
+    });
+  }
+
+  window.accTagsTagify.on('add remove', function() {
+    syncAccSuggestedHighlight();
+    renderAccServicePreview((window.accTagsTagify.value || []).map(function(t) { return t.value; }));
+  });
+
+  syncAccSuggestedHighlight();
+  renderAccServicePreview((window.accTagsTagify.value || []).map(function(t) { return t.value; }));
+
+  $(document).off('click.accServiceChip').on('click.accServiceChip', '.acc-suggested-tag', function(e) {
+    e.preventDefault();
+    var $chip = $(this);
+    if ($chip.hasClass('is-added')) return;
+    var value = $chip.attr('data-value');
+    if (!value || !window.accTagsTagify) return;
+    var existing = (window.accTagsTagify.value || []).map(function(t) { return t.value.toLowerCase(); });
+    if (existing.indexOf(value.toLowerCase()) !== -1) { $chip.addClass('is-added'); return; }
+    window.accTagsTagify.addTags([{ value: value }]);
+  });
+}
 
 function isNumberKey(evt){
   var charCode = (evt.which) ? evt.which : evt.keyCode;
