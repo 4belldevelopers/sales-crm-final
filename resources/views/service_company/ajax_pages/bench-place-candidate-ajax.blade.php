@@ -105,6 +105,8 @@
 
                         if (@$row->condidate_type == 'bench_condidate') {
                             $tredmark = '[Bench]';
+                        } elseif (@$row->condidate_type != 'bench_condidate') {
+                            $tredmark = '[Tracker]';
                         }
 
                         $photo = '';
@@ -223,17 +225,20 @@
                         $durationText = 'Total Duration: ' . $durationDays . ' Days';
                     }
 
-                    $benchNodeCls = $hasBench ? 'is-done' : 'is-static';
-                    $offerNodeCls = $hasOffer ? 'is-done' : 'is-static';
+                    $isBench = (@$row->condidate_type == 'bench_condidate');
+
+                    $offerNodeCls  = $hasOffer  ? 'is-done' : 'is-static';
                     $joinedNodeCls = $hasJoined ? 'is-done' : 'is-static';
-                    // "Placed" only makes sense once joining is confirmed, and there is no
-                    // separate placed-timestamp in the schema — it reuses the joined date.
                     $placedNodeCls = $hasJoined ? 'is-done' : 'is-static';
-                    $lineAfterBench = $hasBench ? 'is-done' : '';
-                    $lineAfterOffer = $hasOffer ? 'is-done' : '';
+                    $lineAfterOffer  = $hasOffer  ? 'is-done' : '';
                     $lineAfterJoined = $hasJoined ? 'is-done' : '';
 
-                    echo '<div class="placed-timeline">
+                    if ($isBench) {
+                        // Bench candidates: 4-node timeline — Bench → Offer → Joined → Placed
+                        $benchNodeCls  = $hasBench ? 'is-done' : 'is-static';
+                        $lineAfterBench = $hasBench ? 'is-done' : '';
+
+                        $timeline = '
                             <div class="placed-timeline-track">
                                 <div class="placed-timeline-node-wrap">
                                     <div class="placed-timeline-node ' . $benchNodeCls . '" data-toggle="tooltip" title="Bench"></div>
@@ -257,7 +262,32 @@
                             </div>
                             <div class="placed-timeline-labels">
                                 <span>Bench</span><span>Offer</span><span>Joined</span><span>Placed</span>
+                            </div>';
+                    } else {
+                        // Non-bench / tracker candidates: 3-node timeline — Offer → Joined → Placed
+                        $timeline = '
+                            <div class="placed-timeline-track">
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $offerNodeCls . '" data-toggle="tooltip" title="Offer"></div>
+                                    <span class="placed-timeline-node-label">' . $offerLabel . '</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterOffer . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $joinedNodeCls . '" data-toggle="tooltip" title="Joined"></div>
+                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterJoined . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $placedNodeCls . '" data-toggle="tooltip" title="Placed"></div>
+                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
+                                </div>
                             </div>
+                            <div class="placed-timeline-labels">
+                                <span>Offer</span><span>Joined</span><span>Placed</span>
+                            </div>';
+                    }
+
+                    echo '<div class="placed-timeline">' . $timeline . '
                             <div class="text-muted fw-bold fs-9 mt-1">' . $durationText . '</div>
                           </div>';
                 @endphp
@@ -370,7 +400,7 @@
                                 <i class="fa-solid fa-user-tie text-muted"></i>
                                 <span class="text-muted fw-semibold fs-9">' . $employment_type . '</span>
                             </span>
-                            <a href="javascript:void(0);" class="placed-change-link commercial-change-btn" data-amount="' . (float) @$row->of_offer_amount . '" data-employment-type="' . @$employment_type . '"><i class="fa-solid fa-pen"></i>Change</a>
+                            <a href="javascript:void(0);" class="placed-change-link commercial-change-btn" data-candidate-id="' . (int)@$row->candidate_id . '" data-is-bench="' . (@$row->condidate_type == 'bench_condidate' ? 1 : 0) . '" data-amount="' . (float) @$row->of_offer_amount . '" data-employment-type="' . @$employment_type . '"><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
@@ -385,7 +415,7 @@
                 @php
                     $result = GeneralMethod::bench_status_subline($row->status);
                     $subS = $result->name ?? '';
-                    $assignmentLabel = $row->status == 3 ? 'Currently Working' : ucwords($subS);
+                    $assignmentLabel = ($row->status == 3 || @$row->condidate_type != 'bench_condidate') ? 'Currently Working' : ucwords($subS);
 
                     $joinedRawForAssign = @$row->of_joined_date;
                     $joinedIsoForAssign = (!empty($joinedRawForAssign) && $joinedRawForAssign != '0000-00-00 00:00:00')
@@ -401,6 +431,8 @@
                                 <span class="text-dark fw-semibold fs-9">--</span>
                             </span>
                             <a href="javascript:void(0);" class="placed-change-link assignment-change-btn"
+                               data-candidate-id="' . (int)@$row->candidate_id . '"
+                               data-is-bench="' . (@$row->condidate_type == 'bench_condidate' ? 1 : 0) . '"
                                data-name="' . e(@$row->full_name) . '"
                                data-designation="' . e(@$row->current_designation) . '"
                                data-exp-loc="' . e(@$expLocLine) . '"
