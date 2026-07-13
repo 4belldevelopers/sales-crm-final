@@ -104,9 +104,9 @@
                         }
 
                         if (@$row->condidate_type == 'bench_condidate') {
-                            $tredmark = '[Bench]';
-                        } elseif (@$row->condidate_type != 'bench_condidate') {
-                            $tredmark = '[Tracker]';
+                            $tredmark = '<span style="display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:#e8f0fe;color:#3b5bdb;margin-left:4px;vertical-align:middle;letter-spacing:.3px;">Bench</span>';
+                        } else {
+                            $tredmark = '';
                         }
 
                         $photo = '';
@@ -168,8 +168,7 @@
                                 </div>
                                 <div class="d-flex flex-column">
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $nameLinkClass . ' fw-bolder text-hover-primary fs-6 ' . $profile_sidebar_css . '" data-toggle="tooltip" title="' . ucwords(@$row->full_name) . '">' .
-                                        ucwords(mb_substr(@$row->full_name, 0, 22)) . $covid .
-                                        '<sup class="text-warning fw-bold ms-1">' . $tredmark . '</sup></a>
+                                        ucwords(mb_substr(@$row->full_name, 0, 22)) . $covid . $tredmark . '</a>
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $subLinkClass . ' fw-bold d-block fs-8 text-hover-primary ' . $profile_sidebar_css . '" data-toggle="tooltip" title="' . ucwords(@$row->current_designation) . '">' .
                                         ucwords(mb_substr(@$row->current_designation, 0, 24)) . '</a>
                                     <span class="text-muted fw-semibold fs-9 d-block">' . $expLocLine . '</span>
