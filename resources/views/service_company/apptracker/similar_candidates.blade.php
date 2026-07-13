@@ -89,9 +89,9 @@
             background: #dbeafe !important;
         }
         .tagify__tag > div {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
             line-height: 1;
         }
 
@@ -102,6 +102,7 @@
             display: inline-flex;
             align-items: center;
             color: #94a3b8;
+            margin-right: 5px;
         }
 
         .tagify__tag .star.checked {
@@ -2333,6 +2334,39 @@
         $(document).ready(simfSetDrawerWidth);
         $(window).on('resize', simfSetDrawerWidth);
         $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger', simfSetDrawerWidth);
+
+        /* Metronic's base .drawer class ships its own (non-!important)
+           "overflow: auto" rule, loaded via a <link> that sits after our
+           inline <style> block in source order — on ties, later-in-source
+           wins, so stylesheet-only overrides have proven unreliable here.
+           Setting these as genuine inline !important styles via JS beats
+           any stylesheet rule unconditionally, guaranteeing only .simf-body
+           scrolls and the header/active-filters/footer stay pinned. */
+        function simfEnforceDrawerLayout() {
+            var drawerEl = document.getElementById('kt_similar_filter_drawer');
+            var cardEl = document.getElementById('simf_card');
+            var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
+            if (drawerEl) {
+                drawerEl.style.setProperty('overflow', 'hidden', 'important');
+                drawerEl.style.setProperty('position', 'fixed', 'important');
+                drawerEl.style.setProperty('top', '0', 'important');
+                drawerEl.style.setProperty('bottom', '0', 'important');
+            }
+            if (cardEl) {
+                cardEl.style.setProperty('display', 'flex', 'important');
+                cardEl.style.setProperty('flex-direction', 'column', 'important');
+                cardEl.style.setProperty('overflow', 'hidden', 'important');
+                cardEl.style.setProperty('height', '100%', 'important');
+            }
+            if (bodyEl) {
+                bodyEl.style.setProperty('flex', '1 1 auto', 'important');
+                bodyEl.style.setProperty('min-height', '0', 'important');
+                bodyEl.style.setProperty('overflow-y', 'auto', 'important');
+            }
+        }
+        $(document).ready(simfEnforceDrawerLayout);
+        $(window).on('resize', simfEnforceDrawerLayout);
+        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
 
         /* ------------------------------------------------------------------
            Filter drawer glue: opening the drawer from the search-box overlay,
