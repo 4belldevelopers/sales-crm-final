@@ -4608,56 +4608,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				break;
 		}
 
+		// job-onboard (joining tracker) uses the exact same ES index with job_master_status_id=6.
+		// Mirror its three should-conditions so both pages show identical records.
+		// Bench placed is kept as-is (original condition).
+		$searchConds = [];
 		if (!empty($custom_search)) {
-				
-			$must[] = [
+			$searchConds[] = [
 				'bool' => [
-					'must' => [
-						[
-							'bool' => [
-								'should' => [
-									['match_phrase_prefix' => ['full_name' => '*' . strtolower($custom_search) . '*']],
-									['wildcard' => ['email' => '*' . strtolower($custom_search) . '*']],
-									['wildcard' => ['phone' => '*' . ($custom_search) . '*']],
-									['match_phrase_prefix' => ['job_title' => '*' . strtolower($custom_search) . '*']],
-								],
-								'minimum_should_match' => 1,
-							],
-						]
-					]
+					'should' => [
+						['match_phrase_prefix' => ['full_name' => strtolower($custom_search)]],
+						['wildcard' => ['email'    => '*' . strtolower($custom_search) . '*']],
+						['wildcard' => ['phone'    => '*' . $custom_search . '*']],
+						['match_phrase_prefix' => ['job_title' => strtolower($custom_search)]],
+					],
+					'minimum_should_match' => 1,
 				],
 			];
 		}
 
-		$must[] = [
-			'bool' => [
-				'should' => [
-					['term' => ['company_id' => $company_id]],
-				],
-				'minimum_should_match' => 1,
-			],
-		];
-
 		$boolQuery = [
 			'bool' => [
-				'must' => [
-					// First condition
-					[
-						'bool' => [
-							'must' => array_merge([
-								['term' => ['other_company' =>$company_id]],
-								['term' => ['condidate_type' =>'bench_condidate']],
-								['term' => ['job_master_status_id' => 6]],
-								['terms' => ['status' =>[3]]],
-							])
-						]
-					]
+				'should' => [
+					// 1. Bench candidates placed by this company (original placed listing)
+					['bool' => ['must' => array_merge([
+						['term'  => ['other_company'       => $company_id]],
+						['term'  => ['condidate_type'       => 'bench_condidate']],
+						['term'  => ['job_master_status_id' => 6]],
+						['terms' => ['status'               => [3]]],
+					], $searchConds)]],
+					// 2. Join tracker — own company, no third-party client (mirrors job-onboard cond 1)
+					['bool' => ['must' => array_merge([
+						['term' => ['company_id'           => $company_id]],
+						['term' => ['job_master_status_id' => 6]],
+						['term' => ['ClientComID'          => 0]],
+					], $searchConds)]],
+					// 3. Join tracker — own company, with third-party client (mirrors job-onboard cond 2)
+					['bool' => ['must' => array_merge([
+						['term'  => ['company_id'           => $company_id]],
+						['term'  => ['job_master_status_id' => 6]],
+						['range' => ['ClientComID'          => ['gt' => 0]]],
+						['range' => ['jobId'                => ['gt' => 0]]],
+						['bool'  => ['must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]]]],
+					], $searchConds)]],
+					// 4. Join tracker — third-party company is this company (mirrors job-onboard cond 3)
+					['bool' => ['must' => array_merge([
+						['term'  => ['ClientComID'          => $company_id]],
+						['term'  => ['job_master_status_id' => 6]],
+						['range' => ['jobId'                => ['gt' => 0]]],
+					], $searchConds)]],
 				],
-				'filter' => [],
-				'must_not' => [
-					// ['term' => ['status' => 3]]
-				]
-			]
+				'minimum_should_match' => 1,
+				'filter'   => [],
+				'must_not' => [],
+			],
 		];
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
@@ -4704,6 +4707,88 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 
 	}
+	public function savePlacedAssignmentDetails(Request $request)
+	{
+		$company_id = auth()->user()->company_id;
+		$candidate_id = (int)$request->candidate_id;
+		$is_bench = (int)$request->is_bench;
+
+		if (!$candidate_id) {
+			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
+		}
+
+		// Try company-scoped lookup first; fall back to unscoped (bench candidates may belong to other company)
+		$offerApp = DB::table('offer_job_applications')
+			->where('application_id', $candidate_id)
+			->where('company_id', $company_id)
+			->first();
+
+		if (!$offerApp) {
+			$offerApp = DB::table('offer_job_applications')
+				->where('application_id', $candidate_id)
+				->first();
+		}
+
+		if ($offerApp) {
+			DB::table('offer_job_applications')->where('id', $offerApp->id)->update([
+				'assignment_expected_end_date' => $request->expected_end_date ?: null,
+				'assignment_status'            => $request->assignment_status ?: null,
+				'assignment_client_location'   => $request->client_location ?: null,
+				'assignment_exit_reason'       => $request->exit_reason ?: null,
+				'assignment_project_outcome'   => $request->project_outcome ?: null,
+				'assignment_remarks'           => $request->remarks ?: null,
+			]);
+		}
+
+		// For bench candidates also update bench_place.placed_end_date
+		if ($is_bench && $request->expected_end_date) {
+			DB::table('bench_place')
+				->where('client_application_id', $candidate_id)
+				->update(['placed_end_date' => $request->expected_end_date]);
+		}
+
+		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
+
+		return Reply::dataOnly(['status' => 'success', 'message' => 'Assignment details saved successfully.']);
+	}
+
+	public function savePlacedCommercialConfig(Request $request)
+	{
+		$company_id = auth()->user()->company_id;
+		$candidate_id = (int)$request->candidate_id;
+
+		if (!$candidate_id) {
+			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
+		}
+
+		$offerApp = DB::table('offer_job_applications')
+			->where('application_id', $candidate_id)
+			->where('company_id', $company_id)
+			->first();
+
+		if (!$offerApp) {
+			$offerApp = DB::table('offer_job_applications')
+				->where('application_id', $candidate_id)
+				->first();
+		}
+
+		if ($offerApp) {
+			$feeFixed = $request->fee_fixed ? (float)str_replace(',', '', $request->fee_fixed) : null;
+			DB::table('offer_job_applications')->where('id', $offerApp->id)->update([
+				'commercial_service_type' => $request->service_type ?: null,
+				'commercial_model'        => $request->commercial_model ?: null,
+				'commercial_fee_method'   => $request->fee_method ?: null,
+				'commercial_fee_base'     => $request->fee_base ?: null,
+				'commercial_fee_pct'      => $request->fee_pct ? (float)$request->fee_pct : null,
+				'commercial_fee_fixed'    => $feeFixed,
+			]);
+		}
+
+		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
+
+		return Reply::dataOnly(['status' => 'success', 'message' => 'Commercial configuration saved successfully.']);
+	}
+
 	public function update_placed_end_date(Request $request)
 	{
 		$block = '';
