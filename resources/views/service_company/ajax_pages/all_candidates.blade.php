@@ -181,7 +181,21 @@
                         if(@$row->wiseId){
                             $percentage =  GeneralMethod::skill_percentage($row->jobId,$skillArr);
                         }
-                        
+
+                        // Match % badge — color reflects the numeric match score:
+                        // >90 green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
+                        $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                        if ($matchNum == 0) {
+                            $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                        } elseif ($matchNum < 50) {
+                            $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                        } elseif ($matchNum <= 90) {
+                            $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                        } else {
+                            $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                        }
+                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+
 
                         // dd($per,$job_skills,$skillArr);
 
@@ -237,7 +251,7 @@
 																				<div class="' .
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1"> '.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                                 $skilltag .
@@ -284,7 +298,7 @@
 																				<div class="' .
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1"> '.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                                 $skilltag .
@@ -379,14 +393,20 @@
                     if ($row->condidate_type == 'bench_condidate') {
                         $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
                     }
+                    // Drop the decimal portion for display only (thousandsCurrencyFormat
+                    // always returns 2 decimals, e.g. "5,328.00" -> "5,328").
+                    $ctc = explode('.', $ctc)[0];
+                    $ectc = explode('.', $ectc)[0];
 
+                    // Full mode word ("Annual"/"Monthly"/"Hourly") instead of a single
+                    // letter, rendered smaller (.75em) than the amount via <sup>.
                     $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $current_ctc_mode = @$salaryMode[@$jobMode];
 
                     $current_ectc_mode = '';
-                    $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                    $current_ectc_mode = @$salaryMode[@$jobMode];
                     if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+                        $current_ectc_mode = @$salaryMode[@$jobMode];
                     }
                     $dnone = '';
                     if ($row->condidate_type == 'bench_condidate') {
@@ -398,17 +418,17 @@
 					<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
                             @$ectc .
-                            '/' .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ectc_mode .
-                            '</a>
+                            '</span></a>
 						<span class="text-muted fw-bold d-block fs-7 ' .
                             $dnone .
                             '">' .
                             @$current_ctc_cur .
                             @$ctc .
-                            '/' .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ctc_mode .
-                            '</span>
+                            '</span></span>
 					</div>';
                     } else {
                         echo '<div class="d-flex flex-column">
@@ -427,28 +447,44 @@
                     if (empty(@$np)) {
                         $np = 'N/A';
                     }
+                    // Notice column color-coding: Immediate = green, a numeric "X Days"
+                    // notice = orange, Serving Notice Period (LWD date) = purple with an
+                    // "SNP LWD" prefix.
+                    $npColor = '#1e293b';
                     if (@$row->serving_notice_period_mode == 0) {
                         if (!empty(@$row->np_id)) {
                             $np = $row->np_id . '  Days';
+                            $npColor = '#d97706';
                         }
                     } elseif (@$row->serving_notice_period_mode == 1) {
                         $np = $row->np_id;
                         if ($np != 'Immediate') {
                             $np = GeneralMethod::ymdTodmyNotTime(@$row->np_id); //date("d-M-Y",strtotime(@$row->np_id));
-                            $today = date('Y-m-d'); 
+                            $today = date('Y-m-d');
                             if(date('Y-m-d', strtotime($row->np_id)) < $today){
                               $np = "Immediate";
+                              $npColor = '#16a34a';
+                            } else {
+                              $np = 'SNP LWD ' . $np;
+                              $npColor = '#9333ea';
                             }
+                        } else {
+                            $npColor = '#16a34a';
                         }
                     } else {
                         $np = $row->np_id;
+                        if ($np == 'Immediate') {
+                            $npColor = '#16a34a';
+                        }
                     }
 
                     if ($row->condidate_type === 'bench_condidate') {
                         $row->current_company = @$row->apl_company_name;
                     }
                     echo '<div class="d-flex flex-column">
-						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
+						<a href="javascript:void(0);" class="fw-bolder fs-6" style="color:' .
+                        $npColor .
+                        ';">' .
                         @$np .
                         '</a>
 						 <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
@@ -459,20 +495,8 @@
             </td>
             <td>
                 @php
-                    echo ' <div class="d-flex flex-column">
-                            <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                            <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        strtoupper(@$row->skills) .
-                        '"></span> 
-                        </div>';
-                @endphp
-            </td>
-            <td>
-                @php
+                    // Location column — row 1: City, Country. Row 2: Education (merged in
+                    // from the old separate Qualification/Education column, now removed).
                     $country = '';
                     $row_country_name = '';
 
@@ -484,26 +508,6 @@
                                 $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
                                 foreach ($country_name_Arr as $cval) {
                                     $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = '';
-                    $row_state_name = '';
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state_name = @$row->state_name;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
                                 }
                             }
                         }
@@ -524,18 +528,14 @@
 
                     echo '<div class="d-flex flex-column">
                     	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        ucwords($row_city_name) . ', ' . ucwords($row_country_name) .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        htmlspecialchars(ucwords(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 10)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 15)) .
                         '</span>
                     </div>';
                 @endphp

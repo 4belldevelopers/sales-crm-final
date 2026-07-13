@@ -168,6 +168,99 @@
             font-weight: bold !important;
         }
 
+        /* ===== Subscription & Wallet Center redesign ===== */
+        .wallet-center-header * { box-sizing: border-box; }
+        .wallet-center-header h1 { font-size: 16px; }
+        .wallet-buy-coins-btn {
+            background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;
+            font-weight: 600; font-size: 12px; padding: 8px 16px; border-radius: 8px;
+        }
+        .wallet-buy-coins-btn:hover { background: #ede9fe; color: #6d28d9; }
+
+        .wallet-card {
+            border: 1px solid #e4e6ef; border-radius: 14px; padding: 20px 22px;
+            cursor: pointer; background: #fff; transition: border-color .15s, box-shadow .15s;
+        }
+        .wallet-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+        .wallet-card .wallet-card-check { color: #d0d3dc; font-size: 20px; }
+        .wallet-card .wallet-card-icon {
+            width: 40px; height: 40px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 16px;
+        }
+        .wallet-card-operational .wallet-card-icon { background: rgba(109,40,217,.12); color: #6d28d9; }
+        .wallet-card-sales .wallet-card-icon { background: rgba(16,163,74,.12); color: #10a34a; }
+        .wallet-card .badge.badge-light-success { font-size: 9px; padding: 3px 8px; }
+        .wallet-card-balance { font-size: 26px; font-weight: 800; color: #181c32; margin-top: 14px; line-height: 1.2; }
+        .wallet-card-balance-label { font-size: 11px; color: #8a8fa3; margin-bottom: 14px; }
+        .wallet-card-stats { border-top: 1px dashed #e4e6ef; padding-top: 12px; }
+        .wallet-card-stat-label { font-size: 10px; color: #8a8fa3; }
+
+        /* .package-switch.opra-tab-plan / .salse-tab-plan are pre-existing
+           global rules meant for small pill buttons (solid bg + white bold
+           text). Reusing those class names on the wallet cards (needed so
+           the existing JS toggle still recognizes them) drags that styling
+           in too, so neutralize it before applying the wallet card's own
+           "active wallet" look. */
+        .wallet-card.package-switch.opra-tab-plan,
+        .wallet-card.package-switch.salse-tab-plan {
+            background-color: #fff !important;
+            color: #181c32 !important;
+            font-weight: 400 !important;
+        }
+        .wallet-card.opra-tab-plan { border-color: #6d28d9; box-shadow: 0 0 0 1px #6d28d9; }
+        .wallet-card.opra-tab-plan .wallet-card-check { color: #6d28d9; }
+        .wallet-card.salse-tab-plan { border-color: #10a34a; box-shadow: 0 0 0 1px #10a34a; }
+        .wallet-card.salse-tab-plan .wallet-card-check { color: #10a34a; }
+
+        .wallet-info-banner {
+            background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px;
+            padding: 10px 16px; font-size: 12px; color: #4c1d95;
+        }
+        .wallet-center-header.wallet-mode-sales .wallet-info-banner {
+            background: #ecfdf3; border-color: #b7ebc6; color: #14532d;
+        }
+
+        .wallet-tab-nav {
+            list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0;
+            padding: 0; border-bottom: 1px solid #e4e6ef;
+        }
+        .wallet-tab-link {
+            display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px;
+            font-size: 12px; font-weight: 600; color: #7e8299; border-bottom: 2px solid transparent;
+            text-decoration: none; cursor: pointer;
+        }
+        .wallet-tab-link:hover { color: #4c1d95; text-decoration: none; }
+        /* Named wt-active, not active — this codebase has a pre-existing
+           global ".active { color: white !important; }" rule that would
+           otherwise make the active tab's text invisible. */
+        .wallet-tab-link.wt-active { color: #6d28d9; border-bottom-color: #6d28d9; }
+        .wallet-center-header.wallet-mode-sales .wallet-tab-link.wt-active { color: #10a34a; border-bottom-color: #10a34a; }
+
+        .wallet-tab-pane { padding: 0 5px; }
+
+        .wallet-stat-card {
+            border: 1px solid #e4e6ef; border-radius: 10px; padding: 14px 16px; background: #fafaff;
+        }
+        .wallet-stat-value { font-size: 18px; font-weight: 800; color: #181c32; }
+        .wallet-stat-label { font-size: 11px; color: #8a8fa3; margin-top: 2px; }
+
+        .wallet-package-preview {
+            border: 1px solid #e4e6ef; border-radius: 10px; padding: 16px; height: 100%;
+        }
+
+        .wallet-coming-soon {
+            text-align: center; padding: 60px 10px; color: #8a8fa3;
+        }
+        .wallet-coming-soon i { font-size: 34px; display: block; margin-bottom: 10px; color: #c4c8d6; }
+
+        @media (max-width: 1366px) {
+            .wallet-card-balance { font-size: 22px; }
+            .wallet-stat-value { font-size: 16px; }
+        }
+        @media (max-width: 767px) {
+            .wallet-tab-nav { overflow-x: auto; flex-wrap: nowrap; }
+            .wallet-tab-link { white-space: nowrap; }
+        }
     </style>
 @endpush
 
@@ -212,352 +305,244 @@
             <div id="kt_content_container" class="container-fluid px-3">
                 <!--begin::Operations/Sales-->
                 <div class="card mt-2" id="kt_pricing">
-                    <!--begin::Nav group-->
-                    <div class="d-flex flex-column pt-10 pb-0">
-                        <div class="mb-8 text-center">
-                            <h1 class="text-gray-900 fs-2hx fw-normal mb-2">Welcome back,
-                                <span class=" fs-2hx fw-bolder me-2">{{ $username }}</span>
-                            </h1>
+                    <!--begin::Wallet Center header-->
+                    <div class="wallet-center-header px-5 px-xl-9 pt-8">
+                        <div class="d-flex flex-wrap flex-stack mb-6">
+                            <div class="d-flex flex-column mb-3 mb-md-0">
+                                <h1 class="d-flex align-items-center text-gray-900 fw-bold mb-1" style="font-size:16px;">
+                                    Subscription &amp; Wallet Center
+                                </h1>
+                                <div class="text-gray-500 fs-8">Manage all your wallets, packages, coins and transactions in one place.</div>
+                            </div>
+                            <a href="javascript:;" class="btn btn-sm wallet-buy-coins-btn"
+                                onclick="switchWalletCenterTab('packages'); return false;">
+                                <i class="fa fa-coins me-1"></i> <span id="walletBuyCoinsLabel">Buy Coins</span>
+                            </a>
                         </div>
-                        <div class="nav-group nav-group-outline mx-auto mb-15" data-kt-buttons="true">
-                            <button
-                                class="btn btn-color-gray-600 btn-active btn-active-secondary px-6 py-3 me-2 package-switch opra-tab-plan"
-                                data-kt-plan="operational">
-                                Operational Package
-                            </button>
 
-                            <button class="btn btn-color-gray-600 btn-active btn-active-secondary px-6 py-3 package-switch"
-                                data-kt-plan="sales">
-                                Sales Package
-                            </button>
+                        <!--begin::Wallet cards-->
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <div class="wallet-card wallet-card-operational package-switch opra-tab-plan wallet-card-active"
+                                    data-kt-plan="operational">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="wallet-card-icon"><i class="fa fa-cog"></i></span>
+                                            <div class="ms-3">
+                                                <div class="fw-bold fs-6 text-gray-900">Operational Wallet</div>
+                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
+                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="row text-center wallet-card-stats">
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($op_coins_used) }}</div>
+                                            <div class="wallet-card-stat-label">Used Coins</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($op_total_purchased) }}</div>
+                                            <div class="wallet-card-stat-label">Purchased</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ $op_days_left }}</div>
+                                            <div class="wallet-card-stat-label">Days Validity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="wallet-card wallet-card-sales package-switch"
+                                    data-kt-plan="sales">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="wallet-card-icon"><i class="fa fa-briefcase"></i></span>
+                                            <div class="ms-3">
+                                                <div class="fw-bold fs-6 text-gray-900">Sales Wallet</div>
+                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                            </div>
+                                        </div>
+                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
+                                    <div class="wallet-card-balance-label">Coins Available</div>
+                                    <div class="row text-center wallet-card-stats">
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($sal_coins_used) }}</div>
+                                            <div class="wallet-card-stat-label">Used Coins</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ number_format($sal_total_purchased) }}</div>
+                                            <div class="wallet-card-stat-label">Purchased</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="fw-bold fs-6">{{ $sal_days_left }}</div>
+                                            <div class="wallet-card-stat-label">Days Validity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <!--end::Wallet cards-->
+
+                        <!--begin::Info banner-->
+                        <div class="wallet-info-banner mb-5">
+                            <i class="fa fa-shield-alt me-2"></i>
+                            <span>Your wallets are secure and private. All transactions and usage are kept separate for each wallet.</span>
+                        </div>
+                        <!--end::Info banner-->
+
+                        <!--begin::Tab nav-->
+                        <ul class="wallet-tab-nav">
+                            <li><a href="javascript:;" class="wallet-tab-link wt-active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="packages" onclick="switchWalletCenterTab('packages');return false;"><i class="fa fa-box"></i> Packages</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="invoices" onclick="switchWalletCenterTab('invoices');return false;"><i class="fa fa-file-invoice"></i> Invoices</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="billing" onclick="switchWalletCenterTab('billing');return false;"><i class="fa fa-credit-card"></i> Billing</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="settings" onclick="switchWalletCenterTab('settings');return false;"><i class="fa fa-cog"></i> Settings</a></li>
+                        </ul>
+                        <!--end::Tab nav-->
                     </div>
-                    <!--end::Nav group-->
+                    <!--end::Wallet Center header-->
                     <!--begin::Card body-->
                     <div class="card-body position-relative px-0 py-0" id="kt_activitiesApplication_body">
+                        <div id="wallet-pane-overview" class="wallet-tab-pane">
                         <div class="row g-5 g-xl-10 mb-5 mb-xl-10 px-5">
                             <div class="col-xl-12 col-lg-12">
-                                <!--<div class="card h-lg-100" style="background: linear-gradient(112.14deg, #FF8A00 0%, #E96922 100%)">-->
-                                <div class="card h-lg-100 operational-packages"
-                                    style="background: dark;box-shadow: 0px 0px 3px 0px #cfcfcf;">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-sm-9 pe-0 mb-5 mb-sm-0">
-                                                <div
-                                                    class="d-flex justify-content-between h-100 flex-column pt-xl-5 pb-xl-2 ps-xl-7">
-                                                    <div class="mb-7">
-                                                        <div class="mb-6">
-                                                            <h4 class="fs-2 fw-semibold text-dark mb-0">Current Plan</h4>
-                                                        </div>
-
-                                                        <div class="d-flex align-items-center flex-wrap d-grid gap-2 ">
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Current
-                                                                        Plan</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? $current_coins_operational[0]['title'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Expiration
-                                                                        Date</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? date('d M Y ', strtotime($current_coins_operational[0]['end_date'])) : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 19 241 / 31%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: blue !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: blue !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Credit
-                                                                        Coins</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_operational ? $current_coins_operational[0]['actual_coins'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-                                                    <div class="m-0">
-                                                        <a href="#"
-                                                            class="btn btn-color-primary bg-primary bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#kt_modal_upgrade_plan">
-                                                            Upgrade Plan
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-3" style="height: 200px;width: 200px; display: flex;justify-content: center;align-items: center;text-align: center;position: relative;">
-                                                 <canvas id="gaugeChart" height="50" width="50" style="display: block; box-sizing: border-box; height: 50px; width: 50px;"></canvas> 
-                                                  <div style="position: absolute; top: 105px; text-align: center;">
-                                                        <text x="150" y="145" text-anchor="middle" dominant-baseline="auto" font-size="12px" font-family="inherit" font-weight="700" fill="#99a1b7" class="apexcharts-text apexcharts-datalabel-label" style="font-family: inherit;">Available Coins</text><br>
-                                                                        <text x="150" y="126" text-anchor="middle" dominant-baseline="auto" font-size="24px" font-family="inherit" font-weight="600" fill="#071437" class="apexcharts-text apexcharts-datalabel-value" style="font-family: inherit;">{{ $current_coins_operational ? $current_coins_operational[0]['coins'] : '' }}</text>
-                                                    </div>
-
-                                                <div>
-
-                                                </div>
-                                            </div>
+                                <!--begin::Overview extras - Operational-->
+                                <div class="row g-4 mt-1 operational-packages">
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($op_total_purchased) }}</div>
+                                            <div class="wallet-stat-label">Total Coins Purchased</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($remain_coins) }}</div>
+                                            <div class="wallet-stat-label">Coins Available</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($op_coins_used) }}</div>
+                                            <div class="wallet-stat-label">Coins Used</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($op_total_spend) }}</div>
+                                            <div class="wallet-stat-label">Total Spend</div>
                                         </div>
                                     </div>
                                 </div>
 
-
-                                <div class="card h-lg-100 salse-packages"
-                                    style="background: dark;box-shadow: 0px 0px 3px 0px #cfcfcf; display:none">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-sm-9 pe-0 mb-5 mb-sm-0">
-                                                <div
-                                                    class="d-flex justify-content-between h-100 flex-column pt-xl-5 pb-xl-2 ps-xl-7">
-                                                    <div class="mb-7">
-                                                        <div class="mb-6">
-                                                            <h4 class="fs-2 fw-semibold text-dark mb-0">Current Plan</h4>
-                                                        </div>
-
-                                                        <div class="d-flex align-items-center flex-wrap d-grid gap-2 ">
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                        opacity="0.3" style="fill: green !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Current
-                                                                        Plan</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? $current_coins_sales[0]['title'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                         opacity="0.3" style="fill: green !important;" />
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Expiration
-                                                                        Date</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? date('d M Y ', strtotime($current_coins_sales[0]['end_date'])) : '' }}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center me-5 me-xl-13">
-                                                                <div class="symbol symbol-40px symbol-circle me-3">
-                                                                    <span class="symbol-label"
-                                                                        style="background: rgb(22 247 18 / 35%);">
-                                                                        <span class="svg-icon svg-icon-danger svg-icon-1x">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                width="20px" height="20px"
-                                                                                viewBox="0 0 24 24" version="1.1">
-                                                                                <g stroke="none" stroke-width="1"
-                                                                                    fill="none" fill-rule="evenodd">
-                                                                                    <rect x="0" y="0" width="20"
-                                                                                        height="20" />
-                                                                                    <path
-                                                                                        d="M8,17 C8.55228475,17 9,17.4477153 9,18 L9,21 C9,21.5522847 8.55228475,22 8,22 L3,22 C2.44771525,22 2,21.5522847 2,21 L2,18 C2,17.4477153 2.44771525,17 3,17 L3,16.5 C3,15.1192881 4.11928813,14 5.5,14 C6.88071187,14 8,15.1192881 8,16.5 L8,17 Z M5.5,15 C4.67157288,15 4,15.6715729 4,16.5 L4,17 L7,17 L7,16.5 C7,15.6715729 6.32842712,15 5.5,15 Z"
-                                                                                         opacity="0.3" style="fill: green !important;"/>
-                                                                                    <path
-                                                                                        d="M2,11.8650466 L2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,15 C22,15.0032706 21.9999948,15.0065399 21.9999843,15.009808 L22.0249378,15 L22.0249378,19.5857864 C22.0249378,20.1380712 21.5772226,20.5857864 21.0249378,20.5857864 C20.7597213,20.5857864 20.5053674,20.4804296 20.317831,20.2928932 L18.0249378,18 L12.9835977,18 C12.7263047,14.0909841 9.47412135,11 5.5,11 C4.23590829,11 3.04485894,11.3127315 2,11.8650466 Z M6,7 C5.44771525,7 5,7.44771525 5,8 C5,8.55228475 5.44771525,9 6,9 L15,9 C15.5522847,9 16,8.55228475 16,8 C16,7.44771525 15.5522847,7 15,7 L6,7 Z"
-                                                                                        style="fill: green !important;" />
-                                                                                </g>
-                                                                            </svg>
-                                                                        </span>
-                                                                    </span>
-                                                                </div>
-                                                                <div class="m-0">
-                                                                    <a href="#"
-                                                                        class="text-dark text-opacity-75 fs-4">Credit
-                                                                        Coins</a>
-                                                                    <span
-                                                                        class="fw-bold text-dark fs-4 d-block">{{ $current_coins_sales ? $current_coins_sales[0]['actual_coins'] : '' }}</span>
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
+                                <div class="mt-8 operational-packages">
+                                    <div class="d-flex flex-stack mb-4">
+                                        <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Operational Wallet</h4>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                    </div>
+                                    <div class="row g-4">
+                                        @foreach (collect($operational_package)->take(3) as $opr_preview)
+                                            <div class="col-md-4">
+                                                <div class="wallet-package-preview">
+                                                    <div class="fw-bold fs-6 text-gray-900">{{ $opr_preview['title'] }}</div>
+                                                    <div class="text-gray-500 fs-8 mb-2">{{ $opr_preview['days'] ? $opr_preview['days'] . ' Days' : 'Custom' }}</div>
+                                                    <div class="fs-3 fw-bolder text-primary">
+                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                        {{ $currency == 'INR' ? $opr_preview['price'] : $opr_preview['price_usd'] }}
                                                     </div>
-                                                    <div class="m-0">
-                                                        <a href="#"
-                                                            class="btn btn-color-success bg-success bg-opacity-15 bg-hover-opacity-25 fw-semibold"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#sales_kt_modal_upgrade_plan">
-                                                            Upgrade Plan
-                                                        </a>
-                                                    </div>
+                                                    <div class="text-gray-500 fs-8">{{ $opr_preview['coins'] }} Coins</div>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-3" style="height: 200px;width: 200px; display: flex; justify-content: center; align-items: center; text-align: center;position: relative;">
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <!--end::Overview extras - Operational-->
 
-                                                <canvas id="gaugeChartSales" height="50" width="50" style="display: block; box-sizing: border-box; height: 50px; width: 50px;"></canvas> 
-
-                                                 <div style="position: absolute; top: 105px; text-align: center;">
-                                                        <text x="150" y="145" text-anchor="middle" dominant-baseline="auto" font-size="12px" font-family="inherit" font-weight="700" fill="#99a1b7" class="apexcharts-text apexcharts-datalabel-label" style="font-family: inherit;">Available Coins</text><br>
-                                                                        <text x="150" y="126" text-anchor="middle" dominant-baseline="auto" font-size="24px" font-family="inherit" font-weight="600" fill="#071437" class="apexcharts-text apexcharts-datalabel-value" style="font-family: inherit;">{{ $current_coins_sales ? $current_coins_sales[0]['coins'] : '' }}</text>
-                                                    </div>
-                                                <div>
-                                                </div>
-                                            </div>
+                                <!--begin::Overview extras - Sales-->
+                                <div class="row g-4 mt-1 salse-packages" style="display:none">
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($sal_total_purchased) }}</div>
+                                            <div class="wallet-stat-label">Total Coins Purchased</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($remain_coins_sales) }}</div>
+                                            <div class="wallet-stat-label">Coins Available</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value">{{ number_format($sal_coins_used) }}</div>
+                                            <div class="wallet-stat-label">Coins Used</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="wallet-stat-card">
+                                            <div class="wallet-stat-value"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($sal_total_spend) }}</div>
+                                            <div class="wallet-stat-label">Total Spend</div>
                                         </div>
                                     </div>
                                 </div>
 
-
-
-
-
-                                <!--begin::Modal - Upgrade plan-->
-                                <div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
-                                    <!--begin::Modal dialog-->
-                                    <div class="modal-dialog modal-xl">
-                                        <!--begin::Modal content-->
-                                        <div class="modal-content rounded">
-                                            <!--begin::Modal header-->
-                                            <div class="modal-header justify-content-end border-0 pb-0">
-                                                <!--begin::Close-->
-                                                <div class="btn btn-sm btn-icon btn-active-color-primary closemodal"
-                                                    data-bs-dismiss="modal">
-                                                    <i class="fa fa-times ki-cross fs-1"><span class="path1"></span><span
-                                                            class="path2"></span></i>
-                                                </div>
-                                                <!--end::Close-->
-                                            </div>
-                                            <!--end::Modal header-->
-
-                                            <!--begin::Modal body-->
-                                            <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
-                                                <!--begin::Heading-->
-                                                <div class="mb-13 text-center">
-                                                    <h1 class="mb-3">Upgrade a Plan</h1>
-
-                                                    <div class="text-muted fw-semibold fs-5">
-                                                        If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
-                                                            class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
+                                <div class="mt-8 salse-packages" style="display:none">
+                                    <div class="d-flex flex-stack mb-4">
+                                        <h4 class="fs-4 fw-bold text-gray-900 mb-0">Recommended Packages for Sales Wallet</h4>
+                                        <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
+                                    </div>
+                                    <div class="row g-4">
+                                        @foreach (collect($sales_package)->take(3) as $sales_preview)
+                                            <div class="col-md-4">
+                                                <div class="wallet-package-preview">
+                                                    <div class="fw-bold fs-6 text-gray-900">{{ $sales_preview['title'] }}</div>
+                                                    <div class="text-gray-500 fs-8 mb-2">{{ $sales_preview['days'] ? $sales_preview['days'] . ' Days' : 'Custom' }}</div>
+                                                    <div class="fs-3 fw-bolder text-success">
+                                                        <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}"></i>
+                                                        {{ $currency == 'INR' ? $sales_preview['price'] : $sales_preview['price_usd'] }}
                                                     </div>
+                                                    <div class="text-gray-500 fs-8">{{ $sales_preview['coins'] }} Coins</div>
                                                 </div>
-                                                <!--end::Heading-->
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <!--end::Overview extras - Sales-->
 
-                                                <!--begin::Plans-->
-                                                <div class="d-flex flex-column">
-                                                    <!--begin::Nav group-->
+                                </div>
+                                <!--end::wallet-pane-overview-->
 
-                                                    <!--begin::Row-->
-                                                    <div class="row">
-                                                            <!--begin::Col-->
-                                                            {{-- @dd($operational_package); --}}
-                                                            @if ($operational_package)
-                                                                @foreach ($operational_package as $opr_val)
+                                <div id="wallet-pane-packages" class="wallet-tab-pane" style="display:none">
+
+
+
+                                <!--begin::Packages - Operational-->
+                                <div id="kt_modal_upgrade_plan" class="operational-packages">
+                                    <!--begin::Heading-->
+                                    <div class="mb-13 text-center">
+                                        <h1 class="mb-3">Choose an Operational Package</h1>
+
+                                        <div class="text-muted fw-semibold fs-5">
+                                            If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
+                                                class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
+                                        </div>
+                                    </div>
+                                    <!--end::Heading-->
+
+                                    <!--begin::Plans-->
+                                    <div class="d-flex flex-column">
+                                        <!--begin::Nav group-->
+
+                                        <!--begin::Row-->
+                                        <div class="row">
+                                                <!--begin::Col-->
+                                                {{-- @dd($operational_package); --}}
+                                                @if ($operational_package)
+                                                    @foreach ($operational_package as $opr_val)
 
                                                                 @php
                                                                  $visibility_coins = 1; 
@@ -780,39 +765,14 @@
                                                     </button>
                                                 </div>
                                                 <!--end::Actions-->
-                                            </div>
-                                            <!--end::Modal body-->
-                                        </div>
-                                        <!--end::Modal content-->
-                                    </div>
-                                    <!--end::Modal dialog-->
                                 </div>
-                                <!--end::Modal - Upgrade plan--><!--begin::Modal - Create App-->
+                                <!--end::Packages - Operational-->
 
-                                <!--begin::Modal - sales_kt_modal_upgrade_plan Upgrade plan-->
-                                <div class="modal fade" id="sales_kt_modal_upgrade_plan" tabindex="-1"
-                                    aria-hidden="true">
-                                    <!--begin::Modal dialog-->
-                                    <div class="modal-dialog modal-xl">
-                                        <!--begin::Modal content-->
-                                        <div class="modal-content rounded">
-                                            <!--begin::Modal header-->
-                                            <div class="modal-header justify-content-end border-0 pb-0">
-                                                <!--begin::Close-->
-                                                <div class="btn btn-sm btn-icon btn-active-color-primary closemodal"
-                                                    data-bs-dismiss="modal">
-                                                    <i class="fa fa-times ki-cross fs-1"><span class="path1"></span><span
-                                                            class="path2"></span></i>
-                                                </div>
-                                                <!--end::Close-->
-                                            </div>
-                                            <!--end::Modal header-->
-
-                                            <!--begin::Modal body-->
-                                            <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
-                                                <!--begin::Heading-->
+                                <!--begin::Packages - Sales-->
+                                <div id="sales_kt_modal_upgrade_plan" class="salse-packages" style="display:none">
+                                    <!--begin::Heading-->
                                                 <div class="mb-13 text-center">
-                                                    <h1 class="mb-3">Upgrade a Plan</h1>
+                                                    <h1 class="mb-3">Choose a Sales Package</h1>
 
                                                     <div class="text-muted fw-semibold fs-5">
                                                         If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
@@ -1050,16 +1010,8 @@
                                                     </button>
                                                 </div>
                                                 <!--end::Actions-->
-                                            </div>
-                                            <!--end::Modal body-->
-                                        </div>
-                                        <!--end::Modal content-->
-                                    </div>
-                                    <!--end::Modal dialog-->
                                 </div>
-                                <!--end::Modal - sales_kt_modal_upgrade_plan Upgrade plan--><!--begin::Modal - Create App-->
-
-                            </div>
+                                <!--end::Packages - Sales-->
 
 
                            
@@ -1185,173 +1137,6 @@
                                         </div>
                                         <div class="py-2 bg-light px-0"></div>
                                         <!--Begin top up history-->
-                                        <div class="row px-5 py-5">
-                                            <div class="card-header border-0 px-0 pb-5">
-                                                <!--begin::Card title-->
-                                                <div class="card-title mb-2 px-5">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="d-flex align-items-center mb-0">
-                                                            <span class="text-gray-900 fs-2 fw-bolder me-2">Transaction History</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end::Card title-->
-                                            </div>
-                                            <div class="row">
-                                                <table
-                                                    class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class dataTable no-footer"
-                                                    id="myTable" role="grid" aria-describedby="myTable_info"
-                                                    style="width: 1270px;">
-                                                    <thead>
-                                                        <tr class="fw-bolder text-muted" role="row">
-                                                            <th class="w-10px pe-0 sorting_disabled" rowspan="1"
-                                                                colspan="1" style="width: 40px;">
-                                                                <div
-                                                                    class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                                    <input class="form-check-input datatable_chk chk_list"
-                                                                        type="checkbox" data-kt-check="true"
-                                                                        data-kt-check-target="#myTable .form-check-input"
-                                                                        value="1">
-                                                                </div>
-                                                            </th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Order ID</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Package</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Coins</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Amount</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Status</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Download</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="text-gray-600 fw-bold">
-                                                        @if ($cart_transaction_history)
-                                                            @foreach ($cart_transaction_history as $val)
-                                                                <tr role="row" class="odd">
-
-                                                                    <td>
-                                                                        <div
-                                                                            class="form-check form-check-sm form-check-custom form-check-solid">
-                                                                            <input class="form-check-input chk_list_item "
-                                                                                name="chk_list_item[]" type="checkbox"
-                                                                                data-jobid="11" value="1015">
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            @php
-                                                                                $number = $val->id;
-                                                                                $ordno = sprintf('%05d', $number);
-                                                                            @endphp
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">#{{ $ordno }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->updated_at }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->product_name }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->event_type }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->credit }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{$val->event_type}} Coins</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6"><i
-                                                                                    class="fa fa-{{ $val->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                                    aria-hidden="true"></i>
-                                                                                {{ $val->total_price }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->payment_mode === 'Payment Link' || $val->payment_mode === 'Online' ? 'Online' : ucfirst($val->payment_gateway) }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="">
-                                                                            @php
-                                                                                if (
-                                                                                    $val->payment_mode !=
-                                                                                        'Payment Link' &&
-                                                                                    $val->status == 'created'
-                                                                                ) {
-                                                                                    $status_color = 'danger';
-                                                                                    $status_text = 'Failed';
-                                                                                } else {
-                                                                                    $status_get = GeneralMethod::paymentstatus(
-                                                                                        $val->status,
-                                                                                        'razorpay');
-                                                                                    $status_color = @$status_get->status_color;
-                                                                                    $status_text = @$status_get->status_text;
-                                                                                }
-
-                                                                            @endphp
-
-                                                                            <span
-                                                                                class="fw-bolder fs-6 text-{{ @$status_color }}">{{ @$status_text }}
-                                                                            </span>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ ($val->payment_mode === 'Online') ? 'Website' : $val->payment_mode }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="{{ route('service_company.subscribe.receiptdownload', [encrypt($val->cart_id)]) }}"
-                                                                                class="text-danger fw-bolder text-hover-primary fs-6">Download&nbsp;
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                    width="18px" height="18px"
-                                                                                    viewBox="0 0 24 24" version="1.1"
-                                                                                    class="kt-svg-icon">
-                                                                                    <g stroke="none" stroke-width="1"
-                                                                                        fill="none"
-                                                                                        fill-rule="evenodd">
-                                                                                        <rect id="bound" x="0" y="0"
-                                                                                            width="24"
-                                                                                            height="24" />
-                                                                                        <path
-                                                                                            d="M2,13 C2,12.5 2.5,12 3,12 C3.5,12 4,12.5 4,13 C4,13.3333333 4,15 4,18 C4,19.1045695 4.8954305,20 6,20 L18,20 C19.1045695,20 20,19.1045695 20,18 L20,13 C20,12.4477153 20.4477153,12 21,12 C21.5522847,12 22,12.4477153 22,13 L22,18 C22,20.209139 20.209139,22 18,22 L6,22 C3.790861,22 2,20.209139 2,18 C2,15 2,13.3333333 2,13 Z"
-                                                                                            id="Path-57" fill="red"
-                                                                                            fill-rule="nonzero"
-                                                                                            opacity="0.3" />
-                                                                                        <rect id="Rectangle"
-                                                                                            fill="red" opacity="0.3"
-                                                                                            transform="translate(12.000000, 8.000000) rotate(-180.000000) translate(-12.000000, -8.000000) "
-                                                                                            x="11" y="1" width="2"
-                                                                                            height="14"
-                                                                                            rx="1" />
-                                                                                        <path
-                                                                                            d="M7.70710678,15.7071068 C7.31658249,16.0976311 6.68341751,16.0976311 6.29289322,15.7071068 C5.90236893,15.3165825 5.90236893,14.6834175 6.29289322,14.2928932 L11.2928932,9.29289322 C11.6689749,8.91681153 12.2736364,8.90091039 12.6689647,9.25670585 L17.6689647,13.7567059 C18.0794748,14.1261649 18.1127532,14.7584547 17.7432941,15.1689647 C17.3738351,15.5794748 16.7415453,15.6127532 16.3310353,15.2432941 L12.0362375,11.3779761 L7.70710678,15.7071068 Z"
-                                                                                            id="Path-102" fill="#000000"
-                                                                                            fill-rule="nonzero"
-                                                                                            transform="translate(12.000004, 12.499999) rotate(-180.000000) translate(-12.000004, -12.499999) " />
-                                                                                    </g>
-                                                                                </svg>
-                                                                            </a>
-
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        @endif
-                                                    </tbody>
-                                                </table>
-                                                {{ $cart_transaction_history->links() }} 
-                                            </div>
-                                        </div>
                                         <!--end top up history-->
                                     </div>
                                 </div>
@@ -1475,177 +1260,54 @@
                                         </div>
                                         <div class="py-2 bg-light px-0"></div>
                                         <!--Begin top up history-->
-                                        <div class="row px-5 py-5">
-                                            <div class="card-header border-0 px-0 pb-5">
-                                                <!--begin::Card title-->
-                                                <div class="card-title mb-2 px-5">
-                                                    <div class="d-flex flex-column">
-                                                        <div class="d-flex align-items-center mb-0">
-                                                            <span class="text-gray-900 fs-2 fw-bolder me-2">Transaction History</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!--end::Card title-->
-                                            </div>
-                                            <div class="row">
-                                                <table
-                                                    class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class dataTable no-footer"
-                                                    id="myTable" role="grid" aria-describedby="myTable_info"
-                                                    style="width: 1270px;">
-                                                    <thead>
-                                                        <tr class="fw-bolder text-muted" role="row">
-                                                            <th class="w-10px pe-0 sorting_disabled" rowspan="1"
-                                                                colspan="1" style="width: 40px;">
-                                                                <div
-                                                                    class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                                    <input class="form-check-input datatable_chk chk_list"
-                                                                        type="checkbox" data-kt-check="true"
-                                                                        data-kt-check-target="#myTable .form-check-input"
-                                                                        value="1">
-                                                                </div>
-                                                            </th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Order ID</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Package</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Coins</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Amount</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Status</th>
-                                                            <th class="sorting_disabled" rowspan="1" colspan="1"
-                                                                style="width: 103px;">Download</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="text-gray-600 fw-bold">
-                                                        @if ($cart_transaction_history)
-                                                            @foreach ($cart_transaction_history as $val)
-                                                                <tr role="row" class="odd">
-                                                                    <td>
-                                                                        <div
-                                                                            class="form-check form-check-sm form-check-custom form-check-solid">
-                                                                            <input class="form-check-input chk_list_item "
-                                                                                name="chk_list_item[]" type="checkbox"
-                                                                                data-jobid="11" value="1015">
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            @php
-                                                                                $number = $val->id;
-                                                                                $ordno = sprintf('%05d', $number);
-                                                                            @endphp
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">#{{ $ordno }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->updated_at }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->product_name }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->event_type }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $val->credit }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{$val->event_type}} Coins</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="javascript:void(0);"
-                                                                                class="text-dark fw-bolder text-hover-primary fs-6"><i
-                                                                                    class="fa fa-{{ $val->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                                    aria-hidden="true"></i>
-                                                                                {{ $val->total_price }}</a>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ $val->payment_mode === 'Payment Link' || $val->payment_mode === 'Online' ? 'Online' : ucfirst($val->payment_gateway) }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="">
-                                                                            @php
-                                                                                if (
-                                                                                    $val->payment_link_id == '' &&
-                                                                                    $val->status == 'created'
-                                                                                ) {
-                                                                                    $status_color = 'danger';
-                                                                                    $status_text = 'Failed';
-                                                                                } else {
-                                                                                    $status_get = GeneralMethod::paymentstatus(
-                                                                                        $val->status,
-                                                                                        'razorpay');
-                                                                                    $status_color = @$status_get->status_color;
-                                                                                    $status_text = @$status_get->status_text;
-                                                                                }
-
-                                                                            @endphp
-
-                                                                            <span
-                                                                                class="fw-bolder fs-6 text-{{ @$status_color }}">{{ @$status_text }}
-                                                                            </span>
-                                                                            <span
-                                                                                class="fw-bold text-muted d-block fs-7">{{ ($val->payment_mode === 'Online') ? 'Website' : $val->payment_mode }}</span>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex flex-column">
-                                                                            <a href="{{ route('service_company.subscribe.receiptdownload', [encrypt($val->cart_id)]) }}"
-                                                                                class="text-danger fw-bolder text-hover-primary fs-6">Download&nbsp;
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                                    width="18px" height="18px"
-                                                                                    viewBox="0 0 24 24" version="1.1"
-                                                                                    class="kt-svg-icon">
-                                                                                    <g stroke="none" stroke-width="1"
-                                                                                        fill="none"
-                                                                                        fill-rule="evenodd">
-                                                                                        <rect id="bound" x="0" y="0"
-                                                                                            width="24"
-                                                                                            height="24" />
-                                                                                        <path
-                                                                                            d="M2,13 C2,12.5 2.5,12 3,12 C3.5,12 4,12.5 4,13 C4,13.3333333 4,15 4,18 C4,19.1045695 4.8954305,20 6,20 L18,20 C19.1045695,20 20,19.1045695 20,18 L20,13 C20,12.4477153 20.4477153,12 21,12 C21.5522847,12 22,12.4477153 22,13 L22,18 C22,20.209139 20.209139,22 18,22 L6,22 C3.790861,22 2,20.209139 2,18 C2,15 2,13.3333333 2,13 Z"
-                                                                                            id="Path-57" fill="red"
-                                                                                            fill-rule="nonzero"
-                                                                                            opacity="0.3" />
-                                                                                        <rect id="Rectangle"
-                                                                                            fill="red" opacity="0.3"
-                                                                                            transform="translate(12.000000, 8.000000) rotate(-180.000000) translate(-12.000000, -8.000000) "
-                                                                                            x="11" y="1" width="2"
-                                                                                            height="14"
-                                                                                            rx="1" />
-                                                                                        <path
-                                                                                            d="M7.70710678,15.7071068 C7.31658249,16.0976311 6.68341751,16.0976311 6.29289322,15.7071068 C5.90236893,15.3165825 5.90236893,14.6834175 6.29289322,14.2928932 L11.2928932,9.29289322 C11.6689749,8.91681153 12.2736364,8.90091039 12.6689647,9.25670585 L17.6689647,13.7567059 C18.0794748,14.1261649 18.1127532,14.7584547 17.7432941,15.1689647 C17.3738351,15.5794748 16.7415453,15.6127532 16.3310353,15.2432941 L12.0362375,11.3779761 L7.70710678,15.7071068 Z"
-                                                                                            id="Path-102" fill="#000000"
-                                                                                            fill-rule="nonzero"
-                                                                                            transform="translate(12.000004, 12.499999) rotate(-180.000000) translate(-12.000004, -12.499999) " />
-                                                                                    </g>
-                                                                                </svg>
-                                                                            </a>
-
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        @endif
-                                                    </tbody>
-                                                </table>
-                                                {{ $cart_transaction_history->links() }} 
-                                            </div>
-                                        </div>
                                         <!--end top up history-->
                                     </div>
                                 </div>
                             </div>
 
+                                </div>
+                                <!--end::wallet-pane-packages-->
 
+                                <!--begin::wallet-pane-transactions-->
+                                <div id="wallet-pane-transactions" class="wallet-tab-pane" style="display:none">
+                                    <div id="walletTransactionsContent" class="text-center text-muted py-15">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        Loading transactions...
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-transactions-->
+
+                                <!--begin::wallet-pane-invoices-->
+                                <div id="wallet-pane-invoices" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-file-invoice"></i>
+                                        <div class="fw-bold fs-6 mt-3">Invoices</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-invoices-->
+
+                                <!--begin::wallet-pane-billing-->
+                                <div id="wallet-pane-billing" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-credit-card"></i>
+                                        <div class="fw-bold fs-6 mt-3">Billing</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-billing-->
+
+                                <!--begin::wallet-pane-settings-->
+                                <div id="wallet-pane-settings" class="wallet-tab-pane" style="display:none">
+                                    <div class="wallet-coming-soon">
+                                        <i class="fa fa-cog"></i>
+                                        <div class="fw-bold fs-6 mt-3">Settings</div>
+                                        <div class="text-gray-500 fs-8">Coming soon.</div>
+                                    </div>
+                                </div>
+                                <!--end::wallet-pane-settings-->
+
+                            </div>
 
                         </div>
                         <!--end::Card body-->
@@ -1662,56 +1324,6 @@
         <script src="https://js.stripe.com/v3/"></script>
         <script src="{{ asset('assets/node_modules/switchery/dist/switchery.min.js') }}<?php echo TM_VERSION; ?>"></script>
 
-        <script>
-        const vctx = document.getElementById('gaugeChart').getContext('2d');
-
-        new Chart(vctx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: ["{{$actual_count}}", "{{$remain_coins}}"], // 75% filled
-                    backgroundColor: ['#122ef5', '#E2E8F0'], // blue + light gray
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                rotation: -90,
-                circumference: 180,
-                cutout: '85%',
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                }
-            }
-        });
-        
-    </script>
-     <script>
-        const vctxs = document.getElementById('gaugeChartSales').getContext('2d');
-
-        new Chart(vctxs, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: ["{{$actual_count_sales}}", "{{$remain_coins_sales}}"], // 75% filled
-                    backgroundColor: ['#24ef21', '#E2E8F0'], // blue + light gray
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                rotation: -90,
-                circumference: 180,
-                cutout: '85%',
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: false },
-                }
-            }
-        });
-        
-    </script>
 
         <script>
             var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
@@ -1745,8 +1357,62 @@
                 setTimeout(() => {
                     $(this).removeClass('active');
                 }, 100);
-                
+
             })
+
+            // Wallet Center: cosmetic-only wallet color mode + "Buy Coins" label.
+            // Added as a SEPARATE handler so the existing .package-switch click
+            // logic above (which drives the actual operational/sales content
+            // toggle) is never touched.
+            $('.package-switch').on('click', function() {
+                var plan = $(this).data('kt-plan');
+                if (plan === 'sales') {
+                    $('.wallet-center-header').addClass('wallet-mode-sales');
+                    $('#walletBuyCoinsLabel').text('Buy Sales Coins');
+                } else {
+                    $('.wallet-center-header').removeClass('wallet-mode-sales');
+                    $('#walletBuyCoinsLabel').text('Buy Coins');
+                }
+            });
+
+            // Wallet Center: top-level tab switching (Overview / Packages /
+            // Transactions / Invoices / Billing / Settings). Pure client-side
+            // show/hide — all tab content is already in the DOM except
+            // Transactions, which is lazy-loaded once via AJAX on first view.
+            var walletTransactionsLoaded = false;
+
+            window.switchWalletCenterTab = function(tab) {
+                $('.wallet-tab-pane').hide();
+                $('#wallet-pane-' + tab).show();
+                $('.wallet-tab-link').removeClass('wt-active');
+                $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('wt-active');
+
+                if (tab === 'transactions' && !walletTransactionsLoaded) {
+                    walletTransactionsLoaded = true;
+                    $.ajax({
+                        url: "{{ route('service_company.transactions.subscriptionAjax') }}",
+                        type: 'GET',
+                        success: function(response) {
+                            $('#walletTransactionsContent').html(response.html);
+                        },
+                        error: function() {
+                            walletTransactionsLoaded = false;
+                            $('#walletTransactionsContent').html(
+                                '<div class="text-center text-danger py-10">Could not load transactions. Please try again.</div>'
+                            );
+                        }
+                    });
+                }
+            };
+
+            // Deep-link support: sidebar links to this page can append
+            // #tab=packages (etc.) to open directly on that tab.
+            (function() {
+                var match = /tab=([a-z]+)/.exec(window.location.hash || '');
+                if (match && $('#wallet-pane-' + match[1]).length) {
+                    switchWalletCenterTab(match[1]);
+                }
+            })();
 
 
             $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {

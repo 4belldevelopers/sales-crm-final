@@ -387,6 +387,10 @@
                     $subS = $result->name ?? '';
                     $assignmentLabel = $row->status == 3 ? 'Currently Working' : ucwords($subS);
 
+                    $joinedRawForAssign = @$row->of_joined_date;
+                    $joinedIsoForAssign = (!empty($joinedRawForAssign) && $joinedRawForAssign != '0000-00-00 00:00:00')
+                        ? date('Y-m-d', strtotime($joinedRawForAssign)) : '';
+
                     echo '<div class="d-flex flex-column">
                             <span class="placed-status-pill is-success">
                                 <i class="fa-solid fa-circle-check me-1"></i>' . $assignmentLabel . '
@@ -396,11 +400,23 @@
                                 <i class="fa-solid fa-calendar-days text-muted"></i>
                                 <span class="text-dark fw-semibold fs-9">--</span>
                             </span>
-                            <a href="javascript:void(0);" class="placed-change-link"><i class="fa-solid fa-pen"></i>Change</a>
+                            <a href="javascript:void(0);" class="placed-change-link assignment-change-btn"
+                               data-name="' . e(@$row->full_name) . '"
+                               data-designation="' . e(@$row->current_designation) . '"
+                               data-exp-loc="' . e(@$expLocLine) . '"
+                               data-client="' . e(@$client_name) . '"
+                               data-employment-type="' . e(@$employment_type) . '"
+                               data-joined-date="' . $joinedIsoForAssign . '"
+                               data-avatar-class="' . @$bgTextDecore . '"
+                               data-avatar-letter="' . strtoupper(@$strVal) . '"
+                            ><i class="fa-solid fa-pen"></i>Change</a>
                           </div>';
                 @endphp
             </td>
-            {{-- Actions: kebab menu — the only wired item reuses the existing stage/status modal --}}
+            {{-- Actions: kebab menu. "View Placement Status" reuses the existing stage/status
+                 modal. "Delete" has no backing endpoint (no delete route exists for this
+                 listing), so it's a view-only confirm-then-preview action — it never removes
+                 the row, to avoid anyone believing a real record was deleted. --}}
             <td>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-icon btn-light placed-action-btn" type="button" data-toggle="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -410,6 +426,11 @@
                         <li>
                             <a href="javascript:void(0);" class="dropdown-item stage_sub_stage" data-row-id="{{ @$row->wiseId }}">
                                 View Placement Status
+                            </a>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);" class="dropdown-item text-danger placed-row-delete-btn" data-candidate-name="{{ e(@$row->full_name) }}">
+                                <i class="fa-solid fa-trash-can me-2"></i>Delete
                             </a>
                         </li>
                     </ul>
