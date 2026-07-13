@@ -43,13 +43,14 @@
         }
 
         @page {
-            margin: 120px 50px 210px 50px; /* top, right, bottom, left margins */
+            margin: 160px 50px 210px 50px; /* top right bottom left — top increased to 160px so the
+                                               fixed header (top:-130px) lands 30px below the page edge */
         }
 
         /* Header styling */
         header {
         position: fixed;
-        top: -130px; /* Adjust this to control the distance from the top of the page */
+        top: -130px; /* 160px page-top margin − 130px = 30px breathing space above the logo */
         left: 0;
         right: 0;
         height: 50px;
