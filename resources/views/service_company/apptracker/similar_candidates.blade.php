@@ -97,7 +97,7 @@
 
         .tagify__tag .star {
             cursor: pointer;
-            font-size: 13px;
+            font-size: 19.5px;
             line-height: 1;
             display: inline-flex;
             align-items: center;
@@ -105,7 +105,7 @@
         }
 
         .tagify__tag .star.checked {
-            color: #2563eb;
+            color: #eab308;
         }
 
         .tagify__tag .tagify__tag-text {
@@ -187,7 +187,7 @@
            .simf-body scrolls internally — without this, the drawer's height
            was growing with its content and the whole browser page ended up
            scrolling instead of just the filter list. */
-        .simf-drawer {
+        #kt_similar_filter_drawer.simf-drawer {
             position: fixed !important;
             top: 0 !important;
             right: 0 !important;
@@ -198,10 +198,11 @@
             overflow: hidden !important;
             z-index: 1200;
         }
-        .simf-card {
+        #simf_card.simf-card {
             display: flex !important;
-            flex-direction: column;
+            flex-direction: column !important;
             font-family: 'Poppins', sans-serif;
+            position: relative !important;
             height: 100vh !important;
             max-height: 100vh !important;
             overflow: hidden !important;
@@ -329,12 +330,17 @@
         .simf-chip-remove:hover {
             background: rgba(0,0,0,.14);
         }
-        .simf-body {
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
-            overflow-x: hidden;
+        #simf_card .simf-body {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
             padding: 4px 20px 16px;
+        }
+        #simf_card .simf-header,
+        #simf_card .simf-activebar,
+        #simf_card .simf-footer {
+            flex-shrink: 0 !important;
         }
         .simf-section {
             padding: 16px 0;
@@ -894,7 +900,7 @@
                     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
                     data-kt-drawer-width="{default:'92%', 'sm': '80%'}" data-kt-drawer-direction="end"
                     data-kt-drawer-toggle="#kt_similar_filter_toggle" data-kt-drawer-close="#kt_similar_filter_close">
-                    <div class="card shadow-none rounded-0 w-100 h-100 simf-card">
+                    <div id="simf_card" class="card shadow-none rounded-0 w-100 h-100 simf-card">
                         <!--begin::Header-->
                         <div class="simf-header">
                             <div class="d-flex align-items-center gap-3">
@@ -1550,9 +1556,9 @@
                                 </div>
                             </div>
                             <div class="simf-footer-actions">
-                                <button type="button" class="btn btn-sm btn-light" id="simf_preview_btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Preview
+                                <button type="button" class="btn btn-sm btn-light" id="simf_close_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                    Close
                                 </button>
                                 <button type="button" class="btn btn-sm btn-light" id="simf_reset_btn">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
@@ -2473,8 +2479,13 @@
             var $chips = $('#simf_active_chips').empty();
             chips.forEach(function(c, idx) {
                 var $chip = $('<span class="simf-chip"></span>')
-                    .toggleClass('mandatory', !!c.mandatory)
-                    .append($('<span></span>').text((c.mandatory ? '★ ' : '') + c.label))
+                    .toggleClass('mandatory', !!c.mandatory);
+                if (c.mandatory) {
+                    $chip.append($('<span style="color:#eab308;"></span>').text('★ ')).append($('<span></span>').text(c.label));
+                } else {
+                    $chip.append($('<span></span>').text(c.label));
+                }
+                $chip
                     .append($('<span class="simf-chip-remove">&times;</span>').on('click', function() {
                         c.clear();
                         updateActiveFiltersUI();
@@ -2509,12 +2520,11 @@
             fetchCandidates();
         });
 
-        // Preview keeps the drawer open (just refreshes the results + footer
-        // count behind it); Apply does the same fetch and then closes the
-        // drawer. Both reuse the exact same fetchCandidates() call the sort
-        // dropdown and pagination already use — no new endpoint.
-        $(document).on('click', '#simf_preview_btn', function() {
-            fetchCandidates();
+        // Close just dismisses the drawer without touching the current results;
+        // Apply reuses the exact same fetchCandidates() call the sort dropdown
+        // and pagination already use, then closes the drawer.
+        $(document).on('click', '#simf_close_btn', function() {
+            $('#kt_similar_filter_close').trigger('click');
         });
         $(document).on('click', '#simf_apply_btn', function() {
             fetchCandidates();
