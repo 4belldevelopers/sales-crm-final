@@ -161,6 +161,317 @@
             background: #f1f5f9;
             color: #334155;
         }
+
+        /* Similar Candidates filter drawer (replaces the old #apptrackerfilter modal) */
+        .simf-card {
+            display: flex;
+            flex-direction: column;
+            font-family: 'Poppins', sans-serif;
+        }
+        .simf-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid #eef0f4;
+            flex-shrink: 0;
+        }
+        .simf-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .simf-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #181c32;
+            margin: 0;
+        }
+        .simf-count-pill {
+            background: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .simf-subtitle {
+            font-size: 12px;
+            color: #7e8299;
+            margin: 2px 0 0;
+        }
+        .simf-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #7e8299;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .simf-close:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        .simf-activebar {
+            padding: 12px 20px;
+            border-bottom: 1px solid #eef0f4;
+            flex-shrink: 0;
+        }
+        .simf-activebar-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .simf-activebar-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #181c32;
+        }
+        .simf-clearall {
+            font-size: 12px;
+            font-weight: 500;
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+        .simf-clearall:hover {
+            color: #b91c1c;
+        }
+        .simf-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .simf-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eef2ff;
+            color: #3730a3;
+            border: 1px solid #e0e7ff;
+            border-radius: 20px;
+            padding: 4px 6px 4px 10px;
+            font-size: 11.5px;
+            font-weight: 500;
+        }
+        .simf-chip.mandatory {
+            background: #fff1f2;
+            color: #be123c;
+            border-color: #ffe4e6;
+        }
+        .simf-chip-remove {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.06);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .simf-chip-remove:hover {
+            background: rgba(0,0,0,.14);
+        }
+        .simf-body {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 4px 20px 16px;
+        }
+        .simf-section {
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f2f6;
+        }
+        .simf-section-last {
+            border-bottom: none;
+        }
+        .simf-section-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .simf-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .simf-icon-blue { background: #eef2ff; color: #4f46e5; }
+        .simf-icon-green { background: #ecfdf5; color: #059669; }
+        .simf-icon-purple { background: #f5f3ff; color: #7c3aed; }
+        .simf-icon-teal { background: #ecfeff; color: #0e7490; }
+        .simf-icon-amber { background: #fffbeb; color: #b45309; }
+        .simf-icon-rose { background: #fff1f2; color: #be123c; }
+        .simf-icon-pink { background: #fdf2f8; color: #be185d; }
+        .simf-icon-sky { background: #f0f9ff; color: #0369a1; }
+        .simf-section-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #181c32;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .simf-section-desc {
+            font-size: 11.5px;
+            color: #99a1b7;
+            margin-top: 1px;
+        }
+        .simf-badge-primary {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #2563eb;
+            background: #dbeafe;
+            border-radius: 4px;
+            padding: 1px 6px;
+        }
+        .simf-mini-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #7e8299;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .simf-loc-suggestions {
+            margin-top: 10px;
+        }
+        .simf-loc-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #99a1b7;
+            margin-bottom: 6px;
+        }
+        .simf-loc-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .simf-loc-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11.5px;
+            font-weight: 500;
+            color: #3f4254;
+        }
+        .simf-loc-chip:hover {
+            border-color: #93c5fd;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .simf-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .simf-pill-row .btn-check {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .simf-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #3f4254;
+            cursor: pointer;
+            transition: border-color .15s, background-color .15s, color .15s;
+        }
+        .simf-pill-row .btn-check:checked + .simf-pill {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        .simf-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid #eef0f4;
+            background: #f8f9fb;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .simf-footer-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .simf-footer-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #dbeafe;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .simf-footer-number {
+            font-size: 15px;
+            font-weight: 700;
+            color: #181c32;
+            line-height: 1.2;
+        }
+        .simf-footer-label {
+            font-size: 10.5px;
+            color: #7e8299;
+        }
+        .simf-footer-hint {
+            cursor: help;
+        }
+        .simf-footer-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .simf-footer-actions .btn {
+            font-size: 11.5px;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        @media (max-width: 576px) {
+            .simf-footer { flex-direction: column; align-items: stretch; }
+            .simf-footer-actions { justify-content: stretch; }
+            .simf-footer-actions .btn { flex: 1 1 auto; justify-content: center; }
+        }
     </style>
 @endpush
 @section('content')
@@ -400,7 +711,7 @@
                             <div class="flex-grow-1" style="position: relative; min-width: 0;">
                                 <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
                                     value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
-                                <div data-toggle="modal" data-target="#apptrackerfilter"
+                                <div class="simf-overlay-trigger"
                                     style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
                             </div>
                             <div style="width: 220px; flex-shrink: 0;">
@@ -420,10 +731,8 @@
                                 </select>
                             </div>
                             <div style="width: 140px; flex-shrink: 0;">
-                                <button type="button"
-                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
-                                    data-toggle="modal" data-target="#apptrackerfilter">
+                                <button type="button" id="kt_similar_filter_toggle"
+                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4 position-relative">
                                     <span class="svg-icon svg-icon-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none">
@@ -433,6 +742,7 @@
                                         </svg>
                                     </span>
                                     Filter
+                                    <span class="badge badge-circle badge-primary simf-count-badge" id="simf_count_badge" style="display:none;position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
                                 </button>
                             </div>
                         </div>
@@ -440,783 +750,643 @@
                 </div>
 
 
-                <!--Start Popup-->
-                <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header flex-stack">
-                                <h2>Filter</h2>
-                                <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal"
-                                    id="apptrackerfilter_close">
-                                    <span class="svg-icon svg-icon-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none">
-                                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                                rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
-                                            <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                                transform="rotate(45 7.41422 6)" fill="black"></rect>
-                                        </svg>
-                                    </span>
+                <!--Start Filter Drawer-->
+                <div id="kt_similar_filter_drawer" class="bg-body simf-drawer" data-kt-drawer="true" data-kt-drawer-name="similar-filter"
+                    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+                    data-kt-drawer-width="{default:'92%', 'sm': '420px', 'md':'460px'}" data-kt-drawer-direction="end"
+                    data-kt-drawer-toggle="#kt_similar_filter_toggle" data-kt-drawer-close="#kt_similar_filter_close">
+                    <div class="card shadow-none rounded-0 w-100 h-100 simf-card">
+                        <!--begin::Header-->
+                        <div class="simf-header">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="simf-header-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                </span>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h3 class="simf-title">Filter Candidates</h3>
+                                        <span class="simf-count-pill" id="simf_header_count">0</span>
+                                    </div>
+                                    <p class="simf-subtitle">Refine your search and find the best talent</p>
                                 </div>
                             </div>
-                            <div class="apptrackerfilter_body_content" id="">
-                                <div class="modal-body" style="padding: 2em;">
-                                    <form id="createSchedule" class="ajax-form" method="post">
-                                        <div class="d-flex flex-column mb-8">
-                                            <label class="form-label required">Enter skills to filter candidate</label>
-                                            <input class="form-control form-control-solid d-flex align-items-center"
-                                                name="kt_tagify_users" value="{{ @$default_skill }}" placeholder=""
-                                                id="kt_tagify_users" />
-                                            <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-                                            <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
-                                            <script>
-                                                const inputElm = document.querySelector('#kt_tagify_users');
+                            <button type="button" class="simf-close" id="kt_similar_filter_close" title="Close">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <!--end::Header-->
 
-                                                const tagify = new Tagify(inputElm, {
-                                                    templates: {
-                                                        tag: function(tagData) {
-                                                            tagData = tagData || {};
-                                                            const value = tagData.value || '';
-                                                            const isChecked = tagData.checked ? 'checked' : '';
-                                                            return `
-                                                        <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                                                            <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                            <div>
-                                                                <span class="star ${isChecked}">🟌</span>
-                                                                <span class="tagify__tag-text">${value}</span>
-                                                            </div>
-                                                        </tag>
-                                                    `;
-                                                        }
-                                                    },
-                                                    transformTag: function(tagData) {
-                                                        tagData.checked = tagData.checked || false;
-                                                        return tagData;
+                        <!--begin::Active filters-->
+                        <div class="simf-activebar d-none" id="simf_active_bar">
+                            <div class="simf-activebar-head">
+                                <span class="simf-activebar-label">Active Filters <span id="simf_active_count">(0)</span></span>
+                                <a href="javascript:void(0);" class="simf-clearall" id="simf_clear_all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                    Clear All
+                                </a>
+                            </div>
+                            <div class="simf-chips" id="simf_active_chips"></div>
+                        </div>
+                        <!--end::Active filters-->
+
+                        <!--begin::Body-->
+                        <div class="simf-body">
+                            <form id="createSchedule" class="ajax-form" method="post">
+
+                                <!--begin::Skills-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-blue">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Skills <span class="simf-badge-primary">Primary</span></div>
+                                            <div class="simf-section-desc">Add skills to find relevant candidates — click ★ to make a skill mandatory</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <input class="form-control form-control-solid d-flex align-items-center"
+                                            name="kt_tagify_users" value="{{ @$default_skill }}" placeholder=""
+                                            id="kt_tagify_users" />
+                                        <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+                                        <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
+                                        <script>
+                                            const inputElm = document.querySelector('#kt_tagify_users');
+
+                                            const tagify = new Tagify(inputElm, {
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        tagData = tagData || {};
+                                                        const value = tagData.value || '';
+                                                        const isChecked = tagData.checked ? 'checked' : '';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
+                                                        <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
+                                                        <div>
+                                                            <span class="star ${isChecked}">★</span>
+                                                            <span class="tagify__tag-text">${value}</span>
+                                                        </div>
+                                                    </tag>
+                                                `;
                                                     }
-                                                });
+                                                },
+                                                transformTag: function(tagData) {
+                                                    tagData.checked = tagData.checked || false;
+                                                    return tagData;
+                                                }
+                                            });
 
-                                                // Add event listener for star click
-                                                document.addEventListener('click', function(e) {
-                                                    if (e.target.classList.contains('star')) {
-                                                        const tagElm = e.target.closest('.tagify__tag');
-                                                        const value = tagElm.querySelector('.tagify__tag-text').textContent;
+                                            // Add event listener for star click
+                                            document.addEventListener('click', function(e) {
+                                                if (e.target.classList.contains('star')) {
+                                                    const tagElm = e.target.closest('.tagify__tag');
+                                                    const value = tagElm.querySelector('.tagify__tag-text').textContent;
 
-                                                        e.target.classList.toggle('checked');
+                                                    e.target.classList.toggle('checked');
 
-                                                        // Update the tag data
-                                                        const tagData = tagify.value.find(tag => tag.value === value);
-                                                        if (tagData) {
-                                                            setTimeout(() => {
-                                                                tagData.checked = e.target.classList.contains('checked');
-                                                                tagify.updateValueByDOMTags();
-                                                            }, 500);
+                                                    // Update the tag data
+                                                    const tagData = tagify.value.find(tag => tag.value === value);
+                                                    if (tagData) {
+                                                        setTimeout(() => {
+                                                            tagData.checked = e.target.classList.contains('checked');
+                                                            tagify.updateValueByDOMTags();
+                                                            updateActiveFiltersUI();
+                                                        }, 500);
 
-                                                        }
                                                     }
-                                                });
-
-
-
-                                                // Initialize Tagify for kt_tagify_2
-                                                const inputJobSearch = document.querySelector('#kt_tagify_2');
-                                                // const tagify2 = new Tagify(inputJobSearch);
-                                                const tagify2 = new Tagify(inputJobSearch, {
-                                                    maxTags: 3 // Limit the number of tags to 5
-                                                });
-
-                                                // Function to update inputJobSearch based on tagify's value
-                                                function updateInputJobSearch() {
-                                                    const tags = tagify.value.map(tag => tag.value).join(',');
-                                                    inputJobSearch.value = tags;
-                                                    autoclickstar();
                                                 }
+                                            });
 
-                                                function updateTagifyUsers() {
-                                                    const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                        value: tag.trim()
-                                                    }));
-                                                    tagify.removeAllTags();
-                                                    tagify.addTags(newTags);
+                                            // Initialize Tagify for kt_tagify_2
+                                            const inputJobSearch = document.querySelector('#kt_tagify_2');
+                                            const tagify2 = new Tagify(inputJobSearch, {
+                                                maxTags: 3 // Limit the number of tags to 5
+                                            });
 
-                                                }
+                                            // Function to update inputJobSearch based on tagify's value
+                                            function updateInputJobSearch() {
+                                                const tags = tagify.value.map(tag => tag.value).join(',');
+                                                inputJobSearch.value = tags;
+                                                autoclickstar();
+                                            }
 
+                                            function updateTagifyUsers() {
+                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
+                                                    value: tag.trim()
+                                                }));
+                                                tagify.removeAllTags();
+                                                tagify.addTags(newTags);
+                                            }
 
-                                                // Listen for tag removal
-                                                tagify.on('add', updateInputJobSearch);
-                                                tagify.on('remove', updateInputJobSearch);
-                                                inputJobSearch.addEventListener('change', updateTagifyUsers);
+                                            // Listen for tag removal
+                                            tagify.on('add', updateInputJobSearch);
+                                            tagify.on('remove', updateInputJobSearch);
+                                            inputJobSearch.addEventListener('change', updateTagifyUsers);
 
-                                                // Initial sync
-                                                updateInputJobSearch();
+                                            // Initial sync
+                                            updateInputJobSearch();
 
-                                                // Sync tagify_users with inputJobSearch
-                                                inputJobSearch.addEventListener('change', function() {
-                                                    const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                        value: tag.trim()
-                                                    }));
-                                                    tagify.loadOriginalValues(newTags);
-                                                });
+                                            // Sync tagify_users with inputJobSearch
+                                            inputJobSearch.addEventListener('change', function() {
+                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
+                                                    value: tag.trim()
+                                                }));
+                                                tagify.loadOriginalValues(newTags);
+                                            });
 
-
-                                                function autoclickstar() {
-                                                    setTimeout(() => {
-                                                        var starElement = document.querySelector('.star');
+                                            function autoclickstar() {
+                                                setTimeout(() => {
+                                                    var starElement = document.querySelector('.star');
+                                                    if (starElement) {
                                                         starElement.click();
                                                         setTimeout(() => {
                                                             starElement.click();
                                                         }, 200);
-                                                    }, 500);
+                                                    }
+                                                }, 500);
+                                            }
+
+                                            function debounceskill(func, delay) {
+                                                let timeoutskill;
+                                                return function(...args) {
+                                                    clearTimeout(timeoutskill);
+                                                    timeoutskill = setTimeout(() => func.apply(this, args), delay);
+                                                };
+                                            }
+
+                                            const fetchSuggestionsSkills = debounceskill(function(query) {
+                                                $.ajax({
+                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                                                    method: 'GET',
+                                                    success: function(data) {
+                                                        if (Array.isArray(data)) {
+                                                            tagify.settings.whitelist = data; // Update whitelist
+                                                            tagify.dropdown.show.call(tagify);
+                                                        } else {
+                                                            console.error("Invalid API response format: Expected array.");
+                                                        }
+                                                    },
+                                                    error: function(err) {
+                                                        console.error("Error fetching Skill:", err);
+                                                    }
+                                                });
+                                            }, 200);
+
+                                            // Listen for user input to trigger API call
+                                            tagify.on('input', function(e) {
+                                                var query = e.detail.value.trim();
+                                                if (query.length < 1) return;
+                                                fetchSuggestionsSkills(query);
+                                            });
+                                            tagify.on('add', updateActiveFiltersUI);
+                                            tagify.on('remove', updateActiveFiltersUI);
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end::Skills-->
+
+                                <!--begin::Location-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-green">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Preferred Location</div>
+                                            <div class="simf-section-desc">Preferred cities or work locations</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <input class="form-control form-control-solid"
+                                            value="{{ $default_loc }}" id="kt_tagify_location"
+                                            placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                        <script>
+                                            // The DOM elements you wish to replace with Tagify
+                                            var inputloc = document.querySelector("#kt_tagify_location");
+                                            var cities = @json($cities);
+                                            // Initialize Tagify script on the above inputs
+                                            var tagifylocation = new Tagify(inputloc, {
+                                                whitelist: [],
+                                                maxTags: 10,
+                                                dropdown: {
+                                                    maxItems: 20,
+                                                    classname: "",
+                                                    enabled: 0,
+                                                    closeOnSelect: true
                                                 }
+                                            });
+                                            // Prevent creating tags on blur or enter key
+                                            tagifylocation.on('input', function(e) {
+                                                tagifylocation.dropdown.show();
+                                            });
 
-                                                function debounceskill(func, delay) {
-                                                    let timeoutskill;
-                                                    return function(...args) {
-                                                        clearTimeout(timeoutskill);
-                                                        timeoutskill = setTimeout(() => func.apply(this, args), delay);
-                                                    };
+                                            // Create tags only on select
+                                            tagifylocation.on('dropdown:select', function(e) {
+                                                tagifylocation.addTags([e.detail.data.value]);
+                                            });
+                                            tagifylocation.on('add', function(e) {
+                                                updateActiveFiltersUI();
+                                            });
+                                            tagifylocation.on('remove', function(e) {
+                                                updateActiveFiltersUI();
+                                            });
+
+                                            function debounce(func, delay) {
+                                                let timer;
+                                                return function (...args) {
+                                                    clearTimeout(timer);
+                                                    timer = setTimeout(() => func.apply(this, args), delay);
+                                                };
+                                            }
+
+                                            // Debounced function to fetch suggestions
+                                            const fetchSuggestions = debounce(function(query) {
+                                                $.ajax({
+                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+                                                    method: 'GET',
+                                                    success: function(data) {
+                                                        if (Array.isArray(data)) {
+                                                            tagifylocation.settings.whitelist = data;
+                                                            tagifylocation.dropdown.show.call(tagifylocation);
+                                                        } else {
+                                                            console.error("Invalid API response format: Expected array.");
+                                                        }
+                                                    },
+                                                    error: function(err) {
+                                                        console.error("Error fetching cities:", err);
+                                                    }
+                                                });
+                                            }, 200);
+
+                                            // Listen for user input to trigger API call
+                                            tagifylocation.on('input', function(e) {
+                                                var query = e.detail.value.trim();
+                                                if (query.length < 2) return;
+                                                fetchSuggestions(query);
+                                            });
+
+                                            setTimeout(() => {
+                                                var city = "{{@$default_loc}}";
+                                                if(city !=''){
+                                                    var cityName = city.split(" | ")[0];
+                                                    fetchSuggestions(cityName);
                                                 }
+                                            }, 100);
+                                            setTimeout(() => {
+                                                var defaultLocation = {!! json_encode(@$default_loc) !!};
 
-                                                 const fetchSuggestionsSkills = debounceskill(function(query) {
-                                                    $.ajax({
-                                                        url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-                                                        method: 'GET',
-                                                        success: function(data) {
-                                                            console.warn("Fetched Skill: ", data);
+                                                if (defaultLocation) {
+                                                    tagifylocation.addTags([defaultLocation]);
+                                                    tagifylocation.dropdown.hide();
+                                                }
+                                                updateActiveFiltersUI();
+                                            }, 5000);
+                                        </script>
 
-                                                            if (Array.isArray(data)) {
-                                                                tagify.settings.whitelist = data; // Update whitelist
-                                                                // tagify.dropdown.show(query); // Show suggestions
-                                                                tagify.dropdown.show.call(tagify);
-                                                            } else {
-                                                                console.error("Invalid API response format: Expected array.");
-                                                            }
-                                                        },
-                                                        error: function(err) {
-                                                            console.error("Error fetching Skill:", err);
-                                                        }
-                                                    });
-                                                }, 200); 
-
-                                                // Listen for user input to trigger API call
-                                                tagify.on('input', function(e) {
-                                                    var query = e.detail.value.trim();
-                                                    if (query.length < 1) return;
-                                                    fetchSuggestionsSkills(query);
-                                                });
-
-                                                // new Tagify(inputElm);   
-                                            </script>
-                                            <!--<textarea class="form-control form-control-solid" rows="4" name=""
-                                                placeholder="Enter your Skills/Keywords..."></textarea>-->
-                                        </div>
-
-                                        <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                            <div class="d-flex flex-column mb-3 fv-row">
-                                                <label class="form-label">Select location for candidate</label>
-                                                <input class="form-control form-control-solid"
-                                                    value="{{ $default_loc }}" id="kt_tagify_location"
-                                                    placeholder="Enter your Location..." />
-                                                <!--<input class="form-control form-control-solid" value="" name="tags" placeholder="Enter your Location...">-->
-                                                <script>
-                                                    // The DOM elements you wish to replace with Tagify
-                                                    var inputloc = document.querySelector("#kt_tagify_location");
-                                                    var cities = @json($cities);
-                                                    // Initialize Tagify script on the above inputs
-                                                    var tagifylocation = new Tagify(inputloc, {
-                                                        whitelist: [],
-                                                        // enforceWhitelist: true, // Prevents users from adding custom values  
-                                                        maxTags: 10,
-                                                        dropdown: {
-                                                            maxItems: 20, // <- mixumum allowed rendered suggestions
-                                                            classname: "", // <- custom classname for this dropdown, so it could be targeted
-                                                            enabled: 0, // <- show suggestions on focus
-                                                            closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
-                                                        }
-                                                    });
-                                                    // Prevent creating tags on blur or enter key
-                                                    tagifylocation.on('input', function(e) {
-                                                        tagifylocation.dropdown.show(); // show the dropdown immediately
-                                                    });
-
-                                                    // Create tags only on select
-                                                    tagifylocation.on('dropdown:select', function(e) {
-                                                        tagifylocation.addTags([e.detail.data.value]);
-                                                    });
-                                                    tagifylocation.on('add', function(e) {
-                                                        // alert(cities);
-                                                        // Remove the tag if it wasn't selected from the dropdown
-                                                        // if (!cities.includes(e.detail.data.value)) {
-                                                        //     setTimeout(() => {
-                                                        //         tagifylocation.removeTag(e.detail.data.value);
-                                                        //     }, 500);
-
-                                                        // }
-                                                    });
-
-
-                                                    function debounce(func, delay) {
-                                                        let timer;
-                                                        return function (...args) {
-                                                            clearTimeout(timer);
-                                                            timer = setTimeout(() => func.apply(this, args), delay);
-                                                        };
-                                                    }
-
-                                                        // Debounced function to fetch suggestions
-                                                    const fetchSuggestions = debounce(function(query) {
-                                                        $.ajax({
-                                                            url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-                                                            method: 'GET',
-                                                            success: function(data) {
-                                                                console.warn("Fetched Cities: ", data);
-
-                                                                if (Array.isArray(data)) {
-                                                                    tagifylocation.settings.whitelist = data; // Update whitelist
-                                                                    // tagifylocation.dropdown.show(query); // Show suggestions
-                                                                    tagifylocation.dropdown.show.call(tagifylocation);
-                                                                } else {
-                                                                    console.error("Invalid API response format: Expected array.");
-                                                                }
-                                                            },
-                                                            error: function(err) {
-                                                                console.error("Error fetching cities:", err);
-                                                            }
-                                                        });
-                                                    }, 200); // 300ms delay
-
-                                                    // Listen for user input to trigger API call
-                                                    tagifylocation.on('input', function(e) {
-                                                        var query = e.detail.value.trim();
-                                                        if (query.length < 2) return;
-                                                        fetchSuggestions(query);
-                                                    });
-
-                                                    setTimeout(() => {
-                                                    var city = "{{@$default_loc}}";
-                                                    if(city !=''){
-                                                        var cityName = city.split(" | ")[0]; // Get the first part (Ballia)
-                                                        fetchSuggestions(cityName);
-                                                    }
-                                                    }, 100);
-                                                    setTimeout(() => {
-                                                        var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
-                                        
-                                                        if (defaultLocation) {
-                                                            tagifylocation.addTags([defaultLocation]); // Add the default location as a tag
-                                                            tagifylocation.dropdown.hide();
-                                                        }
-                                                    }, 5000); // 3 seconds delay
-    
-                                                </script>
+                                        <div class="simf-loc-suggestions">
+                                            <div class="simf-loc-label">Popular Locations</div>
+                                            <div class="simf-loc-chip-row">
+                                                <button type="button" class="simf-loc-chip" data-city="Bangalore">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                    Bangalore
+                                                </button>
+                                                <button type="button" class="simf-loc-chip" data-city="Hyderabad">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+                                                    Hyderabad
+                                                </button>
+                                                <button type="button" class="simf-loc-chip" data-city="Pune">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V10l6-4 6 4v11M9 21v-5h6v5"/></svg>
+                                                    Pune
+                                                </button>
+                                                <button type="button" class="simf-loc-chip" data-city="Mumbai">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4"/></svg>
+                                                    Mumbai
+                                                </button>
+                                                <button type="button" class="simf-loc-chip" data-city="Chennai">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-6 8 6v12M10 21v-6h4v6"/></svg>
+                                                    Chennai
+                                                </button>
+                                                <button type="button" class="simf-loc-chip" data-city="Remote">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                                                    Remote
+                                                </button>
                                             </div>
-                                            <div class="d-flex">
-                                                <div class="fw-semibold me-5 d-flex">
-                                                    <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                        name="communication[]" value="email" checked="checked">
-                                                    <div class="fs-7 text-muted">Include Candidate who prefer to relocate
-                                                    </div>
-                                                </div>
+                                            <div class="simf-loc-label mt-2">Other Suggestions</div>
+                                            <div class="simf-loc-chip-row">
+                                                <button type="button" class="simf-loc-chip" data-city="Noida">Noida</button>
+                                                <button type="button" class="simf-loc-chip" data-city="Gurgaon">Gurgaon</button>
+                                                <button type="button" class="simf-loc-chip" data-city="Kolkata">Kolkata</button>
+                                                <button type="button" class="simf-loc-chip" data-city="Ahmedabad">Ahmedabad</button>
+                                                <button type="button" class="simf-loc-chip" data-city="Chandigarh">Chandigarh</button>
                                             </div>
                                         </div>
 
-                                        <div class="d-flex flex-column mb-8">
-                                            <label class="form-label">Education</label>
-
-
-                                            <input class="form-control form-control-solid" value="{{ $qualification }}"
-                                                id="kt_tagify_education" placeholder="About Education..." />
-                                            <!--<input class="form-control form-control-solid" value="" name="tags" placeholder="Enter your Location...">-->
-                                            <script>
-                                                // The DOM elements you wish to replace with Tagify
-                                                var inputdeducation = document.querySelector("#kt_tagify_education");
-                                                var qualification = @json($qualificationTag);
-                                                var tagifyqualification = new Tagify(inputdeducation, {
-                                                    whitelist: qualification,
-                                                    maxTags: 10,
-                                                    dropdown: {
-                                                        maxItems: 20, // <- mixumum allowed rendered suggestions
-                                                        classname: "", // <- custom classname for this dropdown, so it could be targeted
-                                                        enabled: 0, // <- show suggestions on focus
-                                                        closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
-                                                    }
-                                                });
-
-                                                // Prevent creating tags on blur or enter key
-                                                tagifyqualification.on('input', function(e) {
-                                                    tagifyqualification.dropdown.show(); // show the dropdown immediately
-                                                });
-
-                                                // Create tags only on select
-                                                tagifyqualification.on('dropdown:select', function(e) {
-                                                    tagifyqualification.addTags([e.detail.data.value]);
-                                                });
-                                                tagifyqualification.on('add', function(e) {
-                                                    // alert(qualification);
-                                                    // Remove the tag if it wasn't selected from the dropdown
-                                                    if (!qualification.includes(e.detail.data.value)) {
-                                                        setTimeout(() => {
-                                                            tagifyqualification.removeTag(e.detail.data.value);
-                                                        }, 200);
-
-                                                    }
-                                                });
-                                            </script>
+                                        <div class="form-check form-check-custom mt-3">
+                                            <input class="form-check-input" type="checkbox"
+                                                name="communication[]" value="email" checked="checked" id="simf_relocate_chk">
+                                            <label class="form-check-label fs-7 text-muted" for="simf_relocate_chk">
+                                                Include candidates who prefer to relocate
+                                            </label>
                                         </div>
+                                    </div>
+                                </div>
+                                <!--end::Location-->
 
+                                <!--begin::Education-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-purple">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Education</div>
+                                            <div class="simf-section-desc">Highest qualification</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <input class="form-control form-control-solid" value="{{ $qualification }}"
+                                            id="kt_tagify_education" placeholder="Select education" />
+                                        <script>
+                                            var inputdeducation = document.querySelector("#kt_tagify_education");
+                                            var qualification = @json($qualificationTag);
+                                            var tagifyqualification = new Tagify(inputdeducation, {
+                                                whitelist: qualification,
+                                                maxTags: 10,
+                                                dropdown: {
+                                                    maxItems: 20,
+                                                    classname: "",
+                                                    enabled: 0,
+                                                    closeOnSelect: false
+                                                }
+                                            });
 
+                                            tagifyqualification.on('input', function(e) {
+                                                tagifyqualification.dropdown.show();
+                                            });
 
-                                        <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                            <div class="col-lg-6">
-                                                <label class="form-label required">Minimum Experience in years:</label>
-                                                <select class="form-select form-select-solid" name="min_exp"
-                                                    id="min_exp">
-                                                    <option value="" selected="">Select
-                                                        Experience</option>
-                                                    <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers
-                                                    </option>
+                                            tagifyqualification.on('dropdown:select', function(e) {
+                                                tagifyqualification.addTags([e.detail.data.value]);
+                                            });
+                                            tagifyqualification.on('add', function(e) {
+                                                if (!qualification.includes(e.detail.data.value)) {
+                                                    setTimeout(() => {
+                                                        tagifyqualification.removeTag(e.detail.data.value);
+                                                    }, 200);
+                                                }
+                                                updateActiveFiltersUI();
+                                            });
+                                            tagifyqualification.on('remove', updateActiveFiltersUI);
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end::Education-->
+
+                                <!--begin::Experience-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-teal">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Experience (Years)</div>
+                                            <div class="simf-section-desc">Total work experience</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <select class="form-select form-select-solid" name="min_exp" id="min_exp">
+                                                    <option value="" selected="">Min Experience</option>
+                                                    <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers</option>
                                                     @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}"
-                                                            {{ $i == $min_exp ? 'selected' : '' }}>{{ $i }}
-                                                            &nbsp; Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                        <option value="{{ $i }}" {{ $i == $min_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
                                                     @endfor
                                                 </select>
                                                 <div class="fv-plugins-message-container"></div>
                                             </div>
-                                            <div class="col-lg-6">
-                                                <label class="form-label required">Maximum Experience in years:</label>
-                                                <select class="form-select form-select-solid" name="max_exp"
-                                                    id="max_exp">
-                                                    <option value="" selected="">Select
-                                                        Experience</option>
-                                                    <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers
-                                                    </option>
+                                            <div class="col-6">
+                                                <select class="form-select form-select-solid" name="max_exp" id="max_exp">
+                                                    <option value="" selected="">Max Experience</option>
+                                                    <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers</option>
                                                     @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}"
-                                                            {{ $i == $max_exp ? 'selected' : '' }}>{{ $i }}
-                                                            &nbsp; Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                        <option value="{{ $i }}" {{ $i == $max_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
                                                     @endfor
                                                 </select>
-                                                <div class="fv-plugins-message-container" id="experience_error" style="color: red !important;text-align: center;"></div>
+                                                <div class="fv-plugins-message-container" id="experience_error" style="color:red !important;text-align:center;"></div>
                                             </div>
                                         </div>
-
-                                        <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                            <div class="col-lg-12">
-                                                <div class="row">
-                                                    <div class="col-lg-4">
-                                                        <div class="row">
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Currency</label>
-                                                                <select class="form-select form-select-solid"
-                                                                    arial-label="Select Currency" name="min_salary_currency"
-                                                                    id="min_salary_currency">
-                                                                    <option value="">Select currency</option>
-                                                                    <option value="0"
-                                                                        {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR
-                                                                    </option>
-                                                                    <option value="1"
-                                                                        {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR
-                                                                    </option>
-                                                                    <option value="2"
-                                                                        {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY
-                                                                    </option>
-                                                                    <option value="3"
-                                                                        {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP
-                                                                    </option>
-                                                                    <option value="4"
-                                                                        {{ 4 == $min_salary_currency ? 'selected' : '' }}>USD
-                                                                    </option>
-                                                                    <option value="5"
-                                                                        {{ 5 == $min_salary_currency ? 'selected' : '' }}>AED
-                                                                    </option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Mode</label>
-                                                                <select class="form-select form-select-solid"
-                                                                    arial-label="Select Currency" name="sal_mode" id="sal_mode">
-                                                                    <option value="">Select Mode</option>
-                                                                    <option value="0"
-                                                                        {{ 0 == $min_sal_mode ? 'selected' : '' }}>Annual</option>
-                                                                    <option value="1"
-                                                                        {{ 1 == $min_sal_mode ? 'selected' : '' }}>Monthly</option>
-                                                                    <option value="2"
-                                                                        {{ 2 == $min_sal_mode ? 'selected' : '' }}>Hourly</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>   
-                                                    </div>
-                                                    <div class="col-lg-8">
-                                                        <div class="row">
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Minimum Salary:</label>
-                                                                <input type="number"
-                                                                    class="form-control form-control-lg form-control-solid"
-                                                                    name="min_sal" id="min_sal" placeholder="Enter min salary"
-                                                                    value="{{ $min_salary }}">
-                                                                <div class="fv-plugins-message-container"></div>
-                                                                <span class="form-text text-muted minimum_salary_word"></span>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Maximum Salary:</label>
-                                                                <input type="number"
-                                                                    class="form-control form-control-lg form-control-solid"
-                                                                    name="max_sal" id="max_sal" placeholder="Enter max salary"
-                                                                    value="{{ $max_salary }}">
-                                                                <div class="fv-plugins-message-container"></div>
-                                                                <span class="form-text text-muted maximum_salary_word"></span>
-                                                            </div>  
-                                                            <span class="form-text text-muted" id="salary_error" style="    color: red !important;text-align: center;"></span>  
-                                                        </div> 
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex flex-column mb-8 fv-row fv-plugins-icon-container">
-                                            <label class="form-label required">Notice Period/Availability to join</label>
-                                            <div class="d-flex flex-stack gap-5 mb-3">
-
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="1" id="app_int_notice1"
-                                                        checked="&quot;checked&quot;">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice1">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">Any</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="8" id="app_int_notice8">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice8">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-6">Immediate</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-                                                <div class="col-lg-3">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="9" id="app_int_notice9">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice9">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-6">Served
-                                                                Notice</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-                                                <div class="col-lg-4">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="7" id="app_int_notice7">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice7">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-6">Currently
-                                                                Serving Notice</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-
-
-
-
-
-
-                                            </div>
-                                            <div class="d-flex flex-stack gap-5 mb-3">
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="2" id="app_int_notice2">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice2">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">0-15
-                                                                Days</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="3" id="app_int_notice3">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice3">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">1
-                                                                Month</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="4" id="app_int_notice4">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice4">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">2
-                                                                Months</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="5" id="app_int_notice5">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice5">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">3
-                                                                Months</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-                                                <div class="col-lg-3">
-                                                    <input type="radio" class="btn-check app_int_notice"
-                                                        name="app_int_notice" value="6" id="app_int_notice6">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_notice6">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-6">More than 3
-                                                                Months</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-
-
-
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex flex-column mb-8">
-                                            <label class="form-label required">Stages</label>
-                                            <div class="row py-5 mb-3">
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="0" id="app_int_status0"
-                                                        checked="&quot;checked&quot;">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status0">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">All</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="8" id="app_int_status8">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status8">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Inreview</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="1" id="app_int_status1">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status1">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Sourcing</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="2" id="app_int_status2">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status2">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Screening</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="3" id="app_int_status3">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status3">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Evaluation</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="5" id="app_int_status5">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status5">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">Offer</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2 mt-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="4" id="app_int_status4">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status4">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Negotiation</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2 mt-2">
-                                                    <input type="radio" class="btn-check app_int_status"
-                                                        name="app_int_status" value="7" id="app_int_status7">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_status7">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span
-                                                                class="text-dark-800 fw-bolder d-block fs-5">Rejected</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="d-flex flex-column mb-8">
-                                            <label class="form-label required">Activity</label>
-                                            <div class="row py-5 mb-3">
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="1" id="app_int_activity1"
-                                                        checked="&quot;checked&quot;">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity1">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">All</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="2" id="app_int_activity2">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity2">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">30
-                                                                Days</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="3" id="app_int_activity3">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity3">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">60
-                                                                Days</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="4" id="app_int_activity4">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity4">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">90
-                                                                Days</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="5" id="app_int_activity5">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity5">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">180
-                                                                Days</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <input type="radio" class="btn-check app_int_activity"
-                                                        name="app_int_activity" value="6" id="app_int_activity6">
-                                                    <label
-                                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                                        for="app_int_activity6">
-                                                        <span class="d-block fw-bold text-start">
-                                                            <span class="text-dark-800 fw-bolder d-block fs-5">1
-                                                                Year</span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-
-
-
-
-
-
-                                    </form>
-                                </div>
-                                <!--<div class="modal-footer" style="display: table;">-->
-                                <!--  <button type="button" class="btn btn-light-danger btn-sm p-1" data-dismiss="modal">Close <i class="fa fa-circle fa-sm"></i> </button>-->
-                                <!--  <button type="button" class="btn btn-light-success btn-sm p-1" id="" onclick="newUpdateJobstatus()">Update <i class="fa fa-spinner fa-sm"></i> </button>-->
-                                <!--</div>-->
-                                <div class="modal-footer flex-center">
-                                    <div class="div1">
-                                        <button type="button" id="" class="btn btn-secondary me-3"
-                                            data-dismiss="modal">Close</button>
-                                        <button type="button" id="changetextupdate" class="btn btn-primary"
-                                            onclick="filtersdataget()">
-                                            <span class="indicator-label changetextupdate">Submit</span></button>
                                     </div>
                                 </div>
-                                <script src="https://servicetesting.4bell.com/assets/node_modules/moment/moment.js?ver=1553620716"
-                                    type="text/javascript"></script>
-                                <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716">
-                                </script>
-                                <script
-                                    src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716"
-                                    type="text/javascript"></script>
+                                <!--end::Experience-->
+
+                                <!--begin::Salary-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-amber">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h7a4 4 0 1 0 0-8H6"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Salary (CTC)</div>
+                                            <div class="simf-section-desc">Salary range with currency &amp; mode</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-6">
+                                                <label class="simf-mini-label">Currency</label>
+                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
+                                                    <option value="">Select currency</option>
+                                                    <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (₹)</option>
+                                                    <option value="1" {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR</option>
+                                                    <option value="2" {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY</option>
+                                                    <option value="3" {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP</option>
+                                                    <option value="4" {{ 4 == $min_salary_currency ? 'selected' : '' }}>USD</option>
+                                                    <option value="5" {{ 5 == $min_salary_currency ? 'selected' : '' }}>AED</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="simf-mini-label">Mode</label>
+                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode" id="sal_mode">
+                                                    <option value="">Select Mode</option>
+                                                    <option value="0" {{ 0 == $min_sal_mode ? 'selected' : '' }}>Annual</option>
+                                                    <option value="1" {{ 1 == $min_sal_mode ? 'selected' : '' }}>Monthly</option>
+                                                    <option value="2" {{ 2 == $min_sal_mode ? 'selected' : '' }}>Hourly</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <label class="simf-mini-label">Min Salary</label>
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
+                                                <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted minimum_salary_word"></span>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="simf-mini-label">Max Salary</label>
+                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
+                                                <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted maximum_salary_word"></span>
+                                            </div>
+                                            <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Salary-->
+
+                                <!--begin::Notice Period-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-rose">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Notice Period / Availability</div>
+                                            <div class="simf-section-desc">Time to join</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <div class="simf-pill-row" data-radio-group="app_int_notice">
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="1" id="app_int_notice1" checked>
+                                            <label class="simf-pill" for="app_int_notice1">Any</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="8" id="app_int_notice8">
+                                            <label class="simf-pill" for="app_int_notice8">Immediate</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="2" id="app_int_notice2">
+                                            <label class="simf-pill" for="app_int_notice2">0-15 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="3" id="app_int_notice3">
+                                            <label class="simf-pill" for="app_int_notice3">1 Month</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="4" id="app_int_notice4">
+                                            <label class="simf-pill" for="app_int_notice4">2 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="5" id="app_int_notice5">
+                                            <label class="simf-pill" for="app_int_notice5">3 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="6" id="app_int_notice6">
+                                            <label class="simf-pill" for="app_int_notice6">More than 3 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="9" id="app_int_notice9">
+                                            <label class="simf-pill" for="app_int_notice9">Served Notice</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="7" id="app_int_notice7">
+                                            <label class="simf-pill" for="app_int_notice7">Currently Serving Notice</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Notice Period-->
+
+                                <!--begin::Stages-->
+                                <div class="simf-section">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-pink">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Stages</div>
+                                            <div class="simf-section-desc">Current stage in your pipeline</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <div class="simf-pill-row" data-radio-group="app_int_status">
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="0" id="app_int_status0" checked>
+                                            <label class="simf-pill" for="app_int_status0">Any</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="1" id="app_int_status1">
+                                            <label class="simf-pill" for="app_int_status1">Applied</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="8" id="app_int_status8">
+                                            <label class="simf-pill" for="app_int_status8">Shortlisted</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="2" id="app_int_status2">
+                                            <label class="simf-pill" for="app_int_status2">Screening</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="3" id="app_int_status3">
+                                            <label class="simf-pill" for="app_int_status3">Interview</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="5" id="app_int_status5">
+                                            <label class="simf-pill" for="app_int_status5">Offered</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="4" id="app_int_status4">
+                                            <label class="simf-pill" for="app_int_status4">Negotiation</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="7" id="app_int_status7">
+                                            <label class="simf-pill" for="app_int_status7">Rejected</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Stages-->
+
+                                <!--begin::Activity-->
+                                <div class="simf-section simf-section-last">
+                                    <div class="simf-section-head">
+                                        <span class="simf-icon simf-icon-sky">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="simf-section-title">Activity</div>
+                                            <div class="simf-section-desc">Last active on JeroATS</div>
+                                        </div>
+                                    </div>
+                                    <div class="simf-section-body">
+                                        <div class="simf-pill-row" data-radio-group="app_int_activity">
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked>
+                                            <label class="simf-pill" for="app_int_activity1">Any</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
+                                            <label class="simf-pill" for="app_int_activity2">30 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
+                                            <label class="simf-pill" for="app_int_activity3">60 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
+                                            <label class="simf-pill" for="app_int_activity4">90 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
+                                            <label class="simf-pill" for="app_int_activity5">180 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
+                                            <label class="simf-pill" for="app_int_activity6">1 Year</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Activity-->
+
+                            </form>
+                        </div>
+                        <!--end::Body-->
+
+                        <!--begin::Footer-->
+                        <div class="simf-footer">
+                            <div class="simf-footer-count">
+                                <span class="simf-footer-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </span>
+                                <div>
+                                    <div class="simf-footer-number" id="simf_footer_number">{{ @$existing_counter ?? 0 }}</div>
+                                    <div class="simf-footer-label">Candidates Match <span class="simf-footer-hint" title="Updates after Preview or Apply">ⓘ</span></div>
+                                </div>
+                            </div>
+                            <div class="simf-footer-actions">
+                                <button type="button" class="btn btn-sm btn-light" id="simf_preview_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Preview
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light" id="simf_reset_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                    Reset
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" id="simf_apply_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                    Apply Filters
+                                </button>
                             </div>
                         </div>
+                        <!--end::Footer-->
                     </div>
                 </div>
-                <!--End Popup-->
+                <!--End Filter Drawer-->
 
                 {{-- Row selection action bar — hidden until candidates are checked.
                      Reuses the same mass_mail trigger class as the legacy toolbar button,
@@ -1596,21 +1766,10 @@
         }, 500);
 
         function filtersdataget() {
-            $('.changetextupdate').text('Searching....!');
-            setTimeout(() => {
-                // tableLoad('load');
-                fetchCandidates();
-            }, 1000);
-            var $this = $('#apptrackerfilter');
-            // $this.fadeOut(2000, function() {
-            $this.modal('hide');
-            // });
-            setTimeout(() => {
-                $('#apptrackerfilter_close').click();
-                $('.changetextupdate').text('Submit')
-            }, 2000);
-
-
+            // Used by the sort dropdown's onchange — the filter drawer itself
+            // now has its own Preview/Apply buttons that call fetchCandidates()
+            // directly, this just covers the sort-only auto-apply case.
+            fetchCandidates();
         }
 
         function tableLoad(type) {
@@ -1959,9 +2118,160 @@
                     $('.loadingMessage').css({ display: 'none' });
                     $('#candidatetList').html(response.html);
                     $('#similar_counter').html(response.total);
+                    $('#simf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
                 }
             });
         }
+    </script>
+    <script>
+        /* ------------------------------------------------------------------
+           Filter drawer glue: opening the drawer from the search-box overlay,
+           popular-location quick-add chips, the Active Filters chip bar, and
+           the Preview/Reset/Apply footer buttons. None of this touches the
+           request params fetchCandidates() sends — it only reads/writes the
+           same field IDs the backend already expects.
+        ------------------------------------------------------------------ */
+        $(document).on('click', '.simf-overlay-trigger', function() {
+            $('#kt_similar_filter_toggle').trigger('click');
+        });
+
+        // Popular/other location suggestion chips just add a tag to the
+        // existing location Tagify instance — no extra request.
+        $(document).on('click', '.simf-loc-chip', function() {
+            var city = $(this).data('city');
+            if (typeof tagifylocation !== 'undefined' && city) {
+                tagifylocation.addTags([city]);
+            }
+        });
+
+        function simfFieldLabel(name) {
+            var labels = {
+                min_exp: 'Min Exp', max_exp: 'Max Exp',
+                min_sal: 'Min Salary', max_sal: 'Max Salary'
+            };
+            return labels[name] || name;
+        }
+
+        function updateActiveFiltersUI() {
+            var chips = [];
+
+            // Skills (starred = mandatory)
+            if (typeof tagify !== 'undefined') {
+                tagify.value.forEach(function(tag) {
+                    chips.push({
+                        label: tag.value,
+                        mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+
+            // Location
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.value.forEach(function(tag) {
+                    chips.push({ label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+
+            // Education
+            if (typeof tagifyqualification !== 'undefined') {
+                tagifyqualification.value.forEach(function(tag) {
+                    chips.push({ label: tag.value, clear: function() { tagifyqualification.removeTags(tag.value); } });
+                });
+            }
+
+            // Experience range
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                chips.push({
+                    label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                });
+            }
+
+            // Salary range
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                chips.push({
+                    label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                });
+            }
+
+            // Notice / Stage / Activity — only show when not the default "Any"/"All" pill
+            var noticeEl = $('[name="app_int_notice"]:checked');
+            if (noticeEl.val() && noticeEl.val() !== '1') {
+                chips.push({
+                    label: noticeEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_notice1').prop('checked', true); }
+                });
+            }
+            var statusEl = $('[name="app_int_status"]:checked');
+            if (statusEl.val() && statusEl.val() !== '0') {
+                chips.push({
+                    label: statusEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_status0').prop('checked', true); }
+                });
+            }
+            var activityEl = $('[name="app_int_activity"]:checked');
+            if (activityEl.val() && activityEl.val() !== '1') {
+                chips.push({
+                    label: activityEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_activity1').prop('checked', true); }
+                });
+            }
+
+            var $chips = $('#simf_active_chips').empty();
+            chips.forEach(function(c, idx) {
+                var $chip = $('<span class="simf-chip"></span>')
+                    .toggleClass('mandatory', !!c.mandatory)
+                    .append($('<span></span>').text((c.mandatory ? '★ ' : '') + c.label))
+                    .append($('<span class="simf-chip-remove">&times;</span>').on('click', function() {
+                        c.clear();
+                        updateActiveFiltersUI();
+                    }));
+                $chips.append($chip);
+            });
+
+            var n = chips.length;
+            $('#simf_active_bar').toggleClass('d-none', n === 0);
+            $('#simf_active_count').text('(' + n + ')');
+            $('#simf_header_count').text(n);
+            $('#simf_count_badge').toggle(n > 0).text(n);
+        }
+
+        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', updateActiveFiltersUI);
+        $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', updateActiveFiltersUI);
+
+        $(document).on('click', '#simf_clear_all', function() {
+            if (typeof tagify !== 'undefined') tagify.removeAllTags();
+            if (typeof tagifylocation !== 'undefined') tagifylocation.removeAllTags();
+            if (typeof tagifyqualification !== 'undefined') tagifyqualification.removeAllTags();
+            $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
+            updateActiveFiltersUI();
+        });
+
+        $(document).on('click', '#simf_reset_btn', function() {
+            $('#simf_clear_all').trigger('click');
+            fetchCandidates();
+        });
+
+        // Preview keeps the drawer open (just refreshes the results + footer
+        // count behind it); Apply does the same fetch and then closes the
+        // drawer. Both reuse the exact same fetchCandidates() call the sort
+        // dropdown and pagination already use — no new endpoint.
+        $(document).on('click', '#simf_preview_btn', function() {
+            fetchCandidates();
+        });
+        $(document).on('click', '#simf_apply_btn', function() {
+            fetchCandidates();
+            $('#kt_similar_filter_close').trigger('click');
+        });
+
+        $(document).ready(function() {
+            setTimeout(updateActiveFiltersUI, 600);
+        });
     </script>
 @endpush
