@@ -39,8 +39,10 @@
                             $statusName = 'Hiring';
                             $statusClass = 'joined-bg';
                     }elseif($job->status==='inactive'){
+                            $statusName = 'Closed';
                             $statusClass = 'closed-bg';
                     }elseif($job->status==='hold'){
+                            $statusName = 'Hold';
                             $statusClass = 'hold-bg';
                     }
 
@@ -62,11 +64,13 @@
                     $locations  = explode('`,`',$firstJobcities['display']);
                     $salaryModeSelect = GeneralMethod::salaryMode();
                     $currencySymbole = GeneralMethod::currencySymbole();
-                    $min_sal_mode = strtoupper(substr($salaryModeSelect[$job->min_sal_mode], 0, 1));
-                    $max_sal_mode = strtoupper(substr($salaryModeSelect[$job->max_sal_mode], 0, 1));
-                    $min_salary_currency = $currencySymbole[@$job->min_salary_currency];
-                    $max_salary_currency = $currencySymbole[@$job->max_salary_currency];
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
+                    // Salary budget shown as an abbreviated range (e.g. "50K-100K/Annual")
+                    // — same K abbreviation GeneralMethod::formatAmount() uses on the main
+                    // Jobs list page, but with the full mode word instead of a single letter.
+                    $min_salary_abbr = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat(@$job->min_salary));
+                    $max_salary_abbr = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat(@$job->max_salary));
+                    $salaryModeWord = $salaryModeSelect[@$job->max_sal_mode] ?? $salaryModeSelect[0];
+                    $salaryRangeCurrency = $currencySymbole[@$job->max_salary_currency] ?? $currencySymbole[0];
 
                     $created_at 		=	"";
                     $created_at 		=	@$job->created_at;
@@ -133,7 +137,7 @@
 
                 <div class="d-flex flex-column me-5"> 
                     <span class="text-dark fw-bolder fs-6">{{ @$job->min_exp }}-{{ @$job->max_exp }} Yrs</span> 
-                    <span class="text-muted fw-bold d-block fs-7">{!! $max_salary_currency !!} {{ @$max_salary }}/{{ $max_sal_mode }}</span> 
+                    <span class="text-muted fw-bold d-block fs-7">{!! $salaryRangeCurrency !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}</span> 
                 </div>
                <span class="h-20px border-gray-200 border-start mx-4"></span>
                  <div class="d-flex flex-column me-5"> 
