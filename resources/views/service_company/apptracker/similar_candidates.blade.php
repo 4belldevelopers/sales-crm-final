@@ -76,23 +76,28 @@
             color: white !important;
         }
 
+        /* Skill / Location tag chips: square-ish rounded rect (not a full pill),
+           bordered for definition, consistent padding so star+text+remove all
+           sit on one visual baseline regardless of which section renders them. */
         .tagify__tag {
-            display: flex;
-            align-items: center;
-        }
-
-        .tagify__tag {
+            display: flex !important;
+            align-items: center !important;
             background: #eef2ff !important;
-            border-radius: 20px !important;
+            border: 1px solid #e0e7ff !important;
+            border-radius: 8px !important;
+            margin: 4px 6px 4px 0 !important;
+            padding: 0 !important;
         }
         .tagify__tag.simf-mandatory-tag {
             background: #dbeafe !important;
+            border-color: #bfdbfe !important;
         }
         .tagify__tag > div {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             line-height: 1;
+            padding: 7px 4px 7px 10px !important;
         }
 
         .tagify__tag .star {
@@ -103,6 +108,7 @@
             align-items: center;
             color: #94a3b8;
             margin-right: 5px;
+            flex-shrink: 0;
         }
 
         .tagify__tag .star.checked {
@@ -110,8 +116,18 @@
         }
 
         .tagify__tag .tagify__tag-text {
-            font-size: 13px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3730a3;
             line-height: 1;
+        }
+        .tagify__tag.simf-mandatory-tag .tagify__tag-text {
+            color: #1d4ed8;
+        }
+        .tagify__tag__removeBtn {
+            margin-left: 2px !important;
+            margin-right: 8px !important;
+            flex-shrink: 0;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
