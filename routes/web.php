@@ -329,6 +329,8 @@ Route::get('300', function () {
 });
 
 Route::post('/offer_download_mail/{id?}', [HomeController::class, 'fwd_offer_download'])->name('get.offer_download_mail');
+// Direct PDF stream for candidate download — no file storage, no URL, no symlink dependency.
+Route::get('/offer-letter-stream/{offerId}', [HomeController::class, 'streamOfferLetterPdf'])->name('offer.letter.stream');
 
 
 // Route::prefix('/')->group(function () {
