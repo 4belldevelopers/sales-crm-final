@@ -534,17 +534,17 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
      $background_image		=	url('img/client-default.png'); 
      $name	=	$website	=	$industry	=	$company_sizes	=	$company_type	=	$founded	= $description = $tags	= $client_location_arr = $client_contact_arr =  '';
 		 if($page_event == 'ADD'){
-			$pagetitle	=	'Add Client';	
+			$pagetitle	=	'Add Client';
       $countAddrees= 1;
-		 }else if($page_event == 'EDIT'){ 
+		 }else if($page_event == 'EDIT'){
 			$pagetitle	=	'Edit Client';
-     	
-     	$name					= @$client->name; 
-     	$website				= @$client->website; 
-     	$industry				= @$client->industry; 
-     	$company_sizes			= @$client->company_sizes; 
-     	$company_type			= @$client->company_type; 
-     	$founded				= @$client->founded; 
+
+     	$name					= @$client->name;
+     	$website				= @$client->website;
+     	$industry				= @$client->industry;
+     	$company_sizes			= @$client->company_size_from . '-' . @$client->company_sizes;
+     	$company_type			= @$client->company_type;
+     	$founded				= @$client->founded;
      	
      	$description			= 	@$client->description;
      	$tags					= 	@$client->tags;
@@ -803,7 +803,17 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                               <label class="form-label required" for="company_sizes">Company Size</label>
                               <div class="input-group input-group-solid">
                                 <span class="input-group-text"><i class="la la-users"></i></span>
-                                <input type="number" class="form-control form-control-solid" name="company_sizes" id="company_sizes" value="<?php echo @$company_sizes; ?>" placeholder="Enter employee count">
+                                <select name="company_sizes" class="form-select form-select-solid" id="company_sizes">
+                                  <option value="">Select Company Size</option>
+                                  <option value="1-10"         <?php echo (@$company_sizes == '1-10'         ? 'selected' : ''); ?>>1–10</option>
+                                  <option value="11-50"        <?php echo (@$company_sizes == '11-50'        ? 'selected' : ''); ?>>11–50</option>
+                                  <option value="51-200"       <?php echo (@$company_sizes == '51-200'       ? 'selected' : ''); ?>>51–200</option>
+                                  <option value="201-500"      <?php echo (@$company_sizes == '201-500'      ? 'selected' : ''); ?>>201–500</option>
+                                  <option value="501-1000"     <?php echo (@$company_sizes == '501-1000'     ? 'selected' : ''); ?>>501–1,000</option>
+                                  <option value="1001-5000"    <?php echo (@$company_sizes == '1001-5000'    ? 'selected' : ''); ?>>1,001–5,000</option>
+                                  <option value="5001-10000"   <?php echo (@$company_sizes == '5001-10000'   ? 'selected' : ''); ?>>5,001–10,000</option>
+                                  <option value="10000-999999" <?php echo (@$company_sizes == '10000-999999' ? 'selected' : ''); ?>>10,000+</option>
+                                </select>
                               </div>
                             </div>
                             <div class="client-field fv-plugins-icon-container">
@@ -1923,8 +1933,8 @@ for (let i = 0; i < countAddrees; i++) {
    			$('.span_website').html(website).attr('href', website);			
    			var industry		=	$('#industry option:selected').text(); 
    			$('.span_industry').html(industry);			
-   			var company_sizes	=	$('#company_sizes').val(); 
-   			$('.span_company_sizes').html(company_sizes ? company_sizes + ' employees' : '');			
+   			var company_sizes	=	$('#company_sizes option:selected').text();
+   			$('.span_company_sizes').html(company_sizes && company_sizes !== 'Select Company Size' ? company_sizes + ' employees' : '');			
    			var company_type	=	$('#company_type option:selected').text(); 
    			$('.span_company_type').html(company_type);			
    			var founded			=	$('#founded').val(); 
@@ -2267,7 +2277,7 @@ for (let i = 0; i < countAddrees; i++) {
   function updateAssistantPanel() {
     var map = {
       industry: fieldLabel($('#industry'), 'Not set'),
-      company_sizes: $('#company_sizes').val() ? $('#company_sizes').val() + ' employees' : 'Not set',
+      company_sizes: ($('#company_sizes').val() ? $('#company_sizes option:selected').text() + ' employees' : 'Not set'),
       company_type: fieldLabel($('#company_type'), 'Not set'),
       founded: $('#founded').val() || 'Not set'
     };
