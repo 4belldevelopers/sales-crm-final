@@ -753,7 +753,7 @@
                 <!--Start Filter Drawer-->
                 <div id="kt_similar_filter_drawer" class="bg-body simf-drawer" data-kt-drawer="true" data-kt-drawer-name="similar-filter"
                     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-                    data-kt-drawer-width="{default:'92%', 'sm': '420px', 'md':'460px'}" data-kt-drawer-direction="end"
+                    data-kt-drawer-width="{default:'92%', 'sm': '80%'}" data-kt-drawer-direction="end"
                     data-kt-drawer-toggle="#kt_similar_filter_toggle" data-kt-drawer-close="#kt_similar_filter_close">
                     <div class="card shadow-none rounded-0 w-100 h-100 simf-card">
                         <!--begin::Header-->
@@ -2125,6 +2125,30 @@
         }
     </script>
     <script>
+        /* Drawer width = 80% of the actual content area (i.e. "20% less than
+           the full page width, excluding the vertical sidebar"). A CSS
+           percentage on the drawer itself would resolve against the full
+           viewport (position:fixed drawers use the viewport as their
+           containing block), which would include the space the sidebar
+           sits on — so instead we measure #kt_wrapper, Metronic's main
+           content flex box that already excludes #kt_aside, and size the
+           drawer to 80% of that measured width in pixels. Recalculated on
+           resize and right before the drawer opens, so it stays correct if
+           the sidebar collapses/expands or the window is resized. */
+        function simfSetDrawerWidth() {
+            var wrapper = document.getElementById('kt_wrapper');
+            var contentWidth = wrapper ? wrapper.getBoundingClientRect().width : window.innerWidth;
+            if (!contentWidth) contentWidth = window.innerWidth;
+            var drawerWidth = Math.round(contentWidth * 0.8);
+            var drawerEl = document.getElementById('kt_similar_filter_drawer');
+            if (drawerEl) {
+                drawerEl.style.width = drawerWidth + 'px';
+            }
+        }
+        $(document).ready(simfSetDrawerWidth);
+        $(window).on('resize', simfSetDrawerWidth);
+        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger', simfSetDrawerWidth);
+
         /* ------------------------------------------------------------------
            Filter drawer glue: opening the drawer from the search-box overlay,
            popular-location quick-add chips, the Active Filters chip bar, and
