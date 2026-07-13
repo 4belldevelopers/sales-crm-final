@@ -269,7 +269,13 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         // Wallet summary stats for the Overview tab — derived entirely from
         // $current_coins_operational (already fetched above), so this adds
         // zero extra queries.
-        $this->op_total_purchased = collect($this->current_coins_operational)->sum('order_coins');
+        // Total purchased must come from company_coins.actual_coins (the amount
+        // originally credited per batch), not coin_orders.coins — the latter is
+        // the package size at purchase time and isn't guaranteed to line up
+        // batch-for-batch with $remain_coins (also read from company_coins),
+        // which made "purchased - available" go negative and get clamped to 0,
+        // silently showing "Coins Used: 0" regardless of actual usage.
+        $this->op_total_purchased = collect($this->current_coins_operational)->sum('actual_coins');
         $this->op_total_spend     = collect($this->current_coins_operational)->sum('order_price');
         $this->op_coins_used      = max(0, $this->op_total_purchased - $this->remain_coins);
         $opExpiry = collect($this->current_coins_operational)->pluck('end_date')->filter()->max();
@@ -297,7 +303,9 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         $this->remain_coins_sales = $remain_coins_sales->coins ?? 0;
 
         // Same wallet summary stats, sales side — zero extra queries.
-        $this->sal_total_purchased = collect($this->current_coins_sales)->sum('order_coins');
+        // Same fix as operational — use actual_coins (company_coins), consistent
+        // with $remain_coins_sales, not coin_orders.coins.
+        $this->sal_total_purchased = collect($this->current_coins_sales)->sum('actual_coins');
         $this->sal_total_spend     = collect($this->current_coins_sales)->sum('order_price');
         $this->sal_coins_used      = max(0, $this->sal_total_purchased - $this->remain_coins_sales);
         $salExpiry = collect($this->current_coins_sales)->pluck('end_date')->filter()->max();
