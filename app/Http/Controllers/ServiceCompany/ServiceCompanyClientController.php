@@ -2547,7 +2547,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			$client->industry = $request->industry;
 		}
 		if (!empty($request->company_sizes)) {
-			$client->company_sizes = $request->company_sizes;
+			[$from_size, $to_size] = explode('-', $request->company_sizes);
+			$client->company_size_from = $from_size;
+			$client->company_sizes     = $to_size;
 		}
 		if (!empty($request->company_type)) {
 			$client->company_type = $request->company_type;
@@ -2862,7 +2864,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			$client->industry = @$request->industry;
 		}
 		if (!empty(@$request->company_sizes)) {
-			$client->company_sizes = @$request->company_sizes;
+			[$from_size, $to_size] = explode('-', $request->company_sizes);
+			$client->company_size_from = $from_size;
+			$client->company_sizes     = $to_size;
 		}
 		if (!empty(@$request->company_type)) {
 			$client->company_type = @$request->company_type;
