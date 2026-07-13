@@ -369,10 +369,14 @@
             </a>
         @endif
         <?php
-        if (($final_status_job == 1) && ($job->status == 'active')) {
+        if ($final_status_job == 1) {
         ?>
         <a href="javascript:void(0);">
-            <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3" id="addServiceCandidate">
+            {{-- Always visible regardless of job status — hold/inactive jobs used to
+                 hide this button outright, which just confused agencies. Now the
+                 click handler itself (in footer-script below) intercepts hold/closed
+                 jobs and explains why via a popup instead of silently disappearing. --}}
+            <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3" id="addServiceCandidate" data-job-status="{{ $job->status }}">
                 <span class="svg-icon svg-icon-primary svg-icon-1x">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1749,7 +1753,21 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
 	$(document).ready(function(){
 			$('body').on('click', '#addServiceCandidate', function(){
-			
+
+							// Hold/Closed jobs stay visible now (previously the button was
+							// hidden entirely), but uploading a new profile isn't allowed —
+							// explain why instead of silently disappearing.
+							var jobStatus = $(this).data('job-status');
+							if (jobStatus === 'hold' || jobStatus === 'inactive') {
+								var statusLabel = jobStatus === 'hold' ? 'Hold' : 'Closed';
+								Swal.fire(
+									'Position ' + statusLabel,
+									'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.',
+									'warning'
+								);
+								return false;
+							}
+
 							var url 				=	"{{ route('service_company.auth-custom-package.validatePackage') }}";
 							var token 				=	"{{ csrf_token() }}";							
 							var baseurl    			=	"{{ asset('assets/images/Loading2.gif') }}"; 
