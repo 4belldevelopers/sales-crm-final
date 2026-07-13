@@ -57,6 +57,249 @@
     position: relative;
 }
 
+.btn.custombtn {
+    padding: 6px 6px 6px 6px !important;
+}
+
+/* Fwd Resume / Copy — same pill style as CV Tracker's row-selection action buttons. */
+.aptk-action-btn.btn {
+    font-size: 12px;
+    font-weight: 500;
+    background: #fff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    box-shadow: none !important;
+}
+.aptk-action-btn.btn:hover {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+}
+/* The original toolbar buttons stay in the DOM (so the fwd_resume/application_copy
+   modal-trigger classes keep working unchanged) but are permanently hidden now —
+   their restyled equivalent lives in #aptk_selection_bar below. */
+.aptk-legacy-hide {
+    display: none !important;
+}
+
+/* Row selection action bar — hidden until candidates are checked, then sits
+   directly above the results table. */
+.aptk-selection-bar {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 1px solid #e5e9f2;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    font-family: 'Poppins', sans-serif;
+    flex-wrap: wrap;
+}
+.aptk-selection-bar.show {
+    display: flex;
+}
+.aptk-selection-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+}
+.aptk-selection-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+.aptk-selection-actions .btn {
+    font-size: 12px;
+    font-weight: 500;
+    background: #fff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    box-shadow: none !important;
+}
+.aptk-selection-actions .btn:hover {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+}
+.aptk-selection-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.aptk-selection-close:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+/* Hiring Pipeline card */
+.hp-toolbar-card .card-body {
+    padding: 14px 16px;
+}
+.hp-card .card-body {
+    padding: 16px 20px;
+}
+.hp-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    font-family: 'Poppins', sans-serif;
+}
+.hp-total-link {
+    text-decoration: none;
+    flex-shrink: 0;
+}
+.hp-total {
+    width: 82px;
+    height: 82px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: background-color .15s;
+}
+.hp-total.bg-total-active {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+.hp-total.bg-gray {
+    background: #e4e6ef;
+}
+.hp-total-icon {
+    color: #fff;
+    display: flex;
+}
+.hp-total.bg-gray .hp-total-icon {
+    color: #7e8299;
+}
+.hp-total-icon svg {
+    width: 16px;
+    height: 16px;
+}
+.hp-total-count {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+}
+.hp-total.bg-gray .hp-total-count {
+    color: #3f4254;
+}
+.hp-total-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: #dbeafe;
+    text-align: center;
+    line-height: 1.2;
+    padding: 0 4px;
+}
+.hp-total.bg-gray .hp-total-label {
+    color: #7e8299;
+}
+.hp-eq {
+    font-size: 18px;
+    font-weight: 600;
+    color: #b5b5c3;
+    flex-shrink: 0;
+}
+.hp-chevron {
+    display: flex;
+    color: #c2c5cc;
+    flex-shrink: 0;
+}
+.hp-chevron svg {
+    width: 16px;
+    height: 16px;
+}
+.hp-divider {
+    width: 1px;
+    height: 44px;
+    background: #e4e6ef;
+    flex-shrink: 0;
+    margin: 0 4px;
+}
+.hp-stage {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.hp-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    background: #f2f3f7;
+    border: 2px solid #e4e6ef;
+    transition: border-color .15s, background-color .15s;
+}
+.hp-circle .hp-icon {
+    display: flex;
+    color: #99a1b7;
+    transition: color .15s;
+}
+.hp-circle .hp-icon svg {
+    width: 14px;
+    height: 14px;
+}
+.hp-circle .hp-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5e6278;
+    line-height: 1.2;
+    transition: color .15s;
+}
+.hp-circle.active {
+    border-color: var(--hp-color);
+    background: var(--hp-bg);
+}
+.hp-circle.active .hp-icon {
+    color: var(--hp-color);
+}
+.hp-circle.active .hp-count {
+    color: var(--hp-color);
+}
+.hp-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #7e8299;
+    text-align: center;
+    white-space: nowrap;
+    transition: color .15s, font-weight .15s;
+}
+.hp-label.active {
+    font-weight: 700;
+    color: #181c32;
+}
+@media (max-width: 1440px) {
+    .hp-total { width: 72px; height: 72px; }
+    .hp-circle { width: 52px; height: 52px; }
+}
+@media (max-width: 576px) {
+    .hp-flow { justify-content: flex-start; }
+}
 
 </style>
 @endpush
@@ -115,9 +358,38 @@
       <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
       <!--begin::Actions-->
       <div class="d-flex align-items-center py-1">
+        @if (in_array('view_jobs', $userPermissions))
+            {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                 defined once in the shared layout) that the job title/logo already
+                 uses elsewhere — .show-detail-open's click handler in
+                 service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+            <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
+                View Job
+            </a>
+        @endif
+        <?php
+        if (($final_status_job == 1) && ($job->status == 'active')) {
+        ?>
+        <a href="javascript:void(0);">
+            <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3" id="addServiceCandidate">
+                <span class="svg-icon svg-icon-primary svg-icon-1x">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <polygon points="0 0 24 0 24 24 0 24"/>
+                            <path d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
+                            <path d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z" fill="#000000" fill-rule="nonzero"/>
+                        </g>
+                    </svg>
+                </span> Add Candidate
+            </button>
+        </a>
+        <?php
+        }
+        ?>
         <!--begin::Forward CV-->
-        
-		<a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3  fwd_resume d-none" data-toggle="modal" data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
+
+		<a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 custombtn aptk-action-btn aptk-legacy-hide  fwd_resume d-none" data-toggle="modal" data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
           <rect x="0" y="0" width="24" height="24"/>
@@ -142,7 +414,7 @@
 		
         <!--end::Send Email-->
         <!--begin::Copy-->
-        <a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 d-none application_copy" data-toggle="modal" data-target="#application_copy">
+        <a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 custombtn aptk-action-btn aptk-legacy-hide d-none application_copy" data-toggle="modal" data-target="#application_copy">
         <!--begin::Svg icon-->
         <span class="svg-icon svg-icon-primary svg-icon-1x">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
@@ -296,114 +568,147 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
          @include('sections.service_company.clientappHeader',['tabactive'=>$tabactive])
       </div>
         
-        <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                  <div class="col-lg-4 d-flex align-items-center px-2" style="width:61%">
-                     <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 21%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                        <option value="Show All" selected="">Sort</option>
-                        <option value="1">Newest to Oldest (Upload Date)</option>
-                        <option value="2">Oldest to Newest (Upload Date)</option>
-                        <option value="3">Low to High (Salary)</option>
-                        <option value="4">High to Low (Salary)</option>
-                        <option value="21">Notice Period (Immediate)</option>
-                        <option value="22">Notice Period (Serving)</option>
-                        <option value="7">High to Low (Experience) </option>
-                        <option value="8">Low to High (Experience)</option>
-                     </select>
-                  </div>
-                  {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-control="select2" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                        <option value="110" selected="selected">Location</option>
-                        <option value="111">India</option>
-                     </select>
-                  </div> --}}
-                  {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                     <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                        <span class="svg-icon svg-icon-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                           </svg>
-                        </span>
-                        Filter
-                     </button>
-                  </div> --}}
+        <div class="card hp-toolbar-card mb-4">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                    <div class="flex-grow-1" style="position: relative; min-width: 0;">
+                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                    </div>
+                    <div style="width: 220px; flex-shrink: 0;">
+                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
+                            <option value="Show All" selected="">Sort</option>
+                            <option value="1">Newest to Oldest (Upload Date)</option>
+                            <option value="2">Oldest to Newest (Upload Date)</option>
+                            <option value="3">Low to High (Salary)</option>
+                            <option value="4">High to Low (Salary)</option>
+                            <option value="21">Notice Period (Immediate)</option>
+                            <option value="22">Notice Period (Serving)</option>
+                            <option value="7">High to Low (Experience) </option>
+                            <option value="8">Low to High (Experience)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <?php
+            $hpKnownStages = ['Sourcing', 'Screening', 'Interview', 'Negotiation', 'Offered', 'Joined', 'Rejected'];
+            $hpActiveStage = (!empty(@$candStatusClass['Index']) && in_array(@$candStatusClass['Index'], $hpKnownStages))
+                ? $candStatusClass['Index']
+                : null;
+            $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
 
+            $hpStages = [
+                ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2',
+                    'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
+                ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
+                    'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
+                ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff',
+                    'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
+                ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
+                    'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
+                ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0',
+                    'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
+                ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9',
+                    'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
+            ];
+            $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3',
+                'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
+            $hpCounters = [
+                '1' => @$SourcingCounter,
+                '2' => @$ScreeningCounter,
+                '3' => @$InterviewCounter,
+                '4' => @$NegotiationCounter,
+                '5' => @$OfferedCounter,
+                '6' => @$JoinedCounter,
+                '7' => @$RejectedCounter,
+            ];
+        ?>
 
-                  
-      
-          <?php 
-          if( ($final_status_job == 1) && ($job->status == 'active') )
-          {
-          ?>
-          <div class="col-lg-2 d-flex align-items-center px-2" style="width: 18%;">
-          <a href="javascript:void(0);">
-          <button type="button" class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3 custom_hide py-4" id="addServiceCandidate">
-          <span class="svg-icon svg-icon-primary svg-icon-1x">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-            <polygon points="0 0 24 0 24 24 0 24"/>
-            <path d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-            <path d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z" fill="#000000" fill-rule="nonzero"/>
-            </g>
-          </svg>
-          </span> Add Candidate </button>
-          </a>
+        <div class="card hp-card mb-4">
+            <div class="card-body">
+                <div class="hp-flow">
+                    <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
+                        <div class="<?php echo $hpTotalActive ? 'bg-total-active' : 'bg-gray'; ?> text-center hp-total" id="bg_all">
+                            <span class="hp-total-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                </svg>
+                            </span>
+                            <span class="hp-total-count" id="bg_alldata"><?php echo @$allCandidateCounter; ?></span>
+                            <span class="hp-total-label">Total Candidates</span>
+                        </div>
+                    </a>
+                    <span class="hp-eq">=</span>
+                    <?php foreach ($hpStages as $i => $stage): ?>
+                        <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="<?php echo $stage['rel']; ?>">
+                            <div class="hp-circle <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>"
+                                data-hp="<?php echo $stage['rel']; ?>"
+                                style="--hp-color: <?php echo $stage['color']; ?>; --hp-bg: <?php echo $stage['bg']; ?>;">
+                                <span class="hp-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="<?php echo $stage['icon']; ?>" />
+                                    </svg>
+                                </span>
+                                <span class="hp-count" id="bg_<?php echo $stage['rel']; ?>"><?php echo @$hpCounters[$stage['rel']]; ?></span>
+                            </div>
+                            <div class="hp-label <?php echo $hpActiveStage === $stage['key'] ? 'active' : ''; ?>" id="tx_<?php echo $stage['rel']; ?>">
+                                <?php echo $stage['label']; ?>
+                            </div>
+                        </a>
+                        <?php if ($i < count($hpStages) - 1): ?>
+                            <span class="hp-chevron">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m9 6 6 6-6 6" />
+                                </svg>
+                            </span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    <span class="hp-divider"></span>
+                    <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="<?php echo $hpRejected['rel']; ?>">
+                        <div class="hp-circle <?php echo $hpActiveStage === $hpRejected['key'] ? 'active' : ''; ?>"
+                            data-hp="<?php echo $hpRejected['rel']; ?>"
+                            style="--hp-color: <?php echo $hpRejected['color']; ?>; --hp-bg: <?php echo $hpRejected['bg']; ?>;">
+                            <span class="hp-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="<?php echo $hpRejected['icon']; ?>" />
+                                </svg>
+                            </span>
+                            <span class="hp-count" id="bg_<?php echo $hpRejected['rel']; ?>"><?php echo @$hpCounters[$hpRejected['rel']]; ?></span>
+                        </div>
+                        <div class="hp-label <?php echo $hpActiveStage === $hpRejected['key'] ? 'active' : ''; ?>" id="tx_<?php echo $hpRejected['rel']; ?>">
+                            <?php echo $hpRejected['label']; ?>
+                        </div>
+                    </a>
+                </div>
+            </div>
         </div>
-          <?php 
-          }
-          ?>
 
+        {{-- Row selection action bar — hidden until candidates are checked. Reuses the
+             exact same trigger classes as the legacy toolbar buttons (fwd_resume /
+             application_copy) — this page has no working mass_mail/export handlers, so
+             those buttons are intentionally omitted here. --}}
+        <div class="aptk-selection-bar" id="aptk_selection_bar">
+            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked title="Clear selection" />
+            </div>
+            <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
+            <div class="aptk-selection-actions">
+                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                    <span class="svg-icon svg-icon-primary svg-icon-1x">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                    </span> Forward Resume
+                </a>
+                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
+                    <span class="svg-icon svg-icon-primary svg-icon-1x">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
+                    </span> Copy
+                </a>
+            </div>
+            <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
         </div>
-        
-      <!-- Circles boxes -->
-      <div class="d-flex justify-content-space-around align-items-center custm-bg"> 
-      <a class="d-block text-white f-17 font-weight-bolder application_sttus_nav application_sttus_nav" href="Javascript:void(0);" rel="all">
-        <div class="total_jobs mr-2">
-          <div class=" <?php echo @$tr_class; ?> text-center squre_box" role="alert" id="bg_all"> <span class="total-content-view">
-            <!-- <i class="fa fa-users text-white fa-sm" aria-hidden="true"></i> -->
-            <i class="flaticon2-group text-white fa-sm" aria-hidden="true"></i> <span id="bg_alldata"><?php echo @$allCandidateCounter; ?> </span></span> </div>
-          <h6 class="text-center color-all font-weight-600">&nbsp;Total</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20 application_sttus_nav" href="Javascript:void(0);" rel="1">
-        <div class="sourcing mr-2">
-          <div class="bg text-center circle_boxes SourcingCounter <?php echo $sourcing_bg; ?>" role="alert" id="bg_1"> <?php echo @$SourcingCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $sourcing_text; ?>" id="tx_1">Sourcing</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="2">
-        <div class="screening mr-2">
-          <div class="bg text-center circle_boxes <?php echo $screening_bg; ?>" role="alert" id="bg_2"> <?php echo @$ScreeningCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $screening_text; ?>" id="tx_2">Screening</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="3">
-        <div class="negitation mr-2">
-          <div class="bg text-center circle_boxes <?php echo $interview_bg; ?>" role="alert" id="bg_3"> <?php echo @$InterviewCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $interview_text; ?>" id="tx_3">Evaluation</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="4">
-        <div class="negitation mr-2">
-          <div class="bg text-center circle_boxes <?php echo $negotation_bg; ?>" role="alert" id="bg_4"> <?php echo @$NegotiationCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $negotation_text; ?>" id="tx_4">Negotiation</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="5">
-        <div class="offer mr-2">
-          <div class="bg text-center circle_boxes <?php echo $offer_bg; ?>" role="alert" id="bg_5"> <?php echo @$OfferedCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $offer_text; ?>" id="tx_5">Offer</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="6">
-        <div class="joining mr-2">
-          <div class="bg text-center circle_boxes <?php echo $joining_bg; ?>" role="alert" id="bg_6"> <?php echo @$JoinedCounter; ?> </div>
-          <h6 class="tx text-center color-all font-weight-600 <?php echo $joining_text; ?>" id="tx_6">Joined</h6>
-        </div>
-        </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav" href="Javascript:void(0);" rel="7">
-        <div class="rejected mr-2">
-          <div class="bg alert text-center circle_boxes   <?php echo $rejected_bg; ?>" role="alert" id="bg_7"> <?php echo @$RejectedCounter ?> </div>
-          <h6 class="tx text-center   font-weight-600 <?php echo $rejected_text; ?>" id="tx_7">Rejected</h6>
-        </div>
-        </a> </div>
-      <!-- Circles boxes end -->
       <!--begin::Card-->
       <div class="card">
         <!--begin::Card body-->
@@ -418,14 +723,13 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
                     <input class="form-check-input chk_list" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input" value="1" />
                   </div></th>
-                <th class="">Name</th>
+                <th class="">Candidate Name</th>
                 <th class="">Exp.</th>
                 <th class="">Salary</th>
-                <th class="">Notice Period</th>
-                <th class="">Qualifiction</th>
+                <th class="">Notice</th>
                 <th class="">Interview</th>
                 <th class="">Location</th>
-                <th class="">Source</th>
+                <th class="">Ownership</th>
                 <th class="">Stage</th>
               </tr>
               <!--end::Table row-->
@@ -607,102 +911,84 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             $('.nav_status').css('color','#fff'); 
         } 
       
-      	$('.application_sttus_nav').bind('click',function(){
-              
-            $(".bg").removeClass('bg-Asourcing').addClass('bg-gray');
-            $(".bg").removeClass('bg-Ascreening').addClass('bg-gray');
-            $(".bg").removeClass('bg-Ainterview').addClass('bg-gray');
-            $(".bg").removeClass('bg-Anegotation').addClass('bg-gray');
-            $(".bg").removeClass('bg-Aoffer').addClass('bg-gray');
-            $(".bg").removeClass('bg-Ajoiner').addClass('bg-gray');
-            $(".bg").removeClass('bg-Arejected').addClass('bg-gray');
-            
-            
-            $("#tx_1").removeClass('text-Asourcing').addClass('color-all');
-            $("#tx_2").removeClass('text-Ascreening').addClass('color-all');
-            $("#tx_3").removeClass('text-Ainterview').addClass('color-all');
-            $("#tx_4").removeClass('text-Anegotation').addClass('color-all');
-            $("#tx_5").removeClass('text-Aoffer').addClass('color-all');
-            $("#tx_6").removeClass('text-Ajoiner').addClass('color-all');
-            $("#tx_7").removeClass('text-Arejected').addClass('color-all');
-            
+      	$(document).on('click', '.application_sttus_nav', function(){
+
+            $('.hp-circle').removeClass('active');
+            $('.hp-label').removeClass('active');
             $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
-            
-            
+
             var page  = $(this).attr('rel');
             var jobid = $('#jobid').val();
             var jobIdEncrypt = '{{ $jobIdEncrypt }}';
-        
-        
-         
+
             if(page == 1)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Asourcing'); 
-                $('#tx_'+page).removeClass('color-all').addClass('text-Asourcing');
-                $('.nav_status').html('Sourcing');  
+                $('.hp-circle[data-hp="1"]').addClass('active');
+                $('#tx_1').addClass('active');
+                $('.nav_status').html('Sourcing');
                 $('.nav_status').css('background','#efefef');
                 $('.nav_status').css('color','#000000');
-        
+
             }
             else if(page==2)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Ascreening');  
-                $('#tx_'+page).removeClass('color-all').addClass('text-Ascreening');  
-                $('.nav_status').html('Screening'); 
+                $('.hp-circle[data-hp="2"]').addClass('active');
+                $('#tx_2').addClass('active');
+                $('.nav_status').html('Screening');
                 $('.nav_status').css('background','#fff9ed');
                 $('.nav_status').css('color','#ffab00');
             }
             else if(page==3)
-            {  
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Ainterview');  
-                $('#tx_'+page).removeClass('color-all').addClass('text-Ainterview');  
-                $('.nav_status').html('Interview'); 
+            {
+                $('.hp-circle[data-hp="3"]').addClass('active');
+                $('#tx_3').addClass('active');
+                $('.nav_status').html('Interview');
                 $('.nav_status').css('background','#f0f8ff');
                 $('.nav_status').css('color','#2896ff');
             }
             else if(page==4)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Anegotation'); 
-                $('#tx_'+page).removeClass('color-all').addClass('text-Anegotation');
+                $('.hp-circle[data-hp="4"]').addClass('active');
+                $('#tx_4').addClass('active');
                 $('.nav_status').html('Negotiation');
                 $('.nav_status').css('background','#ffe6f2');
-                $('.nav_status').css('color','#ff4098');    
+                $('.nav_status').css('color','#ff4098');
             }
             else if(page==5)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Aoffer');
-                $('#tx_'+page).removeClass('color-all').addClass('text-Aoffer');  
-                $('.nav_status').html('Offered'); 
+                $('.hp-circle[data-hp="5"]').addClass('active');
+                $('#tx_5').addClass('active');
+                $('.nav_status').html('Offered');
                 $('.nav_status').css('background','#d4ffde');
-                $('.nav_status').css('color','#06c732');  
+                $('.nav_status').css('color','#06c732');
             }
             else if(page==6)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Ajoiner');
-                $('#tx_'+page).removeClass('color-all').addClass('text-Ajoiner'); 
-                $('.nav_status').html('Joined');  
+                $('.hp-circle[data-hp="6"]').addClass('active');
+                $('#tx_6').addClass('active');
+                $('.nav_status').html('Joined');
                 $('.nav_status').css('background','#f7deff');
                 $('.nav_status').css('color','#c000ff');
             }
             else if(page==7)
             {
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-Arejected');
-                $('#tx_'+page).removeClass('color-all').addClass('text-Arejected'); 
-                $('.nav_status').html('Rejected');  
+                $('.hp-circle[data-hp="7"]').addClass('active');
+                $('#tx_7').addClass('active');
+                $('.nav_status').html('Rejected');
                 $('.nav_status').css('background','#ffe2e5');
                 $('.nav_status').css('color','#ff0202');
             }
             else if(page=='all')
             {
-                $('.nav_status').html('All Candidate'); 
+                $('.nav_status').html('All Candidate');
                 $('.nav_status').css('background','linear-gradient(to left, #01e074, #0581d9)');
                 $('.nav_status').css('color','#FFFFFF');
-                $('#bg_'+page).removeClass('bg-gray').addClass('bg-total-active');   
+                $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
             }
-        
-        
+
+
             $('#mstatus_id').val(page);
-            
+
             var url   	= '<?php echo url('/service_company/apptracker/clientapp') ?>';
             url     	= url+'/'+jobIdEncrypt+'/'+page;
             window.history.pushState('page2', 'Title', url);
@@ -1210,7 +1496,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <script>
 
 	$('.chk_list').click(function(){
-		
+
 		if($(".chk_list").prop('checked') == true){
 			var chk_list 	=	$('.chk_list').val();
 			$('.fwd_resume').removeClass("d-none");
@@ -1218,7 +1504,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 			$('.send_email').removeClass("d-none");
 			$('.app_copy').removeClass("d-none");
 			$('.application_copy').removeClass("d-none");
-			
+
 		}else{
 			$('.fwd_resume').addClass("d-none");
 			$('.send_email').addClass("d-none");
@@ -1226,23 +1512,24 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 			$('.app_copy').addClass("d-none");
 			$('.application_copy').addClass("d-none");
 		}
-	 });	
-	 
+		updateAptkSelectionBar();
+	 });
+
 	$(document).on('click', '.chk_list_item', ()=>{
-	   var i=0;	
+	   var i=0;
 	   var arr = [];
        $('.chk_list_item:checked').each(function () {
 		   arr.push($(this).val());
        });
-	   
+
 	   if(arr.length > 0){
 	   		$('.fwd_resume').removeClass("d-none");
 			$('.send_email').removeClass("d-none");
 			$('.app_copy').removeClass("d-none");
 			$('.application_copy').removeClass("d-none");
       $('.custom_hide').addClass("d-none");
-			
-			
+
+
 	   }else{
 	   		$('.fwd_resume').addClass("d-none");
 			$('.send_email').addClass("d-none");
@@ -1250,7 +1537,26 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 			$('.application_copy').addClass("d-none");
       $('.custom_hide').removeClass("d-none");
 	   }
+		updateAptkSelectionBar();
 	 });
+
+	/* Selection bar: live count + clear-selection controls (checkbox + close X). */
+	function updateAptkSelectionBar() {
+		var n = $('.chk_list_item:checked').length;
+		$('#aptk_selected_count').text(n);
+		$('#aptk_selection_bar').toggleClass('show', n > 0);
+		$('#aptk_selection_master_chk').prop('checked', n > 0);
+	}
+	function clearAptkSelection() {
+		$('.chk_list, .chk_list_item').prop('checked', false);
+		$('.fwd_resume, .send_email, .app_copy, .application_copy').addClass('d-none');
+		$('.custom_hide').removeClass('d-none');
+		updateAptkSelectionBar();
+	}
+	$(document).on('click', '#aptk_selection_close', clearAptkSelection);
+	$(document).on('change', '#aptk_selection_master_chk', function() {
+		if (!$(this).is(':checked')) clearAptkSelection();
+	});
 	
 	
 		 
