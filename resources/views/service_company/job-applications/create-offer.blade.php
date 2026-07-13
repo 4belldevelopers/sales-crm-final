@@ -2705,11 +2705,11 @@
                                     {{-- Direct download: navigates to a route that streams the PDF as an
                                          attachment (no AJAX/JSON/storage-URL — those all failed silently on
                                          the live host). target=_blank so the current drawer stays put. --}}
-                                    <button type="button"
-                                       onclick="window.open('{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}','_blank')"
+                                    <a href="{{ route('service_company.cvtracker.offer_letter_stream', $offer_id, false) }}"
+                                       target="_blank" rel="noopener"
                                        class="btn co-btn-close co-step3-download">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Download Offer Letter
-                                    </button>
+                                    </a>
                                     <div class="co-step3-footer-right">
                                         <span class="btn co-btn-close" onclick="prevStep(event,3)">Back</span>
                                         <button type="button" class="btn co-btn-save section_change_value {{ $section_change_value ? '' : 'd-none' }}" onclick="nextStep(event,3)">Continue to Approval</button>
@@ -3335,7 +3335,7 @@
                 }
 
                 // Send Reminder handler
-                $(document).off('click.coApprRemind').on('click.coApprRemind', '.co-appr-remind-send', function() {
+                $(document).on('click', '.co-appr-remind-send', function() {
                     var $btn = $(this);
                     var rEmail  = $btn.data('email');
                     var rOffId  = $btn.data('offerid');
@@ -5627,13 +5627,12 @@
 
                 // ── Template select (reuses the existing email_template endpoint/behavior from the
                 //    original composer — fills Subject + Body, doesn't touch anything else) ──
-                $(document).off('change.coSendTemplate').on('change.coSendTemplate', '#co_send_template', function () {
+                $(document).on('change', '#co_send_template', function () {
                     var template = $(this).val();
                     if (!template) return;
                     // mailtype 7 = candidate offer email (same code path offerSendMail() used for
                     // mtype==1) — it's what fills COMPANY_NAME/CANDIDATE_NAME/JOB_TITLE/OFFER_LETTER_LINK
                     // placeholders in the template using the real offer/candidate data server-side.
-                    //  url: "{{ route('service_company.cvtracker.email_template', [], false) }}",
                     $.ajax({
                         type: 'POST',
                         url: "{{ route('service_company.cvtracker.email_template') }}",
@@ -5699,9 +5698,7 @@
                 });
 
                 // ── Send Offer Letter (native → same fwd_offer_send endpoint) ──
-                // Off first: this partial is AJAX-loaded into the DOM; $(document).on accumulates
-                // across reloads causing double-fire. Unbind before rebind to guarantee one handler.
-                $(document).off('click.coSendSubmit').on('click.coSendSubmit', '#co_send_submit', function () {
+                $(document).on('click', '#co_send_submit', function () {
                     var $btn = $(this);
                     // fold any half-typed chip text into a chip first (To has no input — it's locked to the candidate)
                     $('#co_cc_chips').each(function () {
