@@ -153,7 +153,7 @@ typography, color, and **consistent icons** — which is also the *fastest, ligh
 | Goal | Technique (lightweight) |
 |---|---|
 | Premium feel | Generous whitespace, soft shadows/rounded cards, consistent **Poppins** type, restrained color palette (Metronic tokens) |
-| Visual clarity & polish | One consistent **icon set** (Metronic/Keenicons) across nav, buttons, stat cards, row actions, status chips, empty states |
+| Visual clarity & polish | One consistent **icon style** across nav, buttons, stat cards, row actions, status chips, empty states. Keenicons is **not mandatory** — pick whichever icon set/format (Keenicons, Font Awesome, inline SVG, etc.) best fits the requirement and is verifiably available; just stay consistent within a given screen |
 | Dashboards / data-viz | Clean **2D charts** (e.g. ApexCharts/Chart.js — already common with Metronic): bars, lines, donuts, funnels. **No 3D charts.** |
 | Delight without weight | Subtle **CSS transitions** (hover, fade, slide), skeleton loaders, micro-interactions — fast and GPU-free |
 

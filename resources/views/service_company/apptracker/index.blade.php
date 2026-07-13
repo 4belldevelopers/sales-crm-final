@@ -72,7 +72,250 @@
         .btn.custombtn {
             padding: 6px 6px 6px 6px !important;
         }
-       
+
+        /* Mass Email / Fwd Resume / Copy / Export — same pill style as CV Tracker's
+           row-selection action buttons. */
+        .aptk-action-btn.btn {
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+        }
+        .aptk-action-btn.btn:hover {
+            background: #eff6ff !important;
+            border-color: #93c5fd !important;
+        }
+        /* The original toolbar buttons stay in the DOM (so the mass_mail/fwd_resume/
+           application_copy/exportRecord modal-trigger classes keep working unchanged)
+           but are permanently hidden now — their restyled equivalent lives in
+           #aptk_selection_bar below. */
+        .aptk-legacy-hide {
+            display: none !important;
+        }
+
+        /* Row selection action bar — same design/position as CV Tracker's
+           #cvh_selection_bar: hidden until candidates are checked, then sits directly
+           above the results table. */
+        .aptk-selection-bar {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            background: #fff;
+            border: 1px solid #e5e9f2;
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            font-family: 'Poppins', sans-serif;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-bar.show {
+            display: flex;
+        }
+        .aptk-selection-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .aptk-selection-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .aptk-selection-actions .btn {
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff !important;
+            border: 1px solid #bfdbfe !important;
+            border-radius: 8px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+        }
+        .aptk-selection-actions .btn:hover {
+            background: #eff6ff !important;
+            border-color: #93c5fd !important;
+        }
+        .aptk-selection-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .aptk-selection-close:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        /* Hiring Pipeline card */
+        .hp-toolbar-card .card-body {
+            padding: 14px 16px;
+        }
+        .hp-card .card-body {
+            padding: 16px 20px;
+        }
+        .hp-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .hp-total-link {
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .hp-total {
+            width: 82px;
+            height: 82px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: background-color .15s;
+        }
+        .hp-total.bg-total-active {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        }
+        .hp-total.bg-gray {
+            background: #e4e6ef;
+        }
+        .hp-total-icon {
+            color: #fff;
+            display: flex;
+        }
+        .hp-total.bg-gray .hp-total-icon {
+            color: #7e8299;
+        }
+        .hp-total-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+        .hp-total-count {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .hp-total.bg-gray .hp-total-count {
+            color: #3f4254;
+        }
+        .hp-total-label {
+            font-size: 9px;
+            font-weight: 500;
+            color: #dbeafe;
+            text-align: center;
+            line-height: 1.2;
+            padding: 0 4px;
+        }
+        .hp-total.bg-gray .hp-total-label {
+            color: #7e8299;
+        }
+        .hp-eq {
+            font-size: 18px;
+            font-weight: 600;
+            color: #b5b5c3;
+            flex-shrink: 0;
+        }
+        .hp-chevron {
+            display: flex;
+            color: #c2c5cc;
+            flex-shrink: 0;
+        }
+        .hp-chevron svg {
+            width: 16px;
+            height: 16px;
+        }
+        .hp-divider {
+            width: 1px;
+            height: 44px;
+            background: #e4e6ef;
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+        .hp-stage {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .hp-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            background: #f2f3f7;
+            border: 2px solid #e4e6ef;
+            transition: border-color .15s, background-color .15s;
+        }
+        .hp-circle .hp-icon {
+            display: flex;
+            color: #99a1b7;
+            transition: color .15s;
+        }
+        .hp-circle .hp-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+        .hp-circle .hp-count {
+            font-size: 13px;
+            font-weight: 700;
+            color: #5e6278;
+            line-height: 1.2;
+            transition: color .15s;
+        }
+        .hp-circle.active {
+            border-color: var(--hp-color);
+            background: var(--hp-bg);
+        }
+        .hp-circle.active .hp-icon {
+            color: var(--hp-color);
+        }
+        .hp-circle.active .hp-count {
+            color: var(--hp-color);
+        }
+        .hp-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #7e8299;
+            text-align: center;
+            white-space: nowrap;
+            transition: color .15s, font-weight .15s;
+        }
+        .hp-label.active {
+            font-weight: 700;
+            color: #181c32;
+        }
+        @media (max-width: 1440px) {
+            .hp-total { width: 72px; height: 72px; }
+            .hp-circle { width: 52px; height: 52px; }
+        }
+        @media (max-width: 576px) {
+            .hp-flow { justify-content: flex-start; }
+        }
+
     </style>
 @endpush
 @section('content')
@@ -139,83 +382,77 @@
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center py-1">
+                    @if (in_array('view_jobs', $userPermissions))
+                        {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                             defined once in the shared layout) that the job title/logo already
+                             uses elsewhere — .show-detail-open's click handler in
+                             service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+                        <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                            class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
+                            View Job
+                        </a>
+                    @endif
+                    @if (in_array('add_job_applications', $userPermissions))
+                        <a href="javascript:void(0);">
+                            <button type="button"
+                                class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3"
+                                id="addServiceCandidate">
+                                <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                            <polygon points="0 0 24 0 24 24 0 24" />
+                                            <path
+                                                d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
+                                                fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                                            <path
+                                                d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
+                                                fill="#000000" fill-rule="nonzero" />
+                                        </g>
+                                    </svg>
+                                </span>
+                                Add Candidate
+                            </button>
+                        </a>
+                    @endif
                     <!--begin::Forward CV-->
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn d-none" data-toggle="modal"
-                        data-target="#mass_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Mass Email 
+                        class="btn btn-sm btn-flex btn-light-primary mass_mail fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none" data-toggle="modal"
+                        data-target="#mass_mail">
+                        <span class="svg-icon svg-icon-primary svg-icon-1x">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                        </span> Mass Email
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn d-none fwd_resume" data-toggle="modal"
-                        data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                        fill="#000000" opacity="0.3" />
-                                    <path
-                                        d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                        fill="#000000" />
-                                </g>
-                            </svg>
-                        </span> Fwd Resume 
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none fwd_resume" data-toggle="modal"
+                        data-target="#fwd_resume">
+                        <span class="svg-icon svg-icon-primary svg-icon-1x">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                        </span> Fwd Resume
                     </a>
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn d-none application_copy"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder me-1 custombtn aptk-action-btn aptk-legacy-hide d-none application_copy"
                         data-toggle="modal" data-target="#application_copy">
                         <!--begin::Svg icon-->
                         <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z"
-                                        fill="#000000" fill-rule="nonzero" />
-                                    <path
-                                        d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z"
-                                        fill="#000000" opacity="0.3" />
-                                </g>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                         </span>
                         <!--end::Svg Icon-->
-                        Copy </a>
+                        Copy
+                    </a>
                     <!--end::Copy-->
 
                     <a href="javascript:void(0);" type="button"
-                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn d-none"
+                        class="btn btn-sm btn-flex btn-light-primary fw-bolder before-event downloadexcell exportRecord d-flex align-items-center position-relative my-1 me-1 custombtn aptk-action-btn aptk-legacy-hide d-none"
                         data-toggle="modal" data-target="#application_copy" style="width: 100px;">
-                        <span class="svg-icon svg-icon-primary svg-icon-1x">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24" />
-                                    <path
-                                        d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z"
-                                        fill="#000000" fill-rule="nonzero" />
-                                    <path
-                                        d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z"
-                                        fill="#000000" opacity="0.3" />
-                                </g>
+                        <span class="svg-icon svg-icon-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
                             </svg>
                         </span>
-                        Export 
+                        Export
                     </a>
 
                     <!--begin::Search-->
@@ -350,49 +587,36 @@
     </div>
     <!--end::Toolbar-->
     @php
+        // Hiring Pipeline card: which stage counts as "active" for this page load is
+        // resolved server-side from $candStatusClass (set by the controller from the
+        // mstatus_id route segment) — clicking a stage re-fetches this same page's data
+        // via ajax (see fetchCandidates()/countder() below) and toggles the active look
+        // client-side, it never triggers a full reload.
+        $hpKnownStages = ['Sourcing', 'Screening', 'Interview', 'Negotiation', 'Offered', 'Joined', 'Rejected'];
+        $hpActiveStage = (!empty(@$candStatusClass['Index']) && in_array(@$candStatusClass['Index'], $hpKnownStages))
+            ? $candStatusClass['Index']
+            : null;
+        $hpTotalActive = !empty($mstatus_id) && $mstatus_id == 'all';
 
-        $sourcing_bg = $screening_bg = $interview_bg = $negotation_bg = $offer_bg = $joining_bg = $rejected_bg = $All_candidate_bg =
-            'alert bg-gray text-center circle_boxes';
-        $sourcing_text = $screening_text = $interview_text = $negotation_text = $offer_text = $joining_text = $rejected_text = $All_candidate_text =
-            'text-center color-all';
-
-        if (!empty(@$candStatusClass['Index'])) {
-            if (@$candStatusClass['Index'] == 'Sourcing') {
-                $sourcing_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $sourcing_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Screening') {
-                $screening_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $screening_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Interview') {
-                $interview_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $interview_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Negotiation') {
-                $negotation_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $negotation_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Offered') {
-                $offer_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $offer_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Joined') {
-                $joining_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $joining_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } elseif (@$candStatusClass['Index'] == 'Rejected') {
-                $rejected_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $rejected_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            } else {
-                $All_candidate_bg = 'alert text-center circle_boxes ' . @$candStatusClass['bg_class'];
-                $All_candidate_text = 'text-center  ' . @$candStatusClass['nav_text'];
-            }
-        }
-
-        $tr_class = 'bg-gray';
-        if (!empty($mstatus_id)) {
-            if ($mstatus_id == 'all') {
-                $tr_class = 'bg-total-active';
-            } else {
-                $tr_class = 'bg-gray';
-            }
-        }
-
+        // Colors/icons reuse this app's existing "Pipeline Stages" legend
+        // (resources/views/sections/service_company/pipeline.blade.php) rather than
+        // inventing new ones, so this card matches every other pipeline-stage display.
+        $hpStages = [
+            ['key' => 'Sourcing', 'rel' => '1', 'label' => 'Sourcing', 'color' => '#7e8299', 'bg' => '#eef0f2',
+                'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
+            ['key' => 'Screening', 'rel' => '2', 'label' => 'Screening', 'color' => '#c000ff', 'bg' => '#f9e6ff',
+                'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
+            ['key' => 'Interview', 'rel' => '3', 'label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff',
+                'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
+            ['key' => 'Negotiation', 'rel' => '4', 'label' => 'Negotiation', 'color' => '#ff4098', 'bg' => '#ffe6f2',
+                'icon' => 'M8 3 4 7l4 4M4 7h13M16 21l4-4-4-4M20 17H7'],
+            ['key' => 'Offered', 'rel' => '5', 'label' => 'Offer', 'color' => '#ffab00', 'bg' => '#fff4e0',
+                'icon' => 'M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15'],
+            ['key' => 'Joined', 'rel' => '6', 'label' => 'Joined', 'color' => '#06c732', 'bg' => '#e3fbe9',
+                'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
+        ];
+        $hpRejected = ['key' => 'Rejected', 'rel' => '7', 'label' => 'Rejected', 'color' => '#ff0202', 'bg' => '#ffe3e3',
+            'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'];
     @endphp
 
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
@@ -408,151 +632,139 @@
                 
 
 
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-4 d-flex align-items-center px-2" style="width:61%;position: relative;">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="" placeholder="Search..." id="kt_tagify_2" />
-                            <div style="position: absolute; top: 0px; right: 36px;">
-                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                             </div>
+                <div class="card hp-toolbar-card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
+                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
+                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
+                                    <div style="position: absolute; top: 0px; right: 12px;">
+                                        <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
+                                     </div>
+                            </div>
+                            <div style="width: 220px; flex-shrink: 0;">
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="3">Low to High (Salary)</option>
+                                    <option value="4">High to Low (Salary)</option>
+                                    <!--<option value="9">Notice Period (Immediate)</option>-->
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice Period (Serving)</option>
+                                    <option value="7">High to Low (Experience) </option>
+                                    <option value="8">Low to High (Experience)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 21%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <option value="3">Low to High (Salary)</option>
-                            <option value="4">High to Low (Salary)</option>
-                            <!--<option value="9">Notice Period (Immediate)</option>-->
-                            <option value="21">Notice Period (Immediate)</option>
-                            <option value="22">Notice Period (Serving)</option>
-                            <option value="7">High to Low (Experience) </option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
-                    </div>
-                    {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 10%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-control="select2" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                        <option value="110" selected="selected">Location</option>
-                        <option value="111">India</option>
-                     </select>
-                  </div> --}}
-                    {{-- <div class="col-lg-2 d-flex align-items-center px-2" style="width: 18%;">
-                     <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                        <span class="svg-icon svg-icon-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                           </svg>
-                        </span>
-                        Filter
-                     </button>
-                  </div> --}}
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 18%;">
+                </div>
 
-                        @if (in_array('add_job_applications', $userPermissions))
-                            <a href="javascript:void(0);">
-                                <button type="button"
-                                    class="btn btn-sm btn-flex btn-primary btn-active-primary fw-bolder me-3 py-4"
-                                    id="addServiceCandidate">
-                                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                            width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                <polygon points="0 0 24 0 24 24 0 24" />
-                                                <path
-                                                    d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z"
-                                                    fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                <path
-                                                    d="M0.00065168429,20.1992055 C0.388258525,15.4265159 4.26191235,13 8.98334134,13 C13.7712164,13 17.7048837,15.2931929 17.9979143,20.2 C18.0095879,20.3954741 17.9979143,21 17.2466999,21 C13.541124,21 8.03472472,21 0.727502227,21 C0.476712155,21 -0.0204617505,20.45918 0.00065168429,20.1992055 Z"
-                                                    fill="#000000" fill-rule="nonzero" />
-                                            </g>
+                <div class="card hp-card mb-4">
+                    <div class="card-body">
+                        <div class="hp-flow">
+                            <a class="application_sttus_nav hp-total-link" href="javascript:void(0);" rel="all">
+                                <div class="{{ $hpTotalActive ? 'bg-total-active' : 'bg-gray' }} text-center hp-total" role="alert" id="bg_all">
+                                    <span class="hp-total-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
                                         </svg>
                                     </span>
-                                    Add Candidate
-                                </button>
+                                    <span class="hp-total-count" id="totalcnt">0</span>
+                                    <span class="hp-total-label">Total Candidates</span>
+                                </div>
                             </a>
-                        @endif
-                        {{-- <a href="javascript:void(0);" style="background: #95f1a4; padding: 13px; border-radius: 5px;">
-                      <select class="form-select form-select-transparent text-gray-900 fs-7 lh-1 fw-bold py-0 ps-3 w-auto" data-hide-search="true" id="action_type" data-control="select2" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;width: 0px !important;" onchange="filtersdata()">
-                      <option value=""></option>
-                      <option value="2">Import</option>
-                      <option value="1">Sample download</option>
-                    </select>
-                  </a> --}}
+                            <span class="hp-eq">=</span>
+                            @foreach ($hpStages as $stage)
+                                <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $stage['rel'] }}">
+                                    <div class="hp-circle {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}"
+                                        data-hp="{{ $stage['rel'] }}"
+                                        style="--hp-color: {{ $stage['color'] }}; --hp-bg: {{ $stage['bg'] }};">
+                                        <span class="hp-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="{{ $stage['icon'] }}" />
+                                            </svg>
+                                        </span>
+                                        <span class="hp-count" id="bg_{{ $stage['rel'] }}">0</span>
+                                    </div>
+                                    <div class="hp-label {{ $hpActiveStage === $stage['key'] ? 'active' : '' }}" id="tx_{{ $stage['rel'] }}">
+                                        {{ $stage['label'] }}
+                                    </div>
+                                </a>
+                                @if (!$loop->last)
+                                    <span class="hp-chevron">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="m9 6 6 6-6 6" />
+                                        </svg>
+                                    </span>
+                                @endif
+                            @endforeach
+                            <span class="hp-divider"></span>
+                            <a class="application_sttus_nav hp-stage" href="javascript:void(0);" rel="{{ $hpRejected['rel'] }}">
+                                <div class="hp-circle {{ $hpActiveStage === $hpRejected['key'] ? 'active' : '' }}"
+                                    data-hp="{{ $hpRejected['rel'] }}"
+                                    style="--hp-color: {{ $hpRejected['color'] }}; --hp-bg: {{ $hpRejected['bg'] }};">
+                                    <span class="hp-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="{{ $hpRejected['icon'] }}" />
+                                        </svg>
+                                    </span>
+                                    <span class="hp-count" id="bg_{{ $hpRejected['rel'] }}">0</span>
+                                </div>
+                                <div class="hp-label {{ $hpActiveStage === $hpRejected['key'] ? 'active' : '' }}" id="tx_{{ $hpRejected['rel'] }}">
+                                    {{ $hpRejected['label'] }}
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-
-                <div class="d-flex justify-content-space-around align-items-center custm-bg">
-                    <a class="d-block text-white f-17 font-weight-bolder application_sttus_nav application_sttus_nav"
-                        href="Javascript:void(0);" rel="all">
-                        <div class="total_jobs mr-2">
-                            <div class=" {{ @$tr_class }} text-center squre_box" role="alert" id="bg_all"> <span
-                                    class="total-content-view">
-                                    <i class="flaticon2-group text-white fa-sm" aria-hidden="true"></i> <span
-                                        id="totalcnt">0</span> </span> </div>
-                            <h6 class="text-center color-all font-weight-600">&nbsp;Total</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20 application_sttus_nav"
-                        href="Javascript:void(0);" rel="1">
-                        <div class="sourcing mr-2">
-                            <div class="bg text-center circle_boxes SourcingCounter {{ @$sourcing_bg }}" role="alert"
-                                id="bg_1"> 0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$sourcing_text }}" id="tx_1">
-                                Sourcing</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="2">
-                        <div class="screening mr-2">
-                            <div class="bg text-center circle_boxes {{ @$screening_bg }}" role="alert" id="bg_2">
-                                0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$screening_text }}" id="tx_2">
-                                Screening</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="3">
-                        <div class="negitation mr-2">
-                            <div class="bg text-center circle_boxes {{ @$interview_bg }}" role="alert" id="bg_3">
-                                0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$interview_text }}" id="tx_3">
-                                Evaluation</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="4">
-                        <div class="negitation mr-2">
-                            <div class="bg text-center circle_boxes {{ @$negotation_bg }}" role="alert"
-                                id="bg_4"> 0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$negotation_text }}" id="tx_4">
-                                Negotiation</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="5">
-                        <div class="offer mr-2">
-                            <div class="bg text-center circle_boxes {{ @$offer_bg }}" role="alert" id="bg_5">
-                                0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$offer_text }}" id="tx_5">Offer
-                            </h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="6">
-                        <div class="joining mr-2">
-                            <div class="bg text-center circle_boxes {{ @$joining_bg }}" role="alert" id="bg_6">
-                                0 </div>
-                            <h6 class="tx text-center color-all font-weight-600 {{ @$joining_text }}" id="tx_6">
-                                Joined</h6>
-                        </div>
-                    </a> <a class="d-block text-white font-weight-bolder f-20  application_sttus_nav"
-                        href="Javascript:void(0);" rel="7">
-                        <div class="rejected mr-2">
-                            <div class="bg alert text-center circle_boxes   {{ @$rejected_bg }}" role="alert"
-                                id="bg_7"> 0 </div>
-                            <h6 class="tx text-center   font-weight-600 {{ $rejected_text }}" id="tx_7">Rejected
-                            </h6>
-                        </div>
-                    </a>
+                {{-- Row selection action bar — hidden until candidates are checked.
+                     Reuses the exact same trigger classes as the legacy toolbar buttons
+                     (mass_mail / fwd_resume / application_copy / exportRecord), so every
+                     existing modal + ajax handler works unchanged; only the presentation
+                     and position (directly above the results table) are new. --}}
+                <div class="aptk-selection-bar" id="aptk_selection_bar">
+                    <div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked
+                            title="Clear selection" />
+                    </div>
+                    <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
+                    <div class="aptk-selection-actions">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+                            </span> Send Email
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
+                            </span> Forward Resume
+                        </a>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
+                            </span> Copy
+                        </a>
+                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                            <span class="svg-icon svg-icon-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
+                                </svg>
+                            </span> Export
+                        </button>
+                    </div>
+                    <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
                 </div>
+
                 <div class="card">
                     <div class="card-body pt-3 px-5">
                         @if (in_array('view_job_applications', $userPermissions))
@@ -568,15 +780,14 @@
                                                     value="1" />
                                             </div>
                                         </th>
-                                        <th class="">Name</th>
+                                        <th class="">Candidate Name</th>
                                         {{-- <th class="">Contacts</th> --}}
                                         <th class="">Exp.</th>
                                         <th class="">Salary</th>
                                         <th class="">Notice</th>
-                                        <th class="">Qualification</th>
                                         <th class="">Interview</th>
                                         <th class="">Location</th>
-                                        <th class="">Source</th>
+                                        <th class="">Ownership</th>
                                         <th class="">Stage</th>
                                     </tr>
                                 </thead>
@@ -812,22 +1023,8 @@
             
             $(document).on('click', '.application_sttus_nav', function() {
 
-                $(".bg").removeClass('bg-Asourcing').addClass('bg-gray');
-                $(".bg").removeClass('bg-Ascreening').addClass('bg-gray');
-                $(".bg").removeClass('bg-Ainterview').addClass('bg-gray');
-                $(".bg").removeClass('bg-Anegotation').addClass('bg-gray');
-                $(".bg").removeClass('bg-Aoffer').addClass('bg-gray');
-                $(".bg").removeClass('bg-Ajoiner').addClass('bg-gray');
-                $(".bg").removeClass('bg-Arejected').addClass('bg-gray');
-
-                $("#tx_1").removeClass('text-Asourcing').addClass('color-all');
-                $("#tx_2").removeClass('text-Ascreening').addClass('color-all');
-                $("#tx_3").removeClass('text-Ainterview').addClass('color-all');
-                $("#tx_4").removeClass('text-Anegotation').addClass('color-all');
-                $("#tx_5").removeClass('text-Aoffer').addClass('color-all');
-                $("#tx_6").removeClass('text-Ajoiner').addClass('color-all');
-                $("#tx_7").removeClass('text-Arejected').addClass('color-all');
-
+                $('.hp-circle').removeClass('active');
+                $('.hp-label').removeClass('active');
                 $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
 
                 var page = $(this).attr('rel');
@@ -836,44 +1033,44 @@
                 var jobIdEncrypt = '{{ $jobIdEncrypt }}';
 
                 if (page == 1) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Asourcing');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Asourcing');
+                    $('.hp-circle[data-hp="1"]').addClass('active');
+                    $('#tx_1').addClass('active');
                     $('.nav_status').html('Sourcing');
                     $('.nav_status').css('background', '#efefef');
                     $('.nav_status').css('color', '#000000');
                 } else if (page == 2) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Ascreening');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Ascreening');
+                    $('.hp-circle[data-hp="2"]').addClass('active');
+                    $('#tx_2').addClass('active');
                     $('.nav_status').html('Screening');
                     $('.nav_status').css('background', '#fff9ed');
                     $('.nav_status').css('color', '#ffab00');
                 } else if (page == 3) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Ainterview');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Ainterview');
+                    $('.hp-circle[data-hp="3"]').addClass('active');
+                    $('#tx_3').addClass('active');
                     $('.nav_status').html('Interview');
                     $('.nav_status').css('background', '#f0f8ff');
                     $('.nav_status').css('color', '#2896ff');
                 } else if (page == 4) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Anegotation');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Anegotation');
+                    $('.hp-circle[data-hp="4"]').addClass('active');
+                    $('#tx_4').addClass('active');
                     $('.nav_status').html('Negotiation');
                     $('.nav_status').css('background', '#ffe6f2');
                     $('.nav_status').css('color', '#ff4098');
                 } else if (page == 5) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Aoffer');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Aoffer');
+                    $('.hp-circle[data-hp="5"]').addClass('active');
+                    $('#tx_5').addClass('active');
                     $('.nav_status').html('Offered');
                     $('.nav_status').css('background', '#d4ffde');
                     $('.nav_status').css('color', '#06c732');
                 } else if (page == 6) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Ajoiner');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Ajoiner');
+                    $('.hp-circle[data-hp="6"]').addClass('active');
+                    $('#tx_6').addClass('active');
                     $('.nav_status').html('Joined');
                     $('.nav_status').css('background', '#f7deff');
                     $('.nav_status').css('color', '#c000ff');
                 } else if (page == 7) {
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-Arejected');
-                    $('#tx_' + page).removeClass('color-all').addClass('text-Arejected');
+                    $('.hp-circle[data-hp="7"]').addClass('active');
+                    $('#tx_7').addClass('active');
                     $('.nav_status').html('Rejected');
                     $('.nav_status').css('background', '#ffe2e5');
                     $('.nav_status').css('color', '#ff0202');
@@ -881,7 +1078,7 @@
                     $('.nav_status').html('All Candidate');
                     $('.nav_status').css('background', 'linear-gradient(to left, #01e074, #0581d9)');
                     $('.nav_status').css('color', '#FFFFFF');
-                    $('#bg_' + page).removeClass('bg-gray').addClass('bg-total-active');
+                    $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
                 }
 
                 $('#mstatus_id').val(page);
@@ -1407,6 +1604,7 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
         });
         $(document).on('click', '.chk_list_item', function() {
             var i = 0;
@@ -1431,6 +1629,26 @@
                 $('.app_copy').addClass("d-none");
                 $('.application_copy').addClass("d-none");
             }
+            updateAptkSelectionBar();
+        });
+
+        /* Selection bar: live count + clear-selection controls (checkbox + close X) —
+           same behavior as CV Tracker's #cvh_selection_bar. */
+        function updateAptkSelectionBar() {
+            var n = $('.chk_list_item:checked').length;
+            $('#aptk_selected_count').text(n);
+            $('#aptk_selection_bar').toggleClass('show', n > 0);
+            $('#aptk_selection_master_chk').prop('checked', n > 0);
+        }
+        function clearAptkSelection() {
+            $('.chk_list, .chk_list_item').prop('checked', false);
+            $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+            $('.custom_hide').removeClass('d-none');
+            updateAptkSelectionBar();
+        }
+        $(document).on('click', '#aptk_selection_close', clearAptkSelection);
+        $(document).on('change', '#aptk_selection_master_chk', function() {
+            if (!$(this).is(':checked')) clearAptkSelection();
         });
 
         $(document).on('click', '.fwd_resume', function() {
@@ -1640,45 +1858,49 @@
                     $('#paginationcandidate').html(response.pagination);
 
 
+                    $('.hp-circle').removeClass('active');
+                    $('.hp-label').removeClass('active');
+                    $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
+
                     if (mstatus_id == 1) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Asourcing');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Asourcing');
+                    $('.hp-circle[data-hp="1"]').addClass('active');
+                    $('#tx_1').addClass('active');
                     $('.nav_status').html('Sourcing');
                     $('.nav_status').css('background', '#efefef');
                     $('.nav_status').css('color', '#000000');
                 } else if (mstatus_id == 2) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Ascreening');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Ascreening');
+                    $('.hp-circle[data-hp="2"]').addClass('active');
+                    $('#tx_2').addClass('active');
                     $('.nav_status').html('Screening');
                     $('.nav_status').css('background', '#fff9ed');
                     $('.nav_status').css('color', '#ffab00');
                 } else if (mstatus_id == 3) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Ainterview');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Ainterview');
+                    $('.hp-circle[data-hp="3"]').addClass('active');
+                    $('#tx_3').addClass('active');
                     $('.nav_status').html('Interview');
                     $('.nav_status').css('background', '#f0f8ff');
                     $('.nav_status').css('color', '#2896ff');
                 } else if (mstatus_id == 4) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Anegotation');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Anegotation');
+                    $('.hp-circle[data-hp="4"]').addClass('active');
+                    $('#tx_4').addClass('active');
                     $('.nav_status').html('Negotiation');
                     $('.nav_status').css('background', '#ffe6f2');
                     $('.nav_status').css('color', '#ff4098');
                 } else if (mstatus_id == 5) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Aoffer');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Aoffer');
+                    $('.hp-circle[data-hp="5"]').addClass('active');
+                    $('#tx_5').addClass('active');
                     $('.nav_status').html('Offered');
                     $('.nav_status').css('background', '#d4ffde');
                     $('.nav_status').css('color', '#06c732');
                 } else if (mstatus_id == 6) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Ajoiner');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Ajoiner');
+                    $('.hp-circle[data-hp="6"]').addClass('active');
+                    $('#tx_6').addClass('active');
                     $('.nav_status').html('Joined');
                     $('.nav_status').css('background', '#f7deff');
                     $('.nav_status').css('color', '#c000ff');
                 } else if (mstatus_id == 7) {
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-Arejected');
-                    $('#tx_' + mstatus_id).removeClass('color-all').addClass('text-Arejected');
+                    $('.hp-circle[data-hp="7"]').addClass('active');
+                    $('#tx_7').addClass('active');
                     $('.nav_status').html('Rejected');
                     $('.nav_status').css('background', '#ffe2e5');
                     $('.nav_status').css('color', '#ff0202');
@@ -1686,7 +1908,7 @@
                     $('.nav_status').html('All Candidate');
                     $('.nav_status').css('background', 'linear-gradient(to left, #01e074, #0581d9)');
                     $('.nav_status').css('color', '#FFFFFF');
-                    $('#bg_' + mstatus_id).removeClass('bg-gray').addClass('bg-total-active');
+                    $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
                 }
 
 

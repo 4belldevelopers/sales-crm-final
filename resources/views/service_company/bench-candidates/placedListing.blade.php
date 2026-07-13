@@ -47,26 +47,14 @@
             width: 40px; height: 40px; min-width: 40px;
             border-radius: .6rem;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
-        .placed-stat-label { font-size: 12px; font-weight: 500; color: #7e8299; }
-        .placed-stat-value { font-size: 20px; font-weight: 700; color: #181c32; line-height: 1.2; }
-        .placed-stat-caption { font-size: 11px; color: #a1a5b7; }
-        .placed-stat-delta { font-size: 11px; font-weight: 600; }
+        .placed-stat-label { font-size: 10.8px; font-weight: 500; color: #7e8299; }
+        .placed-stat-value { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .placed-stat-caption { font-size: 10px; color: #a1a5b7; }
+        .placed-stat-delta { font-size: 10px; font-weight: 600; }
         .placed-stat-delta.up { color: #17c653; }
         .placed-stat-delta.down { color: #f1416c; }
-
-        /* ---- placement funnel ---- */
-        .placed-funnel-card { border: 1px solid #eef0f4; border-radius: .75rem; background: #fff; }
-        .placed-funnel-step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35rem; min-width: 84px; }
-        .placed-funnel-icon {
-            width: 46px; height: 46px; border-radius: .6rem;
-            display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
-        }
-        .placed-funnel-value { font-size: 17px; font-weight: 700; color: #181c32; }
-        .placed-funnel-label { font-size: 11px; font-weight: 500; color: #7e8299; }
-        .placed-funnel-chevron { color: #d7dae1; font-size: 1rem; }
-        .placed-funnel-toggle .btn { font-size: 12px; font-weight: 500; padding: .35rem .75rem; }
 
         /* ---- filter bar ---- */
         .placed-filter-bar {
@@ -75,7 +63,7 @@
         }
         .placed-filter-btn {
             border: 1px solid #e4e6ef; background: #f9f9f9; color: #3f4254;
-            border-radius: .5rem; font-size: 12.5px; font-weight: 500;
+            border-radius: .5rem; font-size: 11.5px; font-weight: 500;
             padding: .45rem .75rem; white-space: nowrap;
             display: inline-flex; align-items: center; gap: .35rem;
         }
@@ -85,10 +73,10 @@
         #placedTableWrap { overflow-x: auto; }
         #myTable thead th {
             position: sticky; top: 0; z-index: 2;
-            background: #fff; font-size: 12px; font-weight: 500; color: #7e8299;
+            background: #fff; font-size: 11px; font-weight: 500; color: #7e8299;
             border-bottom: 1px solid #eef0f4; white-space: nowrap; padding: .75rem .6rem;
         }
-        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 13px; }
+        #myTable tbody td { padding: .6rem; vertical-align: middle; font-size: 11.5px; }
         #myTable tbody tr { border-bottom: 1px solid #f4f4f8; }
 
         .placed-avatar {
@@ -96,11 +84,11 @@
             display: flex; align-items: center; justify-content: center; font-weight: 700;
         }
         .placed-skill-badge {
-            background: #f4f4f8; color: #5e6278; font-weight: 400; font-size: 10.5px;
+            background: #f4f4f8; color: #5e6278; font-weight: 400; font-size: 9.5px;
             margin-right: 2px;
         }
-        .fs-8 { font-size: 11.5px !important; }
-        .fs-9 { font-size: 10.5px !important; }
+        .fs-8 { font-size: 10.5px !important; }
+        .fs-9 { font-size: 9.5px !important; }
 
         .placed-timeline { min-width: 190px; }
         .placed-timeline-track { display: flex; align-items: flex-start; }
@@ -108,18 +96,18 @@
         .placed-timeline-node { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .placed-timeline-node.is-static { background: #fff; border: 2px solid #e4e6ef; }
         .placed-timeline-node.is-done { background: #17c653; border: 2px solid #17c653; }
-        .placed-timeline-node-label { font-size: 9.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
+        .placed-timeline-node-label { font-size: 8.5px; font-weight: 600; color: #7e8299; margin-top: 4px; white-space: nowrap; }
         .placed-timeline-line { flex: 1; height: 2px; background: #e4e6ef; min-width: 14px; margin: 4px 1px 0; }
         .placed-timeline-line.is-done { background: #17c653; }
         .placed-timeline-labels { display: flex; justify-content: space-between; margin-top: 1px; }
-        .placed-timeline-labels span { font-size: 9px; color: #a1a5b7; }
+        .placed-timeline-labels span { font-size: 8px; color: #a1a5b7; }
 
         .placed-detail-line { display: flex; align-items: center; gap: .35rem; margin-bottom: 1px; }
-        .placed-detail-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-detail-line i { font-size: 9px; width: 12px; text-align: center; }
 
         .placed-status-pill {
             display: inline-flex; align-items: center; width: fit-content;
-            font-size: 11.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
+            font-size: 10.5px; font-weight: 600; padding: .25rem .55rem; border-radius: .45rem;
         }
         .placed-status-pill.is-success { background: #e8fff3; color: #17c653; }
         .placed-status-pill.is-info { background: #eef3ff; color: #009ef7; }
@@ -127,12 +115,12 @@
         .placed-action-btn { width: 30px; height: 30px; }
 
         .placed-commercial-line { display: flex; align-items: center; gap: .35rem; margin-top: 3px; }
-        .placed-commercial-line i { font-size: 10px; width: 12px; text-align: center; }
+        .placed-commercial-line i { font-size: 9px; width: 12px; text-align: center; }
         .placed-change-link {
             display: inline-flex; align-items: center; gap: .3rem;
-            font-size: 11px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
+            font-size: 10px; font-weight: 600; color: #009ef7; margin-top: 4px; width: fit-content;
         }
-        .placed-change-link i { font-size: 9.5px; }
+        .placed-change-link i { font-size: 8.5px; }
         .placed-change-link:hover { color: #0077b5; }
 
         .rows-per-page-select { cursor: pointer; }
@@ -196,6 +184,98 @@
             display: inline-block; font-size: 10px; font-weight: 700; color: #17c653; background: #eafff3;
             border-radius: .35rem; padding: 1px 6px; margin-top: .35rem;
         }
+
+        .cc-calc-preview { background: #f9f9fb; border-radius: .6rem; padding: .85rem 1rem; }
+        .cc-calc-preview-title { font-size: 12px; font-weight: 700; color: #181c32; margin-bottom: .6rem; }
+        .cc-calc-preview-row { display: flex; align-items: center; gap: .85rem; flex-wrap: wrap; }
+        .cc-calc-cell { display: flex; flex-direction: column; }
+        .cc-calc-label { font-size: 10.5px; color: #a1a5b7; }
+        .cc-calc-value { font-size: 13px; font-weight: 700; color: #181c32; }
+        .cc-calc-op { font-size: 13px; color: #a1a5b7; font-weight: 600; }
+
+        .cc-total-box {
+            background: #f9f9fb; border-radius: .6rem; padding: .6rem .9rem;
+            display: flex; flex-direction: column; align-items: flex-end; justify-content: center; height: 100%;
+        }
+
+        .cc-toggle-link {
+            display: inline-flex; align-items: center; gap: .35rem;
+            font-size: 12px; font-weight: 600; color: #009ef7;
+        }
+        .cc-toggle-link:hover { color: #0077b5; }
+
+        .cc-subsection { background: #f9f9fb; border-radius: .65rem; padding: 1rem 1.1rem; }
+        .cc-progress-row {
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid #e4e6ef; border-radius: .5rem; padding: .55rem .8rem; font-size: 12.5px; font-weight: 600; color: #3f4254;
+        }
+
+        .cc-summary-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem;
+            background: #f9f9fb; border-radius: .6rem; padding: .9rem 1rem;
+        }
+        .cc-summary-cell { display: flex; flex-direction: column; gap: .2rem; }
+
+        /* ---- assignment details drawer ---- */
+        .ad-candidate-card {
+            display: flex; align-items: center; gap: .75rem;
+            border: 1px solid #eef0f4; border-radius: .7rem; padding: .85rem 1rem;
+        }
+        .ad-candidate-avatar { width: 44px; height: 44px; border-radius: .6rem; flex-shrink: 0; }
+
+        .ad-status-list { display: flex; flex-direction: column; gap: .6rem; }
+        .ad-status-card {
+            display: flex; align-items: flex-start; gap: .65rem; cursor: pointer;
+            border: 1.5px solid #e4e6ef; border-radius: .65rem; padding: .8rem .95rem;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .ad-status-card:hover { border-color: #d7dae1; }
+        .ad-status-radio {
+            width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d7dae1; flex-shrink: 0; margin-top: 2px; position: relative;
+        }
+        .ad-status-title { display: block; font-size: 13px; font-weight: 700; color: #181c32; }
+        .ad-status-sub { display: block; font-size: 11.5px; color: #a1a5b7; margin-top: 1px; }
+
+        .ad-status-card[data-tone="success"].is-selected { border-color: #17c653; background: #eafff3; }
+        .ad-status-card[data-tone="success"].is-selected .ad-status-radio { border-color: #17c653; }
+        .ad-status-card[data-tone="success"].is-selected .ad-status-radio::after { background: #17c653; }
+        .ad-status-card[data-tone="info"].is-selected { border-color: #009ef7; background: #f1faff; }
+        .ad-status-card[data-tone="info"].is-selected .ad-status-radio { border-color: #009ef7; }
+        .ad-status-card[data-tone="info"].is-selected .ad-status-radio::after { background: #009ef7; }
+        .ad-status-card[data-tone="danger"].is-selected { border-color: #f1416c; background: #fff5f8; }
+        .ad-status-card[data-tone="danger"].is-selected .ad-status-radio { border-color: #f1416c; }
+        .ad-status-card[data-tone="danger"].is-selected .ad-status-radio::after { background: #f1416c; }
+        .ad-status-card.is-selected .ad-status-radio::after {
+            content: ''; position: absolute; inset: 3px; border-radius: 50%;
+        }
+
+        .ad-summary-box {
+            display: flex; align-items: flex-start; gap: .65rem;
+            border-radius: .6rem; padding: .85rem 1rem; margin-top: 1rem; font-size: 12.5px;
+        }
+        .ad-summary-box i { font-size: 15px; margin-top: 2px; }
+        .ad-summary-box.is-success { background: #eafff3; color: #17c653; }
+        .ad-summary-box.is-info { background: #f1faff; color: #009ef7; }
+        .ad-summary-box.is-danger { background: #fff5f8; color: #f1416c; }
+        .ad-summary-box .fw-bold, .ad-summary-box .text-muted { color: inherit; }
+        .ad-summary-box .fs-9.text-muted, .ad-summary-box .text-muted { opacity: .85; }
+        .ad-summary-kv { display: flex; justify-content: space-between; gap: .75rem; font-size: 11.5px; color: #3f4254; padding: 1px 0; }
+        .ad-summary-kv span { color: #7e8299; }
+
+        .ad-yesno-group { display: flex; gap: .6rem; }
+        .ad-yesno-option {
+            display: flex; align-items: center; gap: .4rem; cursor: pointer;
+            border: 1.5px solid #e4e6ef; border-radius: .5rem; padding: .5rem .9rem; font-size: 12.5px; font-weight: 600; color: #3f4254;
+        }
+        .ad-yesno-radio { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #d7dae1; position: relative; }
+        .ad-yesno-option.is-selected.is-danger { border-color: #f1416c; background: #fff5f8; color: #f1416c; }
+        .ad-yesno-option.is-selected.is-danger .ad-yesno-radio { border-color: #f1416c; }
+        .ad-yesno-option.is-selected .ad-yesno-radio::after {
+            content: ''; position: absolute; inset: 2px; border-radius: 50%; background: #f1416c;
+        }
+        .ad-yesno-option.is-selected:not(.is-danger) { border-color: #009ef7; background: #f1faff; color: #009ef7; }
+        .ad-yesno-option.is-selected:not(.is-danger) .ad-yesno-radio { border-color: #009ef7; }
+        .ad-yesno-option.is-selected:not(.is-danger) .ad-yesno-radio::after { background: #009ef7; }
     </style>
 @endpush
 
@@ -209,7 +289,8 @@
                     <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
                         <a href="javascript:void(0);" class="text-primary">Talent Placed</a>
                     </h5>
-                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.</span>
+                    <span class="text-gray-600 fs-8">Track bench candidates who got placed and their project / placement journey.
+                        <span class="fw-bolder text-dark" id="totalPlace"></span> Placed</span>
                 </div>
             </div>
             <div class="d-flex align-items-center py-1 gap-2">
@@ -306,59 +387,6 @@
                     </div>
 
                     {{-- =====================================================
-                         Placement funnel.
-                         Static placeholder — stage counts need a new ES
-                         aggregation query per stage, not yet built.
-                    ====================================================== --}}
-                    <div class="placed-funnel-card p-4 mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-                            <h6 class="fw-bolder text-dark mb-0">Placement Funnel</h6>
-                            <div class="placed-funnel-toggle btn-group" role="group">
-                                <button type="button" class="btn btn-light-primary active">May 2025</button>
-                                <button type="button" class="btn btn-light">Last 6 Months</button>
-                                <button type="button" class="btn btn-light">Last 1 Year</button>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-secondary text-dark"><i class="fa-solid fa-building"></i></div>
-                                <div class="placed-funnel-value">426</div>
-                                <div class="placed-funnel-label">Bench</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-primary text-primary"><i class="fa-solid fa-shield-halved"></i></div>
-                                <div class="placed-funnel-value">161</div>
-                                <div class="placed-funnel-label">Shortlisted</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-warning text-warning"><i class="fa-solid fa-file-lines"></i></div>
-                                <div class="placed-funnel-value">44</div>
-                                <div class="placed-funnel-label">Offer Released</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-circle-check"></i></div>
-                                <div class="placed-funnel-value">39</div>
-                                <div class="placed-funnel-label">Offer Accepted</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-info text-info"><i class="fa-solid fa-user-check"></i></div>
-                                <div class="placed-funnel-value">37</div>
-                                <div class="placed-funnel-label">Joined</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right placed-funnel-chevron"></i>
-                            <div class="placed-funnel-step">
-                                <div class="placed-funnel-icon bg-light-success text-success"><i class="fa-solid fa-user-check"></i></div>
-                                <div class="placed-funnel-value" id="totalPlace">62</div>
-                                <div class="placed-funnel-label">Placed</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- =====================================================
                          Filter bar — Search and Sort only; both are real and
                          wired to the existing AJAX endpoint.
                     ====================================================== --}}
@@ -405,7 +433,7 @@
                                             <th>Client &amp; Job Details</th>
                                             <th>Recruiter</th>
                                             <th>Commercials</th>
-                                            <th>Current Assignment /<br>Replacement</th>
+                                            <th>Work Status</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
@@ -513,23 +541,24 @@
                     <span class="cc-step-title">Service Type</span>
                 </div>
                 <div class="cc-option-grid mb-5" id="ccServiceTypeGrid">
-                    <label class="cc-option-card" data-value="free">
+                    <label class="cc-option-card is-selected" data-value="free">
                         <span class="cc-option-icon"><i class="fa-regular fa-calendar"></i></span>
-                        <span class="cc-option-label">Free Service</span>
+                        <span class="cc-option-label">Free Service<br><small class="text-muted fw-normal">No charges for this placement</small></span>
                         <span class="cc-option-radio"></span>
                     </label>
-                    <label class="cc-option-card is-selected" data-value="paid">
+                    <label class="cc-option-card" data-value="paid">
                         <span class="cc-option-icon"><i class="fa-solid fa-sack-dollar"></i></span>
-                        <span class="cc-option-label">Paid Service</span>
+                        <span class="cc-option-label">Paid Service<br><small class="text-muted fw-normal">Charges applicable</small></span>
                         <span class="cc-option-radio"></span>
                     </label>
                 </div>
 
                 <div id="ccPaidServiceSection">
-                    {{-- Step 2: Commercial Model --}}
+                    {{-- Step 2: Commercial Model — stays visible regardless of Free/Paid, since the
+                         staffing model (contract vs full-time) is independent of whether it's billed. --}}
                     <div class="cc-step-head">
                         <span class="cc-step-num">2</span>
-                        <span class="cc-step-title">Commercial Model <span class="cc-step-suffix">(Paid Service)</span></span>
+                        <span class="cc-step-title">Commercial Model <span class="cc-step-suffix" id="ccModelStepSuffix">(Free Service)</span></span>
                     </div>
                     <div class="cc-option-grid mb-4" id="ccModelGrid">
                         <label class="cc-option-card is-selected" data-value="contract">
@@ -546,7 +575,7 @@
 
                     <div class="cc-info-banner mb-4">
                         <i class="fa-solid fa-circle-info"></i>
-                        <span>You are configuring terms for <strong id="ccModelBannerText">Contract Staffing</strong>.</span>
+                        <span id="ccModelBanner">You are configuring a <strong>Free Service</strong> for <strong id="ccModelBannerText">Contract Staffing</strong>.</span>
                     </div>
 
                     <div class="cc-tabs">
@@ -556,52 +585,259 @@
                     </div>
 
                     <div id="ccTabGeneral">
-                        <div class="cc-section">
-                            <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
-                            <div class="cc-section-sub">Define the billing amount and billing cycle for this <span id="ccModelLower">contract</span>.</div>
-                            <div class="row g-3">
-                                <div class="col-6">
-                                    <label class="cc-field-label">Billing Amount (₹) *</label>
-                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccBillingAmount" value="0">
+                        {{-- Free Service fields: no billing, just a reason/effective-date record --}}
+                        <div id="ccFreeServiceFields">
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title">2. Commercial Configuration</div>
+                                <div class="cc-info-banner is-success mt-3 mb-4" style="display:block;">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="fa-solid fa-circle-check mt-1"></i>
+                                        <div>
+                                            <div class="fw-bold">This placement is marked as a Free Service.</div>
+                                            <div>No fees or margin will be applicable.</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label class="cc-field-label">Billing Cycle *</label>
-                                    <select class="form-select form-select-solid" id="ccBillingCycle">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="hourly">Hourly</option>
-                                    </select>
+
+                                <div class="cc-section-title fs-8 mb-3">Service Details</div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Service Type *</label>
+                                        <select class="form-select form-select-solid" id="ccFreeServiceTypeField">
+                                            <option value="free" selected>Free Service</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Reason / Purpose *</label>
+                                        <select class="form-select form-select-solid" id="ccFreeReason">
+                                            <option>Goodwill</option>
+                                            <option>Internal Placement</option>
+                                            <option>Trial Period</option>
+                                            <option>Partner Referral</option>
+                                            <option>Other</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="cc-helper-text" id="ccAmountWords">Zero Only</div>
-                            <div class="cc-info-banner mt-3">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>This amount will be billed to the client as per the selected billing cycle.</span>
+                                <label class="cc-field-label">Effective Date *</label>
+                                <input type="date" class="form-control form-control-solid mb-4" id="ccFreeEffectiveDate">
+
+                                <div class="cc-summary-grid">
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Service Fee</span>
+                                        <span class="cc-calc-value">₹0</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Gross Margin</span>
+                                        <span class="cc-calc-value">0%</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Billing Amount</span>
+                                        <span class="cc-calc-value">₹0</span>
+                                    </div>
+                                    <div class="cc-summary-cell">
+                                        <span class="cc-calc-label">Billing Cycle</span>
+                                        <span class="cc-calc-value">-</span>
+                                    </div>
+                                </div>
+                                <div class="cc-info-banner is-success mt-3">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>No billing or fees applicable for this placement.</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="cc-section mb-0">
-                            <div class="cc-section-title"><i class="fa-solid fa-calculator"></i> 2. Commercial Details</div>
-                            <div class="cc-section-sub"><span id="ccMarginFieldLabel2">Margin</span> and profit are calculated automatically.</div>
-                            <div class="row g-3">
-                                <div class="col-4">
-                                    <label class="cc-field-label" id="ccMarginFieldLabel">Gross Margin (%) *</label>
-                                    <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccMarginPct" value="20">
+                        {{-- Contract Staffing fields: billed recurring, margin-based --}}
+                        <div id="ccContractFields" class="d-none">
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Billing Details</div>
+                                <div class="cc-section-sub">Define the billing amount and billing cycle for this contract.</div>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Billing Amount (₹) *</label>
+                                        <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccBillingAmount" value="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="cc-field-label">Billing Cycle *</label>
+                                        <select class="form-select form-select-solid" id="ccBillingCycle">
+                                            <option value="monthly">Monthly</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="hourly">Hourly</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-4">
-                                    <label class="cc-field-label">Profit (₹)</label>
-                                    <input type="text" class="form-control form-control-solid" id="ccProfitAmt" value="0" disabled>
-                                    <span class="cc-auto-badge">Auto Calculated</span>
-                                </div>
-                                <div class="col-4">
-                                    <label class="cc-field-label">Margin Amount (₹)</label>
-                                    <input type="text" class="form-control form-control-solid" id="ccMarginAmt" value="0" disabled>
-                                    <span class="cc-auto-badge">Auto Calculated</span>
+                                <div class="cc-helper-text" id="ccAmountWords">Zero Only</div>
+                                <div class="cc-info-banner mt-3">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <span>This amount will be billed to the client as per the selected billing cycle.</span>
                                 </div>
                             </div>
-                            <div class="cc-info-banner is-success mt-3" id="ccMarginHealthBanner">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span id="ccMarginHealthText">Gross Margin is healthy (Above 20%).</span>
+
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title"><i class="fa-solid fa-calculator"></i> 2. Commercial Details</div>
+                                <div class="cc-section-sub">Margin and profit are calculated automatically.</div>
+                                <div class="row g-3">
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Gross Margin (%) *</label>
+                                        <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccMarginPct" value="20">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Profit (₹)</label>
+                                        <input type="text" class="form-control form-control-solid" id="ccProfitAmt" value="0" disabled>
+                                        <span class="cc-auto-badge">Auto Calculated</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="cc-field-label">Margin Amount (₹)</label>
+                                        <input type="text" class="form-control form-control-solid" id="ccMarginAmt" value="0" disabled>
+                                        <span class="cc-auto-badge">Auto Calculated</span>
+                                    </div>
+                                </div>
+                                <div class="cc-info-banner is-success mt-3" id="ccMarginHealthBanner">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span id="ccMarginHealthText">Gross Margin is healthy (Above 20%).</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Full-time Hiring fields: one-time placement fee + replacement policy --}}
+                        <div id="ccFulltimeFields" class="d-none">
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-file-invoice-dollar"></i> 1. Placement Fee</div>
+                                <div class="cc-section-sub">Define the placement fee and how it will be calculated.</div>
+
+                                <label class="cc-field-label">Fee Method *</label>
+                                <div class="cc-option-grid mb-4" id="ccFeeMethodGrid">
+                                    <label class="cc-option-card is-selected" data-value="percentage">
+                                        <span class="cc-option-icon">%</span>
+                                        <span class="cc-option-label">Percentage<br><small class="text-muted fw-normal">Calculate fee as a percentage</small></span>
+                                        <span class="cc-option-radio"></span>
+                                    </label>
+                                    <label class="cc-option-card" data-value="fixed">
+                                        <span class="cc-option-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                                        <span class="cc-option-label">Fixed Amount<br><small class="text-muted fw-normal">Set a fixed placement fee</small></span>
+                                        <span class="cc-option-radio"></span>
+                                    </label>
+                                </div>
+
+                                <div id="ccFeePercentageBlock">
+                                    <label class="cc-field-label">Calculation Base *</label>
+                                    <div class="cc-option-grid mb-4" id="ccCalcBaseGrid">
+                                        <label class="cc-option-card is-selected" data-value="offered">
+                                            <span class="cc-option-label">Offered Amount<br><small class="text-muted fw-normal">Calculate on candidate offered amount</small></span>
+                                            <span class="cc-option-radio"></span>
+                                        </label>
+                                        <label class="cc-option-card" data-value="agreement">
+                                            <span class="cc-option-label">Agreement Amount<br><small class="text-muted fw-normal">Calculate on agreed amount</small></span>
+                                            <span class="cc-option-radio"></span>
+                                        </label>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label" id="ccCalcBaseLabel">Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span></label>
+                                            <input type="text" class="form-control form-control-solid" id="ccCalcBaseAmount" value="0" disabled>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Placement Fee (%) *</label>
+                                            <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccFeePct" value="15">
+                                        </div>
+                                    </div>
+                                    <div class="cc-calc-preview mt-3">
+                                        <div class="cc-calc-preview-title">Calculation Preview</div>
+                                        <div class="cc-calc-preview-row">
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Base Amount</span>
+                                                <span class="cc-calc-value">₹<span id="ccCalcBaseDisplay">0</span></span>
+                                            </div>
+                                            <span class="cc-calc-op">x</span>
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Fee %</span>
+                                                <span class="cc-calc-value"><span id="ccCalcPctDisplay">15</span>%</span>
+                                            </div>
+                                            <span class="cc-calc-op">=</span>
+                                            <div class="cc-calc-cell">
+                                                <span class="cc-calc-label">Placement Fee</span>
+                                                <span class="cc-calc-value text-success" id="ccCalcResult">₹0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="ccFeeFixedBlock" class="d-none">
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Placement Fee (₹) *</label>
+                                            <input type="text" inputmode="numeric" class="form-control form-control-solid" id="ccFixedFee" value="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="cc-total-box">
+                                                <span class="cc-field-label mb-1">Total Placement Fee</span>
+                                                <span class="text-success fw-bolder fs-4" id="ccFixedFeeTotal">₹0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cc-section">
+                                <div class="cc-section-title"><i class="fa-solid fa-shield-halved"></i> 2. Replacement Policy</div>
+                                <div class="cc-section-sub">Define the replacement period in case of early exit.</div>
+                                <label class="cc-field-label">Replacement Period *</label>
+                                <select class="form-select form-select-solid mb-3" id="ccReplacementPeriod">
+                                    <option value="30">30 Days</option>
+                                    <option value="60">60 Days</option>
+                                    <option value="90" selected>90 Days</option>
+                                    <option value="180">180 Days</option>
+                                </select>
+                                <div class="cc-info-banner is-success mb-3">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>If the candidate leaves within <strong id="ccReplacementPeriodText">90</strong> days, a free replacement will be provided.</span>
+                                </div>
+
+                                <a href="javascript:void(0);" class="cc-toggle-link" id="ccToggleReplacementRequest">
+                                    <i class="fa-solid fa-plus"></i> Log a Replacement Request
+                                </a>
+
+                                <div id="ccReplacementRequestBlock" class="cc-subsection d-none mt-3">
+                                    <div class="cc-section-title fs-8 mb-0">Replacement Request</div>
+                                    <div class="cc-section-sub">Manage replacement requests and track the status.</div>
+                                    <label class="cc-field-label">Replacement Status *</label>
+                                    <select class="form-select form-select-solid mb-3" id="ccReplacementStatus">
+                                        <option value="requested">Requested</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="completed">Completed</option>
+                                    </select>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Reason for Replacement *</label>
+                                            <select class="form-select form-select-solid" id="ccReplacementReason">
+                                                <option>Candidate Absconded</option>
+                                                <option>Performance Issue</option>
+                                                <option>Skill Mismatch</option>
+                                                <option>Personal Reasons</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="cc-field-label">Requested On *</label>
+                                            <input type="date" class="form-control form-control-solid" id="ccReplacementRequestedOn">
+                                        </div>
+                                    </div>
+                                    <label class="cc-field-label mt-3">Replacement Status (Progress)</label>
+                                    <div class="cc-progress-row">
+                                        <span>Request Received</span>
+                                        <span class="badge badge-light-warning">In Progress</span>
+                                    </div>
+                                    <div class="cc-info-banner mt-3">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        <span>You will be able to manage the detailed replacement workflow from the Placement details page.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cc-section mb-0">
+                                <div class="cc-section-title">3. Additional Details <span class="cc-step-suffix">(Optional)</span></div>
+                                <div class="cc-section-sub">Add any optional notes related to this commercial configuration.</div>
+                                <label class="cc-field-label">Internal Note</label>
+                                <textarea class="form-control form-control-solid" id="ccInternalNote" maxlength="500" rows="3" placeholder="Add any internal notes here..."></textarea>
+                                <div class="text-end text-muted fs-9 mt-1"><span id="ccNoteCount">0</span> / 500</div>
                             </div>
                         </div>
                     </div>
@@ -615,16 +851,249 @@
                         No configuration history yet.
                     </div>
                 </div>
-
-                <div id="ccFreeServiceNote" class="d-none text-center text-muted py-10 fs-8">
-                    <i class="fa-regular fa-calendar fs-2 d-block mb-2"></i>
-                    Free Service placements have no billing terms to configure.
-                </div>
             </div>
             <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
                 <button type="button" class="btn btn-light" id="kt_commercialConfig_cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="kt_commercialConfig_save">
                     <i class="fa-solid fa-floppy-disk me-1"></i>Save Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- =====================================================
+         Assignment Details drawer — opened from the "Change" link in the
+         Current Assignment / Replacement column. No assignment_details /
+         replacement_request table or endpoint exists yet, so — same as the
+         Commercial Configuration drawer — this is a view-only calculator:
+         no AJAX calls, "Save Changes" just shows a heads-up and closes.
+         The candidate summary card, the pre-selected status, Employment
+         Type, Client Location, and the "Started On / Total Duration"
+         figures are real, seeded from the clicked row's actual data.
+    ====================================================== --}}
+    <div id="kt_assignmentDetails_toggle"></div>
+    <div id="kt_assignmentDetails" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="assignment-details"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '640px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_assignmentDetails_toggle" data-kt-drawer-close="#kt_assignmentDetails_close">
+        <div class="card shadow-none rounded-0 w-100 h-100" style="display:flex; flex-direction:column;">
+            <div class="card-header align-items-start px-6 py-5">
+                <div class="d-flex flex-column">
+                    <h2 class="fw-bolder text-dark mb-1">Assignment Details</h2>
+                    <div class="text-muted fs-8">Manage current project and assignment details.</div>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" id="kt_assignmentDetails_close">
+                        <i class="fa-solid fa-xmark fs-3"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body px-6 py-5" id="kt_assignmentDetails_body" style="overflow-y:auto; flex-grow:1;">
+
+                <div class="ad-candidate-card mb-5">
+                    <div class="ad-candidate-avatar placed-avatar" id="adCandAvatar"></div>
+                    <div>
+                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6 text-hover-primary" id="adCandName">-</a>
+                        <div class="text-muted fs-8" id="adCandDesignation">-</div>
+                        <div class="d-flex align-items-center gap-3 mt-1 fs-9 text-muted">
+                            <span><i class="fa-solid fa-briefcase me-1"></i><span id="adCandExpLoc">-</span></span>
+                            <span><i class="fa-solid fa-building me-1"></i><span id="adCandClient">-</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 1: Assignment Status --}}
+                <div class="cc-step-head">
+                    <span class="cc-step-num">1</span>
+                    <span class="cc-step-title">Assignment Status</span>
+                </div>
+                <div class="ad-status-list mb-5" id="adStatusGrid">
+                    <label class="ad-status-card is-selected" data-value="working" data-tone="success">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Currently Working</span>
+                            <span class="ad-status-sub">Candidate is currently working with the client.</span>
+                        </span>
+                    </label>
+                    <label class="ad-status-card" data-value="completed" data-tone="info">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Project Completed</span>
+                            <span class="ad-status-sub">Project has been successfully completed.</span>
+                        </span>
+                    </label>
+                    <label class="ad-status-card" data-value="left" data-tone="danger">
+                        <span class="ad-status-radio"></span>
+                        <span>
+                            <span class="ad-status-title">Candidate Left</span>
+                            <span class="ad-status-sub">Candidate is no longer working with the client.</span>
+                        </span>
+                    </label>
+                </div>
+
+                {{-- Step 2: Currently Working fields --}}
+                <div id="adWorkingFields">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Expected End Date *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adExpectedEndDate">
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="cc-field-label">Employment Type</label>
+                                <select class="form-select form-select-solid" id="adEmploymentType">
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Contract">Contract</option>
+                                    <option value="Hourly">Hourly</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="cc-field-label">Client Location</label>
+                                <select class="form-select form-select-solid" id="adClientLocation">
+                                    <option>Bangalore</option>
+                                    <option>Pune</option>
+                                    <option>Hyderabad</option>
+                                    <option>Mumbai</option>
+                                    <option>Remote</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label class="cc-field-label">Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adWorkingRemarks" maxlength="300" rows="2" placeholder="Add any remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9 mb-3"><span id="adWorkingRemarksCount">0</span> / 300</div>
+
+                        <div class="ad-summary-box is-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Assignment Active</div>
+                                <div class="fs-9">Candidate is currently working at the client location.</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-9 text-muted">Started On</div>
+                                <div class="fw-bold" id="adStartedOn">-</div>
+                                <div class="fs-9 text-muted mt-1">Total Duration</div>
+                                <div class="fw-bold" id="adTotalDuration">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 2: Project Completed fields --}}
+                <div id="adCompletedFields" class="d-none">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Completed On *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adCompletedOn">
+                        <label class="cc-field-label">Project Outcome</label>
+                        <select class="form-select form-select-solid mb-3" id="adProjectOutcome">
+                            <option>Successful</option>
+                            <option>Partially Successful</option>
+                            <option>Ended Early</option>
+                        </select>
+                        <label class="cc-field-label">Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adCompletedRemarks" maxlength="300" rows="2" placeholder="Add any remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9 mb-3"><span id="adCompletedRemarksCount">0</span> / 300</div>
+
+                        <div class="ad-summary-box is-info">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">Project Completed</div>
+                                <div class="fs-9">This assignment has been marked as completed.</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-9 text-muted">Started On</div>
+                                <div class="fw-bold" id="adCompletedStartedOn">-</div>
+                                <div class="fs-9 text-muted mt-1">Total Duration</div>
+                                <div class="fw-bold" id="adCompletedTotalDuration">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step 2 + 3: Candidate Left fields + Replacement Management --}}
+                <div id="adLeftFields" class="d-none">
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">2</span>
+                        <span class="cc-step-title">Assignment Details</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Last Working Day *</label>
+                        <input type="date" class="form-control form-control-solid mb-3" id="adLastWorkingDay">
+                        <label class="cc-field-label">Reason *</label>
+                        <select class="form-select form-select-solid mb-3" id="adExitReason">
+                            <option>Candidate Resigned</option>
+                            <option>Performance Issue</option>
+                            <option>Client Ended Contract</option>
+                            <option>Candidate Absconded</option>
+                            <option>Other</option>
+                        </select>
+                        <label class="cc-field-label">Exit Remarks (Optional)</label>
+                        <textarea class="form-control form-control-solid mb-1" id="adExitRemarks" maxlength="300" rows="2" placeholder="Add any exit remarks (optional)..."></textarea>
+                        <div class="text-end text-muted fs-9" id="adExitRemarksCountWrap"><span id="adExitRemarksCount">0</span> / 300</div>
+                    </div>
+
+                    <div class="cc-step-head">
+                        <span class="cc-step-num">3</span>
+                        <span class="cc-step-title">Replacement Management</span>
+                    </div>
+                    <div class="cc-section">
+                        <label class="cc-field-label">Replacement Required *</label>
+                        <div class="ad-yesno-group mb-3" id="adReplacementRequired">
+                            <label class="ad-yesno-option" data-value="no">
+                                <span class="ad-yesno-radio"></span> No
+                            </label>
+                            <label class="ad-yesno-option is-selected is-danger" data-value="yes">
+                                <span class="ad-yesno-radio"></span> Yes
+                            </label>
+                        </div>
+
+                        <div id="adReplacementBlock">
+                            <label class="cc-field-label">Replacement Status *</label>
+                            <select class="form-select form-select-solid mb-3" id="adReplacementStatus">
+                                <option>Requested</option>
+                                <option selected>In Progress</option>
+                                <option>Fulfilled</option>
+                            </select>
+                            <label class="cc-field-label">Replacement Requested On *</label>
+                            <input type="date" class="form-control form-control-solid mb-3" id="adReplacementRequestedOn">
+                            <label class="cc-field-label">Replacement Reason (Optional)</label>
+                            <textarea class="form-control form-control-solid mb-1" id="adReplacementReason" maxlength="300" rows="2" placeholder="Add a replacement reason (optional)..."></textarea>
+                            <div class="text-end text-muted fs-9 mb-3"><span id="adReplacementReasonCount">0</span> / 300</div>
+                        </div>
+
+                        <div class="ad-summary-box is-danger">
+                            <i class="fa-solid fa-user-xmark"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold mb-1">Candidate Left</div>
+                                <div class="ad-summary-kv"><span>Last Working Day</span><strong id="adSummaryLastDay">-</strong></div>
+                                <div class="ad-summary-kv"><span>Reason</span><strong id="adSummaryReason">-</strong></div>
+                                <div class="ad-summary-kv" id="adSummaryReplacementStatusRow"><span>Replacement Status</span><strong id="adSummaryReplacementStatus">-</strong></div>
+                                <div class="ad-summary-kv" id="adSummaryReplacementDateRow"><span>Replacement Requested On</span><strong id="adSummaryReplacementDate">-</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Internal Notes — common to every status --}}
+                <div class="cc-step-head">
+                    <span class="cc-step-num" id="adNotesStepNum">3</span>
+                    <span class="cc-step-title">Internal Notes <span class="cc-step-suffix">(Optional)</span></span>
+                </div>
+                <div class="cc-section mb-0">
+                    <label class="cc-field-label">Internal Notes</label>
+                    <textarea class="form-control form-control-solid" id="adInternalNotes" maxlength="500" rows="3" placeholder="Add any internal notes..."></textarea>
+                    <div class="text-end text-muted fs-9 mt-1"><span id="adNotesCount">0</span> / 500</div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end gap-2 px-6 py-4">
+                <button type="button" class="btn btn-light" id="kt_assignmentDetails_cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="kt_assignmentDetails_save">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Save Changes
                 </button>
             </div>
         </div>
@@ -774,36 +1243,38 @@
             }
         }
 
+        // Service Type (Free/Paid) and Commercial Model (Contract/Full-time) are independent
+        // selections — the model stays pickable even for a Free Service, per the design.
+        // Together they decide which single General-tab field block is visible.
+        function ccUpdateGeneralTab() {
+            var isFree = $('#ccServiceTypeGrid .cc-option-card[data-value="free"]').hasClass('is-selected');
+            var isContract = $('#ccModelGrid .cc-option-card[data-value="contract"]').hasClass('is-selected');
+            var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
+
+            $('#ccFreeServiceFields').toggleClass('d-none', !isFree);
+            $('#ccContractFields').toggleClass('d-none', isFree || !isContract);
+            $('#ccFulltimeFields').toggleClass('d-none', isFree || isContract);
+
+            $('#ccModelStepSuffix').text('(' + (isFree ? 'Free Service' : 'Paid Service') + ')');
+            $('#ccModelBanner').html(isFree
+                ? 'You are configuring a <strong>Free Service</strong> for <strong id="ccModelBannerText">' + modelName + '</strong>.'
+                : 'You are configuring terms for <strong id="ccModelBannerText">' + modelName + '</strong>.');
+
+            if (!isFree) {
+                if (isContract) { ccRecalc(); } else { ccFulltimeRecalc(); }
+            }
+        }
+
         $(document).on('click', '#ccServiceTypeGrid .cc-option-card', function() {
             $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
             $(this).addClass('is-selected');
-            if ($(this).data('value') === 'free') {
-                $('#ccPaidServiceSection').addClass('d-none');
-                $('#ccFreeServiceNote').removeClass('d-none');
-            } else {
-                $('#ccPaidServiceSection').removeClass('d-none');
-                $('#ccFreeServiceNote').addClass('d-none');
-            }
+            ccUpdateGeneralTab();
         });
 
         $(document).on('click', '#ccModelGrid .cc-option-card', function() {
             $('#ccModelGrid .cc-option-card').removeClass('is-selected');
             $(this).addClass('is-selected');
-            var isContract = $(this).data('value') === 'contract';
-            var modelName = isContract ? 'Contract Staffing' : 'Full-time Hiring';
-
-            $('#ccModelBannerText').text(modelName);
-            $('#ccModelLower').text(isContract ? 'contract' : 'placement');
-            $('#ccMarginFieldLabel').text((isContract ? 'Gross Margin' : 'Placement Fee') + ' (%) *');
-            $('#ccMarginFieldLabel2').text(isContract ? 'Gross Margin' : 'Placement Fee');
-
-            var cycleSelect = $('#ccBillingCycle').empty();
-            if (isContract) {
-                cycleSelect.append('<option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option>');
-            } else {
-                cycleSelect.append('<option value="onetime">One-time</option><option value="milestone">Milestone-based</option>');
-            }
-            ccRecalc();
+            ccUpdateGeneralTab();
         });
 
         $(document).on('click', '.cc-tab', function() {
@@ -820,19 +1291,101 @@
             $(this).val(amount.toLocaleString('en-IN'));
         });
 
+        // ---- Full-time Hiring: Placement Fee ----
+        function ccFulltimeRecalc() {
+            var isPercentage = $('#ccFeeMethodGrid .cc-option-card[data-value="percentage"]').hasClass('is-selected');
+            $('#ccFeePercentageBlock').toggleClass('d-none', !isPercentage);
+            $('#ccFeeFixedBlock').toggleClass('d-none', isPercentage);
+
+            if (isPercentage) {
+                var base = parseFloat(($('#ccCalcBaseAmount').val() || '0').toString().replace(/,/g, '')) || 0;
+                var pct = parseFloat($('#ccFeePct').val()) || 0;
+                var fee = Math.round(base * pct / 100);
+                $('#ccCalcBaseDisplay').text(base.toLocaleString('en-IN'));
+                $('#ccCalcPctDisplay').text(pct);
+                $('#ccCalcResult').text('₹' + fee.toLocaleString('en-IN'));
+            } else {
+                var fixed = parseFloat(($('#ccFixedFee').val() || '0').toString().replace(/,/g, '')) || 0;
+                $('#ccFixedFeeTotal').text('₹' + fixed.toLocaleString('en-IN'));
+            }
+        }
+
+        $(document).on('click', '#ccFeeMethodGrid .cc-option-card', function() {
+            $('#ccFeeMethodGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            ccFulltimeRecalc();
+        });
+
+        $(document).on('click', '#ccCalcBaseGrid .cc-option-card', function() {
+            $('#ccCalcBaseGrid .cc-option-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            var isOffered = $(this).data('value') === 'offered';
+            var amountField = $('#ccCalcBaseAmount');
+            if (isOffered) {
+                amountField.prop('disabled', true);
+                amountField.val($('.commercial-change-btn.is-active-row').data('amount') ? Math.round($('.commercial-change-btn.is-active-row').data('amount')).toLocaleString('en-IN') : amountField.val());
+                $('#ccCalcBaseLabel').html('Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span>');
+            } else {
+                amountField.prop('disabled', false);
+                $('#ccCalcBaseLabel').html('Agreement Amount (₹)');
+            }
+            ccFulltimeRecalc();
+        });
+
+        $(document).on('input', '#ccCalcBaseAmount, #ccFeePct, #ccFixedFee', ccFulltimeRecalc);
+
+        $(document).on('change', '#ccReplacementPeriod', function() {
+            $('#ccReplacementPeriodText').text($(this).find('option:selected').text().replace(' Days', ''));
+        });
+
+        $(document).on('click', '#ccToggleReplacementRequest', function() {
+            var block = $('#ccReplacementRequestBlock');
+            var isHidden = block.hasClass('d-none');
+            block.toggleClass('d-none');
+            $(this).html(isHidden
+                ? '<i class="fa-solid fa-minus"></i> Hide Replacement Request'
+                : '<i class="fa-solid fa-plus"></i> Log a Replacement Request');
+        });
+
+        $(document).on('input', '#ccInternalNote', function() {
+            $('#ccNoteCount').text($(this).val().length);
+        });
+
         $(document).on('click', '.commercial-change-btn', function(e) {
             e.preventDefault();
+            $('.commercial-change-btn').removeClass('is-active-row');
+            $(this).addClass('is-active-row');
+
             var amount = parseFloat($(this).data('amount')) || 0;
             var empType = ($(this).data('employment-type') || '').toString().toLowerCase();
             var isContract = empType.indexOf('contract') !== -1 || empType.indexOf('hour') !== -1;
 
             $('#ccServiceTypeGrid .cc-option-card').removeClass('is-selected');
             $('#ccServiceTypeGrid .cc-option-card[data-value="paid"]').addClass('is-selected');
-            $('#ccPaidServiceSection').removeClass('d-none');
-            $('#ccFreeServiceNote').addClass('d-none');
 
+            // Free Service fields — reset to today's date / default reason
+            $('#ccFreeReason').val('Goodwill');
+            $('#ccFreeEffectiveDate').val(new Date().toISOString().slice(0, 10));
+
+            // Contract Staffing fields
             $('#ccMarginPct').val(20);
             $('#ccBillingAmount').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+
+            // Full-time Hiring fields — reset to defaults, seeded with the real offer amount
+            $('#ccFeeMethodGrid .cc-option-card').removeClass('is-selected');
+            $('#ccFeeMethodGrid .cc-option-card[data-value="percentage"]').addClass('is-selected');
+            $('#ccCalcBaseGrid .cc-option-card').removeClass('is-selected');
+            $('#ccCalcBaseGrid .cc-option-card[data-value="offered"]').addClass('is-selected');
+            $('#ccCalcBaseLabel').html('Offered Amount (CTC) <span class="text-muted fw-normal">(Read Only)</span>');
+            $('#ccCalcBaseAmount').prop('disabled', true).val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+            $('#ccFeePct').val(15);
+            $('#ccFixedFee').val(amount ? Math.round(amount).toLocaleString('en-IN') : '0');
+            $('#ccReplacementPeriod').val('90');
+            $('#ccReplacementPeriodText').text('90');
+            $('#ccReplacementRequestBlock').addClass('d-none');
+            $('#ccToggleReplacementRequest').html('<i class="fa-solid fa-plus"></i> Log a Replacement Request');
+            $('#ccInternalNote').val('');
+            $('#ccNoteCount').text('0');
 
             $('#ccModelGrid .cc-option-card[data-value="' + (isContract ? 'contract' : 'fulltime') + '"]').click();
 
@@ -856,6 +1409,182 @@
                 confirmButtonText: 'Got it'
             }).then(function() {
                 $('#kt_commercialConfig_close').trigger('click');
+            });
+        });
+
+        // =====================================================
+        // Assignment Details drawer — pure client-side, no AJAX.
+        // Assignment Status / Replacement Management / Internal Notes have
+        // no backing table yet, so nothing here persists; "Save Changes"
+        // is an honest preview-only action, same as Commercial Configuration.
+        // =====================================================
+        function adDaysBetween(fromIso, toIso) {
+            var from = new Date(fromIso);
+            var to = toIso ? new Date(toIso) : new Date();
+            if (isNaN(from.getTime())) return null;
+            return Math.max(0, Math.round((to - from) / 86400000));
+        }
+
+        function adFormatDate(iso) {
+            if (!iso) return '-';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '-';
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return String(d.getDate()).padStart(2, '0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        function adRecalcSummaries() {
+            var joinedIso = $('#kt_assignmentDetails').data('joined-iso') || '';
+
+            // Currently Working summary
+            $('#adStartedOn').text(adFormatDate(joinedIso));
+            var workingDays = adDaysBetween(joinedIso, '');
+            $('#adTotalDuration').text(workingDays !== null ? workingDays + ' Days' : '-');
+
+            // Project Completed summary
+            $('#adCompletedStartedOn').text(adFormatDate(joinedIso));
+            var completedOnIso = $('#adCompletedOn').val();
+            var completedDays = adDaysBetween(joinedIso, completedOnIso || '');
+            $('#adCompletedTotalDuration').text(completedDays !== null ? completedDays + ' Days' : '-');
+
+            // Candidate Left summary
+            $('#adSummaryLastDay').text($('#adLastWorkingDay').val() ? adFormatDate($('#adLastWorkingDay').val()) : '-');
+            $('#adSummaryReason').text($('#adExitReason').val() || '-');
+            var replacementRequired = $('#adReplacementRequired .ad-yesno-option.is-selected').data('value') === 'yes';
+            $('#adSummaryReplacementStatusRow, #adSummaryReplacementDateRow').toggleClass('d-none', !replacementRequired);
+            $('#adSummaryReplacementStatus').text(replacementRequired ? ($('#adReplacementStatus').val() || '-') : '-');
+            $('#adSummaryReplacementDate').text(replacementRequired && $('#adReplacementRequestedOn').val() ? adFormatDate($('#adReplacementRequestedOn').val()) : '-');
+        }
+
+        $(document).on('click', '#adStatusGrid .ad-status-card', function() {
+            $('#adStatusGrid .ad-status-card').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            var status = $(this).data('value');
+
+            $('#adWorkingFields').toggleClass('d-none', status !== 'working');
+            $('#adCompletedFields').toggleClass('d-none', status !== 'completed');
+            $('#adLeftFields').toggleClass('d-none', status !== 'left');
+            $('#adNotesStepNum').text(status === 'left' ? '4' : '3');
+
+            adRecalcSummaries();
+        });
+
+        $(document).on('click', '#adReplacementRequired .ad-yesno-option', function() {
+            $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
+            $(this).addClass('is-selected');
+            $('#adReplacementBlock').toggleClass('d-none', $(this).data('value') !== 'yes');
+            adRecalcSummaries();
+        });
+
+        $(document).on('input change', '#adCompletedOn, #adLastWorkingDay, #adExitReason, #adReplacementStatus, #adReplacementRequestedOn', adRecalcSummaries);
+
+        // Character counters — shared pattern for every "(Optional)" textarea in this drawer.
+        [
+            ['#adWorkingRemarks', '#adWorkingRemarksCount'],
+            ['#adCompletedRemarks', '#adCompletedRemarksCount'],
+            ['#adExitRemarks', '#adExitRemarksCount'],
+            ['#adReplacementReason', '#adReplacementReasonCount'],
+            ['#adInternalNotes', '#adNotesCount']
+        ].forEach(function(pair) {
+            $(document).on('input', pair[0], function() {
+                $(pair[1]).text($(this).val().length);
+            });
+        });
+
+        $(document).on('click', '.assignment-change-btn', function(e) {
+            e.preventDefault();
+
+            var name = $(this).data('name') || '-';
+            var designation = $(this).data('designation') || '-';
+            var expLoc = $(this).data('exp-loc') || '-';
+            var client = $(this).data('client') || '-';
+            var employmentType = ($(this).data('employment-type') || '').toString();
+            var joinedIso = ($(this).data('joined-date') || '').toString();
+            var avatarClass = ($(this).data('avatar-class') || '').toString();
+            var avatarLetter = ($(this).data('avatar-letter') || '').toString();
+
+            $('#adCandName').text(name);
+            $('#adCandDesignation').text(designation);
+            $('#adCandExpLoc').text(expLoc || '-');
+            $('#adCandClient').text(client || '-');
+            $('#adCandAvatar').attr('class', 'ad-candidate-avatar placed-avatar ' + avatarClass).text(avatarLetter);
+            $('#kt_assignmentDetails').data('joined-iso', joinedIso);
+
+            // reset to the real, honest default: Currently Working (this listing only ever
+            // represents that one real status — see the note in the row partial).
+            $('#adStatusGrid .ad-status-card').removeClass('is-selected');
+            $('#adStatusGrid .ad-status-card[data-value="working"]').addClass('is-selected');
+            $('#adWorkingFields').removeClass('d-none');
+            $('#adCompletedFields, #adLeftFields').addClass('d-none');
+            $('#adNotesStepNum').text('3');
+
+            $('#adExpectedEndDate').val('');
+            if (employmentType && $('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).length) {
+                $('#adEmploymentType').val($('#adEmploymentType option').filter(function() { return $(this).val().toLowerCase() === employmentType.toLowerCase(); }).val());
+            } else {
+                $('#adEmploymentType').prop('selectedIndex', 0);
+            }
+            $('#adClientLocation').prop('selectedIndex', 0);
+            $('#adWorkingRemarks').val('').trigger('input');
+
+            $('#adCompletedOn').val('');
+            $('#adProjectOutcome').prop('selectedIndex', 0);
+            $('#adCompletedRemarks').val('').trigger('input');
+
+            $('#adLastWorkingDay').val('');
+            $('#adExitReason').prop('selectedIndex', 0);
+            $('#adExitRemarks').val('').trigger('input');
+            $('#adReplacementRequired .ad-yesno-option').removeClass('is-selected');
+            $('#adReplacementRequired .ad-yesno-option[data-value="yes"]').addClass('is-selected');
+            $('#adReplacementBlock').removeClass('d-none');
+            $('#adReplacementStatus').prop('selectedIndex', 0);
+            $('#adReplacementRequestedOn').val('');
+            $('#adReplacementReason').val('').trigger('input');
+
+            $('#adInternalNotes').val('').trigger('input');
+
+            adRecalcSummaries();
+            $('#kt_assignmentDetails_toggle').trigger('click');
+        });
+
+        $('#kt_assignmentDetails_cancel').on('click', function() {
+            $('#kt_assignmentDetails_close').trigger('click');
+        });
+
+        $('#kt_assignmentDetails_save').on('click', function() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Preview Only',
+                text: 'Assignment details captured for preview — connect this to a save endpoint to persist them.',
+                confirmButtonText: 'Got it'
+            }).then(function() {
+                $('#kt_assignmentDetails_close').trigger('click');
+            });
+        });
+
+        // Row delete — no delete route exists for this listing, so this confirms then shows
+        // an honest preview notice. It deliberately never removes the row from the table,
+        // since that would look like a real deletion succeeded when nothing was persisted.
+        $(document).on('click', '.placed-row-delete-btn', function(e) {
+            e.preventDefault();
+            var name = $(this).data('candidate-name') || 'this candidate';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Delete this placement record?',
+                text: 'This will permanently remove ' + name + ' from the Talent Placed list.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete',
+                confirmButtonColor: '#f1416c',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Preview Only',
+                        text: 'Delete captured for preview — connect this to a delete endpoint to remove it for real.',
+                        confirmButtonText: 'Got it'
+                    });
+                }
             });
         });
 
