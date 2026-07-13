@@ -134,6 +134,18 @@ class ElasticCandidatesIndex
                         'offer_job_applications.id as offer_id',
                         'offer_job_applications.document',
                         'offer_job_applications.sub_for_approval',
+                        'offer_job_applications.commercial_service_type',
+                        'offer_job_applications.commercial_model',
+                        'offer_job_applications.commercial_fee_method',
+                        'offer_job_applications.commercial_fee_base',
+                        'offer_job_applications.commercial_fee_pct',
+                        'offer_job_applications.commercial_fee_fixed',
+                        'offer_job_applications.assignment_status',
+                        'offer_job_applications.assignment_expected_end_date',
+                        'offer_job_applications.assignment_client_location',
+                        'offer_job_applications.assignment_exit_reason',
+                        'offer_job_applications.assignment_project_outcome',
+                        'offer_job_applications.assignment_remarks',
                         'add_job_wise_condidates.thirdparty_company_id as ClientComID',
                         'add_job_wise_condidates.updated_at',
                         'add_job_wise_condidates.created_at',
@@ -334,7 +346,21 @@ class ElasticCandidatesIndex
                             'hashname' => $application->hashname,
                             'schedule_date' =>($intRow) ? Carbon::parse($intRow->schedule_date)->toIso8601String() : null,
                             'timezone_abbreviation' =>($intRow) ? $intRow->timezone_abbreviation : null,
-                            'schedule_to_time' =>($intRow) ? $intRow->schedule_to_time : null
+                            'schedule_to_time' =>($intRow) ? $intRow->schedule_to_time : null,
+                            // Commercial configuration
+                            'commercial_service_type' => $application->commercial_service_type ?? null,
+                            'commercial_model'        => $application->commercial_model ?? null,
+                            'commercial_fee_method'   => $application->commercial_fee_method ?? null,
+                            'commercial_fee_base'     => $application->commercial_fee_base ?? null,
+                            'commercial_fee_pct'      => $application->commercial_fee_pct ?? null,
+                            'commercial_fee_fixed'    => $application->commercial_fee_fixed ?? null,
+                            // Assignment details
+                            'assignment_status'            => $application->assignment_status ?? null,
+                            'assignment_expected_end_date' => $application->assignment_expected_end_date ?? null,
+                            'assignment_client_location'   => $application->assignment_client_location ?? null,
+                            'assignment_exit_reason'       => $application->assignment_exit_reason ?? null,
+                            'assignment_project_outcome'   => $application->assignment_project_outcome ?? null,
+                            'assignment_remarks'           => $application->assignment_remarks ?? null,
                         ];
                     }
         

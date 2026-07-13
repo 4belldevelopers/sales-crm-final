@@ -240,7 +240,21 @@ class IndexCandidatesToElasticsearch extends Command
                         'type' => 'date',
                         'format' => 'strict_date_optional_time||epoch_millis'
                     ],
-                    'company_name' => ['type' => 'keyword', 'ignore_above' => 256]
+                    'company_name' => ['type' => 'keyword', 'ignore_above' => 256],
+                    // Commercial configuration (from offer_job_applications)
+                    'commercial_service_type' => ['type' => 'keyword', 'ignore_above' => 32],
+                    'commercial_model'        => ['type' => 'keyword', 'ignore_above' => 32],
+                    'commercial_fee_method'   => ['type' => 'keyword', 'ignore_above' => 32],
+                    'commercial_fee_base'     => ['type' => 'keyword', 'ignore_above' => 32],
+                    'commercial_fee_pct'      => ['type' => 'scaled_float', 'scaling_factor' => 100],
+                    'commercial_fee_fixed'    => ['type' => 'scaled_float', 'scaling_factor' => 100],
+                    // Assignment details (from offer_job_applications)
+                    'assignment_status'            => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
+                    'assignment_expected_end_date' => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd'],
+                    'assignment_client_location'   => ['type' => 'keyword', 'ignore_above' => 256],
+                    'assignment_exit_reason'       => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
+                    'assignment_project_outcome'   => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
+                    'assignment_remarks'           => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
                 ]
             ]
         ];
@@ -343,8 +357,21 @@ class IndexCandidatesToElasticsearch extends Command
             'posted_by' => $candidate->posted_by,
             'created_at' => Carbon::parse($candidate->created_at)->toIso8601String(),
             'updated_at' => Carbon::parse($candidate->updated_at)->toIso8601String(),
-            'company_name' => ($candidate->company_name) ? $candidate->company_name :$candidate->client_company_name,
-            // Add other fields as needed
+            'company_name' => ($candidate->company_name) ? $candidate->company_name : $candidate->client_company_name,
+            // Commercial configuration
+            'commercial_service_type' => $candidate->commercial_service_type ?? null,
+            'commercial_model'        => $candidate->commercial_model ?? null,
+            'commercial_fee_method'   => $candidate->commercial_fee_method ?? null,
+            'commercial_fee_base'     => $candidate->commercial_fee_base ?? null,
+            'commercial_fee_pct'      => $candidate->commercial_fee_pct ?? null,
+            'commercial_fee_fixed'    => $candidate->commercial_fee_fixed ?? null,
+            // Assignment details
+            'assignment_status'            => $candidate->assignment_status ?? null,
+            'assignment_expected_end_date' => $candidate->assignment_expected_end_date ?? null,
+            'assignment_client_location'   => $candidate->assignment_client_location ?? null,
+            'assignment_exit_reason'       => $candidate->assignment_exit_reason ?? null,
+            'assignment_project_outcome'   => $candidate->assignment_project_outcome ?? null,
+            'assignment_remarks'           => $candidate->assignment_remarks ?? null,
         ];
     }
 

@@ -4717,34 +4717,44 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
 		}
 
-		// Try company-scoped lookup first; fall back to unscoped (bench candidates may belong to other company)
-		$offerApp = DB::table('offer_job_applications')
-			->where('application_id', $candidate_id)
-			->where('company_id', $company_id)
-			->first();
+		// candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
+		$wiseRecord       = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
+		$wiseId           = $wiseRecord ? $wiseRecord->id : null;
+		$job_id           = $wiseRecord ? $wiseRecord->job_id : null;
+		$jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
 
-		if (!$offerApp) {
-			$offerApp = DB::table('offer_job_applications')
-				->where('application_id', $candidate_id)
-				->first();
-		}
+		$assignmentFields = [
+			'assignment_status'                   => $request->assignment_status ?: null,
+			'assignment_expected_end_date'        => $request->expected_end_date ?: null,
+			'assignment_employment_type'          => $request->employment_type ?: null,
+			'assignment_client_location'          => $request->client_location ?: null,
+			'assignment_exit_reason'              => $request->exit_reason ?: null,
+			'assignment_project_outcome'          => $request->project_outcome ?: null,
+			'assignment_remarks'                  => $request->remarks ?: null,
+			'assignment_internal_notes'           => $request->internal_notes ?: null,
+			'assignment_replacement_required'     => $request->replacement_required !== null ? (bool)(int)$request->replacement_required : null,
+			'assignment_replacement_status'       => $request->replacement_status ?: null,
+			'assignment_replacement_requested_on' => $request->replacement_requested_on ?: null,
+			'assignment_replacement_reason'       => $request->replacement_reason ?: null,
+		];
 
-		if ($offerApp) {
-			DB::table('offer_job_applications')->where('id', $offerApp->id)->update([
-				'assignment_expected_end_date' => $request->expected_end_date ?: null,
-				'assignment_status'            => $request->assignment_status ?: null,
-				'assignment_client_location'   => $request->client_location ?: null,
-				'assignment_exit_reason'       => $request->exit_reason ?: null,
-				'assignment_project_outcome'   => $request->project_outcome ?: null,
-				'assignment_remarks'           => $request->remarks ?: null,
-			]);
-		}
+		
 
-		// For bench candidates also update bench_place.placed_end_date
-		if ($is_bench && $request->expected_end_date) {
-			DB::table('bench_place')
-				->where('client_application_id', $candidate_id)
-				->update(['placed_end_date' => $request->expected_end_date]);
+		// Sync to ELASTIC_CANDIDATES
+		if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			try {
+				$sdfsdf = $this->elasticService->getClient()->update([
+					'index'             => ELASTIC_CANDIDATES,
+					'id'                => $wiseId,
+					'retry_on_conflict' => 5,
+					'body'              => [
+						'doc'           => $assignmentFields,
+						'doc_as_upsert' => true,
+					],
+				]);
+			} catch (\Exception $e) {
+				\Log::error('ES assignment update failed for wiseId=' . $wiseId . ': ' . $e->getMessage());
+			}
 		}
 
 		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
@@ -4761,27 +4771,53 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
 		}
 
-		$offerApp = DB::table('offer_job_applications')
-			->where('application_id', $candidate_id)
-			->where('company_id', $company_id)
-			->first();
+		// candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
+		$wiseRecord       = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
+		$wiseId           = $wiseRecord ? $wiseRecord->id : null;
+		$job_id           = $wiseRecord ? $wiseRecord->job_id : null;
+		$jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
 
-		if (!$offerApp) {
-			$offerApp = DB::table('offer_job_applications')
-				->where('application_id', $candidate_id)
-				->first();
-		}
+		$feeFixed = $request->fee_fixed ? (float)str_replace(',', '', $request->fee_fixed) : null;
+		$feePct   = $request->fee_pct   ? (float)$request->fee_pct : null;
 
-		if ($offerApp) {
-			$feeFixed = $request->fee_fixed ? (float)str_replace(',', '', $request->fee_fixed) : null;
-			DB::table('offer_job_applications')->where('id', $offerApp->id)->update([
-				'commercial_service_type' => $request->service_type ?: null,
-				'commercial_model'        => $request->commercial_model ?: null,
-				'commercial_fee_method'   => $request->fee_method ?: null,
-				'commercial_fee_base'     => $request->fee_base ?: null,
-				'commercial_fee_pct'      => $request->fee_pct ? (float)$request->fee_pct : null,
-				'commercial_fee_fixed'    => $feeFixed,
-			]);
+		$billingAmount = $request->billing_amount ? (float)str_replace(',', '', $request->billing_amount) : null;
+
+		$commercialFields = [
+			'commercial_service_type'             => $request->service_type ?: null,
+			'commercial_model'                    => $request->commercial_model ?: null,
+			'commercial_fee_method'               => $request->fee_method ?: null,
+			'commercial_fee_base'                 => $request->fee_base ?: null,
+			'commercial_fee_pct'                  => $feePct,
+			'commercial_fee_fixed'                => $feeFixed,
+			'commercial_billing_amount'           => $billingAmount,
+			'commercial_billing_cycle'            => $request->billing_cycle ?: null,
+			'commercial_margin_pct'               => $request->margin_pct ? (float)$request->margin_pct : null,
+			'commercial_replacement_period'       => $request->replacement_period ?: null,
+			'commercial_replacement_status'       => $request->replacement_status ?: null,
+			'commercial_replacement_requested_on' => $request->replacement_requested_on ?: null,
+			'commercial_replacement_reason'       => $request->replacement_reason ?: null,
+			'commercial_internal_note'            => $request->internal_note ?: null,
+			'commercial_free_service_type'        => $request->free_service_type ?: null,
+			'commercial_free_reason'              => $request->free_reason ?: null,
+			'commercial_free_effective_date'      => $request->free_effective_date ?: null,
+		];
+
+		
+		// Sync to ELASTIC_CANDIDATES
+		if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			try {
+				$this->elasticService->getClient()->update([
+					'index'             => ELASTIC_CANDIDATES,
+					'id'                => $wiseId,
+					'retry_on_conflict' => 5,
+					'body'              => [
+						'doc'           => $commercialFields,
+						'doc_as_upsert' => true,
+					],
+				]);
+			} catch (\Exception $e) {
+				\Log::error('ES commercial update failed for wiseId=' . $wiseId . ': ' . $e->getMessage());
+			}
 		}
 
 		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
