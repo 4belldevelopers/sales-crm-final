@@ -4057,19 +4057,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$tracker_html .= '</tbody></table>';
                 
 
-		$appData = $appData ?? null;
-		$jobQuestionCount = isset($appData->jobId) ? DB::table('job_additional_detail')
+		$jobQuestionCount = DB::table('job_additional_detail')
 				->select('*')
 				->where('job_additional_detail.job_id', '=', $appData->jobId)
 				->where('job_additional_detail.detail_value', '!=', NULL)
-				->count() : 0;
+				->count();
 
-				$jobSkill = isset($appData->jobId) ? DB::table('job_metronics_skills')
+				$jobSkill = DB::table('job_metronics_skills')
 					->select('job_metronics_skills.*')
 					->where('job_metronics_skills.job_id', '=', $appData->jobId)
 					->where('job_metronics_skills.company_id', '=', $appData->company_id)
 					->orderBy('job_metronics_skills.id')
-					->get() : collect();
+					->get();
 
 
 		if(isset($request->WijobIdArr) && is_array($request->WijobIdArr)) {
@@ -4604,8 +4603,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					? ($currency[$job_applications->offer_mode] ?? 0)
 					: 0;
 				// $SALARY_AMOUNT= $job_applications->offer_amount;
-				$SALARY_AMOUNT = @$job_applications->offer_amount ?? 0;
-				$JOB_TYPE = (@$job_applications->employment_type == 1) ? 'Contract' : 'Full-time';
+				$SALARY_AMOUNT = $job_applications->offer_amount ?? 0;
+				$JOB_TYPE = ($job_applications->employment_type==1) ? 'Contract' : 'Full-time';
 			// dd($offerId,$job_applications->full_name);
 			$designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
 			$template_description = str_replace(["[{COMPANY_NAME}]","[{CANDIDATE_NAME}]","[{JOB_TITLE}]","[{OFFER_LETTER_LINK}]","[{OFFER_LETTER_LINK_COPY}]","[{CANDIDATE_ID}]","[{JOB_ID}]","[{START_DATE_TIME}]","[{CURRENCY}]","[{SALARY_AMOUNT}]","[{SALARY_MODE}]","[{JOB_TYPE}]","[{MANAGER_NAME}]"],[$companyDetails->company_name, @$job_applications->full_name,@$designation,@$Url,@$Urlcopy,@$job_applications->id,@$job_applications->jobId, date("d M Y",strtotime(@$job_applications->joined_date)),$CURRENCY_SELCT,$SALARY_AMOUNT,$SALARY_MODE,$JOB_TYPE,@$users->contact_person_name], $template_description);
@@ -5630,23 +5629,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// checked before anything else (coin deduction, mail dispatch) so a blocked attempt
 		// costs nothing. Counted from updatetimeline (mtypeSection=1 = candidate offer email),
 		// the same real, persisted send-history record the "Sent By"/activity log already use.
-		// if ((int) $mtypeId === 1) {
-		// 	$offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
-		// 	if ($offerAppRow) {
-		// 		$recentSendCount = DB::table('updatetimeline')
-		// 			->where('application_id', $offerAppRow->application_id)
-		// 			->where('job_id', $offerAppRow->job_id)
-		// 			->where('mtypeSection', 1)
-		// 			->where('create_at', '>=', now()->subHours(4))
-		// 			->count();
-		// 		if ($recentSendCount >= 3) {
-		// 			return Reply::dataOnly([
-		// 				'status' => 'rateLimited',
-		// 				'message' => 'This offer letter has already been sent 3 times in the last 4 hours. Please wait before sending it again.',
-		// 			]);
-		// 		}
-		// 	}
-		// }
+		if ((int) $mtypeId === 1) {
+			$offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
+			if ($offerAppRow) {
+				$recentSendCount = DB::table('updatetimeline')
+					->where('application_id', $offerAppRow->application_id)
+					->where('job_id', $offerAppRow->job_id)
+					->where('mtypeSection', 1)
+					->where('create_at', '>=', now()->subHours(4))
+					->count();
+				if ($recentSendCount >= 3) {
+					return Reply::dataOnly([
+						'status' => 'rateLimited',
+						'message' => 'This offer letter has already been sent 3 times in the last 4 hours. Please wait before sending it again.',
+					]);
+				}
+			}
+		}
 
 		// Rate limit: approval emails (mtypeId=8) — at most 1 send per recipient per hour.
 		// Prevents accidental spam when the user clicks "Add" or "Send Reminder" repeatedly.
@@ -5914,7 +5913,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 						// if($result){
 						    $Offertimelime = OfferJobApplication::find($offerId);
-							if (!$Offertimelime) { return Reply::dataOnly(['status' => 'success', 'view' => '']); }
 							$exists = $this->elasticService->getClient()->exists([
 									'index' => ELASTIC_CANDIDATES,
 									'id' => $Offertimelime->joined
@@ -6018,13 +6016,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$values['designation_offer'] = @$exits_offer->designation_offer;
 			$values['offer_currency'] = @$exits_offer->currency;
 			$values['offer_amount'] = @$exits_offer->salary_ctc; $values['joined_date'] = @$exits_offer->joined_date;
-			$values['offer_mode'] = @$exits_offer->salary_mode;
+			$values['offer_mode'] = @$exits_offer->salary_mode; 
 			$values['candidate_status'] = ($mtypeId==1) ? 1 : ''; $values['management_status'] =  ($mtypeId==2) ? 1 : ''; $values['accept_date_time'] = '';
-			$values['approved_date_time'] ='';
-			$values['send_approved_date_time'] = $send_approved_date_time;
-			$values['send_accept_date_time'] =$send_accept_date_time;
+			$values['approved_date_time'] =''; 
+			$values['send_approved_date_time'] = $send_approved_date_time; 
+			$values['send_accept_date_time'] =$send_accept_date_time; 
 			$values['email_id_hr'] = $email_id_hr; $values['name_hr'] = $name_hr;
-			$values['yearly_gross'] = @$exits_offer->yearly_gross; $values['yearly_final_gross'] = @$exits_offer->yearly_final_gross; $values['mtypeSection'] = $mtypeId;
+			$values['yearly_gross'] = $exits_offer->yearly_gross; $values['yearly_final_gross'] = $exits_offer->yearly_final_gross; $values['mtypeSection'] = $mtypeId;
 			GeneralMethod::UpdateTimeline($values);
 
 
