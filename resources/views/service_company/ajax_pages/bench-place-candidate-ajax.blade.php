@@ -263,9 +263,25 @@
                                 <span>Bench</span><span>Offer</span><span>Joined</span><span>Placed</span>
                             </div>';
                     } else {
-                        // Non-bench / tracker candidates: 3-node timeline — Offer → Joined → Placed
+                        // Non-bench candidates: 4-node timeline — Sourcing → Evaluation → Offer → Joined
+                        $sourcingNodeCls   = $hasBench  ? 'is-done' : 'is-static';
+                        $lineAfterSourcing = $hasBench  ? 'is-done' : '';
+                        // Evaluation has no dedicated date in this data model — shown as pending
+                        $evalNodeCls       = $hasOffer  ? 'is-done' : 'is-static';
+                        $lineAfterEval     = $hasOffer  ? 'is-done' : '';
+
                         $timeline = '
                             <div class="placed-timeline-track">
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $sourcingNodeCls . '" data-toggle="tooltip" title="Sourcing"></div>
+                                    <span class="placed-timeline-node-label">' . $benchLabel . '</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterSourcing . '"></span>
+                                <div class="placed-timeline-node-wrap">
+                                    <div class="placed-timeline-node ' . $evalNodeCls . '" data-toggle="tooltip" title="Evaluation"></div>
+                                    <span class="placed-timeline-node-label">--</span>
+                                </div>
+                                <span class="placed-timeline-line ' . $lineAfterEval . '"></span>
                                 <div class="placed-timeline-node-wrap">
                                     <div class="placed-timeline-node ' . $offerNodeCls . '" data-toggle="tooltip" title="Offer"></div>
                                     <span class="placed-timeline-node-label">' . $offerLabel . '</span>
@@ -275,14 +291,9 @@
                                     <div class="placed-timeline-node ' . $joinedNodeCls . '" data-toggle="tooltip" title="Joined"></div>
                                     <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
                                 </div>
-                                <span class="placed-timeline-line ' . $lineAfterJoined . '"></span>
-                                <div class="placed-timeline-node-wrap">
-                                    <div class="placed-timeline-node ' . $placedNodeCls . '" data-toggle="tooltip" title="Placed"></div>
-                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
-                                </div>
                             </div>
                             <div class="placed-timeline-labels">
-                                <span>Offer</span><span>Joined</span><span>Placed</span>
+                                <span>Sourcing</span><span>Evaluation</span><span>Offer</span><span>Joined</span>
                             </div>';
                     }
 
