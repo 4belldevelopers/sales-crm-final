@@ -632,6 +632,14 @@
 						   </div>';
                     }
 
+                    // Row 2 is the recruiter's represented company — same
+                    // post_company_name (falling back to company_name) field used on the
+                    // Similar Candidates tab of the main apptracker page.
+                    $post_company_name = @$row->post_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->company_name;
+                    }
+
                     echo '<div class="d-flex flex-column">
 							<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
                         @$rowpostedby .
@@ -639,9 +647,9 @@
                         ucfirst(mb_substr($rowpostedby, 0, 10)) .
                         '</a>
 						  <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$row->uc_company_name .
+                        @$post_company_name .
                         '">' .
-                        mb_substr(@$row->uc_company_name, 0, 10) .
+                        mb_substr(@$post_company_name, 0, 10) .
                         '</span>
                         </div>';
                 @endphp
