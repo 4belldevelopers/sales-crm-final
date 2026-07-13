@@ -81,10 +81,17 @@
             align-items: center;
         }
 
+        .tagify__tag {
+            background: #eef2ff !important;
+            border-radius: 20px !important;
+        }
+        .tagify__tag.simf-mandatory-tag {
+            background: #dbeafe !important;
+        }
         .tagify__tag > div {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             line-height: 1;
         }
 
@@ -94,13 +101,16 @@
             line-height: 1;
             display: inline-flex;
             align-items: center;
-            color: #cbd5e1;
-            position: static;
-            top: auto;
+            color: #94a3b8;
         }
 
         .tagify__tag .star.checked {
-            color: #f59e0b;
+            color: #2563eb;
+        }
+
+        .tagify__tag .tagify__tag-text {
+            font-size: 13px;
+            line-height: 1;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
@@ -182,15 +192,19 @@
             top: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
+            left: auto !important;
             height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
             z-index: 1200;
         }
         .simf-card {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             font-family: 'Poppins', sans-serif;
-            height: 100%;
-            max-height: 100vh;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
         }
         .simf-header {
             display: flex;
@@ -297,9 +311,9 @@
             font-weight: 500;
         }
         .simf-chip.mandatory {
-            background: #fffbeb;
-            color: #b45309;
-            border-color: #fde68a;
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
         }
         .simf-chip-remove {
             width: 15px;
@@ -388,9 +402,13 @@
             padding-right: 4px;
             min-width: 0;
         }
-        .simf-salary-row .form-select {
+        .simf-salary-row .form-select,
+        .simf-salary-row .form-control {
             font-size: 11px;
             padding-left: 8px;
+            padding-right: 8px;
+        }
+        .simf-salary-row .form-select {
             padding-right: 20px;
         }
 
@@ -940,11 +958,13 @@
                                                         tagData = tagData || {};
                                                         const value = tagData.value || '';
                                                         const isChecked = tagData.checked ? 'checked' : '';
+                                                        const mandatoryClass = tagData.checked ? 'simf-mandatory-tag' : '';
+                                                        const starGlyph = tagData.checked ? '★' : '☆';
                                                         return `
-                                                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
                                                         <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
                                                         <div>
-                                                            <span class="star ${isChecked}">★</span>
+                                                            <span class="star ${isChecked}">${starGlyph}</span>
                                                             <span class="tagify__tag-text">${value}</span>
                                                         </div>
                                                     </tag>
@@ -964,12 +984,17 @@
                                                     const value = tagElm.querySelector('.tagify__tag-text').textContent;
 
                                                     e.target.classList.toggle('checked');
+                                                    const nowChecked = e.target.classList.contains('checked');
+                                                    // Tagify doesn't re-run the tag template on toggle, so keep
+                                                    // the glyph (☆/★) and chip background in sync by hand here.
+                                                    e.target.textContent = nowChecked ? '★' : '☆';
+                                                    tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
                                                     // Update the tag data
                                                     const tagData = tagify.value.find(tag => tag.value === value);
                                                     if (tagData) {
                                                         setTimeout(() => {
-                                                            tagData.checked = e.target.classList.contains('checked');
+                                                            tagData.checked = nowChecked;
                                                             tagify.updateValueByDOMTags();
                                                             updateActiveFiltersUI();
                                                         }, 500);
@@ -1209,13 +1234,6 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-check form-check-custom mt-3">
-                                            <input class="form-check-input" type="checkbox"
-                                                name="communication[]" value="email" checked="checked" id="simf_relocate_chk">
-                                            <label class="form-check-label fs-7 text-muted" for="simf_relocate_chk">
-                                                Include candidates who prefer to relocate
-                                            </label>
-                                        </div>
                                     </div>
                                 </div>
                                 <!--end::Location-->
@@ -1235,7 +1253,7 @@
                                         <input type="hidden" id="kt_tagify_education" value="{{ $qualification }}" />
                                         <div class="simf-select-dd" id="simf_edu_dd">
                                             <button type="button" class="simf-select-dd-btn" id="simf_edu_dd_btn">
-                                                <span id="simf_edu_dd_label">Select education</span>
+                                                <span id="simf_edu_dd_label">Any Education</span>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                             </button>
                                             <div class="simf-select-dd-panel d-none" id="simf_edu_dd_panel">
@@ -1264,7 +1282,7 @@
                                             function simfSyncEducationInput() {
                                                 var payload = simfEducationSelected.map(function(v) { return { value: v }; });
                                                 $('#kt_tagify_education').val(JSON.stringify(payload));
-                                                $('#simf_edu_dd_label').text(simfEducationSelected.length ? simfEducationSelected.join(', ') : 'Select education');
+                                                $('#simf_edu_dd_label').text(simfEducationSelected.length ? simfEducationSelected.join(', ') : 'Any Education');
                                                 updateActiveFiltersUI();
                                             }
 
@@ -1317,6 +1335,7 @@
                                     <div class="simf-section-body">
                                         <div class="row g-2">
                                             <div class="col-6">
+                                                <label class="simf-mini-label">Minimum Experience</label>
                                                 <select class="form-select form-select-solid" name="min_exp" id="min_exp">
                                                     <option value="" selected="">Min Experience</option>
                                                     <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers</option>
@@ -1327,6 +1346,7 @@
                                                 <div class="fv-plugins-message-container"></div>
                                             </div>
                                             <div class="col-6">
+                                                <label class="simf-mini-label">Maximum Experience</label>
                                                 <select class="form-select form-select-solid" name="max_exp" id="max_exp">
                                                     <option value="" selected="">Max Experience</option>
                                                     <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers</option>
@@ -1377,27 +1397,12 @@
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Min Salary</label>
-                                                <select class="form-select form-select-solid" name="min_sal" id="min_sal">
-                                                    <option value="" {{ !in_array($min_salary, [0,500000,1000000,1500000,2000000,2500000]) ? 'selected' : '' }}>Any</option>
-                                                    <option value="0" {{ 0 == $min_salary ? 'selected' : '' }}>0 - 5 LPA</option>
-                                                    <option value="500000" {{ 500000 == $min_salary ? 'selected' : '' }}>5 - 10 LPA</option>
-                                                    <option value="1000000" {{ 1000000 == $min_salary ? 'selected' : '' }}>10 - 15 LPA</option>
-                                                    <option value="1500000" {{ 1500000 == $min_salary ? 'selected' : '' }}>15 - 20 LPA</option>
-                                                    <option value="2000000" {{ 2000000 == $min_salary ? 'selected' : '' }}>20 - 25 LPA</option>
-                                                    <option value="2500000" {{ 2500000 == $min_salary ? 'selected' : '' }}>25+ LPA</option>
-                                                </select>
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Max Salary</label>
-                                                <select class="form-select form-select-solid" name="max_sal" id="max_sal">
-                                                    <option value="" {{ !in_array($max_salary, [1000000,1500000,2000000,2500000,999999999]) ? 'selected' : '' }}>Any</option>
-                                                    <option value="1000000" {{ 1000000 == $max_salary ? 'selected' : '' }}>5 - 10 LPA</option>
-                                                    <option value="1500000" {{ 1500000 == $max_salary ? 'selected' : '' }}>10 - 15 LPA</option>
-                                                    <option value="2000000" {{ 2000000 == $max_salary ? 'selected' : '' }}>15 - 20 LPA</option>
-                                                    <option value="2500000" {{ 2500000 == $max_salary ? 'selected' : '' }}>20 - 25 LPA</option>
-                                                    <option value="999999999" {{ 999999999 == $max_salary ? 'selected' : '' }}>25+ LPA</option>
-                                                </select>
+                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
                                             </div>
                                             <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
@@ -1466,23 +1471,26 @@
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="0" id="app_int_status0" checked>
                                             <label class="simf-pill" for="app_int_status0">Any</label>
 
-                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="1" id="app_int_status1">
-                                            <label class="simf-pill" for="app_int_status1">Applied</label>
-
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="8" id="app_int_status8">
-                                            <label class="simf-pill" for="app_int_status8">Shortlisted</label>
+                                            <label class="simf-pill" for="app_int_status8">Inreview</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="1" id="app_int_status1">
+                                            <label class="simf-pill" for="app_int_status1">Sourcing</label>
 
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="2" id="app_int_status2">
                                             <label class="simf-pill" for="app_int_status2">Screening</label>
 
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="3" id="app_int_status3">
-                                            <label class="simf-pill" for="app_int_status3">Interview</label>
-
-                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="5" id="app_int_status5">
-                                            <label class="simf-pill" for="app_int_status5">Offered</label>
+                                            <label class="simf-pill" for="app_int_status3">Evaluation</label>
 
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="4" id="app_int_status4">
-                                            <label class="simf-pill" for="app_int_status4">Negotiation</label>
+                                            <label class="simf-pill" for="app_int_status4">Negotiations</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="5" id="app_int_status5">
+                                            <label class="simf-pill" for="app_int_status5">Offer</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="6" id="app_int_status6">
+                                            <label class="simf-pill" for="app_int_status6">Joined</label>
 
                                             <input type="radio" class="btn-check app_int_status" name="app_int_status" value="7" id="app_int_status7">
                                             <label class="simf-pill" for="app_int_status7">Rejected</label>
@@ -2322,12 +2330,30 @@
         // existing location Tagify instance — no extra request.
         $(document).on('click', '.simf-loc-chip', function() {
             var city = $(this).data('city');
-            if (typeof tagifylocation !== 'undefined' && city) {
-                // Auto-select this suggestion exactly like picking one from the
-                // real autocomplete dropdown — add the tag and close the panel.
-                tagifylocation.addTags([city]);
-                simfCloseLocPanel();
-            }
+            var $btn = $(this);
+            if (typeof tagifylocation === 'undefined' || !city) return;
+            $btn.prop('disabled', true);
+            // Resolve through the exact same /city-job-suggestions lookup the
+            // real search box uses, so the tag added is the full "City | State |
+            // Country" record the backend expects — not just a bare city name
+            // that never matches a real city_list entry.
+            $.ajax({
+                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(city),
+                method: 'GET',
+                success: function(data) {
+                    $btn.prop('disabled', false);
+                    if (Array.isArray(data) && data.length > 0) {
+                        var match = data.find(function(item) {
+                            return String(item).toLowerCase().indexOf(city.toLowerCase()) === 0;
+                        }) || data[0];
+                        tagifylocation.addTags([match]);
+                        simfCloseLocPanel();
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false);
+                }
+            });
         });
 
         // Location suggestions panel: opens on focus/chevron click, closes once
