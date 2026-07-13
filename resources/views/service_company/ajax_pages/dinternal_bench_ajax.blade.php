@@ -60,6 +60,18 @@
                         }
                     }
 
+                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
+
                     echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 				<a href="javascript:void(0);"   data-row-id="' .
                         @$row->id .
@@ -96,7 +108,7 @@
 				<div class="' .
                         $skilltagclass .
                         '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.':</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                         $skilltag .
@@ -186,7 +198,9 @@
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$symbols,$jobMode);
 
                     $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount ? @$payFormatViewSalary->amount : 0);
+                    $pay_rate_amount = explode('.', $pay_rate_amount)[0];
                     $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount ? @$billFormatViewSalary->amount : 0);
+                    $bill_rate_amount = explode('.', $bill_rate_amount)[0];
                     $pay_rate_mode = $salaryMode[$jobMode ? @$jobMode : 0];
                     $bill_rate_mode = $salaryMode[$jobMode ? @$jobMode : 0];
 
@@ -194,15 +208,15 @@
 					 <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                         @$bill_rate_currency .
                         @$bill_rate_amount .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $pay_rate_mode .
-                        '</a>
+                        '</span></a>
 					 <span class="text-muted fw-bold d-block fs-7">' .
                         $bill_rate_currency .
                         @$pay_rate_amount .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $bill_rate_mode .
-                        '</span>
+                        '</span></span>
 					</div>';
                 @endphp
             </td>
@@ -210,6 +224,7 @@
                 @php
                     $npArr = ['Notice period', 'Available from', 'Immediate'];
                     $npDate = $row->np_id;
+                    $npLabel = $npArr[$row->serving_notice_period_mode];
                     if ($row->serving_notice_period_mode == 0) {
                         $npDate = $row->np_id . ' Days';
                         if ($npDate == 1) {
@@ -219,39 +234,41 @@
                     if ($row->serving_notice_period_mode == 1) {
                         $originalDate = $row->np_id;
                         $npDate = 'SNP LWD ' . date('d-M-y', strtotime($originalDate));
-                        $today = date('Y-m-d'); 
+                        $today = date('Y-m-d');
                             if(date('Y-m-d', strtotime($row->np_id)) < $today){
                               $npDate = "Immediate";
+                              $npLabel = 'Immediate';
                             }
                     } elseif ($row->serving_notice_period_mode == 2) {
                         $npDate == '';
                     }
+
+                    // Availability color: Immediate = green, numeric days notice =
+                    // orange, a real serving last-working-day date = purple. !important
+                    // is required because Bootstrap/Metronic's .text-dark utility class
+                    // sets color with !important, which otherwise beats a plain inline
+                    // style — so the class is dropped below and color is fully
+                    // inline-controlled instead.
+                    if ($npLabel === 'Immediate') {
+                        $npColor = '#16a34a';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColor = '#d97706';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $npColor = '#7c3aed';
+                    } else {
+                        $npColor = '#181c32';
+                    }
+
                     echo '<div class="d-flex flex-column">
-					  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        $npArr[$row->serving_notice_period_mode] .
-                        '</a> 
+					  <a href="javascript:void(0);" class="fw-bolder fs-6" style="color:' . $npColor . ' !important;">' .
+                        $npLabel .
+                        '</a>
 					  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
                         $row->np_id .
                         '">' .
                         $npDate .
                         '</span>
 					</div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo ' <div class="d-flex flex-column">
-						  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        @$row->qualification_name .
-                        '</a>
-						  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                        $row->skills .
-                        '">' .
-                        mb_substr($row->skills, 0, 12) .
-                        '</span> 
-						</div>';
                 @endphp
             </td>
             <td>
@@ -307,20 +324,19 @@
                         $row_city_name = @$row->city;
                     }
 
+                    // Row 2 is now Education (merged in from the removed Qualification
+                    // column) instead of state — same qualification_name field/truncation
+                    // used there.
                     echo '<div class="d-flex flex-column">
                     	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        ucwords($row_city_name) . ', ' . strtoupper($row_country_name) .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        @$row->qualification_name .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                     </div>';
                 @endphp
@@ -386,7 +402,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="9" style="text-align: center; color: black;">
+        <td colspan="8" style="text-align: center; color: black;">
             No data available in table
         </td>
 
