@@ -81,16 +81,26 @@
             align-items: center;
         }
 
+        .tagify__tag > div {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1;
+        }
+
         .tagify__tag .star {
-            margin-left: 0px;
             cursor: pointer;
-            font-size: 21px;
-            position: relative !important;
-            top: 0px;
+            font-size: 13px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            color: #cbd5e1;
+            position: static;
+            top: auto;
         }
 
         .tagify__tag .star.checked {
-            color: #ef1632;
+            color: #f59e0b;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
@@ -163,10 +173,24 @@
         }
 
         /* Similar Candidates filter drawer (replaces the old #apptrackerfilter modal) */
+        /* Force the drawer itself to a fixed, viewport-bound box so only
+           .simf-body scrolls internally — without this, the drawer's height
+           was growing with its content and the whole browser page ended up
+           scrolling instead of just the filter list. */
+        .simf-drawer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            height: 100vh !important;
+            z-index: 1200;
+        }
         .simf-card {
             display: flex;
             flex-direction: column;
             font-family: 'Poppins', sans-serif;
+            height: 100%;
+            max-height: 100vh;
         }
         .simf-header {
             display: flex;
@@ -273,9 +297,9 @@
             font-weight: 500;
         }
         .simf-chip.mandatory {
-            background: #fff1f2;
-            color: #be123c;
-            border-color: #ffe4e6;
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fde68a;
         }
         .simf-chip-remove {
             width: 15px;
@@ -293,7 +317,9 @@
         }
         .simf-body {
             flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 4px 20px 16px;
         }
         .simf-section {
@@ -354,8 +380,103 @@
             margin-bottom: 4px;
             display: block;
         }
+        .simf-salary-row {
+            flex-wrap: nowrap;
+        }
+        .simf-salary-row > [class^="col-"] {
+            padding-left: 4px;
+            padding-right: 4px;
+            min-width: 0;
+        }
+        .simf-salary-row .form-select {
+            font-size: 11px;
+            padding-left: 8px;
+            padding-right: 20px;
+        }
+
+        /* Education multiselect dropdown */
+        .simf-select-dd {
+            position: relative;
+        }
+        .simf-select-dd-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f9f9f9;
+            border: 1px solid #e4e6ef;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 12.5px;
+            color: #3f4254;
+            text-align: left;
+        }
+        .simf-select-dd-btn span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 8px;
+        }
+        .simf-select-dd-btn svg {
+            flex-shrink: 0;
+            color: #99a1b7;
+        }
+        .simf-select-dd-panel {
+            margin-top: 6px;
+            border: 1px solid #e4e6ef;
+            border-radius: 8px;
+            background: #fff;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .simf-select-dd-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            font-size: 12.5px;
+            color: #3f4254;
+            cursor: pointer;
+            margin: 0;
+            border-bottom: 1px solid #f5f6f8;
+        }
+        .simf-select-dd-item:last-child {
+            border-bottom: none;
+        }
+        .simf-select-dd-item:hover {
+            background: #f8f9fb;
+        }
+        .simf-select-dd-item input {
+            accent-color: #2563eb;
+        }
+        .simf-loc-inputwrap {
+            position: relative;
+        }
+        .simf-loc-chevron {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: transparent;
+            color: #99a1b7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: transform .15s;
+        }
+        .simf-loc-chevron.open {
+            transform: translateY(-50%) rotate(180deg);
+        }
         .simf-loc-suggestions {
             margin-top: 10px;
+            border: 1px solid #eef0f4;
+            border-radius: 8px;
+            padding: 10px;
+            background: #fafbfc;
         }
         .simf-loc-label {
             font-size: 11px;
@@ -957,9 +1078,14 @@
                                         </div>
                                     </div>
                                     <div class="simf-section-body">
-                                        <input class="form-control form-control-solid"
-                                            value="{{ $default_loc }}" id="kt_tagify_location"
-                                            placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                        <div class="simf-loc-inputwrap" id="simf_loc_inputwrap">
+                                            <input class="form-control form-control-solid"
+                                                value="{{ $default_loc }}" id="kt_tagify_location"
+                                                placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                            <button type="button" class="simf-loc-chevron" id="simf_loc_chevron" title="Show suggestions">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                        </div>
                                         <script>
                                             // The DOM elements you wish to replace with Tagify
                                             var inputloc = document.querySelector("#kt_tagify_location");
@@ -983,9 +1109,11 @@
                                             // Create tags only on select
                                             tagifylocation.on('dropdown:select', function(e) {
                                                 tagifylocation.addTags([e.detail.data.value]);
+                                                simfCloseLocPanel();
                                             });
                                             tagifylocation.on('add', function(e) {
                                                 updateActiveFiltersUI();
+                                                simfCloseLocPanel();
                                             });
                                             tagifylocation.on('remove', function(e) {
                                                 updateActiveFiltersUI();
@@ -1043,7 +1171,7 @@
                                             }, 5000);
                                         </script>
 
-                                        <div class="simf-loc-suggestions">
+                                        <div class="simf-loc-suggestions d-none" id="simf_loc_panel">
                                             <div class="simf-loc-label">Popular Locations</div>
                                             <div class="simf-loc-chip-row">
                                                 <button type="button" class="simf-loc-chip" data-city="Bangalore">
@@ -1104,38 +1232,72 @@
                                         </div>
                                     </div>
                                     <div class="simf-section-body">
-                                        <input class="form-control form-control-solid" value="{{ $qualification }}"
-                                            id="kt_tagify_education" placeholder="Select education" />
+                                        <input type="hidden" id="kt_tagify_education" value="{{ $qualification }}" />
+                                        <div class="simf-select-dd" id="simf_edu_dd">
+                                            <button type="button" class="simf-select-dd-btn" id="simf_edu_dd_btn">
+                                                <span id="simf_edu_dd_label">Select education</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                            <div class="simf-select-dd-panel d-none" id="simf_edu_dd_panel">
+                                                <label class="simf-select-dd-item">
+                                                    <input type="checkbox" class="simf-edu-check" value="" checked>
+                                                    <span>Any</span>
+                                                </label>
+                                                @foreach ($qualificationTag as $qval)
+                                                    <label class="simf-select-dd-item">
+                                                        <input type="checkbox" class="simf-edu-check" value="{{ $qval }}">
+                                                        <span>{{ $qval }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
                                         <script>
-                                            var inputdeducation = document.querySelector("#kt_tagify_education");
-                                            var qualification = @json($qualificationTag);
-                                            var tagifyqualification = new Tagify(inputdeducation, {
-                                                whitelist: qualification,
-                                                maxTags: 10,
-                                                dropdown: {
-                                                    maxItems: 20,
-                                                    classname: "",
-                                                    enabled: 0,
-                                                    closeOnSelect: false
-                                                }
-                                            });
+                                            // Drives the same #kt_tagify_education hidden field the backend
+                                            // already reads (JSON array of {value:"..."} objects, matched
+                                            // against qualification_master.name) — only the picker UI changed
+                                            // from free-typed Tagify chips to a checklist dropdown.
+                                            var simfEducationSelected = (function() {
+                                                var initial = @json($qualification ? [$qualification] : []);
+                                                return initial.filter(Boolean);
+                                            })();
 
-                                            tagifyqualification.on('input', function(e) {
-                                                tagifyqualification.dropdown.show();
-                                            });
-
-                                            tagifyqualification.on('dropdown:select', function(e) {
-                                                tagifyqualification.addTags([e.detail.data.value]);
-                                            });
-                                            tagifyqualification.on('add', function(e) {
-                                                if (!qualification.includes(e.detail.data.value)) {
-                                                    setTimeout(() => {
-                                                        tagifyqualification.removeTag(e.detail.data.value);
-                                                    }, 200);
-                                                }
+                                            function simfSyncEducationInput() {
+                                                var payload = simfEducationSelected.map(function(v) { return { value: v }; });
+                                                $('#kt_tagify_education').val(JSON.stringify(payload));
+                                                $('#simf_edu_dd_label').text(simfEducationSelected.length ? simfEducationSelected.join(', ') : 'Select education');
                                                 updateActiveFiltersUI();
+                                            }
+
+                                            $(document).on('change', '.simf-edu-check', function() {
+                                                var val = $(this).val();
+                                                if (val === '') {
+                                                    // "Any" clears every specific selection
+                                                    if ($(this).is(':checked')) {
+                                                        $('.simf-edu-check').not(this).prop('checked', false);
+                                                        simfEducationSelected = [];
+                                                    }
+                                                } else {
+                                                    $('.simf-edu-check[value=""]').prop('checked', false);
+                                                    if ($(this).is(':checked')) {
+                                                        if (simfEducationSelected.indexOf(val) === -1) simfEducationSelected.push(val);
+                                                    } else {
+                                                        simfEducationSelected = simfEducationSelected.filter(function(v) { return v !== val; });
+                                                        if (simfEducationSelected.length === 0) $('.simf-edu-check[value=""]').prop('checked', true);
+                                                    }
+                                                }
+                                                simfSyncEducationInput();
                                             });
-                                            tagifyqualification.on('remove', updateActiveFiltersUI);
+
+                                            $(document).on('click', '#simf_edu_dd_btn', function() {
+                                                $('#simf_edu_dd_panel').toggleClass('d-none');
+                                            });
+                                            $(document).on('click', function(e) {
+                                                if (!$(e.target).closest('#simf_edu_dd').length) {
+                                                    $('#simf_edu_dd_panel').addClass('d-none');
+                                                }
+                                            });
+
+                                            $(document).ready(simfSyncEducationInput);
                                         </script>
                                     </div>
                                 </div>
@@ -1144,7 +1306,7 @@
                                 <!--begin::Experience-->
                                 <div class="simf-section">
                                     <div class="simf-section-head">
-                                        <span class="simf-icon simf-icon-teal">
+                                        <span class="simf-icon simf-icon-green">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                                         </span>
                                         <div>
@@ -1183,7 +1345,7 @@
                                 <div class="simf-section">
                                     <div class="simf-section-head">
                                         <span class="simf-icon simf-icon-amber">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h7a4 4 0 1 0 0-8H6"/></svg>
+                                            <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
                                         </span>
                                         <div>
                                             <div class="simf-section-title">Salary (CTC)</div>
@@ -1191,8 +1353,8 @@
                                         </div>
                                     </div>
                                     <div class="simf-section-body">
-                                        <div class="row g-2 mb-2">
-                                            <div class="col-6">
+                                        <div class="row g-2 simf-salary-row">
+                                            <div class="col-3">
                                                 <label class="simf-mini-label">Currency</label>
                                                 <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
                                                     <option value="">Select currency</option>
@@ -1204,7 +1366,7 @@
                                                     <option value="5" {{ 5 == $min_salary_currency ? 'selected' : '' }}>AED</option>
                                                 </select>
                                             </div>
-                                            <div class="col-6">
+                                            <div class="col-3">
                                                 <label class="simf-mini-label">Mode</label>
                                                 <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode" id="sal_mode">
                                                     <option value="">Select Mode</option>
@@ -1213,19 +1375,30 @@
                                                     <option value="2" {{ 2 == $min_sal_mode ? 'selected' : '' }}>Hourly</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-6">
+                                            <div class="col-3">
                                                 <label class="simf-mini-label">Min Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
+                                                <select class="form-select form-select-solid" name="min_sal" id="min_sal">
+                                                    <option value="" {{ !in_array($min_salary, [0,500000,1000000,1500000,2000000,2500000]) ? 'selected' : '' }}>Any</option>
+                                                    <option value="0" {{ 0 == $min_salary ? 'selected' : '' }}>0 - 5 LPA</option>
+                                                    <option value="500000" {{ 500000 == $min_salary ? 'selected' : '' }}>5 - 10 LPA</option>
+                                                    <option value="1000000" {{ 1000000 == $min_salary ? 'selected' : '' }}>10 - 15 LPA</option>
+                                                    <option value="1500000" {{ 1500000 == $min_salary ? 'selected' : '' }}>15 - 20 LPA</option>
+                                                    <option value="2000000" {{ 2000000 == $min_salary ? 'selected' : '' }}>20 - 25 LPA</option>
+                                                    <option value="2500000" {{ 2500000 == $min_salary ? 'selected' : '' }}>25+ LPA</option>
+                                                </select>
                                                 <div class="fv-plugins-message-container"></div>
-                                                <span class="form-text text-muted minimum_salary_word"></span>
                                             </div>
-                                            <div class="col-6">
+                                            <div class="col-3">
                                                 <label class="simf-mini-label">Max Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
+                                                <select class="form-select form-select-solid" name="max_sal" id="max_sal">
+                                                    <option value="" {{ !in_array($max_salary, [1000000,1500000,2000000,2500000,999999999]) ? 'selected' : '' }}>Any</option>
+                                                    <option value="1000000" {{ 1000000 == $max_salary ? 'selected' : '' }}>5 - 10 LPA</option>
+                                                    <option value="1500000" {{ 1500000 == $max_salary ? 'selected' : '' }}>10 - 15 LPA</option>
+                                                    <option value="2000000" {{ 2000000 == $max_salary ? 'selected' : '' }}>15 - 20 LPA</option>
+                                                    <option value="2500000" {{ 2500000 == $max_salary ? 'selected' : '' }}>20 - 25 LPA</option>
+                                                    <option value="999999999" {{ 999999999 == $max_salary ? 'selected' : '' }}>25+ LPA</option>
+                                                </select>
                                                 <div class="fv-plugins-message-container"></div>
-                                                <span class="form-text text-muted maximum_salary_word"></span>
                                             </div>
                                             <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
                                         </div>
@@ -1268,7 +1441,7 @@
                                             <label class="simf-pill" for="app_int_notice6">More than 3 Months</label>
 
                                             <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="9" id="app_int_notice9">
-                                            <label class="simf-pill" for="app_int_notice9">Served Notice</label>
+                                            <label class="simf-pill" for="app_int_notice9">Served Notice Period</label>
 
                                             <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="7" id="app_int_notice7">
                                             <label class="simf-pill" for="app_int_notice7">Currently Serving Notice</label>
@@ -1539,21 +1712,6 @@
             $(document).on("change", "#max_exp", function() {
                 experience_check()
             });
-
-            $(document).on('keyup', '#min_sal', function() {
-                // alert("dkd");
-                var number = parseInt($('#min_sal').val());
-                var result = convertToWords(number);
-                $('.minimum_salary_word').text(capitalizeFirstLetter(result));
-
-            });
-            $(document).on('keyup', '#max_sal', function() {
-                var number = parseInt($('#max_sal').val());
-                var result = convertToWords(number);
-                $('.maximum_salary_word').text(capitalizeFirstLetter(result));
-
-            });
-
 
         $(document).on('click', '.chk_list', function() {
             if ($(".chk_list").prop('checked') == true) {
@@ -2165,7 +2323,42 @@
         $(document).on('click', '.simf-loc-chip', function() {
             var city = $(this).data('city');
             if (typeof tagifylocation !== 'undefined' && city) {
+                // Auto-select this suggestion exactly like picking one from the
+                // real autocomplete dropdown — add the tag and close the panel.
                 tagifylocation.addTags([city]);
+                simfCloseLocPanel();
+            }
+        });
+
+        // Location suggestions panel: opens on focus/chevron click, closes once
+        // a location is picked (from either the popular chips or the real
+        // Tagify autocomplete dropdown) or when clicking outside it.
+        function simfOpenLocPanel() {
+            $('#simf_loc_panel').removeClass('d-none');
+            $('#simf_loc_chevron').addClass('open');
+        }
+        function simfCloseLocPanel() {
+            $('#simf_loc_panel').addClass('d-none');
+            $('#simf_loc_chevron').removeClass('open');
+        }
+        // Tagify hides the original <input> and renders its own contenteditable
+        // wrapper, so we hook Tagify's own focus event rather than the hidden
+        // input's DOM events.
+        $(document).ready(function() {
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.on('focus', simfOpenLocPanel);
+            }
+        });
+        $(document).on('click', '#simf_loc_chevron', function() {
+            if ($('#simf_loc_panel').hasClass('d-none')) {
+                simfOpenLocPanel();
+            } else {
+                simfCloseLocPanel();
+            }
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#simf_loc_inputwrap, #simf_loc_panel').length) {
+                simfCloseLocPanel();
             }
         });
 
@@ -2199,9 +2392,14 @@
             }
 
             // Education
-            if (typeof tagifyqualification !== 'undefined') {
-                tagifyqualification.value.forEach(function(tag) {
-                    chips.push({ label: tag.value, clear: function() { tagifyqualification.removeTags(tag.value); } });
+            if (typeof simfEducationSelected !== 'undefined') {
+                simfEducationSelected.slice().forEach(function(val) {
+                    chips.push({
+                        label: val,
+                        clear: function() {
+                            $('.simf-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
+                        }
+                    });
                 });
             }
 
@@ -2271,7 +2469,10 @@
         $(document).on('click', '#simf_clear_all', function() {
             if (typeof tagify !== 'undefined') tagify.removeAllTags();
             if (typeof tagifylocation !== 'undefined') tagifylocation.removeAllTags();
-            if (typeof tagifyqualification !== 'undefined') tagifyqualification.removeAllTags();
+            $('.simf-edu-check').prop('checked', false);
+            $('.simf-edu-check[value=""]').prop('checked', true);
+            simfEducationSelected = [];
+            simfSyncEducationInput();
             $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
             $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
             updateActiveFiltersUI();
