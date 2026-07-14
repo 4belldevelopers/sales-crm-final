@@ -76,23 +76,28 @@
             color: white !important;
         }
 
+        /* Skill / Location tag chips: square-ish rounded rect (not a full pill),
+           bordered for definition, consistent padding so star+text+remove all
+           sit on one visual baseline regardless of which section renders them. */
         .tagify__tag {
-            display: flex;
-            align-items: center;
-        }
-
-        .tagify__tag {
+            display: flex !important;
+            align-items: center !important;
             background: #eef2ff !important;
-            border-radius: 20px !important;
+            border: 1px solid #e0e7ff !important;
+            border-radius: 8px !important;
+            margin: 4px 6px 4px 0 !important;
+            padding: 0 !important;
         }
         .tagify__tag.simf-mandatory-tag {
             background: #dbeafe !important;
+            border-color: #bfdbfe !important;
         }
         .tagify__tag > div {
             display: flex !important;
             align-items: center !important;
             gap: 6px !important;
             line-height: 1;
+            padding: 7px 4px 7px 10px !important;
         }
 
         .tagify__tag .star {
@@ -103,6 +108,7 @@
             align-items: center;
             color: #94a3b8;
             margin-right: 5px;
+            flex-shrink: 0;
         }
 
         .tagify__tag .star.checked {
@@ -110,8 +116,18 @@
         }
 
         .tagify__tag .tagify__tag-text {
-            font-size: 13px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3730a3;
             line-height: 1;
+        }
+        .tagify__tag.simf-mandatory-tag .tagify__tag-text {
+            color: #1d4ed8;
+        }
+        .tagify__tag__removeBtn {
+            margin-left: 2px !important;
+            margin-right: 8px !important;
+            flex-shrink: 0;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
@@ -307,8 +323,8 @@
             background: #eef2ff;
             color: #3730a3;
             border: 1px solid #e0e7ff;
-            border-radius: 20px;
-            padding: 4px 6px 4px 10px;
+            border-radius: 8px;
+            padding: 5px 7px 5px 10px;
             font-size: 11.5px;
             font-weight: 500;
         }
@@ -970,8 +986,8 @@
                                                         return `
                                                     <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
                                                         <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                        <div>
-                                                            <span class="star ${isChecked}">${starGlyph}</span>
+                                                        <div style="display:flex;align-items:center;">
+                                                            <span class="star ${isChecked}" style="margin-right:7px;">${starGlyph}</span>
                                                             <span class="tagify__tag-text">${value}</span>
                                                         </div>
                                                     </tag>
@@ -1133,11 +1149,6 @@
                                                     closeOnSelect: true
                                                 }
                                             });
-                                            // Prevent creating tags on blur or enter key
-                                            tagifylocation.on('input', function(e) {
-                                                tagifylocation.dropdown.show();
-                                            });
-
                                             // Create tags only on select
                                             tagifylocation.on('dropdown:select', function(e) {
                                                 tagifylocation.addTags([e.detail.data.value]);
@@ -1159,15 +1170,24 @@
                                                 };
                                             }
 
-                                            // Debounced function to fetch suggestions
+                                            // Debounced function to fetch suggestions.
+                                            // The whitelist is refreshed FIRST, then the dropdown is
+                                            // shown — showing it before the whitelist arrives (as an
+                                            // earlier input handler did) rendered an empty, stuck
+                                            // dropdown that never repopulated, which is why the city
+                                            // autosuggest appeared broken.
                                             const fetchSuggestions = debounce(function(query) {
                                                 $.ajax({
-                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
-                                                            tagifylocation.settings.whitelist = data;
-                                                            tagifylocation.dropdown.show.call(tagifylocation);
+                                                            tagifylocation.whitelist = data;
+                                                            // Native typeahead and the custom "Popular
+                                                            // Locations" panel would otherwise overlap;
+                                                            // close the panel so the real suggestions show.
+                                                            simfCloseLocPanel();
+                                                            tagifylocation.dropdown.show(query);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
@@ -1182,6 +1202,7 @@
                                             tagifylocation.on('input', function(e) {
                                                 var query = e.detail.value.trim();
                                                 if (query.length < 2) return;
+                                                simfCloseLocPanel();
                                                 fetchSuggestions(query);
                                             });
 
@@ -2363,6 +2384,12 @@
                 bodyEl.style.setProperty('min-height', '0', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
             }
+            if (cardEl) {
+                cardEl.querySelectorAll('.simf-header, .simf-activebar, .simf-footer').forEach(function(el) {
+                    el.style.setProperty('flex-shrink', '0', 'important');
+                    el.style.setProperty('overflow', 'visible', 'important');
+                });
+            }
         }
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
@@ -2565,21 +2592,111 @@
         $(document).on('click', '#simf_reset_btn', function() {
             $('#simf_clear_all').trigger('click');
             fetchCandidates();
+            // Reset is an explicit apply of the cleared state, so make the
+            // cleared filters the new baseline — otherwise closing the drawer
+            // afterwards would "restore" the pre-reset values.
+            simfCaptureSnapshot();
         });
 
-        // Close just dismisses the drawer without touching the current results;
-        // Apply reuses the exact same fetchCandidates() call the sort dropdown
-        // and pagination already use, then closes the drawer.
+        /* ------------------------------------------------------------------
+           Draft-until-Apply behaviour.
+           Nothing the user changes inside the drawer takes effect until they
+           click "Apply Filters". If they close the drawer by any other means
+           (Close button, the header X, the overlay, or ESC) their unsaved
+           edits are discarded and every field reverts to the last-applied
+           state. We snapshot on open (kt.drawer.shown) and restore on close
+           (kt.drawer.after.hidden) using Metronic's own drawer lifecycle
+           events, so overlay/ESC closes are covered too — not just the
+           buttons we control.
+        ------------------------------------------------------------------ */
+        var simfSnapshot = null;
+        var simfApplying = false;
+
+        function simfCaptureSnapshot() {
+            simfSnapshot = {
+                skills: (typeof tagify !== 'undefined')
+                    ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
+                locations: (typeof tagifylocation !== 'undefined')
+                    ? tagifylocation.value.map(function(t) { return t.value; }) : [],
+                education: (typeof simfEducationSelected !== 'undefined') ? simfEducationSelected.slice() : [],
+                min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
+                min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
+                min_salary_currency: $('#min_salary_currency').val(), sal_mode: $('#sal_mode').val(),
+                notice: $('[name="app_int_notice"]:checked').val(),
+                status: $('[name="app_int_status"]:checked').val(),
+                activity: $('[name="app_int_activity"]:checked').val()
+            };
+        }
+
+        function simfRestoreSnapshot() {
+            if (!simfSnapshot) return;
+            if (typeof tagify !== 'undefined') {
+                tagify.removeAllTags();
+                if (simfSnapshot.skills.length) tagify.addTags(simfSnapshot.skills);
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.removeAllTags();
+                if (simfSnapshot.locations.length) tagifylocation.addTags(simfSnapshot.locations);
+            }
+            simfEducationSelected = simfSnapshot.education.slice();
+            $('.simf-edu-check').prop('checked', false);
+            if (simfEducationSelected.length === 0) {
+                $('.simf-edu-check[value=""]').prop('checked', true);
+            } else {
+                simfEducationSelected.forEach(function(v) {
+                    $('.simf-edu-check[value="' + String(v).replace(/"/g, '\\"') + '"]').prop('checked', true);
+                });
+            }
+            simfSyncEducationInput();
+            $('#min_exp').val(simfSnapshot.min_exp);
+            $('#max_exp').val(simfSnapshot.max_exp);
+            $('#min_sal').val(simfSnapshot.min_sal);
+            $('#max_sal').val(simfSnapshot.max_sal);
+            $('#min_salary_currency').val(simfSnapshot.min_salary_currency);
+            $('#sal_mode').val(simfSnapshot.sal_mode);
+            $('.minimum_salary_word, .maximum_salary_word').text('');
+            if (simfSnapshot.notice) $('[name="app_int_notice"][value="' + simfSnapshot.notice + '"]').prop('checked', true);
+            if (simfSnapshot.status) $('[name="app_int_status"][value="' + simfSnapshot.status + '"]').prop('checked', true);
+            if (simfSnapshot.activity) $('[name="app_int_activity"][value="' + simfSnapshot.activity + '"]').prop('checked', true);
+            updateActiveFiltersUI();
+        }
+
+        function simfBindDrawerLifecycle() {
+            var el = document.getElementById('kt_similar_filter_drawer');
+            if (!el || typeof KTDrawer === 'undefined' || !KTDrawer.getInstance) {
+                return setTimeout(simfBindDrawerLifecycle, 300);
+            }
+            var inst = KTDrawer.getInstance(el);
+            if (!inst) { return setTimeout(simfBindDrawerLifecycle, 300); }
+            inst.on('kt.drawer.shown', function() {
+                simfApplying = false;
+                simfCaptureSnapshot();
+            });
+            inst.on('kt.drawer.after.hidden', function() {
+                if (!simfApplying) simfRestoreSnapshot();
+                simfApplying = false;
+            });
+        }
+        $(document).ready(simfBindDrawerLifecycle);
+
+        // Close discards unsaved edits (handled by the restore-on-hide hook above);
+        // Apply commits them: run the fetch, mark this close as an intentional
+        // apply so the hook does NOT revert, then close the drawer.
         $(document).on('click', '#simf_close_btn', function() {
             $('#kt_similar_filter_close').trigger('click');
         });
         $(document).on('click', '#simf_apply_btn', function() {
+            simfApplying = true;
             fetchCandidates();
             $('#kt_similar_filter_close').trigger('click');
         });
 
         $(document).ready(function() {
             setTimeout(updateActiveFiltersUI, 600);
+            // Seed a baseline snapshot from the server-provided defaults so a
+            // very first close-without-apply reverts correctly even if the
+            // shown event hasn't fired yet.
+            setTimeout(simfCaptureSnapshot, 800);
         });
     </script>
 @endpush

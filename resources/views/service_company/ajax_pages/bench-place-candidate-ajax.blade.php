@@ -268,7 +268,7 @@
                         $tlAppId  = @$row->candidate_id;
                         $tlJobId  = @$row->jobId;
                         $tlRows   = ($tlAppId && $tlJobId)
-                            ? DB::table('updateTimeline')
+                            ? DB::table('updatetimeline')
                                 ->where('application_id', $tlAppId)
                                 ->where('job_id', $tlJobId)
                                 ->orderByDesc('id')
