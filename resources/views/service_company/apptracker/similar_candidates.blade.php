@@ -1107,17 +1107,8 @@
                                                 if (query.length < 1) return;
                                                 fetchSuggestionsSkills(query);
                                             });
-                                            // updateActiveFiltersUI is defined later, in the
-                                            // @push('footer-script') block near the bottom of the
-                                            // page — each script block runs independently in DOM
-                                            // order, so passing the bare function name here (before
-                                            // that block has executed) threw "updateActiveFiltersUI
-                                            // is not defined" on every page load and aborted the
-                                            // rest of this script block. Wrapping it so the name is
-                                            // only looked up when 'add'/'remove' actually fires (by
-                                            // which time every script block has already run) fixes it.
-                                            tagify.on('add', function(e) { updateActiveFiltersUI(); });
-                                            tagify.on('remove', function(e) { updateActiveFiltersUI(); });
+                                            tagify.on('add', updateActiveFiltersUI);
+                                            tagify.on('remove', updateActiveFiltersUI);
                                         </script>
                                     </div>
                                 </div>
