@@ -2300,33 +2300,50 @@
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
 
             $('.loadingMessage').css({ display: 'block' });
-            $.ajax({
+            // Return the jqXHR so callers that chain .then()/.catch() (e.g. the
+            // pagination handler) don't crash on an undefined return value.
+            return $.ajax({
                 url: `{!! route('service_company.apptracker.similar_existing_data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
-                jobid:jobid, 
+                jobid:jobid,
                 search:inputSearch,
-                sortingfilter:sortingfilter, 
+                sortingfilter:sortingfilter,
                 country:country,
                 cus_search:(cus_search),
                 min_exp:min_exp,
-                max_exp:max_exp, 
+                max_exp:max_exp,
                 kt_tagify_location:kt_tagify_location,
                 min_sal:min_sal,
-                max_sal:max_sal, 
+                max_sal:max_sal,
                 min_salary_currency:min_salary_currency,
                 kt_tagify_education:kt_tagify_education,
                 app_int_status:app_int_status,
                 app_int_activity:app_int_activity,
-                app_int_notice:app_int_notice, 
+                app_int_notice:app_int_notice,
                 sal_mode:sal_mode
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
+                    // Guard every field: if the backend ever returns an error
+                    // shape or a non-JSON page for a particular filter combo,
+                    // keep the existing list instead of blanking it with
+                    // `undefined`, and log the raw payload so the real cause is
+                    // visible in the console rather than a silent blank screen.
+                    if (!response || typeof response.html === 'undefined') {
+                        console.error('similar_existing_data_ajax: unexpected response', response);
+                        return;
+                    }
                     $('#candidatetList').html(response.html);
                     $('#similar_counter').html(response.total);
                     $('#simf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                },
+                error: function(xhr) {
+                    // Never leave the loading overlay stuck or the list blank on
+                    // a failed request — surface what went wrong instead.
+                    $('.loadingMessage').css({ display: 'none' });
+                    console.error('similar_existing_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });
         }
