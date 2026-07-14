@@ -1182,12 +1182,17 @@
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
-                                                            tagifylocation.whitelist = data;
+                                                            // Tagify's dropdown filters against
+                                                            // settings.whitelist specifically — a
+                                                            // top-level tagifylocation.whitelist isn't
+                                                            // read anywhere, which is why suggestions
+                                                            // stopped appearing after this was changed.
+                                                            tagifylocation.settings.whitelist = data;
                                                             // Native typeahead and the custom "Popular
                                                             // Locations" panel would otherwise overlap;
                                                             // close the panel so the real suggestions show.
                                                             simfCloseLocPanel();
-                                                            tagifylocation.dropdown.show(query);
+                                                            tagifylocation.dropdown.show.call(tagifylocation, query);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
