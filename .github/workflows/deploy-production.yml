@@ -8,6 +8,10 @@ name: Deploy to Production (hire.jero.works)
 # "Required reviewers" to the `production` environment
 # (Settings -> Environments -> production) for a second approval click.
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
 
 concurrency:
