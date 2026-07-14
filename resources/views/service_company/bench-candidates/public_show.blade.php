@@ -164,17 +164,52 @@
                   $info = pathinfo($url);
               @endphp
 
-                <button type="button" class="btn btn-secondary" style="background: no-repeat; border: 1px solid #e2e8f0;">
-                  <a target="_blank" data-id="{{ $benchApplication->id }}" class="downloadCount" href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => urlencode($url)]) }}" style="display: contents;color:#475569">
-                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                          <polyline points="7 10 12 15 17 10"/>
-                          <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                         <span>Download Resume</span>
-
-                         </a>
-                </button>                    
+                <div style="position:relative;display:inline-block;" id="hdrDlWrapPub">
+                  <button type="button" class="btn btn-secondary" id="hdrDlTogglePub" style="background:no-repeat;border:1px solid #e2e8f0;display:flex;align-items:center;gap:5px;">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#475569">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span style="color:#475569">Download Resume</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:#475569"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <div id="hdrDlMenuPub" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:999;overflow:hidden;">
+                    <a target="_blank" data-id="{{ $benchApplication->id }}" class="downloadCount" href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => urlencode($url)]) }}" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
+                      Download Resume
+                    </a>
+                    <button type="button" onclick="hdrDownloadWithLogoPub()" style="display:flex;align-items:center;gap:6px;width:100%;padding:9px 13px;font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:0;border-left:3px solid #22c55e;cursor:pointer;text-align:left;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                      Resume with Company Logo
+                      <span style="font-size:10px;background:#22c55e;color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;font-weight:700;letter-spacing:.3px;">LOGO</span>
+                    </button>
+                  </div>
+                </div>
+                <script>
+                (function(){
+                  var t=document.getElementById('hdrDlTogglePub'),m=document.getElementById('hdrDlMenuPub');
+                  if(t&&m){
+                    t.addEventListener('click',function(e){e.stopPropagation();m.style.display=m.style.display==='none'?'block':'none';});
+                    document.addEventListener('click',function(){m.style.display='none';});
+                  }
+                })();
+                function hdrDownloadWithLogoPub(){
+                  document.getElementById('hdrDlMenuPub').style.display='none';
+                  var rcvTab=document.querySelector('button[data-target="resume_cv"], button[data-rcv-tab], a[href="#resume_cv"].tab');
+                  if(rcvTab) rcvTab.click();
+                  var tries=0;
+                  var poll=setInterval(function(){
+                    if(document.querySelectorAll('#rcvPages .rcv-page').length){
+                      clearInterval(poll);
+                      var b=document.querySelector('[data-dl="logo"]');
+                      if(b) b.click();
+                    } else if(++tries>80){
+                      clearInterval(poll);
+                      alert('Resume is taking too long to load. Please open the Resume / CV tab and try again.');
+                    }
+                  },100);
+                }
+                </script>                    
         @endif
        
       </div>
@@ -726,12 +761,15 @@
                 $__l = $__c->logo ?? '';
                 if(!empty($__l) && strlen($__l) > 5){ $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy'); }
             }
-            // candidate skills
+            // candidate skills — merge comma-string field + bench_candidate_skill_experience rows
             $rcvSkills = [];
             if(!empty(@$benchApplication->skills)){
                 foreach(explode(',', $benchApplication->skills) as $s){ $s=trim($s); if($s!=='') $rcvSkills[]=$s; }
-                $rcvSkills = array_values(array_unique($rcvSkills));
             }
+            if(!empty($skillExperiences)){
+                foreach($skillExperiences as $__se){ $__sk=trim((string)(@$__se->skill_key)); if($__sk!=='') $rcvSkills[]=$__sk; }
+            }
+            $rcvSkills = array_values(array_unique($rcvSkills));
             // banner stats
             $__te = trim((string) @$benchApplication->total_exp);
             $rcvBExp = $__te !== '' ? $__te.' Years' : '--';

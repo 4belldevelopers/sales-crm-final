@@ -808,6 +808,12 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 										]
 									],
 
+									'candidateJoinedContract_sum' => [
+										'sum' => [
+											'field' => 'doc.candidateJoinedContract'
+										]
+									],
+
 									'interestedCandidates_sum' => [
 										'sum' => [
 											'field' => 'doc.interestedCandidates'
@@ -847,6 +853,12 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 									'backout_sum' => [
 										'sum' => [
 											'field' => 'doc.backout'
+										]
+									],
+
+									'backoutContract_sum' => [
+										'sum' => [
+											'field' => 'doc.backoutContract'
 										]
 									]
 
@@ -959,6 +971,8 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 
 						'candidateJoined' => $row['candidateJoined_sum']['value'] ?? 0,
 
+						'candidateJoinedContract' => $row['candidateJoinedContract_sum']['value'] ?? 0,
+
 						'interestedCandidates' => $row['interestedCandidates_sum']['value'] ?? 0,
 
 						'notInterestedCandidates' => $row['notInterestedCandidates_sum']['value'] ?? 0,
@@ -972,6 +986,8 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 						'negotiation' => $row['negotiation_sum']['value'] ?? 0,
 
 						'backout' => $row['backout_sum']['value'] ?? 0,
+
+						'backoutContract' => $row['backoutContract_sum']['value'] ?? 0,
 
 					];
 
@@ -1105,6 +1121,21 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 				$this->scpInterviewsTotal = $iR['hits']['total']['value'] ?? 0;
 			} catch (\Throwable $e) { $this->scpInterviewsTotal = 0; }
 
+			// Overall offers = all candidates by this user that have an offer created (of_created_date not null).
+			$this->scpOffersTotal = 0;
+			try {
+				$oR = $this->elasticService->getClient()->search([
+					'index' => ELASTIC_CANDIDATES,
+					'body' => ['track_total_hits' => true, 'size' => 0,
+						'query' => ['bool' => ['must' => [
+							['term' => ['submitted_by' => $id]],
+							['exists' => ['field' => 'of_created_date']],
+						]]],
+					],
+				]);
+				$this->scpOffersTotal = $oR['hits']['total']['value'] ?? 0;
+			} catch (\Throwable $e) { $this->scpOffersTotal = (int) ($this->offer_count ?? 0); }
+
 			$this->countries = DB::table('countries')->get();
         	$this->calling_codes = $this->getCallingCodes();
         	return view('service_company.profile.index', $this->data);
@@ -1181,6 +1212,10 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 							'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 							'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 							'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+							'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+							'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+							'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+							'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 						]
 					]
 				]
@@ -1206,7 +1241,7 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 				+ ($item['evaluation_sum']['value'] ?? 0)
 				+ ($item['negotiation_sum']['value'] ?? 0)
 				+ ($item['backout_sum']['value'] ?? 0)
-				+ ($item['backoutTeam_sum']['value'] ?? 0);
+				+ ($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 			return [$item['key'] => [
 				'user_id' => $item['key'],
@@ -1224,6 +1259,10 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 				'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 				'backout' => ($item['backout_sum']['value'] ?? 0),
 				'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+				'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+				'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+				'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+				'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 				'score' => $score
 			]];
 		});
@@ -1304,6 +1343,10 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 						'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 						'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 						'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+						'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+						'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+						'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+						'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 					],
 				]],
 				'size' => 0,
@@ -1325,7 +1368,7 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 				+ ($item['evaluation_sum']['value'] ?? 0)
 				+ ($item['negotiation_sum']['value'] ?? 0)
 				+ ($item['backout_sum']['value'] ?? 0)
-				+ ($item['backoutTeam_sum']['value'] ?? 0);
+				+ ($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 			return [$item['key'] => $score];
 		});
 

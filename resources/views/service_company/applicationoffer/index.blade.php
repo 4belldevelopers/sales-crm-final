@@ -2,677 +2,898 @@
 
 @push('head-script')
 <style>
-body {overflow-x:hidden;}
-@media only screen and (min-width: 900px) and (max-width: 2560px){
-  .table td, .table th, .table tr {width: max-content!important; }
-  .table > :not(caption) > * > * {padding: 0rem; }
-  td:nth-child(n+2),
-  th:nth-child(n+2) {width: revert!important; }
-}
-.div_content {width: 360px; background-color: #fff; width: 360px; height: 55px; position: absolute; padding: 0.5em; display: none; }
-.table td:nth-child(6), th:nth-child(6){text-align:center;}
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesApplication {width: 1025px;}
-}
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesApplication{ width: 1200px; }
-}
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_create_offer {width: 1025px;}
-}
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_create_offer{ width: 1200px; }
+/* ──────────────────────────────────────────────
+   Offer Tracker — redesigned layout v2
+   Font: Poppins (inherited), max 14px per UI spec
+────────────────────────────────────────────── */
+body { overflow-x: hidden; }
+
+/* Poppins everywhere in the hero + pipeline; 16px hard cap per spec. */
+.ot-page-head, .ot-stats-grid, .ot-pipeline-wrap,
+.ot-page-head *, .ot-stats-grid *, .ot-pipeline-wrap * {
+    font-family: 'Poppins', sans-serif !important;
 }
 
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_client_activitiesApplication{ width: 1025px;}
+/* Page header (hero) */
+.ot-page-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px 0;
 }
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_client_activitiesApplication{ width: 1200px; }
+.ot-page-head h4 { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
+.ot-page-head p  { font-size: 11px; color: #64748b; margin: 2px 0 0; }
+.ot-head-actions { display: flex; gap: 10px; align-items: center; }
+.ot-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; }
+.ot-btn:hover { background: #f8fafc; }
+.ot-btn svg { width: 14px; height: 14px; }
+.ot-btn-more { background: #fff; }
+
+/* ── KPI stat cards (hero boxes) — heights trimmed ~20% ── */
+.ot-stats-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+    padding: 14px 24px 0;
 }
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_client_activitiesApplication_toggle{ width: 1025px;}
+.ot-stat-card {
+    background: #fff; border-radius: 14px; padding: 13px 16px;
+    border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_client_activitiesApplication_toggle{ width: 1200px; }
+.ot-stat-icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
 }
-.joining_date::-webkit-inner-spin-button,
-.joining_date::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-#myTable tbody tr {
-    height: 100px; /* Adjust the height as per your requirement */
-    position: relative;
+.ot-stat-icon svg { width: 18px; height: 18px; }
+.ot-stat-body { flex: 1; min-width: 0; }
+.ot-stat-label { font-size: 10px; color: #94a3b8; font-weight: 500; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .4px; }
+.ot-stat-value { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.1; }
+.ot-stat-delta {
+    font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 3px; font-weight: 500;
+}
+.ot-stat-delta.up   { color: #16a34a; }
+.ot-stat-delta.down { color: #dc2626; }
+.ot-stat-delta.warn { color: #d97706; }
+.ot-stat-delta.info { color: #0891b2; }
+.ot-delta-ico { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Pipeline section ── */
+.ot-pipeline-wrap {
+    background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
+    margin: 14px 24px 0; padding: 14px 20px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.ot-pipeline-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.ot-pipeline-head h5 { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; }
+.ot-pipeline-range {
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: #374151; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 5px;
+}
+/* ── Arrow/breadcrumb pipeline cards ──
+   Interlocking chevron segments built with clip-path only.
+   A small flex `gap` leaves the clean white chevron seam between
+   segments (no separate chevron elements, no negative margins —
+   that combination was what broke the layout previously). The whole
+   row lives in a horizontally-scrollable rail so the funnel never
+   wraps or crushes on 15.6" / smaller corporate laptop screens. */
+.ot-pipeline-rail { overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+.ot-pipeline-rail::-webkit-scrollbar { height: 6px; }
+.ot-pipeline-rail::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
+/* No flex gap: segments OVERLAP via negative margin so each arrow point
+   nests inside the next segment's notch, leaving only a thin parallel
+   white seam (arrow depth 14px, overlap 10px → ~4px seam). */
+.ot-pipeline-flow {
+    display: flex; align-items: stretch; gap: 0;
+}
+.ot-pipe-card-v2 {
+    flex: 1 1 0; min-width: 150px; position: relative;
+    padding: 8px 14px 9px 24px;
+    margin-left: -10px;
+    /* middle segment: notch on the left, arrow point on the right */
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+}
+/* First card — softly rounded left corners + arrow right (no left notch) */
+.ot-pipe-card-v2:first-child {
+    margin-left: 0; padding-left: 16px;
+    clip-path: polygon(0 6px, 6px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 6px 100%, 0 calc(100% - 6px));
+}
+/* Last card — left notch + softly rounded right corners (no arrow point) */
+.ot-pipe-card-v2:last-child {
+    padding-right: 16px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 14px 50%);
+}
+.ot-pipe-head-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+}
+.ot-pipe-icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
+.ot-pipe-icon-sm svg { width: 16px; height: 16px; }
+.ot-pipe-lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ot-pipe-big { font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.1; }
+.ot-pipe-pct-v2 { font-size: 11px; color: #64748b; font-weight: 500; }
+.ot-pipe-sub-v2 { font-size: 10px; color: #94a3b8; }
+/* Every stage card: main value pinned top-left, percentage/fraction pinned top-right */
+.ot-pipe-data-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.ot-pipe-data-row .ot-pipe-pct-v2,
+.ot-pipe-data-row .ot-pipe-sub-v2 { margin-top: 2px; white-space: nowrap; }
+
+/* ── Table card ── */
+.ot-card {
+    background: #fff; border-radius: 14px; border: 1px solid #f1f5f9;
+    margin: 18px 24px 24px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
 
+/* Search + filter bar */
+.ot-filter-bar {
+    display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9; flex-wrap: wrap;
+}
+.ot-filter-bar .ot-sort-bar { padding: 0; flex-shrink: 0; }
+.ot-search-wrap { flex: 1; min-width: 220px; position: relative; }
+.ot-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 16px; height: 16px; pointer-events: none; }
+.ot-search-input {
+    width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px 8px 36px;
+    font-size: 13px; color: #374151; outline: none; background: #f8fafc;
+}
+.ot-search-input:focus { border-color: #6366f1; background: #fff; }
+.ot-location-select {
+    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; cursor: pointer; outline: none; min-width: 160px;
+}
+.ot-location-select:focus { border-color: #6366f1; background: #fff; }
+
+/* Tabs row */
+.ot-tabs-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; border-bottom: 1px solid #f1f5f9;
+}
+.ot-tabs { display: flex; gap: 0; overflow-x: auto; }
+.ot-tab {
+    padding: 11px 16px; font-size: 12px; font-weight: 500; color: #64748b;
+    cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; user-select: none;
+    display: flex; align-items: center; gap: 6px; transition: color .15s;
+}
+.ot-tab:hover { color: #374151; }
+.ot-tab-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 18px; border-radius: 99px; font-size: 10px; font-weight: 700;
+    background: #f1f5f9; color: #64748b; padding: 0 5px; transition: all .15s;
+}
+
+/* Per-tab active colors */
+.ot-tab[data-filter="all"].active        { color: #0f172a;  border-bottom-color: #0f172a;  font-weight: 700; }
+.ot-tab[data-filter="all"].active .ot-tab-badge        { background: #e2e8f0; color: #0f172a; }
+.ot-tab[data-filter="pending"].active    { color: #d97706;  border-bottom-color: #d97706;  font-weight: 700; }
+.ot-tab[data-filter="pending"].active .ot-tab-badge    { background: #fef3c7; color: #d97706; }
+.ot-tab[data-filter="sent"].active       { color: #2563eb;  border-bottom-color: #2563eb;  font-weight: 700; }
+.ot-tab[data-filter="sent"].active .ot-tab-badge       { background: #dbeafe; color: #2563eb; }
+.ot-tab[data-filter="accepted"].active   { color: #16a34a;  border-bottom-color: #16a34a;  font-weight: 700; }
+.ot-tab[data-filter="accepted"].active .ot-tab-badge   { background: #dcfce7; color: #16a34a; }
+.ot-tab[data-filter="joining_soon"].active { color: #0891b2; border-bottom-color: #0891b2; font-weight: 700; }
+.ot-tab[data-filter="joining_soon"].active .ot-tab-badge { background: #cffafe; color: #0891b2; }
+.ot-tab[data-filter="expired"].active    { color: #dc2626;  border-bottom-color: #dc2626;  font-weight: 700; }
+.ot-tab[data-filter="expired"].active .ot-tab-badge    { background: #fee2e2; color: #dc2626; }
+
+.ot-sort-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.ot-sort-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+.ot-sort-select {
+    border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; outline: none; cursor: pointer; min-width: 160px;
+}
+.ot-sort-select:focus { border-color: #6366f1; background: #fff; }
+.ot-view-btns { display: flex; gap: 4px; }
+.ot-view-btn {
+    width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e2e8f0; background: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8;
+}
+.ot-view-btn.active { background: #f1f5f9; color: #374151; border-color: #cbd5e1; }
+.ot-view-btn svg { width: 14px; height: 14px; }
+
+/* Table */
+.ot-table { width: 100%; border-collapse: collapse; }
+.ot-table thead tr { background: #f8fafc; }
+.ot-table th {
+    padding: 10px 14px; font-size: 11px; font-weight: 600; color: #64748b;
+    text-align: left; white-space: nowrap; letter-spacing: .3px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.ot-table th .ot-sort-ico { margin-left: 4px; color: #cbd5e1; font-size: 10px; }
+.ot-table th.ot-th-sort { cursor: pointer; user-select: none; }
+.ot-table th.ot-th-sort:hover { color: #334155; }
+.ot-table th.ot-th-sort:hover .ot-sort-ico { color: #94a3b8; }
+.ot-table th.ot-th-sort.active { color: #6366f1; }
+.ot-table th.ot-th-sort.active .ot-sort-ico { color: #6366f1; }
+.ot-row { border-bottom: 1px solid #f8fafc; transition: background .12s; }
+.ot-row:hover { background: #fafbff; }
+.ot-td { padding: 12px 14px; vertical-align: middle; }
+
+/* Candidate cell — listing font sizes reduced ~10% per request (header/Stage untouched) */
+.ot-cand { display: flex; align-items: center; gap: 10px; }
+.ot-avatar {
+    width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0;
+}
+.ot-avatar-img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.ot-cand-info { min-width: 0; }
+.ot-cand-name {
+    font-size: 12px; font-weight: 600; color: #0f172a; display: block; text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;
+}
+.ot-cand-name:hover { color: #6366f1; }
+.ot-cand-role { font-size: 10px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.ot-bench { font-size: 8px; background: #fef3c7; color: #d97706; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+
+/* Job cell */
+.ot-job-title { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
+.ot-job-type  { font-size: 10px; color: #94a3b8; display: block; margin-top: 2px; }
+
+/* Job Status, ID & Client pill */
+.ot-status-pill {
+    display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 10px; font-weight: 600; margin-bottom: 3px;
+}
+.ot-job-meta { font-size: 10px; color: #64748b; display: block; margin-top: 2px; }
+
+/* Compensation */
+.ot-comp-amount { font-size: 12px; font-weight: 600; color: #0f172a; display: block; }
+.ot-comp-type   { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-comp-change { font-size: 10px; color: #6366f1; font-weight: 600; display: block; margin-top: 2px; }
+a:hover .ot-comp-change { text-decoration: underline; }
+.ot-pending-badge { font-size: 10px; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.ot-create-btn { font-size: 11px; color: #f59e0b; font-weight: 700; text-decoration: none; }
+.ot-create-btn:hover { color: #d97706; text-decoration: underline; }
+
+/* Offer Status badge with icon */
+.ot-offer-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px 3px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-bottom: 3px;
+}
+.ot-offer-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
+.ot-offer-sub { font-size: 10px; color: #64748b; display: block; }
+.ot-offer-date { font-size: 9px; color: #94a3b8; display: block; margin-top: 1px; }
+
+/* Joining */
+.ot-join-date      { font-size: 12px; font-weight: 600; color: #1e293b; display: block; }
+.ot-join-time      { font-size: 10px; color: #94a3b8; display: block; margin-top: 1px; }
+.ot-join-countdown { font-size: 10px; font-weight: 600; display: block; margin-top: 2px; }
+.ot-na             { font-size: 13px; color: #cbd5e1; }
+.ot-na-sub         { font-size: 10px; color: #94a3b8; display: block; }
+
+/* Stage — outlined button (font size intentionally unchanged — not part of this request) */
+.ot-td-stage { text-align: center; }
+.ot-stage-btn {
+    display: inline-block; padding: 5px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    background: transparent; color: #7c3aed; border: 1.5px solid #c4b5fd;
+    cursor: pointer; text-decoration: none; transition: all .15s;
+}
+.ot-stage-btn:hover { background: #ede9fe; border-color: #7c3aed; color: #7c3aed; }
+.ot-stage-disabled {
+    background: transparent; color: #94a3b8; border: 1.5px solid #e2e8f0; cursor: default;
+}
+.ot-stage-disabled:hover { background: transparent; border-color: #e2e8f0; }
+/* "Offered" stage — orange instead of the default purple */
+.ot-stage-btn.ot-stage-offered { color: #ea580c; border-color: #fdba74; }
+.ot-stage-btn.ot-stage-offered:hover { background: #ffedd5; border-color: #ea580c; color: #ea580c; }
+
+/* Empty state */
+.ot-empty td { padding: 60px 14px; text-align: center; }
+.ot-empty-inner p { margin: 12px 0 0; font-size: 13px; color: #94a3b8; }
+
+/* Table footer */
+.ot-table-footer {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 12px 20px; border-top: none; background: transparent;
+}
+.ot-rows-per { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
+.ot-rows-select {
+    border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 12px; background: #fff; cursor: pointer;
+}
+
+/* loading shimmer cards */
+.ot-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; height: 16px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* Tighten a touch on ~1366px 15.6" laptops so all six
+   segments fit the row without triggering the scroll rail. */
+@media (max-width: 1440px) {
+    .ot-pipe-card-v2 { padding: 8px 10px 9px 22px; min-width: 142px; }
+}
+@media (max-width: 1200px) {
+    .ot-stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .ot-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .ot-page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    /* The funnel stays intact and simply scrolls horizontally on phones. */
+    .ot-pipe-card-v2 { min-width: 144px; }
+}
 </style>
 @endpush
 
 @section('content')
+
+{{-- ── Toolbar (page header, matches Metronic layout pattern) ── --}}
 <div class="toolbar" id="kt_toolbar">
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-    <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-      <div class="d-flex flex-column">
-        <h5 class="d-flex align-items-center text-dark fw-bolder my-1"> <a href="javascript:void(0);" class="text-gray-800 text-hover-primary">Offer Tracker</a> </h5>
-        <!-- <span class="text-gray-600">{{ @$appCounter }}</span> -->
-        <span class="text-gray-600" id="total_record"></span> 
-      </div>
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+<div class="ot-page-head" style="padding:0;width:100%">
+    <div>
+        <h4>Offer Tracker</h4>
+        <p>Track and manage all your offers in one place</p>
     </div>
-    <div class="d-flex align-items-center py-1">
-      <div class="d-flex align-items-center position-relative my-1 me-3"> 
-        <input type="hidden" name="inputSearch" id="inputSearch" data-kt-user-table-filter="search" class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;" placeholder="Search..." />
-      </div>
-      <div class="card-toolbar">
-        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-          
-          <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-            <div class="px-7 py-5">
-              <div class="fs-5 text-dark fw-bolder">Filter Options</div>
-            </div>
-            <div class="separator border-gray-200"></div>
-            <div class="px-7 py-5" data-kt-user-table-filter="form">
-              <div class="mb-10">
-                <label class="form-label fs-6 fw-bold">Role:</label>
-                <select class="form-select form-select-solid fw-bolder" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="role" data-hide-search="true">
-                  <option></option>
-                  <option value="Administrator">Administrator</option>
-                  <option value="Analyst">Analyst</option>
-                  <option value="Developer">Developer</option>
-                  <option value="Support">Support</option>
-                  <option value="Trial">Trial</option>
-                </select>
-              </div>
-              <div class="mb-10">
-                <label class="form-label fs-6 fw-bold">Two Step Verification:</label>
-                <select class="form-select form-select-solid fw-bolder" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="two-step" data-hide-search="true">
-                  <option></option>
-                  <option value="Enabled">Enabled</option>
-                </select>
-              </div>
-              <div class="d-flex justify-content-end">
-                <button type="reset" class="btn btn-light btn-active-light-primary fw-bold me-2 px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Reset</button>
-                <button type="submit" class="btn btn-primary fw-bold px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="filter">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="d-flex justify-content-end align-items-center d-none" data-kt-user-table-toolbar="selected">
-          <div class="fw-bolder me-5"> <span class="me-2" data-kt-user-table-select="selected_count"></span>Selected </div>
-          <button type="button" class="btn btn-danger" data-kt-user-table-select="delete_selected">Delete Selected</button>
-        </div>
-      </div>
+    <div class="ot-head-actions">
+        <button class="ot-btn" onclick="exportOffers()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+            Export
+        </button>
+        <button class="ot-btn ot-btn-more">
+            More Actions
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
     </div>
-  </div>
 </div>
-<!--end::Toolbar-->
-<!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-0" id="kt_content">
-  <div class="post d-flex flex-column-fluid" id="kt_post">
-    <div id="kt_content_container" class="container-fluid px-3">
-        
-        <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                  <div class="col-lg-4 d-flex align-items-center px-2" style="width:60%;position: relative;">
-                     <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_2" />
-                     <div style="position: absolute; top: 0px; right: 36px;">
-                      <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                   </div>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 25%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter"  data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                        <option value="Show All" selected="">Sort</option>
-                        <option value="10">Newest to Oldest (Offer Date)</option>
-                        <option value="11">Oldest to Newest (Offer Date)</option>
-                         <option value="12">Newest to Oldest (Join Date)</option>
-                        <option value="13">Oldest to Newest (Join Date)</option>
-                        <option value="14">Low to High (Offer Amount)</option>
-                        <option value="15">High to Low (Offer Amount)</option>
-                     </select>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country"  data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                        <option value="" selected="selected">Location</option>
-                        @if(@$countries)
-                            @foreach($countries as $val_co)
-                            <option value="{{ $val_co->id }}">{{ $val_co->country_name }}</option>
-                            @endforeach
-                        @endif
-                        
-                     </select>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                     <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                        <span class="svg-icon svg-icon-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                           </svg>
-                        </span>
-                        Filter
-                     </button>
-                  </div>
-        </div>
-        
-      <div class="card">
-        <div class="card-body pt-3 px-5"> @if(in_array("view_offer", $userPermissions))
-          <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
-          <table class="table align-middle table-row-dashed fs-6 gy-5" id="myTable">
-            <thead>
-              <tr class="fw-bolder text-muted">
-                <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                    <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input-joi" value="1" />
-                  </div></th>
-                <th class="">Name</th>
-                <th class="">Jobs</th>
-                <th class="">Status</th>
-                <th class="">Source</th>
-                <th class="">Offer Amount</th>
-                <th class="">Joining</th>
-                <th class="">Offer Status</th>
-                <th class="">Stage</th>
-              </tr>
-            </thead>
-            <tbody class="text-gray-600 fw-bold" id="offer-tracker">
-            </tbody>
-          </table>
-          <div id="pagination"></div>
-          @else
-          <table id="no-access" class="table align-middle table-row-dashed fs-6 gy-5" >
-            <thead>
-              <tr class="fw-bolder text-muted">
-                <th class=""><div align="center">ACCESS DENIED CONTACT ADMINISTRATOR</div></th>
-              </tr>
-            </thead>
-          </table>
-          @endif </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!--begin::Modal - Stage and sub stage-->
+    </div>{{-- /kt_toolbar_container --}}
+</div>{{-- /kt_toolbar --}}
 
-    <!--begin::Fwd Resume - Modal-->
-    <div class="modal fade" id="fwd_offer" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-          <div class="modal-header flex-stack">
-            <h2 id="titleSet"></h2>
-            <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
-              <span class="svg-icon svg-icon-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-              </svg>
-              </span>
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="post d-flex flex-column-fluid" id="kt_post">
+<div class="container-fluid px-0">
+
+{{-- ── KPI Stats (server-rendered) ── --}}
+@php
+    $statCards = [
+        [
+            'label'  => 'Total Offers',
+            'key'    => 'total',
+            'icon'   => 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z',
+            'bg'     => '#ede9fe', 'ic' => '#7c3aed',
+            'delta'  => 'All offers tracked', 'delta_type' => 'info',
+            'delta_ico' => null,
+        ],
+        [
+            'label'  => 'Pending Offers',
+            'key'    => 'pending',
+            'icon'   => 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
+            'bg'     => '#fef3c7', 'ic' => '#d97706',
+            'delta'  => 'Awaiting action', 'delta_type' => 'warn',
+            'delta_ico' => 'up',
+        ],
+        [
+            'label'  => 'Offer Released',
+            'key'    => 'sent',
+            'icon'   => 'M6 12L3.269 3.126A59.768 59.768 0 0 1 21.485 12 59.77 59.77 0 0 1 3.27 20.876L5.999 12zm0 0h7.5',
+            'bg'     => '#dbeafe', 'ic' => '#2563eb',
+            'delta'  => 'Emailed to Candidate', 'delta_type' => 'up',
+            'delta_ico' => 'up',
+        ],
+        [
+            'label'  => 'Expired',
+            'key'    => 'expired',
+            'icon'   => 'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z',
+            'bg'     => '#fee2e2', 'ic' => '#dc2626',
+            'delta'  => 'Need renewal', 'delta_type' => 'down',
+            'delta_ico' => 'down',
+        ],
+        [
+            'label'  => 'Joining Soon',
+            'key'    => 'joining_soon',
+            'icon'   => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5',
+            'bg'     => '#cffafe', 'ic' => '#0891b2',
+            'delta'  => 'Next 7 days', 'delta_type' => 'info',
+            'delta_ico' => null,
+        ],
+    ];
+@endphp
+<div class="ot-stats-grid">
+    @foreach($statCards as $card)
+    <div class="ot-stat-card">
+        <div class="ot-stat-icon" style="background:{{ $card['bg'] }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $card['icon'] }}"/></svg>
+        </div>
+        <div class="ot-stat-body">
+            <p class="ot-stat-label">{{ $card['label'] }}</p>
+            <p class="ot-stat-value" data-kpi="{{ $card['key'] }}">{{ $offerStats[$card['key']] ?? 0 }}</p>
+            <div class="ot-stat-delta {{ $card['delta_type'] }}">
+                @if($card['delta_ico'] === 'up')
+                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+                @elseif($card['delta_ico'] === 'down')
+                    <svg class="ot-delta-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l8-8h-5V4H9v8H4z"/></svg>
+                @endif
+                <span>{{ $card['delta'] }}</span>
             </div>
-          </div>
-          <div class="card-body position-relative px-0 py-0" id="application_fwd_offer_body_content"></div>
         </div>
-      </div>
     </div>
-    <!--end::Fwd Resume - Modal-->
+    @endforeach
+</div>
 
-        <!--begin::Stage sub stage popup-->
-    <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Stage and sub stage</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"
-                        id="stage_sub_stage_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
-                    </div>
+{{-- ── Pipeline (server-rendered) ── --}}
+<div class="ot-pipeline-wrap">
+    <div class="ot-pipeline-head">
+        <h5>Offers Pipeline</h5>
+        <select class="ot-pipeline-range" id="ot_pipeline_range">
+            <option value="current">This Month</option>
+            <option value="6m">Last 6 Months</option>
+            <option value="all">All Time</option>
+        </select>
+    </div>
+    <div class="ot-pipeline-rail">
+        <div class="ot-pipeline-flow">
+            @foreach($offerPipeline as $p)
+            <div class="ot-pipe-card-v2" data-pipe="{{ $p['key'] ?? '' }}" style="background:{{ $p['icon_bg'] ?? '#f8fafc' }}">
+                <div class="ot-pipe-head-row">
+                    <span class="ot-pipe-icon-sm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="{{ $p['icon_clr'] ?? $p['color'] }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="{{ $p['icon'] ?? '' }}"/>
+                        </svg>
+                    </span>
+                    <span class="ot-pipe-lbl" style="color:{{ $p['color'] }}">{{ $p['label'] }}</span>
                 </div>
-                <div class="stage_body_content" id="stage_body_content"></div>
+                @if(isset($p['sub']))
+                    {{-- Ratio card: percentage (top-left) and the fraction (top-right) --}}
+                    <div class="ot-pipe-data-row">
+                        <span class="ot-pipe-big">{{ $p['pct'] }}%</span>
+                        <span class="ot-pipe-sub-v2">{{ $p['sub'] }}</span>
+                    </div>
+                @else
+                    {{-- All other stages: count (top-left) and percentage (top-right) --}}
+                    <div class="ot-pipe-data-row">
+                        <span class="ot-pipe-big">{{ $p['count'] }}</span>
+                        <span class="ot-pipe-pct-v2">{{ $p['pct'] }}%</span>
+                    </div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+{{-- ── Table card ── --}}
+<div class="ot-card">
+    {{-- Search + Location filter --}}
+    <div class="ot-filter-bar">
+        <div class="ot-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" class="ot-search-input" id="ot_search" placeholder="Search by candidate name, job or offer ID..." />
+        </div>
+        <select class="ot-location-select" id="ot_country">
+            <option value="">All Locations</option>
+            @foreach($countries as $c)
+            <option value="{{ $c->id }}">{{ $c->country_name }}</option>
+            @endforeach
+        </select>
+        <div class="ot-sort-bar">
+            <span class="ot-sort-label">Sort by:</span>
+            <select class="ot-sort-select" id="ot_sort">
+                <option value="">Latest Updated</option>
+                <option value="10">Newest (Offer Date)</option>
+                <option value="11">Oldest (Offer Date)</option>
+                <option value="12">Newest (Join Date)</option>
+                <option value="13">Oldest (Join Date)</option>
+                <option value="14">Low → High (Amount)</option>
+                <option value="15">High → Low (Amount)</option>
+            </select>
+        </div>
+    </div>
+
+    {{-- Tabs + Sort --}}
+    <div class="ot-tabs-bar">
+        <div class="ot-tabs" id="ot_tabs">
+            <div class="ot-tab active" data-filter="all">All <span class="ot-tab-badge" id="tab_total">—</span></div>
+            <div class="ot-tab" data-filter="pending">Pending <span class="ot-tab-badge" id="tab_pending">—</span></div>
+            <div class="ot-tab" data-filter="sent">Offer Released <span class="ot-tab-badge" id="tab_sent">—</span></div>
+            <div class="ot-tab" data-filter="accepted">Accepted <span class="ot-tab-badge" id="tab_accepted">—</span></div>
+            <div class="ot-tab" data-filter="joining_soon">Joining Soon <span class="ot-tab-badge" id="tab_joining">—</span></div>
+            <div class="ot-tab" data-filter="expired">Expired <span class="ot-tab-badge" id="tab_expired">—</span></div>
+        </div>
+        <div class="ot-sort-bar">
+            <div class="ot-view-btns">
+                <button class="ot-view-btn active" title="List">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <button class="ot-view-btn" title="Grid">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </button>
             </div>
         </div>
     </div>
-    <!--end::Stage sub stage popup-->
+
+    {{-- Table --}}
+    @if(in_array('view_offer', $userPermissions))
+    <div style="overflow-x:auto;">
+        <table class="ot-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Job</th>
+                    <th>Job Status, ID &amp; Client</th>
+                    <th class="ot-th-sort" data-asc="14" data-desc="15">Compensation <span class="ot-sort-ico">⇵</span></th>
+                    <th class="ot-th-sort" data-asc="11" data-desc="10">Offer Status <span class="ot-sort-ico">⇵</span></th>
+                    <th class="ot-th-sort" data-asc="13" data-desc="12">Joining <span class="ot-sort-ico">⇵</span></th>
+                    <th style="text-align:center;">Stage</th>
+                </tr>
+            </thead>
+            <tbody id="offer-tracker">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                    <img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Footer: pagination view already includes "Showing X to Y" info --}}
+    <div id="ot_pagination"></div>
+    <div class="ot-table-footer" style="border-top:none;padding-top:8px;">
+        <div></div>
+        <div></div>
+        <div class="ot-rows-per">
+            Rows per page:
+            <select class="ot-rows-select" id="ot_size">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+    @else
+    <div style="padding:40px;text-align:center;color:#ef4444;font-size:13px;font-weight:600;">
+        ACCESS DENIED — Contact your administrator
+    </div>
+    @endif
+</div>
+
+{{-- Add Approver — right-side drawer (replaces #fwd_offer modal) --}}
+<style>
+/* Force the approver drawer above every other layer on this page
+   (Metronic default drawer z-index is 105; create-offer drawer is also ~105;
+   modal backdrops are 1050 in BS4. Using 1055 puts us safely above all of them.) */
+#kt_fwd_offer_drawer {
+    position: fixed !important;
+    top: 0; right: 0; bottom: 0;
+    width: 700px !important;
+    z-index: 1055 !important;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,.12);
+}
+#kt_fwd_offer_drawer.drawer-on {
+    transform: translateX(0) !important;
+}
+#kt_fwd_offer_overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1054;
+}
+#kt_fwd_offer_overlay.active { display: block; }
+/* Keep the body content area a fixed block so absolute-positioned inner pickers
+   don't expand it and create empty space below the form. */
+#application_fwd_offer_body_content {
+    overflow: hidden !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+}
+</style>
+
+<div id="kt_fwd_offer_overlay"></div>
+<div id="kt_fwd_offer_drawer" class="bg-body">
+    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column" style="border-radius:0;">
+        <div class="card-header px-5 py-3 d-flex align-items-center justify-content-between flex-shrink-0" style="border-bottom:1px solid #e4e6ef; min-height:56px;">
+            <h3 class="fw-bold text-dark mb-0 fs-5" id="titleSet">Add Approver</h3>
+            <button type="button" id="kt_fwd_offer_close" class="btn btn-sm btn-icon btn-active-light-danger">
+                <span class="svg-icon svg-icon-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
+                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
+                    </svg>
+                </span>
+            </button>
+        </div>
+        <div id="application_fwd_offer_body_content" class="flex-grow-1 overflow-auto position-relative px-0 py-0"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header flex-stack">
+                <h2>Stage and sub stage</h2>
+                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="stage_sub_stage_close">
+                    <span class="svg-icon svg-icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
+                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div class="stage_body_content" id="stage_body_content"></div>
+        </div>
+    </div>
+</div>
+
+</div>{{-- /container-fluid --}}
+</div>{{-- /kt_post --}}
+</div>{{-- /kt_content --}}
 
 @endsection
 
 @push('footer-script')
-<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 <script>
-    // var input2 = document.querySelector("#kt_tagify_2");
-    // new Tagify(input2);
-</script>
-<script type="text/javascript">
+(function () {
+    'use strict';
 
-$(document).ready(function() {
-	$('#kt_tagify_2').keyup(function() {
-		// tableLoad('filter');    
-    fetchCandidates(); 
-	}); 
-});
+    /* ── state ── */
+    var state = {
+        page    : 1,
+        size    : 10,
+        search  : '',
+        country : '',
+        sort    : '',
+        tab     : 'all',
+        pipelineRange : 'current',
+    };
 
-	
-	  
-        var table;
-        // tableLoad('load');
- function filtersdataget(){
-        		// tableLoad('load');	
-            fetchCandidates(); 
-        	}
-        function tableLoad() 
-			{
-          var   inputSearch 		=	$('#inputSearch').val();
-          var sortingfilter          			= $('#sortingfilter').val();
-          var country          			= $('#country').val();
-          var cus_search          			= $('#kt_tagify_2').val();
-            	table = $('#myTable').dataTable({
-                          serverSide: true, // Enable server-side processing
-													responsive     	:	true, 
-													processing      :	true,
-													ordering		:	false, //disable ordering      			
-													destroy       	:	true,   
-													stateSave     	:	true,      
-													"bLengthChange" :	false,   
-													sDom			:	'lrtip',   
-													// ajax			:	{'url' : '{!! route('service_company.offer.data') !!}', "data" : function ( d ) { d.search = $('#inputSearch').val() } },
-                          ajax			:	{'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data" : function ( d ) { d.search = $('#inputSearch').val(),d.status_cus = 5,d.sortingfilter = sortingfilter,d.country = country,d.cus_search = cus_search } },
-													"fnDrawCallback": function (oSettings) {
-												
-																							var total_record	=	this.fnSettings().fnRecordsTotal();
-																							$('#total_record').html(total_record);
-																							$("body").tooltip({
-																								selector: '[data-toggle="tooltip"]'
-																							});
-                													},
-													columns			: [
-																		{data: 'chkbox', name: 'chkbox', orderable: false, searchable: false},
-																		{data: 'Name', name: 'Name',  orderable: false, searchable: false, width: '15%'},		
-																		{data: 'Requisitions', name: 'Requisitions',  orderable: false, searchable: false, width: '5%'},
-																		{data: 'Status', name: 'Status',width: '10%', searchable : false, orderable: false},
-																		
-																		
-																		{data: 'Source', name: 'Source',  orderable: false, searchable: false, width: '10%'},
-																		{data: 'OfferAmount', name: 'OfferAmount',  orderable: false, searchable: false, width: '5%'},
-																		{data: 'JoiningDate', name: 'JoiningDate',  orderable: false, searchable: false, width: '10%'},
-																		{data: 'OfferStatus', name: 'OfferStatus',  orderable: false, searchable: false, width: '5%'},
-																		{data: 'Stage', name: 'Stage',  orderable: false, searchable: false, width: '10%'}										
-																		
-																]
-            });
-            // new $.fn.dataTable.FixedHeader(table);
-        }
+    /* ── URLs ── */
+    var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
 
+    /* ── fetch table ── */
+    function fetchTable(resetPage) {
+        if (resetPage) state.page = 1;
+        var loader = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
+        document.getElementById('offer-tracker').innerHTML = loader;
 
-        $(document).on('click', '.master_status_div', function(e) {
-
-            e.preventDefault();
-
-            var id = $(this).data('master-status-id');
-            $("#master_status_" + id).attr('checked', true);
-            $('#main_substage').show();
-            $('#comment_div').show();
-
-            $("#inreview").attr('checked', false);
-            $("#sourcing").attr('checked', false);
-            $("#screening").attr('checked', false);
-            $("#evaluation").attr('checked', false);
-            $("#negotation").attr('checked', false);
-            $("#offer").attr('checked', false);
-            $("#joined").attr('checked', false);
-            $("#rejected").attr('checked', false);
-
-            if (id == 1) {
-                $("#sourcing").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('sourcing-bg');
-            } else if (id == 2) {
-                $("#screening").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('screening-bg');
-            } else if (id == 3) {
-                $("#evaluation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('interview');
-            } else if (id == 4) {
-                $("#negotation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-negotation');
-            } else if (id == 5) {
-                $("#offer").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-offer');
-            } else if (id == 6) {
-                $("#joined").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-joined');
-            } else if (id == 7) {
-                $("#rejected").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-rejected');
-                // $('#main_substage').hide();	
-                $('#comment_div').show();
-            } else if (id == 8) {
-                $("#inreview").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('bg-light-warning text-warning');
-                $('#main_substage').hide();
+        $.ajax({
+            url  : URL_CANDIDATES + '?page=' + state.page,
+            type : 'GET',
+            data : {
+                status_cus       : 5,
+                size             : state.size,
+                cus_search       : state.search,
+                country          : state.country,
+                sortingfilter    : state.sort,
+                offer_tab_filter : state.tab,
+                pipeline_range   : state.pipelineRange,
+            },
+            success: function (resp) {
+                document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
+                document.getElementById('ot_pagination').innerHTML  = resp.pagination || '';
+                if (resp.counts) updateOfferCounts(resp.counts, resp.pipelineCounts);
+            },
+            error: function () {
+                document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
             }
+        });
+    }
 
-            if (id > 0 && (id != 8)) {
+    /* ── Sync tab badges + KPI cards + pipeline from the Elasticsearch counts ──
+       Every number comes from the same aggregation that backs the table, so the
+       badges/hero/pipeline always match the actual filtered result set. */
+    function updateOfferCounts(c, p) {
+        if (!c) return;
+        var n = function (v) { return (v != null ? v : 0); };
 
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var url = "{{ route('service_company.job-applications.child_stage', ':id') }}";
-                url = url.replace(':id', id);
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    contentType: false,
-                    cache: false,
-                    processData: false,
-                    beforeSend: function() {
-                        $('#substage').html('<img src="' + baseurl + '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (response.html == '') {
-                                $('#main_substage').hide();
-                            }
-                            $('#substage').html('');
-                            $('#substage').html(response.html);
-                        }
-                    }
-                });
-
-            }
-
-            e.run();
-
+        /* Tab badges — from the full table result set */
+        var badges = {
+            tab_total: c.total, tab_pending: c.pending, tab_sent: c.sent,
+            tab_accepted: c.accepted, tab_joining: c.joining_soon, tab_expired: c.expired
+        };
+        Object.keys(badges).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = n(badges[id]);
         });
 
-		
-    $(document).on('change', '.option_currency', function () 
-			{						
-				var option_case					=	'OFFER_CURRENCY';
-				var option_currency_id 			= $(this).data('id');
-        var offerId 			= $(this).data('offerid');
-				var option_currency_val 		= $(this).val();													
-				var url 						= '{!! route('service_company.applicationoffer.update_salary') !!}';				
-				//url 							= 	url.replace(':id', id);
-        var currency			= $("#option_currency_"+option_currency_id).val();
-				var offer_amount		= $("#offer_amount_"+option_currency_id).val();
-				var joining_date		= $("#joining_date_"+option_currency_id).val();
-				var salarymode 			= $("#option_salarymode"+option_currency_id).val();
-				var token 						= '{{ csrf_token() }}';
-				var baseurl     				= "{{ asset('assets/images/Loading2.gif') }}"; 
-				 
-				$.ajax({
-							type	: 'POST',
-							 beforeSend: function() {
-                                  						//$('#option_currency_'+option_currency_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-                    		},
-							url		: url,
-							data	: {'_token': token, '_method': 'POST', 'option_currency_id' : option_currency_id, 'option_currency_val' : option_currency_val, 'option_case':option_case, 'offerId':offerId,'currency':currency,'offer_amount':offer_amount,'joining_date':joining_date,'salarymode':salarymode },
-							success	: function (response) {
-																if (response.status == "success") {
-																		//$('#right-sidebar-content').html(response.view);
-																}
-														  }
-				});									
-        });
-		
-    $(document).on('change', '.option_salarymode', function () 
-			{						
-				var option_case					=	'OFFER_SALARY_MODE';
-				var option_currency_id 			= $(this).data('id');
-				var option_currency_val 		= $(this).val();		
-        var offerId 			= $(this).data('offerid');											
-				var url 						= '{!! route('service_company.applicationoffer.update_salary') !!}';				
-				//url 							= 	url.replace(':id', id);
-        var currency			= $("#option_currency_"+option_currency_id).val();
-				var offer_amount		= $("#offer_amount_"+option_currency_id).val();
-				var joining_date		= $("#joining_date_"+option_currency_id).val();
-				var salarymode 			= $("#option_salarymode"+option_currency_id).val();
-				var token 						= '{{ csrf_token() }}';
-				$.ajax({
-							type	: 'POST',
-							url		: url,
-							data	: {'_token': token, '_method': 'POST', 'option_currency_id' : option_currency_id, 'option_currency_val' : option_currency_val, 'option_case':option_case, 'offerId':offerId,'currency':currency,'offer_amount':offer_amount,'joining_date':joining_date,'salarymode':salarymode },
-							success	: function (response) {
-																if (response.status == "success") {
-																		//$('#right-sidebar-content').html(response.view);
-																}
-														  }
-				});									
-        }); 
-		
-    $(document).on('change', '.offer_amount', function () 
-			{						
-				var option_case					=	'OFFER_AMOUNT';
-				var option_currency_id 			= $(this).data('id');
-        var offerId 			= $(this).data('offerid');
-				var option_currency_val 		= $(this).val();													
-				var url 						= '{!! route('service_company.applicationoffer.update_salary') !!}';				
-				//url 							= 	url.replace(':id', id);
-        var currency			= $("#option_currency_"+option_currency_id).val();
-				var offer_amount		= $("#offer_amount_"+option_currency_id).val();
-				var joining_date		= $("#joining_date_"+option_currency_id).val();
-				var salarymode 			= $("#option_salarymode"+option_currency_id).val();
-				var token 						= '{{ csrf_token() }}';
-				$.ajax({
-							type	: 'POST',
-							url		: url,
-							data	: {'_token': token, '_method': 'POST', 'option_currency_id' : option_currency_id, 'option_currency_val' : option_currency_val, 'option_case':option_case, 'offerId':offerId,'currency':currency,'offer_amount':offer_amount,'joining_date':joining_date,'salarymode':salarymode },
-							success	: function (response) {
-																if (response.status == "success") {
-																		//$('#right-sidebar-content').html(response.view);
-																}
-														  }
-				});									
-        }); 
-
-
-        $(document).on('click', '.stage_sub_stage', function() {
-
-            $('#stage_body_content').html('');
-            var id = $(this).data('row-id');
-            var url = "{{ route('service_company.job-applications.stage_body_content', ':id') }}";
-            url = url.replace(':id', id);
-            $.ajax({
-                type: 'GET',
-                url: url,
-                success: function(response) {
-                    if (response.status == "success") {
-                        $('#stage_body_content').html('');
-                        $('#stage_body_content').html(response.view);
-                    }
-                }
-            });
-
+        /* KPI stat cards (data-kpi) — from the full table result set */
+        var kpi = {
+            total: c.total, pending: c.pending, sent: c.sent,
+            expired: c.expired, joining_soon: c.joining_soon
+        };
+        document.querySelectorAll('[data-kpi]').forEach(function (el) {
+            var k = el.getAttribute('data-kpi');
+            if (kpi[k] != null) el.textContent = kpi[k];
         });
 
-        $(document).on('click', '#custom_stage_submit', function(e) {
+        /* Pipeline arrows (data-pipe) — driven by the date-windowed counts
+           (dropdown: this month / last 6 months / all time); falls back to
+           the full counts if the server didn't return a windowed set. */
+        var pc = p || c;
+        var ptotal = +pc.total || 0;
+        var pctOf = function (v) { return ptotal > 0 ? Math.round((v / ptotal) * 100) : 0; };
+        var ratio = pctOf(n(pc.joined));
+        var pipe = {
+            total:    { count: ptotal,        pct: 100 },
+            sent:     { count: n(pc.sent),    pct: pctOf(n(pc.sent)) },
+            accepted: { count: n(pc.accepted),pct: pctOf(n(pc.accepted)) },
+            rejected: { count: n(pc.rejected),pct: pctOf(n(pc.rejected)) },
+            joined:   { count: n(pc.joined),  pct: ratio },
+            ratio:    { count: ratio + '%',   pct: ratio, sub: n(pc.joined) + '/' + ptotal }
+        };
+        document.querySelectorAll('[data-pipe]').forEach(function (card) {
+            var d = pipe[card.getAttribute('data-pipe')];
+            if (!d) return;
+            var big = card.querySelector('.ot-pipe-big');
+            var pctEl = card.querySelector('.ot-pipe-pct-v2');
+            var subEl = card.querySelector('.ot-pipe-sub-v2');
+            if (big)   big.textContent = d.count;
+            if (pctEl) pctEl.textContent = d.pct + '%';
+            if (subEl) subEl.textContent = d.sub || '';
+        });
+    }
 
-                e.preventDefault();
+    /* ── events ── */
+    /* search (debounced) */
+    var searchTimer;
+    document.getElementById('ot_search').addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        var val = this.value;
+        searchTimer = setTimeout(function () {
+            state.search = val;
+            fetchTable(true);
+        }, 380);
+    });
 
-                var master_status = $('input[name="master_status"]:checked').val();
-                var comment = $('#comment').val();
-                if (master_status == 8 && comment=='') {
-                    Swal.fire("Warning", 'InReview Comment Required !', "info");
-                } else {
-                    $("#custom_stage_submit").prop("disabled", true);
-                    $("#custom_stage_submit").html(
-                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                        );
+    document.getElementById('ot_country').addEventListener('change', function () {
+        state.country = this.value;
+        fetchTable(true);
+    });
 
-                    $.ajax({
-                        url: '{{ route('service_company.job-applications.stage_submit') }}',
-                        container: '#status_frm',
-                        type: "POST",
-                        data: $('#status_frm').serialize(),
-                        success: function(response) {
-                            $("#custom_stage_submit").prop("disabled", false);
-                            $("#custom_stage_submit").html(
-                                `<span class="indicator-label">Submit</span>`);
-                            if (response.status == 'success') {
-                                Swal.fire("Success", 'Application stage update successfully !',
-                                    "success").then(function() {
-                                    // $('#stage_sub_stage').modal('hide');
-                                    $("#stage_sub_stage_close").click();
-                                });
-                                var page = $('#paginationcandidate .active_disabled').data('page');
-                                fetchCandidates(page);
-                                //  	var table;
-                                // 				tableLoad('load');
-                                // table._fnDraw();
-                                load_interviewSchedule();
-                            } else if (response.status == 'cvpending') {
-                                Swal.fire("Warning", 'Resume pending this job application.',
-                                    "warning").then(function() {
-                                    $("#stage_sub_stage_close").click();
-                                });
-                            } else if (response.status == 'candidatevalidation') {
-                                Swal.fire("Warning", response.message, "warning").then(
-                                function() {
-                                    $("#stage_sub_stage_close").click();
-                                });
-                            }
-                        }
-                    })
+    document.getElementById('ot_sort').addEventListener('change', function () {
+        state.sort = this.value;
+        clearHeaderSort();          /* dropdown wins → drop any column indicator */
+        fetchTable(true);
+    });
+
+    /* ── Column-header sorting (kept in sync with the Sort-by dropdown) ──
+       Each sortable <th> carries the backend sort codes for asc/desc; clicking
+       toggles direction, mirrors the value into #ot_sort, and refetches. */
+    function clearHeaderSort() {
+        document.querySelectorAll('.ot-th-sort').forEach(function (th) {
+            th.classList.remove('active');
+            var ico = th.querySelector('.ot-sort-ico');
+            if (ico) ico.textContent = '⇵';
+        });
+    }
+    document.querySelectorAll('.ot-th-sort').forEach(function (th) {
+        th.addEventListener('click', function () {
+            var asc  = this.dataset.asc;
+            var desc = this.dataset.desc;
+            var goAsc = this.dataset.dir !== 'asc';   /* toggle; default → asc first */
+            clearHeaderSort();
+            this.dataset.dir = goAsc ? 'asc' : 'desc';
+            this.classList.add('active');
+            var ico = this.querySelector('.ot-sort-ico');
+            if (ico) ico.textContent = goAsc ? '↑' : '↓';
+            state.sort = goAsc ? asc : desc;
+            var sel = document.getElementById('ot_sort');
+            if (sel) sel.value = state.sort;          /* keep dropdown reflecting the header */
+            fetchTable(true);
+        });
+    });
+
+    document.getElementById('ot_size').addEventListener('change', function () {
+        state.size = parseInt(this.value, 10);
+        fetchTable(true);
+    });
+
+    /* Offers Pipeline date window (this month / last 6 months / all time) */
+    var pipeRangeEl = document.getElementById('ot_pipeline_range');
+    if (pipeRangeEl) {
+        pipeRangeEl.addEventListener('change', function () {
+            state.pipelineRange = this.value;
+            fetchTable(false);   /* only the pipeline counts change; keep the current page */
+        });
+    }
+
+    /* tab clicks */
+    document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (t) { t.classList.remove('active'); });
+            this.classList.add('active');
+            state.tab = this.dataset.filter;
+            fetchTable(true);
+        });
+    });
+
+    /* pagination (delegated) */
+    document.getElementById('ot_pagination').addEventListener('click', function (e) {
+        var link = e.target.closest('.page-link');
+        if (!link || link.classList.contains('disabled')) return;
+        e.preventDefault();
+        var pg = parseInt(link.dataset.page, 10);
+        if (!pg) return;
+        state.page = pg;
+        fetchTable(false);
+    });
+
+    /* Stage sub-stage */
+    $(document).on('click', '.stage_sub_stage', function () {
+        $('#stage_body_content').html('');
+        var id  = $(this).data('row-id');
+        var url = '{{ route('service_company.job-applications.stage_body_content', ':id') }}'.replace(':id', id);
+        $.ajax({ type:'GET', url:url, success:function(r){ if(r.status=='success') $('#stage_body_content').html(r.view); } });
+    });
+
+    $(document).on('click', '#custom_stage_submit', function (e) {
+        e.preventDefault();
+        var ms = $('input[name="master_status"]:checked').val();
+        var cm = $('#comment').val();
+        if (ms == 8 && !cm) { Swal.fire("Warning",'InReview Comment Required!',"info"); return; }
+        $(this).prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
+        $.ajax({
+            url:'{{ route('service_company.job-applications.stage_submit') }}', type:'POST',
+            data: $('#status_frm').serialize(),
+            success:function(r){
+                $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label">Submit</span>');
+                if(r.status=='success'){
+                    Swal.fire("Success",'Stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
+                    fetchTable(false);
                 }
-
-
-            });
-		
-    $(document).on('change', '.joining_date', function () 
-			{						
-				var option_case					=	'OFFER_JOINING_DATE';
-				var option_currency_id 			=	$(this).data('id');
-        var offerId 			= $(this).data('offerid');
-				var option_currency_val 		=	$(this).val();													
-				var url 						=	'{!! route('service_company.applicationoffer.update_salary') !!}';				
-				//url 							= 	url.replace(':id', id);
-        var currency			= $("#option_currency_"+option_currency_id).val();
-				var offer_amount		= $("#offer_amount_"+option_currency_id).val();
-				var joining_date		= $("#joining_date_"+option_currency_id).val();
-				var salarymode 			= $("#option_salarymode"+option_currency_id).val();
-				var token 						=	'{{ csrf_token() }}';
-				$.ajax({
-							type	: 'POST',
-							url		: url,
-							data	: {'_token': token, '_method': 'POST', 'option_currency_id' : option_currency_id, 'option_currency_val' : option_currency_val, 'option_case':option_case, 'offerId':offerId,'currency':currency,'offer_amount':offer_amount,'joining_date':joining_date,'salarymode':salarymode },
-							success	: function (response) {
-																if (response.status == "success") {
-																		//$('#right-sidebar-content').html(response.view);
-																}
-														  }
-				});									
-      });
-
-
-
-      $(document).on('click','.fwd_offer', function(e){
-       // $('.fwd_resume').click(function(e){
-						
-            e.preventDefault();	
-
-            localStorage.setItem('toggleOpen', 'true');
-            $('#application_mass_mail_body_content').html('');
-            $('#application_fwd_offer_body_content').html('');
-            var jobId = $(this).attr('data-jobId');
-            var candidate = $(this).attr('data-candidate');
-            var mtype = $(this).attr('data-mtype');
-            var offerId = $(this).attr('data-offerId');
-            var arr 		=	[candidate];
-            var jobIdArr = [jobId];
-            // $('.chk_list_item:checked').each(function () {
-                
-            //     var jobId = $(this).attr('data-jobId');
-            //     arr.push($(this).val());
-            //     jobIdArr.push(jobId);
-            // });
-
-            // console.log(jobIdArr);
-
-            var id        	=	jobIdArr[0];
-            var url       	=	"{{ route('service_company.cvtracker.offer_send_mail',':id') }}";
-            url         	=	url.replace(':id', id);
-            var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-            var token       =	"{{ csrf_token() }}";
-          
-           
-            $.ajax({
-                    type		: 'POST',
-                    url			: url,
-                    data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr,'mtype':mtype,'offerId':offerId},
-                    cache		: false,
-                    success 	: function (response) {
-                                        if (response.status == "success") {
-                                            $('#titleSet').text(response.title)
-                                            $('#application_fwd_offer_body_content').html(response.view);
-                                        }
-                            }
-              });
-                  
-      });
-
-
-      $(document).ready(function() {
-            // $.noConflict();
-
-            fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
-                e.preventDefault();
-
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
-            });
-
-      });
-
-
-      function fetchCandidates(page = 1, search = '') {
-          var   inputSearch 		=	$('#inputSearch').val();
-          var sortingfilter          			= $('#sortingfilter').val();
-          var country          			= $('#country').val();
-          var cus_search          			= $('#kt_tagify_2').val();
-          if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
             }
-            // $('.page-loader').css('display', 'flex');
-            $.ajax({
-                url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                  status_cus : 5,
-                  search : $('#inputSearch').val(),
-                  sortingfilter : sortingfilter,
-                  country : country,
-                  cus_search:cus_search
-                },
-                success: function(response) {
-                  $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#total_record').html(response.total);
-                    $('#offer-tracker').html(response.html);
-                    $('#pagination').html(response.pagination);
+        });
+    });
+
+    /* ── Add Approver drawer helpers ── */
+    function openApproverDrawer() {
+        $('#kt_fwd_offer_drawer').addClass('drawer-on');
+        $('#kt_fwd_offer_overlay').addClass('active');
+        $('body').css('overflow', 'hidden');
+    }
+    function closeApproverDrawer() {
+        $('#kt_fwd_offer_drawer').removeClass('drawer-on');
+        $('#kt_fwd_offer_overlay').removeClass('active');
+        $('body').css('overflow', '');
+    }
+    $(document).on('click', '#kt_fwd_offer_close, #kt_fwd_offer_overlay', closeApproverDrawer);
+
+    /* Fwd offer — opens as right-side drawer */
+    $(document).on('click', '.fwd_offer', function (e) {
+        e.preventDefault();
+        var jobId     = $(this).data('jobid');
+        var candidate = $(this).data('candidate');
+        var mtype     = $(this).data('mtype');
+        var offerId   = $(this).data('offerid');
+        var url = '{{ route('service_company.cvtracker.offer_send_mail', ':id') }}'.replace(':id', jobId);
+        $('#titleSet').text('Add Approver');
+        $('#application_fwd_offer_body_content').html('<div style="padding:60px;text-align:center;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="40" alt="Loading..."></div>');
+        openApproverDrawer();
+        $.ajax({
+            type:'POST', url:url,
+            data:{_token:'{{ csrf_token() }}', _method:'POST', arr:[candidate], jobIdArr:[jobId], mtype:mtype, offerId:offerId},
+            success:function(r){
+                if(r.status=='success'){
+                    $('#titleSet').text(r.title);
+                    $('#application_fwd_offer_body_content').html(r.view);
                 }
+            },
+            error: function() {
+                $('#application_fwd_offer_body_content').html('<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load. Please try again.</div>');
+            }
+        });
+    });
+
+    /* Client-job offer: show warning instead of opening create-offer drawer */
+    $(document).on('click', '.ot-client-offer-warn', function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Not Allowed',
+                text: 'This offer belongs to a client job. You cannot create or edit the offer here.',
+                confirmButtonText: 'OK',
+                buttonsStyling: false,
+                customClass: { confirmButton: 'btn btn-primary' }
             });
         }
-        
+    });
 
+    /* Export */
+    window.exportOffers = function () {
+        var prevTitle = document.title;
+        document.title = 'Offer-Tracker-' + new Date().toISOString().slice(0,10);
+        var done = function(){ document.title = prevTitle; window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        window.print();
+        setTimeout(done, 1500);
+    };
 
+    /* ── init ── */
+    fetchTable(false);
 
-
-       
-		
+})();
 </script>
-
-@endpush 
+@endpush

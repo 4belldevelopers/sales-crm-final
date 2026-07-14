@@ -148,6 +148,30 @@ END:VCALENDAR";
 		return  date("d M y", strtotime($originalDate));
 	
 	}	
+	/**
+	 * Human-friendly display label for a permission group_name on the Roles & Permissions
+	 * screens. Display-only remap agreed with the product owner — the underlying DB
+	 * group_name is unchanged, so permissions/saving are unaffected. Used by both the
+	 * main role cards and the Add/Edit role drawer so the labels never drift apart.
+	 */
+	public static function roleGroupLabel($groupName)
+	{
+		$map = [
+			'staffing partners' => 'Agencies',
+			'bench'             => 'Inhouse Talents',
+			'team'             => 'Team/Users',
+			'website'          => 'Career Website',
+			'salary break'     => 'Compensation',
+			'job applications' => 'Candidates',
+			'schedule'         => 'Interview Schedule',
+			'offer'            => 'Offers Tracker',
+			'joining'          => 'Joining Tracker',
+			'salary'           => 'Salary Details of Candidate',
+		];
+		$key = strtolower(trim($groupName));
+		return $map[$key] ?? ucwords($groupName);
+	}
+
 	public static function employmentType()
 	{
 		$array   	= array();
@@ -9472,7 +9496,13 @@ END:VCALENDAR";
 		$negotiation = $teamRankElastic['negotiation'] ?? 0;
 		$backout = $teamRankElastic['backout'] ?? 0;
 		$backoutTeam = $teamRankElastic['backoutTeam'] ?? 0;
-		
+
+		// Contract-hiring variants of the "joined"/backout events (full-time stays in the base keys).
+		$candidateJoinedContract = $teamRankElastic['candidateJoinedContract'] ?? 0;
+		$backoutContract = $teamRankElastic['backoutContract'] ?? 0;
+		$teamCaptainCandidateJoinedContract = $teamRankElastic['teamCaptainCandidateJoinedContract'] ?? 0;
+		$backoutTeamContract = $teamRankElastic['backoutTeamContract'] ?? 0;
+
 
 		$updateTime = now()->toIso8601String();
 
@@ -9497,12 +9527,16 @@ END:VCALENDAR";
 							'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
 							'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
 							'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+							'candidateJoinedContract' => $candidateJoinedContract,
+							'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
 							'sourcing' => $sourcing,
 							'screening' => $screening,
 							'evaluation' => $evaluation,
 							'negotiation' => $negotiation,
 							'backout' => $backout,
 							'backoutTeam' => $backoutTeam,
+							'backoutContract' => $backoutContract,
+							'backoutTeamContract' => $backoutTeamContract,
 							'total_points' => 0,
 							'created_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
 							'updated_at' => isset($updateTime)? date('Y-m-d H:i:s', strtotime($updateTime)) : null
@@ -9534,12 +9568,16 @@ END:VCALENDAR";
 									'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow, // -1 pts per response
 									'teamCaptainOfferReleased' => $teamCaptainOfferReleased, // +10 pts per response
 									'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined, // +20 pts per response
+									'candidateJoinedContract' => $candidateJoinedContract, // joined on a contract job
+									'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract, // team captain, contract job
 									'sourcing' => $sourcing, // +1 pts per response
 									'screening' => $screening, // +1 pts per response
 									'evaluation' => $evaluation, // +1 pts per response
 									'negotiation' => $negotiation, // +1 pts per response
-									'backout' => $backout, // join pts per response								
+									'backout' => $backout, // join pts per response
 									'backoutTeam' => $backoutTeam, // join pts per response
+									'backoutContract' => $backoutContract, // backout on a contract job
+									'backoutTeamContract' => $backoutTeamContract, // team captain backout, contract job
 									'created_at' => $updateTime,
 									'updated_at' => $updateTime
 								],
@@ -9907,7 +9945,7 @@ END:VCALENDAR";
 				}
          return  $allow;
 	}
-	public static function getTeamRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true)
+	public static function getTeamRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true, $returnFull = false)
 	{
 		$elasticService = app(ElasticService::class);
 		$userQuery = [
@@ -9976,6 +10014,10 @@ END:VCALENDAR";
 							'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 							'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 							'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+							'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+							'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+							'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+							'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 						]
 					]
 				]
@@ -10001,7 +10043,11 @@ END:VCALENDAR";
 			    + ($item['evaluation_sum']['value'] ?? 0)
 			    + ($item['negotiation_sum']['value'] ?? 0)
 			    + ($item['backout_sum']['value'] ?? 0)
-			    + ($item['backoutTeam_sum']['value'] ?? 0);
+			    + ($item['backoutTeam_sum']['value'] ?? 0)
+			    + ($item['candidateJoinedContract_sum']['value'] ?? 0)
+			    + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0)
+			    + ($item['backoutContract_sum']['value'] ?? 0)
+			    + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 			return [$item['key'] => [
 				'user_id' => $item['key'],
@@ -10019,6 +10065,10 @@ END:VCALENDAR";
 				'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 				'backout' => ($item['backout_sum']['value'] ?? 0),
 				'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+				'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+				'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+				'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+				'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 				'score' => $score
 			]];
 		});
@@ -10026,22 +10076,29 @@ END:VCALENDAR";
 		$ranked = $users->map(function ($user) use ($scoreMap,$startDate) {
 			$id = $user['id'];
 			return [
-				'id' => $id,
-				'profileUpload' => $scoreMap[$id]['profileUpload'] ?? 0,
+				'id'      => $id,
+				'name'    => $user['name'] ?? '',
+				'email'   => $user['email'] ?? '',
+				'designation' => $user['designation'] ?? '',
+				'profileUpload'   => $scoreMap[$id]['profileUpload'] ?? 0,
 				'interviewScheduled' => $scoreMap[$id]['interviewScheduled'] ?? 0,
-				'interviewNoShow' => $scoreMap[$id]['interviewNoShow'] ?? 0,
-				'offerReleased' => $scoreMap[$id]['offerReleased'] ?? 0,
-				'candidateJoined' => $scoreMap[$id]['candidateJoined'] ?? 0,
+				'interviewNoShow'    => $scoreMap[$id]['interviewNoShow'] ?? 0,
+				'offerReleased'      => $scoreMap[$id]['offerReleased'] ?? 0,
+				'candidateJoined'    => $scoreMap[$id]['candidateJoined'] ?? 0,
 				'teamCaptainInterviewScheduled' => $scoreMap[$id]['teamCaptainInterviewScheduled'] ?? 0,
-				'teamCaptainOfferReleased' => $scoreMap[$id]['teamCaptainOfferReleased'] ?? 0,
-				'teamCaptainCandidateJoined' => $scoreMap[$id]['teamCaptainCandidateJoined'] ?? 0,
-				'rankMonth' => date("M Y",strtotime($startDate)),
-				'sourcing' => $scoreMap[$id]['sourcing'] ?? 0,
-				'screening' => $scoreMap[$id]['screening'] ?? 0,
-				'evaluation' => $scoreMap[$id]['evaluation'] ?? 0,
+				'teamCaptainOfferReleased'      => $scoreMap[$id]['teamCaptainOfferReleased'] ?? 0,
+				'teamCaptainCandidateJoined'    => $scoreMap[$id]['teamCaptainCandidateJoined'] ?? 0,
+				'rankMonth' => date("M Y", strtotime($startDate)),
+				'sourcing'    => $scoreMap[$id]['sourcing'] ?? 0,
+				'screening'   => $scoreMap[$id]['screening'] ?? 0,
+				'evaluation'  => $scoreMap[$id]['evaluation'] ?? 0,
 				'negotiation' => $scoreMap[$id]['negotiation'] ?? 0,
-				'backout' => $scoreMap[$id]['backout'] ?? 0,
+				'backout'     => $scoreMap[$id]['backout'] ?? 0,
 				'backoutTeam' => $scoreMap[$id]['backoutTeam'] ?? 0,
+				'candidateJoinedContract'          => $scoreMap[$id]['candidateJoinedContract'] ?? 0,
+				'teamCaptainCandidateJoinedContract' => $scoreMap[$id]['teamCaptainCandidateJoinedContract'] ?? 0,
+				'backoutContract'     => $scoreMap[$id]['backoutContract'] ?? 0,
+				'backoutTeamContract' => $scoreMap[$id]['backoutTeamContract'] ?? 0,
 				'score' => $scoreMap[$id]['score'] ?? 0,
 			];
 		})->sortByDesc('score')->values();
@@ -10051,6 +10108,18 @@ END:VCALENDAR";
 			return $user;
 		});
 
+		if ($returnFull) {
+			$currentUser = $ranked->firstWhere('id', $loggedInUserId) ?? ['score' => 0, 'rank' => 'N/A'];
+			$leaders = $ranked->take(4);
+			if ($currentUser && !$leaders->contains('id', $loggedInUserId)) {
+				$leaders->push($currentUser);
+			}
+			return [
+				'user'    => $currentUser,
+				'leaders' => $leaders,
+				'total'   => $ranked->count(),
+			];
+		}
 
 		return $ranked->firstWhere('id', $loggedInUserId) ?? ['score' => 0, 'rank' => 'N/A'];
 	}
@@ -12507,6 +12576,230 @@ END:VCALENDAR";
 				return $recommendedDataListArr;
 
 
+	}
+
+	/**
+	 * Internal-client job counts broken down by status (active/inactive/hold).
+	 * Read-only ES aggregation for the Clients list "Jobs" column; mirrors the
+	 * Agencies design. Tenancy: scoped by comId (current company) + client_id.
+	 */
+	public static function InternalClientJobsCountAllStatus($company_id,$client_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['comId' => (int) $company_id]],
+									['term' => ['client_id' => (int) $client_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_jobs'     => ['value_count' => ['field' => 'id']],
+							'job_active'   => ['filter' => ['term' => ['status' => 'active']]],
+							'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+							'job_hold'     => ['filter' => ['term' => ['status' => 'hold']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_jobs'     => $response['aggregations']['all_jobs']['value'] ?? 0,
+					'job_active'   => $response['aggregations']['job_active']['doc_count'] ?? 0,
+					'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+					'job_hold'     => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+				];
+	}
+
+	/**
+	 * Internal-client candidate funnel for the Clients list "Performance" column
+	 * (sourced/evaluated/interviews/offers/joined). Read-only ES aggregations.
+	 * Tenancy: scoped by client_id (already company-bound). Interview count is a
+	 * best-effort term match on client_id in the interview tracker; degrades to 0.
+	 */
+	public static function InternalClientCandidatesCountList($client_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_CANDIDATES,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['client_id' => $client_id]],
+								],
+								'must_not' => [
+									['terms' => ['job_master_status_id' => [8,9]]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_candidates' => ['value_count' => ['field' => 'id']],
+							'joined'    => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+							'sourced'   => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+							'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+							'offers'    => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				$params = [
+					'index' => ELASTIC_INERTVIEW_TRACKER,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['client_id' => $client_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_interview' => ['value_count' => ['field' => 'id']],
+						]
+					]
+				];
+				$responseInterview = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
+					'Joined'         => $response['aggregations']['joined']['doc_count'] ?? 0,
+					'sourced'        => $response['aggregations']['sourced']['doc_count'] ?? 0,
+					'evaluated'      => $response['aggregations']['evaluated']['doc_count'] ?? 0,
+					'offers'         => $response['aggregations']['offers']['doc_count'] ?? 0,
+					'all_interview'  => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
+				];
+	}
+
+	/**
+	 * Direct-client job counts broken down by status (active/inactive/hold) for the
+	 * Clients list "Jobs" column. Read-only ES aggregation over the recommendation
+	 * relation (from_company_id -> to_company_id, final_status = 1).
+	 */
+	public static function DirectClientJobsCountAllStatus($from_company_id,$toCompanyId){
+
+	            $elasticService = app(ElasticService::class);
+
+				$must = [];
+				$must[] = [
+					'nested' => [
+						'path' => 'recommendation_relation',
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['recommendation_relation.to_company_id' => (int)$toCompanyId]],
+									['term' => ['recommendation_relation.from_company_id' => (int)$from_company_id]],
+									['term' => ['recommendation_relation.final_status' => (int)1]],
+								]
+							]
+						]
+					]
+				];
+
+				$params = [
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => $must
+							]
+						],
+						'aggs' => [
+							'all_jobs'     => ['value_count' => ['field' => 'id']],
+							'job_active'   => ['filter' => ['term' => ['status' => 'active']]],
+							'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+							'job_hold'     => ['filter' => ['term' => ['status' => 'hold']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_jobs'     => $response['aggregations']['all_jobs']['value'] ?? 0,
+					'job_active'   => $response['aggregations']['job_active']['doc_count'] ?? 0,
+					'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+					'job_hold'     => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+				];
+	}
+
+	/**
+	 * Direct-client candidate funnel for the Clients list "Performance" column
+	 * (sourced/evaluated/interviews/offers/joined). Read-only ES aggregations,
+	 * scoped by from_company_id/to_company_id + ClientComID + final_status = 1.
+	 */
+	public static function DirectClientCandidatesCountList($from_company_id,$to_company_id){
+
+	            $elasticService = app(ElasticService::class);
+
+				$params = [
+					'index' => ELASTIC_CANDIDATES,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['from_company_id' => $from_company_id]],
+									['term' => ['to_company_id' => $to_company_id]],
+									['term' => ['ClientComID' => $to_company_id]],
+									['term' => ['final_status' => 1]],
+								],
+								'must_not' => [
+									['terms' => ['job_master_status_id' => [8,9]]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_candidates' => ['value_count' => ['field' => 'id']],
+							'joined'    => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+							'sourced'   => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+							'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+							'offers'    => ['filter' => ['exists' => ['field' => 'of_created_date']]],
+						]
+					]
+				];
+
+				$response = $elasticService->getClient()->search($params);
+
+				$params = [
+					'index' => ELASTIC_INERTVIEW_TRACKER,
+					'body'  => [
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									['term' => ['from_company_id' => $from_company_id]],
+									['term' => ['ClientComID' => $to_company_id]],
+								]
+							]
+						],
+						'aggs' => [
+							'all_interview' => ['value_count' => ['field' => 'id']],
+						]
+					]
+				];
+				$responseInterview = $elasticService->getClient()->search($params);
+
+				return (object)[
+					'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
+					'Joined'         => $response['aggregations']['joined']['doc_count'] ?? 0,
+					'sourced'        => $response['aggregations']['sourced']['doc_count'] ?? 0,
+					'evaluated'      => $response['aggregations']['evaluated']['doc_count'] ?? 0,
+					'offers'         => $response['aggregations']['offers']['doc_count'] ?? 0,
+					'all_interview'  => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
+				];
 	}
 
 	public static function agencyJobsCount($company_id){

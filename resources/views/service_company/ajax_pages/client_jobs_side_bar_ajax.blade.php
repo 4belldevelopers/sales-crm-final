@@ -2,980 +2,323 @@
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
 
-    $salaryMode = GeneralMethod::salaryMode();
+    $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-    $job_status = GeneralMethod::job_status();
-    // dd(count($data));
+    $currency        = GeneralMethod::currency();
+    $job_status      = GeneralMethod::job_status();
+
+    // Pipeline stage definitions (label → master_status_id → CSS class)
+    $_stageMapLocal = [
+        ['label'=>'INW','id'=>8,'cls'=>'s-inw'],
+        ['label'=>'SOU','id'=>1,'cls'=>'s-sou'],
+        ['label'=>'SCR','id'=>2,'cls'=>'s-scr'],
+        ['label'=>'EVA','id'=>3,'cls'=>'s-eva'],
+        ['label'=>'NEG','id'=>4,'cls'=>'s-neg'],
+        ['label'=>'OFF','id'=>5,'cls'=>'s-off'],
+        ['label'=>'JOI','id'=>6,'cls'=>'s-joi'],
+        ['label'=>'REJ','id'=>7,'cls'=>'s-rej'],
+    ];
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
     @php
-    $row = (object) $rowArr;
-    $targetJobId = $row->id;
+        $row = (object) $rowArr;
+        $targetJobId = $row->id;
 
-    $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
-    $from_company_id = $relationget->from_company_id ?? null;
-    $recommendation_id = $relationget->to_company_id ?? null;
-    $final_status = $relationget->final_status ?? null;
-    // $match = collect($row->recommendation_relation)->first(function ($item) use ($company_id) {
-    //     return ($item['from_company_id'] ?? null) == $company_id
-    //         || ($item['to_company_id'] ?? null) == $company_id;
-    // });
-    // $from_company_id = ($match['from_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-    // $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-    
+        $relationget      = GeneralMethod::getrRcommendationRelationData($company_id, $targetJobId);
+        $from_company_id  = $relationget->from_company_id ?? null;
+        $recommendation_id = $relationget->to_company_id ?? null;
+        $final_status     = $relationget->final_status ?? null;
 
-    // $final_status = collect($row->recommendation_relation)->first(function ($item) use ($targetJobId) {
-    //     return $item['job_id'] == $targetJobId;
-    // })['final_status'] ?? null;
+        $row->final_status      = $final_status;
+        $row->recommendation_id = $recommendation_id;
+        $row->to_company_id     = $recommendation_id;
+        $row->from_company_id   = $from_company_id;
+        $row->companyidcount    = $row->comId;
+        $row->clients_name      = $row->client_name;
 
-    $row->final_status = $final_status;
-    $row->recommendation_id =$recommendation_id;
-    $row->to_company_id = $recommendation_id;
-    $row->from_company_id = $from_company_id;
-    $row->companyidcount= $row->comId;
-    $row->clients_name = $row->client_name;
+        $job_assign = $row->job_assign;
+        $jobAssign  = collect($job_assign);
 
-    
-    $job_assign = $row->job_assign;
-    $jobAssign = collect($job_assign);
+        // ── Company display name ──
+        if ($row->self_company > 0 && $row->comId == $company_id) {
+            $company_name = ucwords(mb_substr(@$row->company_name, 0, 28));
+        } elseif ($row->comId != $company_id) {
+            $company_name = ucwords(mb_substr(@$row->company_name, 0, 28));
+        } else {
+            $company_name = ucwords(mb_substr(@$row->client_company, 0, 28));
+        }
 
+        // ── Logo / avatar ──
+        $strVal = strtolower(mb_substr(trim(@$row->title), 0, 1));
+        $strOrd = ord($strVal);
+        if      ($strOrd >= 97  && $strOrd <= 101) { $bgLetterCls = 'bg-light-danger text-danger'; $logoColor = '#f64e60'; }
+        elseif  ($strOrd >= 102 && $strOrd <= 106) { $bgLetterCls = 'bg-light-warning text-warning'; $logoColor = '#ffc700'; }
+        elseif  ($strOrd >= 107 && $strOrd <= 111) { $bgLetterCls = 'bg-light-primary text-primary'; $logoColor = '#009ef7'; }
+        elseif  ($strOrd >= 112 && $strOrd <= 116) { $bgLetterCls = 'bg-light-success text-success'; $logoColor = '#50cd89'; }
+        elseif  ($strOrd >= 117 && $strOrd <= 121) { $bgLetterCls = 'bg-dark text-secondary'; $logoColor = '#3f4254'; }
+        else                                        { $bgLetterCls = 'bg-light-secondary text-dark'; $logoColor = '#a1a5b7'; }
+        $logo_path = GeneralMethod::companyDetails($row->id);
+
+        // ── Status pill ──
+        $status = ucwords($row->status);
+        if ($status == 'Active')   $status = 'Hiring';
+        if ($status == 'Inactive') $status = 'Closed';
+        $statusCls = 'active-bg';
+        if ($status == 'Closed') $statusCls = 'closed-bg';
+        elseif ($status == 'Hold') $statusCls = 'hold-bg';
+
+        // ── Internal / client tag ──
+        $recommendation_text = __('messages.clinet_tag');
+        if ($row->comId == $company_id) $recommendation_text = __('messages.internal_tag');
+        $tagCls = ($row->comId == $company_id) ? 'badge-internal' : 'badge-client';
+
+        // ── Experience ──
+        $minExp = @$row->min_exp ?? '0';
+        $maxExp = @$row->max_exp ?? '0';
+
+        // ── Salary ──
+        $min_sal_mode        = strtoupper(mb_substr($salaryMode[$row->min_sal_mode] ?? '', 0, 1));
+        $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '';
+        $max_salary_currency = $currencySymbole[@$row->max_salary_currency] ?? $min_salary_currency;
+        $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
+        $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
+
+        // ── Employment type ──
+        $employment_type = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
+
+        // ── Location ──
+        $client_city_jobs  = $row->client_city_jobs;
+        $jobCitySelected   = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
+        $locationName      = 'Remote';
+        $workTypeLabel     = 'Office';
+        if ($row->work_type == 'yes') {
+            $locationName = 'Remote';
+            $workTypeLabel = 'Remote';
+        } elseif (in_array($row->work_type, ['no', 'other'])) {
+            $firstCity     = collect($client_city_jobs)->first();
+            $locationName  = ($jobCitySelected > 1) ? 'Multiple' : ucwords(mb_substr($firstCity['city_name'] ?? 'Office', 0, 12));
+            $workTypeLabel = 'Office';
+        } elseif ($row->work_type == 'any') {
+            $firstCity     = collect($client_city_jobs)->first();
+            $locationName  = ($jobCitySelected > 1) ? 'Multiple' : ucwords(mb_substr($firstCity['city_name'] ?? 'Office', 0, 12));
+            $workTypeLabel = 'Hybrid';
+        }
+
+        // ── Hiring Manager ──
+        $hiringManager = '—';
+        $hmRole        = '';
+        if (!empty($row->client_contact_info_jobs) && count($row->client_contact_info_jobs) > 0) {
+            $hiringManager = ucwords(mb_substr($row->client_contact_info_jobs[0]['contact_person_name'] ?? '—', 0, 18));
+            $hmRole        = ucwords(mb_substr($row->client_contact_info_jobs[0]['designation'] ?? '', 0, 16));
+        }
+        if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+            $jac = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $row->comId)->filter()->values()->all();
+            if (count($jac) > 0 && $row->comId != auth()->user()->company_id) {
+                $hiringManager = ucwords(mb_substr($jac[0]['user_name'] ?? '—', 0, 18));
+                $hmRole        = ucwords(mb_substr($jac[0]['designation'] ?? '', 0, 16));
+            }
+        }
+
+        // ── Team column: first member name + total count ──
+        $teamName = '';
+        $teamCnt  = 0;
+        if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+            // Direct client job — show client-side HM name
+            $pFirst  = $jobAssign->where('company_id', $from_company_id)->where('job_id', $row->id)->first();
+            $teamCnt = $jobAssign->where('company_id', $from_company_id)->where('job_id', $row->id)->count();
+            $teamName = ucwords(mb_substr($pFirst['user_name'] ?? '', 0, 18));
+            $teamListClass = 'client-hm-listing';
+        } else {
+            // Custom client job — show own team
+            $pFirst  = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)
+                ->filter(fn($r) => $r['user_id'] == $r['spok_user_id'])
+                ->sortBy('user_name')->first();
+            $teamCnt = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)->count();
+            $teamName = ucwords(mb_substr($pFirst['user_name'] ?? '', 0, 18));
+            $teamListClass = 'hm-listing';
+        }
+
+        // ── Agency column: add-agency link + matching count ──
+        $agencyMatchCnt = 0;
+        $agencyAssigned = 0;
+        $recRel = collect($row->recommendation_relation);
+        $agencyAssigned = $recRel->where('from_company_id', $company_id)->where('job_id', $row->id)->where('from_status', 1)->count();
+        // Matching count from row field if available
+        $agencyMatchCnt = (int)(@$row->matching_agency_count ?? $agencyAssigned);
+
+        // ── URL base for pipeline links ──
+        $urlBase = '';
+        if ($custom == 'true') {
+            $urlBase = url('/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/');
+        }
+        if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
+            $urlBase = url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($row->id) . '/');
+        }
+
+        // ── Pipeline stage counts (batch) ──
+        $_stageCounts = [];
+        foreach ($_stageMapLocal as $_st) {
+            $_cnt = ($custom == 'true')
+                ? GeneralMethod::statusCount($company_id, $row->id, $_st['id'])
+                : GeneralMethod::statusCountThirdparty($company_id, $row->id, $_st['id']);
+            $_stageCounts[] = [
+                'label' => $_st['label'],
+                'cls'   => $_st['cls'],
+                'cnt'   => (int)$_cnt,
+                'url'   => $urlBase ? $urlBase . $_st['id'] : '',
+            ];
+        }
+
+        // ── Total applications + INW count ──
+        $totalApps = ($custom == 'true')
+            ? GeneralMethod::allStatusCount($company_id, $row->id)
+            : GeneralMethod::allStatusCountThirdparty($company_id, $row->id);
+        $interviewCnt = $_stageCounts[0]['cnt']; // INW (index 0)
+
+        // ── Date ──
+        $newDate = GeneralMethod::ymdTodmyNotTime($row->created_at);
+
+        // ── Skills — extract text names only; skip numeric IDs from key_skills ──
+        $skillsArr = [];
+        $_rawSkills = !empty(@$row->skills) && is_array($row->skills) ? $row->skills
+                    : (!empty(@$row->key_skills) && is_array($row->key_skills) ? $row->key_skills : []);
+        foreach (array_slice($_rawSkills, 0, 5) as $_s) {
+            $_name = '';
+            if (is_array($_s))        $_name = $_s['name'] ?? $_s['skill_name'] ?? '';
+            elseif (is_object($_s))   $_name = $_s->name ?? $_s->skill_name ?? '';
+            elseif (is_string($_s) && !is_numeric(trim($_s))) $_name = trim($_s);
+            if ($_name !== '') $skillsArr[] = ucwords($_name);
+        }
     @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input" type="checkbox" value="1" />
-                  </div>';
-                @endphp
-            </td>
-            <td class="d-flex align-items-center">
-                @php
-                    $bgTextDecore = $company_name = $strVal = '';
-                    $str = trim(@$row->title);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
 
-                    $profile_detail_class = 'show-detail';
-                    
+    <div class="job-row">
 
-                    if ($row->self_company > 0 && $row->comId == $company_id) {
-                        $company_name = ucwords(mb_substr(@$row->company_name, 0, 30));
-                    } elseif ($row->comId != $company_id) {
-                        $company_name = ucwords(mb_substr(@$row->company_name, 0, 30));
-                    } elseif ($row->self_company == 0) {
-                        $company_name = ucwords(mb_substr(@$row->client_company, 0, 30));
-                    }
-
-                    $icon =
-                        '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="' .
-                        $profile_detail_class .
-                        '">
-                      <div class="symbol-label ' .
-                        $bgTextDecore .
-                        ' border-radius-5">' .
-                        ucwords($strVal) .
-                        '</div>
+        {{-- ── Col 1: Job Details ── --}}
+        <div class="col-job">
+            <div class="drag-col">
+                <i class="fas fa-grip-vertical" style="font-size:12px;"></i>
+            </div>
+            @if($logo_path)
+                <div class="job-logo" style="border-radius:10px; overflow:hidden; background:#f1f3fa;">
+                    <img src="{{ $logo_path }}" alt="">
+                </div>
+            @else
+                <div class="job-logo" style="background:{{ $logoColor }}; border-radius:10px;">
+                    {{ strtoupper($strVal) }}
+                </div>
+            @endif
+            <div class="job-info">
+                <div class="job-title">
+                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="show-detail" title="{{ ucwords(@$row->title) }}">
+                        {{ ucwords(mb_substr(@$row->title, 0, 28)) }}
                     </a>
-                  </div>';
-
-                   $logo_path = GeneralMethod::companyDetails($row->id);
-                    if (!empty($logo_path)) {
-                        $icon =
-                            '<div data-row-id="' .
-                            $row->id .
-                            '"  class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' .
-                            $profile_detail_class .
-                            ' border-radius-5">
-                                        <a href="javascript:void(0);">
-                                            <div class="symbol-label border-radius-5">
-                                            	<img src="' .
-                            @$logo_path .
-                            '" alt="Company Logo" class="border-radius-5 w-100">
-                                            </div>
-                                        </a>
-                                    </div>';
-                    }
-
-                    echo $icon .
-                        '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $profile_detail_class .
-                        '"  data-toggle="tooltip1" title="' .
-                        ucwords(@$row->title) .
-                        '" >' .
-                        ucwords(mb_substr(@$row->title, 0, 15)) .
-                        '</a> 
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $row->id .
-                        '" class="fw-bold text-muted d-block fs-7 text-hover-primary ' .
-                        $profile_detail_class .
-                        '">' .
-                        $company_name .
-                        '</a>
-                  </div>
-                  ';
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo '<div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">' .
-                        @$row->max_exp .
-                        '+</span>
-                    <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                        @$row->min_exp .
-                        '+</span>
-                  </div>';
-                @endphp
-
-            </td>
-            <td>
-                @php
-                    $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = '';
-                    $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
-                    $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
-
-                    $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-                    $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
-
-                    $max_salary = '';
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
-                    $min_salary = '';
-                    $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
-
-                    echo '<div class="d-flex flex-column">
-                         <span class="text-dark fw-bolder fs-6">' .
-                        $min_salary_currency .
-                        $max_salary .
-                        '/' .
-                        $min_sal_mode .
-                        '</span>                    
-                        <span class="fw-bold d-block fs-7">' .
-                        $min_salary_currency .
-                        $min_salary .
-                        '/' .
-                        $max_sal_mode .
-                        '</span>
-                        </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $country_id = $country_name = '';
-                    $jobid = $row->id;
-                    
-                    $client_city_jobs = $row->client_city_jobs;
-                    $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
-
-                    
-
-                    $employment_type = 'Full-time';
-                    if ($row->employment_type == 1) {
-                        $employment_type = 'Contract';
-                    }
-
-                    if ($row->work_type == 'yes') {
-                        echo ' <div class="d-flex flex-column">
-						<span class="text-dark fw-bolder fs-6">Remote</span>
-						<div class="d-flex align-items-center">
-						  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                            ucwords(@$employment_type) .
-                            '" >' .
-                            ucwords(mb_substr(@$employment_type, 0, 10)) .
-                            '</span>
-						  </div>
-						</div>
-					  </div>';
-                    } elseif ($row->work_type == 'no' || $row->work_type =='other') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-
-                            $firstCity = collect($client_city_jobs)->first();
-                        
-                            $cityName = $firstCity['city_name'] ?? null;
-                            $city = mb_substr(@$cityName, 0, 21);
-                            $countryName = $firstCity['country_name'] ?? null;
-                            $country_name = mb_substr(@$countryName, 0, 6);
-
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    } elseif ($row->work_type == 'any') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-
-                            $firstCity = collect($client_city_jobs)->first();
-                        
-                            $cityName = $firstCity['city_name'] ?? null;
-                            $city = mb_substr(@$cityName, 0, 21);
-                            $countryName = $firstCity['country_name'] ?? null;
-                            $country_name = mb_substr(@$countryName, 0, 6);
-
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-						<div class="d-flex align-items-center">
-						  <span class="text-dark fw-bolder fs-6">Remote</span>
-						  &nbsp;|&nbsp;
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $status = $active = $hold = $inactive = $class = '';
-                    $status = ucwords($row->status);
-                    $class = $job_status[$row->status];
-                    
-                    if ($status == 'Active') {
-                        $status = 'Hiring';
-                    }
-
-                    $recommendation_text = __('messages.clinet_tag');
-                    if ($row->comId == $company_id) {
-                        $recommendation_text = __('messages.internal_tag');
-                    }
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
-                    }
-                    echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="fs-6 ' .
-                        @$class .
-                        ' text-hover-success">' .
-                        $status .
-                        '</a>
-                      <span class="fw-bold text-muted d-block fs-7">' .
-                        @$row->id .
-                        ' -' .
-                        $recommendation_text .
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $total_positions = '';
-                    $total_positions = number_format($row->total_positions);
-
-                    
-                    $hiringManager = '--------';
-                    if(count($row->client_contact_info_jobs)>0){
-                        $hiringManager = $row->client_contact_info_jobs[0]['contact_person_name'];
-                    }
-
-                     $recommendation_id = $row->recommendation_id;
-                    if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        $jobAssignListCaptain = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $row->comId)
-                        ->filter()
-                        ->map(fn ($c) => ($c))
-                        ->values()
-                        ->all();
-                        $clientjobAssignListCaptain = '';
-                        if(count($jobAssignListCaptain)>0 && $row->comId != auth()->user()->company_id){
-                            $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
-                        }
-                        
-                    }
-
-                    $created_at = '';
-                    $created_at = $row->created_at;
-                    $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                    echo '<div class="d-flex flex-column">
-                        <span class="text-dark fw-bolder fs-6">' .
-                        $newDate .
-                        '</span>
-                        <span class="text-muted fw-bold d-block fs-7">' .
-                        ucwords(mb_substr(@$hiringManager, 0, 10)) .
-                        ' </span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $html = '';
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        // Direct Client Job
-                        $jobId = $row->id;
-                        $from_company_id = $row->from_company_id;
-
-                       $partnersCount = $jobAssign->where('company_id', $from_company_id)->where('job_id', $jobId)->count();
-
-                       $partnersData = $jobAssign->where('company_id', $from_company_id)->where('job_id', $jobId)->take(1)->values();
-
-                        $html = $temp = '';
-                        $showCount = 0;
-                        $html .=
-                            '<div class="d-flex flex-column">
-					 <div data-row-id="' .
-                            $row->id .
-                            '" class="symbol-group symbol-hover client-hm-listing">';
-                        foreach ($partnersData as $pval) {
-                            $pval = (object) $pval;
-                            $bgTextDecore = GeneralMethod::icoinText(@$pval->user_name);
-                            $image_path = ''; //url('public/avatar.png')
-
-                            if (!empty(@$pval->image) && strlen(@$pval->image) > 10) {
-                                $image_path = @$pval->image;
-                            }
-                            // if($showCount < 1){
-
-                            if (!empty($image_path)) {
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                                    @$pval->user_name .
-                                    '">
-						    <img class="me-2" alt="Pic" src="' .
-                                    @$image_path .
-                                    '">
-						</div>';
-                            } else {
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="' .
-                                    ucwords(@$pval->user_name) .
-                                    '" >
-							<div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-							<a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-								<div class="symbol-label fs-8 fs-8 ' .
-                                    $bgTextDecore .
-                                    ' border-radius-100">' .
-                                    mb_substr($pval->user_name, 0, 1) .
-                                    '</div>
-							</a>		 
-							</div>
-							</div>';
-                            }
-                            // }
-                            $showCount++;
-                        }
-                        if (in_array('add_team_on_requisition', $userPermissions)) {
-                            $html .=
-                                '<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More Comtact list.."><span class="symbol-label font-weight-bold">' .
-                                $partnersCount .
-                                '+</span></div>';
-                        }
-                        $html .= '</div></div><div class="fs-7 fw-bold text-muted">Client</div>';
-                    } else {
-                        //	Custom Client Job
-    
-                        $jobId = $row->id;
-
-                        $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)->count();
-
-                        $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
-                        ->filter(function ($row) {
-                             return $row['user_id'] == $row['spok_user_id'];
-                        })->sortBy('user_name')->take(1)->values();
-
-                        $html = $temp = '';
-                        $showCount = 0;
-                        $html .=
-                            '<div class="d-flex flex-column">
-					<div data-row-id="' .
-                            $row->id .
-                            '"  class="symbol-group symbol-hover hm-listing">';
-                        foreach ($partnersData as $pval) {
-                            $pval = (object) $pval;
-                            $bgTextDecore = GeneralMethod::icoinText(@$pval->user_name);
-                            $image_path = ''; //url('public/avatar.png');
-                            if (!empty(@$pval->image) && strlen(@$pval->image) > 10) {
-                                $image_path = @$pval->image;
-                            }
-
-                            // if($showCount < 1){
-                            if (!empty($image_path)) {
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                                    @$pval->user_name .
-                                    '">
-						     <img class="me-2" alt="Pic" src="' .
-                                    @$image_path .
-                                    '">
-						</div>';
-                            } else {
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="' .
-                                    ucwords(@$pval->user_name) .
-                                    '" >
-							<div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-							<a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-								<div class="symbol-label fs-8 fs-8 ' .
-                                    $bgTextDecore .
-                                    ' border-radius-100">' .
-                                    mb_substr($pval->user_name, 0, 1) .
-                                    '</div>
-							</a>		 
-							</div>
-							</div>';
-                            }
-                            // }
-                            $showCount++;
-                        }
-                        $html .=
-                            '<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More users list.."><span class="symbol-label font-weight-bold" >' .
-                            $partnersCount .
-                            '+</span></div>';
-                        $html .= '</div></div><div class="fs-7 fw-bold text-muted">Team</div>';
-                    }
-                    echo $html;
-                @endphp
-            </td>
-            <td>
-                @php
-                    $html = '';
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        // Direct Client Job
-
-                        $jobId = $row->id;
-
-                        $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)->count();
-
-                        $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
-                        ->filter(function ($row) {
-                             return $row['user_id'] == $row['spok_user_id'];
-                        })->sortBy('user_name')->take(1)->values();
-
-
-                        $html .=
-                            '<div class="d-flex flex-column">
-                    						<div data-row-id="' .
-                            $row->id .
-                            '" class="symbol-group symbol-hover team-listing">';
-                        $temp = '';
-                        foreach ($partnersData as $pval) {
-                            $pval = (object) $pval;
-                            $bgTextDecore = GeneralMethod::icoinText(@$pval->user_name);
-                            $logo_path = '';
-                            if (!empty(@$pval->image) && strlen(@$pval->image) > 10) {
-                                $logo_path = @$pval->image;
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                                    @$pval->user_name .
-                                    '">
-                            						<img alt="Pic" src="' .
-                                    @$logo_path .
-                                    '">
-                          						</div>';
-                            } else {
-                                $html .=
-                                    '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="' .
-                                    ucwords(@$pval->user_name) .
-                                    '" >
-							<div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-							<a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-								<div class="symbol-label fs-8 fs-8 ' .
-                                    $bgTextDecore .
-                                    ' border-radius-100">' .
-                                    mb_substr($pval->user_name, 0, 1) .
-                                    '</div>
-							</a>		 
-							</div>
-							</div>';
-                            }
-                        }
-                        $html .=
-                            '<div data-row-id="' .
-                            $row->id .
-                            '"   class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More team list..">
-														<span class="symbol-label font-weight-bold">' .
-                            $partnersCount .
-                            '+</span>
-													  </div>';
-                        $html .= '</div>
-                    					</div><div class="fs-7 fw-bold text-muted">Team</div>';
-                    }
-                    //	Custom Client Job
-                    else {
-                        $jobId = '';
-                        $jobId = $row->id;
-
-                        $recommendation_relation = $row->recommendation_relation;
-                        $recommendationRelation = collect($recommendation_relation);
-
-                        $recommendedDataListCnt = $recommendationRelation->where('from_company_id', $company_id)->where('job_id', $jobId)->where('from_status', 1)->count();
-
-
-                        $recommendedDataList = $recommendationRelation->where('from_company_id', $company_id)->where('job_id', $jobId)->where('from_status', 1)->take(1)->values();
-
-
-                        $html =
-                            '<div class="d-flex flex-column">
-			  <div data-row-id="' .
-                            $row->id .
-                            '" class="symbol-group symbol-hover spartner-listing">';
-
-                        foreach ($recommendedDataList as $pval) {
-                            $pval = (object) $pval;
-                            $company_details = GeneralMethod::companyDetailsGet($pval->to_company_id);
-                            $image_path = url('img/client-default.png');
-                            if (!empty(@$company_details->logo) && strlen(@$company_details->logo) > 10) {
-                                $image_path = url('public/user-uploads/company-logo/' . @$company_details->logo);
-                            }
-
-                            $html .=
-                                '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                                @$company_details->company_name .
-                                '"><img alt="Pic" src="' .
-                                @$image_path .
-                                '"></div>';
-                        }
-
-                        $html .=
-                            '
-						<div data-row-id="' .
-                            $row->id .
-                            '" class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="" data-bs-original-title="More users list..">
-							<span class="symbol-label font-weight-bold" >' .
-                            @$recommendedDataListCnt .
-                            '+</span>
-						</div>
-						</div>
-					</div><div class="fs-7 fw-bold text-muted">'.__('messages.Agency').'</div>';
-                    }
-
-                    echo $html;
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $url_path = $total_application = $inreview_counter = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/all',
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($row->id) . '/all',
-                        );
-                    }
-                    $applicationCounter = @$row->allCandidate;
-                    $inreview_counter = @$row->InReview;
-                    $master_status_id = 8;
-
-                    //number_format(@$row->thirdparty_counter);
-                    $applicationCounter = GeneralMethod::allStatusCountThirdparty($company_id, $row->id);
-                    $inreview_counter = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-
-                    if($custom == 'true'){
-                    $applicationCounter = GeneralMethod::allStatusCount($company_id, $row->id);
-                     $inreview_counter = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                   
-
-
-
-                    // $applicationCounter = number_format($applicationCounter);
-                    // $inreview_counter = number_format($inreview_counter);
-                    echo '<div class="d-flex flex-column">
-                        <a href="' .
-                        $url_path .
-                        '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                        @$applicationCounter .
-                        '</a>
-                        <a href="' .
-                        $url_path .
-                        '" class="text-muted fw-bold d-block fs-7 text-hover-primary">' .
-                        $inreview_counter .
-                        '</a>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $job_id = '';
-                    $master_status_id = 1;
-                    $cnt = 0;
-                    $job_id = $row->id;
-                    // $cnt = $row->Sourcing;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = $total_application = $inreview_counter = '';
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($job_id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $master_status_id = 2;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    // $cnt = $row->Screening;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($job_id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $master_status_id = 3;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    // $cnt = $row->Interview;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($job_id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 4;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    // $cnt = $row->Negotiation;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($job_id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-
-                @endphp
-            </td>
-            <td>
-                @php
-                    $master_status_id = 5;
-                    $cnt = 0;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    // $cnt = $row->Offered;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($job_id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $master_status_id = 6;
-                    $job_id = '';
-                    $job_id = $row->id;
-                    $cnt = 0;
-                    // $cnt = $row->Joined;
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-                    $url_path = '';
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    $cnt = number_format($cnt);
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $master_status_id = 7;
-                    $job_id = '';
-                    $cnt = 0;
-                    $job_id = $row->id;
-                    // $cnt = number_format($row->Rejected);
-                    $cnt = GeneralMethod::statusCountThirdparty($company_id, $row->id, $master_status_id);
-                    if($custom == 'true'){
-                     $cnt = GeneralMethod::statusCount($company_id, $row->id, $master_status_id);
-                    }
-
-                    if ($custom == 'true') {
-                        $url_path = url(
-                            '/service_company/apptracker/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if (@$row->to_company_id == $company_id && @$row->recommendation_id > 0) {
-                        $url_path = url(
-                            '/service_company/apptracker/clientapp/' .
-                                GeneralMethod::value_encrypt($row->id) .
-                                '/' .
-                                $master_status_id,
-                        );
-                    }
-                    if ($cnt == 0) {
-                        $cnt = '<b>.</b>';
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">0</a></div>';
-                    } else {
-                        echo '<div class="d-flex flex-column"><a href="' .
-                            $url_path .
-                            '" class="text-dark fw-bolder fs-6 text-hover-primary">' .
-                            @$cnt .
-                            '</a></div>';
-                    }
-
-                @endphp
-            </td>
-        </tr>
+                </div>
+                @if(!empty(@$row->department_name))
+                    <div class="job-dept">{{ ucwords(mb_substr(@$row->department_name, 0, 26)) }}</div>
+                @endif
+                <div class="job-client">{{ $company_name }}</div>
+                <div class="job-meta-line">
+                    <span class="it-job-id">#{{ $row->id }}</span>
+                    <span class="it-dot-separator"></span>
+                    <span class="badge-type {{ $tagCls }}">{{ $recommendation_text }}</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Col 2: Experience + Salary ── --}}
+        <div class="col-exp">
+            <div class="exp-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                {{ $minExp }} – {{ $maxExp }} Yrs
+            </div>
+            <div class="sal-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                {!! $min_salary_currency !!}{{ $min_salary }} – {{ $max_salary }} {{ $min_sal_mode }}
+            </div>
+            <span class="badge-type badge-direct" style="margin-top:4px; width:fit-content;">{{ $employment_type }}</span>
+        </div>
+
+        {{-- ── Col 3: Hiring & Location ── --}}
+        <div class="col-hl">
+            <span class="badge-hiring {{ $statusCls }}">{{ $status }}</span>
+            <div class="loc-row" style="margin-top:5px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                {{ $locationName }}
+            </div>
+            <div class="mode-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                {{ $workTypeLabel }}
+            </div>
+        </div>
+
+        {{-- ── Col 4: Hiring Manager ── --}}
+        <div class="col-hm">
+            <div class="hm-name">{{ $hiringManager }}</div>
+            @if($hmRole)<div class="hm-title">{{ $hmRole }}</div>@endif
+            <div class="hm-company">{{ $employment_type }}</div>
+        </div>
+
+        {{-- ── Col 5: Team ── --}}
+        <div class="col-action {{ $teamListClass }}" data-row-id="{{ $row->id }}">
+            @if($teamName)
+                <div style="font-size:12.5px; font-weight:700; color:#181c32;">{{ $teamName }}</div>
+            @endif
+            <div style="font-size:11px; color:#a1a5b7; margin-top:2px;">+{{ $teamCnt }} Members</div>
+            @if(in_array('add_team_on_requisition', $userPermissions))
+                <span class="action-more" style="margin-top:3px;">+ Add More</span>
+            @endif
+        </div>
+
+        {{-- ── Col 6: Agency ── --}}
+        <div class="col-action spartner-listing" data-row-id="{{ $row->id }}">
+            <span class="jobx-add-link"><i class="fas fa-plus-circle"></i> Add Agency</span>
+            @if($agencyMatchCnt > 0)
+                <div style="font-size:11px; color:#a1a5b7; margin-top:4px;">{{ $agencyMatchCnt }} Matching</div>
+            @endif
+        </div>
+
+        {{-- ── Col 7: Hiring Pipeline ── --}}
+        <div class="col-pipeline">
+            <div class="pipeline-stages">
+                @foreach($_stageCounts as $_sc)
+                    <div class="stage">
+                        <span class="stage-label">{{ $_sc['label'] }}</span>
+                        <span class="stage-badge {{ $_sc['cls'] }}">
+                            @if($_sc['url'])
+                                <a href="{{ $_sc['url'] }}">{{ $_sc['cnt'] }}</a>
+                            @else
+                                {{ $_sc['cnt'] }}
+                            @endif
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+            <div class="pipeline-total">
+                Total: <strong>{{ $totalApps }} Applications</strong>
+                @if($interviewCnt > 0)
+                    &nbsp;|&nbsp; Interview: <strong>{{ $interviewCnt }}</strong>
+                @endif
+            </div>
+            <div class="add-date">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                {{ $newDate }}
+            </div>
+        </div>
+
+    </div>
+    @if(count($skillsArr))
+    <div class="job-row-skills">
+        <span class="sk-label">Skills:</span>
+        @foreach($skillsArr as $_skName)
+            <span class="sk-tag">{{ $_skName }}</span>
+        @endforeach
+    </div>
+    @endif
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="17" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="job-empty">
+        <i class="fas fa-briefcase" style="font-size:32px; color:#e4e6ef; display:block; margin-bottom:10px;"></i>
+        No jobs found for this client.
+    </div>
 @endif

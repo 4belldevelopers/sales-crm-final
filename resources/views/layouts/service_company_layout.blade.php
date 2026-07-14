@@ -478,7 +478,7 @@
   <div class="card shadow-none bg-custom-bar rounded-0 w-100" id="application_show_right_bar" ></div>
 </div>
 <div id="kt_create_offer_toggle"></div>
-<div id="kt_create_offer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="create_offer" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_create_offer_toggle" data-kt-drawer-close="#kt_offercreate_close">
+<div id="kt_create_offer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="create_offer" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default: '100%', lg: '82%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_create_offer_toggle" data-kt-drawer-close="#kt_offercreate_close">
   <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar" ></div>
 </div>
 
@@ -1686,7 +1686,7 @@ $(document).on("click", "#shareBenchCandidateBtn", function () {
                     data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr,'mtype':mtype,'offerId':offerId},
                     cache		: false,
                     success 	: function (response) {
-                                        if (response.status == "success") {
+                                        if (response && response.status == "success") {
                                           const link = document.createElement('a');
                                           link.href = response.url; // URL to the PDF file
                                           link.download = ''; // Specify the filename for the download, or leave it empty to use the default file name
@@ -1694,11 +1694,16 @@ $(document).on("click", "#shareBenchCandidateBtn", function () {
                                           document.body.appendChild(link);
                                           link.click(); // Trigger the download
                                           document.body.removeChild(link); // Clean up
-                                        }else if(response.status == "error"){
-                                          Swal.fire("Warning",'Offer Letter not ready' , "warning");	
+                                        } else {
+                                          // Backend returns 'errors' (not 'error') on coin/package failures — catch
+                                          // any non-success status here instead of silently doing nothing.
+                                          Swal.fire("Warning", (response && response.message) ? response.message : 'Offer Letter not ready', "warning");
                                         }
+                            },
+                    error       : function () {
+                                        Swal.fire("Error", "Could not download the offer letter. Please try again.", "error");
                             }
-              });                       
+              });
       });
       
 
@@ -2113,7 +2118,20 @@ $(document).ready(function(){
 																confirmButton: "btn btn-primary"
 														  }
                     });
-                @endif 
+                @endif
+
+                @if (session('candidate_edit_denied'))
+                 Swal.fire({
+									title				: "Not Authorized",
+									text				: @json(session('candidate_edit_denied')),
+									icon				: "warning",
+									buttonsStyling		: false,
+									confirmButtonText	: "Ok, got it!",
+									customClass			: {
+																confirmButton: "btn btn-primary"
+														  }
+                    });
+                @endif
 
 				
                   $(document).on('click','.lock_unlock', function(){

@@ -172,6 +172,24 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			});
 		$this->applicationCounter = $this->applicationCounter->count();
 		$this->countries = DB::table('countries')->get();
+
+		// Initial KPI seed for the CV Tracker hero cards. Only "total" is seeded from
+		// MySQL (reusing $applicationCounter, already company_id-scoped above) to avoid a
+		// flash of 0 on first paint. The live, authoritative numbers for every card come
+		// from ONE Elasticsearch aggregation returned by allcandidates() on the first
+		// table fetch (see $candidateStats there), so JS overrides these immediately —
+		// no extra MySQL/server load.
+		$this->candidateStats = [
+			'total'          => (int) $this->applicationCounter,
+			'today'          => 0,
+			'this_week'      => 0,
+			'immediate'      => 0,
+			'without_resume' => 0,
+			'tabs' => [
+				'inreview' => 0, 'sourcing' => 0, 'screening' => 0, 'evaluation' => 0,
+				'negotiation' => 0, 'offered' => 0, 'joined' => 0, 'rejected' => 0,
+			],
+		];
 		return view('service_company.cvtracker.index', $this->data);
 	}
 	public function allcandidates(Request $request)
@@ -355,7 +373,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'activity' => $app_int_activity,
 			'status_filter' => $app_int_status,
 			'user_id' => $this->user->id,
-			'segmentTwo' => $segmentTwo
+			'segmentTwo' => $segmentTwo,
+			// Offer Tracker tab must vary the cache key, otherwise switching tabs
+			// returns a stale cached result set (the tab filter wasn't part of the key).
+			'offer_tab' => request('offer_tab_filter'),
+			'pipeline_range' => request('pipeline_range'),
+			// CV Tracker stage tab must also vary the cache key for the same reason.
+			'stage_tab' => request('stage_tab'),
 		];
 		
 		$versionKey = 'allcvtracker_version_user_'.$this->user->id;
@@ -992,6 +1016,85 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
+		// Offer tracker tab filter (pending / sent / accepted / joining_soon / expired)
+		$offer_tab_filter = request('offer_tab_filter');
+		// Capture the active tab's filter clause (applied only to the paginated hits,
+		// NOT to the count aggregation — the badges/KPI/pipeline must show totals across
+		// all tabs for the current search/location, so they use the base query below).
+		$offerTabFilterClause = null;
+		if ($status_cus == 5 && !empty($offer_tab_filter) && $offer_tab_filter !== 'all') {
+			switch ($offer_tab_filter) {
+				case 'pending':      $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 0]]; break;
+				case 'sent':         $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 1]]; break;
+				case 'accepted':     $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 2]]; break;
+				case 'joining_soon': $offerTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]]; break;
+				case 'expired':      $offerTabFilterClause = ['term'  => ['of_offer_acceptance' => 4]]; break;
+			}
+		}
+
+		// Joining Tracker tab filter (status_cus=6). Mapped to the same real Elasticsearch
+		// fields the joining counts aggregation uses (of_joined / of_joined_date /
+		// of_offer_acceptance) so the paginated rows always match the tab badge counts.
+		// Applied to the paginated hits ONLY; the badge/KPI aggregation runs on the base
+		// query below so every tab total stays visible regardless of the active tab.
+		// Compound joining filters pre-built as variables (reused by the tab filter AND the
+		// KPI aggregation, so rows and badges always agree).
+		//
+		// Onboarded / Backed Out are keyed off the joining SUB-STAGE, not the of_joined flags:
+		// the main stage is already "Joined" for this whole set, and the company-defined
+		// sub-stage name ("Onboarded" / "Backedout") is what separates them. We resolve THIS
+		// company's candidate_status ids for those names and match the ES "childStatus" field
+		// (mapped integer = add_job_wise_condidates.child_status_id).
+		// Tenancy: candidate_status is a raw query, scoped explicitly by company_id (Rule 3).
+		$fDelayed = $fOnboarded = $fBackedOut = null;
+		if ($status_cus == 6) {
+			$fDelayed = ['bool' => ['must' => [
+				['range' => ['of_joined_date' => ['lt' => 'now/d']]],
+				['term'  => ['of_joined' => 0]],
+			]]];
+			$onboardedStatusIds = array_map('intval', DB::table('candidate_status')
+				->where('company_id', $company_id)
+				->whereRaw("REPLACE(LOWER(name), ' ', '') = 'onboarded'")
+				->pluck('id')->toArray());
+			$backedOutStatusIds = array_map('intval', DB::table('candidate_status')
+				->where('company_id', $company_id)
+				->whereRaw("REPLACE(LOWER(name), ' ', '') = 'backedout'")
+				->pluck('id')->toArray());
+			$fOnboarded = ['terms' => ['childStatus' => $onboardedStatusIds]];
+			$fBackedOut = ['terms' => ['childStatus' => $backedOutStatusIds]];
+		}
+
+		$joining_tab_filter = request('joining_tab_filter');
+		$joiningTabFilterClause = null;
+		if ($status_cus == 6 && !empty($joining_tab_filter) && $joining_tab_filter !== 'all') {
+			switch ($joining_tab_filter) {
+				case 'joining_today': $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]; break;
+				case 'this_week':     $joiningTabFilterClause = ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]; break;
+				case 'delayed':       $joiningTabFilterClause = $fDelayed;   break;
+				case 'no_show':       $joiningTabFilterClause = ['term' => ['of_offer_acceptance' => 3]]; break;
+				case 'pending_docs':  $joiningTabFilterClause = ['term' => ['of_offer_acceptance' => 1]]; break;
+				case 'onboarded':     $joiningTabFilterClause = $fOnboarded; break;
+				case 'backed_out':    $joiningTabFilterClause = $fBackedOut; break;
+			}
+		}
+
+		// CV Tracker stage tabs (All Candidates / InReview / Sourcing / Screening /
+		// Evaluation / Negotiation / Offered / Joined / Rejected) — default "All
+		// Candidates" tab only (status_cus empty). "Rejected" maps to TWO master_status
+		// ids (7 and 9 both named "Rejected" in this company's master_status table), so
+		// the client sends a comma-separated list and we match with a terms query.
+		// Applied to the paginated hits ONLY; the per-stage counts aggregation below runs
+		// on the base query so every tab's badge count stays visible regardless of the
+		// active tab (same convention as the Offer/Joining tracker tabs above).
+		$stage_tab = request('stage_tab');
+		$stageTabFilterClause = null;
+		if (empty($status_cus) && !empty($stage_tab) && $stage_tab !== 'all') {
+			$stageIds = array_filter(array_map('intval', explode(',', (string) $stage_tab)));
+			if (!empty($stageIds)) {
+				$stageTabFilterClause = ['terms' => ['job_master_status_id' => $stageIds]];
+			}
+		}
+
 		// Activity filter
 		if (!empty($app_int_activity)) {
 			$activityFilter = $this->getActivityFilter(
@@ -1029,6 +1132,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// 	];
 		// }
 
+		// Snapshot the base query (all filters EXCEPT the active tab) for the count
+		// aggregation, then apply the tab filter to the paginated hits query only.
+		$offerCountsBase = $boolQuery;
+		if ($offerTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $offerTabFilterClause;
+		}
+		if ($joiningTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $joiningTabFilterClause;
+		}
+		if ($stageTabFilterClause) {
+			$boolQuery['bool']['filter'][] = $stageTabFilterClause;
+		}
+
 		// Build the final query
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
@@ -1064,11 +1180,187 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		// $page_view = 'all_candidates';
 
 		$userPermissions = $this->userPermissions;
-		
+
+		// Offer Tracker tab/KPI/pipeline counts — one size:0 aggregation over the base
+		// query (all offer-stage candidates for the current search/location, ignoring the
+		// active tab) so every number matches THIS result set (fixes the MySQL-vs-ES
+		// mismatch where offer_job_applications counted a different population).
+		$offerCounts = null;
+		$offerPipelineCounts = null;
+		if ($status_cus == 5 && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			// Offers Pipeline date window (dropdown): current month / last 6 months / all time.
+			// Applied only to the nested "pipeline" agg so the pipeline can scope by date
+			// while the tab badges + KPI stay tied to the full table result set.
+			$pipelineRange = request('pipeline_range');
+			if ($pipelineRange === 'current') {
+				$pipelineFilter = ['range' => ['created_at' => ['gte' => 'now/M']]];
+			} elseif ($pipelineRange === '6m') {
+				$pipelineFilter = ['range' => ['created_at' => ['gte' => 'now-6M/d']]];
+			} else {
+				$pipelineFilter = ['match_all' => (object) []];
+			}
+
+			$countsResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'by_acceptance' => ['terms'  => ['field' => 'of_offer_acceptance', 'size' => 10]],
+						'joined'        => ['filter' => ['term'  => ['of_joined' => 1]]],
+						'joining_soon'  => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]]],
+						'pipeline'      => [
+							'filter' => $pipelineFilter,
+							'aggs'   => [
+								'by_acceptance' => ['terms'  => ['field' => 'of_offer_acceptance', 'size' => 10]],
+								'joined'        => ['filter' => ['term' => ['of_joined' => 1]]],
+							],
+						],
+					],
+				],
+			]);
+			$acc = [];
+			foreach (($countsResp['aggregations']['by_acceptance']['buckets'] ?? []) as $b) {
+				$acc[(int) $b['key']] = (int) $b['doc_count'];
+			}
+			$offerCounts = [
+				'total'        => (int) ($countsResp['hits']['total']['value'] ?? 0),
+				'pending'      => $acc[0] ?? 0,
+				'sent'         => $acc[1] ?? 0,
+				'accepted'     => $acc[2] ?? 0,
+				'rejected'     => $acc[3] ?? 0,
+				'expired'      => $acc[4] ?? 0,
+				'joined'       => (int) ($countsResp['aggregations']['joined']['doc_count'] ?? 0),
+				'joining_soon' => (int) ($countsResp['aggregations']['joining_soon']['doc_count'] ?? 0),
+			];
+
+			// Date-windowed counts that drive the Offers Pipeline funnel only.
+			$pacc = [];
+			foreach (($countsResp['aggregations']['pipeline']['by_acceptance']['buckets'] ?? []) as $b) {
+				$pacc[(int) $b['key']] = (int) $b['doc_count'];
+			}
+			$offerPipelineCounts = [
+				'total'    => (int) ($countsResp['aggregations']['pipeline']['doc_count'] ?? 0),
+				'sent'     => $pacc[1] ?? 0,
+				'accepted' => $pacc[2] ?? 0,
+				'rejected' => $pacc[3] ?? 0,
+				'joined'   => (int) ($countsResp['aggregations']['pipeline']['joined']['doc_count'] ?? 0),
+			];
+		}
+
+		// Joining Tracker KPI + tab counts — one size:0 aggregation over the base query
+		// (all joining-stage candidates for the current search/location, ignoring the active
+		// tab) so every card/tab number matches THIS result set. Uses only real ES fields
+		// (of_joined / of_joined_date / of_offer_acceptance) — see the tab-filter switch above
+		// for the matching clauses, keeping badges and paginated rows in agreement.
+		$joiningCounts = null;
+		if ($status_cus == 6 && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$jResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'joined'       => ['filter' => ['term'  => ['of_joined' => 1]]],
+						'today'        => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+						'this_week'    => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+						'this_month'   => ['filter' => ['range' => ['of_joined_date' => ['gte' => 'now/M', 'lt' => 'now+1M/M']]]],
+						'delayed'      => ['filter' => $fDelayed],
+						'no_show'      => ['filter' => ['term'  => ['of_offer_acceptance' => 3]]],
+						'pending_docs' => ['filter' => ['term'  => ['of_offer_acceptance' => 1]]],
+						'onboarded'    => ['filter' => $fOnboarded],
+						'backed_out'   => ['filter' => $fBackedOut],
+					],
+				],
+			]);
+			$ja = $jResp['aggregations'] ?? [];
+			$joiningCounts = [
+				'total'        => (int) ($jResp['hits']['total']['value'] ?? 0),
+				'today'        => (int) ($ja['today']['doc_count'] ?? 0),
+				'joined'       => (int) ($ja['joined']['doc_count'] ?? 0),
+				'backed_out'   => (int) ($ja['backed_out']['doc_count'] ?? 0),
+				'onboarded'    => (int) ($ja['onboarded']['doc_count'] ?? 0),
+				'this_week'    => (int) ($ja['this_week']['doc_count'] ?? 0),
+				'this_month'   => (int) ($ja['this_month']['doc_count'] ?? 0),
+				'delayed'      => (int) ($ja['delayed']['doc_count'] ?? 0),
+				'no_show'      => (int) ($ja['no_show']['doc_count'] ?? 0),
+				'pending_docs' => (int) ($ja['pending_docs']['doc_count'] ?? 0),
+			];
+		}
+
+		// CV Tracker hero KPI cards (Total / Added Today / Added This Week / Immediate
+		// Joiners / Without Resume) — one size:0 aggregation over the same base query
+		// (current search/location/skill/etc. filters, company_id-scoped) already built
+		// above for the default "All Candidates" tab. ES only, rides this same request —
+		// no extra HTTP call from the client, no MySQL involved.
+		$candidateStats = null;
+		if (empty($status_cus) && isset($offerCountsBase) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$cResp = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'size' => 0,
+					'track_total_hits' => true,
+					'query' => $offerCountsBase,
+					'aggs' => [
+						'today'          => ['filter' => ['range' => ['created_at' => ['gte' => 'now/d', 'lt' => 'now+1d/d']]]],
+						'this_week'      => ['filter' => ['range' => ['created_at' => ['gte' => 'now/w', 'lt' => 'now+1w/w']]]],
+						'immediate'      => ['filter' => ['term' => ['np_id.keyword' => 'Immediate']]],
+						// "Without resume": field is either absent (candidate never uploaded
+						// one — most common) or present-but-empty string, so check both.
+						'without_resume' => ['filter' => [
+							'bool' => [
+								'should' => [
+									['bool' => ['must_not' => [['exists' => ['field' => 'resume']]]]],
+									['term' => ['resume.keyword' => '']],
+								],
+								'minimum_should_match' => 1,
+							],
+						]],
+						// Stage tab badge counts. IDs come from this company's master_status
+						// table (id => name): 8=InReview, 1=Sourcing, 2=Screening,
+						// 3=Evaluation, 4=Negotiation, 5=Offered, 6=Joined, 7&9=Rejected
+						// (two rows share the "Rejected" name).
+						'by_status' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+					],
+				],
+			]);
+			$ca = $cResp['aggregations'] ?? [];
+			$statusBuckets = [];
+			foreach (($ca['by_status']['buckets'] ?? []) as $b) {
+				$statusBuckets[(int) $b['key']] = (int) $b['doc_count'];
+			}
+			$candidateStats = [
+				'total'          => (int) ($cResp['hits']['total']['value'] ?? 0),
+				'today'          => (int) ($ca['today']['doc_count'] ?? 0),
+				'this_week'      => (int) ($ca['this_week']['doc_count'] ?? 0),
+				'immediate'      => (int) ($ca['immediate']['doc_count'] ?? 0),
+				'without_resume' => (int) ($ca['without_resume']['doc_count'] ?? 0),
+				'tabs' => [
+					'inreview'   => $statusBuckets[8] ?? 0,
+					'sourcing'   => $statusBuckets[1] ?? 0,
+					'screening'  => $statusBuckets[2] ?? 0,
+					'evaluation' => $statusBuckets[3] ?? 0,
+					'negotiation'=> $statusBuckets[4] ?? 0,
+					'offered'    => $statusBuckets[5] ?? 0,
+					'joined'     => $statusBuckets[6] ?? 0,
+					'rejected'   => ($statusBuckets[7] ?? 0) + ($statusBuckets[9] ?? 0),
+				],
+			];
+		}
+
 		$responseData = [
 			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+			'counts' => $offerCounts,
+			'pipelineCounts' => $offerPipelineCounts,
+			'joiningCounts' => $joiningCounts,
+			'candidateStats' => $candidateStats,
 		];
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CV_TRACKER_TIME));
@@ -2597,9 +2889,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		if ($request->id >= 1) {
 
 			$client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-			// CLIENT CONTACT INFO
-			$ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-			$ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+			// CLIENT CONTACT INFO — job may have no client (direct/internal hire)
+			$ccInfoCount = 0;
+			$ccInfo = collect();
+			if ($client_row && $client_row->client_id) {
+				$ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
+				$ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+			}
 			if ($ccInfoCount > 0) {
 				$i = 0;
 				foreach ($ccInfo as $ccVal) {
@@ -2676,14 +2972,31 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			}
 		$assignData = array_merge($assignDataclient,$assignDatatwo);
 		// dd($assignData);
-		
+
 			$this->cc_email_count = $assignCount;
 			$this->cc_email_data = $commonCcArr;
 			$this->cc_email_assignData = (object)$assignData;
+
+			// Same directories, kept separate so the recipient picker can group them as
+			// "Internal Company Approvers" vs "Client Company Approvers" instead of one merged list.
+			$this->cc_email_internal_data = $assignDatatwo;
+			$this->cc_email_client_data = $assignDataclient;
 		}
 		$this->offerId = $request->offerId;
 		$this->mtype = $request->mtype;
 		// $this->arr = $request->id;
+
+		// Send Offer Letter (mtype=1) — data for the candidate summary header card. Real values
+		// only: the saved offer row (CTC/joining/designation/currency) and, if it was routed for
+		// approval, the latest approval-timeline row (approver name + management_status).
+		if ((int) $request->mtype === 1) {
+			$this->co_send_offer = DB::table('offer_create_main_tds')
+				->where('offer_id', $request->offerId)->where('status', 1)->orderByDesc('id')->first();
+			$this->co_send_appr = DB::table('updatetimeline')
+				->where('application_id', (int) (@$this->arr[0] ?? 0))
+				->where('mtypeSection', 2)->orderByDesc('id')->first();
+		}
+
         if( $request->mtype==1){
 			$title = 'Candidate Email Send';
 		}else{
@@ -4240,7 +4553,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		}
 		if((int)$request->mailtype== 8){
 			$offerId = $request->offerId;
-			
+
 			$email = '0';
 			if(!empty($request->to_email)){
 				$emailall = explode(',',$request->to_email);
@@ -4249,11 +4562,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$from_email = '0';
 			if(!empty($request->from_email)){
 				$from = $request->from_email;
-				$from = json_decode($from, true);
-				$from = array_column($from, 'value');
-				$from = implode(',', $from);
-
-				$from_email = explode(',',$from);
+				$fromDecoded = json_decode($from, true);
+				if (is_array($fromDecoded)) {
+					// Tagify format: [{"value":"email@..."},...]
+					$from = implode(',', array_column($fromDecoded, 'value'));
+				}
+				// else: plain email string (approval flow) — use as-is
+				$from_email = explode(',', $from);
 				$from_email = $from_email[0];
 			}
 
@@ -4280,9 +4595,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				// dd($offer_create->designation);
 
              
-				$SALARY_MODE = $salaryMode[$job_applications->offer_currency];
-				$CURRENCY_SELCT = $currency[$job_applications->offer_mode];
-				$SALARY_AMOUNT= $job_applications->offer_amount;
+				$SALARY_MODE = $job_applications
+					? ($salaryMode[$job_applications->offer_currency] ?? 0)
+					: 0;
+
+				$CURRENCY_SELCT = $job_applications
+					? ($currency[$job_applications->offer_mode] ?? 0)
+					: 0;
+				// $SALARY_AMOUNT= $job_applications->offer_amount;
+				$SALARY_AMOUNT = $job_applications->offer_amount ?? 0;
 				$JOB_TYPE = ($job_applications->employment_type==1) ? 'Contract' : 'Full-time';
 			// dd($offerId,$job_applications->full_name);
 			$designation = (@$offer_createmain) ? $offer_createmain->designation : @$job_applications->title;
@@ -4517,7 +4838,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		if ($attached_cv == 1) {
 			$resumeRowCount = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->count();
 			$resumeRow = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->get();
-			
+
 			$raw_filename = array();
 			if ($resumeRowCount) {
 				foreach ($resumeRow as $key=> $rval) {
@@ -4530,28 +4851,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $customName = 'JERO_'.str_replace(' ','_',$candidates->full_name) . '_' . $documentable_id . '.' . $extension;
 
 					$raw_filename[] = $hashname;
-						
+
 					$attachments[] = [
 							'path' => $hashname,
                             'filename' => $customName,
 							'options' => []
 						];
-
-					
-				// 	$attachmentPath = base_path() . '/public/user-uploads/documents/' . $documentable_id . '/' . $hashname;
-				
-			        	// $attachments[] = [
-						// 	'path' => $hashname,
-						// 	'options' => []
-						// ];
-						
-
-				// 	if (file_exists($attachmentPath)) {
-				// 		$attachments[] = [
-				// 			'file' => $attachmentPath,
-				// 			'options' => []
-				// 		];
-				// 	}
 					}
 
 				}
@@ -4568,10 +4873,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			$company_name =  DB::table('companies')->select('companies.company_name')->where('id','=', $company_id)->first();
 			
             // dd(str_replace('"','',$testmail));
-            
-            
-		
-			
+
+			// Collect unique skills for all selected candidates to highlight in email
+			$candidateSkills = [];
+			if (!empty($arr)) {
+				$candidateSkills = DB::table('job_application_skills')
+					->whereIn('job_application_id', $arr)
+					->pluck('skills')
+					->filter()
+					->unique()
+					->values()
+					->toArray();
+			}
+
+
+
+
 			$senderName =  auth()->user()->name;
             $fromAddress = auth()->user()->email;
 
@@ -4600,16 +4917,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 							if($hr_name_first){
 								$hr_name_first_set = $hr_name_first->contact_person_name;
 							}
-							
+
 						}
-						
+
 						$template_description = str_replace(["[HR_NAME]"],[$hr_name_first_set], $message);
 					}else{
 						$template_description = str_replace(["[HR_NAME]"],[$hr_name_first_set], $message);
 					}
-					
-					
-                  $data = array('message' => $template_description,'subject'=>$subject,'company_name'=>$company_name->company_name,'consultant_name'=>"4Bell Technology",'position'=>"PHP");
+
+
+                  $data = array('message' => $template_description,'subject'=>$subject,'company_name'=>$company_name->company_name,'consultant_name'=>"4Bell Technology",'position'=>"PHP",'candidate_skills'=>$candidateSkills);
 				  $checkMailPermision = GeneralMethod::mailPermission(13);
 					if($checkMailPermision){
 						// QueueMailService
@@ -5308,9 +5625,55 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$arr = $request->arr;
 		$event_id = 0;
 
-		$from = json_decode($from, true);
-		$from = array_column($from, 'value');
-		$from = implode(',', $from);
+		// Rate limit: max 3 candidate offer-letter sends per offer within a 4-hour window,
+		// checked before anything else (coin deduction, mail dispatch) so a blocked attempt
+		// costs nothing. Counted from updatetimeline (mtypeSection=1 = candidate offer email),
+		// the same real, persisted send-history record the "Sent By"/activity log already use.
+		if ((int) $mtypeId === 1) {
+			$offerAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
+			if ($offerAppRow) {
+				$recentSendCount = DB::table('updatetimeline')
+					->where('application_id', $offerAppRow->application_id)
+					->where('job_id', $offerAppRow->job_id)
+					->where('mtypeSection', 1)
+					->where('create_at', '>=', now()->subHours(4))
+					->count();
+				if ($recentSendCount >= 3) {
+					return Reply::dataOnly([
+						'status' => 'rateLimited',
+						'message' => 'This offer letter has already been sent 3 times in the last 4 hours. Please wait before sending it again.',
+					]);
+				}
+			}
+		}
+
+		// Rate limit: approval emails (mtypeId=8) — at most 1 send per recipient per hour.
+		// Prevents accidental spam when the user clicks "Add" or "Send Reminder" repeatedly.
+		if ((int) $mtypeId === 8 && !empty($request->to_email)) {
+			$approvalAppRow = DB::table('offer_job_applications')->where('id', $offerId)->first(['application_id', 'job_id']);
+			if ($approvalAppRow) {
+				$recentApproval = DB::table('updatetimeline')
+					->where('application_id', $approvalAppRow->application_id)
+					->where('job_id', $approvalAppRow->job_id)
+					->whereIn('mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new flow
+					->where('email_id_hr', trim($request->to_email))
+					->where('create_at', '>=', now()->subHour())
+					->exists();
+				if ($recentApproval) {
+					return Reply::dataOnly([
+						'status'  => 'rateLimited',
+						'message' => 'An approval email was already sent to this approver within the last hour. Please wait before sending again.',
+					]);
+				}
+			}
+		}
+
+		$fromDecoded = json_decode($from, true);
+		if (is_array($fromDecoded)) {
+			// Tagify format: [{"value":"email@..."},...]
+			$from = implode(',', array_column($fromDecoded, 'value'));
+		}
+		// else: plain email string (approval flow) — use as-is
 
 		// 		$to = json_decode($to, true);
 		// 		$to = array_column($to, 'value');
@@ -5348,7 +5711,24 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // 		dd($emails);
 		$attachments = array();
-		
+
+		// Sender-supplied files (Step 5 "+ Add Attachment"): store to the public disk so
+		// MailService::downloadAttachment() (which fetches attachments by public URL) can read them.
+		// Capped at 2MB/3 files — separate from any system-generated offer-letter PDF, which can
+		// run larger and isn't part of this user-uploaded set.
+		if ($request->hasFile('attachments')) {
+			$request->validate(['attachments' => 'max:3', 'attachments.*' => 'file|max:2048']);
+			foreach ($request->file('attachments') as $file) {
+				if (!$file->isValid()) continue;
+				$safeName = time().'_'.preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
+				$storedPath = $file->storeAs('offer-attachments/'.$offerId, $safeName, 'public');
+				$attachments[] = [
+					'path' => Storage::disk('public')->url($storedPath),
+					'filename' => $file->getClientOriginalName(),
+					'options' => [],
+				];
+			}
+		}
 
 			$path = base_path() . '/public/user-uploads/documents/';
 			$mailto = $to;
@@ -5508,7 +5888,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 							'path' => $path,   
 							'options' => []      
 						];*/
-						$attachments = [];
                         //    dd($attachments);
 
 							// QueueMailService
@@ -5818,7 +6197,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					   //    $path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
 					    Storage::disk('public')->put($filename, $pdf->output());
                         //    $path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
-                        $path = asset('storage/' . $filename);
+                        // Built from the actual incoming request's host (not asset()/APP_URL) — the
+                        // deployed .env's APP_URL points at a different, unrelated domain, which made
+                        // the previous asset() call return a link the browser couldn't resolve at all.
+                        $path = $request->getSchemeAndHttpHost() . '/storage/' . $filename;
 					   // dd($path);
 						if($coinnotdeduct){
 								$eventId = 36;
@@ -5942,20 +6324,112 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 						$path = str_replace('index.php','',url('storage/app/public/'.$filename.''));
 						// dd($path);
 						
-						return Reply::dataOnly(['status' => 'success', 'url' => $path]);	
+						return Reply::dataOnly(['status' => 'success', 'url' => $path]);
 						}else{
-							return Reply::dataOnly(['status' => 'error', 'url' => '']);	
+							return Reply::dataOnly(['status' => 'error', 'url' => '']);
 						}
 
-					
-                
+
+
     }
+
+	/**
+	 * Stream the offer-letter PDF straight to the browser as a file download.
+	 *
+	 * Why this exists (and why the create-offer Step 3 button uses it instead of
+	 * fwd_offer_download): the old flow generated the PDF, wrote it to
+	 * storage/app/public, then returned a public URL for the browser to fetch. That
+	 * had several silent failure points on the live host — the written file could 404
+	 * (write-perms / symlink), and the URL was built from APP_URL which points at a
+	 * different domain. Streaming the in-memory PDF as an attachment sidesteps all of
+	 * that: no file write, no storage URL, no symlink, no domain dependency. This is a
+	 * draft/preview download during offer creation, so it is intentionally NOT gated by
+	 * the coin system (re-downloading a released offer from the tracker still is).
+	 */
+	public function downloadOfferLetterStream($offerId)
+	{
+		$exits_offer = DB::table('offer_create_main_tds')->where('offer_id','=',$offerId)->where('status','=',1)->first();
+		if (!$exits_offer) { abort(404, 'Offer letter not found'); }
+
+		$rowDataOfferDetails = GeneralMethod::offerLetterdetails($offerId);
+		$address        = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->address : '';
+		$comapny_name   = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->comapny_name : '';
+		$logo           = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->logo : '';
+		$job_title      = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->job_title : '';
+		$candidate_name = (@$rowDataOfferDetails) ? @$rowDataOfferDetails->full_name : '';
+
+		$offer_terms_conditions = DB::table('offer_terms_conditions')->where('offer_id','=',$offerId)->orderByDesc('id')->first();
+		$offerDetails = DB::table('offer_create_main_tds')
+			->join('offer_job_applications', 'offer_create_main_tds.offer_id', '=', 'offer_job_applications.id')
+			->where('offer_job_applications.id', $offerId)
+			->where('offer_create_main_tds.status','=',1)
+			->select(
+				'offer_create_main_tds.offer_id',
+				'offer_create_main_tds.employment_type',
+				'offer_create_main_tds.id as of_main_td',
+				'offer_create_main_tds.currency',
+				'offer_create_main_tds.salary_ctc',
+				'offer_create_main_tds.accept_date_time',
+				'offer_create_main_tds.signature_candidate',
+				'offer_create_main_tds.salary_mode',
+				'offer_create_main_tds.designation',
+				'offer_create_main_tds.joined_date',
+				'offer_create_main_tds.monthly_gross',
+				'offer_create_main_tds.yearly_gross',
+				'offer_create_main_tds.monthly_bounus_gross',
+				'offer_create_main_tds.yearly_bonus_gross',
+				'offer_create_main_tds.monthly_insurence_gross',
+				'offer_create_main_tds.yearly_insurence_gross',
+				'offer_create_main_tds.yearly_final_gross',
+				'offer_create_main_tds.monthly_final_gross'
+			)->get()
+			->map(function($offer) {
+				$basicPoints = DB::table('basic_offer_points')
+					->where('offer_create_main_td_id', $offer->of_main_td)
+					->select('id','poins as basic_poins','Percentage as basic_percentage','condition_s as basic_condition_s','monthly as basic_monthly','yearly as basic_yearly')
+					->get()->toArray();
+				$bonusPoints = DB::table('bonus_offer_points')
+					->where('offer_create_main_td_id', $offer->of_main_td)
+					->select('id','poins as bonus_poins','Percentage as bonus_percentage','condition_s as bonus_condition_s','monthly as bonus_monthly','yearly as bonus_yearly')
+					->get()->toArray();
+				$insurancePoints = DB::table('insurence_offer_points')
+					->where('offer_create_main_td_id', $offer->of_main_td)
+					->select('id','poins as insurence_poins','Percentage as insurence_percentage','condition_s as insurence_condition_s','monthly as insurence_monthly','yearly as insurence_yearly')
+					->get()->toArray();
+				return [
+					'offer_id' => $offer->offer_id,
+					'employment_type' => $offer->employment_type,
+					'of_main_td' => $offer->of_main_td,
+					'accept_date_time' => $offer->accept_date_time,
+					'signature_candidate' => $offer->signature_candidate,
+					'currency' => $offer->currency,
+					'salary_ctc' => $offer->salary_ctc,
+					'salary_mode' => $offer->salary_mode,
+					'designation' => $offer->designation,
+					'joined_date' => $offer->joined_date,
+					'monthly_gross' => $offer->monthly_gross,
+					'yearly_gross' => $offer->yearly_gross,
+					'monthly_bounus_gross' => $offer->monthly_bounus_gross,
+					'yearly_bonus_gross' => $offer->yearly_bonus_gross,
+					'monthly_insurence_gross' => $offer->monthly_insurence_gross,
+					'yearly_insurence_gross' => $offer->yearly_insurence_gross,
+					'yearly_final_gross' => $offer->yearly_final_gross,
+					'monthly_final_gross' => $offer->monthly_final_gross,
+					'Basic_offer_points' => $basicPoints,
+					'Bonus_offer_points' => $bonusPoints,
+					'Insurance_offer_points' => $insurancePoints
+				];
+			});
+
+		$pdf = app('dompdf.wrapper');
+		$pdf->loadView('offer-letter', compact('offerDetails','offer_terms_conditions','offerId','exits_offer','address','comapny_name','logo','job_title','candidate_name'));
+		return $pdf->download('Offer-Letter-'.$offerId.'.pdf');
+	}
+
 	public function previewOfferLettetr(Request $request)
 	{
 
-				// dd($request->all());
-				//echo $request->id; exit; 
-		        $offerId = $request->offerId;
+			        $offerId = $request->offerId;
 
 				$exits_offer = DB::table('offer_create_main_tds')->where('offer_id','=',$offerId)->where('status','=',1)->first();
 				$rowDataOfferDetails = GeneralMethod::offerLetterdetails($offerId);

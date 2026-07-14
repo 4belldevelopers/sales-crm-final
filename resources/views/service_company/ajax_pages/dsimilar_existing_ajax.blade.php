@@ -135,6 +135,18 @@
                         }
                     }
 
+                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
+
                     if ($flag == 1) {
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
                             <a href="javascript:void(0);"  data-row-id="' .
@@ -172,7 +184,7 @@
                             <div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                            <span class="badge badge-light my-1">'.$percentage.'</span>
+                                            '.$matchBadge.'
                                         
                                         ' .
                             $skilltag .
@@ -219,7 +231,7 @@
                             <div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                            <span class="badge badge-light my-1">'.$percentage.'</span>
+                                            '.$matchBadge.'
                                         
                                         ' .
                             $skilltag .
@@ -315,34 +327,86 @@
 
                     $ctc = '';
                     $ctc = GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount);
+                    $ctc = explode('.', $ctc)[0];
                     $ectc = '';
                     $ectc = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount);
+                    $ectc = explode('.', $ectc)[0];
 
                     $current_ctc_mode = '';
-                    //$current_ctc_mode		= mb_substr($salaryMode[@$row->current_ctc_mode], 0, 1);
-                    $current_ctc_mode = mb_substr($salaryMode[$jobMode], 0, 1);
+                    $current_ctc_mode = @$salaryMode[$jobMode];
 
                     $current_ectc_mode = '';
-                    //$current_ectc_mode		= mb_substr($salaryMode[@$row->current_ectc_mode], 0, 1);
-                    $current_ectc_mode = mb_substr($salaryMode[$jobMode], 0, 1);
+                    $current_ectc_mode = @$salaryMode[$jobMode];
 
                     echo '<div class="d-flex flex-column">
                             <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                         @$current_ectc_cur .
                         @$ectc .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $current_ectc_mode .
-                        '</a>
+                        '</span></a>
                             <span class="text-muted fw-bold d-block fs-7">' .
                         $current_ctc_cur .
                         @$ctc .
-                        '/' .
+                        '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                         $current_ctc_mode .
-                        '</span>
+                        '</span></span>
                         </div>';
                 @endphp
             </td>
             <!-- Salary end  -->
+            <!-- Notice start  -->
+            <td>
+                @php
+                    $np = $row->np_id;
+                    if (empty($np)) {
+                        $np = 'N/A';
+                    }
+                    if ($row->serving_notice_period_mode == 0) {
+                        if (!empty($row->np_id)) {
+                            $np = $row->np_id . '  Days';
+                        }
+                    } else {
+                        $np = $row->np_id;
+                    }
+
+                    if ($row->serving_notice_period_mode == 1) {
+                        $originalDate = $row->np_id;
+                        $np = 'SNP LWD ' . date('d-M-y', strtotime($originalDate));
+                        $today = date('Y-m-d');
+                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
+                              $np = "Immediate";
+                            }
+                    }
+
+                    // Notice period color: Immediate = green, numeric days notice =
+                    // orange, a real serving last-working-day date = purple. !important
+                    // is required because Bootstrap/Metronic's .text-dark utility class
+                    // sets color with !important, which otherwise beats a plain inline
+                    // style — so the class is dropped below and color is fully
+                    // inline-controlled instead.
+                    $npColorStyle = 'color:#181c32 !important;';
+                    if ($np === 'Immediate') {
+                        $npColorStyle = 'color:#16a34a !important;';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColorStyle = 'color:#d97706 !important;';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $npColorStyle = 'color:#7c3aed !important;';
+                    }
+
+                    echo '<div class="d-flex flex-column">
+                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
+                        $npColorStyle .
+                        '">' .
+                        @$np .
+                        '</a>
+                   <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
+                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
+                        '</span>
+                  </div>';
+                @endphp
+            </td>
+            <!-- Notice end  -->
             <!-- Location start  -->
             <td>
                 @php
@@ -396,78 +460,25 @@
                         $row_city_name = @$row->city;
                     }
 
+                    // Row 2 is now Education (merged in from the removed Qualification
+                    // column) instead of state — same qualification_name field/truncation
+                    // used there.
                     echo '<div class="d-flex flex-column">
                     	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        ucwords($row_city_name) . ', ' . strtoupper($row_country_name) .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        @$row->qualification_name .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                     </div>';
 
                 @endphp
             </td>
             <!-- Location end  -->
-            <!-- Notice start  -->
-            <td>
-                @php
-                    $np = $row->np_id;
-                    if (empty($np)) {
-                        $np = 'N/A';
-                    }
-                    if ($row->serving_notice_period_mode == 0) {
-                        if (!empty($row->np_id)) {
-                            $np = $row->np_id . '  Days';
-                        }
-                    } else {
-                        $np = $row->np_id;
-                    }
-                    
-                    if ($row->serving_notice_period_mode == 1) {
-                        $originalDate = $row->np_id;
-                        $npDate = 'SNP LWD ' . date('d-M-y', strtotime($originalDate));
-                        $today = date('Y-m-d'); 
-                            if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                              $npDate = "Immediate";
-                            }
-                    }
-                    echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        @$np .
-                        '</a>
-                   <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <!-- Notice end  -->
-            <!-- Qualification start  -->
-            <td>
-                @php
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        strtoupper(@$row->skills) .
-                        '">' .
-                        strtoupper(mb_substr(@$row->skills, 0, 15)) .
-                        '</span> 
-                  </div>';
-                @endphp
-            </td>
-            <!-- Qualification end  -->
             <!-- Jobs start  -->
             <td>
                 @php
@@ -511,59 +522,66 @@
                 @endphp
             </td>
             <!-- Jobs end  -->
-            <!-- Stage start  -->
+            <!-- Date start  -->
+            {{-- <td>
+                @php
+
+                    $created_at = '';
+                    $created_at = $newDate = date('d M , Y', strtotime($row->created_at));
+
+                    echo '<div class="d-flex flex-column">
+                    			<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
+                        @$created_at .
+                        '</a> 
+                  			</div>';
+                @endphp
+            </td> --}}
+            <!-- Date end  -->
+            <!-- Status start  -->
             <td>
                 @php
-                    $stage_default_css = 'stage_sub_stage';
+                    // Job status: mirrors jobs.status ('active'/'hold'/'inactive') as
+                    // stored in Elasticsearch — only these 3 states are shown, as a
+                    // colored badge (green/orange/red), matching the Match% badge style
+                    // used elsewhere on this page.
+                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
+                    $rawStatus = strtolower(@$job_status_get->status);
 
-                    if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
-                        $stage_default_css = 'client_stage_sub_stage';
+                    if ($rawStatus == 'hold') {
+                        $status = 'Hold';
+                        $statusBg = '#fef3c7'; $statusColor = '#d97706';
+                    } elseif ($rawStatus == 'inactive') {
+                        $status = 'Closed';
+                        $statusBg = '#fee2e2'; $statusColor = '#dc2626';
+                    } else {
+                        $status = 'Hiring';
+                        $statusBg = '#dcfce7'; $statusColor = '#16a34a';
                     }
 
-                    if (
-                        $row->thirdparty_company_id > 0 &&
-                        $row->thirdparty_company_id == $company_id &&
-                        $row->master_status_id != 8
-                    ) {
-                        $stage_default_css = '';
+                    // Row 2: Job ID + Internal/Client tag — same recommendation_text
+                    // logic this page already used.
+                    $recommendation_text = __('messages.internal_tag');
+                    if ($row->client_comapny_id != $company_id) {
+                        $recommendation_text = __('messages.clinet_tag');
                     }
 
-                    $name = '';
-                    if ($row->master_status_id == 8) {
-                        $name = '';
-                    }
-                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->child_status_id)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
-                        }
-                    }
                     echo '<div class="d-flex flex-column">
-                        <a href="javascript.void(0);" data-row-id="' .
-                        @$row->id .
-                        '" class="d-flex flex-column ' .
-                        $stage_default_css .
-                        '" data-toggle="modal" data-target="#' .
-                        $stage_default_css .
-                        '">
-                            <span class="badge fw-bolder fs-6 ' .
-                        @$row->css_style .
-                        ' px-2 py-1">' .
-                        ucwords(mb_substr($row->name, 0, 10)) .
+                       <span class="badge my-1" style="background:' .
+                        $statusBg .
+                        ';color:' .
+                        $statusColor .
+                        ';font-weight:600;width:fit-content;">' .
+                        $status .
                         '</span>
-                            <span class="text-muted fw-bold d-block fs-7">' .
-                        @$name .
+                      <span class="fw-bold text-muted d-block fs-7">' .
+                        @$row->jobId .
+                        ' -' .
+                        $recommendation_text .
                         '</span>
-                        </a>
                     </div>';
-
                 @endphp
             </td>
-            <!-- Stage end  -->
+            <!-- Status end  -->
             <!-- Source start  -->
             <td>
                 @php
@@ -626,6 +644,14 @@
 						   </div>';
                     }
 
+                    // Row 2 is the recruiter's represented company — same
+                    // post_company_name (falling back to company_name) field used on the
+                    // Similar Candidates tab of the main apptracker page.
+                    $post_company_name = @$row->post_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->company_name;
+                    }
+
                     echo '<div class="d-flex flex-column">
 							<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
                         @$rowpostedby .
@@ -633,67 +659,67 @@
                         ucfirst(mb_substr($rowpostedby, 0, 10)) .
                         '</a>
 						  <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$row->uc_company_name .
+                        @$post_company_name .
                         '">' .
-                        mb_substr(@$row->uc_company_name, 0, 10) .
+                        mb_substr(@$post_company_name, 0, 10) .
                         '</span>
-						  ';
+                        </div>';
                 @endphp
             </td>
             <!-- Source end  -->
-            <!-- Date start  -->
-            {{-- <td>
-                @php
-
-                    $created_at = '';
-                    $created_at = $newDate = date('d M , Y', strtotime($row->created_at));
-
-                    echo '<div class="d-flex flex-column">
-                    			<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        @$created_at .
-                        '</a> 
-                  			</div>';
-                @endphp
-            </td> --}}
-            <!-- Date end  -->
-            <!-- Status start  -->
+            <!-- Stage start  -->
             <td>
                 @php
-                    $status = $active = $hold = $inactive = $class = $recommendation_id = '';
+                    $stage_default_css = 'stage_sub_stage';
 
-                    // $status = ucwords($row->job_status);
-                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
-                    $status = $job_status_get->status;
-
-                    $class = $job_status[$row->job_status];
-                    
-                    if ($status == 'Active') {
-                        $status = 'Hiring';
-                    }
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
+                    if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
+                        $stage_default_css = 'client_stage_sub_stage';
                     }
 
-                    $recommendation_text = __('messages.internal_tag');
-                    if ($row->client_comapny_id != $company_id) {
-                        $recommendation_text = __('messages.clinet_tag');
+                    if (
+                        $row->thirdparty_company_id > 0 &&
+                        $row->thirdparty_company_id == $company_id &&
+                        $row->master_status_id != 8
+                    ) {
+                        $stage_default_css = '';
                     }
 
+                    $name = '';
+                    if ($row->master_status_id == 8) {
+                        $name = '';
+                    }
+                    if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
+                        $childStatus = '';
+                        $childStatus = DB::table('candidate_status')
+                            ->select('*')
+                            ->where('id', $row->child_status_id)
+                            ->first();
+                        if (!empty($childStatus)) {
+                            $name = @$childStatus->name;
+                        }
+                    }
                     echo '<div class="d-flex flex-column">
-                       <a href="javascript:void(0);" class="fs-6 ' .
-                        @$class .
-                        ' text-hover-success">' .
-                        $status .
-                        '</a>
-                      <span class="fw-bold text-muted d-block fs-7">' .
-                        @$row->jobId .
-                        ' -' .
-                        $recommendation_text .
+                        <a href="javascript.void(0);" data-row-id="' .
+                        @$row->id .
+                        '" class="d-flex flex-column ' .
+                        $stage_default_css .
+                        '" data-toggle="modal" data-target="#' .
+                        $stage_default_css .
+                        '">
+                            <span class="badge fw-bolder fs-6 ' .
+                        @$row->css_style .
+                        ' px-2 py-1">' .
+                        ucwords(mb_substr($row->name, 0, 10)) .
                         '</span>
+                            <span class="text-muted fw-bold d-block fs-7">' .
+                        @$name .
+                        '</span>
+                        </a>
                     </div>';
+
                 @endphp
             </td>
-            <!-- Status end  -->
+            <!-- Stage end  -->
             <!-- Action start  -->
             <td>
                 @php
@@ -793,7 +819,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="13" style="text-align: center; color: black;">
+        <td colspan="11" style="text-align: center; color: black;">
             No data available in table
         </td>
 

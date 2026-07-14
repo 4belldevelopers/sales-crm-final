@@ -753,14 +753,16 @@ use Carbon\Carbon;
   <!--begin::candidateDashboard Content-->
         <div class="tab-pane" id="candidateDashboard" role="tabpanel">
           @php
-            $sdbActive=(int)($counts->get('active',0)); $sdbHold=(int)($counts->get('hold',0)); $sdbClosed=(int)($counts->get('inactive',0));
-            $sdbAdded=(int)(@$total_candidates ?? 0);
+            // My Dashboard cards mirror the overall (all-time) header cards, not a date window.
+            $sdbActive=(int)($scp_active ?? $counts->get('active',0) ?? 0); $sdbHold=(int)($counts->get('hold',0)); $sdbClosed=(int)($counts->get('inactive',0));
+            $sdbAdded=(int)($scp_cand ?? @$total_candidates ?? 0);
             $sdbInReview=(int)(@$inreview_count ?? 0); $sdbSourcing=(int)(@$sourcing_count ?? 0); $sdbScreen=(int)(@$screening_count ?? 0);
-            $sdbEval=(int)(@$evaluation_count ?? 0); $sdbNego=(int)(@$negotiation_count ?? 0); $sdbOffer=(int)(@$offer_count ?? 0);
-            $sdbJoined=(int)(@$joined_count ?? 0); $sdbReject=(int)(@$Rejected_count ?? 0);
-            $sdbInterviews=(int) array_sum((array)(@$interviewValuesMonth ?? []));
+            $sdbEval=(int)(@$evaluation_count ?? 0); $sdbNego=(int)(@$negotiation_count ?? 0);
+            $sdbOffer=(int)($scpOffersTotal ?? @$offer_count ?? 0);
+            $sdbJoined=(int)($scp_join ?? @$joined_count ?? 0); $sdbReject=(int)(@$Rejected_count ?? 0);
+            $sdbInterviews=(int)($scp_intv ?? @$interviewsTrackerTotal ?? 0);
             $sdbConv=$sdbAdded>0 ? round($sdbJoined/$sdbAdded*100,1) : 0;
-            $sdbWin=(isset($startOfMonth)&&isset($endOfMonth)) ? (date('d M y',strtotime($startOfMonth)).' – '.date('d M y',strtotime($endOfMonth))) : '';
+            $sdbWin='';
             $sdbStages=[['In Review',$sdbInReview,'#bdbd26'],['Sourcing',$sdbSourcing,'#000000'],['Screening',$sdbScreen,'#c000ff'],['Evaluation',$sdbEval,'#2896ff'],['Negotiation',$sdbNego,'#ff4098'],['Offer',$sdbOffer,'#ffab00'],['Joined',$sdbJoined,'#06c732'],['Rejected',$sdbReject,'#ff0202']];
           @endphp
           <div class="sdb-wrap">

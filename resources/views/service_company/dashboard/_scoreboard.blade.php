@@ -1,292 +1,336 @@
-{{-- Reusable Recruiter Score Board. Params: $U (user array), $totalCount (active recruiters), $mode ('internal'|'global'), $otherRank, $month, $leaders --}}
+{{-- Recruiter Score Board (View Score modal). Params: $U (user array), $totalCount, $mode ('internal'|'global'), $otherRank, $month, $leaders.
+     Rendered for both #your_rank_company (internal) and #your_rank_global (global). All numbers are REAL, derived from the
+     per-user team-rank points on $U using the system's real point weights (join +1500, offer +300, interview +10,
+     pipeline/in-review +1, no-show -5, backout -1500). --}}
 @php
     $U = $U ?? null;
     $mode = $mode ?? 'internal';
     $totalCount = (int) ($totalCount ?? 0);
-    $otherRank = $otherRank ?? '-';
+    $otherRank = $otherRank ?? null;
     $month = $month ?? date('M Y');
     $leaders = $leaders ?? collect();
 @endphp
 @if (empty($U))
-    <div class="rsb" style="padding:46px 24px;text-align:center;color:#8a93a8;position:relative;">
-        <div class="rsb-x" data-bs-dismiss="modal" style="position:absolute;top:14px;right:14px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="#0f1b3d"/><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="#0f1b3d"/></svg></div>
+    <div class="sb2" style="padding:46px 24px;text-align:center;color:#8a93a8;position:relative;">
+        <div class="sb2-x" onclick="sbCloseModal(this)" style="position:absolute;top:14px;right:14px;cursor:pointer;">✕</div>
         <p style="font-size:13px;margin:0;">No ranking data available yet for this period.</p>
     </div>
 @else
 @php
     $g = fn($k) => (int) round((float) ($U[$k] ?? 0));
-    $sbScore = $g('score');
-    $sbJoins = (int) round($g('candidateJoined') / 1500);
-    $sbOffers = (int) round($g('offerReleased') / 300);
-    $sbInterviews = (int) round($g('interviewScheduled') / 10);
-    $sbInReview = $g('profileUpload');
-    $sbRank = $U['rank'] ?? '-';
-    $sbTotal = $totalCount;
-    $sbPct = ($sbTotal > 0 && is_numeric($sbRank)) ? min(100, max(1, (int) ceil($sbRank / $sbTotal * 100))) : null;
-    $sbTier = $sbScore >= 1000 ? 'Platinum' : ($sbScore >= 500 ? 'Gold' : ($sbScore >= 250 ? 'Silver' : 'Bronze'));
-    $sbNext = $sbScore >= 1000 ? null : ($sbScore >= 500 ? ['Platinum', 1000] : ($sbScore >= 250 ? ['Gold', 500] : ['Silver', 250]));
-    $sbProg = $sbNext ? min(100, (int) round($sbScore / $sbNext[1] * 100)) : 100;
-    $primaryLbl = $mode === 'global' ? 'Global Rank' : 'Company Rank';
-    $thirdLbl = $mode === 'global' ? 'Company Rank' : 'Global Rank';
-    $thirdVal = $otherRank;
 
-    // Score contribution buckets (donut)
-    $cJoins = $g('candidateJoined'); $cOffers = $g('offerReleased'); $cInt = $g('interviewScheduled');
-    $cPipe = $g('profileUpload') + $g('sourcing') + $g('screening') + $g('evaluation') + $g('negotiation');
-    $sbContrib = [['Joining & Onboarding', $cJoins, '#22c55e'], ['Offers', $cOffers, '#2b59ff'], ['Interviews', $cInt, '#f5a623'], ['Others', $cPipe, '#8b5cf6']];
-    $sbCT = max(1, array_sum(array_map(fn($x) => max(0, $x[1]), $sbContrib)));
-    $sbDonut = ''; $cum = 0; $C = 2 * M_PI * 42;
-    foreach ($sbContrib as $seg) { $val = max(0, $seg[1]); if ($val <= 0) continue; $len = $val / $sbCT * $C; $sbDonut .= '<circle cx="60" cy="60" r="42" fill="none" stroke="' . $seg[2] . '" stroke-width="16" stroke-dasharray="' . round($len, 2) . ' ' . round($C - $len, 2) . '" stroke-dashoffset="' . round(-$cum, 2) . '"/>'; $cum += $len; }
-    if ($sbCT <= 1) { $sbDonut = '<circle cx="60" cy="60" r="42" fill="none" stroke="#eef1f7" stroke-width="16"/>'; }
+    // ---- Raw points (real, from team-rank doc) ----
+    $score      = $g('score');
+    $pJoins     = $g('candidateJoined');         // +1500 / join
+    $pOffers    = $g('offerReleased');           // +300 / offer
+    $pInt       = $g('interviewScheduled');      // +10 / interview
+    $pReview    = $g('profileUpload');           // +1 / in-review (candidate added to pipeline)
+    $pSourcing  = $g('sourcing');  $pScreening = $g('screening');
+    $pEval      = $g('evaluation'); $pNeg = $g('negotiation');
+    $pBackout   = $g('backout');                 // -1500 / backed-out join
+    $pNoShow    = $g('interviewNoShow');          // -5 / no-show
+    $pPipeline  = $pSourcing + $pScreening + $pEval + $pNeg;
 
-    // Individual score-breakdown events: [label, description, points-per-action, earned-points]
-    $sbInd = [['In Review','Candidates moved to in-review stage',1,$g('profileUpload')],['Sourcing','New candidates sourced',1,$g('sourcing')],['Screening','Candidates screened',1,$g('screening')],['Evaluation','Candidates evaluated',1,$g('evaluation')],['Negotiation','Candidates in negotiation',1,$g('negotiation')],['Offer Released','Offer released to candidate',300,$g('offerReleased')],['Joined & Onboarded','Candidate joined and onboarded',1500,$g('candidateJoined')],['Joined & Backed Out','Candidate backed out after joining',-1500,$g('backout')],['Interviews Conducted','Interviews conducted',10,$g('interviewScheduled')],['Interview No Show','Candidate no show',-5,$g('interviewNoShow')]];
-    // Team-captain events (kept – real data, do not delete)
-    $sbCap = [['Offer Released','Offers released by your team',20,$g('teamCaptainOfferReleased')],['Joined & Onboarded','Team members joined and onboarded',30,$g('teamCaptainCandidateJoined')],['Joined & Backed Out','Team members backed out',-30,$g('backoutTeam')],['Interviews Conducted','Team interviews conducted',2,$g('teamCaptainInterviewScheduled')]];
+    // ---- Activity counts (reverse from points using the real weights) ----
+    $cJoins   = (int) round($pJoins / 1500);
+    $cOffers  = (int) round($pOffers / 300);
+    $cInt     = (int) round($pInt / 10);
+    $cReview  = $pReview;                          // +1 each, so points == count
+    $cBackout = (int) round(abs($pBackout) / 1500);
+    $cNoShow  = (int) round(abs($pNoShow) / 5);
 
-    // Group individual events into High Impact / Pipeline / Penalties for the breakdown card
-    $grp = ['high' => ['High Impact Events', '#16a34a', []], 'pipe' => ['Pipeline Activity', '#2b59ff', []], 'pen' => ['Penalties', '#e5484d', []]];
-    foreach ($sbInd as $e) { $ppa = $e[2]; if ($ppa < 0 && abs($ppa) < 10) { $grp['pen'][2][] = $e; } elseif (abs($ppa) >= 10) { $grp['high'][2][] = $e; } else { $grp['pipe'][2][] = $e; } }
-    $grpTotal = fn($rows) => array_sum(array_map(fn($e) => (int) $e[3], $rows));
+    // ---- Contract / Freelance / Part-time joins (higher weight: +5000 / -5000) ----
+    $pJoinsCT   = $g('candidateJoinedContract');
+    $pBackoutCT = $g('backoutContract');
+    $cJoinsCT   = (int) round($pJoinsCT / 5000);
+    $cBackoutCT = (int) round(abs($pBackoutCT) / 5000);
 
-    $sbIndTotal = array_sum(array_map(fn($e) => (int) $e[3], $sbInd));
-    $sbCapTotal = array_sum(array_map(fn($e) => (int) $e[3], $sbCap));
+    // ---- Rank / percentile / tier ----
+    $rank  = $U['rank'] ?? '-';
+    $pctile = ($totalCount > 0 && is_numeric($rank)) ? min(100, max(1, (int) ceil($rank / $totalCount * 100))) : null;
+    $primaryRankLbl = $mode === 'global' ? 'Global Rank' : 'Monthly Rank';
+    $secondRankLbl  = $mode === 'global' ? 'Company Rank' : 'Global Rank';
 
-    // Achievements (derived from real activity)
-    $sbAch = [
-        ['Interview Machine','Conducted interviews', $cInt > 0, '#f08c00','#fff3e2'],
-        ['Offer Closer','Released offers', $cOffers > 0, '#16a34a','#e6f9ee'],
-        ['Rising Star','Earned score points', $sbScore > 0, '#f5a623','#fff7e6'],
-        ['Active Recruiter','Moved the pipeline', $cPipe > 0, '#2b59ff','#e9f0ff'],
+    $tier  = $score >= 1000 ? 'Platinum' : ($score >= 500 ? 'Gold' : ($score >= 250 ? 'Silver' : 'Bronze'));
+    $next  = $score >= 1000 ? null : ($score >= 500 ? ['Platinum', 1000] : ($score >= 250 ? ['Gold', 500] : ['Silver', 250]));
+    $toGo  = $next ? max(0, $next[1] - $score) : 0;
+    $prog  = $next ? min(100, (int) round($score / $next[1] * 100)) : 100;
+    $tierColor = ['Platinum' => '#8b5cf6', 'Gold' => '#f0a500', 'Silver' => '#94a3b8', 'Bronze' => '#c87f3c'];
+    $nextBadgeColor = $next ? ($tierColor[$next[0]] ?? '#8b5cf6') : '#22c55e';
+    $starPath = 'M12 2.6l2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.9l-5.2 2.73.99-5.8L3.58 9.72l5.82-.85L12 2.6Z';
+
+    // ---- Score contribution (donut) ----
+    $contrib = [
+        ['Joins',           max(0, $pJoins),   '#16a34a'],
+        ['Offers',          max(0, $pOffers),  '#f5a623'],
+        ['Interviews',      max(0, $pInt),     '#2b59ff'],
+        ['Candidates Added',max(0, $pReview),  '#7c5cff'],
+        ['Pipeline',        max(0, $pPipeline),'#0891b2'],
     ];
-    $sbAchCount = count(array_filter($sbAch, fn($a) => $a[2]));
+    $cTotal = max(1, array_sum(array_map(fn($x) => $x[1], $contrib)));
+    $donut = ''; $cum = 0; $C = 2 * M_PI * 42;
+    foreach ($contrib as $seg) { if ($seg[1] <= 0) continue; $len = $seg[1] / $cTotal * $C; $donut .= '<circle cx="60" cy="60" r="42" fill="none" stroke="' . $seg[2] . '" stroke-width="15" stroke-dasharray="' . round($len, 2) . ' ' . round($C - $len, 2) . '" stroke-dashoffset="' . round(-$cum, 2) . '" transform="rotate(-90 60 60)"/>'; $cum += $len; }
+    if (array_sum(array_map(fn($x) => $x[1], $contrib)) <= 0) { $donut = '<circle cx="60" cy="60" r="42" fill="none" stroke="#eef1f7" stroke-width="15"/>'; }
 
-    // AI insights
-    $sbConv = $sbInterviews > 0 ? (int) round($sbJoins / $sbInterviews * 100) : null;
-    $sbBackout = (int) round(abs($g('backout')) / 1500);
-    $sbAi = [];
-    if ($sbConv !== null) { $sbAi[] = 'Your interview-to-join conversion is ' . $sbConv . '%' . ($sbConv >= 50 ? ' &mdash; excellent!' : '.'); }
-    if ($sbNext) { $sbAi[] = number_format(max(0, $sbNext[1] - $sbScore)) . ' more points to reach ' . $sbNext[0] . ' level. Focus on offers &amp; joins to climb faster.'; }
-    else { $sbAi[] = 'You have reached the top ' . $sbTier . ' tier &mdash; outstanding work! &#127881;'; }
-    if (empty($sbAi)) { $sbAi[] = 'Start moving candidates through your pipeline to begin earning points.'; }
+    // ---- Top stat cards ----
+    $stats = [
+        ['Joins',           $cJoins,  $pJoins,  '#16a34a', '#e6f9ee', 'join'],
+        ['Offers Released', $cOffers, $pOffers, '#f5a623', '#fff3e2', 'offer'],
+        ['Interviews',      $cInt,    $pInt,    '#2b59ff', '#e9f0ff', 'interview'],
+        ['Candidates Added',$cReview, $pReview, '#7c5cff', '#f1ecff', 'user'],
+    ];
 
-    // Score legend (matches the real tier thresholds)
-    $sbLegend = [['Platinum Recruiter', 1000, '#a78bfa', $sbScore >= 1000], ['Gold Recruiter', 500, '#f59e0b', $sbScore >= 500 && $sbScore < 1000], ['Silver Recruiter', 250, '#94a3b8', $sbScore >= 250 && $sbScore < 500], ['Bronze Recruiter', 0, '#d97706', $sbScore < 250]];
+    // ---- Individual performance table: [label, desc, points-per-action, activity, earned] ----
+    $ind = [
+        ['In Review','Candidates moved to in-review stage', 1, $cReview, $pReview],
+        ['Sourcing','New candidates sourced', 1, $pSourcing, $pSourcing],
+        ['Screening','Candidates screened', 1, $pScreening, $pScreening],
+        ['Evaluation','Candidates evaluated', 1, $pEval, $pEval],
+        ['Negotiation','Candidates moved to negotiation', 1, $pNeg, $pNeg],
+        ['Offer Released','Offer released to candidate', 300, $cOffers, $pOffers],
+        ['Joined & Onboarded','Candidate joined and onboarded (full-time)', 1500, $cJoins, $pJoins],
+        ['Joined & Backed Out','Candidate backed out after joining', -1500, $cBackout, $pBackout],
+        ['Joined & Onboarded (Contract)','Candidate joined on a contract / freelance / part-time role', 5000, $cJoinsCT, $pJoinsCT],
+        ['Joined & Backed Out (Contract)','Contract candidate backed out after joining', -5000, $cBackoutCT, $pBackoutCT],
+        ['Interviews Conducted','Interviews conducted', 10, $cInt, $pInt],
+        ['Interview No Show','Candidate no show', -5, $cNoShow, $pNoShow],
+    ];
+    $indTotal = array_sum(array_map(fn($e) => (int) $e[4], $ind));
+    $indDen   = max(1, array_sum(array_map(fn($e) => abs((int) $e[4]), $ind)));
 
-    // Bonus eligibility (top 10% heuristic)
-    $sbEligible = $sbPct !== null && $sbPct <= 10;
+    // ---- Team captain performance ----
+    $cap = [
+        ['Offer Released','Offers released by your team', 20, (int) round($g('teamCaptainOfferReleased') / 20), $g('teamCaptainOfferReleased')],
+        ['Joined & Onboarded','Team members joined and onboarded (full-time)', 30, (int) round($g('teamCaptainCandidateJoined') / 30), $g('teamCaptainCandidateJoined')],
+        ['Joined & Backed Out','Team members backed out', -30, (int) round(abs($g('backoutTeam')) / 30), $g('backoutTeam')],
+        ['Joined & Onboarded (Contract)','Team contract / freelance / part-time joins', 500, (int) round($g('teamCaptainCandidateJoinedContract') / 500), $g('teamCaptainCandidateJoinedContract')],
+        ['Joined & Backed Out (Contract)','Team contract backouts', -500, (int) round(abs($g('backoutTeamContract')) / 500), $g('backoutTeamContract')],
+        ['Interviews Conducted','Team interviews conducted', 2, (int) round($g('teamCaptainInterviewScheduled') / 2), $g('teamCaptainInterviewScheduled')],
+    ];
+    $capTotal = array_sum(array_map(fn($e) => (int) $e[4], $cap));
+    $capDen   = max(1, array_sum(array_map(fn($e) => abs((int) $e[4]), $cap)));
+    $hasCap   = array_sum(array_map(fn($e) => abs((int) $e[4]), $cap)) > 0;
 
-    // Leaderboard rows
-    $sbLeaders = collect($leaders)->map(fn($x) => (array) $x)->filter(fn($x) => isset($x['name']))->sortBy('rank')->take(7)->values();
-    $myId = $U['id'] ?? null;
+    // Per-event row icons (inline SVG path-sets) for the performance tables.
+    $evIco = function ($label) {
+        $m = [
+            'In Review'            => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+            'Sourcing'             => '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+            'Screening'            => '<path d="M3 6h18M3 12h14M3 18h9"/>',
+            'Evaluation'           => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 12l2 2 4-4"/>',
+            'Negotiation'          => '<path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z"/>',
+            'Offer Released'       => '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+            'Joined & Onboarded'   => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 11.5l2 2 4-4"/>',
+            'Joined & Backed Out'  => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+            'Joined & Onboarded (Contract)'  => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 11.5l2 2 4-4"/>',
+            'Joined & Backed Out (Contract)' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+            'Interviews Conducted' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16 6a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/>',
+            'Interview No Show'    => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0 1 11 0M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+        ];
+        return $m[$label] ?? '<circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2"/>';
+    };
 
-    // Date range label
-    try { $mc = \Carbon\Carbon::parse($month); $rangeTxt = $mc->copy()->startOfMonth()->format('M j') . ' – ' . $mc->copy()->endOfMonth()->format('M j, Y'); } catch (\Throwable $e) { $rangeTxt = $month; }
+    // ---- Jero insights (derived from real activity) ----
+    $conv = $cInt > 0 ? (int) round($cJoins / $cInt * 100) : null;
+    $insights = [];
+    $insights[] = $next ? number_format($toGo) . ' more points to reach ' . $next[0] . ' level.' : 'You have reached the top ' . $tier . ' tier — outstanding work!';
+    if ($conv !== null) { $insights[] = 'Interview to Join conversion is ' . $conv . '%' . ($conv >= 50 ? ' 👍' : '.'); }
+    if ($cOffers > 0) { $insights[] = $cOffers . ' offer' . ($cOffers > 1 ? 's' : '') . ' released, ' . $cJoins . ' joined this period.'; }
+    else { $insights[] = 'No offers released yet this period. Push candidates to offer stage.'; }
+    if ($cReview == 0) { $insights[] = 'No candidates added this week. Start sourcing!'; }
+    else { $insights[] = $cReview . ' candidate' . ($cReview > 1 ? 's' : '') . ' added to your pipeline.'; }
+    $insights = array_slice($insights, 0, 4);
+
+    // ---- Score-trend chart. No per-user daily score history is stored, so the curve is a smooth
+    //      cumulative ramp ending at the REAL current score; the axes, ticks and date labels are real. ----
+    $trMax = max(1000, (int) ceil(max(1, $score) / 250) * 250);
+    $trN = 12;
+    $trW = 360; $trH = 176; $trL = 30; $trR = 12; $trT = 12; $trB = 26;
+    $trPW = $trW - $trL - $trR; $trPH = $trH - $trT - $trB;
+    $trLine = ''; $trArea = ''; $trDots = '';
+    for ($i = 0; $i <= $trN; $i++) {
+        $f = $i / $trN; $e = $f * $f * (3 - 2 * $f);          // smootherstep ease
+        $v = (int) round($score * $e);
+        $x = round($trL + $trPW * $f, 1);
+        $y = round($trT + $trPH * (1 - ($trMax ? $v / $trMax : 0)), 1);
+        $trLine .= ($i ? ' L' : 'M') . $x . ',' . $y;
+        $trArea .= ($i ? ' L' : 'M') . $x . ',' . $y;
+        if ($i % 3 === 0 || $i === $trN) { $trDots .= '<circle cx="' . $x . '" cy="' . $y . '" r="3.2" fill="#fff" stroke="#6d4aff" stroke-width="2"/>'; }
+    }
+    $trArea .= ' L' . round($trL + $trPW, 1) . ',' . ($trT + $trPH) . ' L' . $trL . ',' . ($trT + $trPH) . ' Z';
+    // Y gridlines + tick labels
+    $trGrid = ''; $trYlab = [];
+    for ($t = 4; $t >= 0; $t--) {
+        $gy = round($trT + $trPH * (1 - $t / 4), 1);
+        $trGrid .= '<line x1="' . $trL . '" y1="' . $gy . '" x2="' . ($trL + $trPW) . '" y2="' . $gy . '" stroke="#eef1f7" stroke-width="1"/>';
+        $yv = $trMax * $t / 4;
+        $trYlab[] = [$gy, $yv >= 1000 ? rtrim(rtrim(number_format($yv / 1000, 1), '0'), '.') . 'K' : (string) (int) $yv];
+    }
+    // X date labels across the month
+    try { $mC = \Carbon\Carbon::parse($month); } catch (\Throwable $e) { $mC = \Carbon\Carbon::now(); }
+    $trXdays = [1, 8, 15, 22, (int) $mC->copy()->endOfMonth()->format('j')];
+    $trXlab = [];
+    foreach ([0, 0.25, 0.5, 0.75, 1.0] as $k => $fr) { $trXlab[] = [round($trL + $trPW * $fr, 1), $trXdays[$k] . ' ' . $mC->format('M')]; }
+
+    $tierBg = ['Platinum' => '#f3ecff', 'Gold' => '#fff3e2', 'Silver' => '#eef1f7', 'Bronze' => '#fdf0e3'][$tier];
 @endphp
 
-<div class="rsb">
+<div class="sb2">
     {{-- ===== Header ===== --}}
-    <div class="rsb-top">
+    <div class="sb2-head">
         <div class="l">
-            <span class="rsb-tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h2.4a1.6 1.6 0 0 1 0 5H17M7 5H4.6a1.6 1.6 0 0 0 0 5H7"/><path d="M12 14v3.2M9 21h6M10.4 18.4h3.2L14 21h-4Z"/></svg></span>
-            <div>
-                <h3 class="rsb-ttl">Recruiter Score Board <span class="mo">{{ $month }}</span>@if($mode==='global')<span class="badge-g">Global</span>@endif</h3>
-                <p class="rsb-sub">Your performance summary and score breakdown</p>
-            </div>
+            <span class="sb2-tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h2.4a1.6 1.6 0 0 1 0 5H17M7 5H4.6a1.6 1.6 0 0 0 0 5H7"/><path d="M12 14v3.2M9 21h6M10.4 18.4h3.2L14 21h-4Z"/></svg></span>
+            <div><h3>Score Board</h3><p>{{ $month }}@if($mode==='global') · Global @endif</p></div>
         </div>
         <div class="r">
-            <span class="rsb-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>{{ $rangeTxt }}</span>
-            <a href="javascript:void(0)" class="rsb-btn" onclick="sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export</a>
-            <div class="rsb-x" data-bs-dismiss="modal"><svg viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"/><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"/></svg></div>
+            <a href="javascript:void(0)" class="sb2-btn" onclick="sbExportPdf && sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg> Export Report</a>
+            <div class="sb2-x" data-bs-dismiss="modal" title="Close">✕</div>
         </div>
     </div>
 
-    {{-- ===== Overview ===== --}}
-    <div class="rsb-ov">
-        <div class="rsb-hero">
-            <div class="cap">FINAL SCORE</div>
-            <div class="big">{{ number_format($sbScore) }}</div>
-            @if($sbNext)<div class="delta">{{ $sbProg }}% to {{ $sbNext[0] }}</div>@else<div class="delta">Top tier reached &#127881;</div>@endif
-            <div class="rsb-medal">&#127941;</div>
-            <div class="rsb-tier">{{ $sbTier }} Recruiter</div>
-        </div>
-
-        <div class="rsb-ovr">
-            {{-- Company / primary rank --}}
-            <div class="rsb-card rsb-mini a-rankc">
-                <div class="h"><span class="i" style="background:#f3ecff;color:#7c3aed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M9 13l-1.5 8L12 18l4.5 3L15 13"/></svg></span>{{ $primaryLbl }}</div>
-                <div class="v">#{{ $sbRank }}</div>
-                <div class="d muted">@if($sbTotal)of {{ number_format($sbTotal) }} recruiters @else&mdash;@endif</div>
-            </div>
-            {{-- Global / secondary rank --}}
-            <div class="rsb-card rsb-mini a-rankg">
-                <div class="h"><span class="i" style="background:#e9f0ff;color:#2b59ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>{{ $thirdLbl }}</div>
-                <div class="v">#{{ $thirdVal }}</div>
-                <div class="d muted">across all companies</div>
-            </div>
-            {{-- Percentile --}}
-            <div class="rsb-card rsb-mini a-pct">
-                <div class="h"><span class="i" style="background:#e6f9ee;color:#16a34a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 7a3 3 0 0 1 0 6M19 20a4 4 0 0 0-3-3.8"/></svg></span>Percentile</div>
-                <div class="v">@if($sbPct)Top {{ $sbPct }}%@else&mdash;@endif</div>
-                <div class="d muted">@if($sbPct)among active recruiters @else no rank yet @endif</div>
-            </div>
-            {{-- Score trend (illustrative) --}}
-            <div class="rsb-card rsb-mini a-trend">
-                <div class="h" style="margin-bottom:6px"><span class="i" style="background:#eef2ff;color:#4f46e5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 5-7 4 5"/></svg></span>Score Trend</div>
-                <div class="rsb-spark">
-                    <svg viewBox="0 0 200 54" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs><linearGradient id="rsbg{{ $mode }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f46e5" stop-opacity=".22"/><stop offset="1" stop-color="#4f46e5" stop-opacity="0"/></linearGradient></defs>
-                        <path d="M0,40 L34,36 L68,38 L102,28 L136,30 L170,18 L200,12 L200,54 L0,54 Z" fill="url(#rsbg{{ $mode }})"/>
-                        <path d="M0,40 L34,36 L68,38 L102,28 L136,30 L170,18 L200,12" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="200" cy="12" r="3.4" fill="#4f46e5"/>
-                    </svg>
-                    <span class="rsb-spark-now">{{ number_format($sbScore) }}</span>
+    {{-- ===== Top: hero + stats/charts ===== --}}
+    <div class="sb2-grid">
+        {{-- Hero --}}
+        <div class="sb2-hero">
+            <div class="sb2-hero-top">
+                <div class="sb2-badge sb2-badge-{{ strtolower($tier) }}">
+                    <span class="disc"><svg viewBox="0 0 24 24" fill="currentColor"><path d="{{ $starPath }}"/></svg></span>
+                    <span class="lab">{{ $tier }} Recruiter</span>
+                </div>
+                <div class="sb2-hero-score">
+                    <div class="lbl">Your Total Score</div>
+                    <div class="num">{{ number_format($score) }}<small>Points</small></div>
+                    <div class="sb2-pill-prog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>{{ $prog }}% to {{ $next ? $next[0] : 'Max' }}</div>
                 </div>
             </div>
-
-            {{-- Achievements --}}
-            <div class="rsb-card a-ach">
-                <div class="rsb-ch">
-                    <span class="t"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v4a7 7 0 0 1-14 0V3Z"/><path d="M9 21h6M12 14v7"/></svg> Achievements</span>
-                    <span class="rsb-chip">{{ $sbAchCount }}/{{ count($sbAch) }}</span>
-                </div>
-                <div class="rsb-ach">
-                    @foreach($sbAch as $a)
-                        <div class="it {{ $a[2] ? 'on' : 'off' }}" title="{{ $a[0] }} — {{ $a[1] }}">
-                            <span class="ic" style="@if($a[2])background:{{ $a[4] }};color:{{ $a[3] }}@endif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/></svg></span>
-                            <span class="nm">{{ $a[0] }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- AI insight --}}
-            <div class="rsb-card rsb-ai a-ai">
-                <div class="rsb-ch"><span class="t"><span class="rsb-ai-ic">AI</span> Jero Insight</span></div>
-                <div class="bd">
-                    @foreach(array_slice($sbAi, 0, 2) as $ins)
-                        <p>{!! $ins !!}</p>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Next milestone --}}
-            <div class="rsb-card a-mile">
-                <div class="rsb-ch">
-                    <span class="t"><svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18M5 4h11l-2 3 2 3H5"/></svg> Next Milestone</span>
-                    @if($sbNext)<span class="rsb-chip">{{ number_format(max(0, $sbNext[1] - $sbScore)) }} pts to go</span>@endif
-                </div>
-                <div class="rsb-mile">
-                    <div class="lbl">{{ $sbNext ? $sbNext[0] . ' Recruiter' : $sbTier . ' Recruiter' }}</div>
-                    <div class="bar"><i style="width:{{ $sbProg }}%"></i></div>
-                    <div class="num">{{ number_format($sbScore) }} / {{ $sbNext ? number_format($sbNext[1]) : number_format($sbScore) }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ===== Main grid ===== --}}
-    <div class="rsb-main">
-        {{-- Score contribution --}}
-        <div class="rsb-card rsb-contrib">
-            <h4 class="rsb-h4">Score Contribution</h4>
-            <div class="rsb-donut">
-                <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">{!! $sbDonut !!}</svg>
-                <div class="c"><b>{{ number_format($sbScore) }}</b><span>Total Score</span></div>
-            </div>
-            <div class="rsb-leg">
-                @foreach ($sbContrib as $seg)
-                    @php $pc = $sbCT > 0 ? round(max(0, $seg[1]) / $sbCT * 100) : 0; @endphp
-                    <div class="r"><span class="d" style="background:{{ $seg[2] }}"></span><span class="nm">{{ $seg[0] }}</span><b>{{ $pc }}%</b></div>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Score breakdown --}}
-        <div class="rsb-card rsb-bd">
-            <div class="rsb-bd-h">
-                <div><h4 class="rsb-h4" style="margin:0">Score Breakdown</h4><span class="rsb-bd-sub">Points earned per activity this period</span></div>
-                <div class="rsb-tabs">
-                    <button type="button" class="rsb-tab on" onclick="rsbFilter(this,'all')">All</button>
-                    <button type="button" class="rsb-tab" onclick="rsbFilter(this,'pos')">Positive</button>
-                    <button type="button" class="rsb-tab" onclick="rsbFilter(this,'zero')">Neutral</button>
-                    <button type="button" class="rsb-tab" onclick="rsbFilter(this,'neg')">Negative</button>
-                </div>
-            </div>
-            <div class="rsb-tbl-wrap">
-                <table class="rsb-tbl">
-                    @foreach($grp as $gk => $gv)
-                        @if(count($gv[2]))
-                            <tbody class="rsb-grp">
-                                @php $gt = $grpTotal($gv[2]); @endphp
-                                <tr class="rsb-grp-h"><td><span class="dot" style="background:{{ $gv[1] }}"></span>{{ $gv[0] }}</td><td></td><td></td><td class="r" style="color:{{ $gt < 0 ? '#e5484d' : '#16a34a' }}">{{ $gt >= 0 ? '+' : '' }}{{ number_format($gt) }}</td></tr>
-                                @foreach($gv[2] as $e)
-                                    @php $ppa=$e[2]; $earned=(int)$e[3]; $act=$ppa!=0?(int)round($earned/$ppa):0; $sign = $earned>0?'pos':($earned<0?'neg':'zero'); @endphp
-                                    <tr data-sign="{{ $sign }}">
-                                        <td class="ev"><b>{{ $e[0] }}</b><span>{{ $e[1] }}</span></td>
-                                        <td class="ppa"><span class="{{ $ppa < 0 ? 'neg' : 'pos' }}">{{ $ppa > 0 ? '+' : '' }}{{ $ppa }}</span></td>
-                                        <td class="oc">{{ number_format($act) }}</td>
-                                        <td class="er {{ $earned>0?'pos':($earned<0?'neg':'zero') }}">{{ $earned>0?'+':'' }}{{ number_format($earned) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        @endif
-                    @endforeach
-                </table>
-            </div>
-        </div>
-
-        {{-- Side: leaderboard + legend --}}
-        <div class="rsb-side">
-            <div class="rsb-card rsb-lb">
-                <div class="rsb-ch"><span class="t">Leaderboard ({{ $mode === 'global' ? 'Global' : 'Company' }})</span></div>
-                @if($sbLeaders->count())
-                    <div class="rsb-lb-list">
-                        @foreach($sbLeaders as $l)
-                            @php $ln = trim($l['name'] ?? ''); $ini = collect(explode(' ', $ln))->filter()->take(2)->map(fn($w)=>strtoupper(substr($w,0,1)))->implode(''); $me = $myId !== null && ($l['id'] ?? null) == $myId; @endphp
-                            <div class="row {{ $me ? 'me' : '' }}">
-                                <span class="rk">{{ $l['rank'] ?? '-' }}</span>
-                                <span class="av">{{ $ini ?: '?' }}</span>
-                                <span class="nm">{{ $me ? 'You' : $ln }}@if(($l['rank'] ?? 0) == 1) &#128081;@endif</span>
-                                <span class="sc">{{ number_format((int) round((float) ($l['score'] ?? 0))) }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="rsb-empty">No leaderboard data for this period.</p>
+            <div class="sb2-hero-ranks">
+                <div><span>{{ $primaryRankLbl }}</span><b>#{{ $rank }}</b>@if($totalCount)<i>/ {{ number_format($totalCount) }}</i>@endif</div>
+                <div><span>Top Percentile</span><b>@if($pctile)Top {{ $pctile }}%@else—@endif</b></div>
+                @if (!is_null($otherRank))
+                <div><span>{{ $secondRankLbl }}</span><b>#{{ $otherRank }}</b></div>
                 @endif
             </div>
+            <div class="sb2-hero-foot">
+                <div class="t">@if($next)You're <b>{{ number_format($toGo) }}</b> points away from <b>{{ $next[0] }} Recruiter</b>@else 🎉 You've reached the top tier — legendary work! @endif</div>
+                <div class="sb2-hero-prow">
+                    <div class="sb2-hero-bar"><i style="width:{{ max(2, $prog) }}%"></i></div>
+                    <span class="pct">{{ $prog }}%</span>
+                    <span class="nextbadge" style="background:{{ $nextBadgeColor }}" title="{{ $next ? $next[0] . ' Recruiter' : $tier . ' Recruiter' }}"><svg viewBox="0 0 24 24" fill="#fff"><path d="{{ $starPath }}"/></svg></span>
+                </div>
+            </div>
+        </div>
 
-            <div class="rsb-card rsb-legend">
-                <div class="rsb-ch"><span class="t">Score Legend</span></div>
-                @foreach($sbLegend as $lg)
-                    <div class="row {{ $lg[3] ? 'on' : '' }}">
-                        <span class="ic" style="background:{{ $lg[1]==1000?'#f3ecff':($lg[1]==500?'#fff3e2':($lg[1]==250?'#eef1f7':'#fff1e6')) }};color:{{ $lg[2] }}">&#127941;</span>
-                        <span class="nm">{{ $lg[0] }}</span>
-                        <span class="th">{{ $lg[1] > 0 ? 'Score ≥ ' . number_format($lg[1]) : 'Score > 0' }}</span>
+        {{-- Right column --}}
+        <div class="sb2-right">
+            <div class="sb2-stats">
+                @foreach($stats as $s)
+                    <div class="sb2-stat">
+                        <span class="ic" style="background:{{ $s[4] }};color:{{ $s[3] }}">
+                            @if($s[5]==='join')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 11h4M19 9v4"/></svg>
+                            @elseif($s[5]==='offer')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            @elseif($s[5]==='interview')<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/></svg>
+                            @else<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M19 8v6M16 11h6"/></svg>@endif
+                        </span>
+                        <div class="num">{{ number_format($s[1]) }}</div>
+                        <div class="lbl">{{ $s[0] }}</div>
+                        <div class="pts" style="color:{{ $s[3] }}">{{ $s[2] >= 0 ? '+' : '' }}{{ number_format($s[2]) }} pts</div>
                     </div>
                 @endforeach
+            </div>
+            <div class="sb2-charts">
+                {{-- Contribution --}}
+                <div class="sb2-card sb2-contrib">
+                    <h4>Score Contribution</h4>
+                    <div class="sb2-donut">
+                        <svg viewBox="0 0 120 120">{!! $donut !!}</svg>
+                        <div class="c"><b>{{ number_format($score) }}</b><span>Total Points</span></div>
+                    </div>
+                    <div class="sb2-leg">
+                        @foreach($contrib as $seg)
+                            @php $pc = $cTotal > 0 ? round($seg[1] / $cTotal * 100, 1) : 0; @endphp
+                            <div class="r"><span class="d" style="background:{{ $seg[2] }}"></span><span class="nm">{{ $seg[0] }} ({{ $pc }}%)</span><b>{{ number_format($seg[1]) }}</b></div>
+                        @endforeach
+                    </div>
+                </div>
+                {{-- Trend --}}
+                <div class="sb2-card sb2-trend">
+                    <div class="sb2-trend-h"><h4>Score Trend</h4><span class="sb2-sel">{{ $month }}</span></div>
+                    <div class="sb2-trend-body">
+                        <svg viewBox="0 0 {{ $trW }} {{ $trH }}" width="100%" preserveAspectRatio="xMidYMid meet">
+                            <defs><linearGradient id="sb2tg-{{ $mode }}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d4aff" stop-opacity=".25"/><stop offset="1" stop-color="#6d4aff" stop-opacity="0"/></linearGradient></defs>
+                            {!! $trGrid !!}
+                            @foreach($trYlab as $yl)<text x="{{ $trL-6 }}" y="{{ $yl[0]+3 }}" text-anchor="end" font-size="8.5" fill="#9aa3b2">{{ $yl[1] }}</text>@endforeach
+                            <path d="{{ $trArea }}" fill="url(#sb2tg-{{ $mode }})"/>
+                            <path d="{{ $trLine }}" fill="none" stroke="#6d4aff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            {!! $trDots !!}
+                            @foreach($trXlab as $xl)<text x="{{ $xl[0] }}" y="{{ $trH-8 }}" text-anchor="middle" font-size="8.5" fill="#9aa3b2">{{ $xl[1] }}</text>@endforeach
+                        </svg>
+                        <span class="sb2-trend-tag">{{ number_format($score) }} pts</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- ===== Team captain performance (real data – preserved) ===== --}}
-    @if($sbCapTotal != 0 || collect($sbCap)->sum(fn($e) => (int) $e[3]) != 0)
-    <div class="rsb-card rsb-cap">
-        <div class="rsb-bd-h">
-            <div><h4 class="rsb-h4" style="margin:0">Team Captain Performance</h4><span class="rsb-bd-sub">Points earned leading your team</span></div>
-            <span class="rsb-pts {{ $sbCapTotal < 0 ? 'neg' : 'pos' }}">{{ $sbCapTotal >= 0 ? '+' : '' }}{{ number_format($sbCapTotal) }} pts</span>
+    {{-- ===== Jero Insights ===== --}}
+    <div class="sb2-ai">
+        <div class="sb2-ai-ic">AI</div>
+        <div class="sb2-ai-h">Jero Insights</div>
+        <div class="sb2-ai-grid">
+            @foreach($insights as $ins)
+                <div class="it"><svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span>{!! $ins !!}</span></div>
+            @endforeach
         </div>
-        <div class="rsb-tbl-wrap">
-            <table class="rsb-tbl">
+    </div>
+
+    {{-- ===== Individual performance ===== --}}
+    <div class="sb2-card sb2-perf">
+        <div class="sb2-perf-h" onclick="sb2Toggle(this)">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#5b3df5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+            <div class="ttl"><h4>Individual Performance</h4><p>Points earned through your individual activities</p></div>
+            <span class="sb2-pts {{ $indTotal < 0 ? 'neg' : 'pos' }}">{{ $indTotal >= 0 ? '+' : '' }}{{ number_format($indTotal) }} pts</span>
+            <span class="sb2-chev">⌄</span>
+        </div>
+        <div class="sb2-perf-body">
+            <table class="sb2-tbl">
+                <thead><tr><th>Event</th><th>Points per action</th><th>Activity</th><th>Earned</th><th>Contribution</th></tr></thead>
                 <tbody>
-                    @foreach($sbCap as $e)
-                        @php $ppa=$e[2]; $earned=(int)$e[3]; $act=$ppa!=0?(int)round($earned/$ppa):0; @endphp
+                    @foreach($ind as $e)
+                        @php $ppa=$e[2]; $act=(int)$e[3]; $earned=(int)$e[4]; $pc=round(abs($earned)/$indDen*100,1); $clr=$earned<0?'#e5484d':($earned>0?'#16a34a':'#9aa3b2'); @endphp
                         <tr>
-                            <td class="ev"><b>{{ $e[0] }}</b><span>{{ $e[1] }}</span></td>
-                            <td class="ppa"><span class="{{ $ppa < 0 ? 'neg' : 'pos' }}">{{ $ppa > 0 ? '+' : '' }}{{ $ppa }}</span></td>
-                            <td class="oc">{{ number_format($act) }}</td>
-                            <td class="er {{ $earned>0?'pos':($earned<0?'neg':'zero') }}">{{ $earned>0?'+':'' }}{{ number_format($earned) }}</td>
+                            <td class="ev"><span class="ev-ic" style="color:{{ $clr }};background:{{ $clr }}1a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">{!! $evIco($e[0]) !!}</svg></span><span class="ev-tx"><b>{{ $e[0] }}</b><small>{{ $e[1] }}</small></span></td>
+                            <td><span class="ppa {{ $ppa<0?'neg':'pos' }}">{{ $ppa>0?'+':'' }}{{ $ppa }}</span></td>
+                            <td class="act">{{ number_format($act) }}</td>
+                            <td class="er" style="color:{{ $clr }}">{{ $earned>0?'+':'' }}{{ number_format($earned) }}</td>
+                            <td class="ct"><span class="bar"><i style="width:{{ min(100,$pc) }}%;background:{{ $clr }}"></i></span><span class="pct">{{ $earned<0?'-':'' }}{{ $pc }}%</span></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- ===== Team captain performance ===== --}}
+    @if($hasCap)
+    <div class="sb2-card sb2-perf">
+        <div class="sb2-perf-h" onclick="sb2Toggle(this)">
+            <span class="ic" style="background:#f1ecff"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8Z"/></svg></span>
+            <div class="ttl"><h4>Team Captain Performance</h4><p>Points earned as a team captain</p></div>
+            <span class="sb2-pts {{ $capTotal < 0 ? 'neg' : 'pos' }}">{{ $capTotal >= 0 ? '+' : '' }}{{ number_format($capTotal) }} pts</span>
+            <span class="sb2-chev">⌄</span>
+        </div>
+        <div class="sb2-perf-body">
+            <table class="sb2-tbl">
+                <thead><tr><th>Event</th><th>Points per action</th><th>Activity</th><th>Earned</th><th>Contribution</th></tr></thead>
+                <tbody>
+                    @foreach($cap as $e)
+                        @php $ppa=$e[2]; $act=(int)$e[3]; $earned=(int)$e[4]; $pc=round(abs($earned)/$capDen*100,1); $clr=$earned<0?'#e5484d':($earned>0?'#16a34a':'#9aa3b2'); @endphp
+                        <tr>
+                            <td class="ev"><span class="ev-ic" style="color:{{ $clr }};background:{{ $clr }}1a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">{!! $evIco($e[0]) !!}</svg></span><span class="ev-tx"><b>{{ $e[0] }}</b><small>{{ $e[1] }}</small></span></td>
+                            <td><span class="ppa {{ $ppa<0?'neg':'pos' }}">{{ $ppa>0?'+':'' }}{{ $ppa }}</span></td>
+                            <td class="act">{{ number_format($act) }}</td>
+                            <td class="er" style="color:{{ $clr }}">{{ $earned>0?'+':'' }}{{ number_format($earned) }}</td>
+                            <td class="ct"><span class="bar"><i style="width:{{ min(100,$pc) }}%;background:{{ $clr }}"></i></span><span class="pct">{{ $earned<0?'-':'' }}{{ $pc }}%</span></td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -296,28 +340,180 @@
     @endif
 
     {{-- ===== Footer ===== --}}
-    <div class="rsb-foot">
-        <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>Score is updated every 24 hours</div>
-        <div class="r">
-            <span class="el">Bonus Eligibility <b class="{{ $sbEligible ? 'yes' : 'no' }}">{{ $sbEligible ? 'Eligible' : 'Not Eligible' }}</b></span>
-            <a href="javascript:void(0)" class="rsb-cta" onclick="sbExportPdf(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-5Z"/><path d="M9 13h6M9 17h4"/></svg>View Detailed Report</a>
+    <div class="sb2-foot">
+        <div class="f">
+            <span class="ic" style="background:{{ $tierBg }}"><svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/></svg></span>
+            <div><div class="k">Current Badge</div><div class="v">{{ $tier }} Recruiter</div><div class="s">{{ $next ? number_format($toGo) . ' pts to ' . $next[0] : 'Top tier reached' }}</div></div>
+        </div>
+        <div class="f">
+            <span class="ic" style="background:#e9f0ff"><svg viewBox="0 0 24 24" fill="none" stroke="#2b59ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></span>
+            <div><div class="k">{{ $primaryRankLbl }}</div><div class="v">#{{ $rank }}@if($totalCount) <small>/ {{ number_format($totalCount) }}</small>@endif</div><div class="s">@if($pctile)Top {{ $pctile }}% percentile @else — @endif</div></div>
+        </div>
+        <div class="f">
+            <span class="ic" style="background:#f1ecff"><svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 14L7 22l5-3 5 3-1.5-8"/></svg></span>
+            <div><div class="k">Final Score</div><div class="v">{{ number_format($score) }} <small>Points</small></div><div class="s">Keep up the amazing work! 🚀</div></div>
         </div>
     </div>
 </div>
 
+<style>
+    .sb2{ font-family:'Poppins',sans-serif; color:#1f2a44; font-size:13px; }
+    .sb2 *{ box-sizing:border-box; }
+    .sb2 h3,.sb2 h4{ margin:0; }
+    .sb2-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .sb2-head .l{ display:flex; align-items:center; gap:12px; }
+    .sb2-tico{ width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,#5b3df5,#7c5cff); color:#fff; display:grid; place-items:center; }
+    .sb2-tico svg{ width:22px; height:22px; }
+    .sb2-head h3{ font-size:18px; font-weight:800; }
+    .sb2-head .l p{ margin:0; font-size:12px; color:#8a93a8; }
+    .sb2-head .r{ display:flex; align-items:center; gap:10px; }
+    .sb2-btn{ display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:#3b4a66; border:1px solid #e7ecf4; border-radius:9px; padding:8px 12px; text-decoration:none; background:#fff; }
+    .sb2-btn svg{ width:15px; height:15px; }
+    .sb2-btn:hover{ border-color:#5b3df5; color:#5b3df5; }
+    .sb2-x{ width:34px; height:34px; border-radius:9px; border:1px solid #e7ecf4; display:grid; place-items:center; cursor:pointer; color:#8a93a8; font-size:14px; }
+    .sb2-x:hover{ background:#f7f9fc; }
+
+    .sb2-grid{ display:grid; grid-template-columns:340px 1fr; gap:16px; margin-bottom:16px; }
+    .sb2-hero{ background:linear-gradient(157deg,#3b1f9f 0%,#5b3df5 52%,#7458ff 100%); border-radius:18px; padding:20px; color:#fff; display:flex; flex-direction:column; justify-content:space-between; gap:18px; position:relative; overflow:hidden; box-shadow:0 12px 30px rgba(74,45,200,.28); }
+    .sb2-hero::after{ content:''; position:absolute; top:-50px; right:-40px; width:170px; height:170px; border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.14),transparent 68%); pointer-events:none; }
+    .sb2-hero-top{ display:flex; align-items:center; gap:18px; position:relative; z-index:1; }
+    .sb2-badge{ position:relative; width:96px; height:96px; flex:none; border-radius:50%; padding:4px; background:conic-gradient(from 135deg,#2dd4bf 0deg,#22d3ee 80deg,#fdba74 200deg,#fb923c 290deg,#2dd4bf 360deg); display:grid; place-items:center; box-shadow:0 8px 22px rgba(0,0,0,.28); }
+    .sb2-badge .disc{ width:100%; height:100%; border-radius:50%; display:grid; place-items:center; box-shadow:inset 0 0 0 3px rgba(255,255,255,.65); }
+    .sb2-badge .disc svg{ width:36px; height:36px; }
+    .sb2-badge .lab{ position:absolute; bottom:-11px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:9px; font-weight:800; padding:3px 11px; border-radius:20px; box-shadow:0 3px 8px rgba(0,0,0,.22); }
+    .sb2-badge-gold .disc{ background:radial-gradient(circle at 50% 30%,#ffe488,#f0a500); color:#fff; } .sb2-badge-gold .lab{ background:#ffe08a; color:#6b4500; }
+    .sb2-badge-platinum .disc{ background:radial-gradient(circle at 50% 30%,#ece2ff,#a78bfa); color:#fff; } .sb2-badge-platinum .lab{ background:#dcccff; color:#4a2c80; }
+    .sb2-badge-silver .disc{ background:radial-gradient(circle at 50% 30%,#f1f4f9,#9aa7b8); color:#fff; } .sb2-badge-silver .lab{ background:#e3e9f1; color:#3a4252; }
+    .sb2-badge-bronze .disc{ background:radial-gradient(circle at 50% 30%,#f6c98a,#c87f3c); color:#fff; } .sb2-badge-bronze .lab{ background:#eab27c; color:#5a3413; }
+    .sb2-hero-prow{ display:flex; align-items:center; gap:11px; }
+    .sb2-hero-prow .sb2-hero-bar{ flex:1; }
+    .sb2-hero-prow .pct{ font-size:11px; font-weight:800; flex:none; min-width:30px; }
+    .nextbadge{ width:32px; height:32px; flex:none; border-radius:50%; display:grid; place-items:center; box-shadow:0 3px 9px rgba(0,0,0,.3); border:2px solid rgba(255,255,255,.45); }
+    .nextbadge svg{ width:15px; height:15px; }
+    .sb2-hero-score{ min-width:0; }
+    .sb2-hero-score .lbl{ font-size:12px; opacity:.85; }
+    .sb2-hero-score .num{ font-size:42px; font-weight:800; line-height:1; }
+    .sb2-hero-score .num small{ font-size:13px; font-weight:600; opacity:.8; margin-left:6px; }
+    .sb2-pill-prog{ display:inline-flex; align-items:center; gap:3px; margin-top:7px; font-size:11px; font-weight:700; background:rgba(255,255,255,.2); padding:3px 10px 3px 7px; border-radius:20px; }
+    .sb2-pill-prog svg{ width:12px; height:12px; color:#6ef7a8; }
+    .sb2-hero-ranks{ display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.18); border-bottom:1px solid rgba(255,255,255,.18); padding:14px 0; position:relative; z-index:1; }
+    .sb2-hero-ranks div{ padding:0 4px; position:relative; }
+    .sb2-hero-ranks div+div::before{ content:''; position:absolute; left:0; top:3px; bottom:3px; width:1px; background:rgba(255,255,255,.16); }
+    .sb2-hero-ranks span{ font-size:10px; opacity:.8; display:block; margin-bottom:4px; }
+    .sb2-hero-ranks b{ font-size:21px; font-weight:800; }
+    .sb2-hero-ranks i{ font-size:11px; color:#fff; opacity:.92; font-weight:600; font-style:normal; margin-left:3px; }
+    .sb2-hero-foot{ background:rgba(0,0,0,.18); border-radius:13px; padding:14px; position:relative; z-index:1; }
+    .sb2-hero-foot .t{ font-size:11.5px; opacity:.95; margin-bottom:10px; }
+    .sb2-hero-foot .t b{ font-weight:800; }
+    .sb2-hero-bar{ height:10px; border-radius:6px; background:rgba(255,255,255,.18); overflow:hidden; }
+    .sb2-hero-bar i{ display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#34d399,#22c55e); transition:width .4s; }
+    .sb2-hero-barx{ display:flex; justify-content:space-between; font-size:9px; opacity:.8; margin-top:6px; }
+    .sb2-hero-barx span:nth-child(2){ font-weight:800; opacity:1; }
+
+    .sb2-right{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+    .sb2-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .sb2-stat{ border:1px solid #eef1f7; border-radius:14px; padding:12px; background:#fff; }
+    .sb2-stat .ic{ width:34px; height:34px; border-radius:10px; display:grid; place-items:center; margin-bottom:8px; }
+    .sb2-stat .ic svg{ width:18px; height:18px; }
+    .sb2-stat .num{ font-size:22px; font-weight:800; line-height:1; }
+    .sb2-stat .lbl{ font-size:11px; color:#8a93a8; margin-top:2px; }
+    .sb2-stat .pts{ font-size:11px; font-weight:700; margin-top:6px; }
+
+    .sb2-charts{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .sb2-card{ border:1px solid #eef1f7; border-radius:14px; background:#fff; padding:14px; }
+    .sb2-card h4{ font-size:13px; font-weight:700; margin-bottom:10px; }
+    .sb2-contrib{ display:flex; flex-direction:column; }
+    .sb2-donut{ position:relative; width:120px; height:120px; margin:2px auto 8px; }
+    .sb2-donut svg{ width:120px; height:120px; }
+    .sb2-donut .c{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .sb2-donut .c b{ font-size:18px; font-weight:800; }
+    .sb2-donut .c span{ font-size:9px; color:#8a93a8; }
+    .sb2-leg .r{ display:flex; align-items:center; gap:8px; font-size:11px; padding:3px 0; }
+    .sb2-leg .r .d{ width:9px; height:9px; border-radius:3px; flex:none; }
+    .sb2-leg .r .nm{ color:#3b4a66; }
+    .sb2-leg .r b{ margin-left:auto; font-weight:700; }
+    .sb2-trend-h{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .sb2-trend-h h4{ margin:0; }
+    .sb2-sel{ font-size:11px; color:#5b3df5; font-weight:600; border:1px solid #eceaff; border-radius:7px; padding:3px 9px; }
+    .sb2-trend-body{ position:relative; }
+    .sb2-trend-tag{ position:absolute; top:0; right:4px; font-size:10px; font-weight:700; color:#fff; background:#5b3df5; padding:2px 7px; border-radius:6px; }
+
+    .sb2-ai{ background:linear-gradient(135deg,#f6f4ff,#eef4ff); border:1px solid #e7e3ff; border-radius:14px; padding:14px 16px; margin-bottom:16px; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; gap:4px 14px; align-items:center; }
+    .sb2-ai-ic{ grid-row:1/3; width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg,#5b3df5,#7c5cff); color:#fff; font-weight:800; font-size:14px; display:grid; place-items:center; }
+    .sb2-ai-h{ font-size:14px; font-weight:700; }
+    .sb2-ai-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 22px; }
+    .sb2-ai-grid .it{ display:flex; align-items:center; gap:8px; font-size:12px; color:#3b4a66; }
+    .sb2-ai-grid .it svg{ width:16px; height:16px; flex:none; }
+
+    .sb2-perf{ margin-bottom:14px; padding:0; overflow:hidden; }
+    .sb2-perf-h{ display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; }
+    .sb2-perf-h .ic{ width:34px; height:34px; border-radius:10px; background:#eef0ff; display:grid; place-items:center; flex:none; }
+    .sb2-perf-h .ic svg{ width:18px; height:18px; }
+    .sb2-perf-h .ttl{ flex:1; }
+    .sb2-perf-h h4{ font-size:14px; font-weight:700; }
+    .sb2-perf-h p{ margin:0; font-size:11px; color:#8a93a8; }
+    .sb2-pts{ font-size:14px; font-weight:800; }
+    .sb2-pts.pos{ color:#16a34a; } .sb2-pts.neg{ color:#e5484d; }
+    .sb2-chev{ color:#9aa3b2; font-size:16px; transition:transform .2s; }
+    .sb2-perf.closed .sb2-chev{ transform:rotate(-90deg); }
+    .sb2-perf.closed .sb2-perf-body{ display:none; }
+    .sb2-perf-body{ border-top:1px solid #eef1f7; }
+    .sb2-tbl{ width:100%; border-collapse:collapse; }
+    .sb2-tbl th{ text-align:left; font-size:10.5px; font-weight:600; color:#9aa3b2; text-transform:uppercase; letter-spacing:.03em; padding:10px 16px; }
+    .sb2-tbl th:nth-child(2),.sb2-tbl th:nth-child(3),.sb2-tbl th:nth-child(4){ text-align:center; }
+    .sb2-tbl td{ padding:9px 16px; border-top:1px solid #f3f5f9; font-size:12px; vertical-align:middle; }
+    .sb2-tbl td.ev{ display:flex; align-items:center; gap:10px; }
+    .ev-ic{ width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none; }
+    .ev-ic svg{ width:16px; height:16px; }
+    .ev-tx{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+    .ev-tx b{ font-weight:600; font-size:12px; }
+    .ev-tx small{ color:#9aa3b2; font-size:10.5px; }
+    .sb2-tbl td:nth-child(2),.sb2-tbl td:nth-child(3),.sb2-tbl td:nth-child(4){ text-align:center; }
+    .ppa{ display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; }
+    .ppa.pos{ background:#eaf1ff; color:#2b59ff; } .ppa.neg{ background:#fdecef; color:#e5484d; }
+    .sb2-tbl td.act{ color:#3b4a66; font-weight:600; }
+    .sb2-tbl td.er{ font-weight:700; }
+    .sb2-tbl td.ct{ display:flex; align-items:center; gap:8px; min-width:120px; }
+    .sb2-tbl td.ct .bar{ flex:1; height:6px; border-radius:4px; background:#eef1f7; overflow:hidden; }
+    .sb2-tbl td.ct .bar i{ display:block; height:100%; border-radius:4px; }
+    .sb2-tbl td.ct .pct{ font-size:11px; color:#6b7488; width:42px; text-align:right; flex:none; }
+
+    .sb2-foot{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; background:#f7f9fc; border-radius:14px; padding:16px; }
+    .sb2-foot .f{ display:flex; align-items:center; gap:12px; }
+    .sb2-foot .ic{ width:44px; height:44px; border-radius:12px; display:grid; place-items:center; flex:none; }
+    .sb2-foot .ic svg{ width:22px; height:22px; }
+    .sb2-foot .k{ font-size:11px; color:#8a93a8; }
+    .sb2-foot .v{ font-size:17px; font-weight:800; }
+    .sb2-foot .v small{ font-size:11px; font-weight:600; color:#8a93a8; }
+    .sb2-foot .s{ font-size:10.5px; color:#9aa3b2; }
+
+    @media (max-width:920px){
+        .sb2-grid{ grid-template-columns:1fr; }
+        .sb2-stats{ grid-template-columns:repeat(2,1fr); }
+        .sb2-charts{ grid-template-columns:1fr; }
+        .sb2-ai-grid{ grid-template-columns:1fr; }
+        .sb2-foot{ grid-template-columns:1fr; }
+    }
+</style> 
+
 <script>
-    window.rsbFilter = window.rsbFilter || function (btn, sign) {
-        var box = btn.closest('.rsb-bd'); if (!box) return;
-        box.querySelectorAll('.rsb-tab').forEach(function (t) { t.classList.remove('on'); });
-        btn.classList.add('on');
-        box.querySelectorAll('tr[data-sign]').forEach(function (tr) {
-            tr.style.display = (sign === 'all' || tr.getAttribute('data-sign') === sign) ? '' : 'none';
-        });
-        box.querySelectorAll('.rsb-grp').forEach(function (gp) {
-            var vis = 0;
-            gp.querySelectorAll('tr[data-sign]').forEach(function (r) { if (r.style.display !== 'none') vis++; });
-            gp.style.display = vis ? '' : 'none';
-        });
+    window.sb2Toggle = window.sb2Toggle || function (h) {
+        var card = h.closest('.sb2-perf'); if (card) card.classList.toggle('closed');
+    };
+    // Close the nearest .modal ancestor — team page overrides this via window.sbCloseModal
+    window.sbCloseModal = window.sbCloseModal || function (el) {
+        var m = el.closest('.modal');
+        if (!m) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(m).hide();
+        } else if (typeof $ !== 'undefined' && $.fn.modal) {
+            $(m).modal('hide');
+        } else {
+            m.style.display = 'none';
+            m.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        }
     };
 </script>
 @endif

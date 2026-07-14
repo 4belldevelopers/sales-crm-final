@@ -1,0 +1,44 @@
+# Cursor Rules — JERO (hire.jero.works ATS + Talent Marketplace)
+
+You are working in a large multi-tenant Laravel 11 B2B hiring SaaS. The authoritative
+memory is CLAUDE.md and the docs/ + .ai/ knowledge base. ALWAYS consult them before edits.
+
+## Read first
+- CLAUDE.md (project memory & entry point)
+- docs/AI_BOOTSTRAP.md (working protocol), docs/ARCHITECTURE.md, docs/AI_RULES.md
+- docs/GLOSSARY.md (domain terms), the relevant .ai/tasks/*.md and .ai/summaries/*
+- Full index: docs/README.md
+
+## Project facts
+- Product: GOD-level ATS + marketplace where companies trade talent. See docs/PRODUCT_VISION.md.
+- Stack: Laravel 11, PHP 8.2, MySQL (write store) + Elasticsearch (read store, 60+ indices),
+  Redis/Horizon queues, Octane/FrankenPHP, Reverb websockets, Stripe/Razorpay/PhonePe/PayPal/Paddle.
+- Work ONLY in testing.jero.works, never hire.jero.works.
+- Personas: ServiceCompany, ProductCompany, StaffingCompany, SuperAdmin, Admin, Front.
+
+## Hard rules
+1. NEVER open 500KB+ controllers or full route files whole — grep for the method/route name.
+2. DB truth = database/schema/mysql-schema.sql (real structure, 217 tables) — READ IT before any DB
+   work. Schema is not in migrations; confirm columns there (or `php artisan db:table <t>`); never invent migrations.
+3. Eloquent is auto-scoped by company_id; raw DB::table() is NOT — add company_id filters yourself.
+4. Any write to an indexed entity must keep Elasticsearch in sync (Observer/Job re-index).
+5. Use config(), never env() outside config/ (env() returns null under config:cache/Octane).
+6. Queue heavy work (resume parse/upload, mail, bulk import, ES reindex). Never inline.
+7. Preserve existing misspellings (condidate, commericial, Caompany, transection) — they map to
+   real tables/indices. Rename only via docs/NAMING_CONVENTIONS.md safe procedure.
+8. Do NOT change business logic (ranking/matching, billing, status pipelines) without sign-off.
+9. Match existing patterns: fat controllers + services, no repository layer. No unprompted refactors.
+10. UI: follow Metronic theme, Poppins font, max font size 14px (others scale down), clean
+    icon-based beautiful design — NO 3D/WebGL/Three.js (2D charts only). Must fit 1366x768 → 4K,
+    dense tables with sticky header + virtualization. See docs/UI_UX_STANDARDS.md.
+11. Build features as vertical slices: Route + FormRequest + Action/Service + ES sync + Observer +
+    Reverb event + Blade component + test. Extract logic OUT of god controllers (strangler).
+12. Verify with docs/VERIFY.md. Measure before/after. Mark uncertainty explicitly.
+13. DOCUMENT THE PURPOSE OF EVERY NEW CODE: add a short intent comment/docblock (the WHY) on
+    every new file, class, and method; add an intent + company_id tenancy note on complex/raw
+    queries; explain business logic and ES-sync points. Keep comments truthful, no dead/debug
+    code. Undocumented new code is an incomplete change. See docs/CODE_DOCUMENTATION_STANDARD.md.
+
+## Watch out (known issues — see docs/BUG_REPORT.md, docs/SECURITY.md)
+- Active dd() calls and debug routes in code; JobApplication tenant scope is commented out
+  (leak risk); 1227 unescaped {!! !!} (XSS); secrets in .env. Do not copy these patterns.

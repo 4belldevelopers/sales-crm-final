@@ -1,0 +1,109 @@
+# Project Memory (Living) — JERO
+
+> **Persistent, evolving memory for AI agents and humans.** Unlike the `docs/` (which
+> describe how things *are*), this file tracks **current state, active decisions, open
+> questions, and gotchas over time**. KEEP IT UPDATED: when you make a project-level
+> decision, finish a phase, or learn something non-obvious, append it here (newest on top
+> in each section) and, if it's an architecture decision, also add an ADR.
+
+Last updated: 2026-06-27 (added code-documentation rule; resolved `metronics` = Metronic theme).
+
+---
+
+## 1. Snapshot (what is true right now)
+- **Product:** GOD-level ATS + cross-company talent marketplace. See [docs/PRODUCT_VISION.md](../docs/PRODUCT_VISION.md).
+- **Stack:** Laravel 11 / PHP 8.2 · MySQL (write) + Elasticsearch (read, 60+ indices) ·
+  Redis/Horizon · Octane/FrankenPHP · Reverb · S3 · Stripe/Razorpay/PhonePe/PayPal/Paddle · AI (OpenAI).
+- **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
+- **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
+- **Current focus:** documentation & AI-context layer complete; engineering focus should be
+  **Phase 0 hardening** next ([docs/ROADMAP.md](../docs/ROADMAP.md)).
+- **Test coverage:** essentially none (default Breeze scaffolding only) — high regression risk.
+
+## 2. Decision log (append-only; newest first)
+- *2026-06-28* — **Design direction locked: clean, beautiful, ICON-BASED, NO 3D.**
+  Font = **Poppins** app-wide; **max 14px**; follow Metronic; 2D charts only
+  (no Three.js/WebGL/3D). Updated UI_UX_STANDARDS, ENTERPRISE_PLAYBOOK §4, and the UI rule
+  in CLAUDE.md/AGENTS/.cursorrules/.windsurfrules.
+- *2026-06-28* — **Authoritative DB schema captured** → `database/schema/mysql-schema.sql`
+  (MySQL 8.0.45 `dbmaster`, 217 tables + 1 view, structure-only, read-only export). Now the
+  source of truth over the inferred prose in DB_SCHEMA.md. NOTE: generated via a one-off PHP
+  `SHOW CREATE TABLE` loop because XAMPP ships MariaDB `mysqldump`, which cannot authenticate
+  to MySQL 8's `caching_sha2_password`. File is NOT yet committed to git (user chose export
+  workflow). Ran against the live DB read-only (no local copy existed).
+- *2026-06-27* — **Automated enforcement added** ([docs/ENFORCEMENT.md](../docs/ENFORCEMENT.md)):
+  `scripts/ai-guards.sh` (blocks NEW `dd()`/debug + `env()` outside config on changed files;
+  tested working), `.githooks/pre-commit` (guards + Pint), `.github/workflows/ci.yml` (guards +
+  Pint + PHPStan, infra-free), `phpstan.neon.dist` (level 2, needs `composer require --dev
+  phpstan/phpstan larastan/larastan`). Checks run on CHANGED files only, so legacy debt
+  doesn't block. composer.json intentionally NOT modified. **User still needs to run:**
+  `git config core.hooksPath .githooks`, the phpstan install + baseline, and (local DB only)
+  `php artisan schema:dump` to enable the CI test job. Repo: 4belltechnology-tech/jero-ats-qwen.
+- *2026-06-27* — **AI performance kit added** to maximize agent effectiveness:
+  RECIPES (end-to-end cookbooks), AI_GUARDRAILS (ground-truth/anti-hallucination/self-checks),
+  DEFINITION_OF_DONE (single change gate), TESTING (how to test; ~no coverage today),
+  TROUBLESHOOTING (common errors→fixes), PROMPT_LIBRARY (driving prompts). Linked in
+  CLAUDE.md + docs/README.md. Reason: turn a knowledgeable agent into a reliably correct, fast one.
+- *2026-06-27* — **Mandatory rule added:** state the purpose of every new code (intent
+  comment/docblock on each new file/class/method; intent + tenancy note on complex/raw
+  queries). Reason: keep a huge, fast-growing codebase understandable to AI & humans.
+  Standard: [docs/CODE_DOCUMENTATION_STANDARD.md](../docs/CODE_DOCUMENTATION_STANDARD.md);
+  propagated to CLAUDE.md (rule 13), AI_RULES.md (#20), AGENTS/.cursorrules/.windsurfrules.
+- *2026-06-27* — **Resolved:** `metronics` (e.g. `job_metronics_skills`,
+  `ElasticJobMetronicsSkills`) refers to the **Metronic UI theme**, NOT "metrics". It is
+  not a typo — **do not rename**. Updated GLOSSARY & NAMING_CONVENTIONS.
+- *2026-06-27* — Established the AI documentation & memory system (`CLAUDE.md`, `AGENTS.md`,
+  `.cursorrules`, `.windsurfrules`, `docs/`, `.ai/`). Reason: make the codebase AI-friendly,
+  reduce token use, capture product concept. (Docs only; no app code changed.)
+- *2026-06-27* — Recorded 6 retroactive ADRs for existing architecture
+  ([docs/adr/](../docs/adr/)). These document decisions *as observed*, not as originally
+  designed.
+- _(add new decisions here: what was decided, why, by whom, link to ADR/PR)_
+
+## 3. Open questions / needs human confirmation
+- [ ] Tenant isolation: is `JobApplication`'s commented-out `company_id` scope intentional,
+      or a bug? (Blocks safe marketplace work.) — see [BUG-03](../docs/BUG_REPORT.md).
+- [x] ~~`job_metronics_skills` — "metrics" or theme-related?~~ **RESOLVED 2026-06-27:**
+      Metronic UI theme; not a typo; do not rename. (See decision log.)
+- [ ] Which is the **canonical** resume uploader: `UploadResumeToS3` vs `…TestS3` vs
+      `…TestRTwo`? And canonical interview-reminder command (3 exist)?
+- [x] ~~Real DB schema: needs an authoritative dump.~~ **RESOLVED 2026-06-28:** exported
+      read-only to `database/schema/mysql-schema.sql` (MySQL 8.0.45, 217 tables + 1 view,
+      structure only). It is the source of truth; DB_SCHEMA.md prose is secondary. (Done via
+      PHP `SHOW CREATE TABLE`, not `schema:dump` — XAMPP's MariaDB mysqldump can't auth to
+      MySQL 8 caching_sha2_password.)
+- [ ] Deployment topology details (hosts, Horizon/scheduler/Reverb processes) — partially inferred.
+
+## 4. Gotchas / hard-won knowledge (don't relearn the hard way)
+- `env()` outside `config/` returns **null** once `config:cache` runs (Octane needs it) —
+  always use `config()`. (BUG-02)
+- Reads come from **Elasticsearch**, not MySQL — if data looks stale, suspect index drift,
+  not a DB bug. Re-run the relevant `Index*ToElasticsearch`.
+- Raw `DB::table()` is **not** tenant-scoped — always filter `company_id`.
+- Controllers are huge (up to ~813 KB) — never read whole; grep for the method.
+- Baked-in typos (`condidate`, `commericial`, `Caompany`, `transection`) are real
+  identifiers — preserve them; rename only via the safe procedure.
+- Dead code everywhere (`OLD_*`, `old_*`, `oldBackUp/`, stray root controller) — ignore it.
+- Octane is stateful between requests — no request/tenant data in statics/singletons.
+
+## 5. Conventions quick-ref (full: [docs/AI_RULES.md](../docs/AI_RULES.md))
+- Feature = vertical slice (Route + FormRequest + Action/Service + ES sync + Observer +
+  Reverb event + Metronic ≤14px component + test), extracted from god controllers.
+- **Document the purpose of every new code** (intent comment/docblock; tenancy note on raw
+  queries) — [docs/CODE_DOCUMENTATION_STANDARD.md](../docs/CODE_DOCUMENTATION_STANDARD.md).
+- Cache-first; push (Reverb) not poll; queue heavy work; measure before/after.
+- UI: Metronic, **Poppins**, **max 14px**, **clean icon-based design (NO 3D; 2D charts only)**,
+  fit 1366×768 → 4K, dense virtualized tables.
+
+## 6. Pointers
+- Entry: [CLAUDE.md](../CLAUDE.md) · Index: [docs/README.md](../docs/README.md) ·
+  Protocol: [docs/AI_BOOTSTRAP.md](../docs/AI_BOOTSTRAP.md) · Vocab: [docs/GLOSSARY.md](../docs/GLOSSARY.md)
+- Module playbooks: [.ai/tasks/](tasks/) · Class indexes: [.ai/summaries/](summaries/)
+- Plan: [docs/ROADMAP.md](../docs/ROADMAP.md)
+
+---
+### How to maintain this file
+Append, don't rewrite history. When you complete a roadmap phase, note it in §1 and §2.
+When you discover a gotcha, add it to §4. When a question is answered, move it from §3 to
+§2 (as a decision) and update the affected doc. Keep it under ~200 lines — promote durable
+facts into the proper `docs/` file and leave a pointer here.

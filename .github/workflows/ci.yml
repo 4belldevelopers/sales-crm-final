@@ -1,0 +1,63 @@
+# CI — fast, infra-free quality gates for every PR. See docs/ENFORCEMENT.md.
+# These checks need NO database/Elasticsearch/Redis, so they're reliable and cheap.
+# (The test job is included but gated — enable it after committing a schema dump; see notes.)
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master, qwen-dev]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Guards · Style · Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # need history so ai-guards can diff vs base
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: AI guards (no new dd()/env() in changed app/ files)
+        run: |
+          BASE="origin/${{ github.base_ref || 'main' }}"
+          git fetch origin "${{ github.base_ref || 'main' }}" || true
+          if git rev-parse "$BASE" >/dev/null 2>&1; then
+            bash scripts/ai-guards.sh --changed "$BASE"
+          else
+            echo "Base ref not found; scanning is skipped for non-PR runs."
+          fi
+
+      - name: Code style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Static analysis (PHPStan)
+        run: |
+          if [ -f phpstan.neon ] || [ -f phpstan.neon.dist ]; then
+            composer require --dev phpstan/phpstan larastan/larastan --no-interaction --no-progress || true
+            vendor/bin/phpstan analyse --no-progress || echo "::warning::PHPStan reported issues (non-blocking until baseline is committed)."
+          else
+            echo "No phpstan config; skipping."
+          fi
+
+  # ----------------------------------------------------------------------------
+  # tests:
+  #   Enable after you commit database/schema/mysql-schema.sql (php artisan schema:dump
+  #   against a LOCAL dev DB — never prod). Add a mysql service container + .env.testing,
+  #   mock external services. See docs/TESTING.md §5.
+  #
+  #   runs-on: ubuntu-latest
+  #   services: { mysql: { image: mysql:8, env: { MYSQL_DATABASE: testing, MYSQL_ROOT_PASSWORD: root }, ports: ['3306:3306'] } }
+  #   steps: [...checkout, setup-php, composer install, php artisan test]

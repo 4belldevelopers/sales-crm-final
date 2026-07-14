@@ -322,22 +322,33 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
 
                 	$this->permissions = $permissions;
 		
-					$this->role_row 				=	DB::table('roles')->select('roles.display_name')->where('roles.id', $id)->first();
+					/* manual_add/name/priority let the drawer lock the Role Name for SYSTEM roles
+					   (manual_add = 0) so built-in role names can't be renamed on the edit page. */
+					$this->role_row 				=	DB::table('roles')->select('roles.display_name', 'roles.name', 'roles.manual_add', 'roles.priority')->where('roles.id', $id)->first();
 
 					$Rawlist 						=	DB::table('role_has_permissions')->select('role_has_permissions.permission_id')->where('role_has_permissions.role_id', $id)->get()->toArray();
 
-					$array 							=	array_column($Rawlist, 'permission_id');	
+					$array 							=	array_column($Rawlist, 'permission_id');
 
 					$this->permission_role      	=	json_decode(json_encode($array), true);
-															
+
+					/* Users currently assigned to this role — powers the "Assigned Users" summary
+					   and the "affects N active users" warning in the Edit Role drawer. */
+					$this->role_users				=	DB::table('role_user')
+																->join('users', 'users.id', '=', 'role_user.user_id')
+																->where('role_user.role_id', $id)
+																->where('users.type', 0)
+																->select('users.id', 'users.name', 'users.email')
+																->get();
+
 					$this->id						=	$id;
 
 					$view 							=	view('service_company.role-permission.loadEditRole', $this->data)->render();
 					return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
 
-		
-		
+
+
 					if($this->global_company_type == 3)
 					{
 							$this->permissions_master 	= DB::table('permissions_master')

@@ -1253,11 +1253,29 @@ $end_date   =	date('d-M-Y', $date);
                                         <i class="fas fa-eye"></i>View Candidates
                                     </button>
                                 </a>
-                                <a href="{{ $urladd }}" class="">
+                                <a href="{{ $urladd }}" class="job-drawer-add-candidate" data-job-status="{{ @$job->status }}">
                                     <button class="action-btn">
                                         <i class="fas fa-user-plus"></i>Add Candidate
                                     </button>
                                 </a>
+                                <script>
+                                    // Hold/Closed jobs: block the direct navigation and explain why,
+                                    // same popup as the apptracker page's Add Candidate button. Bound
+                                    // directly (not delegated) since this fragment is re-injected fresh
+                                    // each time the job drawer opens.
+                                    $('.job-drawer-add-candidate').off('click').on('click', function(e) {
+                                        var jobStatus = $(this).data('job-status');
+                                        if (jobStatus === 'hold' || jobStatus === 'inactive') {
+                                            e.preventDefault();
+                                            var statusLabel = jobStatus === 'hold' ? 'Hold' : 'Closed';
+                                            Swal.fire(
+                                                'Position ' + statusLabel,
+                                                'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.',
+                                                'warning'
+                                            );
+                                        }
+                                    });
+                                </script>
                             @endif
                             @if(@$tabshow)
                                 @if($viewmore)

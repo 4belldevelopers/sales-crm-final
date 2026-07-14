@@ -48,11 +48,13 @@
     #resume_cv .rcv-kw-cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:14px; }
     #resume_cv .rcv-kw-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
     #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:6px; }
-    #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:default; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; }
+    #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
     #resume_cv .rcv-chip .rcv-cnt { font-size:10px; background:#e2e8f0; color:#475569; border-radius:10px; padding:0 5px; min-width:15px; text-align:center; }
     #resume_cv .rcv-chip.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
     #resume_cv .rcv-chip.found .rcv-cnt { background:#bbf7d0; color:#15803d; }
     #resume_cv .rcv-chip.missing { opacity:.6; }
+    #resume_cv .rcv-chip.active { background:#fef3c7; border-color:#fcd34d; color:#92400e; box-shadow:0 0 0 2px rgba(251,191,36,.25); }
+    #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
     #resume_cv .rcv-main { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; min-height:520px; }
     #resume_cv .rcv-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid #eef2f7; background:#fafbff; flex-wrap:wrap; }
     #resume_cv .rcv-file { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#334155; min-width:0; }
@@ -72,6 +74,9 @@
     #resume_cv .rcv-dl-menu .rcv-dl-item { display:block; width:100%; height:auto; justify-content:flex-start; text-align:left; padding:9px 13px; font-size:12px; font-weight:500; color:#334155; background:#fff; border:0; border-radius:0; cursor:pointer; text-decoration:none; white-space:nowrap; }
     #resume_cv .rcv-dl-menu .rcv-dl-item:hover { background:#eef2ff; color:#4f46e5; }
     #resume_cv .rcv-dl-menu .rcv-dl-item + .rcv-dl-item { border-top:1px solid #f1f5f9; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo { background:#f0fdf4; color:#15803d; font-weight:600; border-left:3px solid #22c55e; display:flex; align-items:center; gap:6px; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo:hover { background:#dcfce7; color:#166534; }
+    #resume_cv .rcv-dl-menu .rcv-dl-item.rcv-dl-logo .rcv-logo-badge { font-size:10px; background:#22c55e; color:#fff; border-radius:4px; padding:1px 5px; margin-left:auto; font-weight:700; letter-spacing:.3px; }
     #resume_cv .rcv-viewport { flex:1; overflow:auto; background:#525659; padding:18px; display:flex; flex-direction:column; align-items:center; gap:14px; }
     #resume_cv .rcv-page { position:relative; box-shadow:0 4px 16px rgba(0,0,0,.35); background:#fff; }
     #resume_cv .rcv-page canvas { display:block; }
@@ -154,7 +159,11 @@
             </button>
             <div class="rcv-dl-menu" id="rcvDlMenu">
               <a class="rcv-dl-item" href="{{ $rcvDownloadUrl }}" target="_blank">Download Resume</a>
-              <button type="button" class="rcv-dl-item" data-dl="logo">Resume with Company Logo</button>
+              <button type="button" class="rcv-dl-item rcv-dl-logo" data-dl="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Resume with Company Logo
+                <span class="rcv-logo-badge">LOGO</span>
+              </button>
               <button type="button" class="rcv-dl-item" data-dl="hl">Resume with Highlighted Keywords</button>
               <button type="button" class="rcv-dl-item" data-dl="both">Highlighted Keywords + Company Logo</button>
             </div>
@@ -189,7 +198,7 @@
     function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
     function buildRegex(){ var a=activeList(); if(!a.length) return null; return new RegExp('('+a.map(escRe).sort(function(x,y){return y.length-x.length;}).join('|')+')','gi'); }
     function countOccurrences(){ Object.keys(keywords).forEach(function(k){ var m=resumeText.match(new RegExp(escRe(k),'gi')); keywords[k].count=m?m.length:0; }); }
-    function chipHtml(name){ var k=keywords[name]; var cls='rcv-chip'+(k.count>0?' found':' missing'); var rm=(k.type==='custom')?'<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>':''; return '<span class="'+cls+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>'; }
+    function chipHtml(name){ var k=keywords[name]; var cls='rcv-chip'+(k.count>0?' found':' missing')+(k.active?' active':''); var rm=(k.type==='custom')?'<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>':''; return '<span class="'+cls+'" data-kw="'+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>'; }
     function renderChips(){
       var jc='', xc='';
       Object.keys(keywords).forEach(function(n){ if(keywords[n].type==='custom') xc+=chipHtml(n); else jc+=chipHtml(n); });
@@ -370,6 +379,8 @@
       var kwB=$id('rcvKwAddBtn');
       if(kwB){ kwB.addEventListener('click', function(){ var i=$id('rcvKwInput'); addKeyword(i.value); i.value=''; i.focus(); }); }
       document.addEventListener('click', function(e){ var x=e.target.closest&&e.target.closest('#resume_cv .rcv-chip-x'); if(x){ e.preventDefault(); var nm=x.getAttribute('data-rm'); if(keywords[nm]){ delete keywords[nm]; renderChips(); applyHighlights(); } } });
+      // chip click toggles highlight on/off
+      document.addEventListener('click', function(e){ if(e.target.closest&&e.target.closest('#resume_cv .rcv-chip-x')) return; var chip=e.target.closest&&e.target.closest('#resume_cv .rcv-chip[data-kw]'); if(chip){ var nm=chip.getAttribute('data-kw'); if(keywords[nm]){ keywords[nm].active=!keywords[nm].active; renderChips(); applyHighlights(); } } });
     }
     function seedKeywords(){ jobSkills.forEach(function(s){ s=String(s||'').trim(); if(s) keywords[s]={type:'skill',active:false,count:0}; }); }
     function init(){
