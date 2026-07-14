@@ -2384,44 +2384,70 @@
             var drawerEl = document.getElementById('kt_similar_filter_drawer');
             var cardEl = document.getElementById('simf_card');
             var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
+            var headerEl = cardEl ? cardEl.querySelector('.simf-header') : null;
+            var activebarEl = cardEl ? cardEl.querySelector('.simf-activebar') : null;
+            var footerEl = cardEl ? cardEl.querySelector('.simf-footer') : null;
             if (drawerEl) {
                 drawerEl.style.setProperty('overflow', 'hidden', 'important');
                 drawerEl.style.setProperty('position', 'fixed', 'important');
                 drawerEl.style.setProperty('top', '0', 'important');
                 drawerEl.style.setProperty('bottom', '0', 'important');
-                // Explicit viewport height too: Metronic sizes the drawer with
-                // top+bottom only, which is NOT an explicit height, so a child's
-                // height:100% can't resolve against it and collapses to content
-                // height (this is what left the footer floating mid-screen with
-                // blank space below). Give it a real height so the chain holds.
                 drawerEl.style.setProperty('height', '100vh', 'important');
             }
             if (cardEl) {
-                cardEl.style.setProperty('display', 'flex', 'important');
-                cardEl.style.setProperty('flex-direction', 'column', 'important');
+                cardEl.style.setProperty('display', 'block', 'important');
+                cardEl.style.setProperty('position', 'relative', 'important');
                 cardEl.style.setProperty('overflow', 'hidden', 'important');
-                // Size the card to the viewport directly (100vh) rather than
-                // 100% of the parent — percentage heights depend on the parent
-                // exposing an explicit height, which the drawer historically did
-                // not; 100vh sidesteps that dependency entirely.
                 cardEl.style.setProperty('height', '100vh', 'important');
                 cardEl.style.setProperty('max-height', '100vh', 'important');
             }
+            [headerEl, activebarEl, footerEl].forEach(function(el) {
+                if (!el) return;
+                el.style.setProperty('overflow', 'visible', 'important');
+            });
+            // Give .simf-body an EXPLICIT pixel height instead of trusting flexbox
+            // to distribute it: header/active-filters-bar/footer heights are
+            // measured directly with offsetHeight (0 if a section is d-none, e.g.
+            // the active-filters bar before any filter is picked), and the body
+            // gets exactly what's left of the viewport. This can't be starved by
+            // any flex/cascade conflict because it never depends on flex
+            // distribution in the first place — it's plain arithmetic. This is
+            // what was actually missing: the active-filters bar's height changes
+            // every time a filter is picked (a chip gets added), and flex-based
+            // sizing kept losing that recalculation, leaving .simf-body too tall
+            // for the remaining space and its tail content (Activity, the
+            // footer) rendering on top of / past the visible viewport.
             if (bodyEl) {
-                bodyEl.style.setProperty('flex', '1 1 auto', 'important');
-                bodyEl.style.setProperty('min-height', '0', 'important');
+                var used = (headerEl ? headerEl.offsetHeight : 0) +
+                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) +
+                    (footerEl ? footerEl.offsetHeight : 0);
+                var available = Math.max(window.innerHeight - used, 100);
+                bodyEl.style.setProperty('position', 'absolute', 'important');
+                bodyEl.style.setProperty('left', '0', 'important');
+                bodyEl.style.setProperty('right', '0', 'important');
+                bodyEl.style.setProperty('top', (headerEl ? headerEl.offsetHeight : 0) +
+                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) + 'px', 'important');
+                bodyEl.style.setProperty('height', available + 'px', 'important');
+                bodyEl.style.setProperty('max-height', available + 'px', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
+                bodyEl.style.setProperty('overflow-x', 'hidden', 'important');
             }
-            if (cardEl) {
-                cardEl.querySelectorAll('.simf-header, .simf-activebar, .simf-footer').forEach(function(el) {
-                    el.style.setProperty('flex-shrink', '0', 'important');
-                    el.style.setProperty('overflow', 'visible', 'important');
-                });
+            if (footerEl) {
+                footerEl.style.setProperty('position', 'absolute', 'important');
+                footerEl.style.setProperty('left', '0', 'important');
+                footerEl.style.setProperty('right', '0', 'important');
+                footerEl.style.setProperty('bottom', '0', 'important');
             }
         }
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
         $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
+        // Re-measure whenever the active-filters bar can change height/visibility
+        // (i.e. any time a filter is added/removed) — this is the exact trigger
+        // that was breaking the earlier flex-based layout.
+        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"], #min_exp, #max_exp, #min_sal, #max_sal, .simf-edu-check', function() {
+            setTimeout(simfEnforceDrawerLayout, 0);
+        });
 
         /* ------------------------------------------------------------------
            Filter drawer glue: opening the drawer from the search-box overlay,
