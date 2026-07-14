@@ -1503,6 +1503,19 @@
                             $row.find('[data-cc-fee]').html(feeLabel + ' <span class="text-muted fw-normal">(Placement Fee)</span>');
                             $row.find('[data-cc-model]').text(modelLabel);
                         }
+                        // Update data-* on the active "Change" button so re-opening shows latest values
+                        var $activeBtn = $('.commercial-change-btn.is-active-row');
+                        $activeBtn.attr('data-service-type', serviceType);
+                        $activeBtn.attr('data-commercial-model', commercialModel);
+                        $activeBtn.attr('data-fee-method', feeMethod);
+                        $activeBtn.attr('data-fee-base', feeBase);
+                        $activeBtn.attr('data-fee-pct', feePct);
+                        $activeBtn.attr('data-fee-fixed', feeFixed);
+                        $activeBtn.attr('data-billing-amount', billingAmount);
+                        $activeBtn.attr('data-billing-cycle', billingCycle);
+                        $activeBtn.attr('data-margin-pct', marginPct);
+                        $activeBtn.attr('data-replacement-period', replacementPeriod);
+                        $activeBtn.attr('data-internal-note', internalNote);
                         Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
                         setTimeout(function() { $('#kt_commercialConfig_close').trigger('click'); }, 1600);
                     } else {
@@ -1769,6 +1782,19 @@
                                 $row.find('[data-ad-end-date]').text(formatted);
                             }
                         }
+                        // Update data-* on the active "Change" button so re-opening shows latest values
+                        var $activeAssignBtn = $('.assignment-change-btn[data-candidate-id="' + candidateId + '"]');
+                        $activeAssignBtn.attr('data-assignment-status', assignmentStatus);
+                        $activeAssignBtn.attr('data-expected-end-date', expectedEndDate);
+                        $activeAssignBtn.attr('data-client-location', clientLocation);
+                        $activeAssignBtn.attr('data-exit-reason', exitReason);
+                        $activeAssignBtn.attr('data-project-outcome', projectOutcome);
+                        $activeAssignBtn.attr('data-remarks', remarks);
+                        $activeAssignBtn.attr('data-internal-notes', internalNotes);
+                        $activeAssignBtn.attr('data-replacement-required', replacementRequired);
+                        $activeAssignBtn.attr('data-replacement-status', replacementStatus);
+                        $activeAssignBtn.attr('data-replacement-requested-on', replacementRequestedOn);
+                        $activeAssignBtn.attr('data-replacement-reason', replacementReason);
                         Swal.fire({ icon: 'success', text: res.message, timer: 1500, showConfirmButton: false });
                         setTimeout(function() { $('#kt_assignmentDetails_close').trigger('click'); }, 1600);
                     } else {
