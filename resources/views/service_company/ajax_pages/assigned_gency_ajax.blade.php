@@ -3,183 +3,202 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
-    $salaryMode = GeneralMethod::salaryMode();
+    $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-
+    $currency        = GeneralMethod::currency();
 @endphp
+
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
         @php
-          $row = (object) $rowArr;
-          $logo_path = '';
+            $row = (object) $rowArr;
+
+            /* ── Logo ──────────────────────────────────────────── */
+            $logo_path = '';
             if (!empty(@$row->logo_to) && strlen(@$row->logo_to) > 10) {
                 $logo_path = @$row->logo_to;
             }
+
+            /* ── Agency initial colour ─────────────────────────── */
+            $companyName = trim(@$row->company_name_to ?? '');
+            $strVal = strtolower(substr($companyName ?: '#', 0, 1));
+            $charCode = ord($strVal);
+            if     ($charCode >= 97  && $charCode <= 101) { $bgColor = '#ef4444'; }
+            elseif ($charCode >= 102 && $charCode <= 106) { $bgColor = '#f59e0b'; }
+            elseif ($charCode >= 107 && $charCode <= 111) { $bgColor = '#6366f1'; }
+            elseif ($charCode >= 112 && $charCode <= 116) { $bgColor = '#22c55e'; }
+            elseif ($charCode >= 117 && $charCode <= 121) { $bgColor = '#1e293b'; }
+            else                                           { $bgColor = '#64748b'; }
+
+            /* ── Industry / category ───────────────────────────── */
+            $getClientIdCompany = GeneralMethod::getClientIdCompany($row->to_company_id);
+            $ind_name = $getClientIdCompany->main_ind_name ?? '';
+
+            /* ── Contact ───────────────────────────────────────── */
+            $contactRows = DB::table('users')
+                ->join('job_assign', 'job_assign.user_id', 'users.id')
+                ->select('users.name', 'users.image', 'users.mobile', 'users.email', 'users.designation')
+                ->where('users.company_id', $row->to_company_id)
+                ->where('job_assign.company_id', $row->to_company_id)
+                ->where('job_assign.job_id', $row->job_id)
+                ->skip(0)->take(1)
+                ->get();
+            $contact = $contactRows->first();
+
+            /* ── Performance ───────────────────────────────────── */
+            $perf = GeneralMethod::agencyCandidatesCount($row->to_company_id, $row->job_id);
+            $sourced    = $perf->Upload    ?? 0;
+            $interviews = $perf->Interview ?? 0;
+            $joined     = $perf->Joined    ?? 0;
+
+            /* ── Job Shared date ───────────────────────────────── */
+            $sharedRaw = @$row->created_at ?? null;
+            $sharedRel = $sharedRaw ? GeneralMethod::timeAgo($sharedRaw) : '—';
+            $sharedAbs = $sharedRaw ? date('d M, Y', strtotime($sharedRaw)) : '';
+
+            /* ── Status badge ──────────────────────────────────── */
+            $finalStatus = intval(@$row->final_status ?? 1);
+            switch ($finalStatus) {
+                case 1:  $badgeClass = 'aa-badge-open';    $badgeLabel = 'Open';    break;
+                case 2:  $badgeClass = 'aa-badge-paused';  $badgeLabel = 'Paused';  break;
+                case 3:  $badgeClass = 'aa-badge-expired'; $badgeLabel = 'Expired'; break;
+                default: $badgeClass = 'aa-badge-closed';  $badgeLabel = 'Closed';  break;
+            }
+
+            /* ── Relation ID for Terms ─────────────────────────── */
+            $relationId = @$row->id ?? '';
+            $jobId      = @$row->job_id ?? '';
         @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    $str = trim(@$row->company_name_to);
-                     $getClientIdCompany = GeneralMethod::getClientIdCompany($row->to_company_id);
-                    $ind_name = $getClientIdCompany->main_ind_name ?? '';
-                    $client_type_css = 'show-detail-direct';
 
-                    if (!empty($str)) {
-                        $str = $strVal = strtolower($str[0]);
-                        $str = ord($str);
-                        if ($str >= 97 && $str <= 101) {
-                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                        } elseif ($str >= 102 && $str <= 106) {
-                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                        } elseif ($str >= 107 && $str <= 111) {
-                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                        } elseif ($str >= 112 && $str <= 116) {
-                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                        } elseif ($str >= 117 && $str <= 121) {
-                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                        } else {
-                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                        }
-                    }
-                    if(!$logo_path){
-                        echo '<div data-row-id="' .$row->id .'" class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 ' . $client_type_css .'" style="float:left">
-                            <a href="javascript:void(0);" data-row-id="1210" class="show-application-detail">
-                            <div class="symbol-label ' .
-                                    @$bgTextDecore .
-                                    ' border-radius-5">' .
-                                    strtoupper(@$strVal) .
-                                    '</div>
-                            </a>
-                            </div>';
-                    }else{
-                         echo ' <div data-row-id="' .$row->id .'" class="symbol symbol-circle symbol-40px overflow-hidden me-2  border-radius-5 ' . $client_type_css .'" style=" float:left;margin-left: 10px !important;"> 
-								<a href="javascript:void(0);">
-									<div class="symbol-label border-radius-5"> <img src="' .
-                        $logo_path .
-                        '" alt="Company Logo" class="border-radius-5 w-100"> </div>
-								</a> 
-							</div>';
-                    }
+        <div class="aa-row">
 
-                    echo '<div data-row-id="' .$row->id .'" class="d-flex flex-column ' . $client_type_css .'" style=" float:left;"> 
-								<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        substr(ucwords(@$row->company_name_to), 0, 30) .
-                        '</a>   
-								<a href="javascript:void(0);" class="fw-bold text-muted d-block fs-7 text-hover-primary">' .
-                        substr(ucwords(@$ind_name), 0, 27) .
-                        '</a>
-							</div>
-							';
+            {{-- ── Agency ──────────────────────────────────────── --}}
+            <div class="aa-col-agency">
+                <div class="aa-logo" style="background:{{ $bgColor }};">
+                    @if($logo_path)
+                        <img src="{{ $logo_path }}" alt="{{ $companyName }}">
+                    @else
+                        {{ strtoupper($strVal) }}
+                    @endif
+                </div>
+                <div style="min-width:0;">
+                    <div class="aa-name">{{ substr(ucwords($companyName), 0, 22) }}</div>
+                    @if($ind_name)
+                        <div class="aa-cat">{{ substr(ucwords($ind_name), 0, 22) }}</div>
+                    @endif
+                </div>
+            </div>
 
+            {{-- ── Contact ──────────────────────────────────────── --}}
+            <div class="aa-col-contact">
+                @if($contact)
+                    <div class="aa-cnt-name">{{ ucwords($contact->name) }}</div>
+                    @if(!empty($contact->designation))
+                        <div class="aa-cnt-desg">{{ $contact->designation }}</div>
+                    @endif
+                    <div class="aa-cnt-btns">
+                        @if(!empty($contact->email))
+                            <button class="aa-cnt-btn email-icon"
+                                    data-email="{{ $contact->email }}"
+                                    data-name="{{ $contact->name }}"
+                                    title="Send email">
+                                <i class="fa-regular fa-envelope"></i>
+                            </button>
+                        @endif
+                        @if(!empty($contact->mobile))
+                            <button class="aa-cnt-btn phone-icon"
+                                    data-phone="{{ $contact->mobile }}"
+                                    data-country="IN"
+                                    data-name="{{ $contact->name }}"
+                                    title="Call contact">
+                                <i class="fa-solid fa-phone"></i>
+                            </button>
+                        @endif
+                    </div>
+                @else
+                    <span class="aa-cnt-dash">—</span>
+                @endif
+            </div>
 
+            {{-- ── Performance KPIs ─────────────────────────────── --}}
+            <div class="aa-col-perf">
+                <div class="aa-kpi">
+                    <div class="aa-kpi-num">{{ $sourced }}</div>
+                    <div class="aa-kpi-label">Sourced</div>
+                </div>
+                <div class="aa-kpi-sep d-none d-xl-block"></div>
+                <div class="aa-kpi">
+                    <div class="aa-kpi-num">0</div>
+                    <div class="aa-kpi-label">Evaluated</div>
+                </div>
+                <div class="aa-kpi-sep d-none d-xl-block"></div>
+                <div class="aa-kpi">
+                    <div class="aa-kpi-num">{{ $interviews }}</div>
+                    <div class="aa-kpi-label">Interviews</div>
+                </div>
+                <div class="aa-kpi-sep d-none d-xl-block"></div>
+                <div class="aa-kpi">
+                    <div class="aa-kpi-num">0</div>
+                    <div class="aa-kpi-label">Offers</div>
+                </div>
+                <div class="aa-kpi-sep d-none d-xl-block"></div>
+                <div class="aa-kpi">
+                    <div class="aa-kpi-num">{{ $joined }}</div>
+                    <div class="aa-kpi-label">Joined</div>
+                </div>
+            </div>
 
-                @endphp
-            </td>
-            <td>
-                @php
-                  $contHtml = '';
-					$contactQuery = DB::table('users')
-						->join('job_assign', 'job_assign.user_id', 'users.id')
-						->select('users.name', 'users.image')
-						->where('users.company_id', $row->to_company_id)
-						->where('job_assign.company_id', $row->to_company_id)
-						->where('job_assign.job_id', $row->job_id)
-						->skip(0)->take(1)
-						->get();
+            {{-- ── Job Shared ────────────────────────────────────── --}}
+            <div class="aa-col-shared">
+                <div class="aa-shared-rel">{{ ucwords($sharedRel) }}</div>
+                @if($sharedAbs)
+                    <div class="aa-shared-abs">{{ $sharedAbs }}</div>
+                @endif
+            </div>
 
-                        $contactQueryCount = DB::table('users')
-						->join('job_assign', 'job_assign.user_id', 'users.id')
-						->select('users.name', 'users.image')
-						->where('users.company_id', $row->to_company_id)
-						->where('job_assign.company_id', $row->to_company_id)
-						->where('job_assign.job_id', $row->job_id)
-						->count();
-                        if($contactQueryCount > 0){
-                                 $contactQueryCount = $contactQueryCount - 1;
-                        }
+            {{-- ── Status ────────────────────────────────────────── --}}
+            <div class="aa-col-status">
+                <span class="aa-badge {{ $badgeClass }}">
+                    <span class="aa-badge-dot"></span>{{ $badgeLabel }}
+                </span>
+            </div>
 
-						// dd(count($contactQuery));
-					if (count($contactQuery)>0) {
-						foreach ($contactQuery as $cont) {
-							$bgTextDecore				=	GeneralMethod::icoinText(@$cont->name);
-							$logo_path = '';
-							
-								$contHtml .=
-								'<div class="d-flex flex-column">
-                                     <div data-row-id="253" class="symbol-group symbol-hover client-hm-listing">
-                                        <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="'.ucwords(@$cont->name).'">
-                            <div class="overflow-hidden me-2">
-                            <a href="javascript:void(0);" data-row-id="11" class="fw-bold text-muted d-block text-hover-primary fs76" id="kt_activities3_toggle">
-                                <div class="fw-bold text-muted d-block fs-7 text-hover-primary">'.ucwords(@$cont->name).'</div>
-                            </a>		 
-                            </div>
-                            </div>';
-                             if($contactQueryCount){
-                                $contHtml .='<div class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More Comtact list.." style="margin-left: 0px;">
-                                    <span class="symbol-label font-weight-bold">'.$contactQueryCount.'+</span>
-                                </div>';
-                             }
-                            
-                            $contHtml .=
-								'</div>
-                            </div>';
-							
-							
-						}
-					}else{
-                        
-                         $contHtml = 0;
-                    }
-					$contHtml .= '</div>';
-					// dd($contHtml);
-				   echo $contHtml;
+            {{-- ── Actions ───────────────────────────────────────── --}}
+            <div class="aa-col-actions">
+                {{-- View Terms --}}
+                <button class="aa-terms-btn client-terms-accept"
+                        data-row-id="{{ $relationId }}"
+                        data-row-relation_id="{{ $relationId }}"
+                        title="View agency terms &amp; conditions">
+                    View Terms
+                </button>
 
-                @endphp
-            </td>
-            <td>
-                @php
-                   $agencyCandidatesCount = GeneralMethod::agencyCandidatesCount($row->to_company_id,$row->job_id);
-                   $profiles = $agencyCandidatesCount->Upload;
-                   $interview_schedules = $agencyCandidatesCount->Interview;
-                   $joined = $agencyCandidatesCount->Joined;
-                 
-                //    $profiles = DB::table('add_job_wise_condidates')->where('job_id','=',$row->job_id)->where('thirdparty_company_id','=',$row->to_company_id)->whereNotIn('master_status_id', [8, 7])->count();
-                   echo  $profiles;
-                @endphp
-            </td>
-            <td>
-              @php
-                //    $interview_schedules = DB::table('interview_schedules')->where('interview_job_id','=',$row->job_id)->where('company_id','=',$row->to_company_id)->whereNotNull('available_status')->count();
-                   echo  $interview_schedules;
-                @endphp
-            </td>
-            <td>
-              @php
-                //    $joined = DB::table('add_job_wise_condidates')->where('job_id','=',$row->job_id)->where('thirdparty_company_id','=',$row->to_company_id)->where('master_status_id','=',6)->count();
-                   echo  $joined;
-                @endphp
-            </td>
-            <td>
-                @php
-                $jobid = $row->job_id;
-				echo '<div class="flex-column"> 
-                <a href="javascript:void(0);" data-row-tabname="Assigned"  data-row-ename="remove"  data-row-jobid="' . $jobid . '" data-row-fromcompany="' . $row->from_company_id . '" data-row-tocompany="' . $row->to_company_id . '" class="btn btn-sm btn-light-danger w-130 remove_job">
-                    Remove
-                </a> 
-                </div>';
-                @endphp
-            </td>
-        </tr>
+                {{-- Three-dot menu --}}
+                <button class="aa-dots-btn" title="More actions" type="button">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <div class="aa-ddmenu">
+                    <button class="aa-ddi remove_job"
+                            data-row-tabname="Assigned"
+                            data-row-ename="remove"
+                            data-row-jobid="{{ $jobId }}"
+                            data-row-fromcompany="{{ @$row->from_company_id }}"
+                            data-row-tocompany="{{ @$row->to_company_id }}"
+                            type="button">
+                        <i class="fa-regular fa-trash-can" style="width:14px;"></i> Remove Agency
+                    </button>
+                </div>
+            </div>
+
+        </div>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="9" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    {{-- Empty state --}}
+    <div class="aa-empty">
+        <div class="aa-empty-icon">
+            <i class="fa-regular fa-building"></i>
+        </div>
+        <div class="aa-empty-title">No Agencies Assigned</div>
+        <div class="aa-empty-sub">Share this job with agencies to receive candidate submissions.</div>
+    </div>
 @endif
