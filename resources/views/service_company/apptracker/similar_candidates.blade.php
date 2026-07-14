@@ -2389,12 +2389,23 @@
                 drawerEl.style.setProperty('position', 'fixed', 'important');
                 drawerEl.style.setProperty('top', '0', 'important');
                 drawerEl.style.setProperty('bottom', '0', 'important');
+                // Explicit viewport height too: Metronic sizes the drawer with
+                // top+bottom only, which is NOT an explicit height, so a child's
+                // height:100% can't resolve against it and collapses to content
+                // height (this is what left the footer floating mid-screen with
+                // blank space below). Give it a real height so the chain holds.
+                drawerEl.style.setProperty('height', '100vh', 'important');
             }
             if (cardEl) {
                 cardEl.style.setProperty('display', 'flex', 'important');
                 cardEl.style.setProperty('flex-direction', 'column', 'important');
                 cardEl.style.setProperty('overflow', 'hidden', 'important');
-                cardEl.style.setProperty('height', '100%', 'important');
+                // Size the card to the viewport directly (100vh) rather than
+                // 100% of the parent — percentage heights depend on the parent
+                // exposing an explicit height, which the drawer historically did
+                // not; 100vh sidesteps that dependency entirely.
+                cardEl.style.setProperty('height', '100vh', 'important');
+                cardEl.style.setProperty('max-height', '100vh', 'important');
             }
             if (bodyEl) {
                 bodyEl.style.setProperty('flex', '1 1 auto', 'important');
@@ -2688,6 +2699,12 @@
             inst.on('kt.drawer.shown', function() {
                 simfApplying = false;
                 simfCaptureSnapshot();
+                // Re-assert the height/scroll layout now that the drawer is
+                // actually visible and measurable — this is the reliable moment,
+                // more so than the toggle-click (which fires before the open
+                // animation lays the element out).
+                simfEnforceDrawerLayout();
+                setTimeout(simfEnforceDrawerLayout, 50);
             });
             inst.on('kt.drawer.after.hidden', function() {
                 if (!simfApplying) simfRestoreSnapshot();
