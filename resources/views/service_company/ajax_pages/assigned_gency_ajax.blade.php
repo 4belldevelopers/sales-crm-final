@@ -37,7 +37,7 @@
             /* ── Contact ───────────────────────────────────────── */
             $contactRows = DB::table('users')
                 ->join('job_assign', 'job_assign.user_id', 'users.id')
-                ->select('users.name', 'users.image', 'users.mobile', 'users.email', 'users.designation')
+                ->select('users.name', 'users.image', 'users.mobile', 'users.email')
                 ->where('users.company_id', $row->to_company_id)
                 ->where('job_assign.company_id', $row->to_company_id)
                 ->where('job_assign.job_id', $row->job_id)
@@ -93,9 +93,6 @@
             <div class="aa-col-contact">
                 @if($contact)
                     <div class="aa-cnt-name">{{ ucwords($contact->name) }}</div>
-                    @if(!empty($contact->designation))
-                        <div class="aa-cnt-desg">{{ $contact->designation }}</div>
-                    @endif
                     <div class="aa-cnt-btns">
                         @if(!empty($contact->email))
                             <button class="aa-cnt-btn email-icon"
