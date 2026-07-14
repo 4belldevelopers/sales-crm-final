@@ -1192,7 +1192,14 @@
                                                             // Locations" panel would otherwise overlap;
                                                             // close the panel so the real suggestions show.
                                                             simfCloseLocPanel();
-                                                            tagifylocation.dropdown.show.call(tagifylocation, query);
+                                                            // No explicit filter argument: Tagify already
+                                                            // tracks the typed text via its own input
+                                                            // state, and passing our own query string here
+                                                            // filters the just-set whitelist a second time
+                                                            // against the raw "City | State | Country"
+                                                            // values, which can zero out the results even
+                                                            // though the whitelist is populated correctly.
+                                                            tagifylocation.dropdown.show.call(tagifylocation);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
