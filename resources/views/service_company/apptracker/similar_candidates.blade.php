@@ -79,55 +79,23 @@
         /* Skill / Location tag chips: square-ish rounded rect (not a full pill),
            bordered for definition, consistent padding so star+text+remove all
            sit on one visual baseline regardless of which section renders them. */
-        .tagify__tag {
-            display: flex !important;
-            align-items: center !important;
-            background: #eef2ff !important;
-            border: 1px solid #e0e7ff !important;
-            border-radius: 8px !important;
-            margin: 4px 6px 4px 0 !important;
-            padding: 0 !important;
-        }
-        .tagify__tag.simf-mandatory-tag {
-            background: #dbeafe !important;
-            border-color: #bfdbfe !important;
-        }
-        .tagify__tag > div {
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            line-height: 1;
-            padding: 7px 4px 7px 10px !important;
-        }
-
+        /* Tagify chip styles — visual properties are set as inline styles in the
+           JS template so they can't be overridden by plugins.bundle.css (loaded
+           mid-body after this <style> block). Only interactive states are here. */
         .tagify__tag .star {
             cursor: pointer;
-            font-size: 19.5px;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            color: #94a3b8;
-            margin-right: 5px;
-            flex-shrink: 0;
         }
-
         .tagify__tag .star.checked {
-            color: #eab308;
+            color: #eab308 !important;
         }
-
-        .tagify__tag .tagify__tag-text {
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #3730a3;
-            line-height: 1;
+        .tagify__tag__removeBtn:hover {
+            background: rgba(0,0,0,.12) !important;
+            color: #000 !important;
         }
-        .tagify__tag.simf-mandatory-tag .tagify__tag-text {
-            color: #1d4ed8;
-        }
-        .tagify__tag__removeBtn {
-            margin-left: 2px !important;
-            margin-right: 8px !important;
-            flex-shrink: 0;
+        /* Location autocomplete dropdown is appended to <body> (appendTarget:document.body)
+           so it needs a z-index above the filter drawer (z-index:1200) and its backdrop. */
+        body > .tagify__dropdown {
+            z-index: 1400 !important;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
@@ -284,9 +252,9 @@
             color: #334155;
         }
         .simf-activebar {
-            padding: 12px 20px;
+            /* Lives inside the scroll container — no pinning needed */
+            padding: 12px 0;
             border-bottom: 1px solid #eef0f4;
-            flex-shrink: 0;
         }
         .simf-activebar-head {
             display: flex;
@@ -355,7 +323,6 @@
             padding: 4px 20px 16px;
         }
         #simf_card .simf-header,
-        #simf_card .simf-activebar,
         #simf_card .simf-footer {
             flex-shrink: 0 !important;
         }
@@ -938,22 +905,22 @@
                         </div>
                         <!--end::Header-->
 
-                        <!--begin::Active filters-->
-                        <div class="simf-activebar d-none" id="simf_active_bar">
-                            <div class="simf-activebar-head">
-                                <span class="simf-activebar-label">Active Filters <span id="simf_active_count">(0)</span></span>
-                                <a href="javascript:void(0);" class="simf-clearall" id="simf_clear_all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
-                                    Clear All
-                                </a>
-                            </div>
-                            <div class="simf-chips" id="simf_active_chips"></div>
-                        </div>
-                        <!--end::Active filters-->
-
                         <!--begin::Body-->
                         <div class="simf-body">
                             <form id="createSchedule" class="ajax-form" method="post">
+
+                                <!--begin::Active filters — inside scroll area so it flows with the sections -->
+                                <div class="simf-activebar d-none" id="simf_active_bar">
+                                    <div class="simf-activebar-head">
+                                        <span class="simf-activebar-label">Active Filters <span id="simf_active_count">(0)</span></span>
+                                        <a href="javascript:void(0);" class="simf-clearall" id="simf_clear_all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                            Clear All
+                                        </a>
+                                    </div>
+                                    <div class="simf-chips" id="simf_active_chips"></div>
+                                </div>
+                                <!--end::Active filters-->
 
                                 <!--begin::Skills-->
                                 <div class="simf-section">
@@ -983,13 +950,19 @@
                                                         const isChecked = tagData.checked ? 'checked' : '';
                                                         const mandatoryClass = tagData.checked ? 'simf-mandatory-tag' : '';
                                                         const starGlyph = tagData.checked ? '★' : '☆';
-                                                        return `
-                                                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                                                        <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                        <div style="display:flex;align-items:center;">
-                                                            <span class="star ${isChecked}" style="margin-right:7px;">${starGlyph}</span>
-                                                            <span class="tagify__tag-text">${value}</span>
-                                                        </div>
+                                                        const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
+                                        const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
+                                        const starColor = tagData.checked ? '#eab308' : '#94a3b8';
+                                        const textColor = tagData.checked ? '#1d4ed8' : '#3730a3';
+                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
+                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
+                                                        <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:11px;height:11px;border-radius:50%;background:rgba(0,0,0,.06);flex-shrink:0;font-size:11px;line-height:1;cursor:pointer;padding:0;"></x>
                                                     </tag>
                                                 `;
                                                     }
@@ -1008,9 +981,15 @@
 
                                                     e.target.classList.toggle('checked');
                                                     const nowChecked = e.target.classList.contains('checked');
-                                                    // Tagify doesn't re-run the tag template on toggle, so keep
-                                                    // the glyph (☆/★) and chip background in sync by hand here.
+
+                                                    // Update glyph, star colour, chip background/border inline
+                                                    // (template uses inline styles so CSS classes alone won't work)
                                                     e.target.textContent = nowChecked ? '★' : '☆';
+                                                    e.target.style.color = nowChecked ? '#eab308' : '#94a3b8';
+                                                    tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
+                                                    tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
+                                                    const textEl = tagElm.querySelector('.tagify__tag-text');
+                                                    if (textEl) textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
                                                     tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
                                                     // Update the tag data
@@ -1021,7 +1000,6 @@
                                                             tagify.updateValueByDOMTags();
                                                             updateActiveFiltersUI();
                                                         }, 500);
-
                                                     }
                                                 }
                                             });
@@ -1146,7 +1124,18 @@
                                                     maxItems: 20,
                                                     classname: "",
                                                     enabled: 0,
-                                                    closeOnSelect: true
+                                                    closeOnSelect: true,
+                                                    /* appendTarget prevents the dropdown from being
+                                                       clipped by .simf-body's overflow:hidden/auto.
+                                                       The body is position:absolute (set by
+                                                       simfEnforceDrawerLayout), making it the containing
+                                                       block for any position:absolute child — including
+                                                       Tagify's dropdown — so the dropdown was silently
+                                                       clipped. Appending to document.body escapes that
+                                                       context entirely; Tagify repositions the dropdown
+                                                       via getBoundingClientRect so it still aligns with
+                                                       the input field. */
+                                                    appendTarget: document.body
                                                 }
                                             });
                                             // Create tags only on select
@@ -1192,14 +1181,7 @@
                                                             // Locations" panel would otherwise overlap;
                                                             // close the panel so the real suggestions show.
                                                             simfCloseLocPanel();
-                                                            // No explicit filter argument: Tagify already
-                                                            // tracks the typed text via its own input
-                                                            // state, and passing our own query string here
-                                                            // filters the just-set whitelist a second time
-                                                            // against the raw "City | State | Country"
-                                                            // values, which can zero out the results even
-                                                            // though the whitelist is populated correctly.
-                                                            tagifylocation.dropdown.show.call(tagifylocation);
+                                                            tagifylocation.dropdown.show.call(tagifylocation, query);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
@@ -2397,7 +2379,6 @@
             var cardEl = document.getElementById('simf_card');
             var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
             var headerEl = cardEl ? cardEl.querySelector('.simf-header') : null;
-            var activebarEl = cardEl ? cardEl.querySelector('.simf-activebar') : null;
             var footerEl = cardEl ? cardEl.querySelector('.simf-footer') : null;
             if (drawerEl) {
                 drawerEl.style.setProperty('overflow', 'hidden', 'important');
@@ -2413,32 +2394,17 @@
                 cardEl.style.setProperty('height', '100vh', 'important');
                 cardEl.style.setProperty('max-height', '100vh', 'important');
             }
-            [headerEl, activebarEl, footerEl].forEach(function(el) {
-                if (!el) return;
-                el.style.setProperty('overflow', 'visible', 'important');
-            });
-            // Give .simf-body an EXPLICIT pixel height instead of trusting flexbox
-            // to distribute it: header/active-filters-bar/footer heights are
-            // measured directly with offsetHeight (0 if a section is d-none, e.g.
-            // the active-filters bar before any filter is picked), and the body
-            // gets exactly what's left of the viewport. This can't be starved by
-            // any flex/cascade conflict because it never depends on flex
-            // distribution in the first place — it's plain arithmetic. This is
-            // what was actually missing: the active-filters bar's height changes
-            // every time a filter is picked (a chip gets added), and flex-based
-            // sizing kept losing that recalculation, leaving .simf-body too tall
-            // for the remaining space and its tail content (Activity, the
-            // footer) rendering on top of / past the visible viewport.
+            /* Body: absolute-positioned between the header and footer.
+               The activebar is now inside the scroll container, so it is
+               NOT subtracted from the available height. */
             if (bodyEl) {
-                var used = (headerEl ? headerEl.offsetHeight : 0) +
-                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) +
-                    (footerEl ? footerEl.offsetHeight : 0);
-                var available = Math.max(window.innerHeight - used, 100);
+                var headerH = headerEl ? headerEl.offsetHeight : 0;
+                var footerH = footerEl ? footerEl.offsetHeight : 0;
+                var available = Math.max(window.innerHeight - headerH - footerH, 100);
                 bodyEl.style.setProperty('position', 'absolute', 'important');
                 bodyEl.style.setProperty('left', '0', 'important');
                 bodyEl.style.setProperty('right', '0', 'important');
-                bodyEl.style.setProperty('top', (headerEl ? headerEl.offsetHeight : 0) +
-                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) + 'px', 'important');
+                bodyEl.style.setProperty('top', headerH + 'px', 'important');
                 bodyEl.style.setProperty('height', available + 'px', 'important');
                 bodyEl.style.setProperty('max-height', available + 'px', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
@@ -2454,12 +2420,6 @@
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
         $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
-        // Re-measure whenever the active-filters bar can change height/visibility
-        // (i.e. any time a filter is added/removed) — this is the exact trigger
-        // that was breaking the earlier flex-based layout.
-        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"], #min_exp, #max_exp, #min_sal, #max_sal, .simf-edu-check', function() {
-            setTimeout(simfEnforceDrawerLayout, 0);
-        });
 
         /* ------------------------------------------------------------------
            Filter drawer glue: opening the drawer from the search-box overlay,
