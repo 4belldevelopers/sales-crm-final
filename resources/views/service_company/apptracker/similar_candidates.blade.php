@@ -2602,7 +2602,14 @@
             $('#simf_count_badge').toggle(n > 0).text(n);
         }
 
-        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', updateActiveFiltersUI);
+        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', function() {
+            updateActiveFiltersUI();
+            // Selecting a Notice/Stage/Activity pill can add a chip to the Active
+            // Filters bar, changing its height — re-assert the drawer's layout so
+            // the flex column recalculates and the footer/body stay correctly
+            // sized instead of drifting after that reflow.
+            if (typeof simfEnforceDrawerLayout === 'function') simfEnforceDrawerLayout();
+        });
         $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', updateActiveFiltersUI);
 
         $(document).on('click', '#simf_clear_all', function() {
