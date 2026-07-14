@@ -377,6 +377,136 @@
     @media (max-width: 768px) {
     #jrwrap .publish-grid, #jrwrap .summary-grid, #jrwrap .compact-grid, #jrwrap .review-row { grid-template-columns: 1fr; }
     }
+    /* ── Add Contact Person — right-side drawer (overrides Bootstrap modal positioning) ── */
+    #add_team_member { padding: 0 !important; }
+    #add_team_member .modal-dialog {
+        margin: 0 0 0 auto;
+        width: min(500px, 100vw);
+        max-width: 100%;
+        height: 100vh;
+        transform: translateX(100%);
+        transition: transform .28s cubic-bezier(.4,0,.2,1) !important;
+    }
+    #add_team_member.show .modal-dialog { transform: translateX(0); }
+    #add_team_member .modal-content {
+        height: 100%;
+        border-radius: 0 !important;
+        border: none !important;
+        border-left: 1px solid #e2e8f4 !important;
+        box-shadow: -12px 0 48px rgba(17,28,68,.14) !important;
+        display: flex; flex-direction: column; overflow: hidden;
+    }
+    @media (max-width: 767px) { #add_team_member .modal-dialog { width: 100vw; } }
+    @media (min-width: 768px) and (max-width: 1024px) { #add_team_member .modal-dialog { width: min(420px,100vw); } }
+
+    /* Header */
+    #add_team_member .modal-header {
+        padding: 20px 24px !important;
+        border-bottom: 1px solid #edf0f7 !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        flex-shrink: 0;
+        background: #fff;
+    }
+    #add_team_member .atm-head-info { flex: 1; min-width: 0; }
+    #add_team_member .atm-title {
+        margin: 0 0 3px !important;
+        font-size: 17px !important; font-weight: 700 !important;
+        color: #0f1940 !important; line-height: 1.3 !important;
+    }
+    #add_team_member .atm-subtitle {
+        margin: 0 !important; font-size: 12px !important;
+        color: #7889a8 !important; line-height: 1.5 !important;
+        font-weight: 400 !important;
+    }
+    #add_team_member .atm-close-btn {
+        flex-shrink: 0; width: 34px; height: 34px;
+        border-radius: 8px; border: 1px solid #e2e8f4;
+        background: #f5f7fb; display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer; color: #64748b; font-size: 15px; padding: 0;
+        transition: background .15s, border-color .15s, color .15s;
+        margin-top: 1px;
+    }
+    #add_team_member .atm-close-btn:hover { background: #fff0f2; border-color: #fca5a5; color: #dc2626; }
+
+    /* Body */
+    #add_team_member .modal-body {
+        padding: 24px !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+        background: #fff;
+    }
+
+    /* Field groups */
+    #add_team_member .atm-field { margin-bottom: 18px; }
+    #add_team_member .atm-label {
+        display: block; margin-bottom: 7px;
+        font-size: 13px; font-weight: 600; color: #0f1940; line-height: 1;
+    }
+    #add_team_member .atm-label .atm-req { color: #e5484d; margin-left: 2px; }
+
+    /* Input wrapper with icon */
+    #add_team_member .atm-input-wrap { position: relative; display: flex; align-items: center; }
+    #add_team_member .atm-input-icon {
+        position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+        font-size: 16px; color: #94a3b8; pointer-events: none; line-height: 1; z-index: 2;
+    }
+    #add_team_member .atm-input-wrap input,
+    #add_team_member .atm-input-wrap .atm-iti-wrap input {
+        width: 100% !important; height: 44px !important;
+        padding: 0 14px 0 40px !important;
+        border: 1px solid #d8e2f0 !important; border-radius: 8px !important;
+        background: #fff !important; color: #1e2d4f !important;
+        font-size: 13px !important; font-family: inherit !important;
+        outline: none !important;
+        box-shadow: none !important;
+        transition: border-color .15s, box-shadow .15s !important;
+    }
+    #add_team_member .atm-input-wrap input::placeholder { color: #94a3b8 !important; font-size: 12.5px !important; }
+    #add_team_member .atm-input-wrap input:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37,99,235,.10) !important;
+    }
+    #add_team_member .atm-input-wrap input.is-invalid { border-color: #ef4444 !important; }
+    #add_team_member .atm-input-wrap input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.10) !important; }
+    #add_team_member .atm-error { display: none; margin-top: 5px; font-size: 11.5px; color: #dc2626; line-height: 1.4; }
+    #add_team_member .atm-error.visible { display: block; }
+
+    /* intl-tel-input overrides — keep icon padding */
+    #add_team_member .iti { width: 100%; }
+    #add_team_member .iti .iti__flag-container { top: 50%; transform: translateY(-50%); height: 30px; left: 8px; }
+    #add_team_member .iti input[type=tel],
+    #add_team_member .iti input[type=number] {
+        padding-left: 52px !important;
+    }
+
+    /* Footer */
+    #add_team_member .atm-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #edf0f7;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; flex-shrink: 0; background: #fff;
+    }
+    #add_team_member .atm-cancel-btn {
+        height: 42px; padding: 0 20px; border-radius: 8px;
+        border: 1px solid #d0d8e8; background: #fff;
+        color: #0f1940; font-size: 13px; font-weight: 600; cursor: pointer;
+        transition: background .15s, border-color .15s;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    #add_team_member .atm-cancel-btn:hover { background: #f5f7fb; border-color: #b6c2d6; }
+    #add_team_member .atm-save-btn {
+        height: 42px; padding: 0 22px; border-radius: 8px;
+        background: #315efb; border: none;
+        color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: background .15s, opacity .15s;
+    }
+    #add_team_member .atm-save-btn:hover:not(:disabled) { background: #1e4fd4; }
+    #add_team_member .atm-save-btn:disabled { opacity: .7; cursor: not-allowed; }
     </style>
 @endpush
 @section('content')
@@ -2031,97 +2161,91 @@
         </div>
     </div>
 
-    <!--begin::Add Contact Person Modal-->
+    <!--begin::Add Contact Person Drawer (Bootstrap modal repurposed as right-side drawer via CSS)-->
     <div class="modal fade" id="add_team_member" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-dialog">
             <div class="modal-content">
+
+                <!-- Header -->
                 <div class="modal-header" id="add_team_member_header">
-                    <h2 class="fw-bolder">Add Contact Person</h2>
-                    <div class="btn btn-icon btn-sm btn-active-light-danger add_team_member_close" data-dismiss="modal">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
+                    <div class="atm-head-info">
+                        <h4 class="atm-title">Add Contact Person</h4>
+                        <p class="atm-subtitle">Add a hiring manager or HR contact for this job position.</p>
                     </div>
-
-
+                    <button type="button" class="atm-close-btn add_team_member_close" data-dismiss="modal" title="Close" aria-label="Close">
+                        <i class="la la-times" aria-hidden="true"></i>
+                    </button>
                 </div>
-                <div class="modal-body scroll-y mx-5">
-                    <form id="add_team_member_form" name="add_team_member_form" class="form" action="#"
-                        method="post">
+
+                <!-- Body -->
+                <div class="modal-body">
+                    <form id="add_team_member_form" name="add_team_member_form" class="form" action="#" method="post">
                         <meta name="csrf-token" content="{{ csrf_token() }}" />
                         @csrf
                         @method('POST')
-                        <div class="row client-cperson-row">
-                            <div class="row client-cperson-container" style="position: relative;">
-                                <span class="form-text text-muted form-label fw-bolder countContact"
-                                    style="position: absolute; top: 0;"></span>
-                                <div class="col-xl-12">
-                                    <div class="form-group-cus mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="text" name="cp_name" id="cp_name_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter person name">
-                                        <span class="form-text text-muted">Please enter contact person name</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
+                        <input type="hidden" value="{{ @$country_code }}" id="phone_country_code" name="phone_country_code">
 
-                                <div class="col-xl-12">
-                                    <div class="form-group-cus mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="email" name="cp_email" id="cp_email_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter email">
-                                        <span class="form-text text-muted">Please enter contact email</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12">
-                                    <div class="form-group-cus mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="number" name="cp_number" maxlength="10" id="cp_number_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter contact number">
-                                            <input type="hidden" value="{{ @$country_code }}" id="phone_country_code" name="phone_country_code">
-                                        <span class="form-text text-muted">Please enter contact number</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12">
-                                    <div class="form-group-cus mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="text" name="cp_desigination" id="cp_desigination_0"
-                                            class="form-control form-control-lg form-control-solid rounded" value=""
-                                            placeholder="Enter desigination" style="">
-                                        <span class="form-text text-muted">Please enter desigination</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="text-center col-xl-12">
-                                    <button type="reset" class="btn btn-light me-3" data-dismiss="modal">Close</button>
-                                    <button class="btn btn-primary "
-                                        id="hiring_contact_person_add"> <span class="indicator-label">Submit</span> <span
-                                            class="indicator-progress">Please wait... <span
-                                                class="spinner-border spinner-border-sm align-middle ms-2"></span> </span>
-                                    </button>
-                                </div>
+                        <!-- Contact Name -->
+                        <div class="atm-field">
+                            <label class="atm-label" for="cp_name_0">Contact Name<span class="atm-req">*</span></label>
+                            <div class="atm-input-wrap">
+                                <i class="la la-user atm-input-icon" aria-hidden="true"></i>
+                                <input type="text" name="cp_name" id="cp_name_0" placeholder="Enter full name" autocomplete="off">
                             </div>
+                            <div class="atm-error" id="atm_err_name">Contact name is required.</div>
                         </div>
+
+                        <!-- Designation -->
+                        <div class="atm-field">
+                            <label class="atm-label" for="cp_desigination_0">Designation<span class="atm-req">*</span></label>
+                            <div class="atm-input-wrap">
+                                <i class="la la-id-badge atm-input-icon" aria-hidden="true"></i>
+                                <input type="text" name="cp_desigination" id="cp_desigination_0" placeholder="e.g. HR Manager, Hiring Lead" autocomplete="off">
+                            </div>
+                            <div class="atm-error" id="atm_err_desig">Designation is required.</div>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="atm-field">
+                            <label class="atm-label" for="cp_email_0">Email Address<span class="atm-req">*</span></label>
+                            <div class="atm-input-wrap">
+                                <i class="la la-envelope atm-input-icon" aria-hidden="true"></i>
+                                <input type="email" name="cp_email" id="cp_email_0" placeholder="name@company.com" autocomplete="off">
+                            </div>
+                            <div class="atm-error" id="atm_err_email">Please enter a valid email address.</div>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="atm-field">
+                            <label class="atm-label" for="cp_number_0">Phone Number</label>
+                            <div class="atm-input-wrap">
+                                <input type="number" name="cp_number" id="cp_number_0" maxlength="10" placeholder="Enter phone number" autocomplete="off">
+                            </div>
+                            <div class="atm-error" id="atm_err_phone">Please enter a valid 10-digit phone number.</div>
+                        </div>
+
                     </form>
                 </div>
+
+                <!-- Footer (outside form — buttons use onclick/id selectors, not form submit) -->
+                <div class="atm-footer">
+                    <button type="button" class="atm-cancel-btn add_team_member_close" data-dismiss="modal">
+                        <i class="la la-times-circle" aria-hidden="true"></i> Cancel
+                    </button>
+                    <button type="button" class="atm-save-btn" id="hiring_contact_person_add">
+                        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:6px;">
+                            <i class="la la-user-plus" aria-hidden="true"></i> Add Contact Person
+                        </span>
+                        <span class="indicator-progress" style="display:none;align-items:center;gap:6px;">
+                            <span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;"></span> Adding…
+                        </span>
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
-    <!--end::Add  Contact Person popup-->
+    <!--end::Add Contact Person Drawer-->
 @endsection
 @push('footer-script')
     {{-- =========================================================
@@ -2229,52 +2353,91 @@
             $('.address_show').hide();
             $.noConflict();
 
-            // ---- Add Hiring Contact Person (original) ----
+            // ---- Add Hiring Contact Person ----
+            function _atmClearErrors() {
+                $('#cp_name_0, #cp_email_0, #cp_desigination_0, #cp_number_0').removeClass('is-invalid');
+                $('.atm-error').removeClass('visible');
+            }
+            // Clear inline errors on input
+            $(document).on('input', '#cp_name_0',       function() { $(this).removeClass('is-invalid'); $('#atm_err_name').removeClass('visible'); });
+            $(document).on('input', '#cp_email_0',      function() { $(this).removeClass('is-invalid'); $('#atm_err_email').removeClass('visible'); });
+            $(document).on('input', '#cp_desigination_0', function() { $(this).removeClass('is-invalid'); $('#atm_err_desig').removeClass('visible'); });
+            $(document).on('input', '#cp_number_0',     function() { $(this).removeClass('is-invalid'); $('#atm_err_phone').removeClass('visible'); });
+            // Clear errors when drawer opens
+            $('#add_team_member').on('show.bs.modal', function() { _atmClearErrors(); });
+
             $("#hiring_contact_person_add").on("click", function(e) {
                 e.preventDefault();
-                var client_id = $('#client_id').val();
-                var cp_name_0 = $('#cp_name_0').val();
-                var cp_email_0 = $('#cp_email_0').val();
-                var cp_number_0 = $('#cp_number_0').val();
-                var cp_desigination_0 = $('#cp_desigination_0').val();
+                _atmClearErrors();
+                var client_id        = $('#client_id').val();
+                var cp_name_0        = $('#cp_name_0').val().trim();
+                var cp_email_0       = $('#cp_email_0').val().trim();
+                var cp_number_0      = $('#cp_number_0').val().trim();
+                var cp_desigination_0 = $('#cp_desigination_0').val().trim();
                 var phone_country_code = $('#phone_country_code').val();
+                var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                var valid = true, $firstBad = null;
 
-                if (client_id > 0 && cp_name_0 != '' && cp_email_0 != '' && cp_desigination_0 != '') {
-                    $('.indicator-label').hide();
-                    $('#hiring_contact_person_add').attr('disabled', true);
-                    $('.indicator-progress').show();
-                    var token = "{{ csrf_token() }}";
-                    var id = client_id;
-                    var url = "{{ route('service_company.jobs.hiring_contact_person', ':id') }}";
-                    url = url.replace(':id', id);
-                    $.ajax({
-                        type: 'POST',
-                        url: url,
-                        data: { '_token': token, 'cp_name_0': cp_name_0, 'cp_email_0': cp_email_0, 'cp_number_0': cp_number_0, 'cp_desigination_0': cp_desigination_0, 'phone_country_code': phone_country_code, 'id': id },
-                        success: function(response) {
-                            if (response.status == 'warning') {
-                                $('#hiring_contact_person_add').attr('disabled', false);
-                                $('.indicator-label').show();
-                                $('.indicator-progress').hide();
-                                $("input[name=cp_email]").val('');
-                                Swal.fire({ text: response.message, icon: "error", buttonsStyling: !1, confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-light" } });
-                                return false;
-                            }
-                            $('#Iteam_Table').prepend(response.view);
-                            var hiring_namager = $('#hiring_namager').val();
-                            if (hiring_namager == '') { $('#hiring_namager').val(response.contact_person_name); }
-                            else { $('#hiring_namager').val(hiring_namager + ',' + response.contact_person_name); }
-                            $('#add_team_member_form')[0].reset();
-                            $('#hiring_contact_person_add').attr('disabled', false);
-                            $('.indicator-label').show();
-                            $('.indicator-progress').hide();
-                            $(".add_team_member_close").click();
-                            if (typeof phoneDisplay === 'function') { phoneDisplay(); }
-                        }
-                    });
-                } else {
-                    Swal.fire({ text: "Please Enter the Conract Person Details after Submit", icon: "error", buttonsStyling: !1, confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-light" } });
+                if (!cp_name_0) {
+                    $('#cp_name_0').addClass('is-invalid'); $('#atm_err_name').addClass('visible');
+                    $firstBad = $firstBad || $('#cp_name_0'); valid = false;
                 }
+                if (!cp_desigination_0) {
+                    $('#cp_desigination_0').addClass('is-invalid'); $('#atm_err_desig').addClass('visible');
+                    $firstBad = $firstBad || $('#cp_desigination_0'); valid = false;
+                }
+                if (!cp_email_0 || !emailRe.test(cp_email_0)) {
+                    $('#cp_email_0').addClass('is-invalid');
+                    $('#atm_err_email').text(!cp_email_0 ? 'Email address is required.' : 'Please enter a valid email address.').addClass('visible');
+                    $firstBad = $firstBad || $('#cp_email_0'); valid = false;
+                }
+                if (!valid) { if ($firstBad) $firstBad.focus(); return; }
+
+                if (!(client_id > 0)) {
+                    Swal.fire({ text: "Please select a client before adding a contact person.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-light" } });
+                    return;
+                }
+
+                // Loading state
+                var $btn = $('#hiring_contact_person_add');
+                $btn.attr('disabled', true);
+                $btn.find('.indicator-label').css('display', 'none');
+                $btn.find('.indicator-progress').css('display', 'inline-flex');
+
+                var token = "{{ csrf_token() }}";
+                var id    = client_id;
+                var url   = "{{ route('service_company.jobs.hiring_contact_person', ':id') }}";
+                url = url.replace(':id', id);
+                $.ajax({
+                    type: 'POST', url: url,
+                    data: { '_token': token, 'cp_name_0': cp_name_0, 'cp_email_0': cp_email_0, 'cp_number_0': cp_number_0, 'cp_desigination_0': cp_desigination_0, 'phone_country_code': phone_country_code, 'id': id },
+                    success: function(response) {
+                        $btn.attr('disabled', false);
+                        $btn.find('.indicator-label').css('display', 'inline-flex');
+                        $btn.find('.indicator-progress').css('display', 'none');
+                        if (response.status == 'warning') {
+                            $("input[name=cp_email]").val('');
+                            $('#cp_email_0').addClass('is-invalid');
+                            $('#atm_err_email').text(response.message).addClass('visible');
+                            $('#cp_email_0').focus();
+                            return false;
+                        }
+                        $('#Iteam_Table').prepend(response.view);
+                        var hiring_namager = $('#hiring_namager').val();
+                        if (hiring_namager == '') { $('#hiring_namager').val(response.contact_person_name); }
+                        else { $('#hiring_namager').val(hiring_namager + ',' + response.contact_person_name); }
+                        $('#add_team_member_form')[0].reset();
+                        _atmClearErrors();
+                        $(".add_team_member_close").click();
+                        if (typeof phoneDisplay === 'function') { phoneDisplay(); }
+                    },
+                    error: function() {
+                        $btn.attr('disabled', false);
+                        $btn.find('.indicator-label').css('display', 'inline-flex');
+                        $btn.find('.indicator-progress').css('display', 'none');
+                        Swal.fire({ text: "Server error, please try again.", icon: "error", confirmButtonText: "Ok" });
+                    }
+                });
             });
 
             $('.hr_manager_add').on('click', function() { $("#hiring_namager").click(); });
@@ -2599,11 +2762,16 @@
                 success: function(data) {
                     if (data.status == 'success') {
                         var ed = document.getElementById('jobDescription');
-                        if (ed) { ed.innerHTML = data.jd || ''; syncDescription(); }
+                        // Only auto-fill description when it is empty (new job); skip on edit to preserve existing JD
+                        var currentDesc = ed ? (ed.innerText || ed.textContent || '').trim() : '';
+                        if (ed && currentDesc === '') {
+                            ed.innerHTML = data.jd || '';
+                            syncDescription();
+                        }
                         $("#min_exp").val(data.minimum_exp).change();
                         $("#max_exp").val(data.maxmum_exp).change();
-                        if (data.skills) {
-                            skills = [];
+                        // Only auto-fill skills when none are already added
+                        if (data.skills && skills.length === 0) {
                             (data.skills.split(',')).forEach(function(s) { s = s.trim(); if (s) skills.push(s); });
                             renderSkills();
                         }
@@ -2638,26 +2806,11 @@
                         if (data.status == 'success') {
                             let html = '';
                             if (data.skills) {
-
-                            skills = [];
-                        
+                            // Do NOT reset skills here — preserve already-added Key Skills
                             data.skills.forEach(function(item) {
-
-                                html += `
-                                    <span class="chip"
-                                        onclick="addSuggestedSkill(this,'${item.skill}')">
-                                        ${item.skill}
-                                        <span class="remove">+</span>
-                                    </span>
-                                `;
-
-
-                                //skills.push(item.skill);
-
-                            // console.log(item.skill, item.confidence);
+                                html += `<span class="chip" onclick="addSuggestedSkill(this,'${item.skill}')">${item.skill} <span class="remove">+</span></span>`;
                             });
-
-                        $('.skillsWrapperSkill').html(html);
+                            $('.skillsWrapperSkill').html(html);
                         }
 
                             // if (data.skills) {

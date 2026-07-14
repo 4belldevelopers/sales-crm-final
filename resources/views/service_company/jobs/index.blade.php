@@ -76,6 +76,26 @@
   display: block; /* Show the button on hover */
 }
 
+/* Prevent filter bar and table from compressing when the job-detail drawer opens */
+#kt_content_container {
+  min-width: 760px;
+  overflow-x: auto;
+}
+.filter-bar {
+  flex-wrap: nowrap !important;
+}
+.filter-bar .search-input-wrap {
+  min-width: 140px;
+  flex-shrink: 1;
+}
+.filter-bar .search-input,
+.filter-bar .filter-select,
+.filter-bar .sortingfilterselect,
+.filter-bar .more-filters-btn {
+  font-size: 12.5px !important;
+  white-space: nowrap;
+}
+
 </style>
 
     

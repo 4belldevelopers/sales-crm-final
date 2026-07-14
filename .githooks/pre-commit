@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Pre-commit hook — runs the AI guards + Pint style check on STAGED files only.
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass in an emergency:  git commit --no-verify   (use sparingly; CI still checks)
+
+set -uo pipefail
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+echo "▶ pre-commit: AI guards…"
+bash scripts/ai-guards.sh || exit 1
+
+# Pint (style) on staged PHP files, if Pint is installed.
+if [ -x vendor/bin/pint ]; then
+  staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
+  if [ -n "$staged_php" ]; then
+    echo "▶ pre-commit: Pint style check…"
+    # shellcheck disable=SC2086
+    if ! vendor/bin/pint --test $staged_php; then
+      echo "  Pint found style issues. Fix with: vendor/bin/pint <files>  (then re-stage)."
+      exit 1
+    fi
+  fi
+fi
+
+echo "✓ pre-commit checks passed."
+exit 0

@@ -200,6 +200,10 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::post('offer-mail-format/{id?}', [ServiceCompanyCvTrackerController::class,'offerSendMail'])->name('cvtracker.offer_send_mail');
 						Route::post('offer-send-mail/fwd_offer_send', [ServiceCompanyCvTrackerController::class,'fwd_offer_send'])->name('cvtracker.fwd_offer_send');
 						Route::post('offer_download_mail/{id?}', [ServiceCompanyCvTrackerController::class,'fwd_offer_download'])->name('cvtracker.offer_download_mail');
+						// Direct streamed offer-letter PDF download (create-offer Step 3 button). GET so the
+						// browser can navigate straight to it; streams the PDF as an attachment with no
+						// intermediate file/URL/storage dependency. See downloadOfferLetterStream() docblock.
+						Route::get('offer-letter/download/{offerId}', [ServiceCompanyCvTrackerController::class,'downloadOfferLetterStream'])->name('cvtracker.offer_letter_stream');
 
 						//END	 
 						//#############       	START APPTRACKER MANAGEMENT	
@@ -360,11 +364,14 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('bench-candidates/benchListingPoolData', [ServiceCompanyBenchCandidatesController::class,'benchListingPoolData'])->name('bench-candidates.benchListingPoolData');	
 						Route::get('bench-candidates/placedListing', [ServiceCompanyBenchCandidatesController::class,'placedListing'])->name('bench-candidates.placedListing');
 						Route::get('bench-candidates/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData'])->name('bench-candidates.placedListingData'); 
-						Route::get('bench-candidates_ajax/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData_ajax'])->name('bench-candidates.placedListingData_ajax'); 
+						Route::get('bench-candidates_ajax/placedListingData', [ServiceCompanyBenchCandidatesController::class,'placedListingData_ajax'])->name('bench-candidates.placedListingData_ajax');
+						Route::post('bench-candidates/save-assignment-details', [ServiceCompanyBenchCandidatesController::class,'savePlacedAssignmentDetails'])->name('bench-candidates.savePlacedAssignmentDetails');
+						Route::post('bench-candidates/save-commercial-config', [ServiceCompanyBenchCandidatesController::class,'savePlacedCommercialConfig'])->name('bench-candidates.savePlacedCommercialConfig');
 						Route::get('bench-candidates/offerListing', [ServiceCompanyBenchCandidatesController::class,'offerListing'])->name('bench-candidates.offerListing'); 
 						Route::get('bench-candidates/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData'])->name('bench-candidates.offerListingData');  
 						Route::get('bench-candidates_ajax/offerListingData', [ServiceCompanyBenchCandidatesController::class,'offerListingData_ajax'])->name('bench-candidates.offerListingData_ajax');  
-						Route::get('bench-candidates/data', [ServiceCompanyBenchCandidatesController::class,'data'])->name('bench-candidates.data'); 
+						Route::get('bench-candidates/staffing-dashboard', [ServiceCompanyBenchCandidatesController::class,'staffingDashboard'])->name('bench-candidates.staffingDashboard');
+						Route::get('bench-candidates/data', [ServiceCompanyBenchCandidatesController::class,'data'])->name('bench-candidates.data');
 						Route::get('bench-candidates_ajax/data', [ServiceCompanyBenchCandidatesController::class,'data_ajax'])->name('bench-candidates.data_ajax'); 
 						Route::get('countDataGetBenchList', [ServiceCompanyBenchCandidatesController::class,'countDataGetBenchList'])->name('bench-candidates.countDataGetBenchList'); 
 						Route::get('bench-candidates/bench_explore_listing', [ServiceCompanyBenchCandidatesController::class,'bench_explore_listing'])->name('bench-candidates.bench_explore_listing'); 
@@ -425,15 +432,16 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('team/jobdata', [ServiceCompanyTeamController::class,'jobdata'])->name('team.jobdata');
 						Route::get('team_ajax/jobdata', [ServiceCompanyTeamController::class,'jobdata_ajax'])->name('team.jobdata_ajax');
 						Route::get('team/assigndata', [ServiceCompanyTeamController::class,'assigndata'])->name('team.assigndata');
-						Route::resource('team', ServiceCompanyTeamController::class);
-						Route::post('team/resetpassword', [ServiceCompanyTeamController::class,'resetpassword'])->name('team.resetpassword'); 
+						Route::get('team/scoreboard', [ServiceCompanyTeamController::class,'teamScoreboard'])->name('team.scoreboard');
+						Route::resource('team', ServiceCompanyTeamController::class)->except(['show']);
+						Route::post('team/resetpassword', [ServiceCompanyTeamController::class,'resetpassword'])->name('team.resetpassword');
 						Route::post('team/statusUpdate', [ServiceCompanyTeamController::class,'statusUpdate'])->name('team.statusUpdate');
 						Route::post('team/teamDelete', [ServiceCompanyTeamController::class,'teamDelete'])->name('team.teamDelete');
 						Route::post('team/reSendmail', [ServiceCompanyTeamController::class,'reSendmail'])->name('team.reSendmail');
 						Route::any('team/roleupdate', [ServiceCompanyTeamController::class,'roleupdate'])->name('team.roleupdate');
-						Route::post('team/WorkingStatus', [ServiceCompanyTeamController::class,'WorkingStatus'])->name('team.WorkingStatus');			
+						Route::post('team/WorkingStatus', [ServiceCompanyTeamController::class,'WorkingStatus'])->name('team.WorkingStatus');
 
-						//END	
+						//END
 						//#############       	START ROLES AND PERMISSION  
 						Route::get('role-permission/show-role/{id?}', [ServiceCompanyRolesPermissionController::class,'showRole'])->name('settings.showRole');
 						// Route::get('role-permission/teamdata', [ServiceCompanyRolesPermissionController::class,'teamdata')->name('settings.teamdata');	
@@ -527,6 +535,8 @@ Route::group(['middleware' => 'auth'], function () {
 
 			Route::get('transection-log', [ManageSubscriptionController::class,'transectionLog'])->name('subscribe.transectionLog');
 			Route::get('new-subscribe/newindex', [ManageSubscriptionController::class,'newindex'])->name('subscribe.newindex');
+			Route::get('transactions/subscription', [ManageSubscriptionController::class,'transactions'])->name('transactions.subscription');
+			Route::get('transactions/subscription-ajax', [ManageSubscriptionController::class,'transactionsAjax'])->name('transactions.subscriptionAjax');
 			Route::get('checkout-subscribe', [ManageSubscriptionController::class,'checkoutSubscribeIist'])->name('subscribe.checkoutSubscribeIist');
 			Route::post('checkout-subscribe', [ManageSubscriptionController::class,'checkoutSubscribe'])->name('subscribe.checkoutSubscribe');
 

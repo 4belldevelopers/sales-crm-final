@@ -46,6 +46,27 @@ class ServiceCompanyJobOnboardController extends ServiceCompanyBaseController
 		});
 		$this->appCounter = $this->appCounter->count();
     	$this->countries = DB::table('countries')->get();
+
+		// Initial KPI seed for the redesigned Joining Tracker hero cards.
+		// WHY only "total" is seeded from MySQL: the live, authoritative numbers for every
+		// card + tab come from ONE Elasticsearch aggregation returned by
+		// cvtracker.allcandidates (status_cus=6) on the first table fetch, so the JS overrides
+		// these the moment data lands. Seeding "total" from the already-computed $appCounter
+		// avoids a flash of 0 on the "Total Joining" card without any extra DB load
+		// (Tenancy note: $appCounter above is already scoped to this company_id).
+		$this->joiningStats = [
+			'total'        => (int) $this->appCounter,
+			'today'        => 0,
+			'joined'       => 0,
+			'backed_out'   => 0,
+			'onboarded'    => 0,
+			'this_week'    => 0,
+			'this_month'   => 0,
+			'delayed'      => 0,
+			'no_show'      => 0,
+			'pending_docs' => 0,
+		];
+
 		return view('service_company.job-onboard.index', $this->data);
 	}
 

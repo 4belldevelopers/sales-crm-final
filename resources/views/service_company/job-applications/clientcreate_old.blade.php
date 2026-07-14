@@ -2189,32 +2189,36 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
          
           setTimeout(() => {
               var existingFileUrl = "{{ $url }}";
-               var resume_url = "{{ $resume_url }}";
-              // var existingFileName = "Jero_UMESH_SADA.docx"; // Name of the file
+              var resume_url = "{{ $resume_url }}";
               if (resume_url && resume_url.trim() !== "") {
-              var existingFileName = existingFileUrl.split('/').pop(); // Extract the last part of the URL
-              var existingFileSize = 12345; // Approximate file size in bytes (use real size if known)
-              if (existingFileName) {
-                    existingFileNameFunc(existingFileName);
-                } else {
-                    console.error("Filename is empty or not present in the URL.");
-                }
+                  // Find the first path segment that has a valid resume extension.
+                  // .split('/').pop() can return a bare number (e.g. "07") when the
+                  // path uses date-based directories like resumes/2024/07/file.pdf.
+                  var extMatch = decodeURIComponent(existingFileUrl).match(/([^\/\\]+\.(pdf|doc|docx))/i);
+                  var existingFileName = extMatch ? extMatch[1] : (decodeURIComponent(existingFileUrl.split('/').pop()) || 'Resume (uploaded)');
+                  if (existingFileName) {
+                      existingFileNameFunc(existingFileName);
+                      // Keep existing path so server preserves the resume on submit
+                      document.querySelector('#uploaded_file_path').value = existingFileUrl;
+                  } else {
+                      console.error("Filename is empty or not present in the URL.");
+                  }
               } else {
-                      console.log("Resume URL is empty");
+                  console.log("Resume URL is empty");
               }
-           
           }, 500);
 
-           setInterval(() => {
-      
+          setInterval(() => {
               const existingFilewww = dropzone.querySelector('.dropzone-item.dz-processing, .dropzone-item.dz-success, .dropzone-item.dz-complete');
-
-                if (existingFilewww) {
-                      $("#resumeCheck").val('1');
-                }else{
+              if (existingFilewww) {
+                  $("#resumeCheck").val('1');
+              } else {
                   $("#resumeCheck").val('');
-                }
-
+                  // Clear path so server does not reference a stale value
+                  if (!document.querySelector('#uploaded_file_path').value) {
+                      document.querySelector('#uploaded_file_path').value = '';
+                  }
+              }
           }, 500);
 
 

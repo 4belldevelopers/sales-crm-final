@@ -329,6 +329,8 @@ Route::get('300', function () {
 });
 
 Route::post('/offer_download_mail/{id?}', [HomeController::class, 'fwd_offer_download'])->name('get.offer_download_mail');
+// Direct PDF stream for candidate download — no file storage, no URL, no symlink dependency.
+Route::get('/offer-letter-stream/{offerId}', [HomeController::class, 'streamOfferLetterPdf'])->name('offer.letter.stream');
 
 
 // Route::prefix('/')->group(function () {
@@ -482,7 +484,14 @@ Route::prefix('product_company')->name('product_company.')->group(function () {
             Route::delete('removerole/{user_id?}', 'ManageRolePermissionController@removerole')->name('settings.removerole');
         });
         
-        Route::resource('account', 'ProductCompanyAccountSettingsController');
+        // ->except(['update']): the explicit POST route below already owns the
+        // "product_company.account.update" name (a custom update action, not the resource's
+        // conventional PUT/PATCH). Without this exclusion the two collide and
+        // `php artisan route:cache` fails at serialization ("Another route has already been
+        // assigned name..."), which was silently breaking every staging deploy — the deploy
+        // script aborts at that step, so `octane:reload` never runs and the server keeps
+        // serving stale code from memory indefinitely.
+        Route::resource('account', 'ProductCompanyAccountSettingsController')->except(['update']);
         Route::get('account/editProfile/{id?}', 'ProductCompanyAccountSettingsController@editProfile')->name('account.editProfile');
         Route::post('account/update/{id}', 'ProductCompanyAccountSettingsController@update')->name('account.update');
         Route::post('account/addIntStage', 'ProductCompanyAccountSettingsController@addIntStage')->name('account.addIntStage');
@@ -523,7 +532,7 @@ Route::prefix('product_company')->name('product_company.')->group(function () {
         Route::get('jobs/application-data', 'ProductCompanyJobsController@applicationData')->name('jobs.applicationData');
         Route::post('jobs/send-emails', 'ProductCompanyJobsController@sendEmails')->name('jobs.sendEmails');
         Route::get('jobs/send-email', 'ProductCompanyJobsController@sendEmail')->name('jobs.sendEmail');
-       	Route::resource('jobs', 'ProductCompanyJobsController');
+       	Route::resource('jobs', 'ProductCompanyJobsController')->except(['update']);
         Route::get('jobs/getContactPerson/{client_id}', 'ProductCompanyJobsController@getContactPerson')->name('jobs.getContactPerson'); // NEW
         Route::get('jobs/lightbox/{client_id}', 'ProductCompanyJobsController@lightbox')->name('jobs.lightbox'); // NEW
         Route::get('jobs/loc_lightbox/{client_id}', 'ProductCompanyJobsController@loc_lightbox')->name('jobs.loc_lightbox'); // NEW
@@ -538,9 +547,11 @@ Route::prefix('product_company')->name('product_company.')->group(function () {
         Route::post('jobs/spartnerAssign', 'ProductCompanyJobsController@spartnerAssign')->name('jobs.spartnerAssign'); // NEW
         Route::post('jobs/newUpdateJobstatus', 'ProductCompanyJobsController@newUpdateJobstatus')->name('jobs.newUpdateJobstatus'); // NEW
         Route::post('jobs/update/{id}', 'ProductCompanyJobsController@update')->name('jobs.update');
-        //Route::get('jobs/hiring_manager/{id?}', 'AdminJobsController@hiring_manager')->name('jobs.hiring_manager'); // NEW			
-        Route::get('jobs/hiring_manager/{id?}', 'ProductCompanyJobsController@hiring_manager')->name('jobs.hiring_manager'); 				// NEW	
-        Route::post('jobs/hiring_manager/{id?}', 'ProductCompanyJobsController@hiring_manager')->name('jobs.hiring_manager'); 				// NEW	
+        //Route::get('jobs/hiring_manager/{id?}', 'AdminJobsController@hiring_manager')->name('jobs.hiring_manager'); // NEW
+        // GET and POST merged into one match() — two separate Route:: calls sharing the same
+        // name broke `php artisan route:cache` serialization (see note near the account/jobs
+        // resource() fixes above for how this class of bug silently killed staging deploys).
+        Route::match(['get', 'post'], 'jobs/hiring_manager/{id?}', 'ProductCompanyJobsController@hiring_manager')->name('jobs.hiring_manager'); 				// NEW
         Route::get('jobs/recruiter/{id?}', 'ProductCompanyJobsController@recruiter')->name('jobs.recruiter'); 								// NEW		
         Route::post('jobs/recruiter/{id?}', 'ProductCompanyJobsController@recruiter')->name('jobs.recruiter'); 								// NEW		
         Route::get('jobs/all_jobs/{id?}', 'ProductCompanyJobsController@all_jobs')->name('jobs.all_jobs'); 									// NEW		

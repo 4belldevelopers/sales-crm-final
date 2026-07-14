@@ -516,7 +516,7 @@
     .jw-mp-tbl tr.me td:last-child{ border-top-right-radius:8px; border-bottom-right-radius:8px; }
 
     /* ===== Recruiter Score Board (redesign · Metronic · Poppins · ≤14px) ===== */
-    #your_rank_company .modal-dialog, #your_rank_global .modal-dialog{ max-width:1180px; }
+    #your_rank_company .modal-dialog, #your_rank_global .modal-dialog, #company_rank_global .modal-dialog{ max-width:1180px; }
     .sb-wrap{ font-family:'Poppins',sans-serif; }
     .rsb, .rsb *{ box-sizing:border-box; font-family:'Poppins',sans-serif; }
     .rsb{ font-size:12.5px; line-height:1.5; color:#1f2a44; }
@@ -966,31 +966,7 @@
             </div>
         </div>
 
-        {{-- Company Global Ranking --}}
-        @if ($jwTopCompanies->count())
-            <div class="jw-card-soft mb-3">
-                <div class="jw-cg">
-                    <div class="jw-cg-cap">
-                        <span>Company Global Ranking ▾</span>
-                        <small>How we rank against top companies</small>
-                    </div>
-                    @foreach ($jwTopCompanies as $idx => $jwC)
-                        @php
-                            $jwName  = @$jwC->name ?? @$jwC->company_name ?? ('Company #' . (@$jwC->id ?? ''));
-                            $jwIsYou = (@$jwC->id == $jwOwnCompanyId);
-                            $jwScore = (float) (@$jwC->score ?? 0);
-                            $jwPct   = max(6, round(($jwScore / $jwMaxScore) * 100));
-                            $cgc     = $jwCgColors[$idx % count($jwCgColors)];
-                        @endphp
-                        <div class="jw-cg-item">
-                            <div class="nm">{{ @$jwC->rank }} {{ \Illuminate\Support\Str::limit($jwName, 14) }}<span class="yu">{{ $jwIsYou ? ' (You)' : '' }}</span></div>
-                            <div class="pts">{{ number_format($jwScore) }} pts</div>
-                            <div class="jw-cg-bar"><i style="width:{{ $jwPct }}%;background:{{ $cgc }}"></i></div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        {{-- Company Global Ranking removed per product decision (2026-06-29) — block intentionally deleted. --}}
         {{-- ===================== END REDESIGNED HERO ===================== --}}
 
         <!--begin::Row OLD ranking (replaced by hero above)-->
@@ -1230,6 +1206,16 @@
                 [$dOffer, $dirOffer] = $jwDelta($jwOffer);
                 [$dJoin, $dirJoin]   = $jwDelta($jwJoin);
 
+                // Monthly KPI strip — the NUMBER and the % delta must come from the SAME monthly series,
+                // otherwise the headline and "vs last month" disagree. Candidates Added = candidates CREATED
+                // this month ($addedMonthValues last bucket); Offers/Joinings = events this month
+                // (of_created_date / of_joined_date series, same as the trend charts). vs the old code which
+                // showed a pipeline status-sum with a daily "vs yesterday" delta.
+                $jwAddedM  = is_array($addedMonthValues ?? null) ? array_values($addedMonthValues) : [];
+                $kpiCandM  = (int) $jwLastOf($jwAddedM);  [$dCandM, $dirCandM] = $jwDelta($jwAddedM);
+                $kpiOfferM = (int) $jwLastOf($jwOffer);
+                $kpiJoinM  = (int) $jwLastOf($jwJoin);
+
                 // candidate pipeline funnel — last 6 months stage counts (no "Added" row)
                 $f6 = $funnel6m ?? [];
                 $jwFunnel = [
@@ -1254,18 +1240,24 @@
                     $labels = array_values($labels);
                     $n = count($vals);
                     if ($n < 2) { return ''; }
-                    $W = 360; $H = 230; $mL = 30; $mR = 12; $mT = 18; $mB = 26;
+                    $W = 360; $H = 230; $mL = 34; $mR = 30; $mT = 18; $mB = 26;
                     $pW = $W - $mL - $mR; $pH = $H - $mT - $mB;
-                    $mx = max($vals);
-                    $niceMax = $mx <= 30 ? max(10, (int) (ceil($mx / 10) * 10)) : (int) (ceil($mx / 20) * 20);
-                    $step = $niceMax <= 30 ? 10 : 20;
-                    $steps = max(2, (int) round($niceMax / $step));
+                    $mx = max($vals); if ($mx <= 0) { $mx = 1; }
+                    // Adaptive "nice" Y scale → ~4 gridlines regardless of magnitude (10s, 100s or 1000s).
+                    // The old fixed step of 20 produced ~400 overlapping gridlines/labels for values in the thousands.
+                    $rawStep = $mx / 4;
+                    $mag = pow(10, floor(log10($rawStep)));
+                    $norm = $rawStep / $mag;
+                    $niceStep = ($norm <= 1 ? 1 : ($norm <= 2 ? 2 : ($norm <= 5 ? 5 : 10))) * $mag;
+                    $niceMax = (int) (ceil($mx / $niceStep) * $niceStep);
+                    $steps = max(2, (int) round($niceMax / $niceStep));
+                    $fmtY = fn ($v) => $v >= 1000 ? rtrim(rtrim(number_format($v / 1000, 1), '0'), '.') . 'k' : (string) (int) round($v);
                     $grid = ''; $yl = '';
                     for ($s = 0; $s <= $steps; $s++) {
                         $yv = $niceMax / $steps * $s;
                         $y = $mT + $pH - ($yv / $niceMax) * $pH;
                         $grid .= '<line x1="' . $mL . '" y1="' . round($y, 1) . '" x2="' . ($W - $mR) . '" y2="' . round($y, 1) . '" stroke="#eef1f6" stroke-width="1"/>';
-                        $yl .= '<text x="' . ($mL - 6) . '" y="' . round($y + 3, 1) . '" text-anchor="end" font-size="9" fill="#9aa3b2">' . (int) $yv . '</text>';
+                        $yl .= '<text x="' . ($mL - 6) . '" y="' . round($y + 3, 1) . '" text-anchor="end" font-size="9" fill="#9aa3b2">' . $fmtY($yv) . '</text>';
                     }
                     $co = [];
                     for ($i = 0; $i < $n; $i++) {
@@ -1341,16 +1333,16 @@
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/></svg></span>
-                            <div><div class="jw-sc-label">Candidates Added</div><div class="jw-sc-num">{{ number_format($total_candidates ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
+                            <div><div class="jw-sc-label">Candidates Added</div><div class="jw-sc-num">{{ number_format($kpiCandM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
-                        <div class="jw-sc-delta {{ $dirCand }}"><span>{{ $dirCand === 'up' ? '↑' : ($dirCand === 'down' ? '↓' : '—') }}</span>{{ abs($dCand) }}% vs yesterday</div>
+                        <div class="jw-sc-delta {{ $dirCandM }}"><span>{{ $dirCandM === 'up' ? '↑' : ($dirCandM === 'down' ? '↓' : '—') }}</span>{{ abs($dCandM) }}% vs last month</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl">
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
-                            <div><div class="jw-sc-label">Offers <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($offer_count ?? 0) }}</div><div class="jw-sc-meta">Total Offers</div></div>
+                            <div><div class="jw-sc-label">Offers <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($kpiOfferM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
                         <div class="jw-sc-delta {{ $dirOffer }}"><span>{{ $dirOffer === 'up' ? '↑' : ($dirOffer === 'down' ? '↓' : '—') }}</span>{{ abs($dOffer) }}% vs last month</div>
                     </div>
@@ -1359,7 +1351,7 @@
                     <div class="jw-card-soft jw-sc h-100">
                         <div class="jw-sc-head">
                             <span class="jw-sc-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
-                            <div><div class="jw-sc-label">Joinings <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($joined_count ?? 0) }}</div><div class="jw-sc-meta">Total Joinings</div></div>
+                            <div><div class="jw-sc-label">Joinings <small style="color:#8a93a8;font-weight:500">({{ date('M Y') }})</small></div><div class="jw-sc-num">{{ number_format($kpiJoinM ?? 0) }}</div><div class="jw-sc-meta">This Month</div></div>
                         </div>
                         <div class="jw-sc-delta {{ $dirJoin }}"><span>{{ $dirJoin === 'up' ? '↑' : ($dirJoin === 'down' ? '↓' : '—') }}</span>{{ abs($dJoin) }}% vs last month</div>
                     </div>
@@ -1381,6 +1373,11 @@
                     <div class="jw-card-soft jw-ch h-100">
                         <div class="jw-ch-head">
                             <div class="jw-ch-title">Candidates Funnel <small>(Last 6 Months)</small></div>
+                        </div>
+                        {{-- Total candidates added in the last 6 months — styled like the Interviews card total (number on top). --}}
+                        <div>
+                            <div class="jw-iv-total">{{ number_format($candidatesAdded6mTotal ?? 0) }}</div>
+                            <div class="jw-iv-sub">Candidates Added <small>(Last 6 Months)</small></div>
                         </div>
                         <div class="jw-ch-body">
                             <div class="jw-fn">
@@ -1769,12 +1766,20 @@
 
             {{-- ===================== MONTHLY PERFORMERS ===================== --}}
             @php
-                $recRows = collect($jwRecruiters)->map(function ($u) use ($jwOwnUserId) {
-                    $u = (array) $u; $jn = (int) round(((float) ($u['candidateJoined'] ?? 0)) / 1500); $of = ((float) ($u['offerReleased'] ?? 0)) / 300;
+                // Recruiter JOIN / O→J% = ACTUAL monthly joinings/offers from offer_job_applications
+                // (keyed by recruiter user id in the controller), NOT gamification points — points only
+                // count 'Onboarded' joinings and under-report real ones. O→J% = joins / offers.
+                $recActualJoins  = $recruiterActualJoins ?? [];
+                $recActualOffers = $recruiterActualOffers ?? [];
+                $recRows = collect($jwRecruiters)->map(function ($u) use ($jwOwnUserId, $recActualJoins, $recActualOffers) {
+                    $u = (array) $u; $uid = (int) ($u['id'] ?? 0);
+                    $jn = (int) ($recActualJoins[$uid] ?? 0); $of = (int) ($recActualOffers[$uid] ?? 0);
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => (int) ($u['rank'] ?? 0), 'big' => (int) ($u['score'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->sortBy('rank')->values();
+                // Captain JOIN / O→J% still derived from team-captain points (weight: 30 pts/join, 20 pts/offer)
+                // pending an actual-count source for captain attribution.
                 $capRows = collect($jwCaptains)->map(function ($u, $i) use ($jwOwnUserId) {
-                    $u = (array) $u; $jn = (int) round(((float) ($u['teamCaptainCandidateJoined'] ?? 0)) / 20); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 10;
+                    $u = (array) $u; $jn = (int) round(((float) ($u['teamCaptainCandidateJoined'] ?? 0)) / 30); $of = ((float) ($u['teamCaptainOfferReleased'] ?? 0)) / 20;
                     return ['name' => ucwords(strtolower($u['name'] ?? 'Unknown')), 'rank' => $i + 1, 'big' => (int) ($u['captainScore'] ?? 0), 'j' => $jn, 'c' => $of > 0 ? min(100, (int) round($jn / $of * 100)) : 0, 'is_me' => (($u['id'] ?? null) == $jwOwnUserId)];
                 })->values();
                 $venTopJ = collect($jwVendors)->max(fn ($v) => (int) (((array) $v)['joinings'] ?? 0)) ?: 0;
@@ -1822,6 +1827,11 @@
                             $tableRows = $rows->slice(3)->values();
                             $p1 = $podium[0] ?? null; $p2 = $podium[1] ?? null; $p3 = $podium[2] ?? null;
                             $podOrdered = [['p2', $p2], ['p1', $p1], ['p3', $p3]];
+                            // Summary header (Score + Top Performer) — the rank-1 row of this group; matches the Daily Leaderboards style.
+                            $mpTop = $p1 ? (array) $p1 : null;
+                            $mpTopScore = (int) ($mpTop['big'] ?? 0);
+                            $mpHasLeader = $mpTop && $mpTopScore > 0;
+                            
                         @endphp
                         <div class="col-xl-4 mb-3 mb-xl-0">
                             <div class="jw-mp-card h-100 {{ $lock_unlock ? '' : 'card-xxl-stretch-lock' }}">
@@ -1829,6 +1839,18 @@
                                     <span class="ic" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}">{!! $mpIcon($lb['icon']) !!}</span>
                                     <span class="ttl" style="color:{{ $lb['color'] }}">{{ $lb['title'] }}</span>
                                     <a href="javascript:void(0)" class="arr">→</a>
+                                </div>
+                                {{-- Score + Top Performer summary (same design as Daily Leaderboards) --}}
+                                <div class="jw-lb-sum">
+                                    <div class="s-score"><div class="l">Score</div><div class="v" style="color:{{ $lb['color'] }}">{{ number_format($mpHasLeader ? $mpTopScore : 0) }}</div></div>
+                                    <div class="s-top">
+                                        @if ($mpHasLeader)
+                                            <div class="l">Top Performer</div>
+                                            <div class="tp"><span class="medal">🏅</span><span class="tpn">{{ \Illuminate\Support\Str::limit($mpTop['name'] ?? '', 14) }}</span></div>
+                                        @else
+                                            <div class="noleader" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 19l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg> No Leader Yet</div>
+                                        @endif
+                                    </div>
                                 </div>
                                 <table class="jw-mp-tbl">
                                     <thead><tr><th>{{ $lb['nmcol'] }}</th><th>{{ $lb['jlbl'] }}</th><th>{{ $lb['clbl'] }}</th>@if ($lb['hasScore'])<th>{{ $lb['blbl'] }}</th>@endif<th>Rank</th></tr></thead>
@@ -2056,17 +2078,6 @@
                                     <span class="ic" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}">{!! $lbIcon($lb['icon']) !!}</span>
                                     <span class="ttl" style="color:{{ $lb['color'] }}">{{ $lb['title'] }}</span>
                                     <span class="cnt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5.5a3 3 0 0 1 0 5.5M21 20a6 6 0 0 0-5-5.9"/></svg> {{ $count }} {{ $lb['unit'] }}</span>
-                                </div>
-                                <div class="jw-lb-sum">
-                                    <div class="s-score"><div class="l">Score</div><div class="v" style="color:{{ $lb['color'] }}">{{ number_format($top ? (int) ($top['value'] ?? 0) : 0) }}</div></div>
-                                    <div class="s-top">
-                                        @if ($top)
-                                            <div class="l">Top Performer</div>
-                                            <div class="tp"><span class="medal">🥇</span><span class="tpn">{{ \Illuminate\Support\Str::limit($top['name'] ?? '', 14) }}</span></div>
-                                        @else
-                                            <div class="noleader" style="background:{{ $lb['bg'] }};color:{{ $lb['color'] }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 19l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg> No Leader Yet</div>
-                                        @endif
-                                    </div>
                                 </div>
                                 <div class="jw-lb-th"><span class="c-nm">{{ $lb['col'] }}</span><span class="c-sc">Score</span><span class="c-rank">Rank</span></div>
                                 @forelse ($rows as $r)
@@ -3611,313 +3622,9 @@
 
     <div class="modal fade" id="company_rank_global" tabindex="-1" aria-hidden="true" >
         <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content custmbg">
-            <div class="modal-header flex-stack" style="position: relative;">
-                <h2>Score Board {{date("F Y",strtotime($rankstartOfMonth))}} </h2>
-                <div class="btn btn-sm btn-icon btn-active-color-primary data-bs-dismiss" data-bs-dismiss="modal"> <span class="svg-icon svg-icon-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-                    <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-                </svg>
-                </span> </div>
-            </div>
-            <div class="modal-body scroll-y mx-5 mx-xl-18 pt-0 pb-15">
-                            <div class="table-responsive">
-                                <!--begin::Table-->
-                                <table class="table table-row-dashed table-row-gray-200 align-middle gs-0 gy-4">
-                                    <!--begin::Table head-->
-                                    <thead>
-                                        <tr class="border-0">
-                                            <th class="p-0 min-w-150px">Events</th>
-                                            <th class="p-0 min-w-150px">Points</th>
-                                            <th class="p-0 min-w-150px">Activity</th>
-                                            <th class="p-0 min-w-140px">Earned</th>
-                                        </tr>
-                                    </thead>
-                                    <!--end::Table head-->
-
-                                    <!--begin::Table body-->
-                                    <tbody>
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">InReview</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +1                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['profileUpload']/1}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['profileUpload']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Sourcing</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +1                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['sourcing']/1}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['sourcing']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Screening</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +1                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['screening']/1}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['screening']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Evaluation</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +1                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['evaluation']/1}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['evaluation']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Negotiation</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +1                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['negotiation']/1}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['negotiation']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Offers Released</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +300                                
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['offerReleased']/300}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['offerReleased']}}</span>
-                                                </td>
-                                            </tr>  
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined & OnBoarded</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +500                               
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['candidateJoined']/1500}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['candidateJoined']}}</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Joined Backed Out</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    -500                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['backout']/1500}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-danger">{{$ownUser_global_company['backout']}}</span>
-                                                </td>
-                                            </tr>   
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Interviews Conducted</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +10                                   
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['interviewScheduled']/10}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['interviewScheduled']}}</span>
-                                                </td>
-                                            </tr>  
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Interview NoShow</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    -5                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['interviewNoShow']/5}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-danger">{{($ownUser_global_company['interviewNoShow'] ? '' : '-')}}{{$ownUser_global_company['interviewNoShow']}}</span>
-                                                </td>
-                                            </tr>  
-                                            {{-- <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Team Captain Offer Released</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +20                               
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['teamCaptainOfferReleased']/20}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['teamCaptainOfferReleased']}}</span>
-                                                </td>
-                                            </tr>  --}}
-                                             {{-- <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Team Captain Joined & OnBoarded</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +30                               
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['teamCaptainCandidateJoined']/30}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['teamCaptainCandidateJoined']}}</span>
-                                                </td>
-                                            </tr>  --}}
-                                             
-                                            {{-- <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Team Captain Joined & Backed Out</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    -30                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['backoutTeam']/30}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-danger">{{$ownUser_global_company['backoutTeam']}}</span>
-                                                </td>
-                                            </tr> --}}
-                                            
-                                            {{-- <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Team Captain Interviews Conducted</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +2                             
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['teamCaptainInterviewScheduled']/2}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['teamCaptainInterviewScheduled']}}</span>
-                                                </td>
-                                            </tr> --}}
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Jobs Posted</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +2                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['jobsPosted']/2}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['jobsPosted']}}</span>
-                                                </td>
-                                            </tr>  
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Post Job to Vendor Market</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +2                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['postJobToVendorMarket']/2}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['postJobToVendorMarket']}}</span>
-                                                </td>
-                                            </tr>  
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Outsource Jobs to Vendors</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +5                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['outsourceJobsToVendors']/5}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['outsourceJobsToVendors']}}</span>
-                                                </td>
-                                            </tr>  
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">List Bench Candidates</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +3                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['listBenchCandidates']/3}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['listBenchCandidates']}}</span>
-                                                </td>
-                                            </tr>   
-                                            <tr>
-                                                <td>
-                                                    <a href="#" class="text-gray-700 text-hover-primary mb-1 fs-6">Respond to Bench Requests</a>
-                                                </td>
-                                                <td class="text-muted fw-bold">
-                                                    +4                                    
-                                                </td>
-                                                 <td class="text-muted fw-bold">
-                                                    <span class="">{{$ownUser_global_company['respondToBenchRequests']/4}}</span>
-                                                </td>
-                                                <td class="">
-                                                    <span class="text-success">+{{$ownUser_global_company['respondToBenchRequests']}}</span>
-                                                </td>
-                                            </tr> 
-                                            <tr style="background: #d1ccd3;">
-                                              <td colspan="3">
-                                                    <a href="#" class="text-gray-900 fw-bold text-hover-primary mb-1 fs-3">Final Score</a>
-                                                </td>
-                                                <td class="">
-                                                    <span class="fs-3">{{$ownUser_global_company['score']}}</span>
-                                                </td>
-                                            </tr>                                  
-                                    </tbody>
-                                    <!--end::Table body-->
-                                </table>
-                            </div>
+            <div class="modal-content custmbg" style="border-radius:18px;">
+            <div class="modal-body sb-wrap" style="padding:20px 24px 24px;">
+                @include('service_company.dashboard._company_scoreboard', ['U'=>$ownUser_global_company ?? null, 'totalCount'=>($companyRankTotal ?? 0), 'mode'=>'company', 'otherRank'=>($ownUser_global['rank'] ?? '-'), 'month'=>date('M Y', strtotime($rankstartOfMonth ?? 'now')), 'leaders'=>($topUsers_rank ?? collect()), 'recruiterTotal'=>($recruiterMeta['count'] ?? 0)])
             </div>
             </div>
         </div>

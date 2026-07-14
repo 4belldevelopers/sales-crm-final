@@ -1,455 +1,531 @@
 @extends('layouts.service_company_layout')
+
 @push('head-script')
-<link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
+{{-- Font Awesome — required so the currency symbols (e.g. <i class="fa fa-inr">) render in the Compensation column. --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
 <style>
-.border-radius-5 {border-radius:5px!important;}
+/* ──────────────────────────────────────────────
+   Joining Tracker — redesigned layout
+   Font: Poppins (inherited), 14px hard cap per UI spec.
+   Built to run with near-zero extra server load: the table + every KPI/tab number
+   come from ONE cached Elasticsearch aggregation (cvtracker.allcandidates,status_cus=6).
+────────────────────────────────────────────── */
+.jt-scope, .jt-scope * { font-family: 'Poppins', sans-serif !important; box-sizing: border-box; }
 
-@media only screen and (min-width: 900px) and (max-width: 2560px){
-  .table td, .table th, .table tr {width: max-content!important;}
-  .table > :not(caption) > * > * {padding: 0rem;}
-  td:nth-child(n+2),
-  th:nth-child(n+2) {width: revert!important;}
-}
-@media  only screen and (min-width: 1024px) and (max-width: 1440px) {
-#kt_activitiesApplication {width: 1025px;}
-}
-@media  only screen and (min-width: 1440px) and (max-width: 2560px) {
-#kt_activitiesApplication { width: 1200px; } 
-}
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_client_activitiesApplication { width: 1025px;}
-}
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_client_activitiesApplication { width: 1200px; }
-}
-@media  only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_client_activitiesApplication_toggle { width: 1025px;}
-}
-@media  only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_client_activitiesApplication_toggle{ width: 1200px; }
-}
-#myTable tbody tr {
-    height: 82px; /* Adjust the height as per your requirement */
-    position: relative;
+/* Page header */
+.jt-page-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px 0; }
+.jt-page-head h4 { font-size: 16px; font-weight: 700; margin: 0; color: #0f172a; }
+.jt-page-head p  { font-size: 11px; color: #64748b; margin: 2px 0 0; }
+.jt-head-actions { display: flex; gap: 10px; align-items: center; }
+.jt-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; color: #374151; }
+.jt-btn:hover { background: #f8fafc; }
+.jt-btn svg { width: 14px; height: 14px; }
+
+/* KPI stat cards */
+.jt-stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; padding: 14px 24px 0; }
+.jt-stat-card { background: #fff; border-radius: 14px; padding: 13px 16px; border: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.jt-stat-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.jt-stat-icon svg { width: 18px; height: 18px; }
+.jt-stat-body { flex: 1; min-width: 0; }
+.jt-stat-label { font-size: 10px; color: #94a3b8; font-weight: 500; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .4px; }
+.jt-stat-value { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.15; }
+.jt-stat-delta { font-size: 10px; margin-top: 4px; display: flex; align-items: center; gap: 3px; font-weight: 500; }
+.jt-stat-delta.up { color: #16a34a; } .jt-stat-delta.down { color: #dc2626; }
+.jt-stat-delta.warn { color: #d97706; } .jt-stat-delta.info { color: #0891b2; }
+.jt-stat-link { font-size: 11px; font-weight: 600; color: #6366f1; cursor: pointer; margin-top: 4px; display: inline-flex; align-items: center; gap: 3px; }
+.jt-stat-link:hover { color: #4f46e5; }
+
+/* Table card */
+.jt-card { background: #fff; border-radius: 14px; border: 1px solid #f1f5f9; margin: 18px 24px 24px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+
+/* Search + filter bar */
+.jt-filter-bar { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; flex-wrap: wrap; }
+.jt-search-wrap { flex: 1; min-width: 220px; position: relative; }
+.jt-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 16px; height: 16px; pointer-events: none; }
+.jt-search-input { width: 100%; border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px 8px 36px; font-size: 13px; color: #374151; outline: none; background: #f8fafc; }
+.jt-search-input:focus { border-color: #6366f1; background: #fff; }
+.jt-location-select { border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; cursor: pointer; outline: none; min-width: 160px; }
+.jt-location-select:focus { border-color: #6366f1; background: #fff; }
+
+/* Tabs row */
+.jt-tabs-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #f1f5f9; gap: 12px; flex-wrap: wrap; }
+.jt-tabs { display: flex; gap: 0; overflow-x: auto; }
+.jt-tab { padding: 11px 16px; font-size: 12px; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; user-select: none; display: flex; align-items: center; gap: 6px; transition: color .15s; }
+.jt-tab:hover { color: #374151; }
+.jt-tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; border-radius: 99px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #64748b; padding: 0 5px; transition: all .15s; }
+.jt-tab[data-filter="all"].active           { color: #0f172a; border-bottom-color: #0f172a; font-weight: 700; }
+.jt-tab[data-filter="all"].active .jt-tab-badge           { background: #e2e8f0; color: #0f172a; }
+.jt-tab[data-filter="joining_today"].active  { color: #7c3aed; border-bottom-color: #7c3aed; font-weight: 700; }
+.jt-tab[data-filter="joining_today"].active .jt-tab-badge  { background: #ede9fe; color: #7c3aed; }
+.jt-tab[data-filter="this_week"].active      { color: #2563eb; border-bottom-color: #2563eb; font-weight: 700; }
+.jt-tab[data-filter="this_week"].active .jt-tab-badge      { background: #dbeafe; color: #2563eb; }
+.jt-tab[data-filter="delayed"].active        { color: #ea580c; border-bottom-color: #ea580c; font-weight: 700; }
+.jt-tab[data-filter="delayed"].active .jt-tab-badge        { background: #ffedd5; color: #ea580c; }
+.jt-tab[data-filter="no_show"].active        { color: #dc2626; border-bottom-color: #dc2626; font-weight: 700; }
+.jt-tab[data-filter="no_show"].active .jt-tab-badge        { background: #fee2e2; color: #dc2626; }
+.jt-tab[data-filter="pending_docs"].active   { color: #d97706; border-bottom-color: #d97706; font-weight: 700; }
+.jt-tab[data-filter="pending_docs"].active .jt-tab-badge   { background: #fef3c7; color: #d97706; }
+
+.jt-sort-bar { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.jt-sort-label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+.jt-sort-select { border: 1px solid #e2e8f0; border-radius: 9px; padding: 8px 12px; font-size: 13px; color: #374151; background: #f8fafc; outline: none; cursor: pointer; min-width: 150px; }
+.jt-sort-select:focus { border-color: #6366f1; background: #fff; }
+.jt-view-btns { display: flex; gap: 4px; }
+.jt-view-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; }
+.jt-view-btn.active { background: #f1f5f9; color: #374151; border-color: #cbd5e1; }
+.jt-view-btn svg { width: 14px; height: 14px; }
+
+/* Table */
+.jt-table { width: 100%; border-collapse: collapse; }
+.jt-table thead tr { background: #f8fafc; }
+.jt-table th { padding: 10px 14px; font-size: 11px; font-weight: 600; color: #64748b; text-align: left; white-space: nowrap; letter-spacing: .3px; border-bottom: 1px solid #f1f5f9; }
+.jt-table th .jt-sort-ico { margin-left: 4px; color: #cbd5e1; font-size: 10px; }
+.jt-table th.jt-th-sort { cursor: pointer; user-select: none; }
+.jt-table th.jt-th-sort:hover { color: #334155; }
+.jt-table th.jt-th-sort.active { color: #6366f1; }
+.jt-table th.jt-th-sort.active .jt-sort-ico { color: #6366f1; }
+.jt-row { border-bottom: 1px solid #f8fafc; transition: background .12s; }
+.jt-row:hover { background: #fafbff; }
+.jt-td { padding: 12px 14px; vertical-align: middle; }
+
+/* Candidate / HR owner cells */
+.jt-cand { display: flex; align-items: center; gap: 10px; }
+.jt-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+.jt-avatar-img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.jt-avatar-sm, .jt-avatar-img.jt-avatar-sm { width: 34px; height: 34px; font-size: 13px; }
+.jt-avatar-link { display: inline-flex; }
+.jt-cand-info { min-width: 0; }
+.jt-cand-name { font-size: 13px; font-weight: 600; color: #0f172a; display: block; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.jt-cand-name:hover { color: #6366f1; }
+.jt-cand-role { font-size: 11px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.jt-bench { font-size: 9px; background: #dbeafe; color: #2563eb; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
+.jt-owner-name { font-size: 13px; font-weight: 600; color: #0f172a; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.jt-owner-role { font-size: 11px; color: #94a3b8; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+
+/* Job & Department */
+.jt-job-title { font-size: 13px; font-weight: 600; color: #1e293b; display: block; }
+.jt-job-type  { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+
+/* Joining status */
+.jt-status-link { text-decoration: none; display: block; cursor: pointer; }
+.jt-status-pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+.jt-status-sub { font-size: 11px; color: #64748b; display: block; }
+
+/* Job Status */
+.jt-jobstatus { font-size: 13px; font-weight: 600; color: #1e293b; display: inline-block; }
+.jt-jobstatus-sub { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+/* Closed requisitions read red (background + text) */
+.jt-jobstatus.jt-closed { background: #fee2e2; color: #dc2626; padding: 2px 9px; border-radius: 6px; }
+
+/* Offer Amount */
+.jt-comp-amount { font-size: 13px; font-weight: 600; color: #0f172a; display: block; white-space: nowrap; }
+.jt-comp-type   { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+
+/* Stage */
+.jt-td-stage { min-width: 120px; }
+.jt-stage-link { text-decoration: none; display: block; cursor: pointer; }
+.jt-stage-pill { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+.jt-stage-pill:not([class*="badge-"]):not([class*="bg-"]) { background: #f1f5f9; color: #475569; }
+.jt-stage-sub { font-size: 11px; color: #94a3b8; display: block; }
+.jt-stage-link:hover .jt-stage-pill { filter: brightness(0.97); }
+
+/* Joining date */
+.jt-join-date { font-size: 13px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 5px; }
+.jt-join-date svg { width: 14px; height: 14px; }
+.jt-join-time { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+.jt-join-countdown { font-size: 11px; font-weight: 600; display: block; margin-top: 2px; }
+.jt-na { font-size: 14px; color: #cbd5e1; display: block; }
+.jt-na-sub { font-size: 11px; color: #94a3b8; display: block; }
+
+/* Colour tones (reused from GeneralMethod::icoinText output) */
+.jt-avatar.bg-light-danger  { background:#fee2e2 !important; color:#dc2626 !important; }
+.jt-avatar.bg-light-warning { background:#fef3c7 !important; color:#d97706 !important; }
+.jt-avatar.bg-light-primary { background:#e0e7ff !important; color:#4f46e5 !important; }
+.jt-avatar.bg-light-success { background:#dcfce7 !important; color:#16a34a !important; }
+.jt-avatar.bg-light-info    { background:#cffafe !important; color:#0891b2 !important; }
+.jt-avatar.bg-dark, .jt-avatar.bg-light-secondary { background:#e2e8f0 !important; color:#475569 !important; }
+
+/* Empty state */
+.jt-empty td { padding: 60px 14px; text-align: center; }
+.jt-empty-inner p { margin: 12px 0 0; font-size: 13px; color: #94a3b8; }
+
+/* Table footer */
+.jt-table-footer { display: flex; align-items: center; justify-content: flex-end; padding: 12px 20px; }
+.jt-rows-per { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
+.jt-rows-select { border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 12px; background: #fff; cursor: pointer; }
+
+/* Responsive — 15.6" laptops & smaller */
+@media (max-width: 1200px) { .jt-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  {
+    .jt-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .jt-page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .jt-card { margin: 14px 12px; }
+    .jt-stats-grid, .jt-page-head { padding-left: 12px; padding-right: 12px; }
 }
 </style>
 @endpush
 
-<!-- Responsive CSS -->
-<!--<link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">-->
-<!-- Responsive CSS End -->
 @section('content')
-<!--begin::Toolbar-->
+<div class="jt-scope">
+
+{{-- ── Page header ── --}}
 <div class="toolbar" id="kt_toolbar">
-  <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-    <!--begin::Page title-->
-    <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-      <!--begin::Staffing Partners-->
-      <div class="d-flex flex-column">
-        <h5 class="d-flex align-items-center text-dark fw-bolder my-1"> <a href="javascript:void(0);" class="text-gray-800 text-hover-primary">Joining Tracker</a> </h5>
-        <!--<span class="text-gray-600">{{ @$appCounter }}</span> -->		
-		 <span class="text-gray-600" id="total_record"></span> 		 
-		</div>
-      <!--end::Staffing Partners-->
-      <!--begin::Separator-->
-      <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-      <!--end::Separator-->
-    </div>
-    <!--end::Page title-->
-    <!--begin::Actions-->
-    <div class="d-flex align-items-center py-1">
-      <!--begin::Search-->
-      <div class="d-flex align-items-center position-relative my-1 me-3">
-        <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-       
-        <!--end::Svg Icon-->
-        <input type="hidden" data-kt-user-table-filter="search" name="inputSearch" id="inputSearch" class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;" placeholder="Search..." />
-      </div>
-      <!--end::Search-->
-      <div class="card-toolbar">
-        <!--begin::Toolbar-->
-        <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-          <!--begin::Filter-->
-         
-          <!--begin::Menu 1-->
-          <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-            <!--begin::Header-->
-            <div class="px-7 py-5">
-              <div class="fs-5 text-dark fw-bolder">Filter Options</div>
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+        <div class="jt-page-head" style="padding:0;width:100%">
+            <div>
+                <h4>Joining Tracker</h4>
+                <p>Track and manage candidate joining and onboarding in one place</p>
             </div>
-            <!--end::Header-->
-            <!--begin::Separator-->
-            <div class="separator border-gray-200"></div>
-            <!--end::Separator-->
-            <!--begin::Content-->
-            <div class="px-7 py-5" data-kt-user-table-filter="form">
-              <!--begin::Input group-->
-              <div class="mb-10">
-                <label class="form-label fs-6 fw-bold">Role:</label>
-                <select class="form-select form-select-solid fw-bolder" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="role" data-hide-search="true">
-                  <option></option>
-                  <option value="Administrator">Administrator</option>
-                  <option value="Analyst">Analyst</option>
-                  <option value="Developer">Developer</option>
-                  <option value="Support">Support</option>
-                  <option value="Trial">Trial</option>
-                </select>
-              </div>
-              <!--end::Input group-->
-              <!--begin::Input group-->
-              <div class="mb-10">
-                <label class="form-label fs-6 fw-bold">Two Step Verification:</label>
-                <select class="form-select form-select-solid fw-bolder" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="two-step" data-hide-search="true">
-                  <option></option>
-                  <option value="Enabled">Enabled</option>
-                </select>
-              </div>
-              <!--end::Input group-->
-              <!--begin::Actions-->
-              <div class="d-flex justify-content-end">
-                <button type="reset" class="btn btn-light btn-active-light-primary fw-bold me-2 px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Reset</button>
-                <button type="submit" class="btn btn-primary fw-bold px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="filter">Apply</button>
-              </div>
-              <!--end::Actions-->
+            <div class="jt-head-actions">
+                <button class="jt-btn" onclick="exportJoining()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+                    Export
+                </button>
+                <button class="jt-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+                    More Actions
+                </button>
             </div>
-            <!--end::Content-->
-          </div>
-          <!--end::Menu 1-->
-          <!--end::Filter-->
         </div>
-        <!--end::Toolbar-->
-        <!--begin::Group actions-->
-        <div class="d-flex justify-content-end align-items-center d-none" data-kt-user-table-toolbar="selected">
-          <div class="fw-bolder me-5"> <span class="me-2" data-kt-user-table-select="selected_count"></span>Selected </div>
-          <button type="button" class="btn btn-danger" data-kt-user-table-select="delete_selected">Delete Selected</button>
-        </div>
-      </div>
     </div>
-    <!--end::Actions-->
-  </div>
-  <!--end::Container-->
 </div>
-<!--end::Toolbar-->
 
-<!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
-  <div class="post d-flex flex-column-fluid" id="kt_post">
-    <div id="kt_content_container" class="container-fluid px-3">
-        
-        <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                  <div class="col-lg-4 d-flex align-items-center px-2" style="width:60%;position: relative;">
-                     <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_2" />
-                     <div style="position: absolute; top: 0px; right: 36px;">
-                      <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                   </div>
+<div class="content d-flex flex-column flex-column-fluid pt-2" id="kt_content">
+<div class="post d-flex flex-column-fluid" id="kt_post">
+<div class="container-fluid px-0">
 
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 25%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                         <option value="Show All" selected="">Sort</option>
-                         <option value="12">Newest to Oldest (Join Date)</option>
-                        <option value="13">Oldest to Newest (Join Date)</option>
-                        <option value="14">Low to High (Offer Amount)</option>
-                        <option value="15">High to Low (Offer Amount)</option>
-                     </select>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                     <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                        <option value="" selected="selected">Location</option>
-                        @if(@$countries)
-                            @foreach($countries as $val_co)
-                            <option value="{{ $val_co->id }}">{{ $val_co->country_name }}</option>
-                            @endforeach
-                        @endif
-                        
-                     </select>
-                  </div>
-                  <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                     <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                        <span class="svg-icon svg-icon-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                              <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                           </svg>
-                        </span>
-                        Filter
-                     </button>
-                  </div>
+{{-- ── KPI Stats (seeded server-side, refreshed live from ES counts) ── --}}
+@php
+    // Current month label for the "This Month's Joinings" card, e.g. "July 26".
+    $thisMonthLabel = date('F y');
+    $statCards = [
+        ['label'=>'Total Joined','key'=>'total','bg'=>'#ede9fe','ic'=>'#7c3aed','sub'=>'text','tone'=>'info','delta'=>'All joinings tracked',
+         'icon'=>'M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-1.13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'],
+        ['label'=>"Today's Joinings",'key'=>'today','bg'=>'#dbeafe','ic'=>'#2563eb','sub'=>'link',
+         'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5'],
+        ['label'=>'Onboarded','key'=>'onboarded','bg'=>'#d1fae5','ic'=>'#059669','sub'=>'pct','tone'=>'up',
+         'icon'=>'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632z'],
+        ['label'=>'Backed Out','key'=>'backed_out','bg'=>'#fee2e2','ic'=>'#dc2626','sub'=>'pct','tone'=>'down',
+         'icon'=>'M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'],
+        ['label'=>"This Month's Joinings",'key'=>'this_month','bg'=>'#fef3c7','ic'=>'#d97706','sub'=>'text','tone'=>'info','delta'=>$thisMonthLabel,
+         'icon'=>'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5A2.25 2.25 0 0 1 5.25 5.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5M9 15.75l1.75 1.75L14 13.5'],
+    ];
+@endphp
+<div class="jt-stats-grid">
+    @foreach($statCards as $card)
+    <div class="jt-stat-card">
+        <div class="jt-stat-icon" style="background:{{ $card['bg'] }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="{{ $card['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $card['icon'] }}"/></svg>
         </div>
-        
-      <div class="card">
-        <div class="card-body pt-3 px-5"> 
-@if(in_array("view_joining", $userPermissions))
-    <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
-			  <table id="myTable" class="table align-middle table-row-dashed fs-6 gy-5" >
-				<thead>
-				  <tr class="fw-bolder text-muted">
-					<th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-						<input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-					  </div></th>
-					<th class="">Name</th>
-					{{-- <th class="">Contact</th> --}}
-					<th class="">Jobs</th>
-					<th class="">Status</th> 
-					<th class="">Source</th>
-					<th class="">Offer Amount</th>
-					<th class="">Joining Date</th>
-					<th class="">Stage</th>
-				  </tr>
-				</thead>
-        <tbody class="text-gray-600 fw-bold" id="joining-tracker">
-        </tbody>
-			  </table>
-        <div id="pagination"></div>
-@else
-			<table id="no-access" class="table align-middle table-row-dashed fs-6 gy-5" >
-				<thead>
-				  <tr class="fw-bolder text-muted">
-					<th class=""><div align="center">ACCESS DENIED CONTACT ADMINISTRATOR</div></th>
-				  </tr>
-				</thead>
-			</table>
-@endif 
-		</div>
-      </div>
+        <div class="jt-stat-body">
+            <p class="jt-stat-label">{{ $card['label'] }}</p>
+            <p class="jt-stat-value" data-kpi="{{ $card['key'] }}">{{ $joiningStats[$card['key']] ?? 0 }}</p>
+            @if($card['sub'] === 'link')
+                <span class="jt-stat-link" data-jump-tab="joining_today">View Today's List
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </span>
+            @elseif($card['sub'] === 'pct')
+                <div class="jt-stat-delta {{ $card['tone'] }}"><span data-kpi-pct="{{ $card['key'] }}">0% of total joining</span></div>
+            @else
+                <div class="jt-stat-delta {{ $card['tone'] }}"><span>{{ $card['delta'] }}</span></div>
+            @endif
+        </div>
     </div>
-  </div>
+    @endforeach
 </div>
-<!--end::Content-->
 
+{{-- ── Table card ── --}}
+<div class="jt-card">
+    {{-- Search + Location filter --}}
+    <div class="jt-filter-bar">
+        <div class="jt-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" class="jt-search-input" id="jt_search" placeholder="Search by candidate name, job or offer ID..." />
+        </div>
+        <select class="jt-location-select" id="jt_country">
+            <option value="">All Locations</option>
+            @foreach($countries as $c)
+            <option value="{{ $c->id }}">{{ $c->country_name }}</option>
+            @endforeach
+        </select>
+        <div class="jt-sort-bar">
+            <span class="jt-sort-label">Sort by:</span>
+            <select class="jt-sort-select" id="jt_sort">
+                <option value="12">Latest Joining Date</option>
+                <option value="13">Oldest Joining Date</option>
+                <option value="onboarded">Onboarded</option>
+                <option value="backed_out">Backed Out</option>
+            </select>
+        </div>
+    </div>
 
-    <!--begin::Stage sub stage popup-->
-    <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Stage and sub stage</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"
-                        id="stage_sub_stage_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
-                    </div>
+    {{-- Tabs + view toggle --}}
+    <div class="jt-tabs-bar">
+        <div class="jt-tabs" id="jt_tabs">
+            <div class="jt-tab active" data-filter="all">All <span class="jt-tab-badge" data-tab="total">—</span></div>
+            <div class="jt-tab" data-filter="joining_today">Joining Today <span class="jt-tab-badge" data-tab="today">—</span></div>
+            <div class="jt-tab" data-filter="this_week">This Week <span class="jt-tab-badge" data-tab="this_week">—</span></div>
+            <div class="jt-tab" data-filter="delayed">Delayed <span class="jt-tab-badge" data-tab="delayed">—</span></div>
+            <div class="jt-tab" data-filter="no_show">No Show <span class="jt-tab-badge" data-tab="no_show">—</span></div>
+            <div class="jt-tab" data-filter="pending_docs">Pending Docs <span class="jt-tab-badge" data-tab="pending_docs">—</span></div>
+        </div>
+        <div class="jt-view-btns">
+            <button class="jt-view-btn active" title="List">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <button class="jt-view-btn" title="Grid" disabled style="opacity:.5;cursor:not-allowed;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    {{-- Table --}}
+    @if(in_array('view_joining', $userPermissions))
+    <div style="overflow-x:auto;">
+        <table class="jt-table">
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Requisitions</th>
+                    <th>Job Status</th>
+                    <th>Ownership</th>
+                    <th class="jt-th-sort" data-asc="14" data-desc="15">Compensation <span class="jt-sort-ico">⇵</span></th>
+                    <th class="jt-th-sort" data-asc="13" data-desc="12">Joining Date <span class="jt-sort-ico">⇵</span></th>
+                    <th>Stage</th>
+                </tr>
+            </thead>
+            <tbody id="joining-tracker">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                    <img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...
+                </td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="jt_pagination"></div>
+    @else
+    <div style="padding:40px;text-align:center;color:#ef4444;font-size:13px;font-weight:600;">
+        ACCESS DENIED — Contact your administrator
+    </div>
+    @endif
+</div>
+
+{{-- Stage change modal (preserved) --}}
+<div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header flex-stack">
+                <h2>Stage and sub stage</h2>
+                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="stage_sub_stage_close">
+                    <span class="svg-icon svg-icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
+                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
+                        </svg>
+                    </span>
                 </div>
-                <div class="stage_body_content" id="stage_body_content"></div>
             </div>
+            <div class="stage_body_content" id="stage_body_content"></div>
         </div>
     </div>
-    <!--end::Stage sub stage popup-->
+</div>
 
-
-
-
+</div>{{-- /container-fluid --}}
+</div>{{-- /kt_post --}}
+</div>{{-- /kt_content --}}
+</div>{{-- /jt-scope --}}
 @endsection
+
 @push('footer-script')
-<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
-
 <script>
-    // var input2 = document.querySelector("#kt_tagify_2");
-    // new Tagify(input2);
-</script>
+(function () {
+    'use strict';
 
-<script>
+    /* ── state ── */
+    var state = { page: 1, size: 10, search: '', country: '', sort: '12', tab: 'all' };
 
-$(document).ready(function() {
-	$('#kt_tagify_2').keyup(function() {
-		// tableLoad('filter');   
-    fetchCandidates();   
-	}); 
-});
+    var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
 
-   	var table;
-   	// tableLoad('load');
-    function filtersdataget(){
-        		// tableLoad('load');
-            fetchCandidates(); 	
-        	}
-	function tableLoad(){
-	
-    var   inputSearch 		=	$('#inputSearch').val();
-    var sortingfilter          			= $('#sortingfilter').val();
-	var country          			= $('#country').val();
-	var cus_search          			= $('#kt_tagify_2').val();
-    table = $('#myTable').dataTable(
-    {							
-							responsive  	:	true,
-							processing  	:	true,
-							serverSide  	:	true,
-							destroy   		:	true,
-							ordering		:	false, //disable ordering
-							"bLengthChange" :	false, //thought this line could hide the LengthMenu
-							sDom			:	'lrtip',
-							oLanguage 		:	{sLengthMenu: "_MENU_",},
-              ajax			:	{'url' : '{!! route('service_company.cvtracker.alldata') !!}', "data" : function ( d ) { d.search = $('#inputSearch').val(),d.status_cus = 6,d.sortingfilter = sortingfilter,d.country = country,d.cus_search = cus_search } },
-							// ajax			:	{'url' : '{!! route('service_company.job-onboard.data') !!}', "data": function ( d ) { d.search = $('#inputSearch').val() } },
-						   "fnDrawCallback"	:	function (oSettings){
-																	var total_record	=	this.fnSettings().fnRecordsTotal();
-																	$('#total_record').html(total_record);					
-																	$("body").tooltip(	{selector: '[data-toggle="tooltip"]'});
-																},        
-						   	columns			:
-												   [
-															{data: 'chkbox', name:'chkbox', width: '5%', orderable: false, searchable: false},
-															{data: 'Name', name:'Name', width: '20%', orderable: false, searchable: false},
-															{data: 'Contacts', name:'Contacts', width: '15%', orderable: false, searchable: false},
-															{data: 'Requisitions', name:'Requisitions', width: '15%', orderable: false, searchable: false},
-															{data: 'Status', name: 'Status',width: '10%', searchable : false, orderable: false},
-															
-															{data: 'Source', name:'Source', width: '10%', orderable: false, searchable: false},
-															{data: 'Offer', name:'Offer', width: '10%', orderable: false, searchable: false},
-															{data: 'Joining', name:'Joining', width: '10%', orderable: false, searchable: false},
-															{data: 'Stage', name:'Stage', width: '10%', orderable: false, searchable: false}
-												   ]
-					   
-	   
-	   			});
-       			new $.fn.dataTable.FixedHeader(table);
-   	}  
+    function loaderRow() {
+        return '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
+    }
 
+    /* ── fetch table (one request also returns every KPI/tab count) ── */
+    function fetchTable(resetPage) {
+        if (resetPage) state.page = 1;
+        document.getElementById('joining-tracker').innerHTML = loaderRow();
 
-    $(document).on('click', '.stage_sub_stage', function() {
+        $.ajax({
+            url  : URL_CANDIDATES + '?page=' + state.page,
+            type : 'GET',
+            data : {
+                status_cus         : 6,
+                size               : state.size,
+                cus_search         : state.search,
+                country            : state.country,
+                sortingfilter      : state.sort,
+                joining_tab_filter : state.tab,
+            },
+            success: function (resp) {
+                document.getElementById('joining-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No joining records found</td></tr>';
+                document.getElementById('jt_pagination').innerHTML = resp.pagination || '';
+                if (resp.joiningCounts) updateCounts(resp.joiningCounts);
+            },
+            error: function () {
+                document.getElementById('joining-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+            }
+        });
+    }
 
-            $('#stage_body_content').html('');
-            var id = $(this).data('row-id');
-            var url = "{{ route('service_company.job-applications.stage_body_content', ':id') }}";
-            url = url.replace(':id', id);
-            $.ajax({
-                type: 'GET',
-                url: url,
-                success: function(response) {
-                    if (response.status == "success") {
-                        $('#stage_body_content').html('');
-                        $('#stage_body_content').html(response.view);
-                    }
-                }
-            });
+    /* ── Sync KPI cards + tab badges from the single ES aggregation ── */
+    function updateCounts(c) {
+        if (!c) return;
+        var n = function (v) { return (v != null ? v : 0); };
+        var total = n(c.total);
 
+        /* Tab badges */
+        document.querySelectorAll('[data-tab]').forEach(function (el) {
+            var k = el.getAttribute('data-tab');
+            el.textContent = n(c[k]);
         });
 
-        $(document).on('click', '#custom_stage_submit', function(e) {
+        /* KPI stat values */
+        document.querySelectorAll('[data-kpi]').forEach(function (el) {
+            var k = el.getAttribute('data-kpi');
+            if (c[k] != null) el.textContent = c[k];
+        });
 
-                e.preventDefault();
+        /* KPI sub-percentages ("X% of total joining") */
+        document.querySelectorAll('[data-kpi-pct]').forEach(function (el) {
+            var k = el.getAttribute('data-kpi-pct');
+            var pct = total > 0 ? Math.round((n(c[k]) / total) * 100) : 0;
+            el.textContent = pct + '% of total joining';
+        });
+    }
 
-                var master_status = $('input[name="master_status"]:checked').val();
-                var comment = $('#comment').val();
-                if (master_status == 8 && comment=='') {
-                    Swal.fire("Warning", 'InReview Comment Required !', "info");
-                } else {
-                    $("#custom_stage_submit").prop("disabled", true);
-                    $("#custom_stage_submit").html(
-                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                        );
+    /* ── events ── */
+    var searchTimer;
+    document.getElementById('jt_search').addEventListener('input', function () {
+        clearTimeout(searchTimer);
+        var val = this.value;
+        searchTimer = setTimeout(function () { state.search = val; fetchTable(true); }, 380);
+    });
 
-                    $.ajax({
-                        url: '{{ route('service_company.job-applications.stage_submit') }}',
-                        container: '#status_frm',
-                        type: "POST",
-                        data: $('#status_frm').serialize(),
-                        success: function(response) {
-                            $("#custom_stage_submit").prop("disabled", false);
-                            $("#custom_stage_submit").html(
-                                `<span class="indicator-label">Submit</span>`);
-                            if (response.status == 'success') {
-                                Swal.fire("Success", 'Application stage update successfully !',
-                                    "success").then(function() {
-                                    // $('#stage_sub_stage').modal('hide');
-                                    $("#stage_sub_stage_close").click();
-                                });
-                                var page = $('#paginationcandidate .active_disabled').data('page');
-                                fetchCandidates(page);
-                                //  	var table;
-                                // 				tableLoad('load');
-                                // table._fnDraw();
-                                load_interviewSchedule();
-                            } else if (response.status == 'cvpending') {
-                                Swal.fire("Warning", 'Resume pending this job application.',
-                                    "warning").then(function() {
-                                    $("#stage_sub_stage_close").click();
-                                });
-                            } else if (response.status == 'candidatevalidation') {
-                                Swal.fire("Warning", response.message, "warning").then(
-                                function() {
-                                    $("#stage_sub_stage_close").click();
-                                });
-                            }
-                        }
-                    })
-                }
+    document.getElementById('jt_country').addEventListener('change', function () {
+        state.country = this.value; fetchTable(true);
+    });
 
-
-            });
-            
-
-
-     $(document).ready(function() {
-            // $.noConflict();
-
-            fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
-                e.preventDefault();
-
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
-            });
-
-      });
-
-
-      function fetchCandidates(page = 1, search = '') {
-          var   inputSearch 		=	$('#inputSearch').val();
-          var sortingfilter          			= $('#sortingfilter').val();
-          var country          			= $('#country').val();
-          var cus_search          			= $('#kt_tagify_2').val();
-          if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
-            }
-            $.ajax({
-                url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                  status_cus : 6,
-                  search : $('#inputSearch').val(),
-                  sortingfilter : sortingfilter,
-                  country : country,
-                  cus_search:cus_search
-                },
-                success: function(response) {
-                  $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#total_record').html(response.total);
-                    $('#joining-tracker').html(response.html);
-                    $('#pagination').html(response.pagination);
-                }
-            });
+    document.getElementById('jt_sort').addEventListener('change', function () {
+        var v = this.value;
+        if (v === 'onboarded' || v === 'backed_out') {
+            // Status views: filter the table to those candidates, drop the tab-bar highlight,
+            // and fall back to the latest-joining-date order.
+            setTabsInactive();
+            state.tab  = v;
+            state.sort = '12';
+        } else {
+            state.sort = v;
         }
-   
-   	
+        clearHeaderSort();
+        fetchTable(true);
+    });
+
+    /* Column-header sort (mirrors the Sort-by dropdown) */
+    function clearHeaderSort() {
+        document.querySelectorAll('.jt-th-sort').forEach(function (th) {
+            th.classList.remove('active');
+            var ico = th.querySelector('.jt-sort-ico'); if (ico) ico.textContent = '⇵';
+        });
+    }
+    document.querySelectorAll('.jt-th-sort').forEach(function (th) {
+        th.addEventListener('click', function () {
+            var goAsc = this.dataset.dir !== 'asc';
+            clearHeaderSort();
+            this.dataset.dir = goAsc ? 'asc' : 'desc';
+            this.classList.add('active');
+            var ico = this.querySelector('.jt-sort-ico'); if (ico) ico.textContent = goAsc ? '↑' : '↓';
+            state.sort = goAsc ? this.dataset.asc : this.dataset.desc;
+            var sel = document.getElementById('jt_sort'); if (sel) sel.value = state.sort;
+            fetchTable(true);
+        });
+    });
+
+    /* tab clicks */
+    function setTabsInactive() {
+        document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) { t.classList.remove('active'); });
+    }
+    function activateTab(filter) {
+        document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) {
+            t.classList.toggle('active', t.dataset.filter === filter);
+        });
+        state.tab = filter;
+        // A real tab supersedes the Sort dropdown's status views — revert it to "Latest".
+        var sel = document.getElementById('jt_sort');
+        if (sel && (sel.value === 'onboarded' || sel.value === 'backed_out')) { sel.value = '12'; state.sort = '12'; }
+        fetchTable(true);
+    }
+    document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () { activateTab(this.dataset.filter); });
+    });
+    /* "View Today's List" card link jumps to the Joining Today tab */
+    document.querySelectorAll('[data-jump-tab]').forEach(function (el) {
+        el.addEventListener('click', function () { activateTab(this.dataset.jumpTab); });
+    });
+
+    /* pagination (delegated) */
+    document.getElementById('jt_pagination').addEventListener('click', function (e) {
+        var link = e.target.closest('.page-link');
+        if (!link || link.classList.contains('disabled')) return;
+        e.preventDefault();
+        var pg = parseInt(link.dataset.page, 10);
+        if (!pg) return;
+        state.page = pg;
+        fetchTable(false);
+    });
+
+    /* Stage sub-stage modal (preserved from the original page) */
+    $(document).on('click', '.stage_sub_stage', function () {
+        $('#stage_body_content').html('');
+        var id  = $(this).data('row-id');
+        var url = '{{ route('service_company.job-applications.stage_body_content', ':id') }}'.replace(':id', id);
+        $.ajax({ type:'GET', url:url, success:function(r){ if(r.status=='success') $('#stage_body_content').html(r.view); } });
+    });
+
+    $(document).on('click', '#custom_stage_submit', function (e) {
+        e.preventDefault();
+        var ms = $('input[name="master_status"]:checked').val();
+        var cm = $('#comment').val();
+        if (ms == 8 && !cm) { Swal.fire("Warning",'InReview Comment Required!',"info"); return; }
+        $(this).prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
+        $.ajax({
+            url:'{{ route('service_company.job-applications.stage_submit') }}', type:'POST',
+            data: $('#status_frm').serialize(),
+            success:function(r){
+                $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label">Submit</span>');
+                if(r.status=='success'){
+                    Swal.fire("Success",'Application stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
+                    fetchTable(false);
+                } else if (r.status == 'cvpending') {
+                    Swal.fire("Warning",'Resume pending this job application.',"warning").then(function(){ $("#stage_sub_stage_close").click(); });
+                } else if (r.status == 'candidatevalidation') {
+                    Swal.fire("Warning", r.message, "warning").then(function(){ $("#stage_sub_stage_close").click(); });
+                }
+            }
+        });
+    });
+
+    /* Export (print-to-PDF, no server round-trip) */
+    window.exportJoining = function () {
+        var prev = document.title;
+        document.title = 'Joining-Tracker-' + new Date().toISOString().slice(0,10);
+        var done = function(){ document.title = prev; window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        window.print();
+        setTimeout(done, 1500);
+    };
+
+    /* ── init ── */
+    fetchTable(false);
+})();
 </script>
-
-
-
 @endpush

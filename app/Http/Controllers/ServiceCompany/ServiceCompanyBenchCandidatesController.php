@@ -119,12 +119,178 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'exited'      => $response['aggregations']['exited']['doc_count'] ?? 0,
 		];
 
-		
+
 			$this->companies = DB::table('companies')->select('id','company_name')->where('id', auth()->user()->company_id)->first();
             // dd($this->counts);
 
+		// Inhouse Talents page keeps only its hero KPI chips (counts + MoM deltas + Bench Cost);
+		// the Bench-Aging / Loss / Profit charts now live on the Staffing Dashboard.
+		$companyId = auth()->user()->company_id;
+		$analytics = $this->benchStaffingAnalytics($companyId);
+		$this->currencyCode = $analytics->currencyCode;
+		$this->deltas       = $analytics->deltas;
+		$this->benchCost    = $analytics->benchCost;
+
 		return view('service_company.bench-candidates.index', $this->data);
-		
+
+	}
+
+	/**
+	 * Staffing Dashboard — Bench Aging, Bench Cost (Loss) and Gross Profit analytics,
+	 * moved out of the Inhouse Talents page into a dedicated Talent-Marketplace sub-page.
+	 */
+	public function staffingDashboard()
+	{
+		abort_if(Gate::denies('view_job_applications'), 403);
+		$this->pageTitle = __('Staffing Dashboard');
+
+		$companyId = auth()->user()->company_id;
+		$a = $this->benchStaffingAnalytics($companyId);
+
+		$this->currencyCode    = $a->currencyCode;
+		$this->benchCost       = $a->benchCost;
+		$this->grossProfit     = $a->grossProfit;
+		$this->benchAging      = $a->benchAging;
+		$this->benchCount      = $a->benchCount;
+		$this->avgBenchAge     = $a->avgBenchAge;
+		$this->longestBenchAge = $a->longestBenchAge;
+		$this->profitMargin    = $a->profitMargin;
+		$this->benchROI        = $a->benchROI;
+		$this->chartLabels     = $a->chartLabels;
+		$this->lossSeries      = $a->lossSeries;
+		$this->profitSeries    = $a->profitSeries;
+		$this->deltas          = $a->deltas;
+
+		return view('service_company.bench-candidates.staffing-dashboard', $this->data);
+	}
+
+	/**
+	 * Shared bench financial analytics (tenant-scoped). Returns everything the
+	 * Staffing Dashboard needs; the Inhouse page consumes only a subset.
+	 *
+	 *  - Loss (Bench Cost) = annual salary (ctc_yearly) of talents still ON BENCH (status 2).
+	 *  - Gross Profit = (client pay on placements, bench_place.bill_rate_amount, annualised)
+	 *                   − (bench cost of unplaced) − (salary we pay placed talents).
+	 * NOTE: raw DB::table is NOT auto tenant-scoped, so company_id is filtered explicitly.
+	 */
+	private function benchStaffingAnalytics(int $companyId): object
+	{
+		// Talents still on bench (unplaced) — drives Bench Cost / Loss + aging.
+		$benchRows = DB::table('job_applications')
+			->select('id', 'ctc_yearly', 'created_at')
+			->where('company_id', $companyId)
+			->where('condidate_type', 'bench_condidate')
+			->where('status', 2)
+			->get();
+
+		// Actual placement records: what the client pays us (bill_rate) + what we pay the placed talent (pay_rate).
+		$placementRows = DB::table('bench_place')
+			->select('bench_id', 'pay_rate_amount', 'pay_rate_mode', 'bill_rate_amount', 'bill_rate_mode', 'create_at')
+			->where('source_comapny_id', $companyId)
+			->get();
+
+		// Annualise a raw placement rate (mode: 0=Annual, 1=Monthly, 2=Hourly).
+		$annual = fn ($amount, $mode) => (float) GeneralMethod::salaryDividedByMode((int) $mode, (float) $amount)->yearly;
+
+		$benchCost       = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);
+		$placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+		$placedSalary    = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+		$grossProfit     = $placedClientPay - $benchCost - $placedSalary;
+
+		// Bench Aging buckets (days on bench, derived from created_at).
+		$aging = ['b1' => 0, 'b2' => 0, 'b3' => 0, 'b4' => 0];
+		$today = Carbon::today();
+		foreach ($benchRows as $r) {
+			$days = $r->created_at ? Carbon::parse($r->created_at)->diffInDays($today) : 0;
+			if ($days <= 15)      { $aging['b1']++; }
+			elseif ($days <= 30)  { $aging['b2']++; }
+			elseif ($days <= 45)  { $aging['b3']++; }
+			else                  { $aging['b4']++; }
+		}
+
+		// Daily Loss/Profit trend across the current month (cumulative to each day).
+		$monthStart = Carbon::now()->startOfMonth();
+		$dayCount   = (int) Carbon::now()->format('j');
+		$labels = $lossSeries = $profitSeries = [];
+		for ($d = 1; $d <= $dayCount; $d++) {
+			$cursor = (clone $monthStart)->addDays($d - 1)->endOfDay();
+			$labels[] = $cursor->format('d M');
+
+			$lossToDate = (float) $benchRows
+				->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor))
+				->sum(fn ($r) => (float) $r->ctc_yearly);
+
+			$placedToDate = $placementRows->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->lte($cursor));
+			$clientPayToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+			$placedSalToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+
+			$lossSeries[]   = round($lossToDate, 2);
+			$profitSeries[] = round($clientPayToDate - $lossToDate - $placedSalToDate, 2);
+		}
+
+		$ages = $benchRows->map(fn ($r) => $r->created_at ? Carbon::parse($r->created_at)->diffInDays($today) : 0);
+		$avgBenchAge     = $ages->count() ? (int) round($ages->avg()) : 0;
+		$longestBenchAge = $ages->count() ? (int) $ages->max() : 0;
+		$profitMargin    = $placedClientPay > 0 ? round(($grossProfit / $placedClientPay) * 100, 1) : 0;
+		$benchROI        = $benchCost > 0 ? round($placedClientPay / $benchCost, 2) : 0;
+
+		// Month-over-month deltas ("vs last month" chips), from records created in each window.
+		$thisStart = Carbon::now()->startOfMonth();
+		$lastStart = Carbon::now()->subMonthNoOverflow()->startOfMonth();
+		$lastEnd   = Carbon::now()->subMonthNoOverflow()->endOfMonth();
+
+		$addsThis = DB::table('job_applications')->where('company_id', $companyId)->where('condidate_type', 'bench_condidate')
+			->where('created_at', '>=', $thisStart)->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
+		$addsLast = DB::table('job_applications')->where('company_id', $companyId)->where('condidate_type', 'bench_condidate')
+			->whereBetween('created_at', [$lastStart, $lastEnd])->selectRaw('status, COUNT(*) c')->groupBy('status')->pluck('c', 'status');
+
+		$delta = function ($cur, $prev) {
+			if ($prev <= 0) { return $cur > 0 ? 100.0 : 0.0; }
+			return round((($cur - $prev) / $prev) * 100, 1);
+		};
+
+		$sumBench = fn ($from, $to) => (float) $benchRows
+			->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => (float) $r->ctc_yearly);
+		$sumPlaceBill = fn ($from, $to) => (float) $placementRows
+			->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
+		$sumPlacePay = fn ($from, $to) => (float) $placementRows
+			->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->betweenIncluded($from, $to))
+			->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+
+		$costThis = $sumBench($thisStart, Carbon::now());
+		$costLast = $sumBench($lastStart, $lastEnd);
+		$profitThis = $sumPlaceBill($thisStart, Carbon::now()) - $costThis - $sumPlacePay($thisStart, Carbon::now());
+		$profitLast = $sumPlaceBill($lastStart, $lastEnd) - $costLast - $sumPlacePay($lastStart, $lastEnd);
+
+		$deltas = (object) [
+			'all'    => $delta($addsThis->sum(), $addsLast->sum()),
+			'pool'   => $delta($addsThis->get(1, 0), $addsLast->get(1, 0)),
+			'bench'  => $delta($addsThis->get(2, 0), $addsLast->get(2, 0)),
+			'hold'   => $delta($addsThis->get(4, 0), $addsLast->get(4, 0)),
+			'placed' => $delta($addsThis->get(3, 0), $addsLast->get(3, 0)),
+			'cost'   => $delta($costThis, $costLast),
+			'profit' => $delta($profitThis, $profitLast),
+		];
+
+		$currencyMode = GeneralMethod::getCompanyCurrencyBenchshowMode($companyId);
+
+		return (object) [
+			'currencyCode'    => $currencyMode->currency_code ?? 'INR',
+			'benchCost'       => $benchCost,
+			'grossProfit'     => $grossProfit,
+			'benchAging'      => (object) $aging,
+			'benchCount'      => $benchRows->count(),
+			'avgBenchAge'     => $avgBenchAge,
+			'longestBenchAge' => $longestBenchAge,
+			'profitMargin'    => $profitMargin,
+			'benchROI'        => $benchROI,
+			'chartLabels'     => $labels,
+			'lossSeries'      => $lossSeries,
+			'profitSeries'    => $profitSeries,
+			'deltas'          => $deltas,
+		];
 	}
 	public function countDataGetBenchList(){
 
@@ -428,6 +594,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			$data = array_map(function ($hit) {
 				return $hit['_source'];
 			}, $response['hits']['hits']);
+
+			// Enrich rows with work-preference (wm), which is not part of the bench ES index.
+			// Why: the Location column shows Remote/Hybrid/Onsite; keep it live without a reindex.
+			$pageIds = array_filter(array_column($data, 'id'));
+			if (!empty($pageIds)) {
+				$wmMap = DB::table('job_applications')->whereIn('id', $pageIds)->pluck('wm', 'id');
+				foreach ($data as &$row) {
+					$row['wm'] = $wmMap[$row['id'] ?? null] ?? null;
+				}
+				unset($row);
+			}
 		}
 
 		$pagination = [
@@ -1820,6 +1997,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'job_applications.offer_amount',
 			'job_applications.joined_date',
 			'job_applications.rating',
+			'job_applications.created_at',
 			'users.name as posted_by',
 			'bench_master_status.name as master_status_name',
 			'state_list.state as state_name',
@@ -1892,6 +2070,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		} else {
 			$this->row_city_name = @$this->application->city;
 		}
+
+		/**
+		 * Stat tiles for the "Change Status" drawer (Active Interviews / Profile View /
+		 * Client Submissions / Bench Duration / Resume Download). Reuses the same helper
+		 * and counter table already queried per-row on the listing page, so no new query shape.
+		 */
+		$pipelineCounter = GeneralMethod::bench_explore_listing_counter($id)->applicationCounter;
+		$this->activeInterviews = $pipelineCounter->Interview ?? 0;
+		$this->clientSubmissions = $pipelineCounter->allCandidate ?? 0;
+		$this->profileViewCount = DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count();
+		$this->resumeDownloadCount = DB::table('bench_count_view_download')->where('type', 2)->where('status', 0)->where('candidate_id', $id)->count();
+		$this->benchDurationDays = !empty($this->benchApplication->created_at)
+			? (int) \Carbon\Carbon::parse($this->benchApplication->created_at)->diffInDays(now())
+			: 0;
+
 		$view = view('service_company.bench-candidates.bench_application_status', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
@@ -1991,21 +2184,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 		return DataTables::of($benchAppOnJob)
 			->setRowClass(function ($row) {
-				$exists = (($row->status ?? null) === 3) ? 1 : 0;
-
-				return $exists ? 'classname' : '';
+				// Real "already placed on this job" check (bench_id + jobID exist in ELASTIC_BENCH_PLACED),
+				// computed above into $row->exists — NOT the job's own recruitment stage.
+				return ($row->exists ?? 0) ? 'classname' : '';
 			})->setRowAttr([
 				'style' => function ($row) {
-					$exists = (($row->status ?? null) === 3) ? 1 : 0;
-					return $exists
+					return ($row->exists ?? 0)
 						? 'background-color:#e8f9f6a6;'
 						: '';
 				}
 			])
 			->editColumn('chkbox', function ($row) {
 
-			   // ELASTIC_BENCH_PLACED
-			   $exists = (($row->status ?? null) === 3) ? 1 : 0;
+			   $exists = $row->exists ?? 0;
                 $disabled = '';
 				$checked = 'checked';
 				if($exists){
@@ -2323,39 +2514,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 							'index' => ELASTIC_JOBS,
 							'id'    =>(int) $row->jobId,
 					];
-				
+
 				$response = $this->elasticService->getClient()->get($params);
 				$thisjob = (object) $response['_source'];
-				// dd($thisjob->job_assign);
 				$job_assign = $thisjob->job_assign;
 				$partnersCount = collect($job_assign)->where('company_id',$row->company_id)->count();
-
-				// $partnersCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.id', 'users.name', 'users.image')->where('job_assign.job_id', '=', $row->jobId)->where('job_assign.company_id', '=', $row->company_id)->where('users.company_id', '=', $row->company_id)->count();
-
 				$partnersData = collect($job_assign)->where('company_id',$row->company_id)->map(fn ($item) => (object) $item)->take(1);
 
-				// dd($partnersData);
+				// Plain bold-name + muted-subtitle text (no avatar widget) to match the
+				// "Hiring Manager" cell style used in the Change Status drawer's job table.
+				$first = $partnersData->first();
+				$name = $first ? ucwords($first->user_name) : 'Unassigned';
+				$extra = $partnersCount > 1 ? ' +' . ($partnersCount - 1) : '';
 
-				// $partnersData = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.id', 'users.name', 'users.image')->where('job_assign.job_id', '=', $row->jobId)->where('job_assign.company_id', '=', $row->company_id)->where('users.company_id', '=', $row->company_id)->orderBy('users.name', 'ASC')->skip(0)->take(3)->get();
-
-				$jobId = $row->jobId;
-				$html = $temp = '';
-				$html .= '<div class="d-flex flex-column"><div class="symbol-group symbol-hover">';
-				
-				foreach ($partnersData as $pval) {
-					$image_path = '';
-					if (!empty(@$pval->image) && strlen(@$pval->image) > 10)
-						$image_path = url('public/user-uploads/team_profile_img/' . @$pval->image);
-					$html .= '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' . @$pval->user_name . '"> <div class="symbol symbol-circle symbol-30px overflow-hidden me-2 border-radius-100" style="float:left">
-                            <a href="javascript:void(0);" data-row-id="11" class="border-radius-100" id="kt_activities3_toggle">
-                                <div class="symbol-label fs-8 fs-8 bg-dark text-secondary border-radius-100">'.mb_substr($pval->user_name, 0, 1).'</div>
-                            </a>		 
-                            </div></div>';
-				}
-				$html .= '<div data-row-id="' . $row->jobId . '"   class="symbol symbol-30 symbol-circle symbol-light hm-listing" data-bs-placement="top" data-toggle="tooltip2" title="More users list.."><span class="symbol-label font-weight-bold">' . $partnersCount . '+</span></div>';
-				$html .= '</div></div>';
-
-				return $html;
+				return '<div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">' . $name . $extra . '</span>
+                    <span class="text-muted fw-bold d-block fs-7">Assigned Recruiter</span>
+                  </div>';
 
 			})
 			->editColumn('Interview', function ($row) use ($feedback_status) {
@@ -3634,7 +3809,169 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		$this->pageTitle = __('Offer Listing');
 		$this->allBenchApplication = BenchApplication::count();
+		$stats = $this->benchOfferStats();
+		$this->benchOfferHeroStats = $stats['hero'];
+		$this->benchOfferTabStats = $stats['tabs'];
+		$this->benchOfferLocations = $stats['locations'];
 		return view('service_company.bench-candidates.offerListing', $this->data);
+	}
+
+	/**
+	 * Hero KPI cards, status-tab counts (All/Pending/Offer Released/Accepted/Joining Soon/
+	 * Expired) and the "All Locations" filter options for the Shortlisted Bench Candidates
+	 * listing — computed with a single Elasticsearch `filters` + `terms` aggregation call
+	 * (candidates index) and cached per-company, so the page load stays one ES round trip.
+	 */
+	private function benchOfferStats(): array
+	{
+		$default = [
+			'hero' => [
+				'total_shortlisted' => 0,
+				'joining_this_week' => 0,
+				'offer_released' => 0,
+				'offer_accepted' => 0,
+				'joined' => 0,
+			],
+			'tabs' => [
+				'all' => 0,
+				'pending' => 0,
+				'released' => 0,
+				'accepted' => 0,
+				'joining_soon' => 0,
+				'expired' => 0,
+			],
+			'locations' => [],
+		];
+
+		$company_id = auth()->user()->company_id;
+
+		if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			return $default;
+		}
+
+		$versionKey = 'allbenchofferListing_version_user_' . $this->user->id;
+		$version = cache()->get($versionKey, 1);
+		$cacheKeySet = 'ats:benchofferStats:' . $company_id . ':' . $version;
+
+		if (cache()->has($cacheKeySet)) {
+			return cache()->get($cacheKeySet);
+		}
+
+		$activeMust = ['terms' => ['job_master_status_id' => [5, 6]]];
+		$activeMustNot = ['term' => ['status' => 3]];
+		$noOfferShould = [
+			'bool' => [
+				'should' => [
+					['bool' => ['must_not' => [['exists' => ['field' => 'of_offer_amount']]]]],
+					['bool' => ['must_not' => [['exists' => ['field' => 'of_joined_date']]]]],
+				],
+				'minimum_should_match' => 1,
+			],
+		];
+
+		$params = [
+			'index' => ELASTIC_CANDIDATES,
+			'request_cache' => true,
+			'body' => [
+				'size' => 0,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term' => ['other_company' => $company_id]],
+							['term' => ['condidate_type' => 'bench_condidate']],
+						],
+					],
+				],
+				'aggs' => [
+					'hero_stats' => [
+						'filters' => [
+							'filters' => [
+								'total_shortlisted' => [
+									'bool' => ['must' => [$activeMust], 'must_not' => [$activeMustNot]],
+								],
+								'joining_this_week' => [
+									'bool' => [
+										'must' => [
+											$activeMust,
+											['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]],
+										],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'offer_released' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 1]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'offer_accepted' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 2]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+								'joined' => [
+									'bool' => [
+										'must' => [
+											['term' => ['job_master_status_id' => 6]],
+											['term' => ['status' => 3]],
+										],
+									],
+								],
+								'pending' => [
+									'bool' => ['must' => [$activeMust, $noOfferShould], 'must_not' => [$activeMustNot]],
+								],
+								'expired' => [
+									'bool' => [
+										'must' => [$activeMust, ['term' => ['of_offer_acceptance' => 4]]],
+										'must_not' => [$activeMustNot],
+									],
+								],
+							],
+						],
+					],
+					'active_locations' => [
+						'filter' => ['bool' => ['must' => [$activeMust], 'must_not' => [$activeMustNot]]],
+						'aggs' => [
+							'by_city' => [
+								'terms' => ['field' => 'city_name', 'size' => 30, 'order' => ['_count' => 'desc']],
+							],
+						],
+					],
+				],
+			],
+		];
+
+		try {
+			$response = $this->elasticService->getClient()->search($params);
+		} catch (\Exception $e) {
+			return $default;
+		}
+		$buckets = $response['aggregations']['hero_stats']['buckets'] ?? [];
+		$cityBuckets = $response['aggregations']['active_locations']['by_city']['buckets'] ?? [];
+
+		$stats = [
+			'hero' => [
+				'total_shortlisted' => $buckets['total_shortlisted']['doc_count'] ?? 0,
+				'joining_this_week' => $buckets['joining_this_week']['doc_count'] ?? 0,
+				'offer_released' => $buckets['offer_released']['doc_count'] ?? 0,
+				'offer_accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
+				'joined' => $buckets['joined']['doc_count'] ?? 0,
+			],
+			'tabs' => [
+				'all' => $buckets['total_shortlisted']['doc_count'] ?? 0,
+				'pending' => $buckets['pending']['doc_count'] ?? 0,
+				'released' => $buckets['offer_released']['doc_count'] ?? 0,
+				'accepted' => $buckets['offer_accepted']['doc_count'] ?? 0,
+				'joining_soon' => $buckets['joining_this_week']['doc_count'] ?? 0,
+				'expired' => $buckets['expired']['doc_count'] ?? 0,
+			],
+			'locations' => array_map(fn ($b) => $b['key'], $cityBuckets),
+		];
+
+		cache()->put($cacheKeySet, $stats, now()->addMinutes(ALL_BENCH_OFFER_LISTING_TIME));
+
+		return $stats;
 	}
 	public function offerListingData_ajax(Request $request)
 	{
@@ -3655,12 +3992,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			  $from = ($page - 1) * $size;
 			  $sort = [];
 
+			  $searchTerm = trim((string) ($request->input('search') ?: $request->input('cus_search')));
+			  $tab = (string) $request->input('tab', 'all');
+			  $location = trim((string) $request->input('country'));
+
 			  $cachePayload = [
 					'page' => $page,
 					'size' => $size,
 					'q' => $searchQuery,
 					'company' => $company_id,
 					'cus_search' => $request->input('cus_search'),
+					'search' => $searchTerm,
+					'tab' => $tab,
+					'location' => $location,
 					'country' => $request->input('country'),
 					'user_id' => $this->user->id,
 					'sortingfilter' => $valCheck
@@ -3904,6 +4248,53 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 						]
 					]
 				];
+
+				// Search box: "candidate name, job or offer ID"
+				if ($searchTerm !== '') {
+					$searchShould = [
+						['match_phrase_prefix' => ['full_name' => $searchTerm]],
+						['match_phrase_prefix' => ['title' => $searchTerm]],
+					];
+					if (is_numeric($searchTerm)) {
+						$searchShould[] = ['term' => ['offer_id' => (int) $searchTerm]];
+					}
+					$boolQuery['bool']['must'][] = ['bool' => ['should' => $searchShould, 'minimum_should_match' => 1]];
+				}
+
+				// Location filter ("All Locations" dropdown)
+				if ($location !== '' && strtolower($location) !== 'all') {
+					$boolQuery['bool']['must'][] = ['term' => ['city_name' => $location]];
+				}
+
+				// Status tabs: All / Pending / Offer Released / Accepted / Joining Soon / Expired
+				switch ($tab) {
+					case 'pending':
+						$boolQuery['bool']['must'][] = [
+							'bool' => [
+								'should' => [
+									['bool' => ['must_not' => [['exists' => ['field' => 'of_offer_amount']]]]],
+									['bool' => ['must_not' => [['exists' => ['field' => 'of_joined_date']]]]],
+								],
+								'minimum_should_match' => 1,
+							],
+						];
+						break;
+					case 'released':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 1]];
+						break;
+					case 'accepted':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 2]];
+						break;
+					case 'joining_soon':
+						$boolQuery['bool']['must'][] = ['range' => ['of_joined_date' => ['gte' => 'now/d', 'lte' => 'now+7d/d']]];
+						break;
+					case 'expired':
+						$boolQuery['bool']['must'][] = ['term' => ['of_offer_acceptance' => 4]];
+						break;
+					default:
+						break; // 'all'
+				}
+
 				$params = [
 					'index' => ELASTIC_CANDIDATES,
 					'request_cache' => true,
@@ -4217,56 +4608,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				break;
 		}
 
+		// job-onboard (joining tracker) uses the exact same ES index with job_master_status_id=6.
+		// Mirror its three should-conditions so both pages show identical records.
+		// Bench placed is kept as-is (original condition).
+		$searchConds = [];
 		if (!empty($custom_search)) {
-				
-			$must[] = [
+			$searchConds[] = [
 				'bool' => [
-					'must' => [
-						[
-							'bool' => [
-								'should' => [
-									['match_phrase_prefix' => ['full_name' => '*' . strtolower($custom_search) . '*']],
-									['wildcard' => ['email' => '*' . strtolower($custom_search) . '*']],
-									['wildcard' => ['phone' => '*' . ($custom_search) . '*']],
-									['match_phrase_prefix' => ['job_title' => '*' . strtolower($custom_search) . '*']],
-								],
-								'minimum_should_match' => 1,
-							],
-						]
-					]
+					'should' => [
+						['match_phrase_prefix' => ['full_name' => strtolower($custom_search)]],
+						['wildcard' => ['email'    => '*' . strtolower($custom_search) . '*']],
+						['wildcard' => ['phone'    => '*' . $custom_search . '*']],
+						['match_phrase_prefix' => ['job_title' => strtolower($custom_search)]],
+					],
+					'minimum_should_match' => 1,
 				],
 			];
 		}
 
-		$must[] = [
-			'bool' => [
-				'should' => [
-					['term' => ['company_id' => $company_id]],
-				],
-				'minimum_should_match' => 1,
-			],
-		];
-
 		$boolQuery = [
 			'bool' => [
-				'must' => [
-					// First condition
-					[
-						'bool' => [
-							'must' => array_merge([
-								['term' => ['other_company' =>$company_id]],
-								['term' => ['condidate_type' =>'bench_condidate']],
-								['term' => ['job_master_status_id' => 6]],
-								['terms' => ['status' =>[3]]],
-							])
-						]
-					]
+				'should' => [
+					// 1. Bench candidates placed by this company (original placed listing)
+					['bool' => ['must' => array_merge([
+						['term'  => ['other_company'       => $company_id]],
+						['term'  => ['condidate_type'       => 'bench_condidate']],
+						['term'  => ['job_master_status_id' => 6]],
+						['terms' => ['status'               => [3]]],
+					], $searchConds)]],
+					// 2. Join tracker — own company, no third-party client (mirrors job-onboard cond 1)
+					['bool' => ['must' => array_merge([
+						['term' => ['company_id'           => $company_id]],
+						['term' => ['job_master_status_id' => 6]],
+						['term' => ['ClientComID'          => 0]],
+					], $searchConds)]],
+					// 3. Join tracker — own company, with third-party client (mirrors job-onboard cond 2)
+					['bool' => ['must' => array_merge([
+						['term'  => ['company_id'           => $company_id]],
+						['term'  => ['job_master_status_id' => 6]],
+						['range' => ['ClientComID'          => ['gt' => 0]]],
+						['range' => ['jobId'                => ['gt' => 0]]],
+						['bool'  => ['must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]]]],
+					], $searchConds)]],
+					// 4. Join tracker — third-party company is this company (mirrors job-onboard cond 3)
+					['bool' => ['must' => array_merge([
+						['term'  => ['ClientComID'          => $company_id]],
+						['term'  => ['job_master_status_id' => 6]],
+						['range' => ['jobId'                => ['gt' => 0]]],
+					], $searchConds)]],
 				],
-				'filter' => [],
-				'must_not' => [
-					// ['term' => ['status' => 3]]
-				]
-			]
+				'minimum_should_match' => 1,
+				'filter'   => [],
+				'must_not' => [],
+			],
 		];
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
@@ -4296,6 +4690,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
 			'listType' => 'allcandidate',
+			'per_page' => $size, // lets pagination partial show the real page size instead of assuming 10
 		];
 
 		$userPermissions = $this->userPermissions;
@@ -4312,6 +4707,125 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 
 	}
+	public function savePlacedAssignmentDetails(Request $request)
+	{
+		$company_id = auth()->user()->company_id;
+		$candidate_id = (int)$request->candidate_id;
+		$is_bench = (int)$request->is_bench;
+
+		if (!$candidate_id) {
+			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
+		}
+
+		// candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
+		$wiseRecord       = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
+		$wiseId           = $wiseRecord ? $wiseRecord->id : null;
+		$job_id           = $wiseRecord ? $wiseRecord->job_id : null;
+		$jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
+
+		$assignmentFields = [
+			'assignment_status'                   => $request->assignment_status ?: null,
+			'assignment_expected_end_date'        => $request->expected_end_date ?: null,
+			'assignment_employment_type'          => $request->employment_type ?: null,
+			'assignment_client_location'          => $request->client_location ?: null,
+			'assignment_exit_reason'              => $request->exit_reason ?: null,
+			'assignment_project_outcome'          => $request->project_outcome ?: null,
+			'assignment_remarks'                  => $request->remarks ?: null,
+			'assignment_internal_notes'           => $request->internal_notes ?: null,
+			'assignment_replacement_required'     => $request->replacement_required !== null ? (bool)(int)$request->replacement_required : null,
+			'assignment_replacement_status'       => $request->replacement_status ?: null,
+			'assignment_replacement_requested_on' => $request->replacement_requested_on ?: null,
+			'assignment_replacement_reason'       => $request->replacement_reason ?: null,
+		];
+
+		
+
+		// Sync to ELASTIC_CANDIDATES
+		if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			try {
+				$sdfsdf = $this->elasticService->getClient()->update([
+					'index'             => ELASTIC_CANDIDATES,
+					'id'                => $wiseId,
+					'retry_on_conflict' => 5,
+					'body'              => [
+						'doc'           => $assignmentFields,
+						'doc_as_upsert' => true,
+					],
+				]);
+			} catch (\Exception $e) {
+				\Log::error('ES assignment update failed for wiseId=' . $wiseId . ': ' . $e->getMessage());
+			}
+		}
+
+		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
+
+		return Reply::dataOnly(['status' => 'success', 'message' => 'Assignment details saved successfully.']);
+	}
+
+	public function savePlacedCommercialConfig(Request $request)
+	{
+		$company_id = auth()->user()->company_id;
+		$candidate_id = (int)$request->candidate_id;
+
+		if (!$candidate_id) {
+			return Reply::dataOnly(['status' => 'fail', 'message' => 'Invalid candidate.']);
+		}
+
+		// candidate_id from JS = wiseId = add_job_wise_condidates.id (ES document _id)
+		$wiseRecord       = DB::table('add_job_wise_condidates')->where('id', $candidate_id)->first();
+		$wiseId           = $wiseRecord ? $wiseRecord->id : null;
+		$job_id           = $wiseRecord ? $wiseRecord->job_id : null;
+		$jobApplicationId = $wiseRecord ? $wiseRecord->job_application_id : null;
+
+		$feeFixed = $request->fee_fixed ? (float)str_replace(',', '', $request->fee_fixed) : null;
+		$feePct   = $request->fee_pct   ? (float)$request->fee_pct : null;
+
+		$billingAmount = $request->billing_amount ? (float)str_replace(',', '', $request->billing_amount) : null;
+
+		$commercialFields = [
+			'commercial_service_type'             => $request->service_type ?: null,
+			'commercial_model'                    => $request->commercial_model ?: null,
+			'commercial_fee_method'               => $request->fee_method ?: null,
+			'commercial_fee_base'                 => $request->fee_base ?: null,
+			'commercial_fee_pct'                  => $feePct,
+			'commercial_fee_fixed'                => $feeFixed,
+			'commercial_billing_amount'           => $billingAmount,
+			'commercial_billing_cycle'            => $request->billing_cycle ?: null,
+			'commercial_margin_pct'               => $request->margin_pct ? (float)$request->margin_pct : null,
+			'commercial_replacement_period'       => $request->replacement_period ?: null,
+			'commercial_replacement_status'       => $request->replacement_status ?: null,
+			'commercial_replacement_requested_on' => $request->replacement_requested_on ?: null,
+			'commercial_replacement_reason'       => $request->replacement_reason ?: null,
+			'commercial_internal_note'            => $request->internal_note ?: null,
+			'commercial_free_service_type'        => $request->free_service_type ?: null,
+			'commercial_free_reason'              => $request->free_reason ?: null,
+			'commercial_free_effective_date'      => $request->free_effective_date ?: null,
+		];
+
+		
+		// Sync to ELASTIC_CANDIDATES
+		if ($wiseId && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			try {
+				$this->elasticService->getClient()->update([
+					'index'             => ELASTIC_CANDIDATES,
+					'id'                => $wiseId,
+					'retry_on_conflict' => 5,
+					'body'              => [
+						'doc'           => $commercialFields,
+						'doc_as_upsert' => true,
+					],
+				]);
+			} catch (\Exception $e) {
+				
+				\Log::error('ES commercial update failed for wiseId=' . $wiseId . ': ' . $e->getMessage());
+			}
+		}
+
+		GeneralMethod::cacheClean('allbenchplacedListing_version_user_' . $this->user->id);
+
+		return Reply::dataOnly(['status' => 'success', 'message' => 'Commercial configuration saved successfully.']);
+	}
+
 	public function update_placed_end_date(Request $request)
 	{
 		$block = '';

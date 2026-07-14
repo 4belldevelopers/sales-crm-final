@@ -761,11 +761,49 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
 					$candidateValues[] = $candidateBucket['doc_count'] ?? 0;
 				}
-				$this->labels = $labels ; 
+				$this->labels = $labels ;
 				$this->candidateValues = $candidateValues;
 				$this->candidateValuesTotal = array_sum($candidateValues);
 
-				/** End Candidate last 7 days */	
+				/*
+				 * Daily Performance — last-7-days Offers & Joinings series for the KPI cards.
+				 * $offerDailyValues / $joinDailyValues were never built, so the Offers and Joinings
+				 * cards always showed 0 regardless of real data. Source = offer_job_applications
+				 * (same authoritative source as the Monthly Performers joinings fix): a Joining is
+				 * master_status_id 6 dated by joined_date; an Offer is master_status_id 5/6 dated by
+				 * created_at. The last element of each array is "today". Reuses the 7-day window
+				 * ($startDate..$endDate) already set above. Tenancy: raw DB::table is not auto-scoped,
+				 * so company_id is filtered explicitly (Rule #3).
+				 */
+				$joinDailyMap = DB::table('offer_job_applications')
+					->select(DB::raw('DATE(joined_date) as d'), DB::raw('COUNT(*) as cnt'))
+					->where('company_id', $this->company_id)
+					->whereNull('deleted_at')
+					->where('master_status_id', 6)
+					->whereBetween('joined_date', [$startDate->toDateTimeString(), $endDate->toDateTimeString()])
+					->groupBy(DB::raw('DATE(joined_date)'))
+					->pluck('cnt', 'd')->toArray();
+
+				$offerDailyMap = DB::table('offer_job_applications')
+					->select(DB::raw('DATE(created_at) as d'), DB::raw('COUNT(*) as cnt'))
+					->where('company_id', $this->company_id)
+					->whereNull('deleted_at')
+					->whereIn('master_status_id', [5, 6])
+					->whereBetween('created_at', [$startDate->toDateTimeString(), $endDate->toDateTimeString()])
+					->groupBy(DB::raw('DATE(created_at)'))
+					->pluck('cnt', 'd')->toArray();
+
+				$offerDailyValues = [];
+				$joinDailyValues  = [];
+				for ($i = 0; $i < 7; $i++) {
+					$day = $startDate->copy()->addDays($i)->format('Y-m-d');
+					$offerDailyValues[] = (int) ($offerDailyMap[$day] ?? 0);
+					$joinDailyValues[]  = (int) ($joinDailyMap[$day] ?? 0);
+				}
+				$this->offerDailyValues = $offerDailyValues;
+				$this->joinDailyValues  = $joinDailyValues;
+
+				/** End Candidate last 7 days */
 
 
 				$startOfMonth = Carbon::now()->startOfMonth();
@@ -883,10 +921,93 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 
 				 }
-				 $this->labelsCommjoin = $labelsCommjoin ; 
+				 $this->labelsCommjoin = $labelsCommjoin ;
 				 $this->candidateValuesCommjoin = $candidateValuesCommjoin;
 				//  dd($this->candidateValuesCommjoin,$this->labelsCommjoin);
 				 $this->candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
+
+				/*
+				 * Candidates Added Trend wiring (intent): the dashboard "Candidates Added Trend"
+				 * chart reads $addedMonthLabels / $addedMonthValues (last 6 months) which were
+				 * never built (blank chart). This runs the SAME company-scoped candidate query
+				 * used by the 7-day "candidates added" widget, but as a monthly date_histogram
+				 * on created_at across the last 6 months. Tenancy: scoped by company_id /
+				 * ClientComID in the should-clauses below.
+				 */
+				$addedStartMonth = Carbon::now()->startOfMonth()->subMonths(5);
+				$addedEndMonth   = Carbon::now()->endOfMonth();
+				$paramsAdded = [
+					'index' => ELASTIC_CANDIDATES,
+					'request_cache' => true,
+					'body' => [
+						'track_total_hits' => true,
+						'size' => 0,
+						'query' => [
+							'bool' => [
+								'must' => [
+									[
+										'bool' => [
+											'should' => [
+												// candidate added directly by this company (no client routing)
+												['bool' => ['must' => [
+													['term' => ['company_id' => (int) $company_id]],
+													['term' => ['ClientComID' => 0]],
+												]]],
+												// candidate added by this company against a client requirement
+												['bool' => [
+													'must' => [
+														['term' => ['company_id' => (int) $company_id]],
+														['range' => ['ClientComID' => ['gt' => 0]]],
+													],
+													'must_not' => [
+														['terms' => ['job_master_status_id' => [8, 9]]],
+													],
+												]],
+												// candidate routed to this company as the client
+												['bool' => ['must' => [
+													['term' => ['ClientComID' => (int) $company_id]],
+												]]],
+											],
+											'minimum_should_match' => 1,
+										],
+									],
+								],
+								'filter' => [
+									['range' => ['created_at' => [
+										'gte' => $addedStartMonth->toDateString(),
+										'lte' => $addedEndMonth->toDateString(),
+									]]],
+								],
+							],
+						],
+						'aggs' => [
+							'added_over_time' => [
+								'date_histogram' => [
+									'field' => 'created_at',
+									'calendar_interval' => 'month',
+									'format' => 'yyyy-MM',
+									'min_doc_count' => 0,
+									'extended_bounds' => [
+										'min' => $addedStartMonth->format('Y-m'),
+										'max' => $addedEndMonth->format('Y-m'),
+									],
+								],
+							],
+						],
+					],
+				];
+				$responseAdded = $this->elasticService->getClient()->search($paramsAdded);
+				$addedBuckets  = $responseAdded['aggregations']['added_over_time']['buckets'] ?? [];
+				$addedMonthLabels = [];
+				$addedMonthValues = [];
+				for ($i = 5; $i >= 0; $i--) {
+					$addedMonthPoint   = Carbon::now()->startOfMonth()->subMonths($i);
+					$addedMonthLabels[] = $addedMonthPoint->format('M Y');
+					$addedMonthBucket   = collect($addedBuckets)->firstWhere('key_as_string', $addedMonthPoint->format('Y-m'));
+					$addedMonthValues[] = $addedMonthBucket['doc_count'] ?? 0;
+				}
+				$this->addedMonthLabels = $addedMonthLabels;
+				$this->addedMonthValues = $addedMonthValues;
 
 
 
@@ -1067,7 +1188,75 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
 				    // $this->total_candidates = collect($this->result)->sum();
 				   $this->total_candidates =$this->inreview_count+$this->sourcing_count+$this->screening_count+$this->evaluation_count+$this->negotiation_count+$this->offer_count+$this->joined_count;
-				   
+
+				   /*
+				    * Candidates Funnel (Last 6 Months) — TRUE 6-month cohort.
+				    * The $this->result counts above are filtered by updated_at within the CURRENT
+				    * month, so they do NOT match this card's "Last 6 Months" label. Here we run a
+				    * status_counts aggregation over candidates CREATED in the last 6 months (the same
+				    * company scope as the Added Trend) and break that cohort down by current status.
+				    * $candidatesAdded6mTotal is the headline total of candidates added in those 6 months
+				    * (shown above the funnel). Tenancy: company_id / ClientComID in the should-clauses.
+				    */
+				   $funnelScope = [
+						'bool' => [
+							'must' => [[
+								'bool' => [
+									'should' => [
+										['bool' => ['must' => [
+											['term' => ['company_id' => (int) $company_id]],
+											['term' => ['ClientComID' => 0]],
+										]]],
+										['bool' => [
+											'must' => [
+												['term' => ['company_id' => (int) $company_id]],
+												['range' => ['ClientComID' => ['gt' => 0]]],
+											],
+											'must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]],
+										]],
+										['bool' => ['must' => [
+											['term' => ['ClientComID' => (int) $company_id]],
+										]]],
+									],
+									'minimum_should_match' => 1,
+								],
+							]],
+							'filter' => [
+								['range' => ['created_at' => [
+									'gte' => $addedStartMonth->toDateString(),
+									'lte' => $addedEndMonth->toDateString(),
+								]]],
+							],
+						],
+				   ];
+				   $funnelResponse = $this->elasticService->getClient()->search([
+						'index' => ELASTIC_CANDIDATES,
+						'request_cache' => true,
+						'body' => [
+							'track_total_hits' => true,
+							'size' => 0,
+							'query' => $funnelScope,
+							'aggs' => [
+								'status_counts' => ['terms' => ['field' => 'job_master_status_id', 'size' => 20]],
+							],
+						],
+				   ]);
+				   $funnel6mResult = collect($funnelResponse['aggregations']['status_counts']['buckets'] ?? [])
+						->mapWithKeys(fn ($b) => [(string) $b['key'] => $b['doc_count']]);
+				   $this->funnel6m = [
+						'inreview'   => (int) $funnel6mResult->get('8', 0),
+						'sourcing'   => (int) $funnel6mResult->get('1', 0),
+						'screening'  => (int) $funnel6mResult->get('2', 0),
+						'evaluation' => (int) $funnel6mResult->get('3', 0),
+						// 'offer' & 'joined' below are placeholders — they are overridden further down with the
+						// actual offers/joinings that OCCURRED in the last 6 months (by offer/joined date), to match
+						// the Offers/Joinings Trend charts. Current-status counts under-report these events.
+						'offer'      => (int) $funnel6mResult->get('5', 0),
+						'joined'     => (int) $funnel6mResult->get('6', 0),
+				   ];
+				   // Total candidates added in the last 6 months (matches the Added Trend chart total).
+				   $this->candidatesAdded6mTotal = (int) array_sum($addedMonthValues);
+
 				$counts = collect([
 					'Joined' => $this->result->get('6', 0),
 					'Sourcing' => $this->result->get('1', 0),
@@ -1383,10 +1572,21 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 
 				 }
-				 $this->labelsCommoffer = $labelsCommoffer ; 
+				 $this->labelsCommoffer = $labelsCommoffer ;
 				 $this->candidateValuesCommoffer = $candidateValuesCommoffer;
 				//  dd($this->candidateValuesCommoffer,$this->labelsCommoffer);
 				 $this->candidateValuesTotaloffer = array_sum($candidateValuesCommoffer);
+
+				 /*
+				  * Funnel Offers & Joined fix: show offers RELEASED and candidates JOINED within the last
+				  * 6 months (by offer date / joined date) — the same totals as the Offers/Joinings Trend
+				  * charts and the Offer Acceptance section — instead of "created-in-6-months candidates
+				  * currently in that status", which under-reported them. Both 6-month series exist by now.
+				  */
+				 $f6 = $this->funnel6m;
+				 $f6['offer']  = (int) array_sum($candidateValuesCommoffer);
+				 $f6['joined'] = (int) array_sum($candidateValuesCommjoin);
+				 $this->funnel6m = $f6;
 				 //  dd($labelsCommoffer,$candidateValuesCommoffer);
 					
         
@@ -2003,6 +2203,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2027,7 +2231,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2045,6 +2249,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2068,6 +2276,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 					$userteam['negotiation'] = $scoreMap[$user_id]['negotiation'] ?? 0;
 					$userteam['backout'] = $scoreMap[$user_id]['backout'] ?? 0;
 					$userteam['backoutTeam'] = $scoreMap[$user_id]['backoutTeam'] ?? 0;
+					$userteam['candidateJoinedContract'] = $scoreMap[$user_id]['candidateJoinedContract'] ?? 0;
+					$userteam['teamCaptainCandidateJoinedContract'] = $scoreMap[$user_id]['teamCaptainCandidateJoinedContract'] ?? 0;
+					$userteam['backoutContract'] = $scoreMap[$user_id]['backoutContract'] ?? 0;
+					$userteam['backoutTeamContract'] = $scoreMap[$user_id]['backoutTeamContract'] ?? 0;
 					$userteam['score'] = $scoreMap[$user_id]['score'] ?? 0;
 					return $userteam;
 			})->sort(function ($a, $b) {
@@ -2114,6 +2326,40 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				'count' => $rankedUsers->count(),
 				'active' => $rankedUsers->filter(fn ($u) => strtolower($u['status'] ?? 'inactive') === 'active')->count(),
 			];
+
+			/*
+			 * Actual monthly joinings & offers per recruiter for the JOIN / O→J% columns of
+			 * "Monthly Performers". These must reflect REAL recruitment outcomes, not gamification
+			 * points — the points pipeline only credits an 'Onboarded' joining (and deducts for
+			 * non-onboarded ones), so it under-reports real joinings (e.g. shows 1 where 2 joined).
+			 * Source of truth = offer_job_applications.submitted_by (the recruiter who owns the
+			 * candidate). Window = the report month (previous completed month, matching the rest of
+			 * this section). Tenancy: raw DB::table is NOT auto-scoped, so company_id is filtered
+			 * explicitly (Rule #3). Join = reached "Joined" (master_status_id 6) with joined_date in
+			 * the month; Offer = reached offer/joined stage (master_status_id 5 or 6) in the month.
+			 */
+			$repMonthStart = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d H:i:s');
+			$repMonthEnd   = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d H:i:s');
+
+			$this->recruiterActualJoins = DB::table('offer_job_applications')
+				->select('submitted_by', DB::raw('COUNT(*) as cnt'))
+				->where('company_id', $this->company_id)
+				->whereNull('deleted_at')
+				->where('master_status_id', 6)
+				->whereBetween('joined_date', [$repMonthStart, $repMonthEnd])
+				->groupBy('submitted_by')
+				->pluck('cnt', 'submitted_by')
+				->toArray();
+
+			$this->recruiterActualOffers = DB::table('offer_job_applications')
+				->select('submitted_by', DB::raw('COUNT(*) as cnt'))
+				->where('company_id', $this->company_id)
+				->whereNull('deleted_at')
+				->whereIn('master_status_id', [5, 6])
+				->whereBetween('created_at', [$repMonthStart, $repMonthEnd])
+				->groupBy('submitted_by')
+				->pluck('cnt', 'submitted_by')
+				->toArray();
 
 			// Top performing captains — reuse the already-built $rankedUsers (no extra query).
 			// Captain-only score (not recruiter score) = sum of their team-captain contributions.
@@ -2203,6 +2449,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2227,7 +2477,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2245,6 +2495,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2381,6 +2635,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2409,7 +2667,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2427,6 +2685,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2576,6 +2838,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2600,7 +2866,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2618,6 +2884,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2756,6 +3026,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2780,7 +3054,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'user_id' => $item['key'],
@@ -2798,6 +3072,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -2943,6 +3221,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 								'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 								'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 								'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+								'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+								'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+								'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+								'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							]
 						]
 					]
@@ -2973,7 +3255,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'company_id' => $item['key'],
@@ -2997,6 +3279,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 						'score' => $score
 					]];
 			});
@@ -3068,6 +3354,9 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 			
 			$this->topUsers_rank_global_company = $topUsers_global_company;
 			$this->ownUser_global_company = $currentUser_global_company;
+			// For the Company Score Board modal: total ranked companies (percentile) + a fuller top-7 leaderboard.
+			$this->companyRankTotal = $rankedUsers_global_company->count();
+			$this->companyLeaders   = $rankedUsers_global_company->take(7)->values();
 
 			// dd($this->ownUser_global_company);
 	
@@ -3546,6 +3835,101 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
 	    // End Bench Talent Request
 
+
+			/*
+			 * Daily Leaderboards wiring (intent): the dashboard "Daily Leaderboards" block
+			 * (Teams / Captains / Agencies) reads $teamDailyReport, $captainDailyReport,
+			 * $agencyDailyReport (+ matching *Meta). The daily ranks themselves are already
+			 * computed above ($rankedUsers_daily_internal_rank, $this->topUsersCaptainDaily,
+			 * $rankedstaffing_daily); this block only reshapes them into the
+			 * {name, value, rank, is_me} rows the view expects — no ranking/business logic
+			 * is changed. Tenancy: every source list is already company-scoped (built from
+			 * this company's ES users / staffing partners), so no extra filter is needed.
+			 */
+			$dashLoggedInUserId = (int) auth()->user()->id;
+
+			// Teams Daily Report — top 4 team members by daily score (+ the logged-in user if outside the top 4).
+			$teamDailySource = isset($rankedUsers_daily_internal_rank) ? collect($rankedUsers_daily_internal_rank) : collect();
+			$teamDailyTop    = $teamDailySource->take(4);
+			$teamDailyMe     = $teamDailySource->firstWhere('id', $dashLoggedInUserId);
+			if ($teamDailyMe && !$teamDailyTop->contains('id', $dashLoggedInUserId)) {
+				$teamDailyTop = $teamDailyTop->push($teamDailyMe);
+			}
+			$this->teamDailyReport = $teamDailyTop->values()->map(function ($u) use ($dashLoggedInUserId) {
+				$u = (array) $u;
+				return [
+					'name'  => ucwords(strtolower($u['name'] ?? '')),
+					'value' => (int) ($u['score'] ?? 0),
+					'rank'  => (int) ($u['rank'] ?? 0),
+					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
+				];
+			})->values();
+			$this->teamDailyMeta = [
+				'count' => $teamDailySource->count(),
+				'total' => (int) $teamDailySource->sum(fn ($u) => (int) (((array) $u)['score'] ?? 0)),
+			];
+
+			// Captains Daily Report — top 5 captains by today's captain score, plus the logged-in user's
+			// own position if they're a captain outside the top 5. A "captain" = a user assigned as the
+			// spoke (spok_user_id) on at least one of this company's ACTIVE jobs, so captains are listed
+			// even with zero captain points today. Tenancy: raw DB::table, scoped by jobs.company_id (Rule #3).
+			$captainUserIds = DB::table('job_assign')
+				->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+				->where('jobs.company_id', $this->company_id)
+				->where('jobs.status', 'active')
+				->whereNotNull('job_assign.spok_user_id')
+				->distinct()
+				->pluck('job_assign.spok_user_id')
+				->map(fn ($v) => (int) $v)
+				->all();
+
+			$captainAllRanked = collect($rankedUsers_daily_internal_rank ?? [])
+				->filter(fn ($u) => in_array((int) (((array) $u)['id'] ?? 0), $captainUserIds, true))
+				->map(function ($u) {
+					$u = (array) $u;
+					$u['captainScore'] = (int) ($u['teamCaptainInterviewScheduled'] ?? 0)
+						+ (int) ($u['teamCaptainOfferReleased'] ?? 0)
+						+ (int) ($u['teamCaptainCandidateJoined'] ?? 0);
+					return $u;
+				})
+				->sortByDesc('captainScore')
+				->values()
+				->map(function ($u, $i) { $u['captainRank'] = $i + 1; return $u; });
+
+			$captainTop = $captainAllRanked->take(5);
+			$captainMe  = $captainAllRanked->firstWhere('id', $dashLoggedInUserId);
+			if ($captainMe && !$captainTop->contains('id', $dashLoggedInUserId)) {
+				$captainTop = $captainTop->push($captainMe);   // append "YOU" row with the real rank
+			}
+			$this->captainDailyReport = $captainTop->values()->map(function ($u) use ($dashLoggedInUserId) {
+				$u = (array) $u;
+				return [
+					'name'  => ucwords(strtolower($u['name'] ?? '')),
+					'value' => (int) ($u['captainScore'] ?? 0),
+					'rank'  => (int) ($u['captainRank'] ?? 0),
+					'is_me' => (int) ($u['id'] ?? 0) === $dashLoggedInUserId,
+				];
+			})->values();
+			$this->captainDailyMeta = [
+				'count' => $captainAllRanked->count(),
+				'total' => (int) $captainAllRanked->sum(fn ($u) => (int) (((array) $u)['captainScore'] ?? 0)),
+			];
+
+			// Agency Daily Report — top staffing partners by today's profile uploads.
+			$agencyDailySource = isset($rankedstaffing_daily) ? collect($rankedstaffing_daily) : collect();
+			$this->agencyDailyReport = $agencyDailySource->take(4)->map(function ($a) {
+				$a = (array) $a;
+				return [
+					'name'  => ucwords(strtolower($a['company_name'] ?? '')),
+					'value' => (int) ($a['upload_count'] ?? 0),
+					'rank'  => (int) ($a['rank'] ?? 0),
+					'is_me' => false,
+				];
+			})->values();
+			$this->agencyDailyMeta = [
+				'count' => $agencyDailySource->count(),
+				'total' => (int) $agencyDailySource->sum(fn ($a) => (int) (((array) $a)['upload_count'] ?? 0)),
+			];
 
 			$responseData = view('service_company.dashboard.index', $this->data)->render();
 

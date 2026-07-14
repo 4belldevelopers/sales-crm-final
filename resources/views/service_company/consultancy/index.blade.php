@@ -775,6 +775,13 @@
         flex-shrink: 0;
         cursor: pointer;
         transition: all 0.15s;
+        overflow: hidden;
+      }
+      .tbl-av img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
       }
       .tbl-av:hover {
         transform: scale(1.08);

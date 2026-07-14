@@ -2017,7 +2017,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 
 		$this->job = DB::table('jobs')
-			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
 			->leftJoin('recommendation_relation', function ($join) use ($company_id) {
 				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
 				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));
@@ -6842,7 +6842,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 
 		$this->job = DB::table('jobs')
-			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
 			->leftJoin('recommendation_relation', function ($join) use ($company_id) {
 				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
 				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));
@@ -7824,7 +7824,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 
 		$this->job = DB::table('jobs')
-			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+			->select('jobs.id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency', 'jobs.total_positions', 'jobs.status', 'recommendation_relation.final_status', 'jobs.client_id', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
 			->leftJoin('recommendation_relation', function ($join) use ($company_id) {
 				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
 				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));

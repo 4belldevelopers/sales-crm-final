@@ -3958,6 +3958,20 @@ protected $elasticService;
 
 		$this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
+		// Populate job skills for skill-highlight panel — mirrors show() but uses local $jobId
+		$this->jobSkill = collect();
+		$_wsJobId = $jobId ?? @$this->application->job_id;
+		if (!empty($_wsJobId)) {
+			$this->jobSkill = DB::table('job_metronics_skills')
+				->leftJoin('candidate_job_skill_exp', function ($join) {
+					$join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+						->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
+				})
+				->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+				->where('job_metronics_skills.job_id', '=', $_wsJobId)
+				->get();
+		}
+
 		// $view = view('service_company.job-applications.show', $this->data)->render();
 		// dd("jd");
 		$view = view('service_company.job-applications.showdetail', $this->data)->render();
@@ -3973,6 +3987,28 @@ protected $elasticService;
 		$id = GeneralMethod::value_decrypt($id);
 		$company_id = '';
 		$company_id = auth()->user()->company_id;
+
+		// Authorization: only the assigned Captain (job_assign.spok_user_id) or the submitting user
+		// (add_job_wise_condidates.submitted_by), within the same company, may open this edit form.
+		// Here $id is the add_job_wise_condidates.id.
+		$authUserId = auth()->id();
+		$canEditCandidate = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $id)
+			->where('ajwc.company_id', $company_id)
+			->where(function ($query) use ($authUserId) {
+				$query->where('ja.spok_user_id', $authUserId)
+					->orWhere('ajwc.submitted_by', $authUserId);
+			})
+			->exists();
+
+		if (!$canEditCandidate) {
+			return redirect()->back()->with('candidate_edit_denied', "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it");
+		}
+
 		$AddJobWiseCondidate = AddJobWiseCondidate::find($id);
 		$this->AddJobWiseCondidateRankRow = $id;
 		// dd($AddJobWiseCondidate->job_id);
@@ -4388,7 +4424,11 @@ protected $elasticService;
 					'offer_job_applications.offer_amount as salary_ctc',
 					'offer_job_applications.offer_mode as salary_mode',
 					'offer_create_main_tds.designation',
-					'offer_job_applications.joined_date',
+					// The Compensation step's Joining Date field saves to offer_create_main_tds.joined_date
+					// (not offer_job_applications.joined_date, which nothing keeps in sync) — reading from
+					// the wrong table meant a joining date set on Compensation could show blank everywhere
+					// this feeds (hero facts, approval info card, email body).
+					'offer_create_main_tds.joined_date',
 					'offer_job_applications.confidential',
 					'offer_create_main_tds.monthly_gross',
 					'offer_create_main_tds.yearly_gross',
@@ -4599,7 +4639,102 @@ protected $elasticService;
 		$this->offer_terms = str_replace(["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"],[$candidate_name, $candidate_email,$candidate_mobile,$comapny_name,$job_title,$of_joined_date_update,$job_title,date("d M Y")], $offer_terms);
 		// dd($this->offer_terms,$offer_terms,$this->account );
 		// $this->offer_terms = $offer_terms;
-		
+
+		// Same values used in the merge above, exposed to the view so the Template step's
+		// "Insert Variable" chips can insert this offer's actual resolved values.
+		$this->co_candidate_name   = $candidate_name;
+		$this->co_candidate_email  = $candidate_email;
+		$this->co_candidate_mobile = $candidate_mobile;
+		$this->co_company_name     = $comapny_name;
+		$this->co_job_title        = $job_title;
+		$this->co_joining_date     = $of_joined_date_update;
+		$this->co_today_date       = date("d M Y");
+		$this->co_company_logo     = $logo;
+		$this->co_company_address  = $address;
+
+		// Approval step (Step 4): $section_change_value already carries offer_create_main_tds.*
+		// (management_status/send_approved_date_time/approved_date_time). The approver's own
+		// name/email only lives on updatetimeline (written by fwd_offer_send()/saveSignature()),
+		// so pull the latest approval-type row for this application, plus a short activity feed.
+		// Fetch ALL approval emails sent for this offer (one row per approver/resend).
+		// Left-join users_profile by email to get the approver's designation when available.
+		$this->co_appr_timeline = DB::table('updatetimeline')
+			->leftJoin('users', 'users.email', '=', 'updatetimeline.email_id_hr')
+			->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+			->select('updatetimeline.*', 'users_profile.designation as approver_designation')
+			->where('updatetimeline.application_id', $this->application->id)
+			->where('updatetimeline.job_id', $this->application->job_id)
+			->whereIn('updatetimeline.mtypeSection', [2, 8]) // 2 = legacy approval, 8 = new approval flow (mtypeId=8)
+			->orderByDesc('updatetimeline.id')
+			->get();
+
+		$this->co_activity_log = DB::table('updatetimeline')
+			->where('application_id', $this->application->id)
+			->where('job_id', $this->application->job_id)
+			->whereNotNull('mtypeSection')
+			->orderByDesc('id')
+			->limit(8)
+			->get();
+
+		// Step 5 hero: "Sent By" — mtypeSection 1 = candidate-facing offer email (fwd_offer_send,
+		// mtypeId==1). name_hr/email_id_hr aren't populated for this event type, so the sender
+		// comes from event_by_user_id instead. "Sent/Not Sent" itself reads
+		// offer_create_main_tds.send_accept_date_time (already in $section_change_value).
+		$this->co_send_timeline = DB::table('updatetimeline')
+			->leftJoin('users', 'users.id', '=', 'updatetimeline.event_by_user_id')
+			->where('updatetimeline.application_id', $this->application->id)
+			->where('updatetimeline.job_id', $this->application->job_id)
+			->where('updatetimeline.mtypeSection', 1)
+			->orderByDesc('updatetimeline.id')
+			->select('updatetimeline.*', 'users.name as sent_by_name')
+			->first();
+
+		// Step 5 "Template" dropdown — same ES-backed list offerSendMail() uses for mtype==1
+		// (candidate offer email): temptype 7. Selecting one calls the existing
+		// service_company.cvtracker.email_template endpoint (unchanged) to fill Subject/Body.
+		$co_send_tpl_params = [
+			'index' => ELASTIC_EMAIL_TEMPLATE,
+			'body'  => [
+				'size' => 10000,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term'  => ['status' => 1]],
+							['match' => ['temptype' => 7]],
+						],
+					],
+				],
+			],
+		];
+		$co_send_tpl_response = $this->elasticService->getClient()->search($co_send_tpl_params);
+		$this->co_send_templates = collect($co_send_tpl_response['hits']['hits'] ?? [])
+			->map(function ($hit) { return (object) $hit['_source']; });
+
+		// Step 5 "Add Email" picker: internal team members (active users in this company) and,
+		// when the job belongs to an external client, that client's contacts. Same directories
+		// the approval composer uses, exposed here so the native Send Offer Letter page can
+		// offer a pick-from-team drawer without an AJAX round-trip.
+		$this->co_send_internal = DB::table('users')
+			->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
+			->leftjoin('companies', 'companies.id', 'users.company_id')
+			->select('users.id', 'users.name', 'users.email', 'users_profile.designation as display_name', 'companies.company_name')
+			->where('users.company_id', '=', auth()->user()->company_id)
+			->where('users.status', '=', 'active')
+			->whereNotNull('users.email')
+			->groupBy('users.id')->get()->toArray();
+
+		$this->co_send_client = [];
+		$co_job_client = DB::table('jobs')
+			->leftjoin('clients', 'clients.id', 'jobs.client_id')
+			->select('clients.id as client_id', 'clients.self_company')
+			->where('jobs.id', $this->application->job_id)->first();
+		if ($co_job_client && (int) @$co_job_client->self_company === 0 && @$co_job_client->client_id) {
+			$this->co_send_client = DB::table('client_contact_info')
+				->leftjoin('clients', 'clients.id', 'client_contact_info.client_id')
+				->select('client_contact_info.id', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
+				->where('client_contact_info.client_id', $co_job_client->client_id)
+				->whereNotNull('client_contact_info.contact_person_email')->get()->toArray();
+		}
 
 		// dd($this->offer_points);
 		$view = view('service_company.job-applications.create-offer', $this->data)->render();
@@ -4786,13 +4921,10 @@ protected $elasticService;
 						$today = Carbon::today();
 						$diffInDays = abs($today->diffInDays($join_update_date_check));
 
-						$offerReleasedUser = 0;
-						$offerReleasedTeam = 0;
-
-						if($diffInDays<=30){
-							$offerReleasedUser = 300;
-						    $offerReleasedTeam = 20;
-						}
+						// Every offer release counts (no 30-day window), so offers always reconcile with joins
+						// (which are ungated). Product decision 2026-06-30 — fix applies going forward.
+						$offerReleasedUser = 300;
+						$offerReleasedTeam = 20;
 
 						$teamCaptainId = array_map(function ($arr) {
 							return array_values(array_filter($arr, function ($value) {
@@ -5246,12 +5378,38 @@ protected $elasticService;
 	// Function to convert currency to INR
 	public function update(Request $request, $id)
 	{
-		// echo '<pre>'; print_r($_FILES); exit; 
+		// echo '<pre>'; print_r($_FILES); exit;
 		// die;
 
 		// dd(auth()->user()->company_id);
 
 		// dd($request->all());
+
+		// Authorization: a candidate profile may only be edited by the assigned Captain
+		// (job_assign.spok_user_id) or the submitting user (add_job_wise_condidates.submitted_by),
+		// and only within the same company (tenancy).
+		$authUserId = auth()->id();
+		$authCompanyId = auth()->user()->company_id;
+		$canEditCandidate = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.job_application_id', $id)
+			->where('ajwc.company_id', $authCompanyId)
+			->where(function ($query) use ($authUserId) {
+				$query->where('ja.spok_user_id', $authUserId)
+					->orWhere('ajwc.submitted_by', $authUserId);
+			})
+			->exists();
+
+		if (!$canEditCandidate) {
+			return Reply::dataOnly([
+				'status'  => 'notauthorized',
+				'msgType' => 'warning',
+				'message' => "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it"
+			]);
+		}
 
 		 $validator = Validator::make($request->all(), [
 			'email' => [
@@ -8123,6 +8281,33 @@ protected $elasticService;
 		$currency = GeneralMethod::currency();
 		$salaryModeOffer = GeneralMethod::salaryModeOffer();
 
+
+		$userId = auth()->id(); 
+		$isValid = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $addJobWiseCondidate_id) // Candidate row id
+			->where(function ($query) use ($userId) {
+				$query->where('ja.spok_user_id', $userId)
+					->orWhere('ajwc.submitted_by', $userId);
+			})
+			->exists();
+
+		if (!$isValid) {
+
+			$validations = (object)[
+				'message' => "You are not authorized to update this candidate's status. Only the assigned Captain or the submitting user can update this candidate's status."
+			];
+
+			return Reply::dataOnly([
+				'status'  => 'candidatevalidation',
+				'message' => $validations->message
+			]);
+		}
+
+
         		                    // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         							// if($chkAdminRole){
         							    
@@ -8222,6 +8407,20 @@ protected $elasticService;
 							$candidateJoineddTeam = 0;
 							$candidateJoineddUserbackout = -1500;
 							$candidateJoineddTeambackout = -30;
+
+							// Route the join/backout points into full-time keys or contract keys based on the job type.
+							$sstEmpType = DB::table('jobs')->where('id', $AddJobWiseCondidate->job_id)->value('employment_type');
+							$sstIsContract = ((int) $sstEmpType !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
+							// Full-time keeps the base weights (join 1500 / team 30); contract uses higher weights (join 5000 / team 500).
+							$cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
+							$boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
+							$cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
+							$boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
+							$cjUserCT = ($sstIsContract && $candidateJoineddUser != 0)        ? 5000  : 0;
+							$boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
+							$cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0)        ? 500   : 0;
+							$boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500  : 0;
+
 							$teamCaptainId = array_map(function ($arr) {
 								return array_values(array_filter($arr, function ($value) {
 									return $value != 0;
@@ -8251,8 +8450,10 @@ protected $elasticService;
 										'teamCaptainInterviewScheduled'=>0,
 										'teamCaptainInterviewNoShow'=>0,
 										'teamCaptainOfferReleased'=>0,
-										'teamCaptainCandidateJoined'=>$candidateJoineddTeam,
-										'backoutTeam'=>$candidateJoineddTeambackout,
+										'teamCaptainCandidateJoined'=>$cjTeamFT,
+										'backoutTeam'=>$boTeamFT,
+										'teamCaptainCandidateJoinedContract'=>$cjTeamCT,
+										'backoutTeamContract'=>$boTeamCT,
 									];
 									GeneralMethod::teamRankElastic($teamRankElastic);
 								}
@@ -8268,8 +8469,10 @@ protected $elasticService;
 								'interviewScheduled'=>0,
 								'interviewNoShow'=>0,
 								'offerReleased'=>0,
-								'candidateJoined'=>$candidateJoineddUser,
-								'backout'=>$candidateJoineddUserbackout,
+								'candidateJoined'=>$cjUserFT,
+								'backout'=>$boUserFT,
+								'candidateJoinedContract'=>$cjUserCT,
+								'backoutContract'=>$boUserCT,
 								'jobsPosted'=>0,
 								'feedbackGivenOnCVs'=>0,
 								'postJobToVendorMarket'=>0,
@@ -9104,6 +9307,17 @@ protected $elasticService;
 						    $candidateJoineddTeam = 30;
 						}
 
+						// Route the join/backout points into full-time keys or contract keys based on the job type.
+						$sstIsContract = ((int) @$wise_c->employment_type !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
+						$cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
+						$cjUserCT = ($sstIsContract && $candidateJoineddUser != 0)        ? 5000  : 0;
+						$boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
+						$boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
+						$cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
+						$cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0)        ? 500   : 0;
+						$boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
+						$boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500  : 0;
+
 						$teamCaptainId = array_map(function ($arr) {
 							return array_values(array_filter($arr, function ($value) {
 								return $value != 0;
@@ -9133,8 +9347,10 @@ protected $elasticService;
 									'teamCaptainInterviewScheduled'=>0,
 									'teamCaptainInterviewNoShow'=>0,
 									'teamCaptainOfferReleased'=>0,
-									'teamCaptainCandidateJoined'=>$candidateJoineddTeam,
-									'backoutTeam'=>$candidateJoineddTeambackout,
+									'teamCaptainCandidateJoined'=>$cjTeamFT,
+									'backoutTeam'=>$boTeamFT,
+									'teamCaptainCandidateJoinedContract'=>$cjTeamCT,
+									'backoutTeamContract'=>$boTeamCT,
 								];
 								GeneralMethod::teamRankElastic($teamRankElastic);
 							}
@@ -9150,8 +9366,10 @@ protected $elasticService;
 					'interviewScheduled'=>0,
 					'interviewNoShow'=>0,
 					'offerReleased'=>0,
-					'candidateJoined'=>$candidateJoineddUser,
-					'backout'=>$candidateJoineddUserbackout,
+					'candidateJoined'=>$cjUserFT,
+					'backout'=>$boUserFT,
+					'candidateJoinedContract'=>$cjUserCT,
+					'backoutContract'=>$boUserCT,
 					'jobsPosted'=>0,
 					'feedbackGivenOnCVs'=>0,
 					'postJobToVendorMarket'=>0,
@@ -10790,6 +11008,31 @@ protected $elasticService;
 		$master_status = @$request->master_status;
 		$sub_stages = @$request->sub_stages;
 		$comment = @$request->comment;
+
+		$userId = auth()->id(); 
+		$isValid = DB::table('add_job_wise_condidates as ajwc')
+			->leftJoin('job_assign as ja', function ($join) {
+				$join->on('ja.job_id', '=', 'ajwc.job_id')
+					->on('ja.company_id', '=', 'ajwc.company_id');
+			})
+			->where('ajwc.id', $addJobWiseCondidate_id) // Candidate row id
+			->where(function ($query) use ($userId) {
+				$query->where('ja.spok_user_id', $userId)
+					->orWhere('ajwc.submitted_by', $userId);
+			})
+			->exists();
+
+		if (!$isValid) {
+			
+			$validations = (object)[
+				'message' => "You are not authorized to update this candidate's status. Only the assigned Captain or the submitting user can update this candidate's status."
+			];
+
+			return Reply::dataOnly([
+				'status'  => 'candidatevalidation',
+				'message' => $validations->message
+			]);
+		}
 
 
 		$addJobWiseCondidate = AddJobWiseCondidate::find($addJobWiseCondidate_id);

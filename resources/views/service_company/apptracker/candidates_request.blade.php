@@ -70,6 +70,16 @@
             <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
             <!--begin::Actions-->
             <div class="d-flex align-items-center py-1">
+                @if (in_array('view_jobs', $userPermissions))
+                    {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
+                         defined once in the shared layout) that the job title/logo already
+                         uses elsewhere — .show-detail-open's click handler in
+                         service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
+                    <a href="javascript:void(0);" data-id="{{ $job->id }}"
+                        class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
+                        View Job
+                    </a>
+                @endif
                 <!--begin::Search-->
                 <div class="d-flex align-items-center position-relative my-1 me-3 d-none">
                     <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
@@ -193,52 +203,56 @@
                     @include('sections.service_company.apptrackerHeader',['tabactive'=>$tabactive])
                 </div>
 
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0 d-none">
-                    <div class="col-lg-4 d-flex align-items-center px-2" style="width:50%">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <option value="3">Low to High (Salary)</option>
-                            <option value="4">High to Low (Salary)</option>
-                            <option value="21">Notice Period (Immediate)</option>
-                            <option value="22">Notice (Serving)</option>
-                            <option value="5">Low to High (Notice Period)</option>
-                            <option value="6">High to Low (Notice Period)</option>
-                            <option value="7">High to Low (Experience) </option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="country" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
-                            style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                            <option value="110" selected="selected">Location</option>
-                            <option value="111">India</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                        <button type="button"
-                            class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                        fill="black"></path>
-                                </svg>
-                            </span>
-                            Filter
-                        </button>
+                <div class="card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
+                                    value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                            </div>
+                            <div style="width: 200px; flex-shrink: 0;">
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="3">Low to High (Salary)</option>
+                                    <option value="4">High to Low (Salary)</option>
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice (Serving)</option>
+                                    <option value="5">Low to High (Notice Period)</option>
+                                    <option value="6">High to Low (Notice Period)</option>
+                                    <option value="7">High to Low (Experience) </option>
+                                    <option value="8">Low to High (Experience)</option>
+                                </select>
+                            </div>
+                            <div style="width: 160px; flex-shrink: 0;">
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="country" data-dropdown-css-class="w-150px"
+                                    data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
+                                    style="border: 1px solid #ffffff;" onchange="filtersdata()">
+                                    <option value="110" selected="selected">Location</option>
+                                    <option value="111">India</option>
+                                </select>
+                            </div>
+                            <div style="width: 140px; flex-shrink: 0;">
+                                <button type="button"
+                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
+                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                                    <span class="svg-icon svg-icon-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
+                                                fill="black"></path>
+                                        </svg>
+                                    </span>
+                                    Filter
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -259,11 +273,10 @@
                                                 value="1">
                                         </div>
                                     </th>
-                                    <th class="">Name</th>
+                                    <th class="">Candidate Name</th>
                                     <th class="">Exp.</th>
                                     <th class="">Salary</th>
                                     <th class="">Notice</th>
-                                    <th class="">Qualification</th>
                                     <th class="">Location</th>
                                     {{-- <th class="">Type</th> --}}
                                     <th class="">Last Active</th>

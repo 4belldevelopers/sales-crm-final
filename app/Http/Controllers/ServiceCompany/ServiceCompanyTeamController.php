@@ -60,7 +60,51 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$this->elasticService = $elasticService;
     }
    	public function index(){
-				$this->usersCount 	= User::with('company')->company()->count();
+				// Why: the redesigned team list shows summary stat cards (Total / Active /
+				// Inactive / Captain·TRM) and status tabs. These aggregate counts are cached
+				// briefly so the landing load stays cheap — the row data itself is fetched and
+				// cached separately via data_ajax(). Tenancy: User::company() is company-scoped;
+				// the raw DB::table() counts are filtered by company_id explicitly.
+				$companyId = $this->user->company_id;
+
+				$this->teamCounts = cache()->remember(
+					'ats:teamcounts:' . $companyId,
+					now()->addMinutes(ALL_TEAM_TIME),
+					function () use ($companyId) {
+						$status = User::query()->company()
+							->selectRaw('COUNT(*) as total')
+							->selectRaw("SUM(status = 'active') as active")
+							->selectRaw("SUM(status = 'inactive') as inactive")
+							->selectRaw("SUM(password = '') as invited")
+							->first();
+
+						// Captain = members acting as SPOC/captain on at least one assigned job.
+						$captain = DB::table('job_assign')
+							->where('company_id', $companyId)
+							->where('spok_user_id', '>', 0)
+							->distinct()
+							->count('spok_user_id');
+
+						// TRM = members who relate/manage at least one talent (submitted_by).
+						$trm = DB::table('job_applications')
+							->where('company_id', $companyId)
+							->where('submitted_by', '>', 0)
+							->distinct()
+							->count('submitted_by');
+
+						return [
+							'total'     => (int) ($status->total ?? 0),
+							'active'    => (int) ($status->active ?? 0),
+							'inactive'  => (int) ($status->inactive ?? 0),
+							'invited'   => (int) ($status->invited ?? 0),
+							'suspended' => 0, // users.status enum has no "suspended" state yet
+							'captain'   => (int) $captain,
+							'trm'       => (int) $trm,
+						];
+					}
+				);
+
+				$this->usersCount 	= $this->teamCounts['total'];
 				$this->users 		= User::with('company')->company()->get();
 				return view('service_company.team.index', $this->data);
     }
@@ -105,6 +149,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$company_id		= 	$this->user->company_id;	
 				$searchTerms = request('cus_search');
 				$custom_search =  $searchTerms; //json_decode($searchTerms, true);
+				// Status tab on the redesigned list: all|active|inactive|invited|suspended
+				$statusTab = request('statusTab');
 
 				$reportMonth = Carbon::now()->startOfMonth()->subMonth();
 				$rankstartOfMonthForReport = $reportMonth->copy()->startOfMonth()->toDateTimeString();      // 2025-06-01
@@ -127,7 +173,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					'company' => $company_id,
 					'custom_search' => $custom_search,
 			        'user_id' => $this->user->id,
-					'sortingfilter' => request('sortingfilter')
+					'sortingfilter' => request('sortingfilter'),
+					'statusTab' => $statusTab
 				];
 
 				$versionKey = 'allteam_version_user_'.$this->user->id;
@@ -173,6 +220,19 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'minimum_should_match' => 1,
 					],
 				];
+
+				// Status tab filter. "invited" = members who have not set a password yet
+				// (empty/absent password). "suspended" has no backing status today, so it
+				// resolves to an empty set. "all" applies no extra constraint.
+				if (!empty($statusTab) && $statusTab !== 'all') {
+					if ($statusTab === 'invited') {
+						$must[] = ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]];
+					} elseif ($statusTab === 'suspended') {
+						$must[] = ['term' => ['status' => 'suspended']];
+					} else {
+						$must[] = ['term' => ['status' => $statusTab]];
+					}
+				}
 
 				// handle sorting filter request
 				if (request('sortingfilter') != "") {
@@ -266,6 +326,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 									'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 									'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 									'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+									'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+									'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+									'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+									'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 								]
 							]
 						]
@@ -293,7 +357,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						($item['evaluation_sum']['value'] ?? 0)+
 						($item['negotiation_sum']['value'] ?? 0)+
 						($item['backout_sum']['value'] ?? 0)+
-						($item['backoutTeam_sum']['value'] ?? 0);
+						($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 					return [$item['key'] => [
 						'score' => $score,
@@ -314,6 +378,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'negotiation' => ($item['negotiation_sum']['value'] ?? 0),
 						'backout' => ($item['backout_sum']['value'] ?? 0),
 						'backoutTeam' => ($item['backoutTeam_sum']['value'] ?? 0),
+						'candidateJoinedContract' => ($item['candidateJoinedContract_sum']['value'] ?? 0),
+						'teamCaptainCandidateJoinedContract' => ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0),
+						'backoutContract' => ($item['backoutContract_sum']['value'] ?? 0),
+						'backoutTeamContract' => ($item['backoutTeamContract_sum']['value'] ?? 0),
 					]];
 				});
 
@@ -335,6 +403,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 						'teamCaptainInterviewNoShow' => $scoreMap[$user_id]['teamCaptainInterviewNoShow'] ?? 0,
 						'teamCaptainOfferReleased' => $scoreMap[$user_id]['teamCaptainOfferReleased'] ?? 0,
 						'teamCaptainCandidateJoined' => $scoreMap[$user_id]['teamCaptainCandidateJoined'] ?? 0,
+						'candidateJoinedContract' => $scoreMap[$user_id]['candidateJoinedContract'] ?? 0,
+						'teamCaptainCandidateJoinedContract' => $scoreMap[$user_id]['teamCaptainCandidateJoinedContract'] ?? 0,
+						'backoutContract' => $scoreMap[$user_id]['backoutContract'] ?? 0,
+						'backoutTeamContract' => $scoreMap[$user_id]['backoutTeamContract'] ?? 0,
 						'sourcing' => ($scoreMap['sourcing']['value'] ?? 0),
 						'screening' => ($scoreMap['screening']['value'] ?? 0),
 						'evaluation' => ($scoreMap['evaluation']['value'] ?? 0),
@@ -395,7 +467,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$responseData = [
 					'html' => view('service_company.ajax_pages.team-list-ajax', compact('data','userPermissions','company_id'))->render(),
 					'total' => $total,
-					'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+					'pagination' => view('service_company.ajax_pages.team-pagination', compact('pagination'))->render(),
 				];
 
 
@@ -1057,6 +1129,34 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					$this->interviewsTrackerTotal = $ivCntResp['hits']['total']['value'] ?? 0;
 				}
 
+				// Overall offers for this member = all candidates submitted by them that have an
+				// offer created (of_created_date not null). Powers the My Dashboard "Offers" card
+				// with an all-time figure, matching the other overall header cards.
+				$this->scpOffersTotal = 0;
+				if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+					try {
+						$ofCntResp = $this->elasticService->getClient()->search([
+							'index' => ELASTIC_CANDIDATES,
+							'request_cache' => true,
+							'body' => [
+								'size' => 0,
+								'track_total_hits' => true,
+								'query' => [
+									'bool' => [
+										'must' => [
+											['term' => ['submitted_by' => $id]],
+											['exists' => ['field' => 'of_created_date']],
+										]
+									]
+								]
+							]
+						]);
+						$this->scpOffersTotal = $ofCntResp['hits']['total']['value'] ?? 0;
+					} catch (\Throwable $e) {
+						$this->scpOffersTotal = (int) ($this->offer_count ?? 0);
+					}
+				}
+
 
 				/*
 				|--------------------------------------------------------------------------
@@ -1502,6 +1602,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 							'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
 							'backout_sum' => ['sum' => ['field' => 'doc.backout']],
 							'backoutTeam_sum' => ['sum' => ['field' => 'doc.backoutTeam']],
+							'candidateJoinedContract_sum' => ['sum' => ['field' => 'doc.candidateJoinedContract']],
+							'teamCaptainCandidateJoinedContract_sum' => ['sum' => ['field' => 'doc.teamCaptainCandidateJoinedContract']],
+							'backoutContract_sum' => ['sum' => ['field' => 'doc.backoutContract']],
+							'backoutTeamContract_sum' => ['sum' => ['field' => 'doc.backoutTeamContract']],
 							'attachments_sum' => ['sum' => ['field' => 'doc.attachmentCount']],
 						]
 					]
@@ -1528,7 +1632,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				+ ($item['evaluation_sum']['value'] ?? 0)
 				+ ($item['negotiation_sum']['value'] ?? 0)
 				+ ($item['backout_sum']['value'] ?? 0)
-				+ ($item['backoutTeam_sum']['value'] ?? 0);
+				+ ($item['backoutTeam_sum']['value'] ?? 0) + ($item['candidateJoinedContract_sum']['value'] ?? 0) + ($item['teamCaptainCandidateJoinedContract_sum']['value'] ?? 0) + ($item['backoutContract_sum']['value'] ?? 0) + ($item['backoutTeamContract_sum']['value'] ?? 0);
 
 			return [$item['key'] => [
 				'user_id' => $item['key'],
@@ -2288,33 +2392,39 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 	
 	}
 
-	public function editrole($id)  
+	public function editrole($id)
 	{
-		// dd($id);
-			
-			$company_id					=	'';
-			$company_id					=	auth()->user()->company_id; 
-			$this->roleslist 			=	DB::table('roles')
-											->select('roles.id', 'roles.display_name', 'roles.name', 'roles.priority', 'roles.description')
-											->where('roles.company_id', '=', $company_id)
-											//->where('roles.id', '=', $id)
-											->orderBy('roles.name', 'ASC')
-											->get();
-			
-			$this->selrole 				=	DB::table('role_user')
-											->select('role_user.role_id')
-											->where('role_user.user_id', '=', $id)
-											//->where('roles.id', '=', $id)
-											//->orderBy('roles.name', 'ASC')
-											->first();
-			
-			$this->id					=	$id;	
-			// dd($this->data);
-														
-			$view = view('service_company.team.editrole', $this->data)->render();
-			// dd($view);
-			return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+		$company_id = auth()->user()->company_id;
 
+		$this->roleslist = DB::table('roles')
+			->select('roles.id', 'roles.display_name', 'roles.name', 'roles.priority', 'roles.description')
+			->where('roles.company_id', '=', $company_id)
+			->orderBy('roles.name', 'ASC')
+			->get();
+
+		$this->selrole = DB::table('role_user')
+			->select('role_user.role_id')
+			->where('role_user.user_id', '=', $id)
+			->first();
+
+		// Current role name for the badge
+		$currentRoleName = '';
+		if ($this->selrole) {
+			$cr = DB::table('roles')->where('id', $this->selrole->role_id)->value('display_name');
+			$currentRoleName = $cr ? ucwords($cr) : '';
+		}
+		$this->currentRoleName = $currentRoleName;
+
+		// User details for the drawer header
+		$this->editUser = DB::table('users')
+			->select('id', 'name', 'email', 'image', 'created_at', 'status')
+			->where('id', $id)
+			->first();
+
+		$this->id = $id;
+
+		$view = view('service_company.team.editrole', $this->data)->render();
+		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
 
 	public function roleupdate(Request $request)
@@ -2360,6 +2470,38 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 	}		 
 						   
     }
+
+	public function teamScoreboard(Request $request)
+	{
+		$userId    = (int) $request->get('user_id');
+		$companyId = $this->user->company_id;
+
+		$reportMonth = \Carbon\Carbon::now()->startOfMonth()->subMonth();
+		$start = $reportMonth->copy()->startOfMonth()->toIso8601String();
+		$end   = $reportMonth->copy()->endOfMonth()->toIso8601String();
+
+		try {
+			// Internal rank (within company) — full result includes leaders + total
+			$internal  = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
+			$userData  = $internal['user']    ?? ['score' => 0, 'rank' => 'N/A'];
+			$leaders   = $internal['leaders'] ?? collect();
+			$total     = $internal['total']   ?? 0;
+
+			// Team page shows internal ranks only — no cross-company global rank
+			$view = view('service_company.dashboard._scoreboard', [
+				'U'          => is_array($userData) ? $userData : (array) $userData,
+				'totalCount' => $total,
+				'mode'       => 'internal',
+				'otherRank'  => null,
+				'month'      => date('M Y', strtotime($start)),
+				'leaders'    => $leaders,
+			])->render();
+
+			return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+		} catch (\Throwable $e) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Scoreboard data could not be loaded.']);
+		}
+	}
 
 	public function create()
 	{

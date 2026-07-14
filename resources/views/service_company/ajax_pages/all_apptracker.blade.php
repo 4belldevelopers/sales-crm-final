@@ -154,7 +154,22 @@
                     $skillArr = explode(',', $row->skills);
 
                     $percentage =  GeneralMethod::skill_percentage($row->job_id,$skillArr);
-                    
+
+                    // Match % badge — color reflects the numeric match score, same
+                    // thresholds/colors as the CV Tracker page: >90 green, 50-90 orange,
+                    // 0<50 red, exactly 0 neutral grey.
+                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
+                    if ($matchNum == 0) {
+                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                    } elseif ($matchNum < 50) {
+                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                    } elseif ($matchNum <= 90) {
+                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    } else {
+                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                    }
+                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+
                     if (count($skillArr) > 0) {
                         foreach ($skillArr as $sval) {
                             $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
@@ -199,7 +214,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -247,7 +262,7 @@
 					<div class="' .
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1">'.$percentage.'</span>
+                                    '.$matchBadge.'
                                  
                                   ' .
                             $skilltag .
@@ -372,10 +387,15 @@
                     
                     $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$mod);
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$symbols,$mod);
-                     
-                    
-                    $current_ctc_mode = '';
-                    $current_ctc_mode = mb_substr($salaryMode[@$jobMode], 0, 1);
+
+                    // Drop the decimal portion for display only (thousandsCurrencyFormat
+                    // always returns 2 decimals), and use the full mode word ("Annual"/
+                    // "Monthly"/"Hourly") rendered smaller than the amount — same as CV Tracker.
+                    $payAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($payFormatViewSalary->amount))[0];
+                    $billAmountFormatted = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
+
+                    $current_ctc_mode = @$salaryMode[@$jobMode];
+                    $current_ectc_mode = @$salaryMode[@$jobMode];
 
                     $dnone = '';
                     $dnonetype = 'd-none';
@@ -389,18 +409,18 @@
                         echo '<div class="d-flex flex-column">
 						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                             $current_ectc_cur .
-                            $billFormatViewSalary->amount .
-                            '/' .
+                            $billAmountFormatted .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ectc_mode .
-                            '</a>
+                            '</span></a>
 						 <span class="text-muted fw-bold d-block fs-7 ' .
                             $dnone .
                             '">' .
                             @$current_ctc_cur .
-                            $payFormatViewSalary->amount .
-                            '/' .
+                            $payAmountFormatted .
+                            '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' .
                             $current_ctc_mode .
-                            '</span>
+                            '</span></span>
 						 <span class="text-muted fw-bold text-muted d-block fs-7 ' .
                             $dnonetype .
                             '" data-toggle="tooltip">' .
@@ -437,17 +457,36 @@
                         if ($np != 'Immediate') {
                             $np = date('d M y', strtotime($row->np_id));
 
-                            $today = date('Y-m-d'); 
+                            $today = date('Y-m-d');
                             if(date('Y-m-d', strtotime($row->np_id)) < $today){
                               $np = "Immediate";
                             }
-                            
+
                         }
+                    }
+
+                    // Notice period color: Immediate = green, numeric days notice =
+                    // orange, a real serving last-working-day date = purple (prefixed
+                    // "SNP LWD" — Serving Notice Period / Last Working Day). !important
+                    // is required here because Bootstrap/Metronic's .text-dark utility
+                    // class sets color with !important, which otherwise beats a plain
+                    // inline style — so the class is dropped below and color is fully
+                    // inline-controlled instead.
+                    $npColorStyle = 'color:#181c32 !important;';
+                    if ($np === 'Immediate') {
+                        $npColorStyle = 'color:#16a34a !important;';
+                    } elseif ($row->serving_notice_period_mode == 0) {
+                        $npColorStyle = 'color:#d97706 !important;';
+                    } elseif ($row->serving_notice_period_mode == 1) {
+                        $np = 'SNP LWD ' . $np;
+                        $npColorStyle = 'color:#7c3aed !important;';
                     }
 
                     $row->current_company = $row->current_company ? $row->current_company : @$row->apl_company_name;
                     echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
+                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
+                        $npColorStyle .
+                        '">' .
                         @$np .
                         '</a>
                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
@@ -478,154 +517,84 @@
                     if ($intRowCount > 0) {
                         $schedule_date = @$intRow->schedule_date;
                         $schedule_date = date('d M, Y', strtotime($schedule_date));
-                        $schedule_time = Carbon::parse($intRow->schedule_date)->format('h:i A');
-                    } else {
-                        $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
-                    }
-
-                    if ($intRowCount > 0) {
-                        $feedback_status_name = '';
-                        if ($intRow->feedback >= 0) {
-                            $feedback_status_name = @$feedback_status[@$intRow->feedback]['name'];
-                            $className = @$feedback_status[@$intRow->feedback]['classname'];
-                        } else {
-                            $feedback_status_name = 'Pending';
-                            $className = 'pending-bg';
-                        }
-                    } else {
-                        $feedback_status_name = '';
-                    }
-
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7 ' .
-                        @$className .
-                        ' px-1">' .
-                        @$feedback_status_name .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $schedule_date = $className = '';
-                    $intRowCount = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->count();
-                    $intRow = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->first();
-                    $html = '';
-                    $schedule_time = '';
-                    if ($intRowCount > 0) {
-                        $schedule_date = @$intRow->schedule_date;
-                        $schedule_date = date('d M, Y', strtotime($schedule_date));
                         $timezone_abbreviation = ($intRow->timezone_abbreviation) ? ' ('.$intRow->timezone_abbreviation.')' : '';
                         $schedule_time = @$intRow->schedule_to_time. ' '.$timezone_abbreviation;
                     } else {
                         $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
                     }
 
+                    // Row 3: interview mode (Face To Face / Video Call / Telecon) until
+                    // feedback has actually been recorded on the Interview Tracker page —
+                    // once $intRow->feedback is a real status (not the unset/-1 default),
+                    // that feedback replaces the mode here, using the same name/classname
+                    // lookup (GeneralMethod::feedback_status()) already used elsewhere.
+                    $feedbackGiven = false;
+                    $row3Text = '';
+                    $row3Class = '';
                     if ($intRowCount > 0) {
-                        $feedback_status_name = '';
                         if ($intRow->feedback >= 0) {
-                            $feedback_status_name = @$feedback_status[@$intRow->feedback]['name'];
-                            $className = @$feedback_status[@$intRow->feedback]['classname'];
+                            $feedbackGiven = true;
+                            $row3Text = @$feedback_status[@$intRow->feedback]['name'];
+                            $row3Class = @$feedback_status[@$intRow->feedback]['classname'];
                         } else {
-                            $feedback_status_name = 'Pending';
-                            $className = 'pending-bg';
+                            $interviewModeLabels = [1 => 'Telecon', 2 => 'Video Call', 3 => 'Face To Face', 4 => 'Other'];
+                            $row3Text = $interviewModeLabels[(int) @$intRow->interview_mode] ?? '';
                         }
-                    } else {
-                        $feedback_status_name = '';
+                    }
+
+                    $row3Html = '';
+                    if ($row3Text !== '') {
+                        if ($feedbackGiven) {
+                            $row3Html = '<span class="badge fw-bold ' . $row3Class . ' d-inline-flex align-items-center gap-1 mt-1" style="font-size:10.5px;width:fit-content;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                ' . $row3Text . '
+                            </span>';
+                        } else {
+                            $row3Html = '<span class="d-flex align-items-center gap-1 fw-bold fs-7 mt-1" style="color:#3699ff;">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                                ' . $row3Text . '
+                            </span>';
+                        }
                     }
 
                     echo '<div class="d-flex flex-column">
-                        		<span class="text-dark fw-bolder fs-6">' .
+                        		<span class="text-dark fw-bolder fs-6 d-flex align-items-center gap-1">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                    ' .
                         @$schedule_date .
                         '</span>
-								<span class="text-muted fw-bold d-block fs-7">' .
+								<span class="text-muted fw-bold d-block fs-7 d-flex align-items-center gap-1">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:#99a1b7;flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                    ' .
                         $schedule_time .
-                        '</span>
+                        '</span>' .
+                        $row3Html .
+                        '
                     		</div>';
                 @endphp
             </td>
             <td>
                 @php
 
-                    $country = $row_country_name = '';
-
-                    if (empty($row->country)) {
-                        $row_country_name = '----';
-                    } else {
-                        if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
-                    }
-
-                    $state = $row_state_name = '';
-
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        if (@$row->country == 101) {
-                            $row_state_name = @$row->state_name;
-                        } else {
-                            $state = @$row->state;
-                            if (is_numeric(@$row->country) && is_numeric($state)) {
-                                if ($state > 0) {
-                                    $state_name_Arr = GeneralMethod::getStateName(@$row->country, $state);
-                                    foreach ($state_name_Arr as $sval) {
-                                        $row_state_name = ucwords($sval['name']);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    $city = $row_city_name = '';
-
-                    if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
-                    } else {
-                        $row_city_name = @$row->city;
-                    }
                     $row_city_name = @$row->city_name;
-                    $row_state_name = @$row->state_name;
                     $row_country_name = @$row->country_name;
 
+                    // Row 2 is now Education (merged in from the removed Education column)
+                    // instead of state — same qualification_name field/truncation used there.
                     echo '<div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
                         ucwords($row_city_name) .
-                        '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
-                        '</a>
-                       <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
+                        ', ' .
                         strtoupper($row_country_name) .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
+                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        ', ' .
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        '</a>
+                       <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
+                        @$row->qualification_name .
+                        '">' .
+                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                 </div>';
 
@@ -707,7 +676,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="10" style="text-align: center; color: black;">
+        <td colspan="9" style="text-align: center; color: black;">
             No data available in table
         </td>
 
