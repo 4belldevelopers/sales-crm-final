@@ -264,32 +264,71 @@
                             </div>';
                     } else {
                         // Non-bench candidates: 4-node timeline — Sourcing → Evaluation → Offer → Joined
-                        $sourcingNodeCls   = $hasBench  ? 'is-done' : 'is-static';
-                        $lineAfterSourcing = $hasBench  ? 'is-done' : '';
-                        // Evaluation has no dedicated date in this data model — shown as pending
-                        $evalNodeCls       = $hasOffer  ? 'is-done' : 'is-static';
-                        $lineAfterEval     = $hasOffer  ? 'is-done' : '';
+                        // Fetch latest date per stage from updateTimeline
+                        $tlAppId  = @$row->candidate_id;
+                        $tlJobId  = @$row->jobId;
+                        $tlRows   = ($tlAppId && $tlJobId)
+                            ? DB::table('updateTimeline')
+                                ->where('application_id', $tlAppId)
+                                ->where('job_id', $tlJobId)
+                                ->orderByDesc('id')
+                                ->get(['master_process_name', 'create_at'])
+                            : collect();
+
+                        // Latest date per stage (first match in DESC order = latest)
+                        $sourcingRaw  = optional($tlRows->firstWhere('master_process_name', 'Sourcing'))->create_at;
+                        $evalRaw      = optional($tlRows->first(fn($r) => in_array($r->master_process_name, ['Evaluation', 'InReview', 'Screening'])))->create_at;
+                        $tlOfferRaw   = optional($tlRows->firstWhere('master_process_name', 'Offered'))->create_at;
+                        $tlJoinedRaw  = optional($tlRows->firstWhere('master_process_name', 'Joined'))->create_at;
+
+                        // Fall back to previously resolved dates if updateTimeline has no entry
+                        $tlOfferRaw  = $tlOfferRaw  ?: $offerRaw;
+                        $tlJoinedRaw = $tlJoinedRaw ?: $joinedRaw;
+
+                        $hasSourcing  = !empty($sourcingRaw);
+                        $hasEval      = !empty($evalRaw);
+                        $hasTlOffer   = !empty($tlOfferRaw);
+                        $hasTlJoined  = !empty($tlJoinedRaw);
+
+                        $sourcingLabel = $hasSourcing  ? date($dateFmt, strtotime($sourcingRaw))  : '--';
+                        $evalLabel     = $hasEval      ? date($dateFmt, strtotime($evalRaw))      : '--';
+                        $tlOfferLabel  = $hasTlOffer   ? date($dateFmt, strtotime($tlOfferRaw))   : '--';
+                        $tlJoinedLabel = $hasTlJoined  ? date($dateFmt, strtotime($tlJoinedRaw))  : '--';
+
+                        $sourcingNodeCls   = $hasSourcing ? 'is-done' : 'is-static';
+                        $lineAfterSourcing = $hasSourcing ? 'is-done' : '';
+                        $evalNodeCls       = $hasEval     ? 'is-done' : 'is-static';
+                        $lineAfterEval     = $hasEval     ? 'is-done' : '';
+                        $tlOfferNodeCls    = $hasTlOffer  ? 'is-done' : 'is-static';
+                        $lineAfterTlOffer  = $hasTlOffer  ? 'is-done' : '';
+                        $tlJoinedNodeCls   = $hasTlJoined ? 'is-done' : 'is-static';
+
+                        // Duration: Sourcing → Joined
+                        if ($hasSourcing && $hasTlJoined) {
+                            $durationDays = (int) floor(abs(\Carbon\Carbon::parse($sourcingRaw)->diffInSeconds(\Carbon\Carbon::parse($tlJoinedRaw))) / 86400);
+                            $durationText = 'Total Duration: ' . $durationDays . ' Days';
+                        }
 
                         $timeline = '
                             <div class="placed-timeline-track">
                                 <div class="placed-timeline-node-wrap">
                                     <div class="placed-timeline-node ' . $sourcingNodeCls . '" data-toggle="tooltip" title="Sourcing"></div>
-                                    <span class="placed-timeline-node-label">' . $benchLabel . '</span>
+                                    <span class="placed-timeline-node-label">' . $sourcingLabel . '</span>
                                 </div>
                                 <span class="placed-timeline-line ' . $lineAfterSourcing . '"></span>
                                 <div class="placed-timeline-node-wrap">
                                     <div class="placed-timeline-node ' . $evalNodeCls . '" data-toggle="tooltip" title="Evaluation"></div>
-                                    <span class="placed-timeline-node-label">--</span>
+                                    <span class="placed-timeline-node-label">' . $evalLabel . '</span>
                                 </div>
                                 <span class="placed-timeline-line ' . $lineAfterEval . '"></span>
                                 <div class="placed-timeline-node-wrap">
-                                    <div class="placed-timeline-node ' . $offerNodeCls . '" data-toggle="tooltip" title="Offer"></div>
-                                    <span class="placed-timeline-node-label">' . $offerLabel . '</span>
+                                    <div class="placed-timeline-node ' . $tlOfferNodeCls . '" data-toggle="tooltip" title="Offer"></div>
+                                    <span class="placed-timeline-node-label">' . $tlOfferLabel . '</span>
                                 </div>
-                                <span class="placed-timeline-line ' . $lineAfterOffer . '"></span>
+                                <span class="placed-timeline-line ' . $lineAfterTlOffer . '"></span>
                                 <div class="placed-timeline-node-wrap">
-                                    <div class="placed-timeline-node ' . $joinedNodeCls . '" data-toggle="tooltip" title="Joined"></div>
-                                    <span class="placed-timeline-node-label">' . $joinedLabel . '</span>
+                                    <div class="placed-timeline-node ' . $tlJoinedNodeCls . '" data-toggle="tooltip" title="Joined"></div>
+                                    <span class="placed-timeline-node-label">' . $tlJoinedLabel . '</span>
                                 </div>
                             </div>
                             <div class="placed-timeline-labels">
