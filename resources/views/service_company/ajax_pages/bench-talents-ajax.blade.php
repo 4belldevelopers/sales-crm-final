@@ -43,7 +43,7 @@
    
 
     @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr style="height: 82px; position: relative;">
             <td>
                 @php
                     $bgTextDecore = $strVal = '';
@@ -63,78 +63,64 @@
                     } else {
                         $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                     }
-                    $profile_sidebar_css = '';
 
+                    /* Skills — absolute footer strip */
+                    $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
                     $skilltag = '';
-                    $skilltagclass = '';
-                    $skillArr = explode(',', $row->skills);
-                    if (empty($limit)) {
-                        if (count($skillArr) > 0) {
-                            foreach ($skillArr as $sval) {
-                                $skilltag .= '<span class="badge badge-light my-1">' . ucfirst($sval) . '</span>  ';
-                            }
-                        }
-                    } else {
-                        $skilltagclass = 'd-none';
+                    foreach ($skillArr as $sval) {
+                        if ($sval === '') { continue; }
+                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:300;">' . e(ucfirst($sval)) . '</span> ';
                     }
-                    $viewCount = DB::table('bench_count_view_download')
-                        ->where('type', '=', 1)
-                        ->where('status', '=', 0)
-                        ->where('candidate_id', '=', $row->id)
-                        ->count();
-                    $downloadCount = DB::table('bench_count_view_download')
-                        ->where('type', '=', 2)
-                        ->where('status', '=', 0)
-                        ->where('candidate_id', '=', $row->id)
-                        ->count();
-                        $logo_path = url('public/ad-label-icon.svg');
-                        $skillArr = DB::table('benchboostkeywordcandidates')->where('benchboostkeywordcandidates.candidate_id', @$row->id)->pluck('skill_name')->toArray();
-                        $award = '';
-                        $award = '<span class="badge badge-light-info my-1">'.@$row->skill_match_percent.'%</span>';
 
-                    echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-					<a href="javascript:void(0);"   data-row-id="' . @$row->id . '" class="' . $profile_sidebar_css . '">
-						<div class="symbol-label ' .
-                        @$bgTextDecore .
-                        ' border-radius-5">' .
-                        strtoupper(@$strVal) .
-                        '</div>
-					</a>
-				</div>                  
-				<div class="d-flex flex-column">
-				<a href="javascript:void(0);"  data-row-id="' .
-                        @$row->id .
-                        '"  class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $profile_sidebar_css .
-                        ' " data-toggle="tooltip" title="' .
-                        ucwords(@$row->full_name) .
-                        '">' .
-                        ucwords(mb_substr(@$row->full_name, 0, 22)) .
-                        '</a>
-				<a href="javascript:void(0);"  data-row-id="' .
-                        @$row->id .
-                        '"  class="text-muted fw-bold d-block fs-7 text-hover-primary ' .
-                        $profile_sidebar_css .
-                        ' " data-toggle="tooltip" title="' .
-                        ucwords(@$row->current_designation) .
-                        '">' .
-                        ucwords(mb_substr(@$row->current_designation, 0, 22)) .
-                        '</a>
-				</div>
-				
-				<div class="' .
-                        $skilltagclass .
-                        '" style="position: absolute; bottom: 0;">
-                                    '.$award.' <span class="badge badge-light-success my-1">Skills: </span>
-                                 
-                                  ' .
-                        $skilltag .
-                        '
-                                   
-                                    </div>
+                    /* Match % badge — shown before skills, replaces Ads badge in this view */
+                    $matchBadge = (!empty($row->skill_match_percent))
+                        ? '<span class="badge badge-light-info my-0">' . (int)$row->skill_match_percent . '%</span> '
+                        : '';
 
-				';
+                    /* View / Download counts */
+                    try {
+                        $viewCount = DB::table('bench_count_view_download')
+                            ->where('type', 1)->where('status', 0)->where('candidate_id', $row->id)->count();
+                        $downloadCount = DB::table('bench_count_view_download')
+                            ->where('type', 2)->where('status', 0)->where('candidate_id', $row->id)->count();
+                    } catch (\Exception $e) {
+                        $viewCount = 0;
+                        $downloadCount = 0;
+                    }
                 @endphp
+
+                <div class="d-flex align-items-start">
+                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 flex-shrink-0">
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="d-flex w-100 h-100">
+                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5 d-flex align-items-center justify-content-center">{{ strtoupper($strVal) }}</div>
+                        </a>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
+                            class="text-dark fw-bolder text-hover-primary fs-6"
+                            data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">{{ ucwords(mb_substr(@$row->full_name, 0, 20)) }}</a>
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
+                            class="text-muted fw-bold d-block fs-7 text-hover-primary"
+                            data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation, 0, 20)) }}</a>
+                    </div>
+                </div>
+
+                {{-- Match% + Skills footer strip (bottom-left) --}}
+                @if($matchBadge || $skilltag)
+                <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
+                    {!! $matchBadge !!}{!! $skilltag !!}
+                </div>
+                @endif
+
+                {{-- View / Download stats (bottom-right, inline) --}}
+                <div style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 14px;">
+                    <span style="display:flex; align-items:center; gap:4px; color:#a1a5b7; font-size:11px; font-weight:500;">
+                        <i class="fa fa-eye" style="font-size:12px;"></i> {{ $viewCount }}
+                    </span>
+                    <span style="display:flex; align-items:center; gap:4px; color:#a1a5b7; font-size:11px; font-weight:500;">
+                        <i class="fa fa-download" style="font-size:12px;"></i> {{ $downloadCount }}
+                    </span>
+                </div>
             </td>
             <td>
                 @php
@@ -389,54 +375,42 @@
                         </div>';
                 @endphp
             </td>
+            {{-- Relationship Manager --}}
             <td>
                 @php
                     $hmCount = DB::table('bench_assign')
                         ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.id', 'users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', '=', $row->id)
-                        ->where('bench_assign.company_id', '=', $company_id)
-                        ->where('users.company_id', '=', $company_id)
+                        ->where('bench_assign.bench_applications_id', $row->id)
+                        ->where('bench_assign.company_id', $company_id)
+                        ->where('users.company_id', $company_id)
                         ->count();
-
                     $hmData = DB::table('bench_assign')
                         ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.id', 'users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', '=', $row->id)
-                        ->where('bench_assign.company_id', '=', $company_id)
-                        ->where('users.company_id', '=', $company_id)
-                        ->orderBy('users.name', 'ASC')
-                        ->skip(0)
-                        ->take(1)
-                        ->get();
-
-                    $html = $temp = '';
-                    $html .= '<div data-row-id="' .$row->id .'" class="d-flex flex-column hmb-listing">
-                            <div class="symbol-group symbol-hover">';
-                    foreach ($hmData as $pval) {
-                        $logo_path = str_replace('index.php', '', url('public/avatar.png'));
-                        if (!empty(@$pval->image) && strlen(@$pval->image) > 10) {
-                            $logo_path = @$pval->image;
-                        }
-                        $html .=
-                            '<div class="symbol symbol-30 symbol-circle" data-bs-placement="top" data-toggle="tooltip3" title="' .
-                            @$pval->name .
-                            '"><img alt="Pic" src="' .
-                            @$logo_path .
-                            '"></div>';
-                    }
-                    $html .=
-                        '<div data-row-id="' .
-                        $row->id .
-                        '"   class="symbol symbol-30 symbol-circle symbol-light" data-bs-placement="top" data-toggle="tooltip2" title="More users list..">
-                                        <span class="symbol-label font-weight-bold">' .
-                        $hmCount .
-                        '+</span>
-                                      </div>';
-                    $html .= '</div>
-                        </div>';
-                    echo $html;
+                        ->select('users.name', 'users.image')
+                        ->where('bench_assign.bench_applications_id', $row->id)
+                        ->where('bench_assign.company_id', $company_id)
+                        ->where('users.company_id', $company_id)
+                        ->orderBy('users.name', 'ASC')->take(1)->first();
+                    $managerFullName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                    $managerFirstName = ucfirst(explode(' ', trim($managerFullName))[0]);
+                    $managerImg = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
+                    $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                 @endphp
+                <div class="d-flex align-items-center gap-2">
+                    @if($managerImg)
+                        <img src="{{ $managerImg }}" alt="{{ $managerFullName }}"
+                             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                    @else
+                        <div style="width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7e8299;flex-shrink:0;">
+                            {{ strtoupper(substr($managerFirstName, 0, 1)) }}
+                        </div>
+                    @endif
+                    <div class="d-flex flex-column" style="min-width:0;">
+                        <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:80px;"
+                              data-toggle="tooltip" title="{{ $managerFullName }}{{ $extra }}">{{ $managerFirstName }}{{ $extra }}</span>
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing" style="font-size:11px;">Change</a>
+                    </div>
+                </div>
             </td>
             <td>
 
@@ -445,30 +419,27 @@
                     
                     $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id,$currentJobId);
                         
+                        $btnStyle = 'white-space:nowrap;font-size:11px;padding:5px 10px;';
                         if ($benchRequestCheck == null) {
-                            echo ' <div class="d-flex my-4">
-                                    <a href="javascript:void(0);" data-jobId="' .$currentJobId . '" data-conId="' . $row->id .'"  class="btn btn-sm btn-primary request-send">Send Bench Request</a>
-                            </div> ';
+                            echo '<div class="d-flex my-2">
+                                    <a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Send Bench Request</a>
+                                  </div>';
                         } else if ($benchRequestCheck->ac_status == 0) {
-                            echo ' <div class="d-flex my-4">
-						             <a href="javascript:void(0);" class="btn btn-sm btn-success">Request sent</a>
-                                 </div> ';
-
+                            echo '<div class="d-flex my-2">
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-success" style="' . $btnStyle . '">Request sent</a>
+                                  </div>';
                         } else if ($benchRequestCheck->ac_status == 1) {
-                             echo ' <div class="d-flex my-4">
-                                  <a href="javascript:void(0);" class="text-dark">Added</a>
-                             </div> ';
-
+                            echo '<div class="d-flex my-2">
+                                    <a href="javascript:void(0);" class="text-dark" style="' . $btnStyle . '">Added</a>
+                                  </div>';
                         } else if ($benchRequestCheck->ac_status == 2) {
-                             echo '<div class="d-flex flex-column">
-                                <a href="javascript:void(0);" class="btn btn-sm btn-danger">Expired</a>
-                            </div> ';
-
+                            echo '<div class="d-flex my-2">
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="' . $btnStyle . '">Expired</a>
+                                  </div>';
                         } else if ($benchRequestCheck->ac_status == 3) {
-                             echo '<div class="d-flex flex-column">
-				               <a href="javascript:void(0);" class="btn btn-sm btn-danger">Removed</a>
-			                </div> ';
-
+                            echo '<div class="d-flex my-2">
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="' . $btnStyle . '">Removed</a>
+                                  </div>';
                         }
                     
                 @endphp

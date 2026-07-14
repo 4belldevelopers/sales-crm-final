@@ -38,7 +38,7 @@
             // Employment type (Full-time/Contract) — shared by the Availability column's 2nd row.
             $outsourcing_type = $row->outsourcing_type == 2 ? 'Contract' : 'Full-time';
         @endphp
-        <tr>
+        <tr style="height: 102px; position: relative;">
             {{-- Checkbox --}}
             <td>
                 <div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -68,21 +68,26 @@
                     }
                     $profile_sidebar_css = 'bench_show_application_detail';
 
+                    /* Skills — absolute footer strip at bottom of <tr>, no-wrap, overflow hidden. */
+                    $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
+
                     $skilltag = '';
-                    $skillArr = explode(',', $row->skills);
-                    if (empty($limit)) {
-                        foreach (array_slice($skillArr, 0, 3) as $sval) {
-                            $sval = trim($sval);
-                            if ($sval === '') { continue; }
-                            $skilltag .= '<span class="badge badge-light my-0">' . ucfirst($sval) . '</span> ';
-                        }
+                    foreach ($skillArr as $sval) {
+                        if ($sval === '') { continue; }
+                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:300;">' . e(ucfirst($sval)) . '</span> ';
                     }
                     $award = (@$row->ads_switch == 'Yes') ? '<span class="badge badge-light-danger my-0">Ads</span>' : '';
+
+                    /* View / Download counts from bench_count_view_download table */
+                    $viewCount = DB::table('bench_count_view_download')
+                        ->where('type', 1)->where('status', 0)->where('candidate_id', $row->id)->count();
+                    $downloadCount = DB::table('bench_count_view_download')
+                        ->where('type', 2)->where('status', 0)->where('candidate_id', $row->id)->count();
                 @endphp
                 <div class="d-flex align-items-start">
-                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 flex-shrink-0">
+                    <div class="symbol symbol-circle symbol-40px me-2 flex-shrink-0" style="overflow:hidden; border-radius:50%;">
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="{{ $profile_sidebar_css }} d-flex w-100 h-100">
-                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5 w-100 h-100 d-flex align-items-center justify-content-center">{{ strtoupper($strVal) }}</div>
+                            <div class="symbol-label {{ $bgTextDecore }} w-100 h-100 d-flex align-items-center justify-content-center" style="border-radius:50%;">{{ strtoupper($strVal) }}</div>
                         </a>
                     </div>
                     <div class="d-flex flex-column">
@@ -92,11 +97,25 @@
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
                             class="text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }}"
                             data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation, 0, 20)) }}</a>
-                        @if ($award !== '')
-                            <div class="d-flex align-items-center gap-3 mt-1">{!! $award !!}</div>
-                        @endif
-                        <div class="mt-1">{!! $skilltag !!}</div>
                     </div>
+                </div>
+                {{-- Ads + Skills footer strip (bottom-left) --}}
+                @if($award || $skilltag)
+                <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
+                    {!! $award !!}{!! $skilltag !!}
+                </div>
+                @endif
+
+                {{-- View / Download stats (bottom-right, inline) --}}
+                <div style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 14px;">
+                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
+                        <i class="fa fa-eye" style="font-size: 12px;"></i>
+                        {{ $viewCount }}
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
+                        <i class="fa fa-download" style="font-size: 12px;"></i>
+                        {{ $downloadCount }}
+                    </span>
                 </div>
             </td>
 
@@ -224,17 +243,30 @@
                         ->count();
                     $hmData = DB::table('bench_assign')
                         ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.name')
+                        ->select('users.name', 'users.image')
                         ->where('bench_assign.bench_applications_id', $row->id)
                         ->where('bench_assign.company_id', $company_id)
                         ->where('users.company_id', $company_id)
                         ->orderBy('users.name', 'ASC')->take(1)->first();
                     $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                    $managerImg  = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
                     $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                 @endphp
-                <div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ $managerName }}">{{ mb_substr($managerName, 0, 14) }}{{ $extra }}</span>
-                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing">Change</a>
+                <div class="d-flex align-items-center gap-2">
+                    {{-- Manager avatar --}}
+                    @if($managerImg)
+                        <img src="{{ $managerImg }}" alt="{{ $managerName }}"
+                             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                    @else
+                        <div style="width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7e8299;flex-shrink:0;">
+                            {{ strtoupper(substr($managerName, 0, 1)) }}
+                        </div>
+                    @endif
+                    <div class="d-flex flex-column" style="min-width:0;">
+                        <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:90px;"
+                              data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">{{ $managerName }}{{ $extra }}</span>
+                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing" style="font-size:11px;">Change</a>
+                    </div>
                 </div>
             </td>
 

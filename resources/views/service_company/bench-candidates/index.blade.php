@@ -139,6 +139,16 @@
 
         .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 12px !important; }
 
+        /* ── Skill chips — absolute footer strip technique ─────── */
+        /* Rows need position:relative so the absolute skills strip anchors to them */
+        .bench-dash #benchListingTable tbody tr { position: relative; }
+
+        /* Skills badge style matches badge-light but slightly lighter weight */
+        .bench-dash #benchListingTable tbody tr .skill {
+            font-size: 10px !important;
+            font-weight: 300 !important;
+        }
+
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
             .bench-dash .num { font-size: 16px !important; }
@@ -886,6 +896,10 @@
         // ---- Table fetch + pagination ----
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
+            // Re-init tooltips after each AJAX load so newly inserted chips get tooltips
+            $(document).on('ajaxComplete', function() {
+                $('[title]').tooltip({ trigger: 'hover', placement: 'top' });
+            });
             $(document).on('click', '#paginationbenchCandidateBenchCandidates .page-link', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
