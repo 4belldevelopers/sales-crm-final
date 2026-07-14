@@ -58,40 +58,41 @@
         font-size: 10.5px; font-weight: 600; color: #94a3b8;
         text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .aa-hcol-agency     { flex: 0 0 22%; }
-    .aa-hcol-contact    { flex: 0 0 17%; }
-    .aa-hcol-perf       { flex: 1 1 auto; text-align: center; }
-    .aa-hcol-shared     { flex: 0 0 11%; }
-    .aa-hcol-status     { flex: 0 0 10%; text-align: center; }
-    .aa-hcol-actions    { flex: 0 0 13%; text-align: right; }
+    .aa-hcol-agency     { flex: 0 0 19%; }
+    .aa-hcol-contact    { flex: 0 0 13%; }
+    .aa-hcol-perf       { flex: 0 0 30%; text-align: center; }
+    .aa-hcol-shared     { flex: 0 0 12%; }
+    .aa-hcol-status     { flex: 0 0 9%; text-align: center; }
+    .aa-hcol-actions    { flex: 1 1 auto; text-align: right; }
 
     .aa-row {
         display: flex; align-items: center;
         background: #fff; border: 1px solid #e8ecf1;
-        border-radius: 10px; padding: 13px 16px;
-        margin-bottom: 7px;
+        border-radius: 10px; padding: 10px 14px;
+        margin-bottom: 6px;
         transition: box-shadow 0.15s ease, border-color 0.15s ease;
-        gap: 0; min-height: 70px;
+        gap: 0; min-height: 54px;
     }
     .aa-row:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); border-color: #c7d2de; }
 
-    .aa-col-agency     { flex: 0 0 22%; display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 8px; }
-    .aa-col-contact    { flex: 0 0 17%; min-width: 0; padding-right: 8px; }
-    .aa-col-perf       { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
-    .aa-col-shared     { flex: 0 0 11%; min-width: 0; padding-right: 6px; }
-    .aa-col-status     { flex: 0 0 10%; text-align: center; }
-    .aa-col-actions    { flex: 0 0 13%; display: flex; align-items: center; justify-content: flex-end; gap: 6px; position: relative; }
+    .aa-col-agency     { flex: 0 0 19%; display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 8px; }
+    .aa-col-contact    { flex: 0 0 13%; min-width: 0; padding-right: 8px; }
+    /* Fixed width so it never steals space from Actions */
+    .aa-col-perf       { flex: 0 0 30%; display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: nowrap; }
+    .aa-col-shared     { flex: 0 0 12%; min-width: 0; padding-right: 6px; }
+    .aa-col-status     { flex: 0 0 9%; text-align: center; }
+    .aa-col-actions    { flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 6px; position: relative; min-width: 130px; }
 
     /* Agency logo */
     .aa-logo {
-        width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 17px; color: #fff;
+        font-weight: 700; font-size: 15px; color: #fff;
         overflow: hidden; border: 2px solid #f0f4f8;
     }
     .aa-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .aa-name    { font-weight: 600; font-size: 12.5px; color: #0f172a; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .aa-cat     { font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aa-name    { font-weight: 600; font-size: 12px; color: #0f172a; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aa-cat     { font-size: 10.5px; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Contact */
     .aa-cnt-name { font-size: 12px; font-weight: 500; color: #0f172a; line-height: 1.3; }
@@ -107,11 +108,16 @@
     }
     .aa-cnt-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-    /* KPI badges */
-    .aa-kpi { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 46px; }
-    .aa-kpi-num   { font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1; }
-    .aa-kpi-label { font-size: 9.5px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
-    .aa-kpi-sep   { width: 1px; height: 28px; background: #e8ecf1; flex-shrink: 0; }
+    /* KPI badges — 5 equal columns inside the performance cell */
+    .aa-kpi {
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        flex: 1 1 0; min-width: 0; padding: 0 4px;
+        border-right: 1px solid #e8ecf1;
+    }
+    .aa-kpi:last-child { border-right: none; }
+    .aa-kpi-num   { font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1; }
+    .aa-kpi-label { font-size: 9px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+    .aa-kpi-sep   { display: none; }
 
     /* Shared date */
     .aa-shared-rel { font-size: 12px; font-weight: 500; color: #1e293b; }
@@ -180,17 +186,18 @@
     .aa-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
     .aa-empty-sub   { font-size: 12.5px; color: #94a3b8; max-width: 280px; line-height: 1.6; }
 
-    /* Responsive */
+    /* Responsive — tablet / mobile */
     @media (max-width: 991px) {
         .aa-header-row { display: none !important; }
-        .aa-row { flex-wrap: wrap; gap: 10px; }
+        .aa-row        { flex-wrap: wrap; gap: 10px; padding: 12px; }
         .aa-col-agency  { flex: 1 1 100%; }
         .aa-col-contact { flex: 1 1 100%; }
-        .aa-col-perf    { flex: 1 1 100%; justify-content: flex-start; gap: 10px; }
+        .aa-col-perf    { flex: 1 1 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+        .aa-kpi         { flex: 0 0 auto; border-right: none; padding: 3px 8px;
+                          background: #f8fafc; border-radius: 5px; min-width: 52px; }
         .aa-col-shared  { flex: 1 1 45%; }
         .aa-col-status  { flex: 1 1 45%; text-align: left; }
-        .aa-col-actions { flex: 1 1 100%; justify-content: flex-start; }
-        .aa-kpi-sep     { display: none; }
+        .aa-col-actions { flex: 1 1 100%; justify-content: flex-start; min-width: unset; }
     }
 
 </style>

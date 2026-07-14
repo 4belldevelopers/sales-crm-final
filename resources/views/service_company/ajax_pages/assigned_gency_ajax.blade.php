@@ -117,31 +117,27 @@
                 @endif
             </div>
 
-            {{-- ── Performance KPIs ─────────────────────────────── --}}
+            {{-- ── Performance KPIs (5 inline, no-wrap) ────────────── --}}
             <div class="aa-col-perf">
                 <div class="aa-kpi">
-                    <div class="aa-kpi-num">{{ $sourced }}</div>
-                    <div class="aa-kpi-label">Sourced</div>
+                    <span class="aa-kpi-num">{{ $sourced }}</span>
+                    <span class="aa-kpi-label">Sourced</span>
                 </div>
-                <div class="aa-kpi-sep d-none d-xl-block"></div>
                 <div class="aa-kpi">
-                    <div class="aa-kpi-num">0</div>
-                    <div class="aa-kpi-label">Evaluated</div>
+                    <span class="aa-kpi-num">0</span>
+                    <span class="aa-kpi-label">Evaluated</span>
                 </div>
-                <div class="aa-kpi-sep d-none d-xl-block"></div>
                 <div class="aa-kpi">
-                    <div class="aa-kpi-num">{{ $interviews }}</div>
-                    <div class="aa-kpi-label">Interviews</div>
+                    <span class="aa-kpi-num">{{ $interviews }}</span>
+                    <span class="aa-kpi-label">Interviews</span>
                 </div>
-                <div class="aa-kpi-sep d-none d-xl-block"></div>
                 <div class="aa-kpi">
-                    <div class="aa-kpi-num">0</div>
-                    <div class="aa-kpi-label">Offers</div>
+                    <span class="aa-kpi-num">0</span>
+                    <span class="aa-kpi-label">Offers</span>
                 </div>
-                <div class="aa-kpi-sep d-none d-xl-block"></div>
                 <div class="aa-kpi">
-                    <div class="aa-kpi-num">{{ $joined }}</div>
-                    <div class="aa-kpi-label">Joined</div>
+                    <span class="aa-kpi-num">{{ $joined }}</span>
+                    <span class="aa-kpi-label">Joined</span>
                 </div>
             </div>
 
