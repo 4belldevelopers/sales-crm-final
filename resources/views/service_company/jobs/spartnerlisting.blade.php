@@ -58,10 +58,10 @@
         font-size: 10.5px; font-weight: 600; color: #94a3b8;
         text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .aa-hcol-agency     { flex: 0 0 19%; }
-    .aa-hcol-contact    { flex: 0 0 13%; }
-    .aa-hcol-perf       { flex: 0 0 30%; text-align: center; }
-    .aa-hcol-shared     { flex: 0 0 12%; }
+    .aa-hcol-agency     { flex: 0 0 18%; }
+    .aa-hcol-contact    { flex: 0 0 12%; }
+    .aa-hcol-perf       { flex: 0 0 35%; text-align: center; }
+    .aa-hcol-shared     { flex: 0 0 11%; padding-left: 8px; }
     .aa-hcol-status     { flex: 0 0 9%; text-align: center; }
     .aa-hcol-actions    { flex: 1 1 auto; text-align: right; }
 
@@ -75,11 +75,11 @@
     }
     .aa-row:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); border-color: #c7d2de; }
 
-    .aa-col-agency     { flex: 0 0 19%; display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 8px; }
-    .aa-col-contact    { flex: 0 0 13%; min-width: 0; padding-right: 8px; }
-    /* Fixed width so it never steals space from Actions */
-    .aa-col-perf       { flex: 0 0 30%; display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: nowrap; }
-    .aa-col-shared     { flex: 0 0 12%; min-width: 0; padding-right: 6px; }
+    .aa-col-agency     { flex: 0 0 18%; display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 8px; }
+    .aa-col-contact    { flex: 0 0 12%; min-width: 0; padding-right: 8px; }
+    /* Fixed width; KPIs size from content so spacing feels natural */
+    .aa-col-perf       { flex: 0 0 35%; display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: nowrap; overflow: hidden; padding-right: 20px; }
+    .aa-col-shared     { flex: 0 0 11%; min-width: 0; padding-left: 8px; padding-right: 6px; }
     .aa-col-status     { flex: 0 0 9%; text-align: center; }
     .aa-col-actions    { flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 6px; position: relative; min-width: 130px; }
 
@@ -108,15 +108,15 @@
     }
     .aa-cnt-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-    /* KPI badges — 5 equal columns inside the performance cell */
+    /* KPI badges — natural-width per item so padding is consistent */
     .aa-kpi {
-        display: flex; flex-direction: column; align-items: center; gap: 2px;
-        flex: 1 1 0; min-width: 0; padding: 0 4px;
-        border-right: 1px solid #e8ecf1;
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        flex: 0 1 auto; padding: 0 10px;
+        border-right: 1px solid #e2e8f0;
     }
     .aa-kpi:last-child { border-right: none; }
     .aa-kpi-num   { font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1; }
-    .aa-kpi-label { font-size: 9px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+    .aa-kpi-label { font-size: 9px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; }
     .aa-kpi-sep   { display: none; }
 
     /* Shared date */
