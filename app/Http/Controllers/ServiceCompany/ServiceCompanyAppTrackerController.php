@@ -586,6 +586,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'order' => 'desc'
 					]
 				];
+				// Same stage, same match count — whoever was uploaded/added
+				// first ranks first (not the global "id desc" newest-first
+				// fallback below, which only applies once this also ties).
+				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			default:
 				// Custom job_master_status_id order
