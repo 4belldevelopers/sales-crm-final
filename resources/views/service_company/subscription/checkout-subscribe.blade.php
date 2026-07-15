@@ -77,6 +77,7 @@
         .btn-group .selected-term .term-price {
             font-weight: 700;
         }
+<<<<<<< HEAD
 
         .btn-group.hg-plan-btn-group .selected-term span.term-price,
         .btn-group.hg-plan-btn-group .selected-term span.term-description {
@@ -269,6 +270,149 @@
             display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px;
         }
         .co-feature-strip-item span { display: block; }
+=======
+
+        .btn-group.hg-plan-btn-group .selected-term span.term-price,
+        .btn-group.hg-plan-btn-group .selected-term span.term-description {
+            color: #0171bc;
+        }
+
+        .selected-term .testsdfd {
+            margin-left: 3%;
+            margin-right: 12%;
+            line-height: 17px;
+            float: none;
+        }
+
+        .hg-percentage-discount {
+            color: #f15922;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        span.hg-actual-price,
+        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
+        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
+        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
+            color: #767676;
+        }
+
+        span.hg-actual-price {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        span.hg-actual-price,
+        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
+        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
+        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
+            color: #767676;
+        }
+
+        .hg-plan-btn-group .hg-actual-price span.WebRupee {
+            font-size: 14px;
+        }
+
+        .WebRupee {
+            font-family: 'WebRupee' !important;
+        }
+
+        span.hg-actual-price {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        span.hg-actual-price,
+        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
+        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
+        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
+            color: #767676;
+        }
+
+        .package-term {
+            font-size: 16px;
+        }
+
+        .dropdown-menu li {
+            padding: .8em 1em;
+            cursor: pointer;
+            border-bottom: 1px dotted lightgray;
+            display: block;
+        }
+
+        .dropdown-menu li:last-child {
+            border-bottom: none;
+        }
+
+        .active {
+            color: white !important;
+        }
+
+
+        /* Main container styling */
+        .container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Loader styles */
+        .loader-overlay {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            /* White overlay */
+            z-index: 1000;
+            /* Ensure it stays on top */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            border: 6px solid #f3f3f3;
+            /* Light grey */
+            border-top: 6px solid #3498db;
+            /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Loader animation */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Text below loader */
+        .loader-text {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        .no-time-message {
+            display: flex;
+            justify-content: center; /* Centers horizontally */
+            align-items: center;    /* Centers vertically */
+            width: 100%;
+            text-align: center;     /* Aligns text to center */
+            font-size: 1.5rem;      /* Adjust font size as needed */
+            color: #555;            /* Adjust color as needed */
+        }
+
+>>>>>>> parent of e32f1d9c (Subscriptions)
     </style>
 @endpush
 
@@ -329,6 +473,7 @@
 
 
 @section('content')
+<<<<<<< HEAD
     <!--begin::Content-->
     <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
         <div class="container-xxl" id="kt_content_container">
@@ -438,11 +583,169 @@
                                     <div class="fw-bold text-success" id="couponAppliedCode">{{ @$carts->coupon_code }}</div>
                                     <div class="fs-8 text-success">
                                         <span id="couponAppliedPct">{{ @$carts->coupon_code ? rtrim(rtrim(number_format(@$carts->discount, 2), '0'), '.') : '' }}</span>% Discount Applied
+=======
+    <!--begin::Toolbar-->
+    <div class="toolbar" id="kt_toolbar">
+        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
+            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
+                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
+                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
+                <div class="d-flex flex-column">
+                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
+                        <span class="text-gray-800 mb-0 pt-5">Subscription Package</span>
+                    </h5>
+                    <span class="text-gray-600" id="">&nbsp;</span>
+                </div>
+                <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
+            </div>
+            <div class="d-flex align-items-center py-1 d-none ">
+            </div>
+        </div>
+    </div>
+    <!--end::Toolbar-->
+    <!--begin::Content-->
+    <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
+        <div class=" container-xxl " id="kt_content_container">
+            <!--begin::Invoice 2 main-->
+            <div class="card">
+                <!--begin::Body-->
+                <div class="card-body p-lg-20">
+                    <!--begin::Layout-->
+                    <div class="d-flex flex-column flex-xl-row">
+                        <!--begin::Content-->
+                        @if (@$carts)
+                        <div class="flex-lg-row-fluid me-xl-18 mb-10 mb-xl-0">
+                            <!--begin::Invoice 2 content-->
+                            <div class="mt-n1">
+
+                               
+                                <!--begin::Wrapper-->
+                                <div class="m-0">
+
+
+
+                                    <!--begin::Row-->
+                                    <div class="row g-5 mb-12">
+                                        <!--end::Col-->
+                                        <div class="col-sm-12">
+                                            <!--end::Label-->
+
+                                            <!--end::Text-->
+
+                                            <!--end::Text-->
+
+                                            <!--end::Description-->
+
+
+
+                                            <!--end::Description-->
+                                            <div class="fw-semibold fs-7 text-gray-600">
+
+                                                <div class="row">
+                                                    <div class="col-sm-9">
+                                                        <div class="fw-bold fs-6 text-gray-800">Billing Details</div>
+                                                        <p><span id="usernamebill">{{ @$user_name }}</span><p>
+                                                        <p>{{ @$company_name }}<p>
+                                                        <p><span id="billing_address">{{ @$locArr }}</span> <p>
+                                                        <p><span id="billing_gst">{{ @$gstin }}</span> <p>
+                                                        <p><span id="billing_pan">{{ @$pan_no }}</span> <p>
+                                                    </div>
+                                                    <div class="col-sm-3">
+                                                        <a href="javascript:;" class="btn btn-primary show-billing-address"
+                                                            id="" style="float: right;">Edit Details</a>
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                            <!--end::Description-->
+                                        </div>
+                                        <!--end::Col-->
+
+                                        <!--end::Col-->
+                                        <div class="col-sm-6">
+                                            <!--end::Label-->
+
+
+                                            <!--end::Description-->
+                                            <div class="fw-semibold fs-7 text-gray-600">
+
+                                            </div>
+                                            <!--end::Description-->
+                                        </div>
+                                        <!--end::Col-->
                                     </div>
+                                    <!--end::Row-->
+
+
+                                    <!--begin::Content-->
+                                    <div class="flex-grow-1">
+                                        <!--begin::Table-->
+                                        <div class="table-responsive border-bottom mb-9">
+                                            <table class="table mb-3">
+                                                <thead>
+                                                    <tr class="border-bottom fs-6 fw-bold text-muted">
+                                                        <th class="min-w-50px pb-2">Product</th>
+                                                        <th class="min-w-50px pb-2">Duration</th>
+                                                        <th class="min-w-50px pb-2">Coins</th>
+                                                        <th class="min-w-50px pb-2">Price</th>
+                                                        <th class="min-w-50px pb-2">Action</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    @if (@$carts)
+                                                        <tr class="fw-bold text-gray-700 fs-5">
+                                                            <td class="d-flex align-items-center pt-6">
+                                                                 {{ @$carts ? @$carts->product_name : '' }}
+                                                            </td>
+
+                                                            <td class="pt-6">
+                                                                {{ @$carts->subscription_type == 'yes' ? @$durationType : @$durationType }} at <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
+                                                                    aria-hidden="true"></i> {{ number_format($perMonthPrice,2) }}/Month
+                                                            </td>
+                                                            <td class="pt-6 fw-bolder">
+                                                                {{ @$carts ? $carts->credit : '' }}</td>
+                                                            <td class="pt-6">
+                                                                <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
+                                                                    aria-hidden="true"></i>
+                                                            @php
+                                                                    $actualPrice = @$carts->price;
+                                                                    if (@$carts->discount) {
+                                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
+                                                                    }
+                                                            @endphp
+
+                                                                {{ @$carts ?  number_format($actualPrice,2) : '' }}</td>
+                                                            <td class="pt-6"><i class="fa fa-trash" aria-hidden="true"
+                                                                    data-trash="{{ encrypt(@$carts->id) }}" style="cursor: pointer;"></i></td>
+                                                        </tr>
+                                                    @else
+                                                        <tr class="border-bottom fs-6 fw-bold text-muted"
+                                                            style="text-align: center; background: #ff000012;">
+                                                            <td colspan="5" class="min-w-175px pb-2">No Product</td>
+                                                        </tr>
+                                                    @endif
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!--end::Table-->
+
+
+>>>>>>> parent of e32f1d9c (Subscriptions)
+                                    </div>
+                                    <!--end::Content-->
                                 </div>
+<<<<<<< HEAD
                                 <a href="javascript:;" id="removeCouponBtn" class="text-danger fs-3">&times;</a>
+=======
+                                <!--end::Wrapper-->
+                               
+>>>>>>> parent of e32f1d9c (Subscriptions)
                             </div>
+                            <!--end::Invoice 2 content-->
                         </div>
+<<<<<<< HEAD
                         <!--end::Coupon-->
                     @else
                         <!--begin::Empty cart state-->
@@ -469,8 +772,144 @@
                                     <div class="text-gray-500 fs-8">You can purchase additional coins or upgrade your plan anytime.</div>
                                     <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="fw-bold">Buy Coins <i class="fa fa-chevron-right fs-9"></i></a>
                                 </div>
+=======
+                        <!--end::Content-->
+
+                        <!--begin::Sidebar-->
+                        <div class="m-0">
+                            <!--begin::Invoice 2 sidebar-->
+                            <div
+                                class="d-print-none border border-dashed border-gray-300 card-rounded h-lg-100 min-w-md-350px p-9 bg-lighten">
+
+                                <!--begin::Title-->
+                                <h6 class="mb-8 fw-bolder text-gray-600 text-hover-primary">PAYMENT DETAILS</h6>
+                                <!--end::Title-->
+
+                                <!--begin::Container-->
+                                <div class="mb-6">
+                                    <!--begin::Section-->
+                                    <div class="mw-300px">
+
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <!--begin::Label-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">Subtotal:</div>
+                                            <!--end::Label-->
+
+                                            <!--begin::Value-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">
+
+                                                @if (@$carts)
+                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
+                                                        aria-hidden="true"></i>
+                                                @endif
+                                                @php
+                                                    $actualPrice = $carts->price;
+                                                    if ($carts->discount) {
+                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
+                                                    }
+                                                @endphp
+
+                                                {{  number_format($actualPrice,2) }}
+                                            </div>
+                                            <!--end::Value-->
+                                        </div>
+
+                                        @if(@$carts->discount)
+                                         <!--begin::Item-->
+                                         <div class="d-flex justify-content-between mb-3">
+                                            <!--begin::Label-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">Discounts :</div>
+                                            <!--end::Label-->
+
+                                            <!--begin::Value-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">
+                                                {{ @$carts->discount }}%
+                                            </div>
+                                            <!--end::Value-->
+                                        </div>
+                                        
+                                        <!--begin::Item-->
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <!--begin::Label-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">Price Offer Discount:</div>
+                                            <!--end::Label-->
+
+                                            <!--begin::Value-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">
+                                                
+                                                @if (@$carts)
+                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
+                                                        aria-hidden="true"></i>
+                                                @endif
+
+                                                {{ @$carts->price }}
+                                            </div>
+                                            <!--end::Value-->
+                                        </div>
+
+                                        <!--end::Item-->
+                                        @endif
+
+                                        <!--begin::Item-->
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <!--begin::Label-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">{{ @$carts->currency == 'INR' ? 'GST' : 'TAX' }}</div>
+                                            <!--end::Label-->
+
+                                            <!--begin::Value-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">
+                                                {{ @$carts->gst ? @$carts->gst . '%' : '0.00' }}</div>
+                                            <!--end::Value-->
+                                        </div>
+                                        <!--end::Item-->
+
+                                        <!--begin::Item-->
+
+
+                                        <!--begin::Item-->
+                                        <div class="d-flex justify-content-between">
+                                            <!--begin::Label-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">Total</div>
+                                            <!--end::Label-->
+
+                                            <!--begin::Value-->
+                                            <div class="text-end fw-bold fs-6 text-gray-800">
+                                                @if (@$carts)
+                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
+                                                        aria-hidden="true"></i>
+                                                @endif
+                                                {{ @$carts->total_price }}
+                                            </div>
+                                            <!--end::Value-->
+                                        </div>
+                                        <!--end::Item-->
+                                    </div>
+                                    <!--end::Section-->
+
+
+
+                                </div>
+
+                                <!--end::Container-->
+
+
+                                <div class="mb-6">
+
+                                    <a href="#"
+                                        class="btn btn-sm btn-success {{ $carts_count ? 'cart_add' : 'cert_warning' }}"
+                                        style="    background-color: #be4783 !important; width: 100% !important;"
+                                        data-cart="{{ encrypt(@$carts->id) }}">Pay
+                                        Now</a>
+                                    <!--end::Title-->
+                                </div>
+
+
+
+>>>>>>> parent of e32f1d9c (Subscriptions)
                             </div>
+                            <!--end::Invoice 2 sidebar-->
                         </div>
+<<<<<<< HEAD
                         <!--end::Empty cart state-->
                     @endif
                 </div>
@@ -572,6 +1011,23 @@
                 </div>
             </div>
             <!--end::Feature strip-->
+=======
+                        <!--end::Sidebar-->
+                        @else
+
+                        <div class="no-time-message">
+                            <p>No data available</p>
+                        </div>
+
+                        @endif
+
+                    </div>
+                    <!--end::Layout-->
+                </div>
+                <!--end::Body-->
+            </div>
+            <!--end::Invoice 2 main-->
+>>>>>>> parent of e32f1d9c (Subscriptions)
         </div>
     </div>
 
