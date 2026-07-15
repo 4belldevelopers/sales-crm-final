@@ -11296,6 +11296,66 @@ END:VCALENDAR";
 	// which is why the same job could show very different "Similar
 	// Candidates" numbers depending on which tab you were viewing it
 	// from).
+	// Mirrors buildSkillMatchClause()'s match_phrase_prefix semantics in
+	// PHP: a required skill counts as matched when its words appear as a
+	// consecutive prefix match within the candidate's skill text — e.g.
+	// required "java" matches a candidate skill entry of "Java Developer"
+	// or "Sr. Java Fullstack Developer", not only an exact "Java". The
+	// candidate-list endpoints used to compute matched_skills with a plain
+	// array_intersect() (exact string equality), so a candidate ES itself
+	// had already returned via this same phrase-prefix query would show up
+	// in results with NONE of their skill tags highlighted as matched.
+	public static function skillMatchesPhrasePrefix(string $requiredSkill, string $candidateSkill): bool
+	{
+		$requiredWords = preg_split('/[\s\/,\-]+/', strtolower(trim($requiredSkill)), -1, PREG_SPLIT_NO_EMPTY);
+		$candidateWords = preg_split('/[\s\/,\-]+/', strtolower(trim($candidateSkill)), -1, PREG_SPLIT_NO_EMPTY);
+		$wordCount = count($requiredWords);
+		if ($wordCount === 0 || count($candidateWords) < $wordCount) {
+			return false;
+		}
+
+		for ($i = 0; $i <= count($candidateWords) - $wordCount; $i++) {
+			$isMatch = true;
+			foreach ($requiredWords as $idx => $word) {
+				$candidateWord = $candidateWords[$i + $idx];
+				// Every word must match exactly except the LAST word of the
+				// required skill, which only needs to be a prefix — same as
+				// match_phrase_prefix treating the final query token as a
+				// prefix search.
+				$isLastWord = $idx === $wordCount - 1;
+				if ($isLastWord ? !str_starts_with($candidateWord, $word) : $candidateWord !== $word) {
+					$isMatch = false;
+					break;
+				}
+			}
+			if ($isMatch) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Returns the subset of $candidateSkills that phrase-prefix-match any
+	// entry in $requiredSkills — the "which of this candidate's skills
+	// satisfy the job's requirements" computation every AppTracker tab's
+	// results endpoint needs for its Match % badge and skill highlighting
+	// (see skillMatchesPhrasePrefix() above). Preserves each matched
+	// candidate skill's original wording/casing (callers ucfirst() it for
+	// display), only $requiredSkills is expected pre-lowercased.
+	public static function matchedSkillsList(array $candidateSkills, array $requiredSkills): array
+	{
+		$matched = [];
+		foreach ($candidateSkills as $candidateSkill) {
+			foreach ($requiredSkills as $requiredSkill) {
+				if (self::skillMatchesPhrasePrefix($requiredSkill, $candidateSkill)) {
+					$matched[] = $candidateSkill;
+					break;
+				}
+			}
+		}
+		return array_values(array_unique($matched, SORT_STRING));
+	}
+
 	public static function buildSkillMatchClause(string $skill): array
 	{
 		$synonymMap = config('skill_synonyms', []);
