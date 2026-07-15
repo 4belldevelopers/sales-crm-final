@@ -66,7 +66,7 @@
 
                     $percentage=0;
                     $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkills);
+                    $totalElements = count($requiredSkillsForDisplay ?? []);
                     $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
                     $matchPercentage = min($matchPercentage, 100);
                     $percentage = round($matchPercentage, 1);

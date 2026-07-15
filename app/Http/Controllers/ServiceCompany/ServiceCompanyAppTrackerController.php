@@ -5496,8 +5496,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				];
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		
-				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
+
+				// "Show All Bench Candidates" clears the Skills tagify along
+				// with every other filter, so $requiredSkills goes empty —
+				// without this fallback, Match % would drop to 0 for
+				// everyone the instant filters are cleared, instead of
+				// staying meaningful against the job it's being viewed from.
+				$requiredSkillsForDisplay = !empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort;
+
+				$data = array_map(function ($hit) use ($requiredSkillsForDisplay, $mandatorySkills) {
 
 			$source = $hit['_source'];
 			$jobSkills = collect(data_get($source, 'job_application_skills', []))
@@ -5506,7 +5513,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			->unique()
 			->toArray();
 
-				$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
+				$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkillsForDisplay);
 				$matchCount = count($matchedSkills);
 				// Which matches were against a STARRED/mandatory requirement
 				// vs just an entered-but-not-starred one — feeds the 3-tier
@@ -5519,6 +5526,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				]);
 			}, $response['hits']['hits']);
 		}
+		$requiredSkillsForDisplay = $requiredSkillsForDisplay ?? (!empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort);
 			
 			$pagination = [
 				'total' => $total,
@@ -5535,7 +5543,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
