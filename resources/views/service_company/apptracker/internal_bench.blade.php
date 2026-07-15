@@ -1004,6 +1004,11 @@
                                 <span>Filter<span id="ibf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary ibf-count-badge d-none" id="ibf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
                             </button>
+                            <button type="button" id="ibf_show_all_btn" class="btn btn-sm btn-light-primary"
+                                style="height:44px;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;"
+                                title="Clear every filter and show the company's full active in-house bench roster">
+                                Show All Bench Candidates
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2668,6 +2673,18 @@
         });
 
         $(document).on('click', '#ibf_reset_btn', function() {
+            $('#ibf_clear_all').trigger('click');
+            fetchCandidates();
+            ibfCaptureSnapshot();
+            ibfAppliedExpanded = false;
+            ibfRenderAppliedFiltersCard();
+        });
+
+        // Toolbar shortcut — same clear-everything logic as Reset, just
+        // reachable without opening the drawer first. Match % still shows
+        // (see the controller's $requiredSkillsForDisplay fallback to the
+        // job's own skills once the Skills tagify goes empty).
+        $(document).on('click', '#ibf_show_all_btn', function() {
             $('#ibf_clear_all').trigger('click');
             fetchCandidates();
             ibfCaptureSnapshot();
