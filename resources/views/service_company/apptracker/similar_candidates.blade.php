@@ -1419,7 +1419,7 @@
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Min Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="0">
                                                 <div class="fv-plugins-message-container"></div>
                                                 <span class="form-text text-muted minimum_salary_word"></span>
                                             </div>
@@ -2617,7 +2617,8 @@
             $('.simf-edu-check[value=""]').prop('checked', true);
             simfEducationSelected = [];
             simfSyncEducationInput();
-            $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#min_exp, #max_exp, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#min_sal').val(0);
             $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
             updateActiveFiltersUI();
         });
