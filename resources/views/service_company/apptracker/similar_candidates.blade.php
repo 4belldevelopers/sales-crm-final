@@ -1890,8 +1890,12 @@
                 <!--begin::Card-->
                 <div class="card">
                     <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5">
-                      <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                    <div class="card-body pt-3 px-5" style="position: relative;">
+                      <!-- Circle loader only (Bootstrap/Metronic's own spinner-border,
+                           same pattern used elsewhere in this app) — no text label. -->
+                      <div class="loadingMessage" style="display: none; position: absolute; inset: 0; z-index: 10; align-items: center; justify-content: center; background: rgba(255,255,255,.7);">
+                          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                      </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
                             <!--begin::Table head-->
                             <thead>
@@ -2540,7 +2544,7 @@
 
         });
 
-        function fetchCandidates(page = 1, search = '', loadingText = 'Processing...') {
+        function fetchCandidates(page = 1, search = '') {
             var jobid = '{{ @$job->id }}';
             // #inputSearch never existed on this page — the real search box
             // is #kt_tagify_2. This was previously always reading undefined,
@@ -2565,7 +2569,7 @@
             var app_int_activity = $('[name="app_int_activity"]:checked').val();
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
 
-            $('.loadingMessage').text(loadingText).css({ display: 'block' });
+            $('.loadingMessage').css({ display: 'flex' });
             // Return the jqXHR so callers that chain .then()/.catch() (e.g. the
             // pagination handler) don't crash on an undefined return value.
             return $.ajax({
@@ -2616,14 +2620,10 @@
 
         // Free-text search box: Enter re-runs the same fetchCandidates() call
         // the sort dropdown and pagination already use — no separate endpoint.
-        // "Searching..." (vs the generic "Processing...") gives distinct
-        // feedback for this specific trigger, since search is now AND-ed
-        // onto every active filter and an empty result is more likely here
-        // than from picking a single filter.
         $(document).on('keydown', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
-                fetchCandidates(1, '', 'Searching...');
+                fetchCandidates();
             }
         });
 
