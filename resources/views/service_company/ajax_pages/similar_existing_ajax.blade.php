@@ -471,14 +471,26 @@
                         $npColorStyle = 'color:#7c3aed !important;';
                     }
 
+                    // The 2nd row (current company) was silently cutting off
+                    // at 10 characters with no ellipsis — a company name any
+                    // longer than that just stopped mid-word with no visual
+                    // sign it was truncated (e.g. a company literally named
+                    // "(formerly ..." would render as just "(formerly " and
+                    // read as broken/garbled rather than truncated text).
+                    $currentCompanyFull = ucwords(@$row->current_company);
+                    $currentCompanyShort = ucwords(mb_substr(@$row->current_company, 0, 10));
+                    if (mb_strlen(@$row->current_company) > 10) {
+                        $currentCompanyShort .= '…';
+                    }
+
                     echo '<div class="d-flex flex-column">
 								<a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
                         $npColorStyle .
                         '">' .
                         @$np .
                         '</a>
-						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
+						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' . htmlspecialchars($currentCompanyFull, ENT_QUOTES, 'UTF-8') .
+                        '">' . htmlspecialchars($currentCompanyShort, ENT_QUOTES, 'UTF-8') .
                         '</span>
 							</div>';
                 @endphp
@@ -540,6 +552,17 @@
                     // Row 2 is now Education (merged in from the removed Education
                     // column) instead of state — same qualification_name field/
                     // truncation the removed column used.
+                    //
+                    // "Nearby" badge: this candidate isn't an exact match on
+                    // the selected location — they were pulled in by the
+                    // Delhi NCR-style metro-cluster expansion (see
+                    // resolveLocationCluster() in the controller), so the row
+                    // needs to visually say why, rather than silently mixing
+                    // them in with exact-location candidates.
+                    $nearbyLocationBadge = (!empty($row->is_nearby_location))
+                        ? ' <span class="badge badge-light-info my-1" style="font-size:9px;font-weight:600;vertical-align:middle;" title="Not an exact match on your selected location — included because it\'s in the same metro area">Nearby</span>'
+                        : '';
+
                     echo '<div class="d-flex flex-column">
 									<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
                         ucwords($row_city_name) .
@@ -549,11 +572,11 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) .
                         ', ' .
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
-                        '</a>
+                        '</a>' . $nearbyLocationBadge . '
 									<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
+                        mb_strtoupper(@$row->qualification_name) .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
+                        mb_strtoupper(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
 								</div>';
 

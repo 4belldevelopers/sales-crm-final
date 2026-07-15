@@ -424,6 +424,16 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             padding-right: 8px;
+            /* Education/qualification data is always displayed uppercase,
+               regardless of how it was entered/stored — see the standing
+               convention note in docs/UI_UX_STANDARDS.md. Applied via CSS
+               (display-only) rather than mutating the value, so the exact
+               casing used for backend matching (qualification_master.name)
+               is untouched. */
+            text-transform: uppercase;
+        }
+        .simf-edu-name {
+            text-transform: uppercase;
         }
         .simf-select-dd-btn svg {
             flex-shrink: 0;
@@ -840,7 +850,7 @@
         .simf-applied-chip-remove:hover { opacity: 1; }
         .simf-applied-chip.cat-skill      { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
         .simf-applied-chip.cat-location   { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
-        .simf-applied-chip.cat-education  { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+        .simf-applied-chip.cat-education  { background: #eff6ff; color: #2563eb; border-color: #dbeafe; text-transform: uppercase; }
         .simf-applied-chip.cat-experience { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
         .simf-applied-chip.cat-salary     { background: #ecfeff; color: #0e7490; border-color: #cffafe; }
         .simf-applied-chip.cat-notice     { background: #fffbeb; color: #b45309; border-color: #fde68a; }
@@ -1525,7 +1535,7 @@
                                                 @foreach ($qualificationTag as $qval)
                                                     <label class="simf-select-dd-item">
                                                         <input type="checkbox" class="simf-edu-check" value="{{ $qval }}">
-                                                        <span>{{ $qval }}</span>
+                                                        <span class="simf-edu-name">{{ $qval }}</span>
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -2815,11 +2825,14 @@
                 });
             }
 
-            // Education
+            // Education — label is displayed uppercase (education data
+            // convention, see docs/UI_UX_STANDARDS.md); val itself stays
+            // exact-case since it's what the clear() lookup and the
+            // backend payload match against.
             if (typeof simfEducationSelected !== 'undefined') {
                 simfEducationSelected.slice().forEach(function(val) {
                     chips.push({
-                        label: val,
+                        label: val.toUpperCase(),
                         clear: function() {
                             $('.simf-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
                         }
