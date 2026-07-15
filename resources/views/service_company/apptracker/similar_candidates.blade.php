@@ -603,11 +603,12 @@
         }
 
         /* ==================================================================
-           Enterprise toolbar redesign: search / sort / save-search / filter.
-           The search input's existing behaviour (a single click anywhere in
-           it opens the filter drawer via .simf-overlay-trigger — it isn't a
-           live free-text search box, fetchCandidates() never reads its value)
-           is preserved exactly; only the visual treatment changes.
+           Enterprise toolbar redesign: search / sort / filter.
+           #kt_tagify_2 is a plain free-text field with one job (candidate
+           name / company / recruiter search) — it no longer opens the
+           drawer or mirrors the drawer's Skills tagify; the Filter button
+           is the drawer's only entry point now, and the Active Filters card
+           below is the single place structured filters are summarized.
         ================================================================== */
         .simf-toolbar-card {
             border: 1px solid #eef0f4;
@@ -615,19 +616,31 @@
             box-shadow: 0 1px 2px rgba(16,24,40,.04);
             font-family: 'Poppins', sans-serif;
         }
-        .simf-search-wrap {
+        /* All three controls (search / sort / filter) share the same
+           height, background, border and radius so they read as one
+           cohesive row — only the Filter button breaks from it deliberately,
+           as the single primary/colored action in the row. */
+        .simf-search-wrap,
+        .simf-sort-wrap {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #f8f9fb;
+            background: #fff;
             border: 1px solid #e4e6ef;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 0 14px;
-            flex: 1 1 auto;
-            min-width: 0;
             height: 44px;
         }
-        .simf-search-icon {
+        .simf-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .simf-sort-wrap {
+            flex-shrink: 0;
+            width: 200px;
+        }
+        .simf-search-icon,
+        .simf-sort-icon {
             color: #99a1b7;
             flex-shrink: 0;
             display: flex;
@@ -641,30 +654,15 @@
             font-size: 13.5px;
             height: 100%;
         }
-        .simf-sort-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            flex-shrink: 0;
-            width: 200px;
-        }
-        .simf-sort-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: #99a1b7;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            padding-left: 2px;
-        }
         .simf-sort-select.form-select {
-            border: 1px solid #e4e6ef !important;
-            border-radius: 10px !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
             font-size: 13px !important;
             font-weight: 500;
-            background-color: #fff !important;
-            height: 42px;
+            height: 100%;
         }
-        .simf-savesearch-btn,
         .simf-filter-btn {
             height: 44px;
             border-radius: 10px !important;
@@ -676,17 +674,6 @@
             white-space: nowrap;
             padding: 0 16px !important;
             flex-shrink: 0;
-        }
-        .simf-savesearch-btn {
-            background: #fff !important;
-            border: 1px solid #e4e6ef !important;
-            color: #3f4254 !important;
-        }
-        .simf-savesearch-btn:hover {
-            border-color: #93c5fd !important;
-            color: #1d4ed8 !important;
-        }
-        .simf-filter-btn {
             background: #2563eb !important;
             border: 1px solid #2563eb !important;
             color: #fff !important;
@@ -1043,12 +1030,12 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control simf-search-input" name="inputJobSearch"
-                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
-                                <div class="simf-overlay-trigger"
-                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0; left: 0;"> </div>
+                                    placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" />
                             </div>
                             <div class="simf-sort-wrap">
-                                <span class="simf-sort-label">Sort by</span>
+                                <span class="simf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
                                 <select class="form-select form-select-solid simf-sort-select" data-hide-search="true"
                                     id="sortingfilter" data-dropdown-css-class="w-150px"
                                     data-placeholder="Select an option"
@@ -1064,10 +1051,6 @@
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
                             </div>
-                            <button type="button" class="btn simf-savesearch-btn" id="simf_save_search_btn" title="Save this search">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16Z"/></svg>
-                                Save Search
-                            </button>
                             <button type="button" id="kt_similar_filter_toggle"
                                 class="btn simf-filter-btn position-relative">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
@@ -1220,54 +1203,13 @@
                                                 }
                                             });
 
-                                            // Initialize Tagify for kt_tagify_2
-                                            const inputJobSearch = document.querySelector('#kt_tagify_2');
-                                            const tagify2 = new Tagify(inputJobSearch, {
-                                                maxTags: 3 // Limit the number of tags to 5
-                                            });
-
-                                            // Function to update inputJobSearch based on tagify's value
-                                            function updateInputJobSearch() {
-                                                const tags = tagify.value.map(tag => tag.value).join(',');
-                                                inputJobSearch.value = tags;
-                                                autoclickstar();
-                                            }
-
-                                            function updateTagifyUsers() {
-                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                    value: tag.trim()
-                                                }));
-                                                tagify.removeAllTags();
-                                                tagify.addTags(newTags);
-                                            }
-
-                                            // Listen for tag removal
-                                            tagify.on('add', updateInputJobSearch);
-                                            tagify.on('remove', updateInputJobSearch);
-                                            inputJobSearch.addEventListener('change', updateTagifyUsers);
-
-                                            // Initial sync
-                                            updateInputJobSearch();
-
-                                            // Sync tagify_users with inputJobSearch
-                                            inputJobSearch.addEventListener('change', function() {
-                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                    value: tag.trim()
-                                                }));
-                                                tagify.loadOriginalValues(newTags);
-                                            });
-
-                                            function autoclickstar() {
-                                                setTimeout(() => {
-                                                    var starElement = document.querySelector('.star');
-                                                    if (starElement) {
-                                                        starElement.click();
-                                                        setTimeout(() => {
-                                                            starElement.click();
-                                                        }, 200);
-                                                    }
-                                                }, 500);
-                                            }
+                                            // #kt_tagify_2 (the top toolbar's search box) is a plain
+                                            // free-text field, deliberately NOT Tagify-wrapped and NOT
+                                            // synced with the drawer's Skills tagify — it previously
+                                            // mirrored the drawer's skill chips two-way, which duplicated
+                                            // what the Active Filters card and drawer already show. Its
+                                            // one job now is free-text search (name/company/recruiter/an
+                                            // unfiltered skill), kept separate from structured filtering.
 
                                             function debounceskill(func, delay) {
                                                 let timeoutskill;
@@ -2493,7 +2435,15 @@
 
         function fetchCandidates(page = 1, search = '') {
             var jobid = '{{ @$job->id }}';
-            var inputSearch = $('#inputSearch').val();
+            // #inputSearch never existed on this page — the real search box
+            // is #kt_tagify_2. This was previously always reading undefined,
+            // silently sending an empty "search" param on every request. The
+            // backend endpoint doesn't act on "search" yet either (confirmed
+            // by inspecting similar_existing_data_ajax — no request('search')
+            // usage), so this now sends the typed text correctly but it
+            // won't filter results until the Elasticsearch query is updated
+            // to use it — a backend change, not a front-end one.
+            var inputSearch = $('#kt_tagify_2').val();
             var sortingfilter = $('#sortingfilter').val();
             var country = $('#country').val();
             var cus_search = $('#kt_tagify_users').val();
@@ -2557,6 +2507,15 @@
                 }
             });
         }
+
+        // Free-text search box: Enter re-runs the same fetchCandidates() call
+        // the sort dropdown and pagination already use — no separate endpoint.
+        $(document).on('keydown', '#kt_tagify_2', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                fetchCandidates();
+            }
+        });
     </script>
     <script>
         /* Drawer width = 80% of the actual content area (i.e. "20% less than
@@ -2581,7 +2540,7 @@
         }
         $(document).ready(simfSetDrawerWidth);
         $(window).on('resize', simfSetDrawerWidth);
-        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger', simfSetDrawerWidth);
+        $(document).on('click', '#kt_similar_filter_toggle', simfSetDrawerWidth);
 
         /* Metronic's base .drawer class ships its own (non-!important)
            "overflow: auto" rule, loaded via a <link> that sits after our
@@ -2635,18 +2594,14 @@
         }
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
-        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
+        $(document).on('click', '#kt_similar_filter_toggle, #kt_similar_filter_close', simfEnforceDrawerLayout);
 
         /* ------------------------------------------------------------------
-           Filter drawer glue: opening the drawer from the search-box overlay,
-           popular-location quick-add chips, the Active Filters chip bar, and
-           the Preview/Reset/Apply footer buttons. None of this touches the
-           request params fetchCandidates() sends — it only reads/writes the
-           same field IDs the backend already expects.
+           Filter drawer glue: popular-location quick-add chips, the Active
+           Filters chip bar, and the Preview/Reset/Apply footer buttons. None
+           of this touches the request params fetchCandidates() sends — it
+           only reads/writes the same field IDs the backend already expects.
         ------------------------------------------------------------------ */
-        $(document).on('click', '.simf-overlay-trigger', function() {
-            $('#kt_similar_filter_toggle').trigger('click');
-        });
 
         // Popular/other location suggestion chips just add a tag to the
         // existing location Tagify instance — no extra request.
@@ -2955,13 +2910,6 @@
             $('#simf_applied_card').toggleClass('d-none', items.length === 0);
             $('#simf_applied_count').text(items.length);
         }
-
-        // No saved-search backend exists anywhere in this codebase yet — this
-        // is a placeholder acknowledging the click rather than silently doing
-        // nothing, until that feature is actually built.
-        $(document).on('click', '#simf_save_search_btn', function() {
-            Swal.fire({ title: 'Save Search', text: 'Saved searches are coming soon.', icon: 'info', timer: 1800, showConfirmButton: false });
-        });
 
         $(document).on('click', '#simf_applied_clear_all', function() {
             $('#simf_clear_all').trigger('click');
