@@ -624,7 +624,7 @@
         .simf-sort-wrap {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background: #fff;
             border: 1px solid #e4e6ef;
             border-radius: 10px;
@@ -644,8 +644,16 @@
         .simf-sort-icon {
             color: #99a1b7;
             flex-shrink: 0;
+            width: 16px;
+            height: 16px;
             display: flex;
             align-items: center;
+            justify-content: center;
+        }
+        .simf-search-icon svg,
+        .simf-sort-icon svg {
+            flex-shrink: 0;
+            display: block;
         }
         .simf-search-input.form-control {
             border: none !important;
@@ -2155,19 +2163,14 @@
 
 
 
-        var input2 = document.querySelector("#kt_tagify_2");
-        // new Tagify(input2);
-        new Tagify(input2, {
-            whitelist: [""],
-            maxTags: 15,
-            dropdown: {
-                maxItems: 20, // <- mixumum allowed rendered suggestions
-                classname: "", // <- custom classname for this dropdown, so it could be targeted
-                enabled: 0, // <- show suggestions on focus
-                closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
-            }
-        });
-
+        // A second, independent Tagify instance used to be created here on
+        // #kt_tagify_2 (in addition to the one removed alongside the sync
+        // code near its declaration) with whitelist: [""] — a single blank
+        // entry — and dropdown.enabled: 0, which showed a dropdown with one
+        // blank-looking suggestion the instant the field was focused. That
+        // was the actual cause of the "blank dropdown opens on search bar
+        // click" bug; #kt_tagify_2 is a plain input now, not Tagify-wrapped
+        // by anything.
 
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('[data-kt-modal-bidding="option"]');
