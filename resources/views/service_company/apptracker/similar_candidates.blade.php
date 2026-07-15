@@ -103,8 +103,8 @@
             content: none !important;
         }
         .tagify__tag__removeBtn:hover {
-            background: rgba(220,38,38,.28) !important;
-            color: #b91c1c !important;
+            background: rgba(37,99,235,.28) !important;
+            color: #1d4ed8 !important;
         }
         /* Location autocomplete dropdown is appended to <body> (appendTarget:document.body)
            so it needs a z-index above the filter drawer (z-index:1200) and its backdrop. */
@@ -1258,7 +1258,7 @@
                                                         <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
                                                         <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
                                                         <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
-                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(220,38,38,.14);color:#dc2626;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
                                                     </tag>
                                                 `;
                                                     }
@@ -1382,6 +1382,28 @@
                                             var tagifylocation = new Tagify(inputloc, {
                                                 whitelist: [],
                                                 maxTags: 10,
+                                                // Without a custom template, Location tags fell back to
+                                                // Tagify's own default (grey) styling — the Skills tagify
+                                                // above only looks themed because ITS colour comes from
+                                                // this same kind of custom template, not from a shared
+                                                // CSS class. Same blue/indigo chip + blue remove "×" as
+                                                // Skills, just without the star (Location has no
+                                                // mandatory/optional concept).
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        const value = tagData.value || '';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                    </tag>
+                                                `;
+                                                    }
+                                                },
                                                 dropdown: {
                                                     maxItems: 20,
                                                     classname: "",
