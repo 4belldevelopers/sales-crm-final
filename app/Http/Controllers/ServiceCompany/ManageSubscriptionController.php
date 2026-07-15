@@ -136,7 +136,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             return (array) $row;
         });
 
-        dd($this->data);
+        // dd($this->data);
 
         return view('service_company.subscription.index', $this->data);
     }
