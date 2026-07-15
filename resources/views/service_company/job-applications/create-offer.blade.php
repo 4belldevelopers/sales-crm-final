@@ -821,6 +821,32 @@
 
 
         initSample();
+
+        // Template switcher — swap CKEditor content when the dropdown changes
+        (function () {
+            var companyTpl = {!! json_encode($company_offer_terms ?? '') !!};
+            var agencyTpl  = {!! json_encode($agency_offer_terms ?? '') !!};
+
+            function setEditorContent(html) {
+                if (CKEDITOR.instances['editorterms1']) {
+                    CKEDITOR.instances['editorterms1'].setData(html);
+                } else {
+                    var el = document.getElementById('editorterms1');
+                    if (el) el.value = html;
+                }
+            }
+
+            document.addEventListener('change', function (e) {
+                if (e.target && e.target.id === 'co_tpl_select') {
+                    var val = e.target.value;
+                    if (val === 'agency-offer-letter-template') {
+                        setEditorContent(agencyTpl);
+                    } else {
+                        setEditorContent(companyTpl);
+                    }
+                }
+            });
+        })();
     </script>
 
 
@@ -2593,7 +2619,8 @@
                                     <div class="co-tpl-select-wrap">
                                         <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
                                         <select id="co_tpl_select" class="co-tpl-select">
-                                            <option value="company-offer-letter-template" selected>Company Offer Letter Template</option>
+                                            <option value="company-offer-letter-template" {{ empty($is_bench_candidate) ? 'selected' : '' }}>Company Offer Letter Template</option>
+                                            <option value="agency-offer-letter-template" {{ !empty($is_bench_candidate) ? 'selected' : '' }}>Agency Offer Letter Template</option>
                                         </select>
                                     </div>
                                 </div>
@@ -3091,7 +3118,7 @@
                                                 <select class="co-send-input" id="co_send_template">
                                                     <option value="">Select Email Template…</option>
                                                     @foreach($co_send_templates ?? [] as $co_tpl)
-                                                        <option value="{{ $co_tpl->id }}">{{ $co_tpl->display_name }}</option>
+                                                        <option value="{{ $co_tpl->id }}" {{ (!empty($is_bench_candidate) && stripos($co_tpl->display_name, 'Relationship Manager') !== false) ? 'selected' : '' }}>{{ $co_tpl->display_name }}</option>
                                                     @endforeach
                                                 </select>
                                                 <div class="co-send-hint">Choosing a template replaces the Subject and Body below</div>
@@ -5665,6 +5692,14 @@
                         }
                     });
                 });
+
+                @if(!empty($is_bench_candidate))
+                // Auto-load the Relationship Manager template for bench candidates
+                $(function () {
+                    var $tpl = $('#co_send_template');
+                    if ($tpl.val()) { $tpl.trigger('change'); }
+                });
+                @endif
 
                 // ── Attachments ("+ Add Attachment" — real files, actually sent with the email) ──
                 var coAttachFiles = [];
