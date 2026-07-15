@@ -154,7 +154,25 @@
                     } else {
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
-                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$percentage.'%</span>';
+                    // Tooltip breaking down WHY this candidate scored this
+                    // percentage — matched vs missing skills — so the badge
+                    // isn't just an unexplained number. Uses a plain native
+                    // title attribute (not data-toggle="tooltip") since this
+                    // partial is injected via AJAX on every filter/sort/page
+                    // change and a Bootstrap-tooltip re-init isn't guaranteed
+                    // to run against freshly-injected markup; a native title
+                    // works with zero JS dependency regardless.
+                    $missingSkills = array_values(array_diff($requiredSkills, array_map('strtolower', $skillArr)));
+                    $matchTooltipParts = [];
+                    if (!empty($skillArr)) {
+                        $matchTooltipParts[] = 'Matched: ' . implode(', ', array_map('ucfirst', $skillArr));
+                    }
+                    if (!empty($missingSkills)) {
+                        $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
+                    }
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+
+                    $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;cursor:help;">Match '.$percentage.'%</span>';
 
                     if (count($skillArr) > 0) {
                         foreach ($skillArr as $sval) {

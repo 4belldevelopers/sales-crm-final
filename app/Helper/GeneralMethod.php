@@ -4614,6 +4614,31 @@ END:VCALENDAR";
 
 
 	}
+
+	// Same query as JobcitiesTags() but WITHOUT the ->take(1) — that limit
+	// meant a job configured with multiple locations (e.g. "Hyderabad + 1
+	// Other City") only ever had its FIRST city auto-applied as a filter,
+	// silently dropping the rest. JobcitiesTags() itself is left untouched
+	// since it has ~13 other call sites across the codebase that expect a
+	// single joined string; this returns every configured city as a plain
+	// array of "City | State | Country" strings instead, for callers that
+	// want to seed all of them (e.g. multiple Tagify tags), not just one.
+	public static function JobcitiesTagsAll($jobID){
+
+		$citylistSelect = DB::table('client_city_jobs')
+				->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+			->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+			->join('countries', 'countries.id', '=', 'state_list.country_id')
+			->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+			->where('city_list.city','!=','')
+			->where('client_city_jobs.job_id', $jobID)
+			->get()->map(function($city) {
+				return $city->city_name . ' | ' . $city->state_name . ' | ' . $city->country_name;
+			});
+
+		return $citylistSelect->toArray();
+
+	}
 	public static function companyMainAddress($companyId){
 		$clientDetails = DB::table('clients')->where('clients.company_id','=',$companyId)->where('self_company','=',1)->first();
 		$clientMainLocation = 101;

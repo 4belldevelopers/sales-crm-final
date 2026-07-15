@@ -746,6 +746,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		// dd($gdFilterData);
 		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
+		// All configured locations for this job (JobcitiesTags() above only
+		// ever returns the first, via ->take(1) — kept as-is since it has
+		// other call sites elsewhere that expect a single string). The
+		// Similar Candidates filter drawer uses this array to pre-select
+		// every configured city, not just the first one.
+		$this->default_locations = GeneralMethod::JobcitiesTagsAll($jobid);
 		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
 		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
 		$this->max_exp = $gdFilterData->max_exp + 1;
@@ -1316,11 +1322,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		if (!empty($mandatorySkills)) {
 			$mustSkills = [];
 			foreach ($mandatorySkills as $skill) {
-				$mustSkills[] = [
-					'match_phrase' => [
-						'job_application_skills.skills' => $skill
-					]
-				];
+				$mustSkills[] = $this->buildSkillMatchClause($skill);
 			}
 
 			$skillBool = ['must' => $mustSkills];
@@ -1329,11 +1331,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			if (!empty($optionalSkills)) {
 				$shouldSkills = [];
 				foreach ($optionalSkills as $skill) {
-					$shouldSkills[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+					$shouldSkills[] = $this->buildSkillMatchClause($skill);
 				}
 				// No minimum_should_match here on purpose — these are
 				// preferred, not required; adding a minimum would turn them
@@ -1350,11 +1348,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$should = [];
 
 			foreach ($requiredSkills as $skill) {
-				$should[] = [
-					'match_phrase' => [
-						'job_application_skills.skills' => $skill
-					]
-				];
+				$should[] = $this->buildSkillMatchClause($skill);
 			}
 
 			$boolQuery['bool']['filter'][] = [
@@ -1740,6 +1734,42 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		return response()->json($responseData);
 
 
+	}
+
+
+	// Expands a skill into a match_phrase query for itself, OR (if it has
+	// known synonyms in config/skill_synonyms.php) a nested bool "should"
+	// covering every variant — a candidate matching ANY variant satisfies
+	// this one skill slot. match_phrase only ever does literal text
+	// matching, so without this a candidate tagged "JS" never matched a
+	// filter for "JavaScript" even though they're the same skill. Returns
+	// a plain match_phrase (no wrapping) when there are no synonyms, to
+	// keep the query as small as possible for the common case.
+	protected function buildSkillMatchClause(string $skill): array
+	{
+		$synonymMap = config('skill_synonyms', []);
+		$variants = array_values(array_unique(array_merge([$skill], $synonymMap[$skill] ?? [])));
+
+		if (count($variants) === 1) {
+			return [
+				'match_phrase' => [
+					'job_application_skills.skills' => $variants[0]
+				]
+			];
+		}
+
+		return [
+			'bool' => [
+				'should' => array_map(function ($variant) {
+					return [
+						'match_phrase' => [
+							'job_application_skills.skills' => $variant
+						]
+					];
+				}, $variants),
+				'minimum_should_match' => 1
+			]
+		];
 	}
 
 	// Helper method for search conditions
