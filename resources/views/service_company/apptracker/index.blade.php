@@ -157,6 +157,138 @@
             color: #334155;
         }
 
+        /* Search + Sort toolbar — same visual language as
+           similar_candidates.blade.php's simf-toolbar-card (no Filter
+           button here, this page keeps its existing Kanban stage pills
+           instead of a filter drawer). plf- prefix (Pool List Filter) to
+           keep this page's styles/JS distinct from the ibf-/abf-/simf-
+           prefixed ones on other AppTracker tabs. */
+        .plf-toolbar-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        .plf-search-wrap,
+        .plf-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+        .plf-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .plf-sort-wrap {
+            flex-shrink: 0;
+            width: 220px;
+            position: relative;
+        }
+        .plf-search-icon,
+        .plf-sort-icon {
+            color: #99a1b7;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plf-search-icon svg,
+        .plf-sort-icon svg {
+            flex-shrink: 0;
+            display: block;
+        }
+        .plf-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13.5px;
+            line-height: 42px;
+            height: 42px;
+        }
+        /* Custom Sort control — the native <select> can't be styled
+           cross-browser once its dropdown is open, so the visible control
+           is this button + an owned dropdown panel; the real
+           <select id="sortingfilter"> stays hidden underneath purely so
+           filtersdataget()/fetchCandidates() keep reading it unchanged. */
+        .plf-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .plf-sort-btn:focus { outline: none; }
+        .plf-sort-btn span {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .plf-sort-btn .chevron {
+            flex-shrink: 0;
+            color: #99a1b7;
+            transition: transform .15s;
+        }
+        .plf-sort-btn.open .chevron {
+            transform: rotate(180deg);
+        }
+        .plf-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .plf-sort-item {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .plf-sort-item:hover {
+            background: #f8f9fb;
+        }
+        .plf-sort-item.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        @media (max-width: 992px) {
+            .plf-sort-wrap { width: 160px; }
+        }
+        @media (max-width: 768px) {
+            .plf-search-wrap { flex-basis: 100%; }
+            .plf-sort-wrap { width: 140px; }
+        }
+
         /* Hiring Pipeline card */
         .hp-toolbar-card .card-body {
             padding: 14px 16px;
@@ -632,32 +764,38 @@
                 
 
 
-                <div class="card hp-toolbar-card mb-4">
+                <div class="card mb-4 plf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
-                                    <div style="position: absolute; top: 0px; right: 12px;">
-                                        <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                                     </div>
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="plf-search-wrap" style="position: relative;">
+                                <span class="plf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control plf-search-input" name="inputJobSearch"
+                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 50%; right: 0; transform: translateY(-50%);"></div>
                             </div>
-                            <div style="width: 220px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                    onchange="filtersdataget()">
+                            <div class="plf-sort-wrap" id="plf_sort_wrap">
+                                <span class="plf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="plf-sort-btn" id="plf_sort_btn">
+                                    <span id="plf_sort_label">Sort</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
                                     <option value="Show All" selected="">Sort</option>
+                                    <option value="10">Higher Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
                                     <option value="4">High to Low (Salary)</option>
-                                    <!--<option value="9">Notice Period (Immediate)</option>-->
                                     <option value="21">Notice Period (Immediate)</option>
                                     <option value="22">Notice Period (Serving)</option>
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
+                                <div class="plf-sort-panel d-none" id="plf_sort_panel"></div>
                             </div>
                         </div>
                     </div>
@@ -1027,6 +1165,48 @@
         @if (session('packageStatus'))
             poolToast.fire({ icon: 'warning', title: "{{ session('packageStatus') }}" });
         @endif
+
+        // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
+        // simfRenderSortPanel — reads options straight from the real
+        // #sortingfilter <select> (single source of truth), keeps that
+        // select's value in sync so filtersdataget()/fetchCandidates() are
+        // unaffected, only replaces how the option list is PRESENTED since a
+        // native <select>'s open dropdown can't be styled cross-browser.
+        function plfRenderSortPanel() {
+            var $panel = $('#plf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="plf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#plf_sort_label').text(label);
+                        plfCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function plfOpenSortPanel() {
+            plfRenderSortPanel();
+            $('#plf_sort_panel').removeClass('d-none');
+            $('#plf_sort_btn').addClass('open');
+        }
+        function plfCloseSortPanel() {
+            $('#plf_sort_panel').addClass('d-none');
+            $('#plf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#plf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#plf_sort_panel').hasClass('d-none')) plfOpenSortPanel();
+            else plfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#plf_sort_wrap').length) plfCloseSortPanel();
+        });
 
         $(document).ready(function() {
 

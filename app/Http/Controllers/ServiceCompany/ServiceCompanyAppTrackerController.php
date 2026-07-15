@@ -308,6 +308,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$filters = [];
 		$customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
 
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads for the row Match % badge), used by the
+		// "Higher Match" sort option below to rank candidates against this
+		// job specifically. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
+
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
@@ -510,6 +516,37 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				break;
 			case 8:
 				$sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
+				break;
+			case 10: // Higher Match — ranks by how many of the job's own
+				// required skills (job_metronics_skills) this candidate's
+				// skill list contains. Exact keyword match, not the
+				// phrase-prefix logic the Match % badge uses — Painless
+				// scripts run per-document on every sort, so this stays a
+				// cheap containment check rather than the fuzzier PHP-side
+				// comparison.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								int matchCount = 0;
+								if (doc.containsKey('job_application_skills.skills.keyword')) {
+									for (s in params.skills) {
+										if (doc['job_application_skills.skills.keyword'].contains(s)) {
+											matchCount += 1;
+										}
+									}
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
 				break;
 			default:
 				// Custom job_master_status_id order
