@@ -519,24 +519,37 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				break;
 			case 10: // Higher Match — ranks by how many of the job's own
 				// required skills (job_metronics_skills) this candidate's
-				// skill list contains. Exact keyword match, not the
-				// phrase-prefix logic the Match % badge uses — Painless
-				// scripts run per-document on every sort, so this stays a
-				// cheap containment check rather than the fuzzier PHP-side
-				// comparison.
+				// skill list satisfies. doc['...keyword'].contains(s) checks
+				// EXACT list membership, not substring — so a required
+				// "java" never matched a candidate skill of "Java Developer"
+				// (case mismatch AND no phrase-prefix), leaving the ranking
+				// uncorrelated with the Match % badge shown on the row
+				// (which uses skill_percentage()'s phrase-prefix, case-
+				// insensitive comparison). Reading params._source directly
+				// and doing a lowercase substring check per candidate skill
+				// mirrors that same logic closely enough to sort in the
+				// order the badge implies.
 				$sort[] = [
 					'_script' => [
 						'type' => 'number',
 						'script' => [
 							'lang' => 'painless',
 							'source' => "
-								int matchCount = 0;
-								if (doc.containsKey('job_application_skills.skills.keyword')) {
-									for (s in params.skills) {
-										if (doc['job_application_skills.skills.keyword'].contains(s)) {
-											matchCount += 1;
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
 										}
 									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
 								}
 								return matchCount;
 							",
