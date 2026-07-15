@@ -553,15 +553,11 @@
                     // column) instead of state — same qualification_name field/
                     // truncation the removed column used.
                     //
-                    // "Nearby" badge: this candidate isn't an exact match on
-                    // the selected location — they were pulled in by the
-                    // Delhi NCR-style metro-cluster expansion (see
-                    // resolveLocationCluster() in the controller), so the row
-                    // needs to visually say why, rather than silently mixing
-                    // them in with exact-location candidates.
-                    $nearbyLocationBadge = (!empty($row->is_nearby_location))
-                        ? ' <span class="badge badge-light-info my-1" style="font-size:9px;font-weight:600;vertical-align:middle;" title="Not an exact match on your selected location — included because it\'s in the same metro area">Nearby</span>'
-                        : '';
+                    // Nearby-location visual badge removed per design
+                    // feedback (didn't fit) — the underlying metro-cluster
+                    // expansion and exact-first priority sort
+                    // (resolveLocationCluster() in the controller) are
+                    // untouched, this only drops the "Nearby" label.
 
                     echo '<div class="d-flex flex-column">
 									<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
@@ -572,7 +568,7 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) .
                         ', ' .
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
-                        '</a>' . $nearbyLocationBadge . '
+                        '</a>
 									<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
                         mb_strtoupper(@$row->qualification_name) .
                         '">' .
