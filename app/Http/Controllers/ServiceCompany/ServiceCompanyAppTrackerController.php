@@ -1560,6 +1560,51 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
+		// Free-text search box (candidate name, recruiter/ownership, client
+		// or company name, job title/position, location, skills, and Job ID).
+		// Appended to the SAME $boolQuery['bool']['filter'] array every other
+		// filter above uses — that array is AND-ed by Elasticsearch, so this
+		// narrows whatever the other active filters already matched instead
+		// of searching the full unfiltered candidate pool.
+		$freeTextSearch = trim((string) $request->input('search', ''));
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'client_name',
+							'company_name',
+							'title^2',
+							'city',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			// job_id is a numeric field — a term/match query against it
+			// errors on non-numeric input rather than just finding zero
+			// matches, so only add this clause when the typed text is
+			// purely digits.
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['job_id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
 		if ($valCheck==22) {
 			$today = date('Y-m-d');  
 			$next30 = date('Y-m-d', strtotime('+30 days'));
