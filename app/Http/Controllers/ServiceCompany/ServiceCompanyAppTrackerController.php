@@ -1736,7 +1736,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 				    $matchCount = count($matchedSkills);
 					// Split out of matched_skills specifically: which matches
 					// were against a STARRED/mandatory requirement vs just an
@@ -1745,7 +1745,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					// skill I marked mandatory" apart from "this candidate
 					// happens to have one of my other entered skills too" —
 					// both currently rendered with the identical highlight.
-					$matchedMandatorySkills = array_values(array_intersect($jobSkills, $mandatorySkills));
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
 					// True when this candidate is only in the results because
 					// of metro-cluster expansion (e.g. a Noida candidate
 					// surfaced by a Gurgaon search) — lets the UI show a
@@ -5207,7 +5207,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
@@ -5948,7 +5948,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
@@ -6894,7 +6894,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
@@ -7890,7 +7890,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 				    $matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
@@ -8859,7 +8859,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
@@ -9849,7 +9849,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
