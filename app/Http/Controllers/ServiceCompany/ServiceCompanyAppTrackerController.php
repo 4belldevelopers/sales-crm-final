@@ -974,7 +974,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// down, and $exactLocationIds is threaded through to the response
 		// mapping so the UI can show a "Nearby" badge on cluster-only rows.
 		$exactLocationIds = array_map('intval', $location);
-		$locationCluster = $this->resolveLocationCluster($exactLocationIds, $locationCityNames);
+		$locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
 		$location = $locationCluster['expanded'];
 		$locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
 		$education = array();
@@ -1363,7 +1363,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		if (!empty($mandatorySkills)) {
 			$mustSkills = [];
 			foreach ($mandatorySkills as $skill) {
-				$mustSkills[] = $this->buildSkillMatchClause($skill);
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
 
 			$skillBool = ['must' => $mustSkills];
@@ -1372,7 +1372,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			if (!empty($optionalSkills)) {
 				$shouldSkills = [];
 				foreach ($optionalSkills as $skill) {
-					$shouldSkills[] = $this->buildSkillMatchClause($skill);
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 				}
 				// No minimum_should_match here on purpose — these are
 				// preferred, not required; adding a minimum would turn them
@@ -1389,7 +1389,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$should = [];
 
 			foreach ($requiredSkills as $skill) {
-				$should[] = $this->buildSkillMatchClause($skill);
+				$should[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
 
 			$boolQuery['bool']['filter'][] = [
@@ -1802,104 +1802,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 	}
 
-
-	// Expands a skill into a match_phrase_prefix query for itself, OR (if
-	// it has known synonyms in config/skill_synonyms.php) a nested bool
-	// "should" covering every variant — a candidate matching ANY variant
-	// satisfies this one skill slot. Returns a plain match_phrase_prefix
-	// (no wrapping) when there are no synonyms, to keep the query as small
-	// as possible for the common case.
-	//
-	// match_phrase_prefix (not match_phrase) deliberately: a job requiring
-	// "Java" was NOT matching a candidate whose stored skill value is the
-	// compound phrase "Java Developer" — match_phrase requires an exact
-	// phrase match, and "java" alone isn't the same phrase as "java
-	// developer". match_phrase_prefix instead treats the query as a
-	// phrase-so-far and matches "java" as a completable PREFIX wherever it
-	// occurs in the analyzed field, so "Java Developer" / "Senior Java
-	// Developer" now correctly match a "Java" requirement. It's also the
-	// efficient choice for this: Lucene can use the term dictionary's
-	// sorted prefix range directly, unlike a *java*-style wildcard (which
-	// needs a full field-value scan and would be materially slower at
-	// this dataset's scale).
-	protected function buildSkillMatchClause(string $skill): array
-	{
-		$synonymMap = config('skill_synonyms', []);
-		$variants = array_values(array_unique(array_merge([$skill], $synonymMap[$skill] ?? [])));
-
-		if (count($variants) === 1) {
-			return [
-				'match_phrase_prefix' => [
-					'job_application_skills.skills' => $variants[0]
-				]
-			];
-		}
-
-		return [
-			'bool' => [
-				'should' => array_map(function ($variant) {
-					return [
-						'match_phrase_prefix' => [
-							'job_application_skills.skills' => $variant
-						]
-					];
-				}, $variants),
-				'minimum_should_match' => 1
-			]
-		];
-	}
-
-	// Given the exact city_ids the recruiter selected and the raw city
-	// names those selections resolved from, widens the location filter to
-	// include every other city in the same metro cluster (see
-	// config/location_clusters.php) — e.g. selecting Gurgaon also pulls in
-	// Noida/Delhi/Faridabad/Ghaziabad/Greater Noida candidates. Returns
-	// both sets so the caller can filter on 'expanded' while still ranking
-	// 'exact' first via a priority sort. If no selected city belongs to a
-	// configured cluster, 'expanded' just equals 'exact' — unchanged
-	// original behaviour.
-	protected function resolveLocationCluster(array $exactCityIds, array $cityNames): array
-	{
-		$clusters = config('location_clusters', []);
-		if (empty($clusters) || empty($cityNames)) {
-			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
-		}
-
-		$matchedFragments = [];
-		foreach ($cityNames as $cityName) {
-			$lower = strtolower($cityName);
-			foreach ($clusters as $cluster) {
-				foreach ($cluster['city_fragments'] as $fragment) {
-					if (str_contains($lower, $fragment)) {
-						$matchedFragments = array_merge($matchedFragments, $cluster['city_fragments']);
-						continue 2;
-					}
-				}
-			}
-		}
-
-		if (empty($matchedFragments)) {
-			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
-		}
-
-		$matchedFragments = array_values(array_unique($matchedFragments));
-
-		$clusterCityIds = DB::table('city_list')
-			->where('city', '!=', '')
-			->where(function ($q) use ($matchedFragments) {
-				foreach ($matchedFragments as $fragment) {
-					$q->orWhere('city', 'LIKE', '%' . $fragment . '%');
-				}
-			})
-			->pluck('city_id')
-			->map(function ($id) { return (int) $id; })
-			->toArray();
-
-		return [
-			'exact' => $exactCityIds,
-			'expanded' => array_values(array_unique(array_merge($exactCityIds, $clusterCityIds))),
-		];
-	}
 
 
 	// Helper method for search conditions

@@ -11193,6 +11193,113 @@ END:VCALENDAR";
 				   return $intRow ?? null;
 
 	}
+	// Expands a skill into a match_phrase_prefix query for itself, OR (if
+	// it has known synonyms in config/skill_synonyms.php) a nested bool
+	// "should" covering every variant — a candidate matching ANY variant
+	// satisfies this one skill slot. match_phrase_prefix (not
+	// match_phrase): a job requiring "Java" was not matching a candidate
+	// whose stored skill value is the compound phrase "Java Developer" —
+	// match_phrase requires an exact phrase match, and "java" alone isn't
+	// the same phrase as "java developer". match_phrase_prefix matches
+	// "java" as a completable prefix wherever it occurs, so "Java
+	// Developer" / "Senior Java Developer" now correctly match. It's also
+	// the efficient choice: Lucene can use the term dictionary's sorted
+	// prefix range directly, unlike a *java*-style wildcard (full
+	// field-value scan, forbidden by docs/UI_UX_STANDARDS.md for exactly
+	// this performance reason).
+	//
+	// Shared between ServiceCompanyAppTrackerController::
+	// similar_existing_data_ajax() (the actual results query) and
+	// custome_count_all() below (the header tab counters shown on every
+	// AppTracker page) specifically so the two can never drift out of
+	// sync again — they did drift once already (skill matching, location
+	// clustering, and salary-missing-data handling were all improved in
+	// the results query without this counter being updated to match,
+	// which is why the same job could show very different "Similar
+	// Candidates" numbers depending on which tab you were viewing it
+	// from).
+	public static function buildSkillMatchClause(string $skill): array
+	{
+		$synonymMap = config('skill_synonyms', []);
+		$variants = array_values(array_unique(array_merge([$skill], $synonymMap[$skill] ?? [])));
+
+		if (count($variants) === 1) {
+			return [
+				'match_phrase_prefix' => [
+					'job_application_skills.skills' => $variants[0]
+				]
+			];
+		}
+
+		return [
+			'bool' => [
+				'should' => array_map(function ($variant) {
+					return [
+						'match_phrase_prefix' => [
+							'job_application_skills.skills' => $variant
+						]
+					];
+				}, $variants),
+				'minimum_should_match' => 1
+			]
+		];
+	}
+
+	// Given the exact city_ids the recruiter selected (or, for the header
+	// counters, the job's own default location) and the raw city names
+	// those selections resolved from, widens the location filter to
+	// include every other city in the same metro cluster (see
+	// config/location_clusters.php) — e.g. selecting/defaulting to Gurgaon
+	// also pulls in Noida/Delhi/Faridabad/Ghaziabad/Greater Noida
+	// candidates. Returns both sets so the caller can filter on 'expanded'
+	// while still ranking 'exact' first via a priority sort. If no
+	// selected city belongs to a configured cluster, 'expanded' just
+	// equals 'exact' — unchanged original behaviour. See
+	// buildSkillMatchClause() above for why this lives here shared, not on
+	// the controller.
+	public static function resolveLocationCluster(array $exactCityIds, array $cityNames): array
+	{
+		$clusters = config('location_clusters', []);
+		if (empty($clusters) || empty($cityNames)) {
+			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
+		}
+
+		$matchedFragments = [];
+		foreach ($cityNames as $cityName) {
+			$lower = strtolower($cityName);
+			foreach ($clusters as $cluster) {
+				foreach ($cluster['city_fragments'] as $fragment) {
+					if (str_contains($lower, $fragment)) {
+						$matchedFragments = array_merge($matchedFragments, $cluster['city_fragments']);
+						continue 2;
+					}
+				}
+			}
+		}
+
+		if (empty($matchedFragments)) {
+			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
+		}
+
+		$matchedFragments = array_values(array_unique($matchedFragments));
+
+		$clusterCityIds = DB::table('city_list')
+			->where('city', '!=', '')
+			->where(function ($q) use ($matchedFragments) {
+				foreach ($matchedFragments as $fragment) {
+					$q->orWhere('city', 'LIKE', '%' . $fragment . '%');
+				}
+			})
+			->pluck('city_id')
+			->map(function ($id) { return (int) $id; })
+			->toArray();
+
+		return [
+			'exact' => $exactCityIds,
+			'expanded' => array_values(array_unique(array_merge($exactCityIds, $clusterCityIds))),
+		];
+	}
+
 	public static function  custome_count_all($id){
 	   
 		$elasticService = app(ElasticService::class);
@@ -11254,6 +11361,21 @@ END:VCALENDAR";
 			$location_arr[] = $sval->city_id;
 		}
 		$location = $location_arr;
+
+		// Same Delhi NCR-style metro cluster expansion
+		// similar_existing_data_ajax() applies to the actual results (see
+		// resolveLocationCluster() above) — without this, this counter used
+		// only the job's exact default city while the results page (once a
+		// clustered city like Gurgaon is involved) counted every city in
+		// the cluster, which is the other half of why the two numbers
+		// diverged. city_list has no name on the job's own city_id list, so
+		// resolve it first purely to determine cluster membership.
+		$exactLocationIds = array_map('intval', $location);
+		$locationCityNames = !empty($exactLocationIds)
+			? DB::table('city_list')->whereIn('city_id', $exactLocationIds)->pluck('city')->toArray()
+			: [];
+		$locationCluster = self::resolveLocationCluster($exactLocationIds, $locationCityNames);
+		$location = $locationCluster['expanded'];
 
 		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
 			->where('job_id', '=', $id)->pluck('job_application_id')->toArray();
@@ -11381,17 +11503,20 @@ END:VCALENDAR";
 			]
 		];
 		// dd($requiredSkills);
-		
+
+		// Same match_phrase_prefix-based matching similar_existing_data_ajax()
+		// uses for the actual results — see buildSkillMatchClause() above for
+		// why (a job requiring "Java" needs to match a candidate whose skill
+		// is stored as "Java Developer"). This counter has no concept of a
+		// mandatory/starred skill (it only knows the job's own default skill
+		// list), so every skill stays an OR condition — unchanged structure,
+		// just the corrected match type.
 		if (!empty($requiredSkills)) {
 			if (!empty($requiredSkills)) {
 				$should = [];
 
 				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+					$should[] = self::buildSkillMatchClause($skill);
 				}
 
 				$boolQuery['bool']['filter'][] = [
@@ -11418,7 +11543,7 @@ END:VCALENDAR";
 		}
 
 		if (!empty($location)) {
-			
+
 			$boolQuery['bool']['filter'][] = [
 				'terms' => [
 					 'city_id' => array_map('intval', $location)
@@ -11504,9 +11629,20 @@ END:VCALENDAR";
 				$salaryRange['lte'] = $max_salary;
 			}
 
+			// Same missing-salary-inclusive handling
+			// similar_existing_data_ajax() uses for the actual results: a
+			// plain range filter only matches documents that HAVE the
+			// field, so a candidate missing salary data was silently
+			// excluded from this counter (but NOT from the results page
+			// after that fix), which was the third source of the two
+			// numbers disagreeing.
 			$boolQuery['bool']['filter'][] = [
-				'range' => [
-					$salaryField => $salaryRange
+				'bool' => [
+					'should' => [
+						['range' => [$salaryField => $salaryRange]],
+						['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+					],
+					'minimum_should_match' => 1,
 				]
 			];
 		}
@@ -11514,7 +11650,7 @@ END:VCALENDAR";
 
 
 		// dd($boolQuery);
-		
+
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
 			'request_cache' => true,
