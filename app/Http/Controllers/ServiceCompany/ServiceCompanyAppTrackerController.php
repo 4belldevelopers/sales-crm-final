@@ -1688,7 +1688,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				    $matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						// The candidate's FULL skill list (already computed above
+						// for the intersect, just not previously exposed) — lets
+						// the results row show every skill the candidate has,
+						// highlighting the ones that match the job instead of
+						// only showing the matched subset and hiding the rest.
+						'all_skills' => $jobSkills
 					]);
 				}, $response['hits']['hits']);
 				

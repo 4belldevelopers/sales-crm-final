@@ -174,10 +174,29 @@
 
                     $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;cursor:help;">Match '.$percentage.'%</span>';
 
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
+                    // Show every skill the candidate has, highlighting the
+                    // ones that match the job's required skills (green)
+                    // instead of only showing the matched subset and hiding
+                    // the rest — $row->all_skills is the candidate's full
+                    // skill list, already computed server-side alongside
+                    // matched_skills (same Elasticsearch document, no extra
+                    // query). Unmatched skills are capped so a candidate
+                    // with a long skill list doesn't make the row unreadable.
+                    $allSkillsList = $row->all_skills ?? $skillArr;
+                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $skillArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
+
+                    foreach ($skillArr as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkills, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {
