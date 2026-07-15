@@ -254,6 +254,12 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::post('coin-event-status', [SuperAdminCompanyController::class,'coinEventStatus'])->name('company.coinEventStatus');
 
+    Route::get('coupons', [\App\Http\Controllers\SuperAdmin\CouponController::class,'index'])->name('coupons.index');
+    Route::get('coupons/add-edit/{id?}', [\App\Http\Controllers\SuperAdmin\CouponController::class,'addEdit'])->name('coupons.addEdit');
+    Route::post('coupons/store', [\App\Http\Controllers\SuperAdmin\CouponController::class,'store'])->name('coupons.store');
+    Route::post('coupons/toggle-status', [\App\Http\Controllers\SuperAdmin\CouponController::class,'toggleStatus'])->name('coupons.toggleStatus');
+    Route::post('coupons/destroy', [\App\Http\Controllers\SuperAdmin\CouponController::class,'destroy'])->name('coupons.destroy');
+
     Route::get('topup-coin-packages', [SuperAdminCompanyController::class,'topUpCoinPackages'])->name('company.topUpCoinPackages');
     Route::get('add-edit-top-up-coin-packages/{id?}', [SuperAdminCompanyController::class,'addEditTopUpcoinPackages'])->name('company.addEditTopUpcoinPackages');
     Route::post('top-upcoin-package-store', [SuperAdminCompanyController::class,'topUpCoinPackageStore'])->name('company.topUpCoinPackageStore');

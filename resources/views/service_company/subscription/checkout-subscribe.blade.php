@@ -218,6 +218,41 @@
             color: #555;            /* Adjust color as needed */
         }
 
+        /* ===== Secure Checkout redesign ===== */
+        .co-header h1 { font-size: 16px; }
+        .co-secure-badge {
+            background: #ecfdf3; color: #10a34a; border: 1px solid #b7ebc6;
+            font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px;
+        }
+        .co-card { border: 1px solid #e4e6ef; border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+        .co-card-title { font-size: 14px; font-weight: 700; color: #181c32; }
+        .co-icon-circle {
+            width: 36px; height: 36px; border-radius: 50%; background: #f5f3ff; color: #6d28d9;
+            display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 15px;
+        }
+        .co-badge-type { background: #f5f3ff; color: #6d28d9; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .co-order-icon {
+            width: 56px; height: 56px; border-radius: 12px; background: #f5f3ff; color: #6d28d9;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .co-feature-item { font-size: 12px; color: #4a4f63; padding: 3px 0; }
+        .co-feature-item i { color: #10a34a; margin-right: 6px; }
+        .co-stat-value { font-size: 16px; font-weight: 800; color: #181c32; }
+        .co-stat-label { font-size: 10px; color: #8a8fa3; }
+        .co-coupon-box { background: #f8f9fc; border-radius: 10px; padding: 16px; }
+        .co-coupon-applied { background: #ecfdf3; border: 1px solid #b7ebc6; border-radius: 10px; padding: 12px 16px; }
+        .co-feature-strip { border-top: 1px solid #e4e6ef; padding-top: 16px; margin-top: 8px; }
+        .co-feature-strip-item { text-align: center; font-size: 11px; }
+        .co-feature-strip-item i { font-size: 20px; color: #6d28d9; display: block; margin-bottom: 6px; }
+        .co-summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+        .co-summary-total { font-size: 20px; font-weight: 800; color: #4c1d95; }
+        .co-save-banner { background: #ecfdf3; border: 1px solid #b7ebc6; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #14532d; }
+        .co-pay-btn {
+            width: 100%; background: #4c1d95 !important; border: none; padding: 12px; font-weight: 700; border-radius: 10px;
+        }
+        .co-help-card { border: 1px solid #e4e6ef; border-radius: 12px; padding: 18px; }
+        .co-empty-state { text-align: center; padding: 80px 20px; width: 100%; }
+        .co-empty-state i { font-size: 40px; color: #c4c8d6; display: block; margin-bottom: 14px; }
     </style>
 @endpush
 
@@ -278,312 +313,211 @@
 
 
 @section('content')
-    <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                        <span class="text-gray-800 mb-0 pt-5">Subscription Package</span>
-                    </h5>
-                    <span class="text-gray-600" id="">&nbsp;</span>
-                </div>
-                <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-            </div>
-            <div class="d-flex align-items-center py-1 d-none ">
-            </div>
-        </div>
-    </div>
-    <!--end::Toolbar-->
     <!--begin::Content-->
     <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
-        <div class=" container-xxl " id="kt_content_container">
-            <!--begin::Invoice 2 main-->
-            <div class="card">
-                <!--begin::Body-->
-                <div class="card-body p-lg-20">
-                    <!--begin::Layout-->
-                    <div class="d-flex flex-column flex-xl-row">
-                        <!--begin::Content-->
-                        @if (@$carts)
-                        <div class="flex-lg-row-fluid me-xl-18 mb-10 mb-xl-0">
-                            <!--begin::Invoice 2 content-->
-                            <div class="mt-n1">
+        <div class="container-xxl" id="kt_content_container">
 
-                               
-                                <!--begin::Wrapper-->
-                                <div class="m-0">
-
-
-
-                                    <!--begin::Row-->
-                                    <div class="row g-5 mb-12">
-                                        <!--end::Col-->
-                                        <div class="col-sm-12">
-                                            <!--end::Label-->
-
-                                            <!--end::Text-->
-
-                                            <!--end::Text-->
-
-                                            <!--end::Description-->
-
-
-
-                                            <!--end::Description-->
-                                            <div class="fw-semibold fs-7 text-gray-600">
-
-                                                <div class="row">
-                                                    <div class="col-sm-9">
-                                                        <div class="fw-bold fs-6 text-gray-800">Billing Details</div>
-                                                        <p><span id="usernamebill">{{ @$user_name }}</span><p>
-                                                        <p>{{ @$company_name }}<p>
-                                                        <p><span id="billing_address">{{ @$locArr }}</span> <p>
-                                                        <p><span id="billing_gst">{{ @$gstin }}</span> <p>
-                                                        <p><span id="billing_pan">{{ @$pan_no }}</span> <p>
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <a href="javascript:;" class="btn btn-primary show-billing-address"
-                                                            id="" style="float: right;">Edit Details</a>
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                            <!--end::Description-->
-                                        </div>
-                                        <!--end::Col-->
-
-                                        <!--end::Col-->
-                                        <div class="col-sm-6">
-                                            <!--end::Label-->
-
-
-                                            <!--end::Description-->
-                                            <div class="fw-semibold fs-7 text-gray-600">
-
-                                            </div>
-                                            <!--end::Description-->
-                                        </div>
-                                        <!--end::Col-->
-                                    </div>
-                                    <!--end::Row-->
-
-
-                                    <!--begin::Content-->
-                                    <div class="flex-grow-1">
-                                        <!--begin::Table-->
-                                        <div class="table-responsive border-bottom mb-9">
-                                            <table class="table mb-3">
-                                                <thead>
-                                                    <tr class="border-bottom fs-6 fw-bold text-muted">
-                                                        <th class="min-w-50px pb-2">Product</th>
-                                                        <th class="min-w-50px pb-2">Duration</th>
-                                                        <th class="min-w-50px pb-2">Coins</th>
-                                                        <th class="min-w-50px pb-2">Price</th>
-                                                        <th class="min-w-50px pb-2">Action</th>
-                                                    </tr>
-                                                </thead>
-
-                                                <tbody>
-                                                    @if (@$carts)
-                                                        <tr class="fw-bold text-gray-700 fs-5">
-                                                            <td class="d-flex align-items-center pt-6">
-                                                                 {{ @$carts ? @$carts->product_name : '' }}
-                                                            </td>
-
-                                                            <td class="pt-6">
-                                                                {{ @$carts->subscription_type == 'yes' ? @$durationType : @$durationType }} at <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                    aria-hidden="true"></i> {{ number_format($perMonthPrice,2) }}/Month
-                                                            </td>
-                                                            <td class="pt-6 fw-bolder">
-                                                                {{ @$carts ? $carts->credit : '' }}</td>
-                                                            <td class="pt-6">
-                                                                <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                    aria-hidden="true"></i>
-                                                            @php
-                                                                    $actualPrice = @$carts->price;
-                                                                    if (@$carts->discount) {
-                                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
-                                                                    }
-                                                            @endphp
-
-                                                                {{ @$carts ?  number_format($actualPrice,2) : '' }}</td>
-                                                            <td class="pt-6"><i class="fa fa-trash" aria-hidden="true"
-                                                                    data-trash="{{ encrypt(@$carts->id) }}" style="cursor: pointer;"></i></td>
-                                                        </tr>
-                                                    @else
-                                                        <tr class="border-bottom fs-6 fw-bold text-muted"
-                                                            style="text-align: center; background: #ff000012;">
-                                                            <td colspan="5" class="min-w-175px pb-2">No Product</td>
-                                                        </tr>
-                                                    @endif
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!--end::Table-->
-
-
-                                    </div>
-                                    <!--end::Content-->
-                                </div>
-                                <!--end::Wrapper-->
-                               
-                            </div>
-                            <!--end::Invoice 2 content-->
-                        </div>
-                        <!--end::Content-->
-
-                        <!--begin::Sidebar-->
-                        <div class="m-0">
-                            <!--begin::Invoice 2 sidebar-->
-                            <div
-                                class="d-print-none border border-dashed border-gray-300 card-rounded h-lg-100 min-w-md-350px p-9 bg-lighten">
-
-                                <!--begin::Title-->
-                                <h6 class="mb-8 fw-bolder text-gray-600 text-hover-primary">PAYMENT DETAILS</h6>
-                                <!--end::Title-->
-
-                                <!--begin::Container-->
-                                <div class="mb-6">
-                                    <!--begin::Section-->
-                                    <div class="mw-300px">
-
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Subtotal:</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-                                                @php
-                                                    $actualPrice = $carts->price;
-                                                    if ($carts->discount) {
-                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
-                                                    }
-                                                @endphp
-
-                                                {{  number_format($actualPrice,2) }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-
-                                        @if(@$carts->discount)
-                                         <!--begin::Item-->
-                                         <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Discounts :</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                {{ @$carts->discount }}%
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-                                        
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Price Offer Discount:</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-
-                                                {{ @$carts->price }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-
-                                        <!--end::Item-->
-                                        @endif
-
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">{{ @$carts->currency == 'INR' ? 'GST' : 'TAX' }}</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                {{ @$carts->gst ? @$carts->gst . '%' : '0.00' }}</div>
-                                            <!--end::Value-->
-                                        </div>
-                                        <!--end::Item-->
-
-                                        <!--begin::Item-->
-
-
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Total</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-                                                {{ @$carts->total_price }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-                                        <!--end::Item-->
-                                    </div>
-                                    <!--end::Section-->
-
-
-
-                                </div>
-
-                                <!--end::Container-->
-
-
-                                <div class="mb-6">
-
-                                    <a href="#"
-                                        class="btn btn-sm btn-success {{ $carts_count ? 'cart_add' : 'cert_warning' }}"
-                                        style="    background-color: #be4783 !important; width: 100% !important;"
-                                        data-cart="{{ encrypt(@$carts->id) }}">Pay
-                                        Now</a>
-                                    <!--end::Title-->
-                                </div>
-
-
-
-                            </div>
-                            <!--end::Invoice 2 sidebar-->
-                        </div>
-                        <!--end::Sidebar-->
-                        @else
-
-                        <div class="no-time-message">
-                            <p>No data available</p>
-                        </div>
-
-                        @endif
-
-                    </div>
-                    <!--end::Layout-->
+            <div class="d-flex flex-wrap flex-stack mb-6">
+                <div class="co-header d-flex flex-column">
+                    <h1 class="d-flex align-items-center text-gray-900 fw-bold mb-1">
+                        <i class="fa fa-shield-alt text-primary me-2"></i> Secure Checkout
+                    </h1>
+                    <div class="text-gray-500 fs-8">Review your order and complete your payment securely.</div>
                 </div>
-                <!--end::Body-->
+                <div class="d-flex flex-column align-items-end">
+                    <span class="co-secure-badge"><i class="fa fa-lock me-1"></i> 100% Secure Checkout</span>
+                    <span class="text-gray-500 fs-9 mt-1">Your payment details are safe with us</span>
+                </div>
             </div>
-            <!--end::Invoice 2 main-->
+
+            <div class="row">
+                <div class="col-xl-8">
+
+                    <!--begin::Billing Information-->
+                    <div class="co-card">
+                        <div class="d-flex flex-stack mb-4">
+                            <div class="d-flex align-items-center">
+                                <span class="co-icon-circle"><i class="fa fa-building"></i></span>
+                                <span class="co-card-title">Billing Information</span>
+                            </div>
+                            <a href="javascript:;" class="btn btn-sm btn-light-primary show-billing-address">Edit Billing</a>
+                        </div>
+                        <div class="fs-7 text-gray-700">
+                            <div class="fw-bold fs-6 mb-1">{{ @$company_name }}</div>
+                            <div><span id="usernamebill">{{ @$user_name }}</span></div>
+                            <div><span id="billing_address">{{ @$locArr }}</span></div>
+                            @if(@$gstin)
+                                <div class="mt-1">GSTIN: <span id="billing_gst">{{ @$gstin }}</span></div>
+                            @else
+                                <div><span id="billing_gst" style="display:none;"></span></div>
+                            @endif
+                            <span id="billing_pan" style="display:none;">{{ @$pan_no }}</span>
+                        </div>
+                    </div>
+                    <!--end::Billing Information-->
+
+                    @if (@$carts)
+                        <!--begin::Your Order-->
+                        <div class="co-card">
+                            <div class="d-flex flex-stack mb-4">
+                                <div class="d-flex align-items-center">
+                                    <span class="co-icon-circle"><i class="fa fa-tag"></i></span>
+                                    <span class="co-card-title">Your Order (1 item)</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="btn btn-sm btn-light-primary">Edit Order</a>
+                                    <a href="javascript:;" class="text-danger" data-toggle="tooltip" title="Remove">
+                                        <i class="fa fa-trash fa-lg" aria-hidden="true"
+                                            data-trash="{{ encrypt(@$carts->id) }}"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start">
+                                <span class="co-order-icon me-4"><i class="fa fa-coins"></i></span>
+                                <div class="flex-grow-1">
+                                    <span class="co-badge-type mb-2 d-inline-block">{{ ucfirst(@$carts->event_type) }} Coins</span>
+                                    <div class="fw-bold fs-4 text-gray-900 mb-2">{{ @$carts->product_name }}</div>
+                                    <div class="co-feature-item"><i class="fa fa-check-circle"></i>{{ number_format(@$carts->credit) }} {{ ucfirst(@$carts->event_type) }} Coins</div>
+                                    <div class="co-feature-item"><i class="fa fa-check-circle"></i>Validity: {{ @$carts->duration }} Days</div>
+                                </div>
+                                <div class="d-flex text-center gap-6">
+                                    <div>
+                                        <div class="co-stat-value">{{ number_format(@$carts->credit) }}</div>
+                                        <div class="co-stat-label">Coins</div>
+                                    </div>
+                                    <div>
+                                        <div class="co-stat-value">{{ @$durationType }}</div>
+                                        <div class="co-stat-label">Validity</div>
+                                    </div>
+                                    <div>
+                                        <div class="co-stat-value"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice, 2) }}</div>
+                                        <div class="co-stat-label">Price</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Your Order-->
+
+                        <!--begin::Coupon-->
+                        <div class="co-card">
+                            <div class="d-flex align-items-center mb-4">
+                                <span class="co-icon-circle"><i class="fa fa-ticket-alt"></i></span>
+                                <span class="co-card-title">Have Coupon?</span>
+                            </div>
+
+                            <div id="couponInputState" class="co-coupon-box" style="{{ @$carts->coupon_code ? 'display:none;' : '' }}">
+                                <label class="fs-8 text-gray-600 mb-2 d-block">Apply a coupon code to get discount</label>
+                                <div class="d-flex gap-3">
+                                    <input type="text" id="couponCodeInput" class="form-control form-control-solid"
+                                        placeholder="Enter coupon code">
+                                    <button type="button" id="applyCouponBtn" class="btn btn-primary">Apply</button>
+                                </div>
+                                <div id="couponError" class="text-danger fs-8 mt-2" style="display:none;"></div>
+                            </div>
+
+                            <div id="couponAppliedState" class="co-coupon-applied d-flex align-items-center justify-content-between"
+                                style="{{ @$carts->coupon_code ? '' : 'display:none;' }}">
+                                <div>
+                                    <div class="fw-bold text-success" id="couponAppliedCode">{{ @$carts->coupon_code }}</div>
+                                    <div class="fs-8 text-success">
+                                        <span id="couponAppliedPct">{{ @$carts->coupon_code ? rtrim(rtrim(number_format(@$carts->discount, 2), '0'), '.') : '' }}</span>% Discount Applied
+                                    </div>
+                                </div>
+                                <a href="javascript:;" id="removeCouponBtn" class="text-danger fs-3">&times;</a>
+                            </div>
+                        </div>
+                        <!--end::Coupon-->
+
+                        <!--begin::Feature strip-->
+                        <div class="co-card">
+                            <div class="row co-feature-strip">
+                                <div class="col-3 co-feature-strip-item"><i class="fa fa-file-invoice"></i>GST Invoice<div class="text-gray-500">Automatic invoice with GST</div></div>
+                                <div class="col-3 co-feature-strip-item"><i class="fa fa-bolt"></i>Instant Activation<div class="text-gray-500">Coins will be added instantly</div></div>
+                                <div class="col-3 co-feature-strip-item"><i class="fa fa-lock"></i>Secure Payment<div class="text-gray-500">Razorpay secured checkout</div></div>
+                                <div class="col-3 co-feature-strip-item"><i class="fa fa-headset"></i>24x7 Support<div class="text-gray-500">We're here to help you</div></div>
+                            </div>
+                        </div>
+                        <!--end::Feature strip-->
+                    @else
+                        <div class="co-card co-empty-state">
+                            <i class="fa fa-shopping-cart"></i>
+                            <div class="fw-bold fs-4 text-gray-700 mb-2">No Product in Cart</div>
+                            <div class="text-gray-500 fs-7 mb-6">Add a package to your cart to proceed with checkout.</div>
+                            <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="btn btn-primary">
+                                <i class="fa fa-coins me-1"></i> Buy Coins
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="col-xl-4">
+                    @if (@$carts)
+                        <!--begin::Order Summary-->
+                        <div class="co-card">
+                            <div class="d-flex align-items-center mb-4">
+                                <span class="co-icon-circle"><i class="fa fa-bookmark"></i></span>
+                                <span class="co-card-title">Order Summary</span>
+                            </div>
+
+                            <div class="co-summary-row">
+                                <span class="text-gray-600">Subtotal ({{ @$carts->product_name }})</span>
+                                <span class="fw-bold"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice, 2) }}</span>
+                            </div>
+
+                            @if(@$carts->discount)
+                                <div class="co-summary-row">
+                                    <span class="text-gray-600">Discount ({{ rtrim(rtrim(number_format($carts->discount, 2), '0'), '.') }}%)</span>
+                                    <span class="fw-bold text-success">-<i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice - $carts->price, 2) }}</span>
+                                </div>
+                                <div class="co-summary-row">
+                                    <span class="text-gray-600">Price After Discount</span>
+                                    <span class="fw-bold"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($carts->price, 2) }}</span>
+                                </div>
+                            @endif
+
+                            <div class="co-summary-row">
+                                <span class="text-gray-600">{{ @$carts->currency == 'INR' ? 'GST' : 'TAX' }} ({{ @$carts->gst ? rtrim(rtrim(number_format($carts->gst, 2), '0'), '.') : 0 }}%)</span>
+                                <span class="fw-bold"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format(@$carts->gst_amount, 2) }}</span>
+                            </div>
+
+                            <hr>
+
+                            <div class="co-summary-row align-items-center">
+                                <span class="fw-bold fs-6">Total Amount</span>
+                                <span class="co-summary-total"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format(@$carts->total_price, 2) }}</span>
+                            </div>
+
+                            @if(@$carts->discount)
+                                <div class="co-save-banner d-flex justify-content-between align-items-center mb-4">
+                                    <span>You Save</span>
+                                    <span class="fw-bold"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice - $carts->price, 2) }} ({{ rtrim(rtrim(number_format($carts->discount, 2), '0'), '.') }}%)</span>
+                                </div>
+                            @endif
+
+                            <a href="#" class="btn btn-sm btn-success co-pay-btn {{ $carts_count ? 'cart_add' : 'cert_warning' }}"
+                                data-cart="{{ encrypt(@$carts->id) }}">
+                                <i class="fa fa-lock me-1"></i> Proceed to Secure Payment
+                            </a>
+                            <div class="text-center text-gray-500 fs-9 mt-2">You will be redirected to Razorpay</div>
+                        </div>
+                        <!--end::Order Summary-->
+                    @endif
+
+                    <!--begin::Need Help-->
+                    <div class="co-help-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="co-icon-circle"><i class="fa fa-shield-alt"></i></span>
+                            <span class="co-card-title">Need Help?</span>
+                        </div>
+                        <div class="text-gray-600 fs-8 mb-3">Have a question about your order or billing? Our team is here to help.</div>
+                        <a href="mailto:support@jero.works" class="btn btn-sm btn-light-primary w-100">
+                            <i class="fa fa-envelope me-1"></i> Email Us
+                        </a>
+                    </div>
+                    <!--end::Need Help-->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1089,5 +1023,41 @@
             var rzp = new Razorpay(options);
             rzp.open(); // Open the Razorpay payment window
         }
+    </script>
+@endpush
+
+@push('footer-script')
+    <script>
+        $(document).on('click', '#applyCouponBtn', function() {
+            var code = $('#couponCodeInput').val().trim();
+            $('#couponError').hide().text('');
+            if (!code) {
+                $('#couponError').text('Please enter a coupon code.').show();
+                return;
+            }
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('service_company.subscribe.applyCoupon') }}",
+                data: { '_token': "{{ csrf_token() }}", 'code': code },
+                success: function() {
+                    window.location.reload();
+                },
+                error: function(xhr) {
+                    var message = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Could not apply this coupon.';
+                    $('#couponError').text(message).show();
+                }
+            });
+        });
+
+        $(document).on('click', '#removeCouponBtn', function() {
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('service_company.subscribe.removeCoupon') }}",
+                data: { '_token': "{{ csrf_token() }}" },
+                success: function() {
+                    window.location.reload();
+                }
+            });
+        });
     </script>
 @endpush
