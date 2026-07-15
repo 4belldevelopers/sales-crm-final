@@ -1170,6 +1170,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				]
 			];
 		}
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -1347,6 +1352,74 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'script' => [
 							'lang' => 'painless',
 							'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
+			case 10: // Higher Match — no stage grouping here (this page isn't
+				// stage-gated like the Pool tab). Ranked by: (1) match count
+				// against the job's own required skills, desc; (2) tied on
+				// match — most recently uploaded first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['created_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
 						],
 						'order' => 'asc'
 					]
@@ -3982,6 +4055,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		
 
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -4153,6 +4231,74 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'script' => [
 							'lang' => 'painless',
 							'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc — this index has no
+				// nested job_application_skills structure (no live skill
+				// search exists on this tab), so this reads the flat
+				// comma-separated 'skills' field the row partial already
+				// uses; (2) tied on match — most recently applied first;
+				// (3) still tied — Immediate joiners rank top, then
+				// candidates currently serving notice (date-based), then by
+				// ascending notice-period days (fewer days ranks higher); no
+				// notice-period data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('skills') && params._source.skills != null) {
+									for (s in params._source.skills.toString().splitOnToken(',')) {
+										candidateSkills.add(s.trim().toLowerCase());
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['created_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
 						],
 						'order' => 'asc'
 					]
@@ -4703,6 +4849,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -4880,6 +5031,73 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'script' => [
 							'lang' => 'painless',
 							'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated on the bench first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
 						],
 						'order' => 'asc'
 					]
@@ -6398,6 +6616,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -6575,6 +6798,73 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'script' => [
 							'lang' => 'painless',
 							'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated on the bench first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
 						],
 						'order' => 'asc'
 					]
