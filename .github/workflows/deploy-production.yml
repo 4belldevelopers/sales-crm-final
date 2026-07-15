@@ -1,37 +1,52 @@
-set -e
+name: Deploy to Production (hire.jero.works)
 
-cd ${{ secrets.PROD_PATH }}
+# MANUAL ONLY. Production never deploys automatically.
+# After staging is verified and you've merged `staging` into `main`,
+# go to the Actions tab -> this workflow -> "Run workflow" to deploy.
+#
+# If your repo is on a GitHub Team/Enterprise plan, you can also add
+# "Required reviewers" to the `production` environment
+# (Settings -> Environments -> production) for a second approval click.
+on:
+  workflow_dispatch:
 
-trap 'php artisan up || true' EXIT
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
-php artisan down --render="errors::503" || true
-
-echo ">> Pulling latest main code"
-git fetch origin main
-git reset --hard origin/main
-
-echo ">> Installing PHP deps"
-composer install --no-dev --optimize-autoloader --no-interaction
-
-echo ">> Installing Node packages"
-npm ci
-
-echo ">> Building frontend"
-npm run build
-
-echo ">> Running migrations"
-php artisan migrate --force
-
-echo ">> Clearing caches"
-php artisan optimize:clear
-
-echo ">> Rebuilding caches"
-php artisan optimize
-
-echo ">> Restarting queues"
-php artisan queue:restart || true
-
-echo ">> Reloading Octane"
-php artisan octane:reload || true
-
-echo "✅ Production deployment completed"
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.PROD_PATH }}
+            echo ">> Enabling maintenance mode"
+            php artisan down --render="errors::503" || true
+            echo ">> Pulling latest main code"
+            git fetch origin main
+            git reset --hard origin/main
+            echo ">> Installing PHP deps"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            echo ">> Building frontend assets"
+            npm ci
+            npm run build
+            echo ">> Running migrations"
+            php artisan migrate --force
+            echo ">> Caching config/routes/views"
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            echo ">> Reloading Octane workers"
+            php artisan octane:reload
+            echo ">> Disabling maintenance mode"
+            php artisan up
+            echo ">> Production deploy complete"
