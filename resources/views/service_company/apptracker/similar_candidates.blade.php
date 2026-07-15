@@ -637,7 +637,8 @@
         }
         .simf-sort-wrap {
             flex-shrink: 0;
-            width: 200px;
+            width: 220px;
+            position: relative;
         }
         .simf-search-icon,
         .simf-sort-icon {
@@ -651,17 +652,79 @@
             background: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
+            margin: 0 !important;
             font-size: 13.5px;
-            height: 100%;
+            line-height: 42px;
+            height: 42px;
         }
-        .simf-sort-select.form-select {
-            border: none !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            font-size: 13px !important;
-            font-weight: 500;
+        /* Custom Sort control — the native <select> can't be styled
+           cross-browser once its dropdown is open (confirmed: Select2 never
+           actually initializes on this element, only data-hide-search was
+           present, which does nothing without data-control="select2"), so
+           the visible control is this button + an owned dropdown panel; the
+           real <select id="sortingfilter"> stays hidden underneath purely
+           so fetchCandidates()/filtersdataget() keep reading it unchanged. */
+        .simf-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
             height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .simf-sort-btn:focus { outline: none; }
+        .simf-sort-btn span {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .simf-sort-btn .chevron {
+            flex-shrink: 0;
+            color: #99a1b7;
+            transition: transform .15s;
+        }
+        .simf-sort-btn.open .chevron {
+            transform: rotate(180deg);
+        }
+        .simf-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .simf-sort-item {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .simf-sort-item:hover {
+            background: #f8f9fb;
+        }
+        .simf-sort-item.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
         }
         .simf-filter-btn {
             height: 44px;
@@ -1030,16 +1093,17 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control simf-search-input" name="inputJobSearch"
-                                    placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" />
+                                    placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" autocomplete="off" />
                             </div>
-                            <div class="simf-sort-wrap">
+                            <div class="simf-sort-wrap" id="simf_sort_wrap">
                                 <span class="simf-sort-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
                                 </span>
-                                <select class="form-select form-select-solid simf-sort-select" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option"
-                                    onchange="filtersdataget()">
+                                <button type="button" class="simf-sort-btn" id="simf_sort_btn">
+                                    <span id="simf_sort_label">Best Match</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
                                     <option value="Show All" selected="">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
@@ -1050,6 +1114,7 @@
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
+                                <div class="simf-sort-panel d-none" id="simf_sort_panel"></div>
                             </div>
                             <button type="button" id="kt_similar_filter_toggle"
                                 class="btn simf-filter-btn position-relative">
@@ -2515,6 +2580,48 @@
                 e.preventDefault();
                 fetchCandidates();
             }
+        });
+
+        // Custom Sort dropdown. Reads options straight from the real
+        // #sortingfilter <select> (single source of truth — nothing is
+        // duplicated/hardcoded here), keeps that select's value in sync so
+        // filtersdataget()/fetchCandidates() are completely unaffected, and
+        // only replaces how the option list is PRESENTED, since a native
+        // <select>'s open dropdown can't be styled cross-browser.
+        function simfRenderSortPanel() {
+            var $panel = $('#simf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="simf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#simf_sort_label').text(label);
+                        simfCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function simfOpenSortPanel() {
+            simfRenderSortPanel();
+            $('#simf_sort_panel').removeClass('d-none');
+            $('#simf_sort_btn').addClass('open');
+        }
+        function simfCloseSortPanel() {
+            $('#simf_sort_panel').addClass('d-none');
+            $('#simf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#simf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#simf_sort_panel').hasClass('d-none')) simfOpenSortPanel();
+            else simfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#simf_sort_wrap').length) simfCloseSortPanel();
         });
     </script>
     <script>
