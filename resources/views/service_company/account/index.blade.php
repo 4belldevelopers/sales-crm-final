@@ -654,10 +654,16 @@ input[type="radio"]:checked {
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_stage"> <span class="nav-text font-weight-bold">Interview Stage</span> </a> </li>
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
 
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms"> 
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms">
           <span class="nav-text font-weight-bold">Terms & Conditions</span>
           <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-           </a> 
+           </a>
+      </li>
+
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#agencyofferterms">
+          <span class="nav-text font-weight-bold">Terms & Conditions</span>
+          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Agency Offer Letter)</span>
+           </a>
       </li>
 
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offercomponent"> 
@@ -1373,6 +1379,47 @@ input[type="radio"]:checked {
   </div>
 </div>
 <!--end::offerterms Terms & Canditions Content-->
+
+
+<!--begin::agencyofferterms Terms & Conditions Content-->
+<div class="tab-pane" id="agencyofferterms" role="tabpanel">
+  <!--begin::Overview header-->
+  <div class="card-header cursor-pointer px-0">
+    <!--begin::Card title-->
+    <div class="card-title m-0">
+      <h3 class="fw-bolder m-0">Terms & Conditions</h3>
+    </div>
+    <!--end::Card title-->
+    <!--begin::Action-->
+    <div class="card-title m-0">
+    <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsagencyofferTop" id="updateCompanyTermsagencyofferTop">Save Changes</a>
+    <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsagencyofferTop" id="setToDefaultCompanyTermsagencyofferTop">Set to Default</a>
+    <a href="javascript:;" class="btn btn-primary align-self-center" id="editBtnagencyoffer">Edit</a>
+    </div>
+    <!--end::Action-->
+  </div>
+  <!--end::Terms & Conditions header-->
+  <div class="card-body px-0 py-7">
+    <!--begin::Terms & Conditions Content-->
+    <div class="row">
+      <div class="col-lg-12 mb-7 view-terms" id="viewTermsagencyoffer">{!! (@$account->agency_offer_terms) ? @$account->agency_offer_terms : ((@$global_settings->agency_offer_terms) ? $global_settings->agency_offer_terms : '') !!}</div>
+      <form id="terms_contentagencyoffer" name="terms_contentagencyoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+          <meta name="csrf-token" content="{{ csrf_token() }}" />
+          <input type="hidden" name="pageterms" id="pagetermsagencyoffer" value="termsagencyoffer" />
+          @csrf
+          @method('POST')
+        <div class="col-lg-12 edit-terms" id="editTermsagencyoffer" style="display:none;">
+            <textarea id="kt_docs_tinymce_hiddenagencyoffer" name="kt_docs_tinymce_hiddenagencyoffer" class="tox-target">{!! (@$account->agency_offer_terms) ? @$account->agency_offer_terms : ((@$global_settings->agency_offer_terms) ? $global_settings->agency_offer_terms : '') !!}</textarea>
+          <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
+            <button class="btn btn-primary me-2 updateCompanyTermsagencyoffer" type="button" id="updateCompanyTermsagencyoffer">Save Changes</button>
+            <button class="btn btn-primary me-2 setToDefaultCompanyTermsagencyoffer" type="button" id="setToDefaultCompanyTermsagencyoffer">Set to Default</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!--end::agencyofferterms Terms & Conditions Content-->
 
 
 <!--begin::Offer components Content-->
@@ -2864,7 +2911,57 @@ if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
             initSampleoffer();
 
 
-            
+            var initSampleagencyoffer = ( function()
+            {
+                    var wysiwygareaAvailable = isWysiwygareaAvailable(),
+                    isBBCodeBuiltIn = !!CKEDITOR.plugins.get( 'bbcode' );
+
+                return function() {
+                                            var editorElement = CKEDITOR.document.getById( 'kt_docs_tinymce_hiddenagencyoffer' );
+
+                                            if ( isBBCodeBuiltIn ) {
+                                                editorElement.setHtml(
+                                                    'Hello world!\n\n' +
+                                                    'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
+                                                );
+                                            }
+                                            if ( wysiwygareaAvailable ) {
+                                                CKEDITOR.replace('kt_docs_tinymce_hiddenagencyoffer', {
+                                                  extraPlugins: 'customDropdown',
+                                                  toolbarGroups: [
+                                                      { name: 'clipboard', groups: ['clipboard', 'undo'] },
+                                                      { name: 'editing', groups: ['find', 'selection', 'spellchecker'] },
+                                                      { name: 'links' },
+                                                      { name: 'insert' },
+                                                      { name: 'forms' },
+                                                      { name: 'tools' },
+                                                      { name: 'document', groups: ['mode', 'document', 'doctools'] },
+                                                      { name: 'others' },
+                                                      { name: 'basicstyles', groups: ['basicstyles', 'cleanup'] },
+                                                      { name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align', 'bidi'] },
+                                                      { name: 'styles' },
+                                                      { name: 'colors' }
+                                                  ]
+                                                });
+                                            } else {
+                                                editorElement.setAttribute( 'contenteditable', 'true' );
+                                                CKEDITOR.inline( 'kt_docs_tinymce_hiddenagencyoffer' );
+                                            }
+                                };
+                function isWysiwygareaAvailable()
+                {
+                    if ( CKEDITOR.revision == ( '%RE' + 'V%' ) ) {
+                        return true;
+                    }
+                    return !!CKEDITOR.plugins.get( 'wysiwygarea' );
+                }
+
+            } )();
+
+            initSampleagencyoffer();
+
+
+
 
 document.getElementById('add_interview_sub_stage_form').addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
@@ -2958,6 +3055,39 @@ $(document).on('click','.updateCompanyTermsofferTop',function(){
 })
 $(document).on('click','.setToDefaultCompanyTermsofferTop',function(){
       $('.setToDefaultCompanyTermsoffer').click();
+})
+
+document.addEventListener('DOMContentLoaded', function() {
+    var editBtn = document.getElementById('editBtnagencyoffer');
+    var viewTerms = document.getElementById('viewTermsagencyoffer');
+    var editTerms = document.getElementById('editTermsagencyoffer');
+    var updateTop = document.getElementById('updateCompanyTermsagencyofferTop');
+    var setDefaultTop = document.getElementById('setToDefaultCompanyTermsagencyofferTop');
+    updateTop.style.display = "none";
+    setDefaultTop.style.display = "none";
+
+    editBtn.addEventListener('click', function() {
+        if (viewTerms.style.display === "none") {
+            viewTerms.style.display = "block";
+            editTerms.style.display = "none";
+            editBtn.textContent = "Edit";
+            updateTop.style.display = "none";
+            setDefaultTop.style.display = "none";
+        } else {
+            viewTerms.style.display = "none";
+            editTerms.style.display = "block";
+            editBtn.textContent = "View";
+            updateTop.style.display = "block";
+            setDefaultTop.style.display = "block";
+        }
+    });
+});
+
+$(document).on('click','.updateCompanyTermsagencyofferTop',function(){
+      $('.updateCompanyTermsagencyoffer').click();
+})
+$(document).on('click','.setToDefaultCompanyTermsagencyofferTop',function(){
+      $('.setToDefaultCompanyTermsagencyoffer').click();
 })
 
 $(document).on('click','.updateCompanyTermsTop',function(){
@@ -3468,7 +3598,69 @@ $(document).ready(function(){
                                                     var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hiddenoffer.setData(data.terms);	
                                                   }
                                         }
-                          });				
+                          });
+                });
+
+                $('body').on('click', '#updateCompanyTermsagencyoffer', function(){
+                    $("#updateCompanyTermsagencyofferTop").text("Please wait...");
+                    var data = new FormData();
+                    var kt_docs_tinymce_hiddenagencyoffer = CKEDITOR.instances.kt_docs_tinymce_hiddenagencyoffer.getData();
+                    data.append("description", kt_docs_tinymce_hiddenagencyoffer);
+                    var form_data = $('#terms_contentagencyoffer').serializeArray();
+                    $.each(form_data, function (key, input) {
+                        data.append(input.name, input.value);
+                    });
+                    data.append("descriptiontype", "agency_offer_terms");
+
+                      $.ajax({
+                            url     :   '{{route('service_company.account.update', @$account->id)}}',
+                            headers :   {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                            method  :   "POST",
+                            processData: false,
+                            contentType: false,
+                            data    :   data,
+                            redirect:   true,
+                            success :   function (data) {
+                                                $("#updateCompanyTermsagencyofferTop").text("Save Changes");
+                                                  if(data.status == 'success'){
+                                                    $('#viewTermsagencyoffer').html(data.terms);
+                                                      Swal.fire("Success", "Terms & Condition update successfully!", "success");
+                                                      $('#viewTermsagencyoffer').show();
+                                                      $('#editTermsagencyoffer').hide();
+                                                      $("#editBtnagencyoffer").text("Edit");
+                                                      $('.updateCompanyTermsagencyofferTop').hide();
+                                                      $('.setToDefaultCompanyTermsagencyofferTop').hide();
+                                                  }
+                                        }
+                          });
+                });
+
+                $('body').on('click', '#setToDefaultCompanyTermsagencyoffer', function(){
+
+                    var data = new FormData();
+                    data.append("description", 'setDefault');
+                    $("#setToDefaultCompanyTermsagencyofferTop").text("Please wait...");
+                    var form_data = $('#terms_contentagencyoffer').serializeArray();
+                    $.each(form_data, function (key, input) {
+                        data.append(input.name, input.value);
+                    });
+                    data.append("descriptiontype", "agency_offer_terms");
+
+                      $.ajax({
+                            url     :   '{{route('service_company.account.update', @$account->id)}}',
+                            headers :   {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                            method  :   "POST",
+                            processData: false,
+                            contentType: false,
+                            data    :   data,
+                            redirect:   true,
+                            success :   function (data) {
+                                                    $("#setToDefaultCompanyTermsagencyofferTop").text("Set to Default");
+                                                  if(data.status == 'success'){
+                                                    CKEDITOR.instances.kt_docs_tinymce_hiddenagencyoffer.setData(data.terms);
+                                                  }
+                                        }
+                          });
                 });
 
 

@@ -782,6 +782,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 								  if($global_settings){
 									if($request->descriptiontype=='offer_terms'){
 										$terms = @$global_settings->offer_terms;
+									}elseif($request->descriptiontype=='agency_offer_terms'){
+										$terms = @$global_settings->agency_offer_terms;
 									}elseif($request->descriptiontype=='offer_terms_admin'){
 										// $global_settings = Company::findOrFail(auth()->user()->company_id);
 										$terms = @$global_settings->offer_terms;
@@ -804,6 +806,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 							$company->offer_terms 				=	@$request->description;
 							$company->save();
 							return Reply::dataOnly(['status' => 'success','terms' => $company->offer_terms]);
+						 }elseif($request->pageterms=='termsagencyoffer'){
+							$company_id      					=	auth()->user()->company_id;
+					        $company 							=	Company::findOrFail($company_id);
+							$company->agency_offer_terms 		=	@$request->description;
+							$company->save();
+							return Reply::dataOnly(['status' => 'success','terms' => $company->agency_offer_terms]);
 						 }
 			
 					$company_logo_path					=	'';

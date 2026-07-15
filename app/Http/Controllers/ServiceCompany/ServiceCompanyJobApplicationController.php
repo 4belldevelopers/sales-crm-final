@@ -4617,6 +4617,9 @@ protected $elasticService;
 			$offer_terms =  (@$this->offer_terms_conditions->terms_condition) ? $this->offer_terms_conditions->terms_condition : '';
 		}else{
 			$offer_terms =  (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms; 
+			if($this->application->condidate_type=='bench_condidate'){
+				$offer_terms =  (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+			}
 		}
 		$rowDataOfferDetails = GeneralMethod::offerLetterdetails($this->offer_id);
 	
@@ -4636,9 +4639,17 @@ protected $elasticService;
 				 $of_joined_date_update = "[JOINING_DATE]";
 		}
 
-		$this->offer_terms = str_replace(["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"],[$candidate_name, $candidate_email,$candidate_mobile,$comapny_name,$job_title,$of_joined_date_update,$job_title,date("d M Y")], $offer_terms);
-		// dd($this->offer_terms,$offer_terms,$this->account );
-		// $this->offer_terms = $offer_terms;
+		$replaceFrom = ["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"];
+		$replaceTo   = [$candidate_name, $candidate_email, $candidate_mobile, $comapny_name, $job_title, $of_joined_date_update, $job_title, date("d M Y")];
+
+		$this->offer_terms = str_replace($replaceFrom, $replaceTo, $offer_terms);
+
+		// Resolve both templates with variables replaced so the view can switch between them
+		$raw_company_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
+		$raw_agency_terms  = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+		$this->company_offer_terms = str_replace($replaceFrom, $replaceTo, (string)$raw_company_terms);
+		$this->agency_offer_terms  = str_replace($replaceFrom, $replaceTo, (string)$raw_agency_terms);
+		$this->is_bench_candidate  = ($this->application->condidate_type == 'bench_condidate');
 
 		// Same values used in the merge above, exposed to the view so the Template step's
 		// "Insert Variable" chips can insert this offer's actual resolved values.
