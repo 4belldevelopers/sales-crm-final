@@ -1431,18 +1431,26 @@
                                                 fetchSuggestions(query);
                                             });
 
+                                            // $default_locations is EVERY city configured on this job
+                                            // (not just the first — that was the bug: JobcitiesTags()
+                                            // used by the old single-string $default_loc only ever
+                                            // returns one city via ->take(1), so a job posted across
+                                            // multiple locations only had the first auto-applied as a
+                                            // filter here, silently dropping the rest).
                                             setTimeout(() => {
-                                                var city = "{{@$default_loc}}";
-                                                if(city !=''){
-                                                    var cityName = city.split(" | ")[0];
-                                                    fetchSuggestions(cityName);
+                                                var defaultLocations = {!! json_encode(@$default_locations ?? []) !!};
+                                                var firstCity = defaultLocations.length ? defaultLocations[0].split(" | ")[0] : '';
+                                                if (firstCity !== '') {
+                                                    fetchSuggestions(firstCity);
                                                 }
                                             }, 100);
                                             setTimeout(() => {
-                                                var defaultLocation = {!! json_encode(@$default_loc) !!};
+                                                var defaultLocations = {!! json_encode(@$default_locations ?? []) !!};
 
-                                                if (defaultLocation) {
-                                                    tagifylocation.addTags([defaultLocation]);
+                                                if (defaultLocations.length) {
+                                                    // One addTags() call with the full array creates one
+                                                    // tag per element — not one tag containing everything.
+                                                    tagifylocation.addTags(defaultLocations);
                                                     tagifylocation.dropdown.hide();
                                                 }
                                                 updateActiveFiltersUI();
