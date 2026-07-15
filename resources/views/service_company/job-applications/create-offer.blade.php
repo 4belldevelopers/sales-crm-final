@@ -2952,9 +2952,13 @@
                                 </div>
 
                                 @php
-                                    // Native composer — all values are real (from createOffer's scope); no AJAX loader.
+                                    // Native composer — all values are real (from createOffer's scope); no AJAX loader. condidate_type
                                     $so_name    = trim((string) @$co_candidate_name) ?: (@$application->full_name ?: 'Candidate');
                                     $so_email   = @$co_candidate_email ?: @$application->email;
+                                    if(@$application->condidate_type=='bench_condidate'){
+                                         $bench_assign = DB::table('users')->join('bench_assign','bench_assign.user_id','=','users.id')->select('users.email')->where('bench_assign.bench_applications_id',@$application->id)->first();
+                                        $so_email   = @$bench_assign->email ?? @$application->email;
+                                    }
                                     $so_role    = @$designation ?: @$co_job_title;
                                     $so_exp     = @$application->total_exp;
                                     $so_location = trim((string) (@$application->current_location ?: @$application->city));
