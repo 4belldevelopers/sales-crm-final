@@ -601,6 +601,207 @@
             .simf-footer-actions { justify-content: stretch; }
             .simf-footer-actions .btn { flex: 1 1 auto; justify-content: center; }
         }
+
+        /* ==================================================================
+           Enterprise toolbar redesign: search / sort / save-search / filter.
+           The search input's existing behaviour (a single click anywhere in
+           it opens the filter drawer via .simf-overlay-trigger — it isn't a
+           live free-text search box, fetchCandidates() never reads its value)
+           is preserved exactly; only the visual treatment changes.
+        ================================================================== */
+        .simf-toolbar-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        .simf-search-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fb;
+            border: 1px solid #e4e6ef;
+            border-radius: 12px;
+            padding: 0 14px;
+            flex: 1 1 auto;
+            min-width: 0;
+            height: 44px;
+        }
+        .simf-search-icon {
+            color: #99a1b7;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        .simf-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            font-size: 13.5px;
+            height: 100%;
+        }
+        .simf-sort-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex-shrink: 0;
+            width: 200px;
+        }
+        .simf-sort-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #99a1b7;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            padding-left: 2px;
+        }
+        .simf-sort-select.form-select {
+            border: 1px solid #e4e6ef !important;
+            border-radius: 10px !important;
+            font-size: 13px !important;
+            font-weight: 500;
+            background-color: #fff !important;
+            height: 42px;
+        }
+        .simf-savesearch-btn,
+        .simf-filter-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+            padding: 0 16px !important;
+            flex-shrink: 0;
+        }
+        .simf-savesearch-btn {
+            background: #fff !important;
+            border: 1px solid #e4e6ef !important;
+            color: #3f4254 !important;
+        }
+        .simf-savesearch-btn:hover {
+            border-color: #93c5fd !important;
+            color: #1d4ed8 !important;
+        }
+        .simf-filter-btn {
+            background: #2563eb !important;
+            border: 1px solid #2563eb !important;
+            color: #fff !important;
+        }
+        .simf-filter-btn:hover {
+            background: #1d4ed8 !important;
+        }
+        @media (max-width: 992px) {
+            .simf-sort-wrap { width: 160px; }
+        }
+        @media (max-width: 768px) {
+            .simf-search-wrap { flex-basis: 100%; }
+            .simf-sort-wrap { width: 140px; }
+        }
+
+        /* ==================================================================
+           Applied Filters summary card — lives on the main page above the
+           results table (NOT inside the drawer), hidden until at least one
+           filter has actually been applied via "Apply Filters".
+        ================================================================== */
+        .simf-applied-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            background: #fff;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .simf-applied-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .simf-applied-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #181c32;
+        }
+        .simf-applied-count {
+            background: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 19px;
+            height: 19px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .simf-applied-clearall {
+            font-size: 12px;
+            font-weight: 500;
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+        .simf-applied-clearall:hover { color: #b91c1c; }
+        .simf-applied-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .simf-applied-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .simf-applied-chip .ic { display: inline-flex; align-items: center; flex-shrink: 0; }
+        .simf-applied-chip .star { font-size: 12px; line-height: 1; }
+        .simf-applied-chip-remove {
+            cursor: pointer;
+            opacity: .55;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 2px;
+        }
+        .simf-applied-chip-remove:hover { opacity: 1; }
+        .simf-applied-chip.cat-skill      { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
+        .simf-applied-chip.cat-location   { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+        .simf-applied-chip.cat-education  { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+        .simf-applied-chip.cat-experience { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .simf-applied-chip.cat-salary     { background: #ecfeff; color: #0e7490; border-color: #cffafe; }
+        .simf-applied-chip.cat-notice     { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .simf-applied-chip.cat-status     { background: #fdf2f8; color: #be185d; border-color: #fbcfe8; }
+        .simf-applied-chip.cat-activity   { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+        .simf-applied-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+        .simf-applied-more:hover { background: #e5e7eb; }
     </style>
 @endpush
 @section('content')
@@ -834,21 +1035,25 @@
 
             </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4 simf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="simf-search-wrap" style="position: relative;">
+                                <span class="simf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control simf-search-input" name="inputJobSearch"
                                     value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
                                 <div class="simf-overlay-trigger"
-                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
+                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0; left: 0;"> </div>
                             </div>
-                            <div style="width: 220px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                            <div class="simf-sort-wrap">
+                                <span class="simf-sort-label">Sort by</span>
+                                <select class="form-select form-select-solid simf-sort-select" data-hide-search="true"
                                     id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
+                                    data-placeholder="Select an option"
                                     onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="Show All" selected="">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
@@ -859,24 +1064,35 @@
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
                             </div>
-                            <div style="width: 140px; flex-shrink: 0;">
-                                <button type="button" id="kt_similar_filter_toggle"
-                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4 position-relative">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                                fill="black"></path>
-                                        </svg>
-                                    </span>
-                                    Filter
-                                    <span class="badge badge-circle badge-primary simf-count-badge" id="simf_count_badge" style="display:none;position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
-                                </button>
-                            </div>
+                            <button type="button" class="btn simf-savesearch-btn" id="simf_save_search_btn" title="Save this search">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16Z"/></svg>
+                                Save Search
+                            </button>
+                            <button type="button" id="kt_similar_filter_toggle"
+                                class="btn simf-filter-btn position-relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span>Filter<span id="simf_filter_count_text"></span></span>
+                                <span class="badge badge-circle badge-primary simf-count-badge d-none" id="simf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!--begin::Applied Filters summary card — hidden until Apply Filters is clicked-->
+                <div class="simf-applied-card d-none" id="simf_applied_card">
+                    <div class="simf-applied-head">
+                        <span class="simf-applied-title">
+                            Active Filters
+                            <span class="simf-applied-count" id="simf_applied_count">0</span>
+                        </span>
+                        <a href="javascript:void(0);" class="simf-applied-clearall" id="simf_applied_clear_all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                            Clear All
+                        </a>
+                    </div>
+                    <div class="simf-applied-chips" id="simf_applied_chips"></div>
+                </div>
+                <!--end::Applied Filters summary card-->
 
 
                 <!--Start Filter Drawer-->
@@ -2583,8 +2799,163 @@
             $('#simf_active_bar').toggleClass('d-none', n === 0);
             $('#simf_active_count').text('(' + n + ')');
             $('#simf_header_count').text(n);
-            $('#simf_count_badge').toggle(n > 0).text(n);
+            $('#simf_count_badge').toggleClass('d-none', n === 0).text(n);
+            $('#simf_filter_count_text').text(n > 0 ? ' (' + n + ')' : '');
         }
+
+        /* ------------------------------------------------------------------
+           Applied Filters summary card (main page, above the results table).
+           Unlike the drawer's own #simf_active_bar (which previews DRAFT
+           changes live, before Apply), this card reflects only the
+           last-APPLIED state — it's rendered on Apply/Reset and on initial
+           load, not on every keystroke inside the drawer. Reads the exact
+           same underlying sources as updateActiveFiltersUI() so the two
+           never disagree, just grouped/colored by category to match the
+           enterprise design instead of one flat list.
+        ------------------------------------------------------------------ */
+        var SIMF_APPLIED_VISIBLE_CAP = 8;
+        var simfAppliedExpanded = false;
+
+        function simfCategoryIcon(cat) {
+            var paths = {
+                skill: '<path d="m8 6-6 6 6 6M16 6l6 6-6 6"/>',
+                location: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+                education: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>',
+                experience: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+                notice: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+                status: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/>',
+                activity: '<path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>'
+            };
+            if (cat === 'salary') {
+                return '<span style="font-size:11px;font-weight:700;line-height:1;">₹</span>';
+            }
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (paths[cat] || '') + '</svg>';
+        }
+
+        function simfBuildAppliedItems() {
+            var items = [];
+
+            if (typeof tagify !== 'undefined') {
+                tagify.value.forEach(function(tag) {
+                    items.push({
+                        cat: 'skill', label: tag.value, mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.value.forEach(function(tag) {
+                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+            if (typeof simfEducationSelected !== 'undefined') {
+                simfEducationSelected.slice().forEach(function(val) {
+                    items.push({
+                        cat: 'education', label: val,
+                        clear: function() {
+                            $('.simf-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
+                        }
+                    });
+                });
+            }
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                items.push({
+                    cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                });
+            }
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                items.push({
+                    cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                });
+            }
+            var noticeEl = $('[name="app_int_notice"]:checked');
+            if (noticeEl.val() && noticeEl.val() !== '1') {
+                items.push({
+                    cat: 'notice', label: noticeEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_notice1').prop('checked', true); }
+                });
+            }
+            var statusEl = $('[name="app_int_status"]:checked');
+            if (statusEl.val() && statusEl.val() !== '0') {
+                items.push({
+                    cat: 'status', label: statusEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_status0').prop('checked', true); }
+                });
+            }
+            var activityEl = $('[name="app_int_activity"]:checked');
+            if (activityEl.val() && activityEl.val() !== '1') {
+                items.push({
+                    cat: 'activity', label: activityEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_activity1').prop('checked', true); }
+                });
+            }
+            return items;
+        }
+
+        // Removing a chip from this card acts on already-APPLIED filters, so
+        // (unlike drawer edits) it re-fetches immediately instead of waiting
+        // for an Apply click, and refreshes the drawer's own state/snapshot
+        // so reopening the drawer shows the same, now-current picture.
+        function simfAppliedChipRemoved() {
+            fetchCandidates();
+            if (typeof updateActiveFiltersUI === 'function') updateActiveFiltersUI();
+            if (typeof simfCaptureSnapshot === 'function') simfCaptureSnapshot();
+            renderAppliedFiltersCard();
+        }
+
+        function renderAppliedFiltersCard() {
+            var items = simfBuildAppliedItems();
+            var $chips = $('#simf_applied_chips').empty();
+            var visible = simfAppliedExpanded ? items : items.slice(0, SIMF_APPLIED_VISIBLE_CAP);
+
+            visible.forEach(function(it) {
+                var $chip = $('<span class="simf-applied-chip"></span>').addClass('cat-' + it.cat);
+                $chip.append('<span class="ic">' + simfCategoryIcon(it.cat) + '</span>');
+                if (it.mandatory) {
+                    $chip.append($('<span class="star"></span>').text('★'));
+                }
+                $chip.append($('<span></span>').text(it.label));
+                $chip.append(
+                    $('<span class="simf-applied-chip-remove">&times;</span>').on('click', function() {
+                        it.clear();
+                        simfAppliedChipRemoved();
+                    })
+                );
+                $chips.append($chip);
+            });
+
+            if (!simfAppliedExpanded && items.length > SIMF_APPLIED_VISIBLE_CAP) {
+                var remaining = items.length - SIMF_APPLIED_VISIBLE_CAP;
+                $chips.append(
+                    $('<span class="simf-applied-more"></span>').text('+' + remaining + ' More').on('click', function() {
+                        simfAppliedExpanded = true;
+                        renderAppliedFiltersCard();
+                    })
+                );
+            }
+
+            $('#simf_applied_card').toggleClass('d-none', items.length === 0);
+            $('#simf_applied_count').text(items.length);
+        }
+
+        // No saved-search backend exists anywhere in this codebase yet — this
+        // is a placeholder acknowledging the click rather than silently doing
+        // nothing, until that feature is actually built.
+        $(document).on('click', '#simf_save_search_btn', function() {
+            Swal.fire({ title: 'Save Search', text: 'Saved searches are coming soon.', icon: 'info', timer: 1800, showConfirmButton: false });
+        });
+
+        $(document).on('click', '#simf_applied_clear_all', function() {
+            $('#simf_clear_all').trigger('click');
+            fetchCandidates();
+            if (typeof simfCaptureSnapshot === 'function') simfCaptureSnapshot();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
+        });
 
         $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', function() {
             updateActiveFiltersUI();
@@ -2616,6 +2987,8 @@
             // cleared filters the new baseline — otherwise closing the drawer
             // afterwards would "restore" the pre-reset values.
             simfCaptureSnapshot();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
         });
 
         /* ------------------------------------------------------------------
@@ -2714,6 +3087,8 @@
         $(document).on('click', '#simf_apply_btn', function() {
             simfApplying = true;
             fetchCandidates();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
             $('#kt_similar_filter_close').trigger('click');
         });
 
@@ -2723,6 +3098,9 @@
             // very first close-without-apply reverts correctly even if the
             // shown event hasn't fired yet.
             setTimeout(simfCaptureSnapshot, 800);
+            // Reflect any filters that arrived pre-applied (e.g. carried over
+            // from the URL/session on first load) in the summary card too.
+            setTimeout(renderAppliedFiltersCard, 700);
         });
     </script>
 @endpush
