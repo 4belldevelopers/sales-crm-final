@@ -11308,7 +11308,7 @@ END:VCALENDAR";
 				'index' => ELASTIC_JOBS,
 				'id'    => $id,
 		];
-		
+
 		$response = $elasticService->getClient()->get($params);
 		$jobs_details = (object) $response['_source'];
         //  dd($jobs_details);
