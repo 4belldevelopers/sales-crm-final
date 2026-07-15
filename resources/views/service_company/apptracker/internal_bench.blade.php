@@ -179,6 +179,114 @@
             background: #f1f5f9;
             color: #334155;
         }
+
+        /* Show All Inhouse Bench — a mode switch, not a filter field, so it
+           lives in its own bar between the header and the filter form
+           rather than as one more row inside the sections below. */
+        .ibf-showall-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #eef0f4;
+            flex-shrink: 0;
+            transition: background-color .15s;
+        }
+        .ibf-showall-bar.active {
+            background: #eff6ff;
+        }
+        .ibf-showall-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .ibf-showall-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #e0e7ff;
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background-color .15s, color .15s;
+        }
+        .ibf-showall-bar.active .ibf-showall-icon {
+            background: #2563eb;
+            color: #fff;
+        }
+        .ibf-showall-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #181c32;
+            line-height: 1.3;
+        }
+        .ibf-showall-desc {
+            font-size: 11px;
+            color: #7e8299;
+            line-height: 1.3;
+            margin-top: 1px;
+        }
+        /* Custom switch — a native checkbox styled as an iOS-style toggle,
+           same enterprise visual language as the rest of the drawer. */
+        .ibf-switch {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 24px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .ibf-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .ibf-switch-slider {
+            position: absolute;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 999px;
+            transition: background-color .15s;
+        }
+        .ibf-switch-slider::before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(16,24,40,.15);
+            transition: transform .15s;
+        }
+        .ibf-switch input:checked + .ibf-switch-slider {
+            background: #2563eb;
+        }
+        .ibf-switch input:checked + .ibf-switch-slider::before {
+            transform: translateX(18px);
+        }
+        .ibf-switch input:focus-visible + .ibf-switch-slider {
+            outline: 2px solid #93c5fd;
+            outline-offset: 2px;
+        }
+        /* Locked state — every filter section becomes visually inert (not
+           just non-interactive) so it reads as "temporarily disabled", not
+           "broken". pointer-events:none on the sections wrapper is the
+           single source of truth for blocking interaction; individual
+           widgets (Tagify, native selects) are never separately disabled,
+           so nothing needs to be re-initialized when unlocking. */
+        .ibf-sections-locked {
+            opacity: .5;
+            pointer-events: none;
+            filter: grayscale(.3);
+            transition: opacity .15s, filter .15s;
+        }
         .ibf-activebar {
             padding: 12px 0;
             border-bottom: 1px solid #eef0f4;
@@ -1004,11 +1112,6 @@
                                 <span>Filter<span id="ibf_filter_count_text"></span></span>
                                 <span class="badge badge-circle badge-primary ibf-count-badge d-none" id="ibf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
                             </button>
-                            <button type="button" id="ibf_show_all_btn" class="btn btn-sm btn-light-primary"
-                                style="height:44px;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;"
-                                title="Clear every filter and show the company's full active in-house bench roster">
-                                Show All Bench Candidates
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1055,6 +1158,24 @@
                         </div>
                         <!--end::Header-->
 
+                        <!--begin::Show All mode switch-->
+                        <div class="ibf-showall-bar" id="ibf_showall_bar">
+                            <div class="ibf-showall-info">
+                                <span class="ibf-showall-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </span>
+                                <div>
+                                    <div class="ibf-showall-label">Show All Inhouse Bench</div>
+                                    <div class="ibf-showall-desc">View the full active roster — filters below are locked while this is on</div>
+                                </div>
+                            </div>
+                            <label class="ibf-switch" title="Show all active in-house bench candidates">
+                                <input type="checkbox" id="ibf_showall_toggle">
+                                <span class="ibf-switch-slider"></span>
+                            </label>
+                        </div>
+                        <!--end::Show All mode switch-->
+
                         <!--begin::Body-->
                         <div class="ibf-body">
                             <form id="createSchedule" class="ajax-form" method="post">
@@ -1072,6 +1193,7 @@
                                 </div>
                                 <!--end::Active filters-->
 
+                                <div id="ibf_sections_wrap">
                                 <!--begin::Skills-->
                                 <div class="ibf-section">
                                     <div class="ibf-section-head">
@@ -1723,6 +1845,7 @@
                                     </div>
                                 </div>
                                 <!--end::Activity-->
+                                </div>
 
                             </form>
                         </div>
@@ -2680,12 +2803,30 @@
             ibfRenderAppliedFiltersCard();
         });
 
-        // Toolbar shortcut — same clear-everything logic as Reset, just
-        // reachable without opening the drawer first. Match % still shows
-        // (see the controller's $requiredSkillsForDisplay fallback to the
-        // job's own skills once the Skills tagify goes empty).
-        $(document).on('click', '#ibf_show_all_btn', function() {
-            $('#ibf_clear_all').trigger('click');
+        // Show All Inhouse Bench — takes effect immediately (not gated
+        // behind Apply, same as Reset), locks the filter sections visually
+        // and to interaction, and remembers whatever was selected before
+        // switching on so turning it back off restores it exactly rather
+        // than leaving the drawer blank. Stored in its own variable (not
+        // just relying on ibfSnapshot) because the drawer's own open/close
+        // lifecycle captures/restores ibfSnapshot independently and would
+        // otherwise overwrite it while this is on.
+        var ibfShowAllPreState = null;
+        $(document).on('change', '#ibf_showall_toggle', function() {
+            var isOn = $(this).is(':checked');
+            $('#ibf_showall_bar').toggleClass('active', isOn);
+            $('#ibf_sections_wrap').toggleClass('ibf-sections-locked', isOn);
+
+            if (isOn) {
+                ibfCaptureSnapshot();
+                ibfShowAllPreState = ibfSnapshot;
+                $('#ibf_clear_all').trigger('click');
+            } else if (ibfShowAllPreState) {
+                ibfSnapshot = ibfShowAllPreState;
+                ibfRestoreSnapshot();
+                ibfShowAllPreState = null;
+            }
+
             fetchCandidates();
             ibfCaptureSnapshot();
             ibfAppliedExpanded = false;
