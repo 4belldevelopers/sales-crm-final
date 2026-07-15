@@ -3278,7 +3278,7 @@ protected $elasticService;
 			if($currentSlug==='apptracker'){
 				$this->skillAndQuestions = true;
 			}
-			if($currentSlug==='apptracker' || $currentSlug==='cvtracker'){
+			if($currentSlug==='apptracker' || $currentSlug==='cvtracker' || $currentSlug==='interview-schedule'){
 				$this->editprofile = true;
 				$this->currentSlug = $_GET['slug'];
 			}
@@ -3846,7 +3846,7 @@ protected $elasticService;
 			  if($currentSlug==='apptracker'){
                   $this->skillAndQuestions = true;
 			  }
-			if($currentSlug==='apptracker' || $currentSlug==='cvtracker'){
+			if($currentSlug==='apptracker' || $currentSlug==='cvtracker' || $currentSlug==='interview-schedule'){
 				$this->editprofile = true;
 				$this->currentSlug = $_GET['slug'];
 			}
