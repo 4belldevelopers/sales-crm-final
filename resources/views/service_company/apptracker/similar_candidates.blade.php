@@ -88,9 +88,23 @@
         .tagify__tag .star.checked {
             color: #eab308 !important;
         }
+        /* The vendor Tagify stylesheet renders this button via a CSS
+           mask-image (an SVG X clipped out of background-color) rather than
+           real text — combined with our own inline background of 6% black
+           opacity, the icon was nearly invisible against the light chip
+           background. We render a literal "×" character instead (see the
+           tag template below) and explicitly cancel the mask so it can't
+           clip our text away or double up with a mask-rendered glyph. */
+        .tagify__tag__removeBtn,
+        .tagify__tag__removeBtn::before,
+        .tagify__tag__removeBtn::after {
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            content: none !important;
+        }
         .tagify__tag__removeBtn:hover {
-            background: rgba(0,0,0,.12) !important;
-            color: #000 !important;
+            background: rgba(220,38,38,.28) !important;
+            color: #b91c1c !important;
         }
         /* Location autocomplete dropdown is appended to <body> (appendTarget:document.body)
            so it needs a z-index above the filter drawer (z-index:1200) and its backdrop. */
@@ -1242,9 +1256,9 @@
                                                         ${this.getAttributes(tagData)}
                                                         style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
                                                         <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
-                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
-                                                        <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
-                                                            style="display:inline-flex;align-items:center;justify-content:center;width:11px;height:11px;border-radius:50%;background:rgba(0,0,0,.06);flex-shrink:0;font-size:11px;line-height:1;cursor:pointer;padding:0;"></x>
+                                                        <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(220,38,38,.14);color:#dc2626;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
                                                     </tag>
                                                 `;
                                                     }
@@ -1255,23 +1269,30 @@
                                                 }
                                             });
 
-                                            // Add event listener for star click
+                                            // Toggle mandatory (star) on click of EITHER the star itself
+                                            // OR the keyword text next to it — previously only the tiny
+                                            // star hit-target worked, so clicking the (much bigger, more
+                                            // obvious) keyword label appeared to do nothing.
                                             document.addEventListener('click', function(e) {
-                                                if (e.target.classList.contains('star')) {
-                                                    const tagElm = e.target.closest('.tagify__tag');
-                                                    const value = tagElm.querySelector('.tagify__tag-text').textContent;
+                                                const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+                                                if (toggleTarget) {
+                                                    const tagElm = toggleTarget.closest('.tagify__tag');
+                                                    if (!tagElm) return;
+                                                    const starEl = tagElm.querySelector('.star');
+                                                    const textEl = tagElm.querySelector('.tagify__tag-text');
+                                                    if (!starEl || !textEl) return;
+                                                    const value = textEl.textContent;
 
-                                                    e.target.classList.toggle('checked');
-                                                    const nowChecked = e.target.classList.contains('checked');
+                                                    starEl.classList.toggle('checked');
+                                                    const nowChecked = starEl.classList.contains('checked');
 
                                                     // Update glyph, star colour, chip background/border inline
                                                     // (template uses inline styles so CSS classes alone won't work)
-                                                    e.target.textContent = nowChecked ? '★' : '☆';
-                                                    e.target.style.color = nowChecked ? '#eab308' : '#94a3b8';
+                                                    starEl.textContent = nowChecked ? '★' : '☆';
+                                                    starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
                                                     tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
                                                     tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
-                                                    const textEl = tagElm.querySelector('.tagify__tag-text');
-                                                    if (textEl) textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
+                                                    textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
                                                     tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
                                                     // Update the tag data
