@@ -6514,13 +6514,22 @@ END:VCALENDAR";
 			}, $skillArr);
 			
 
+			// in_array() required an EXACT string match between the job's
+			// skill keyword ("java") and the candidate's own skill entry
+			// ("java developer") — never equal, so a candidate whose skill
+			// list only had compound entries scored 0% even when they
+			// clearly had the skill. Same phrase-prefix check
+			// buildSkillMatchClause()/matchedSkillsList() use elsewhere.
 			$matches = 0;
-			foreach ($lowercaseArray2 as $value) {
-				if (in_array($value, $lowercaseArray1)) {
-					$matches++;
+			foreach ($lowercaseArray1 as $required) {
+				foreach ($lowercaseArray2 as $candidate) {
+					if (self::skillMatchesPhrasePrefix($required, $candidate)) {
+						$matches++;
+						break;
+					}
 				}
 			}
-			
+
 			$totalElements = count($lowercaseArray1);
 			$matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
 
@@ -6547,13 +6556,19 @@ END:VCALENDAR";
 		}, $skillArr);
 		
 
+		// Same phrase-prefix fix as skill_percentage() above — in_array()
+		// required an exact string match, so a candidate skill of "java
+		// developer" never counted against a required "java".
 		$matches = 0;
-		foreach ($lowercaseArray2 as $value) {
-			if (in_array($value, $lowercaseArray1)) {
-				$matches++;
+		foreach ($lowercaseArray1 as $required) {
+			foreach ($lowercaseArray2 as $candidate) {
+				if (self::skillMatchesPhrasePrefix($required, $candidate)) {
+					$matches++;
+					break;
+				}
 			}
 		}
-		
+
 		$totalElements = count($lowercaseArray1);
 		$matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
 

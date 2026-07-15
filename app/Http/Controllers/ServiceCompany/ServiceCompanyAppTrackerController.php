@@ -4535,25 +4535,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->where('name', 'admin')
 		// 	->count();
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors similar_existing_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
 		$requiredSkills = [];
+		$mandatorySkills = [];
+		$checkedSkills = [];
 		if (\request('cus_search') != "") {
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$requiredSkills = array_column($checkedSkills, 'value');
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
-
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -4563,6 +4561,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
 
 		$cachePayload = [
@@ -4833,46 +4832,48 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		
 
 
-		// Skills filter
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
-
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				// APPEND, do not overwrite
-				$boolQuery['bool']['filter'][] = [
-					'bool' => [
-						'must' => $must
-					]
-				];
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// similar_existing_data_ajax(): starred skills are a hard requirement
+		// (must — every one of them has to match), skills typed but left
+		// unstarred stay additive once at least one skill is starred (they
+		// still boost relevance/Match % via $requiredSkills, but are never
+		// required on their own). If nothing is starred, behaviour is
+		// unchanged: match at least one of the entered skills.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
-		}else{
-			if (!empty($requiredSkills)) {
 
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
 			$skillShould = [];
 
-				foreach ($requiredSkills as $skill) {
-					$skillShould[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				// append skill filter
-				$boolQuery['bool']['filter'][] = [
-					'bool' => [
-						'should' => $skillShould,
-						'minimum_should_match' => 1
-					]
-				];
-					
+			foreach ($requiredSkills as $skill) {
+				$skillShould[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
+			// append skill filter
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $skillShould,
+					'minimum_should_match' => 1
+				]
+			];
 		}
 
 		// Experience filter
@@ -5198,22 +5199,27 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
-				$source = $hit['_source'];
-				$jobSkills = collect(data_get($source, 'job_application_skills', []))
-				->pluck('skills')
-				->filter()
-				->unique()
-				->toArray();
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
 
-					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
-					$matchCount = count($matchedSkills);
-					return array_merge($source, [
-						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
-					]);
-				}, $response['hits']['hits']);
+			$source = $hit['_source'];
+			$jobSkills = collect(data_get($source, 'job_application_skills', []))
+			->pluck('skills')
+			->filter()
+			->unique()
+			->toArray();
+
+				$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
+				$matchCount = count($matchedSkills);
+				// Which matches were against a STARRED/mandatory requirement
+				// vs just an entered-but-not-starred one — feeds the 3-tier
+				// skill chip rendering in internal_bench_ajax.blade.php.
+				$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
+				return array_merge($source, [
+					'matched_skill_count' => $matchCount,
+					'matched_skills' => $matchedSkills,
+					'matched_mandatory_skills' => $matchedMandatorySkills
+				]);
+			}, $response['hits']['hits']);
 		}
 			
 			$pagination = [
@@ -6224,24 +6230,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->where('name', 'admin')
 		// 	->count();
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors similar_existing_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
 		$requiredSkills = [];
+		$mandatorySkills = [];
 		if (\request('cus_search') != "") {
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$requiredSkills = array_column($checkedSkills, 'value');
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
+		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -6250,7 +6256,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$page = max((int) $request->input('page', 1), 1);
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
-		$requiredSkills = array_map('strtolower', $requiredSkills);
 
 
 
@@ -6715,50 +6720,49 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 		
-		// Skills filter
-
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-					$must = [];
-
-					foreach ($requiredSkills as $skill) {
-						$must[] = [
-							'match_phrase' => [
-								'job_application_skills.skills' => $skill
-							]
-						];
-					}
-
-					$boolQuery = [
-						'bool' => [
-							'filter' => [
-								[
-									'bool' => [
-										'must' => $must
-									]
-								]
-							]
-						]
-					];
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// similar_existing_data_ajax()/internal_bench_data_ajax(): starred
+		// skills are a hard requirement (must), unstarred entered skills stay
+		// additive. APPENDED to $boolQuery['bool']['filter'][] — the previous
+		// version of this block REASSIGNED $boolQuery entirely in the
+		// mandatory-skill branch, silently discarding the must_not company_id
+		// (this tab excludes the requesting company's own candidates) and
+		// every other filter (status/education/location/range) already built
+		// above the instant any skill was starred.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
-		}else{
-			if (!empty($requiredSkills)) {
-				$should = [];
 
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 				}
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
-				];
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
 			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			$should = [];
+
+			foreach ($requiredSkills as $skill) {
+				$should[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+							'bool' => [
+								'should' => $should,
+								'minimum_should_match' => 1
+							]
+			];
 		}
 
 		if ($valCheck==22) {
@@ -6885,8 +6889,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -6896,9 +6900,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
+					// Which matches were against a STARRED/mandatory requirement
+					// vs just an entered-but-not-starred one — feeds the 3-tier
+					// skill chip rendering in public_bench_ajax.blade.php.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills
 					]);
 				}, $response['hits']['hits']);
 		}
