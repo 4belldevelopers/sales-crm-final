@@ -1400,6 +1400,113 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         return view('service_company.subscription.checkout-subscribe', $this->data);
     }
 
+    /**
+     * Recompute a cart's price/gst/total from its original package price and
+     * a given discount percent — shared by applyCoupon() and removeCoupon()
+     * so both always derive from the true original subtotal rather than
+     * reversing an already-discounted price (which would compound errors
+     * across repeated apply/remove cycles).
+     *
+     * @param object $cart
+     * @param float $discountPercent
+     * @return array{price: float, gst_amount: float, total_price: float}
+     */
+    private function recalculateCartTotals($cart, $discountPercent)
+    {
+        if ($cart->subscription_type === 'yes') {
+            $pkg = DB::table('coin_packages')->where('id', $cart->pck_top_id)->first();
+        } else {
+            $pkg = DB::table('top_up_coin_packages')->where('id', $cart->pck_top_id)->first();
+        }
+
+        $subtotal = $cart->currency === 'INR' ? $pkg->price : $pkg->price_usd;
+        $price = $subtotal * (1 - $discountPercent / 100);
+        $gstAmount = ($price * $cart->gst) / 100;
+
+        return [
+            'price' => $price,
+            'gst_amount' => $gstAmount,
+            'total_price' => $price + $gstAmount,
+        ];
+    }
+
+    public function applyCoupon(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $cart = DB::table('carts')->where('company_id', $company_id)->where('status', 0)->first();
+
+        if (!$cart) {
+            return response()->json(['status' => 'error', 'message' => 'Your cart is empty.'], 422);
+        }
+
+        $code = strtoupper(trim($request->code));
+        $coupon = \App\Models\Coupon::whereRaw('UPPER(code) = ?', [$code])->first();
+
+        if (!$coupon || !$coupon->isRedeemable()) {
+            return response()->json(['status' => 'error', 'message' => 'This coupon code is invalid or has expired.'], 422);
+        }
+
+        $totals = $this->recalculateCartTotals($cart, $coupon->discount_percent);
+
+        DB::table('carts')->where('id', $cart->id)->update([
+            'discount' => $coupon->discount_percent,
+            'price' => $totals['price'],
+            'gst_amount' => $totals['gst_amount'],
+            'total_price' => $totals['total_price'],
+            'coupon_id' => $coupon->id,
+            'coupon_code' => $coupon->code,
+        ]);
+
+        if ($cart->coupon_id != $coupon->id) {
+            $coupon->increment('times_redeemed');
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'code' => $coupon->code,
+            'discount_percent' => $coupon->discount_percent,
+            'price' => round($totals['price'], 2),
+            'gst_amount' => round($totals['gst_amount'], 2),
+            'total_price' => round($totals['total_price'], 2),
+        ]);
+    }
+
+    public function removeCoupon(Request $request)
+    {
+        $company_id = auth()->user()->company_id;
+        $cart = DB::table('carts')->where('company_id', $company_id)->where('status', 0)->first();
+
+        if (!$cart) {
+            return response()->json(['status' => 'error', 'message' => 'Your cart is empty.'], 422);
+        }
+
+        if ($cart->subscription_type === 'yes') {
+            $pkg = DB::table('coin_packages')->where('id', $cart->pck_top_id)->first();
+            $originalDiscount = $pkg->discount ?? 0;
+        } else {
+            $originalDiscount = 0;
+        }
+
+        $totals = $this->recalculateCartTotals($cart, $originalDiscount);
+
+        DB::table('carts')->where('id', $cart->id)->update([
+            'discount' => $originalDiscount,
+            'price' => $totals['price'],
+            'gst_amount' => $totals['gst_amount'],
+            'total_price' => $totals['total_price'],
+            'coupon_id' => null,
+            'coupon_code' => null,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'discount_percent' => $originalDiscount,
+            'price' => round($totals['price'], 2),
+            'gst_amount' => round($totals['gst_amount'], 2),
+            'total_price' => round($totals['total_price'], 2),
+        ]);
+    }
+
     public function deletecheckout(Request $request){
              decrypt($request->id);
              $id =  decrypt($request->id);

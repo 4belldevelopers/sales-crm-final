@@ -543,6 +543,8 @@ Route::group(['middleware' => 'auth'], function () {
 			Route::post('custom-checkout-subscribe', [ManageSubscriptionController::class,'customCheckoutSubscribe'])->name('subscribe.customCheckoutSubscribe');
 
 			Route::get('deletecheckout-subscribe', [ManageSubscriptionController::class,'deletecheckout'])->name('subscribe.deletecheckout');
+			Route::post('checkout-subscribe/apply-coupon', [ManageSubscriptionController::class,'applyCoupon'])->name('subscribe.applyCoupon');
+			Route::post('checkout-subscribe/remove-coupon', [ManageSubscriptionController::class,'removeCoupon'])->name('subscribe.removeCoupon');
 			Route::get('cartcheckout-subscribe', [ManageSubscriptionController::class,'cartcheckout'])->name('subscribe.cartcheckout');
 			Route::get('receiptdownload-subscribe/{id?}', [ManageSubscriptionController::class,'receiptdownload'])->name('subscribe.receiptdownload');
 			
