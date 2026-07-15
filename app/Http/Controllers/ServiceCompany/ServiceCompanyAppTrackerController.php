@@ -517,12 +517,38 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			case 8:
 				$sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
 				break;
-			case 10: // Higher Match — ranks by how many of the job's own
-				// required skills (job_metronics_skills) this candidate's
-				// skill list satisfies. doc['...keyword'].contains(s) checks
-				// EXACT list membership, not substring — so a required
-				// "java" never matched a candidate skill of "Java Developer"
-				// (case mismatch AND no phrase-prefix), leaving the ranking
+			case 10: // Higher Match — stage grouping (In-Review → Sourcing →
+				// Screening → ... → Rejected) STAYS the primary sort, same
+				// as the default view; this only replaces the secondary
+				// "id desc" tiebreak within each stage with match ranking,
+				// so a Screening candidate can never outrank an In-Review
+				// one just for matching better — it only reorders who's
+				// shown first WITHIN In-Review, WITHIN Sourcing, etc.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				// Ranks by how many of the job's own required skills
+				// (job_metronics_skills) this candidate's skill list
+				// satisfies. doc['...keyword'].contains(s) checks EXACT list
+				// membership, not substring — so a required "java" never
+				// matched a candidate skill of "Java Developer" (case
+				// mismatch AND no phrase-prefix), leaving the ranking
 				// uncorrelated with the Match % badge shown on the row
 				// (which uses skill_percentage()'s phrase-prefix, case-
 				// insensitive comparison). Reading params._source directly
