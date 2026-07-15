@@ -2501,16 +2501,15 @@
 
         });
 
-        function fetchCandidates(page = 1, search = '') {
+        function fetchCandidates(page = 1, search = '', loadingText = 'Processing...') {
             var jobid = '{{ @$job->id }}';
             // #inputSearch never existed on this page — the real search box
             // is #kt_tagify_2. This was previously always reading undefined,
-            // silently sending an empty "search" param on every request. The
-            // backend endpoint doesn't act on "search" yet either (confirmed
-            // by inspecting similar_existing_data_ajax — no request('search')
-            // usage), so this now sends the typed text correctly but it
-            // won't filter results until the Elasticsearch query is updated
-            // to use it — a backend change, not a front-end one.
+            // silently sending an empty "search" param on every request.
+            // similar_existing_data_ajax now reads it and applies it as an
+            // additional AND-ed Elasticsearch filter clause (see the backend
+            // for field list/details), so it narrows whatever filters are
+            // already active rather than searching the full candidate pool.
             var inputSearch = $('#kt_tagify_2').val();
             var sortingfilter = $('#sortingfilter').val();
             var country = $('#country').val();
@@ -2527,7 +2526,7 @@
             var app_int_activity = $('[name="app_int_activity"]:checked').val();
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
 
-            $('.loadingMessage').css({ display: 'block' });
+            $('.loadingMessage').text(loadingText).css({ display: 'block' });
             // Return the jqXHR so callers that chain .then()/.catch() (e.g. the
             // pagination handler) don't crash on an undefined return value.
             return $.ajax({
@@ -2578,10 +2577,14 @@
 
         // Free-text search box: Enter re-runs the same fetchCandidates() call
         // the sort dropdown and pagination already use — no separate endpoint.
+        // "Searching..." (vs the generic "Processing...") gives distinct
+        // feedback for this specific trigger, since search is now AND-ed
+        // onto every active filter and an empty result is more likely here
+        // than from picking a single filter.
         $(document).on('keydown', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
-                fetchCandidates();
+                fetchCandidates(1, '', 'Searching...');
             }
         });
 
