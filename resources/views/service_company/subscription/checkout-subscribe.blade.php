@@ -251,8 +251,24 @@
             width: 100%; background: #4c1d95 !important; border: none; padding: 12px; font-weight: 700; border-radius: 10px;
         }
         .co-help-card { border: 1px solid #e4e6ef; border-radius: 12px; padding: 18px; }
-        .co-empty-state { text-align: center; padding: 80px 20px; width: 100%; }
-        .co-empty-state i { font-size: 40px; color: #c4c8d6; display: block; margin-bottom: 14px; }
+        .co-empty-state { text-align: center; padding: 50px 30px; width: 100%; }
+        .co-empty-icon-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+        .co-empty-icon-wrap > i {
+            font-size: 46px; color: #6d28d9; background: #f5f3ff; border-radius: 50%;
+            width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;
+        }
+        .co-empty-icon-badge {
+            position: absolute; top: -2px; right: -2px; width: 26px; height: 26px; border-radius: 50%;
+            background: #6d28d9; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .co-empty-divider { display: flex; align-items: center; text-align: center; color: #8a8fa3; font-size: 11px; margin: 10px 0; }
+        .co-empty-divider::before, .co-empty-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e4e6ef; }
+        .co-empty-divider span { padding: 0 12px; }
+        .co-summary-empty-icon {
+            width: 90px; height: 90px; border-radius: 50%; background: #f5f3ff; color: #d6d1e8;
+            display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px;
+        }
+        .co-feature-strip-item span { display: block; }
     </style>
 @endpush
 
@@ -408,7 +424,7 @@
 
                             <div id="couponInputState" class="co-coupon-box" style="{{ @$carts->coupon_code ? 'display:none;' : '' }}">
                                 <label class="fs-8 text-gray-600 mb-2 d-block">Apply a coupon code to get discount</label>
-                                <div class="d-flex gap-3">
+                                <div class="d-flex align-items-center gap-3">
                                     <input type="text" id="couponCodeInput" class="form-control form-control-solid"
                                         placeholder="Enter coupon code">
                                     <button type="button" id="applyCouponBtn" class="btn btn-primary">Apply</button>
@@ -428,26 +444,34 @@
                             </div>
                         </div>
                         <!--end::Coupon-->
+                    @else
+                        <!--begin::Empty cart state-->
+                        <div class="co-card co-empty-state" style="background:#fff;">
+                            <div class="co-empty-icon-wrap">
+                                <i class="fa fa-cart-shopping"></i>
+                                <span class="co-empty-icon-badge"><i class="fa fa-exclamation"></i></span>
+                            </div>
+                            <div class="fw-bold fs-2 text-gray-800 mb-2">Your cart is empty</div>
+                            <div class="text-gray-500 fs-7">Looks like you haven't selected any plan or item yet.</div>
+                            <div class="text-gray-500 fs-7 mb-6">Choose a subscription plan or add items to your cart to continue.</div>
 
-                        <!--begin::Feature strip-->
-                        <div class="co-card">
-                            <div class="row co-feature-strip">
-                                <div class="col-3 co-feature-strip-item"><i class="fa fa-file-invoice"></i>GST Invoice<div class="text-gray-500">Automatic invoice with GST</div></div>
-                                <div class="col-3 co-feature-strip-item"><i class="fa fa-bolt"></i>Instant Activation<div class="text-gray-500">Coins will be added instantly</div></div>
-                                <div class="col-3 co-feature-strip-item"><i class="fa fa-lock"></i>Secure Payment<div class="text-gray-500">Razorpay secured checkout</div></div>
-                                <div class="col-3 co-feature-strip-item"><i class="fa fa-headset"></i>24x7 Support<div class="text-gray-500">We're here to help you</div></div>
+                            <div class="d-flex justify-content-center align-items-center gap-3 mb-6">
+                                <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="btn btn-primary">Explore Plans</a>
+                                <a href="{{ route('service_company.subscribe.checkoutSubscribeIist') }}" class="btn btn-outline btn-outline-primary">View My Cart</a>
+                            </div>
+
+                            <div class="co-empty-divider"><span>or</span></div>
+
+                            <div class="d-flex align-items-center justify-content-center mt-6">
+                                <span class="co-icon-circle"><i class="fa fa-coins"></i></span>
+                                <div class="text-start">
+                                    <div class="fw-bold text-gray-800">Need more coins?</div>
+                                    <div class="text-gray-500 fs-8">You can purchase additional coins or upgrade your plan anytime.</div>
+                                    <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="fw-bold">Buy Coins <i class="fa fa-chevron-right fs-9"></i></a>
+                                </div>
                             </div>
                         </div>
-                        <!--end::Feature strip-->
-                    @else
-                        <div class="co-card co-empty-state">
-                            <i class="fa fa-shopping-cart"></i>
-                            <div class="fw-bold fs-4 text-gray-700 mb-2">No Product in Cart</div>
-                            <div class="text-gray-500 fs-7 mb-6">Add a package to your cart to proceed with checkout.</div>
-                            <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="btn btn-primary">
-                                <i class="fa fa-coins me-1"></i> Buy Coins
-                            </a>
-                        </div>
+                        <!--end::Empty cart state-->
                     @endif
                 </div>
 
@@ -502,6 +526,24 @@
                             <div class="text-center text-gray-500 fs-9 mt-2">You will be redirected to Razorpay</div>
                         </div>
                         <!--end::Order Summary-->
+                    @else
+                        <!--begin::Order Summary empty-->
+                        <div class="co-card text-center" style="background:#fff;">
+                            <div class="d-flex align-items-center mb-4">
+                                <span class="co-icon-circle"><i class="fa fa-bookmark"></i></span>
+                                <span class="co-card-title">Order Summary</span>
+                            </div>
+                            <div class="co-summary-empty-icon"><i class="fa fa-file-alt"></i></div>
+                            <div class="fw-bold fs-5 text-gray-800 mb-2">No items selected</div>
+                            <div class="text-gray-500 fs-8 mb-6">Your order summary will appear here once you add items to your cart.</div>
+                            <div class="text-start">
+                                <div class="co-feature-item"><i class="fa fa-check-circle"></i>No hidden charges</div>
+                                <div class="co-feature-item"><i class="fa fa-check-circle"></i>GST invoice included</div>
+                                <div class="co-feature-item"><i class="fa fa-check-circle"></i>Instant activation</div>
+                                <div class="co-feature-item"><i class="fa fa-check-circle"></i>24x7 support</div>
+                            </div>
+                        </div>
+                        <!--end::Order Summary empty-->
                     @endif
 
                     <!--begin::Need Help-->
@@ -518,6 +560,18 @@
                     <!--end::Need Help-->
                 </div>
             </div>
+
+            <!--begin::Feature strip-->
+            <div class="co-card" style="background:#fff;">
+                <div class="row co-feature-strip">
+                    <div class="col co-feature-strip-item"><i class="fa fa-file-invoice"></i><span class="fw-bold text-gray-800">GST Invoice</span><div class="text-gray-500">Automatic invoice with GST</div></div>
+                    <div class="col co-feature-strip-item"><i class="fa fa-bolt"></i><span class="fw-bold text-gray-800">Instant Activation</span><div class="text-gray-500">Coins will be added instantly</div></div>
+                    <div class="col co-feature-strip-item"><i class="fa fa-lock"></i><span class="fw-bold text-gray-800">Secure Payment</span><div class="text-gray-500">Razorpay secured checkout</div></div>
+                    <div class="col co-feature-strip-item"><i class="fa fa-undo"></i><span class="fw-bold text-gray-800">Money Back</span><div class="text-gray-500">7-day refund policy</div></div>
+                    <div class="col co-feature-strip-item"><i class="fa fa-headset"></i><span class="fw-bold text-gray-800">24x7 Support</span><div class="text-gray-500">We're here to help you</div></div>
+                </div>
+            </div>
+            <!--end::Feature strip-->
         </div>
     </div>
 
