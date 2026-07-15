@@ -814,6 +814,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			GeneralMethod::skillsAddElastic($skillsAddElastic);
 		}
 
+		// $mandatorySkills tracks only the starred/checked skills (used to
+		// build a strict "must match" clause below). $requiredSkills is
+		// EVERY entered skill, checked or not — it previously got
+		// overwritten to contain ONLY the checked skills the moment any
+		// skill was starred, which silently dropped every other typed
+		// skill from filtering AND from the relevance-sort script AND
+		// from the "Match %" badge (all three read $requiredSkills). A
+		// recruiter starring one skill out of four was unknowingly
+		// discarding the other three everywhere, not just marking one as
+		// required. $requiredSkills now always reflects everything typed;
+		// $mandatorySkills is the separate, additive "must have" set.
+		$mandatorySkills = [];
 		if (\request('cus_search') != "") {
 
 			$checkedSkills = array_filter($custom_search, function ($skill) {
@@ -824,15 +836,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				return $skill['checked'] == false;
 			});
 
-			if (!empty($checkedSkills)) {
-				$requiredSkills = array_column($checkedSkills, 'value');
-			} else {
-				$requiredSkills = array_column($uncheckedSkills, 'value');
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 
 		}
 
-		// dd($requiredSkills,$custom_search,$checkedSkills,$uncheckedSkills);
+		// dd($requiredSkills,$mandatorySkills,$custom_search,$checkedSkills,$uncheckedSkills);
 
 		$location = request('kt_tagify_location');
 		$custom_location = json_decode($location, true);
@@ -958,32 +967,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
-		$relevanceCase = "";
-		if (\request('cus_search') != "") {
-			$relevanceCase = "";
-
-
-			$checkedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == true;
-			});
-
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$value = $skill['value'];
-					$relevanceCase .= " + CASE WHEN job_application_skills.skills LIKE '%{$value}%' THEN 1 ELSE 0 END";
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$value = $skill['value'];
-					$relevanceCase .= " + CASE WHEN job_application_skills.skills LIKE '%{$value}%' THEN 1 ELSE 0 END";
-				}
-			}
-
-		}
+		// (A $relevanceCase block used to sit here, building a MySQL-style
+		// "CASE WHEN ... LIKE" string from the same checked/unchecked skill
+		// split computed above — it was never read anywhere after being
+		// built, since this method queries Elasticsearch, not MySQL. Removed
+		// as dead code rather than left to confuse future readers into
+		// thinking skill relevance is scored via a SQL CASE expression.)
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -994,14 +983,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$from = ($page - 1) * $size;
         // dd(array_values($requiredSkills));
 		$requiredSkills = array_map('strtolower', $requiredSkills);
-		
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
+
+		// Computed here (not down where the search filter clause is built)
+		// specifically so it can be included in $cachePayload below — the
+		// cache key is derived from this payload, and a parameter left out
+		// of it means two different searches with identical other filters
+		// would collide on the same cache key and one could silently serve
+		// the other's stale results.
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -1305,44 +1303,66 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			]
 		];
 
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
+		// Starred/mandatory skills are a hard requirement (must — every one of
+		// them has to match). Skills typed but left unstarred are additive
+		// once at least one skill is starred: they still boost relevance
+		// (the sort script and the Match % badge both read $requiredSkills,
+		// which includes them) but are never required on their own. This
+		// matches how "mandatory keyword" reads in Naukri-style search —
+		// required PLUS preferred, not required INSTEAD OF preferred, which
+		// is what the previous must/should EITHER-OR branch actually did:
+		// starring one skill silently discarded every other typed skill
+		// from filtering entirely.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = [
+					'match_phrase' => [
+						'job_application_skills.skills' => $skill
+					]
+				];
+			}
 
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = [
 						'match_phrase' => [
 							'job_application_skills.skills' => $skill
 						]
 					];
 				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required; adding a minimum would turn them
+				// back into a second hard requirement layered on the must.
+				$skillBool['should'] = $shouldSkills;
+			}
 
-				// APPEND, do not overwrite
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'must' => $must
-								]
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			// Nothing starred: unchanged original behaviour — match at
+			// least one of the entered skills.
+			$should = [];
+
+			foreach ($requiredSkills as $skill) {
+				$should[] = [
+					'match_phrase' => [
+						'job_application_skills.skills' => $skill
+					]
 				];
 			}
-		}else{
-			if (!empty($requiredSkills)) {
-				$should = [];
 
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
-				];
-			}
+			$boolQuery['bool']['filter'][] = [
+							'bool' => [
+								'should' => $should,
+								'minimum_should_match' => 1
+							]
+			];
 		}
 
 
@@ -1391,87 +1411,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					$salaryRange['lte'] = (float) $max_salary;
 				}
 
+				// Inclusive of candidates with no salary recorded: a plain
+				// `range` filter only matches documents that HAVE the field,
+				// so a candidate missing salary data would silently vanish
+				// from the results the instant any salary filter was
+				// applied, with no indication why. Matching either "salary
+				// is in range" OR "salary field is missing entirely" keeps
+				// those candidates visible instead of penalizing them for a
+				// data gap that isn't their fault.
 				$boolQuery['bool']['filter'][] = [
-					'range' => [
-						$salaryField => $salaryRange
+					'bool' => [
+						'should' => [
+							['range' => [$salaryField => $salaryRange]],
+							['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+						],
+						'minimum_should_match' => 1,
 					]
 				];
 			}
-		// if (!empty($max_salary)) {
-		// 	// Normalize inputs
-        //     $min = is_numeric($min_salary) ? (float) $min_salary : 0.0;
-        //     $max = is_numeric($max_salary) ? (float) $max_salary : null;
-            
-        //     if($min >0 && $max > 0){
-                
-                
-    	// 		$salaryField = 'ectc_yearly'; // default
-    	// 		switch ($sal_mode) {
-    	// 			case 2: $salaryField = 'ectc_hourly'; break;
-    	// 			case 1: $salaryField = 'ectc_monthly'; break;
-    	// 		}
-    			
-    	// 		$boolQuery['bool']['filter'][] = [
-    	// 			'range' => [
-    	// 				$salaryField => [
-    	// 					'gte' => (float)$min_salary,
-    	// 					'lte' => (float)$max_salary
-    	// 				]
-    	// 			]
-    	// 		];
-			
-                
-        //     }else{
-            
-        //         // Decide salary field
-        //         $salaryField = 'ectc_yearly'; // default
-        //         switch ($sal_mode) {
-        //             case 2:
-        //                 $salaryField = 'ectc_hourly';
-        //                 break;
-        //             case 1:
-        //                 $salaryField = 'ectc_monthly';
-        //                 break;
-        //         }
-                
-        //         // Build salary filter
-        //         $salaryFilter = [
-        //             'bool' => [
-        //                 'should' => [
-        //                     // 1️⃣ Salary >= min (covers numeric values)
-        //                     [
-        //                         'range' => [
-        //                             $salaryField => [
-        //                                 'gte' => $min
-        //                             ]
-        //                         ]
-        //                     ],
-                
-        //                     // 2️⃣ Salary IS NULL (field missing)
-        //                     [
-        //                         'bool' => [
-        //                             'must_not' => [
-        //                                 ['exists' => ['field' => $salaryField]]
-        //                             ]
-        //                         ]
-        //                     ]
-        //                 ],
-        //                 'minimum_should_match' => 1
-        //             ]
-        //         ];
-                
-        //         // Add max salary only if provided and > 0
-        //         if ($max !== null && $max > 0) {
-        //             $salaryFilter['bool']['should'][0]['range'][$salaryField]['lte'] = $max;
-        //         }
-                
-        //         // Attach filter to main query
-        //         $boolQuery['bool']['filter'][] = $salaryFilter;
-        //     }
-		// }
-		// dd($salaryField,$min_salary,$max_salary);
 
-		
 		// Education filter
 		if (!empty($education)) {
 			$boolQuery['bool']['filter'][] = [
@@ -1565,8 +1523,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// Appended to the SAME $boolQuery['bool']['filter'] array every other
 		// filter above uses — that array is AND-ed by Elasticsearch, so this
 		// narrows whatever the other active filters already matched instead
-		// of searching the full unfiltered candidate pool.
-		$freeTextSearch = trim((string) $request->input('search', ''));
+		// of searching the full unfiltered candidate pool. ($freeTextSearch
+		// itself is computed earlier, alongside $cachePayload, so it's part
+		// of the cache key.)
 		if ($freeTextSearch !== '') {
 			$searchShould = [
 				[
@@ -1755,9 +1714,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			// Lets the empty-state message in the results partial distinguish
+			// "no candidates at all for this job" from "no matches for your
+			// current filters/search" — a plain "No data available" reads as
+			// a possible bug once search is AND-ed onto every other filter,
+			// since an over-filtered zero-result state is now more common.
+			$hasActiveFilters = !empty($requiredSkills) || !empty($location) || !empty($education)
+				|| $min_exp !== '' || $max_exp !== ''
+				|| (!empty($app_int_status) && (int) $app_int_status > 0)
+				|| (!empty($app_int_notice) && (int) $app_int_notice > 1)
+				|| !empty($app_int_activity)
+				|| ($min_salary !== null && $min_salary !== '' && $min_salary != 0.00)
+				|| ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00);
+			$search = $freeTextSearch;
 			// dd($data);
 			$responseData  =[
-				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];

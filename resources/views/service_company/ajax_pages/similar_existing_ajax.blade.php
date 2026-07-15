@@ -853,11 +853,32 @@
         </tr>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="12" style="text-align: center; color: black;">
-            No data available in table
+    {{-- Context-aware empty state: distinguishes "no candidates for this job
+         at all" from "your filters/search narrowed it to zero" — with search
+         now AND-ed onto every active filter, the latter is common and a bare
+         "No data available" reads like a bug rather than an expected outcome
+         of a tight filter combination. --}}
+    <tr style="height: 160px; position: relative; background: #fffcfc7a;">
+        <td colspan="12" style="text-align: center; padding: 32px 16px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Poppins',sans-serif;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#c4c9d4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                @if (!empty($search ?? null))
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates match &quot;{{ $search }}&quot;</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">
+                        @if (!empty($hasActiveFilters ?? false))
+                            Try a different search term, or clear one of your active filters to widen the results.
+                        @else
+                            Try a different search term or check the spelling.
+                        @endif
+                    </div>
+                @elseif (!empty($hasActiveFilters ?? false))
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates match your current filters</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">Try widening or clearing a filter — Experience, Salary and Location are common ones to loosen first.</div>
+                @else
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates found for this job yet</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">New matches will appear here as candidates are added.</div>
+                @endif
+            </div>
         </td>
-
     </tr>
 @endif
