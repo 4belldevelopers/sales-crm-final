@@ -1388,6 +1388,12 @@
                     $('#candidatetList').html(response.html);
                     $('#similar_counter').html(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    // The header card's hint (see clientappHeader.blade.php)
+                    // says "job defaults" by default — correct everywhere
+                    // EXCEPT here, since this specific number IS the live,
+                    // current-filter result once fetched.
+                    $('#apth_hint_similar_counter').attr('title',
+                        'This is your current filter selection on this page — the same card on other tabs shows this job\'s default count instead.');
                 }
             });
         }

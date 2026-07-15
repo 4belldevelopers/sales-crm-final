@@ -2660,6 +2660,13 @@
                     $('#similar_counter').html(response.total);
                     $('#simf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    // The header card's hint (see apptrackerHeader.blade.php)
+                    // says "job defaults" by default — correct everywhere
+                    // EXCEPT here, since this specific number IS the live,
+                    // current-filter result once fetched. Swap the tooltip
+                    // so it doesn't contradict what the page just showed.
+                    $('#apth_hint_similar_counter').attr('title',
+                        'This is your current filter selection on this page — the same card on other tabs shows this job\'s default count instead.');
                 },
                 error: function(xhr) {
                     // Never leave the loading overlay stuck or the list blank on
