@@ -4789,12 +4789,20 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$requiredSkills = array_map('strtolower', $requiredSkills);
 		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
+		// Free-text search box (#kt_tagify_2, "search by candidate name,
+		// skills, education or location") — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Same multi_match pattern similar_existing_data_ajax()
+		// uses, adapted to this index's actual field names (city_name/
+		// country_name, not city — confirmed via internal_bench_ajax.blade.php).
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -5129,6 +5137,46 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		
 
+
+		// Free-text search box: candidate name, designation, relationship
+		// manager (posted_by, if present on this index), location, skills,
+		// and candidate ID (as an exact match when the typed text is purely
+		// numeric). AND-ed into the same $boolQuery['bool']['filter'] array
+		// every other filter above uses, so it narrows whatever's already
+		// matched rather than searching the unfiltered full bench.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
 
 		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
 		// similar_existing_data_ajax(): starred skills are a hard requirement
@@ -6563,13 +6611,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 
-
+		// Free-text search box (#kt_tagify_2) — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Same multi_match pattern similar_existing_data_ajax()
+		// uses, adapted to this index's actual field names (city_name/
+		// country_name, not city — confirmed via public_bench_ajax.blade.php).
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -7098,6 +7152,46 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 		
+		// Free-text search box: candidate name, designation, relationship
+		// manager (posted_by, if present on this index), location, skills,
+		// and candidate ID (as an exact match when the typed text is purely
+		// numeric). AND-ed into the same $boolQuery['bool']['filter'] array
+		// every other filter above uses, so it narrows whatever's already
+		// matched rather than searching the unfiltered full marketplace.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
 		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
 		// similar_existing_data_ajax()/internal_bench_data_ajax(): starred
 		// skills are a hard requirement (must), unstarred entered skills stay
