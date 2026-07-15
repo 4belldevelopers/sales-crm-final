@@ -1675,8 +1675,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -1686,9 +1686,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
 				    $matchCount = count($matchedSkills);
+					// Split out of matched_skills specifically: which matches
+					// were against a STARRED/mandatory requirement vs just an
+					// entered-but-not-starred one. A recruiter reading the
+					// row should be able to tell "this candidate has the
+					// skill I marked mandatory" apart from "this candidate
+					// happens to have one of my other entered skills too" —
+					// both currently rendered with the identical highlight.
+					$matchedMandatorySkills = array_values(array_intersect($jobSkills, $mandatorySkills));
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
 						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills,
 						// The candidate's FULL skill list (already computed above
 						// for the intersect, just not previously exposed) — lets
 						// the results row show every skill the candidate has,
