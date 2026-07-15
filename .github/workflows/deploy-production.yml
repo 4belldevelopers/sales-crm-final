@@ -9,8 +9,10 @@ concurrency:
 
 jobs:
   deploy:
+    name: Deploy Production
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 30
 
     steps:
       - name: Deploy over SSH
@@ -20,39 +22,162 @@ jobs:
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_PORT || 22 }}
+          command_timeout: 30m
 
           script: |
             set -e
 
             cd ${{ secrets.PROD_PATH }}
 
+            ###########################################################
+            # ALWAYS BRING SITE BACK ONLINE EVEN IF DEPLOYMENT FAILS
+            ###########################################################
             trap 'php artisan up || true' EXIT
 
+            echo "=================================================="
+            echo "🚀 JERO PRODUCTION DEPLOYMENT"
+            echo "Started: $(date)"
+            echo "Server : $(hostname)"
+            echo "Path   : $(pwd)"
+            echo "=================================================="
+
+            ###########################################################
+            # ENVIRONMENT CHECK
+            ###########################################################
+
+            echo ""
+            echo ">> Checking environment"
+
+            php -v
+            composer --version
+            node -v
+            npm -v
+
+            ###########################################################
+            # MAINTENANCE MODE
+            ###########################################################
+
+            echo ""
             echo ">> Enabling maintenance mode"
+
             php artisan down --render="errors::503" || true
 
-            echo ">> Pulling latest main code"
+            ###########################################################
+            # UPDATE SOURCE CODE
+            ###########################################################
+
+            echo ""
+            echo ">> Updating source code"
+
             GIT_SSH_COMMAND="ssh -i /root/.ssh/github_production" git fetch origin main
+
             GIT_SSH_COMMAND="ssh -i /root/.ssh/github_production" git reset --hard origin/main
 
-            echo ">> Installing PHP dependencies"
+            git clean -fd
+
+            echo ""
+            echo ">> Current Commit"
+
+            git log -1 --oneline
+
+            ###########################################################
+            # COMPOSER
+            ###########################################################
+
+            echo ""
+            echo ">> Installing Composer dependencies"
+
             export COMPOSER_ALLOW_SUPERUSER=1
-            composer install --no-dev --optimize-autoloader --no-interaction
 
-            echo ">> Building frontend assets"
-            export NODE_ENV=production
-            npm ci
-            npm run build
+            composer install \
+                --no-dev \
+                --prefer-dist \
+                --optimize-autoloader \
+                --classmap-authoritative \
+                --no-interaction
 
-            echo ">> Running migrations"
+            ###########################################################
+            # FRONTEND BUILD
+            ###########################################################
+
+            if [ -f package-lock.json ]; then
+
+              echo ""
+              echo ">> Installing Node packages"
+
+              export NODE_ENV=production
+
+              npm ci
+
+              echo ""
+              echo ">> Building frontend"
+
+              npm run build
+
+            else
+
+              echo ""
+              echo ">> No package-lock.json found. Skipping frontend build."
+
+            fi
+
+            ###########################################################
+            # DATABASE
+            ###########################################################
+
+            echo ""
+            echo ">> Running database migrations"
+
             php artisan migrate --force
 
-            echo ">> Caching Laravel"
+            ###########################################################
+            # CACHE
+            ###########################################################
+
+            echo ""
+            echo ">> Clearing old caches"
+
+            php artisan optimize:clear
+
+            echo ""
+            echo ">> Rebuilding caches"
+
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            echo ">> Reloading Octane"
-            php artisan octane:reload
+            php artisan event:cache || true
 
-            echo ">> Deployment completed successfully"
+            ###########################################################
+            # RESTART SERVICES
+            ###########################################################
+
+            echo ""
+            echo ">> Restarting Laravel services"
+
+            php artisan queue:restart || true
+
+            php artisan horizon:terminate || true
+
+            php artisan reverb:restart || true
+
+            php artisan octane:reload || true
+
+            ###########################################################
+            # HEALTH CHECK
+            ###########################################################
+
+            echo ""
+            echo ">> Running health check"
+
+            curl -fsS https://hire.jero.works > /dev/null
+
+            ###########################################################
+            # COMPLETE
+            ###########################################################
+
+            echo ""
+            echo "=================================================="
+            echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
+            echo "Finished: $(date)"
+            echo "=================================================="
