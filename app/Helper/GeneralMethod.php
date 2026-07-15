@@ -3753,6 +3753,84 @@ END:VCALENDAR";
 
 		return $notification;
 	}
+	// The single, shared source for a job's DEFAULT skills/location/
+	// experience/salary — reads the Elasticsearch ELASTIC_JOBS document
+	// only, deliberately never MySQL. Used by every AppTracker tab page
+	// that pre-populates its filter drawer from the job's defaults
+	// (similar_candidates(), internal_bench(), career_apply(),
+	// public_bench()) AND by custome_count_all() (the header counter
+	// shown on all six tabs). Before this, each of those read the job
+	// separately — most via gdFilterData()/JobcitiesTags() (MySQL),
+	// custome_count_all() via ES directly — so if a job's skills/
+	// location/salary were edited and the ES reindex lagged even
+	// briefly, different tabs would silently compute against different
+	// versions of the same job and show disagreeing counts on a fresh
+	// page load, with no filter having been touched. Every caller now
+	// reading the identical ES document is what makes that permanent
+	// rather than something that can quietly drift apart again the next
+	// time one call site is edited and another isn't.
+	//
+	// city_list/state_list/countries lookups below stay MySQL — that's
+	// static reference data (city names), not the job's own editable
+	// state, so it carries none of the staleness risk this exists to
+	// avoid.
+	// $resolveLocationNames: skip when the caller only needs raw city_ids
+	// (e.g. custome_count_all(), which builds an Elasticsearch terms filter
+	// from them) — the city_list/state_list/countries join to produce
+	// "City | State | Country" display strings is only useful to callers
+	// populating a UI field (the filter drawer's default_loc). Avoids an
+	// unnecessary MySQL join on every header-counter computation, which
+	// runs on every AppTracker tab page load.
+	public static function jobDefaultsFromEs($id, $resolveLocationNames = true)
+	{
+		$elasticService = app(ElasticService::class);
+		$jobEsDoc = (object) $elasticService->getClient()->get([
+			'index' => ELASTIC_JOBS,
+			'id' => $id,
+		])['_source'];
+
+		$skillArr = [];
+		foreach ($jobEsDoc->job_metronics_skills ?? [] as $sval) {
+			$sval = (object) $sval;
+			$skillArr[] = $sval->skill_name;
+		}
+
+		$cityIds = [];
+		foreach ($jobEsDoc->client_city_jobs ?? [] as $sval) {
+			$sval = (object) $sval;
+			$cityIds[] = $sval->city_id;
+		}
+		$locationTags = [];
+		if ($resolveLocationNames && !empty($cityIds)) {
+			$locationTags = DB::table('client_city_jobs')
+				->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+				->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+				->join('countries', 'countries.id', '=', 'state_list.country_id')
+				->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+				->where('city_list.city', '!=', '')
+				->whereIn('city_list.city_id', $cityIds)
+				->get()
+				->map(function ($city) {
+					return $city->city_name . ' | ' . $city->state_name . ' | ' . $city->country_name;
+				})
+				->toArray();
+		}
+
+		return (object) [
+			'jobEsDoc' => $jobEsDoc,
+			'min_exp' => $jobEsDoc->min_exp,
+			'max_exp' => $jobEsDoc->max_exp,
+			'min_salary_currency' => $jobEsDoc->min_salary_currency,
+			'min_salary' => $jobEsDoc->min_salary,
+			'max_salary' => $jobEsDoc->max_salary,
+			'min_sal_mode' => $jobEsDoc->min_sal_mode,
+			'qualification' => $jobEsDoc->qualification ?? '',
+			'default_skill' => implode(',', $skillArr),
+			'default_loc' => $locationTags[0] ?? '',
+			'default_locations' => $locationTags,
+		];
+	}
+
 	public static function gdFilterData($jobId){
 		$company_id = auth()->user()->company_id;
 		$job = Job::findOrFail($jobId);
@@ -11304,13 +11382,15 @@ END:VCALENDAR";
 	   
 		$elasticService = app(ElasticService::class);
 		$company_id = auth()->user()->company_id;
-		$params = [
-				'index' => ELASTIC_JOBS,
-				'id'    => $id,
-		];
 
-		$response = $elasticService->getClient()->get($params);
-		$jobs_details = (object) $response['_source'];
+		// Same shared ES-only job lookup every tab page's default-filter
+		// population uses (see jobDefaultsFromEs() above) — jobEsDoc is the
+		// raw ELASTIC_JOBS _source, kept under this same $jobs_details name
+		// so the rest of this (large, multi-counter) function is unchanged.
+		// false: this function only ever uses raw city_ids in ES filters
+		// below, never the resolved "City | State | Country" display
+		// strings, so skip that extra MySQL join.
+		$jobs_details = self::jobDefaultsFromEs($id, false)->jobEsDoc;
         //  dd($jobs_details);
 		$min_exp = ($jobs_details->min_exp >= 1) ? $jobs_details->min_exp - 1 : $jobs_details->min_exp;
 		$max_exp = $jobs_details->max_exp + 1;

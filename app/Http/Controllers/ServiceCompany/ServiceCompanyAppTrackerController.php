@@ -743,64 +743,30 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$job = $this->job;
 		$jobid = $job->id;
 
-		// Default skills/location/experience/salary read from the SAME
-		// Elasticsearch ELASTIC_JOBS document GeneralMethod::custome_count_all()
-		// (the header counter shown on every other AppTracker tab) reads
-		// from — previously this page used gdFilterData()/JobcitiesTags()
-		// (MySQL) while custome_count_all() used ES, so if a job's skills/
-		// location/salary were edited and the ES reindex lagged even
-		// briefly, the two would silently compute against different data
-		// and disagree on a fresh page load, before any filter was
-		// touched. Reading the identical document both places is what
-		// makes the two numbers match consistently. city_list/state_list/
-		// countries lookups below stay MySQL — that's static reference
-		// data (city names), not the job's own editable state, so it
-		// carries none of the staleness risk this was fixing.
-		$jobEsDoc = (object) $this->elasticService->getClient()->get([
-			'index' => ELASTIC_JOBS,
-			'id' => $id,
-		])['_source'];
+		// Single shared source (GeneralMethod::jobDefaultsFromEs(), ES only)
+		// for a job's default skills/location/experience/salary — used here
+		// AND by custome_count_all() (the header counter on every other
+		// AppTracker tab), so the two can't drift out of sync the way
+		// gdFilterData()/JobcitiesTags() (MySQL) vs custome_count_all() (ES)
+		// did: a job edited in MySQL with the ES reindex lagging even
+		// briefly used to make this page and the header counter compute
+		// against genuinely different data, disagreeing on a fresh load
+		// before any filter was touched.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		$defaultSkillArr = [];
-		foreach ($jobEsDoc->job_metronics_skills ?? [] as $sval) {
-			$sval = (object) $sval;
-			$defaultSkillArr[] = $sval->skill_name;
-		}
-
-		$defaultCityIds = [];
-		foreach ($jobEsDoc->client_city_jobs ?? [] as $sval) {
-			$sval = (object) $sval;
-			$defaultCityIds[] = $sval->city_id;
-		}
-		$defaultLocationTags = [];
-		if (!empty($defaultCityIds)) {
-			$defaultLocationTags = DB::table('client_city_jobs')
-				->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-				->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-				->join('countries', 'countries.id', '=', 'state_list.country_id')
-				->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-				->where('city_list.city', '!=', '')
-				->whereIn('city_list.city_id', $defaultCityIds)
-				->get()
-				->map(function ($city) {
-					return $city->city_name . ' | ' . $city->state_name . ' | ' . $city->country_name;
-				})
-				->toArray();
-		}
-
-		$this->default_loc = $defaultLocationTags[0] ?? '';
+		$this->default_loc = $jobDefaults->default_loc;
 		// All configured locations for this job, not just the first — the
 		// Similar Candidates filter drawer uses this array to pre-select
 		// every configured city.
-		$this->default_locations = $defaultLocationTags;
+		$this->default_locations = $jobDefaults->default_locations;
 		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
-		$this->min_exp = ($jobEsDoc->min_exp >= 1) ? $jobEsDoc->min_exp - 1 : $jobEsDoc->min_exp;
-		$this->max_exp = $jobEsDoc->max_exp + 1;
-		$this->min_salary_currency = $jobEsDoc->min_salary_currency;
-		$this->min_salary = $jobEsDoc->min_salary;
-		$this->max_salary = $jobEsDoc->max_salary;
-		$this->min_sal_mode = $jobEsDoc->min_sal_mode;
-		$this->default_skill = implode(',', $defaultSkillArr);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = $jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		// dd($jobid,$title,$min_exp,$max_exp,$min_salary,$max_salary);
 
@@ -4342,28 +4308,30 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 		$this->job = Job::findOrFail($id);
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		// dd($gdFilterData);
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc =GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp =$gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = $jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->custome_count = $this->custome_count($id);
 		$return_data = GeneralMethod::custome_count_all($id);
 		$this->pool_counter = $return_data->pool_counter;
 		$this->existing_counter = $return_data->existing_counter;
-		$this->internal_bench_counter = $return_data->internal_bench_counter;		
-		$this->public_bench_counter = $return_data->public_bench_counter;	
-		$this->recomnded_counter = $return_data->recomnded_counter;	
+		$this->internal_bench_counter = $return_data->internal_bench_counter;
+		$this->public_bench_counter = $return_data->public_bench_counter;
+		$this->recomnded_counter = $return_data->recomnded_counter;
 		$this->career_counter = $return_data->career_counter;;
 
 		$this->cities = GeneralMethod::allCities();
@@ -5282,20 +5250,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 		$this->job = Job::findOrFail($id);
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc = GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification = GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = '';//$gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = '';//$jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->custome_count = $this->custome_count($id);
 		$return_data = GeneralMethod::custome_count_all($id);
@@ -6022,20 +5992,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		session()->put('job_id', $id);
 
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		// dd($gdFilterData->default_loc);
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc = GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification ='';// GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp =$gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';// GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = $jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->cities = GeneralMethod::allCities();
 		$this->qualificationTag = DB::table('qualification_master')
@@ -6991,19 +6963,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->internal_bench_counter = $return_data->internal_bench_counter;		
 		$this->career_counter = $return_data->career_counter;;
 
-
-		$gdFilterData = GeneralMethod::gdFilterData($id);
 		$jobid = $id;
-		// dd($gdFilterData);
-		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates()/internal_bench()/etc. and
+		// custome_count_all() (the header counter on every tab) use, so
+		// this page's defaults can't drift out of sync with the header
+		// count the way gdFilterData()/JobcitiesTags() (MySQL) vs
+		// custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
+
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = $jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 
 		$skill_arr = array();
@@ -7973,18 +7950,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->internal_bench_counter = $return_data->internal_bench_counter;		
 		$this->career_counter = $return_data->career_counter;;
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates()/internal_bench()/etc. and
+		// custome_count_all() (the header counter on every tab) use, so
+		// this page's defaults can't drift out of sync with the header
+		// count the way gdFilterData()/JobcitiesTags() (MySQL) vs
+		// custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 		$jobid = $id;
-		// dd($gdFilterData);
-		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		$this->min_salary = $jobDefaults->min_salary;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 		// $this->jobclient = Client::findOrFail($this->job->client_id);
 
 		$skill_arr = array();
