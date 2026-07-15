@@ -11697,12 +11697,23 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// similar_candidates.blade.php's filter drawer hardcodes its Min
+		// Salary field to 0 (not the job's own min_salary) — every other
+		// tab's older-style filter modal (internal_bench/public_bench)
+		// defaults that field to the job's real min_salary instead. This
+		// counter has to match whichever floor the CORRESPONDING live page
+		// actually applies on load, not the job's raw value uniformly, or
+		// this counter and the Similar Candidates page disagree the moment
+		// you land on either one — same 0 floor as the live page, only for
+		// this block.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {
@@ -11898,12 +11909,20 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// internal_bench.blade.php's filter drawer now defaults Min Salary
+		// to 0 (not the job's own min_salary) — every AppTracker tab's Min
+		// Salary field is 0 by default, same as similar_candidates.blade.php
+		// (see custome_count_all()'s Existing counter block above), so this
+		// counter has to use the same 0 floor as the live In-house Bench
+		// page or the two disagree the moment you land on either one.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {
@@ -12123,12 +12142,20 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// public_bench.blade.php's filter drawer now defaults Min Salary to
+		// 0 (not the job's own min_salary) — every AppTracker tab's Min
+		// Salary field is 0 by default, same as similar_candidates.blade.php
+		// (see custome_count_all()'s Existing counter block above), so this
+		// counter has to use the same 0 floor as the live Agency Bench page
+		// or the two disagree the moment you land on either one.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {

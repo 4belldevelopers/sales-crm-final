@@ -770,7 +770,7 @@
                                                                 <input type="number"
                                                                     class="form-control form-control-lg form-control-solid"
                                                                     name="min_sal" id="min_sal" placeholder="Enter min salary"
-                                                                    value="{{ $min_salary }}">
+                                                                    value="0">
                                                                 <div class="fv-plugins-message-container"></div>
                                                                 <span class="form-text text-muted minimum_salary_word"></span>
                                                             </div>
