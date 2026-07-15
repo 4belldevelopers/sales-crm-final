@@ -1,418 +1,146 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <link rel="stylesheet" href="{{ asset('assets/node_modules/switchery/dist/switchery.min.css') }}<?php echo TM_VERSION; ?>">
     <style>
-        body {
-            overflow-x: hidden;
-        }
-
-        .w-md-130px {
-            width: 130px !important;
-        }
-
-        .active_plan {
-            width: fit-content;
-        }
-
-        .btn-group.hg-plan-btn-group {
-            width: 100%;
-        }
-
-        .shared-hosting .container_hosting-package .btn-group button.btn {
-            padding: 10px 15px;
-        }
-
-        .shared-hosting .container_hosting-package .btn-group button.btn {
-            padding: 14px 15px;
-            text-align: left;
-            width: 100%;
-        }
-
-        .btn.btn-info.hg-plan-btn-info {
-            box-shadow: none;
-            border-color: #ddd;
-            width: 100%;
-            float: none;
-        }
-
-        .btn-group .selected-term {
-            display: inline;
-            color: #333;
-        }
-
-        .btn-group .selected-term .term-length {
-            color: #666;
-            font-size: 14px;
-            text-transform: capitalize;
-        }
-
-        .btn-group .selected-term .WebRupee.webrupee1,
-        .btn-group .selected-term span.WebRupee {
-            color: #0171bc;
-        }
-
-        .hg-plan-btn-group span.WebRupee {
-            font-size: 22px;
-        }
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .hg-plan-btn-group span.term-price {
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .btn-group .selected-term .term-price {
-            font-weight: 700;
-        }
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .btn-group .selected-term .term-price {
-            font-weight: 700;
-        }
-<<<<<<< HEAD
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .selected-term .testsdfd {
-            margin-left: 3%;
-            margin-right: 12%;
-            line-height: 17px;
-            float: none;
-        }
-
-        .hg-percentage-discount {
-            color: #f15922;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .hg-plan-btn-group .hg-actual-price span.WebRupee {
-            font-size: 14px;
-        }
-
-        .WebRupee {
-            font-family: 'WebRupee' !important;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .package-term {
-            font-size: 16px;
-        }
-
-        .dropdown-menu li {
-            padding: .8em 1em;
-            cursor: pointer;
-            border-bottom: 1px dotted lightgray;
-            display: block;
-        }
-
-        .dropdown-menu li:last-child {
-            border-bottom: none;
-        }
-
-        .active {
-            color: white !important;
-        }
-
-
-        /* Main container styling */
-        .container {
-            padding: 20px;
-            text-align: center;
-        }
-
-        /* Loader styles */
+        /* ===== SECURE CHECKOUT ===== */
+        /* Loader */
         .loader-overlay {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            /* White overlay */
-            z-index: 1000;
-            /* Ensure it stays on top */
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,.88); z-index: 9999;
+            justify-content: center; align-items: center; flex-direction: column;
         }
+        .loader { border: 5px solid #f0f0f0; border-top: 5px solid #5b59e8; border-radius: 50%; width: 50px; height: 50px; animation: co-spin 1s linear infinite; }
+        .loader-text { margin-top: 14px; font-size: 14px; color: #374151; font-weight: 600; }
+        @keyframes co-spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
-        .loader {
-            border: 6px solid #f3f3f3;
-            /* Light grey */
-            border-top: 6px solid #3498db;
-            /* Blue */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Loader animation */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Text below loader */
-        .loader-text {
-            margin-top: 10px;
-            font-size: 18px;
-            color: #333;
-        }
-        .no-time-message {
-            display: flex;
-            justify-content: center; /* Centers horizontally */
-            align-items: center;    /* Centers vertically */
-            width: 100%;
-            text-align: center;     /* Aligns text to center */
-            font-size: 1.5rem;      /* Adjust font size as needed */
-            color: #555;            /* Adjust color as needed */
-        }
-
-        /* ===== Secure Checkout redesign ===== */
-        .co-header h1 { font-size: 16px; }
+        /* Page header */
+        .co-header h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 0 0 4px; }
+        .co-header h1 i { color: #5b59e8; font-size: 22px; }
         .co-secure-badge {
-            background: #ecfdf3; color: #10a34a; border: 1px solid #b7ebc6;
-            font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 8px;
+            background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
+            font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 10px;
+            display: flex; align-items: flex-start; gap: 6px;
         }
-        .co-card { border: 1px solid #e4e6ef; border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
-        .co-card-title { font-size: 14px; font-weight: 700; color: #181c32; }
+        .co-secure-badge i { margin-top: 2px; }
+        .co-secure-badge-sub { font-size: 11px; font-weight: 400; color: #6b7280; display: block; margin-top: 1px; }
+
+        /* Cards */
+        .co-card {
+            background: #fff; border: 1px solid #e8e8f0; border-radius: 14px;
+            padding: 20px 22px; margin-bottom: 18px;
+            box-shadow: 0 1px 8px rgba(0,0,0,.06);
+        }
+        .co-card-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
         .co-icon-circle {
-            width: 36px; height: 36px; border-radius: 50%; background: #f5f3ff; color: #6d28d9;
-            display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 15px;
+            width: 36px; height: 36px; border-radius: 10px; background: #ede9fe; color: #7c3aed;
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-right: 10px; font-size: 14px; flex-shrink: 0;
         }
-        .co-badge-type { background: #f5f3ff; color: #6d28d9; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+        /* Billing */
+        .co-gst-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #f0fdf4; border: 1px solid #bbf7d0;
+            border-radius: 20px; padding: 3px 10px;
+            font-size: 11px; font-weight: 700; color: #15803d;
+        }
+        .co-btn-outline-primary {
+            font-size: 12px; font-weight: 600; color: #5b59e8; border: 1.5px solid #5b59e8;
+            background: transparent; border-radius: 8px; padding: 7px 16px; cursor: pointer;
+            transition: all .18s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .co-btn-outline-primary:hover { background: #5b59e8; color: #fff; }
+
+        /* Order item */
+        .co-badge-type { background: #f5f3ff; color: #6d28d9; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
         .co-order-icon {
-            width: 56px; height: 56px; border-radius: 12px; background: #f5f3ff; color: #6d28d9;
-            display: flex; align-items: center; justify-content: center; font-size: 22px;
+            width: 56px; height: 56px; border-radius: 14px; background: #ede9fe; color: #7c3aed;
+            display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
         }
-        .co-feature-item { font-size: 12px; color: #4a4f63; padding: 3px 0; }
-        .co-feature-item i { color: #10a34a; margin-right: 6px; }
-        .co-stat-value { font-size: 16px; font-weight: 800; color: #181c32; }
-        .co-stat-label { font-size: 10px; color: #8a8fa3; }
-        .co-coupon-box { background: #f8f9fc; border-radius: 10px; padding: 16px; }
-        .co-coupon-applied { background: #ecfdf3; border: 1px solid #b7ebc6; border-radius: 10px; padding: 12px 16px; }
-        .co-feature-strip { border-top: 1px solid #e4e6ef; padding-top: 16px; margin-top: 8px; }
-        .co-feature-strip-item { text-align: center; font-size: 11px; }
-        .co-feature-strip-item i { font-size: 20px; color: #6d28d9; display: block; margin-bottom: 6px; }
-        .co-summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
-        .co-summary-total { font-size: 20px; font-weight: 800; color: #4c1d95; }
-        .co-save-banner { background: #ecfdf3; border: 1px solid #b7ebc6; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #14532d; }
+        .co-feature-item { font-size: 12px; color: #374151; padding: 3px 0; }
+        .co-feature-item i { color: #22c55e; margin-right: 6px; }
+        .co-stat-block { border-top: 1px solid #f0f0f8; padding-top: 12px; margin-top: 12px; display: flex; gap: 28px; }
+        .co-stat-value { font-size: 17px; font-weight: 800; color: #1a1a2e; }
+        .co-stat-label { font-size: 10px; color: #9a9cb0; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+        .co-trash-btn {
+            width: 34px; height: 34px; background: #fff5f5; border: 1.5px solid #fecaca;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transition: background .15s; flex-shrink: 0;
+        }
+        .co-trash-btn:hover { background: #fecaca; }
+        .co-trash-btn i { color: #ef4444; font-size: 13px; pointer-events: none; }
+
+        /* Coupon */
+        .co-coupon-wrap { display: flex; gap: 14px; align-items: stretch; }
+        .co-coupon-input-side { flex: 1; }
+        .co-coupon-box { background: #f8f9fc; border-radius: 10px; padding: 14px 16px; height: 100%; }
+        .co-coupon-applied {
+            min-width: 190px; background: #f0fdf4; border: 1.5px solid #bbf7d0;
+            border-radius: 10px; padding: 14px 16px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .co-coupon-applied-name { font-size: 15px; font-weight: 800; color: #15803d; display: flex; align-items: center; gap: 6px; }
+        .co-coupon-applied-desc { font-size: 12px; font-weight: 600; color: #15803d; margin-top: 3px; }
+        @media (max-width: 600px) { .co-coupon-wrap { flex-direction: column; } .co-coupon-applied { min-width: unset; } }
+
+        /* Summary */
+        .co-summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 9px 0; border-bottom: 1px solid #f5f5fa; }
+        .co-summary-row:last-child { border-bottom: none; }
+        .co-summary-total { font-size: 22px; font-weight: 900; color: #5b59e8; }
+        .co-save-banner {
+            background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px;
+            padding: 10px 14px; font-size: 12px; color: #14532d; display: flex; justify-content: space-between; align-items: center;
+        }
         .co-pay-btn {
-            width: 100%; background: #4c1d95 !important; border: none; padding: 12px; font-weight: 700; border-radius: 10px;
+            width: 100%; background: linear-gradient(135deg,#5b59e8,#7c3aed) !important;
+            border: none; padding: 14px; font-weight: 700; border-radius: 12px; font-size: 14px;
+            color: #fff; box-shadow: 0 4px 16px rgba(91,89,232,.3); transition: opacity .18s;
         }
-        .co-help-card { border: 1px solid #e4e6ef; border-radius: 12px; padding: 18px; }
-        .co-empty-state { text-align: center; padding: 50px 30px; width: 100%; }
+        .co-pay-btn:hover { opacity: .9; color: #fff; }
+
+        /* Need Help */
+        .co-help-card {
+            background: #fff; border: 1px solid #e8e8f0; border-radius: 14px;
+            padding: 18px 20px; box-shadow: 0 1px 8px rgba(0,0,0,.06);
+        }
+        .co-btn-contact {
+            width: 100%; border: 1.5px solid #5b59e8; color: #5b59e8; background: transparent;
+            border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: all .18s; margin-bottom: 14px;
+        }
+        .co-btn-contact:hover { background: #5b59e8; color: #fff; }
+        .co-help-channels { display: flex; justify-content: space-around; }
+        .co-help-channel { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; font-weight: 600; }
+        .co-help-channel i { color: #5b59e8; font-size: 12px; }
+
+        /* Feature strip */
+        .co-feature-strip { padding-top: 14px; }
+        .co-feature-strip-item { text-align: center; font-size: 11px; }
+        .co-feature-strip-item i { font-size: 20px; color: #7c3aed; display: block; margin-bottom: 6px; }
+        .co-feature-strip-item .fw-bold { font-size: 12px; font-weight: 700; color: #5b59e8; }
+        .co-feature-strip-item .text-gray-500 { font-size: 10px; }
+
+        /* Empty cart */
+        .co-empty-state { text-align: center; padding: 50px 30px; }
         .co-empty-icon-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
         .co-empty-icon-wrap > i {
-            font-size: 46px; color: #6d28d9; background: #f5f3ff; border-radius: 50%;
-            width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;
+            font-size: 46px; color: #7c3aed; background: #ede9fe; border-radius: 50%;
+            width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;
         }
         .co-empty-icon-badge {
-            position: absolute; top: -2px; right: -2px; width: 26px; height: 26px; border-radius: 50%;
-            background: #6d28d9; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px;
+            position: absolute; top: 4px; right: 2px; width: 24px; height: 24px; border-radius: 50%;
+            background: #ef4444; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px;
         }
-        .co-empty-divider { display: flex; align-items: center; text-align: center; color: #8a8fa3; font-size: 11px; margin: 10px 0; }
-        .co-empty-divider::before, .co-empty-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e4e6ef; }
+        .co-empty-divider { display: flex; align-items: center; color: #9a9cb0; font-size: 11px; margin: 14px 0; }
+        .co-empty-divider::before, .co-empty-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e8e8f0; }
         .co-empty-divider span { padding: 0 12px; }
         .co-summary-empty-icon {
-            width: 90px; height: 90px; border-radius: 50%; background: #f5f3ff; color: #d6d1e8;
-            display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px;
-        }
-        .co-feature-strip-item span { display: block; }
-=======
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
+            width: 80px; height: 80px; border-radius: 50%; background: #f5f3ff; color: #c4b5fd;
+            display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 14px;
         }
 
-        .selected-term .testsdfd {
-            margin-left: 3%;
-            margin-right: 12%;
-            line-height: 17px;
-            float: none;
-        }
-
-        .hg-percentage-discount {
-            color: #f15922;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .hg-plan-btn-group .hg-actual-price span.WebRupee {
-            font-size: 14px;
-        }
-
-        .WebRupee {
-            font-family: 'WebRupee' !important;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .package-term {
-            font-size: 16px;
-        }
-
-        .dropdown-menu li {
-            padding: .8em 1em;
-            cursor: pointer;
-            border-bottom: 1px dotted lightgray;
-            display: block;
-        }
-
-        .dropdown-menu li:last-child {
-            border-bottom: none;
-        }
-
-        .active {
-            color: white !important;
-        }
-
-
-        /* Main container styling */
-        .container {
-            padding: 20px;
-            text-align: center;
-        }
-
-        /* Loader styles */
-        .loader-overlay {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            /* White overlay */
-            z-index: 1000;
-            /* Ensure it stays on top */
-            justify-content: center;
-            align-items: center;
-        }
-
-        .loader {
-            border: 6px solid #f3f3f3;
-            /* Light grey */
-            border-top: 6px solid #3498db;
-            /* Blue */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Loader animation */
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Text below loader */
-        .loader-text {
-            margin-top: 10px;
-            font-size: 18px;
-            color: #333;
-        }
-        .no-time-message {
-            display: flex;
-            justify-content: center; /* Centers horizontally */
-            align-items: center;    /* Centers vertically */
-            width: 100%;
-            text-align: center;     /* Aligns text to center */
-            font-size: 1.5rem;      /* Adjust font size as needed */
-            color: #555;            /* Adjust color as needed */
-        }
-
->>>>>>> parent of e32f1d9c (Subscriptions)
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; display: block; }
     </style>
 @endpush
 
@@ -473,21 +201,25 @@
 
 
 @section('content')
-<<<<<<< HEAD
     <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
+    <div class="content d-flex flex-column flex-column-fluid pt-2 pb-8" id="kt_content">
         <div class="container-xxl" id="kt_content_container">
 
             <div class="d-flex flex-wrap flex-stack mb-6">
                 <div class="co-header d-flex flex-column">
-                    <h1 class="d-flex align-items-center text-gray-900 fw-bold mb-1">
-                        <i class="fa fa-shield-alt text-primary me-2"></i> Secure Checkout
+                    <h1 class="d-flex align-items-center mb-1">
+                        <i class="fa fa-shield-alt me-2"></i> Secure Checkout
                     </h1>
-                    <div class="text-gray-500 fs-8">Review your order and complete your payment securely.</div>
+                    <div class="text-gray-500 fs-7">Review your order and complete your payment securely.</div>
                 </div>
-                <div class="d-flex flex-column align-items-end">
-                    <span class="co-secure-badge"><i class="fa fa-lock me-1"></i> 100% Secure Checkout</span>
-                    <span class="text-gray-500 fs-9 mt-1">Your payment details are safe with us</span>
+                <div class="d-none d-sm-flex flex-column align-items-end">
+                    <span class="co-secure-badge">
+                        <i class="fa fa-lock"></i>
+                        <span>
+                            100% Secure Checkout
+                            <span class="co-secure-badge-sub">Your payment details are safe with us</span>
+                        </span>
+                    </span>
                 </div>
             </div>
 
@@ -501,16 +233,23 @@
                                 <span class="co-icon-circle"><i class="fa fa-building"></i></span>
                                 <span class="co-card-title">Billing Information</span>
                             </div>
-                            <a href="javascript:;" class="btn btn-sm btn-light-primary show-billing-address">Edit Billing</a>
+                            <a href="javascript:;" class="co-btn-outline-primary show-billing-address">
+                                <i class="fa fa-pen-to-square"></i> Edit Billing
+                            </a>
                         </div>
                         <div class="fs-7 text-gray-700">
-                            <div class="fw-bold fs-6 mb-1">{{ @$company_name }}</div>
-                            <div><span id="usernamebill">{{ @$user_name }}</span></div>
-                            <div><span id="billing_address">{{ @$locArr }}</span></div>
+                            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                                <span class="fw-bold fs-5 text-gray-900">{{ @$company_name }}</span>
+                                @if(@$gstin)
+                                    <span class="co-gst-badge"><i class="fa fa-circle-check"></i> GST Verified</span>
+                                @endif
+                            </div>
+                            <div class="fw-bold text-gray-700 mb-1"><span id="usernamebill">{{ @$user_name }}</span></div>
+                            <div class="text-gray-600"><span id="billing_address">{{ @$locArr }}</span></div>
                             @if(@$gstin)
-                                <div class="mt-1">GSTIN: <span id="billing_gst">{{ @$gstin }}</span></div>
+                                <div class="text-gray-500 mt-1">GSTIN: <span id="billing_gst">{{ @$gstin }}</span></div>
                             @else
-                                <div><span id="billing_gst" style="display:none;"></span></div>
+                                <span id="billing_gst" style="display:none;"></span>
                             @endif
                             <span id="billing_pan" style="display:none;">{{ @$pan_no }}</span>
                         </div>
@@ -523,37 +262,39 @@
                             <div class="d-flex flex-stack mb-4">
                                 <div class="d-flex align-items-center">
                                     <span class="co-icon-circle"><i class="fa fa-tag"></i></span>
-                                    <span class="co-card-title">Your Order (1 item)</span>
+                                    <span class="co-card-title">Your Order</span>
+                                    <span class="ms-2" style="background:#f5f3ff;color:#7c3aed;font-size:11px;font-weight:700;border-radius:20px;padding:2px 10px;">(1 item)</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="btn btn-sm btn-light-primary">Edit Order</a>
-                                    <a href="javascript:;" class="text-danger" data-toggle="tooltip" title="Remove">
-                                        <i class="fa fa-trash fa-lg" aria-hidden="true"
-                                            data-trash="{{ encrypt(@$carts->id) }}"></i>
-                                    </a>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="co-btn-outline-primary">Edit Order</a>
+                                    <button type="button" class="co-trash-btn" title="Remove">
+                                        <i class="fa fa-trash" data-trash="{{ encrypt(@$carts->id) }}"></i>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-start">
-                                <span class="co-order-icon me-4"><i class="fa fa-coins"></i></span>
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="co-order-icon"><i class="fa fa-coins"></i></span>
                                 <div class="flex-grow-1">
-                                    <span class="co-badge-type mb-2 d-inline-block">{{ ucfirst(@$carts->event_type) }} Coins</span>
-                                    <div class="fw-bold fs-4 text-gray-900 mb-2">{{ @$carts->product_name }}</div>
+                                    <span class="co-badge-type mb-2">{{ ucfirst(@$carts->event_type) }} Coins</span>
+                                    <div class="fw-bold fs-4 text-gray-900 mt-2 mb-2">{{ @$carts->product_name }}</div>
                                     <div class="co-feature-item"><i class="fa fa-check-circle"></i>{{ number_format(@$carts->credit) }} {{ ucfirst(@$carts->event_type) }} Coins</div>
                                     <div class="co-feature-item"><i class="fa fa-check-circle"></i>Validity: {{ @$carts->duration }} Days</div>
-                                </div>
-                                <div class="d-flex text-center gap-6">
-                                    <div>
-                                        <div class="co-stat-value">{{ number_format(@$carts->credit) }}</div>
-                                        <div class="co-stat-label">Coins</div>
-                                    </div>
-                                    <div>
-                                        <div class="co-stat-value">{{ @$durationType }}</div>
-                                        <div class="co-stat-label">Validity</div>
-                                    </div>
-                                    <div>
-                                        <div class="co-stat-value"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice, 2) }}</div>
-                                        <div class="co-stat-label">Price</div>
+                                    <div class="co-feature-item"><i class="fa fa-check-circle"></i>AI Resume Search &amp; Unlock</div>
+                                    <div class="co-feature-item"><i class="fa fa-check-circle"></i>Priority Email &amp; Chat Support</div>
+                                    <div class="co-stat-block">
+                                        <div class="me-4">
+                                            <div class="co-stat-value">{{ number_format(@$carts->credit) }}</div>
+                                            <div class="co-stat-label">Coins</div>
+                                        </div>
+                                        <div class="me-4">
+                                            <div class="co-stat-value">{{ @$durationType }}</div>
+                                            <div class="co-stat-label">Validity</div>
+                                        </div>
+                                        <div>
+                                            <div class="co-stat-value"><i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"></i> {{ number_format($actualPrice, 2) }}</div>
+                                            <div class="co-stat-label">Price</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -564,188 +305,39 @@
                         <div class="co-card">
                             <div class="d-flex align-items-center mb-4">
                                 <span class="co-icon-circle"><i class="fa fa-ticket-alt"></i></span>
-                                <span class="co-card-title">Have Coupon?</span>
-                            </div>
-
-                            <div id="couponInputState" class="co-coupon-box" style="{{ @$carts->coupon_code ? 'display:none;' : '' }}">
-                                <label class="fs-8 text-gray-600 mb-2 d-block">Apply a coupon code to get discount</label>
-                                <div class="d-flex align-items-center gap-3">
-                                    <input type="text" id="couponCodeInput" class="form-control form-control-solid"
-                                        placeholder="Enter coupon code">
-                                    <button type="button" id="applyCouponBtn" class="btn btn-primary">Apply</button>
-                                </div>
-                                <div id="couponError" class="text-danger fs-8 mt-2" style="display:none;"></div>
-                            </div>
-
-                            <div id="couponAppliedState" class="co-coupon-applied d-flex align-items-center justify-content-between"
-                                style="{{ @$carts->coupon_code ? '' : 'display:none;' }}">
                                 <div>
-                                    <div class="fw-bold text-success" id="couponAppliedCode">{{ @$carts->coupon_code }}</div>
-                                    <div class="fs-8 text-success">
-                                        <span id="couponAppliedPct">{{ @$carts->coupon_code ? rtrim(rtrim(number_format(@$carts->discount, 2), '0'), '.') : '' }}</span>% Discount Applied
-=======
-    <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                        <span class="text-gray-800 mb-0 pt-5">Subscription Package</span>
-                    </h5>
-                    <span class="text-gray-600" id="">&nbsp;</span>
-                </div>
-                <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-            </div>
-            <div class="d-flex align-items-center py-1 d-none ">
-            </div>
-        </div>
-    </div>
-    <!--end::Toolbar-->
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
-        <div class=" container-xxl " id="kt_content_container">
-            <!--begin::Invoice 2 main-->
-            <div class="card">
-                <!--begin::Body-->
-                <div class="card-body p-lg-20">
-                    <!--begin::Layout-->
-                    <div class="d-flex flex-column flex-xl-row">
-                        <!--begin::Content-->
-                        @if (@$carts)
-                        <div class="flex-lg-row-fluid me-xl-18 mb-10 mb-xl-0">
-                            <!--begin::Invoice 2 content-->
-                            <div class="mt-n1">
-
-                               
-                                <!--begin::Wrapper-->
-                                <div class="m-0">
-
-
-
-                                    <!--begin::Row-->
-                                    <div class="row g-5 mb-12">
-                                        <!--end::Col-->
-                                        <div class="col-sm-12">
-                                            <!--end::Label-->
-
-                                            <!--end::Text-->
-
-                                            <!--end::Text-->
-
-                                            <!--end::Description-->
-
-
-
-                                            <!--end::Description-->
-                                            <div class="fw-semibold fs-7 text-gray-600">
-
-                                                <div class="row">
-                                                    <div class="col-sm-9">
-                                                        <div class="fw-bold fs-6 text-gray-800">Billing Details</div>
-                                                        <p><span id="usernamebill">{{ @$user_name }}</span><p>
-                                                        <p>{{ @$company_name }}<p>
-                                                        <p><span id="billing_address">{{ @$locArr }}</span> <p>
-                                                        <p><span id="billing_gst">{{ @$gstin }}</span> <p>
-                                                        <p><span id="billing_pan">{{ @$pan_no }}</span> <p>
-                                                    </div>
-                                                    <div class="col-sm-3">
-                                                        <a href="javascript:;" class="btn btn-primary show-billing-address"
-                                                            id="" style="float: right;">Edit Details</a>
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-                                            <!--end::Description-->
-                                        </div>
-                                        <!--end::Col-->
-
-                                        <!--end::Col-->
-                                        <div class="col-sm-6">
-                                            <!--end::Label-->
-
-
-                                            <!--end::Description-->
-                                            <div class="fw-semibold fs-7 text-gray-600">
-
-                                            </div>
-                                            <!--end::Description-->
-                                        </div>
-                                        <!--end::Col-->
-                                    </div>
-                                    <!--end::Row-->
-
-
-                                    <!--begin::Content-->
-                                    <div class="flex-grow-1">
-                                        <!--begin::Table-->
-                                        <div class="table-responsive border-bottom mb-9">
-                                            <table class="table mb-3">
-                                                <thead>
-                                                    <tr class="border-bottom fs-6 fw-bold text-muted">
-                                                        <th class="min-w-50px pb-2">Product</th>
-                                                        <th class="min-w-50px pb-2">Duration</th>
-                                                        <th class="min-w-50px pb-2">Coins</th>
-                                                        <th class="min-w-50px pb-2">Price</th>
-                                                        <th class="min-w-50px pb-2">Action</th>
-                                                    </tr>
-                                                </thead>
-
-                                                <tbody>
-                                                    @if (@$carts)
-                                                        <tr class="fw-bold text-gray-700 fs-5">
-                                                            <td class="d-flex align-items-center pt-6">
-                                                                 {{ @$carts ? @$carts->product_name : '' }}
-                                                            </td>
-
-                                                            <td class="pt-6">
-                                                                {{ @$carts->subscription_type == 'yes' ? @$durationType : @$durationType }} at <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                    aria-hidden="true"></i> {{ number_format($perMonthPrice,2) }}/Month
-                                                            </td>
-                                                            <td class="pt-6 fw-bolder">
-                                                                {{ @$carts ? $carts->credit : '' }}</td>
-                                                            <td class="pt-6">
-                                                                <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                                    aria-hidden="true"></i>
-                                                            @php
-                                                                    $actualPrice = @$carts->price;
-                                                                    if (@$carts->discount) {
-                                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
-                                                                    }
-                                                            @endphp
-
-                                                                {{ @$carts ?  number_format($actualPrice,2) : '' }}</td>
-                                                            <td class="pt-6"><i class="fa fa-trash" aria-hidden="true"
-                                                                    data-trash="{{ encrypt(@$carts->id) }}" style="cursor: pointer;"></i></td>
-                                                        </tr>
-                                                    @else
-                                                        <tr class="border-bottom fs-6 fw-bold text-muted"
-                                                            style="text-align: center; background: #ff000012;">
-                                                            <td colspan="5" class="min-w-175px pb-2">No Product</td>
-                                                        </tr>
-                                                    @endif
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <!--end::Table-->
-
-
->>>>>>> parent of e32f1d9c (Subscriptions)
-                                    </div>
-                                    <!--end::Content-->
+                                    <span class="co-card-title">Have Coupon?</span>
+                                    <div class="text-gray-500 fs-8">Apply a coupon code to get discount</div>
                                 </div>
-<<<<<<< HEAD
-                                <a href="javascript:;" id="removeCouponBtn" class="text-danger fs-3">&times;</a>
-=======
-                                <!--end::Wrapper-->
-                               
->>>>>>> parent of e32f1d9c (Subscriptions)
                             </div>
-                            <!--end::Invoice 2 content-->
+
+                            <div class="co-coupon-wrap">
+                                {{-- Input side (always visible) --}}
+                                <div class="co-coupon-input-side">
+                                    <div class="co-coupon-box">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="text" id="couponCodeInput" class="form-control form-control-solid"
+                                                placeholder="Enter coupon code"
+                                                value="{{ @$carts->coupon_code }}">
+                                            <button type="button" id="applyCouponBtn" class="btn btn-outline-secondary" style="white-space:nowrap;font-weight:700;">Apply</button>
+                                        </div>
+                                        <div id="couponError" class="text-danger fs-8 mt-2" style="display:none;"></div>
+                                    </div>
+                                </div>
+
+                                {{-- Applied state (visible when coupon applied) --}}
+                                <div id="couponAppliedState" class="co-coupon-applied" style="{{ @$carts->coupon_code ? '' : 'display:none;' }}">
+                                    <div class="co-coupon-applied-name">
+                                        <i class="fa fa-circle-check"></i>
+                                        <span id="couponAppliedCode">{{ @$carts->coupon_code }}</span>
+                                        <a href="javascript:;" id="removeCouponBtn" class="ms-auto" style="color:#9a9cb0;font-size:16px;line-height:1;" title="Remove">&times;</a>
+                                    </div>
+                                    <div class="co-coupon-applied-desc">
+                                        <span id="couponAppliedPct">{{ @$carts->coupon_code ? rtrim(rtrim(number_format(@$carts->discount, 2), '0'), '.') : '' }}</span>% Discount Applied
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-<<<<<<< HEAD
                         <!--end::Coupon-->
                     @else
                         <!--begin::Empty cart state-->
@@ -772,144 +364,8 @@
                                     <div class="text-gray-500 fs-8">You can purchase additional coins or upgrade your plan anytime.</div>
                                     <a href="{{ route('service_company.subscribe.newindex') }}#tab=packages" class="fw-bold">Buy Coins <i class="fa fa-chevron-right fs-9"></i></a>
                                 </div>
-=======
-                        <!--end::Content-->
-
-                        <!--begin::Sidebar-->
-                        <div class="m-0">
-                            <!--begin::Invoice 2 sidebar-->
-                            <div
-                                class="d-print-none border border-dashed border-gray-300 card-rounded h-lg-100 min-w-md-350px p-9 bg-lighten">
-
-                                <!--begin::Title-->
-                                <h6 class="mb-8 fw-bolder text-gray-600 text-hover-primary">PAYMENT DETAILS</h6>
-                                <!--end::Title-->
-
-                                <!--begin::Container-->
-                                <div class="mb-6">
-                                    <!--begin::Section-->
-                                    <div class="mw-300px">
-
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Subtotal:</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-                                                @php
-                                                    $actualPrice = $carts->price;
-                                                    if ($carts->discount) {
-                                                        $actualPrice = $carts->price / (1 - $carts->discount / 100);
-                                                    }
-                                                @endphp
-
-                                                {{  number_format($actualPrice,2) }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-
-                                        @if(@$carts->discount)
-                                         <!--begin::Item-->
-                                         <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Discounts :</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                {{ @$carts->discount }}%
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-                                        
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Price Offer Discount:</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-
-                                                {{ @$carts->price }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-
-                                        <!--end::Item-->
-                                        @endif
-
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">{{ @$carts->currency == 'INR' ? 'GST' : 'TAX' }}</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                {{ @$carts->gst ? @$carts->gst . '%' : '0.00' }}</div>
-                                            <!--end::Value-->
-                                        </div>
-                                        <!--end::Item-->
-
-                                        <!--begin::Item-->
-
-
-                                        <!--begin::Item-->
-                                        <div class="d-flex justify-content-between">
-                                            <!--begin::Label-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">Total</div>
-                                            <!--end::Label-->
-
-                                            <!--begin::Value-->
-                                            <div class="text-end fw-bold fs-6 text-gray-800">
-                                                @if (@$carts)
-                                                    <i class="fa fa-{{ @$carts->currency == 'INR' ? 'inr' : 'usd' }}"
-                                                        aria-hidden="true"></i>
-                                                @endif
-                                                {{ @$carts->total_price }}
-                                            </div>
-                                            <!--end::Value-->
-                                        </div>
-                                        <!--end::Item-->
-                                    </div>
-                                    <!--end::Section-->
-
-
-
-                                </div>
-
-                                <!--end::Container-->
-
-
-                                <div class="mb-6">
-
-                                    <a href="#"
-                                        class="btn btn-sm btn-success {{ $carts_count ? 'cart_add' : 'cert_warning' }}"
-                                        style="    background-color: #be4783 !important; width: 100% !important;"
-                                        data-cart="{{ encrypt(@$carts->id) }}">Pay
-                                        Now</a>
-                                    <!--end::Title-->
-                                </div>
-
-
-
->>>>>>> parent of e32f1d9c (Subscriptions)
                             </div>
-                            <!--end::Invoice 2 sidebar-->
                         </div>
-<<<<<<< HEAD
                         <!--end::Empty cart state-->
                     @endif
                 </div>
@@ -989,12 +445,17 @@
                     <div class="co-help-card">
                         <div class="d-flex align-items-center mb-3">
                             <span class="co-icon-circle"><i class="fa fa-shield-alt"></i></span>
-                            <span class="co-card-title">Need Help?</span>
+                            <div>
+                                <div class="co-card-title">Need Help?</div>
+                                <div class="text-gray-500 fs-8">Our support team is here to assist you</div>
+                            </div>
                         </div>
-                        <div class="text-gray-600 fs-8 mb-3">Have a question about your order or billing? Our team is here to help.</div>
-                        <a href="mailto:support@jero.works" class="btn btn-sm btn-light-primary w-100">
-                            <i class="fa fa-envelope me-1"></i> Email Us
-                        </a>
+                        <button type="button" class="co-btn-contact">Contact Support</button>
+                        <div class="co-help-channels">
+                            <div class="co-help-channel"><i class="fa fa-comment"></i> Live Chat</div>
+                            <div class="co-help-channel"><i class="fa fa-phone"></i> Call Us</div>
+                            <div class="co-help-channel"><i class="fa fa-envelope"></i> Email Us</div>
+                        </div>
                     </div>
                     <!--end::Need Help-->
                 </div>
@@ -1011,23 +472,6 @@
                 </div>
             </div>
             <!--end::Feature strip-->
-=======
-                        <!--end::Sidebar-->
-                        @else
-
-                        <div class="no-time-message">
-                            <p>No data available</p>
-                        </div>
-
-                        @endif
-
-                    </div>
-                    <!--end::Layout-->
-                </div>
-                <!--end::Body-->
-            </div>
-            <!--end::Invoice 2 main-->
->>>>>>> parent of e32f1d9c (Subscriptions)
         </div>
     </div>
 
@@ -1363,24 +807,15 @@
         });
 
         $('.salse-packages').hide();
-        $('.fa-trash').click(function() {
-            let checked = $(this).data('trash');
-            // alert(checked);
+        $(document).on('click', '.co-trash-btn', function() {
+            let checked = $(this).find('i').data('trash');
             var url = "{{ route('service_company.subscribe.deletecheckout') }}";
             $.ajax({
                 type: 'GET',
                 url: url,
-                data: {
-                    '_method': 'GET',
-                    'id': checked
-                },
-
-                success: function(response) {
-                    window.location.reload(true);
-                }
+                data: { '_method': 'GET', 'id': checked },
+                success: function(response) { window.location.reload(true); }
             });
-
-
         });
 
         $('.cert_warning').click(function() {
