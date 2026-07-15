@@ -763,7 +763,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = $jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
@@ -4320,7 +4324,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = $jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
@@ -5262,7 +5270,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = '';//$jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
@@ -6004,7 +6016,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = $jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
@@ -6977,7 +6993,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = $jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
@@ -7964,7 +7984,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
 		$this->max_exp = $jobDefaults->max_exp + 1;
 		$this->min_salary_currency = $jobDefaults->min_salary_currency;
-		$this->min_salary = $jobDefaults->min_salary;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
 		$this->max_salary = $jobDefaults->max_salary;
 		$this->min_sal_mode = $jobDefaults->min_sal_mode;
 		$this->default_skill = $jobDefaults->default_skill;
