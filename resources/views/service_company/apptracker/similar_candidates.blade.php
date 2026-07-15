@@ -1322,7 +1322,7 @@
                                     <div class="simf-section-body">
                                         <div class="simf-loc-inputwrap" id="simf_loc_inputwrap">
                                             <input class="form-control form-control-solid"
-                                                value="" id="kt_tagify_location"
+                                                value="{{ $default_loc }}" id="kt_tagify_location"
                                                 placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
                                             <button type="button" class="simf-loc-chevron" id="simf_loc_chevron" title="Show suggestions">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -1416,8 +1416,22 @@
                                                 fetchSuggestions(query);
                                             });
 
-                                            // Location not pre-populated on listing page — full dataset loads without job-location filter
-                                            setTimeout(() => { updateActiveFiltersUI(); }, 5000);
+                                            setTimeout(() => {
+                                                var city = "{{@$default_loc}}";
+                                                if(city !=''){
+                                                    var cityName = city.split(" | ")[0];
+                                                    fetchSuggestions(cityName);
+                                                }
+                                            }, 100);
+                                            setTimeout(() => {
+                                                var defaultLocation = {!! json_encode(@$default_loc) !!};
+
+                                                if (defaultLocation) {
+                                                    tagifylocation.addTags([defaultLocation]);
+                                                    tagifylocation.dropdown.hide();
+                                                }
+                                                updateActiveFiltersUI();
+                                            }, 5000);
                                         </script>
 
                                         <div class="simf-loc-suggestions d-none" id="simf_loc_panel">
@@ -1562,9 +1576,9 @@
                                                 <label class="simf-mini-label">Minimum Experience</label>
                                                 <select class="form-select form-select-solid" name="min_exp" id="min_exp">
                                                     <option value="" selected="">Min Experience</option>
-                                                    <option value="0">Freshers</option>
+                                                    <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers</option>
                                                     @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}">{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                        <option value="{{ $i }}" {{ $i == $min_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
                                                     @endfor
                                                 </select>
                                                 <div class="fv-plugins-message-container"></div>
@@ -1573,9 +1587,9 @@
                                                 <label class="simf-mini-label">Maximum Experience</label>
                                                 <select class="form-select form-select-solid" name="max_exp" id="max_exp">
                                                     <option value="" selected="">Max Experience</option>
-                                                    <option value="0">Freshers</option>
+                                                    <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers</option>
                                                     @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}">{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                        <option value="{{ $i }}" {{ $i == $max_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
                                                     @endfor
                                                 </select>
                                                 <div class="fv-plugins-message-container" id="experience_error" style="color:red !important;text-align:center;"></div>
@@ -1627,7 +1641,7 @@
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Max Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="">
+                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
                                                 <span class="form-text text-muted maximum_salary_word"></span>
                                             </div>
