@@ -2149,6 +2149,20 @@
             }
         });
 
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline (see internal_bench_ajax.blade.php's $existingCandidatesQuery
+        // branch) — rather than re-fetching the list (which would make it
+        // vanish immediately). The row only actually disappears once the
+        // list is genuinely re-fetched (pagination, filter, sort, or a real
+        // page reload).
+        function ibfMarkCandidateRowAdded($btn) {
+            $btn.closest('div.d-flex.flex-column').html(
+                '<a href="javascript:void(0);" class="fw-bold fs-6 stage_sub_stage rejected-bg text-hover-danger fw-bolder fs-6">&nbsp;&nbsp;Added&nbsp;&nbsp;</a>'
+            );
+        }
+
         $(document).on('click', '.add_to_inreview', function(e) {
             e.preventDefault(); // 🚫 stop anchor default behavior
 
@@ -2158,69 +2172,56 @@
             if ($btn.hasClass('processing')) {
                 return false;
             }
-            $btn.addClass('processing')
-                .addClass('disabled')
-                .css('pointer-events', 'none');
 
-
-            var id = $(this).data('row-id');
-            var source_from_type = $(this).data('row-source_from_type');
-            var source_jobid = $(this).data('row-jobid');
+            var id = $btn.data('row-id');
+            var source_from_type = $btn.data('row-source_from_type');
+            var source_jobid = $btn.data('row-jobid');
 
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+            // No confirmation dialog — a single click starts the add
+            // immediately; the spinner below is the only "processing"
+            // feedback needed, and the result comes back as a toast.
+            var originalHtml = $btn.html();
+            $btn.addClass('processing')
+                .prop('disabled', true)
+                .css('pointer-events', 'none')
+                .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
+
+            function restoreButton() {
+                $btn.removeClass('processing')
+                    .prop('disabled', false)
+                    .css('pointer-events', '')
+                    .html(originalHtml);
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    'id': id,
+                    'source_from_type': source_from_type,
+                    'source_jobid': source_jobid
                 },
-                buttonsStyling: false
-            })
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
-
-                    $.ajax({
-                        type: 'GET',
-                        url: url,
-                        data: {
-                            'id': id,
-                            'source_from_type': source_from_type,
-                            'source_jobid': source_jobid
-                        },
-                        success: function(response) {
-
-                            if (response.status == 'coinCheck') {
-                                ibfToast.fire({ icon: 'warning', title: response.message });
-                                return false;
-                            }
-                            if (response.status == 'success') {
-
-                                var page = $('#paginationcandidate .active_disabled').data('page');
-                                fetchCandidates(page);
-                                ibfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
-                            }
-                        }
-                    });
-
-                } else if (
-                    result.dismiss === Swal.DismissReason.cancel
-                ) {
-                    $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
+                success: function(response) {
+                    if (response.status == 'coinCheck') {
+                        restoreButton();
+                        ibfToast.fire({ icon: 'warning', title: response.message });
+                        return false;
+                    }
+                    if (response.status == 'success') {
+                        ibfMarkCandidateRowAdded($btn);
+                        ibfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
+                    } else {
+                        restoreButton();
+                    }
+                },
+                error: function() {
+                    restoreButton();
+                    ibfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                 }
-            })
-
+            });
         });
         $(document).ready(function() {
             setTimeout(() => {

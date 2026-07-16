@@ -2038,11 +2038,9 @@
 
     <script>
         // Small top-right toast, auto-dismissing, pause-on-hover — SweetAlert2's
-        // own documented toast mode. Only non-chained success/fail notices are
-        // converted to this; the "Are you sure?" confirmation below stays a
-        // real blocking modal since it gates the actual AJAX calls (including
-        // the coin/package validation step that only Agency Bench candidates
-        // require, unlike In-house Bench).
+        // own documented toast mode. All add_to_inreview notices (including
+        // the coin/package check unique to Agency Bench) go through this —
+        // there's no confirmation modal in this flow at all anymore.
         const abfToast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -2055,6 +2053,20 @@
             }
         });
 
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline (see public_bench_ajax.blade.php's $existingCandidatesQuery
+        // branch) — rather than re-fetching the list (which used to make it
+        // vanish immediately via fetchCandidates(page)). The row only
+        // actually disappears once the list is genuinely re-fetched
+        // (pagination, filter, sort, or a real page reload).
+        function abfMarkCandidateRowAdded($btn) {
+            $btn.closest('div.d-flex.flex-column').html(
+                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+            );
+        }
+
         $(document).on('click', '.add_to_inreview', function(e) {
             e.preventDefault(); // 🚫 stop anchor default behavior
 
@@ -2064,107 +2076,86 @@
             if ($btn.hasClass('processing')) {
                 return false;
             }
-            $btn.addClass('processing')
-                .addClass('disabled')
-                .css('pointer-events', 'none');
 
-
-            var id = $(this).data('row-id');
-            var source_from_type = $(this).data('row-source_from_type');
-            var source_jobid = $(this).data('row-jobid');
+            var id = $btn.data('row-id');
+            var source_from_type = $btn.data('row-source_from_type');
+            var source_jobid = $btn.data('row-jobid');
 
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
+            // No confirmation dialog — a single click starts the add
+            // immediately; the spinner below is the only "processing"
+            // feedback needed, and the result comes back as a toast.
+            var originalHtml = $btn.html();
+            $btn.addClass('processing')
+                .prop('disabled', true)
+                .css('pointer-events', 'none')
+                .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+            function restoreButton() {
+                $btn.removeClass('processing')
+                    .prop('disabled', false)
+                    .css('pointer-events', '')
+                    .html(originalHtml);
+            }
+
+            var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+            var inner_token = "{{ csrf_token() }}";
+            var eventId = 10;
+
+            $.ajax({
+                type: 'POST',
+                url: inner_url,
+                beforeSend: function() {},
+                data: {
+                    '_token': inner_token,
+                    'event': 'Bench_Sales',
+                    'app_id': id,
+                    'source_jobid': source_jobid,
+                    'eventId': eventId
                 },
-                buttonsStyling: false
-            })
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
+                success: function(response) {
+                    if (response.status == "success") {
+                        $.ajax({
+                            type: 'GET',
+                            url: url,
+                            data: {
+                                'id': id,
+                                'source_from_type': source_from_type,
+                                'source_jobid': source_jobid
+                            },
+                            success: function(response) {
+                                if (response.status == 'coinCheck') {
+                                    restoreButton();
+                                    abfToast.fire({ icon: 'warning', title: response.message });
+                                    return false;
+                                }
 
-
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
-
-                    var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
-                    var inner_token = "{{ csrf_token() }}";
-                    var inner_baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                    var eventId = 10;
-
-                    $.ajax({
-                        type: 'POST',
-                        url: inner_url,
-                        beforeSend: function() {},
-                        data: {
-                            '_token': inner_token,
-                            'event': 'Bench_Sales',
-                            'app_id': id,
-                            'source_jobid': source_jobid,
-                            'eventId': eventId
-                        },
-                        //data		: {'_token': inner_token, 'event':'CVACCESS'}, NEW_BENCH_CLIENT_REQUEST
-                        success: function(response) {
-
-
-
-
-                            if (response.status == "success") {
-                                $.ajax({
-                                    type: 'GET',
-                                    url: url,
-                                    data: {
-                                        'id': id,
-                                        'source_from_type': source_from_type,
-                                        'source_jobid': source_jobid
-                                    },
-                                    success: function(response) {
-
-                                        if (response.status == 'coinCheck') {
-                                            abfToast.fire({ icon: 'warning', title: response.message });
-                                            return false;
-                                        }
-
-
-                                        if (response.status == 'success') {
-                                            // tableLoad('load');
-                                            var page = $('#paginationcandidate .active_disabled').data('page');
-                                            fetchCandidates(page);
-                                            abfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
-                                        }
-                                    }
-                                });
-
-
-
-
-                            } else if (response.status == "info") {
-                                abfToast.fire({ icon: 'error', title: response.message });
+                                if (response.status == 'success') {
+                                    abfMarkCandidateRowAdded($btn);
+                                    abfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
+                                } else {
+                                    restoreButton();
+                                }
+                            },
+                            error: function() {
+                                restoreButton();
+                                abfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                             }
-
-                        }
-                    });
-
-
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
+                        });
+                    } else if (response.status == "info") {
+                        restoreButton();
+                        abfToast.fire({ icon: 'error', title: response.message });
+                    } else {
+                        restoreButton();
+                    }
+                },
+                error: function() {
+                    restoreButton();
+                    abfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                 }
-            })
-
-
+            });
         });
 
         $(document).on('click', '.downloadCount', function() {
