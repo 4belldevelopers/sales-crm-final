@@ -2447,7 +2447,7 @@
         // instant removal.
         function simfMarkCandidateRowAdded($btn) {
             $btn.closest('div.d-flex.flex-column').html(
-                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+                '<a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>'
             );
         }
 

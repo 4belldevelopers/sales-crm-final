@@ -2158,7 +2158,7 @@
         // page reload).
         function ibfMarkCandidateRowAdded($btn) {
             $btn.closest('div.d-flex.flex-column').html(
-                '<a href="javascript:void(0);" class="fw-bold fs-6 stage_sub_stage rejected-bg text-hover-danger fw-bolder fs-6">&nbsp;&nbsp;Added&nbsp;&nbsp;</a>'
+                '<a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>'
             );
         }
 
