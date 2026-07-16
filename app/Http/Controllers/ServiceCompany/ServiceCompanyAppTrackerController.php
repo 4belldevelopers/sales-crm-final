@@ -343,9 +343,52 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		switch ($valCheck) {
 			case 1:
+				// Stage grouping (InReview → Sourcing → ... → Rejected) stays
+				// the primary sort here too — same as the default view —
+				// with newest-upload-date as the secondary tiebreak within
+				// each stage, matching what the sort label promises instead
+				// of a flat created_at sort that ignores stage entirely.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'desc']];
 				break;
 			case 2:
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			case 3:
@@ -2422,9 +2465,52 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		switch ($valCheck) {
 			case 1:
+				// Stage grouping (InReview → Sourcing → ... → Rejected) stays
+				// the primary sort here too — same as the default view —
+				// with newest-upload-date as the secondary tiebreak within
+				// each stage, matching what the sort label promises instead
+				// of a flat created_at sort that ignores stage entirely.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'desc']];
 				break;
 			case 2:
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			case 3:
