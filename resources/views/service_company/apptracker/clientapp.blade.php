@@ -1680,17 +1680,17 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
-	$('.chk_list').click(function(){ 
-		
+	$('.chk_list').click(function(){
+
 		if($(".chk_list").prop('checked') == true){
 			var chk_list 	=	$('.chk_list').val();
       $('.custom_hide').addClass("d-none");
-			$('.chk_list_item').attr('checked','checked');
+			$('.chk_list_item').prop('checked', true);
 		}else{
-			$('.chk_list_item').removeAttr('checked');		
+			$('.chk_list_item').prop('checked', false);
       $('.custom_hide').removeClass("d-none");
 		}
-	});	
+	});
 
 </script>
 <script>
