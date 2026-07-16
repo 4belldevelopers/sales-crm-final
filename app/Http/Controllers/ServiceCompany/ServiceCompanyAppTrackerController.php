@@ -2646,18 +2646,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			]
 		];
 
-		// Both Notice Period Date sorts only make sense for candidates who
-		// are actually serving notice (stage 8) — mirrors allDataAjax()'s
-		// identical restriction, which this method was missing entirely, so
-		// these sorts used to reorder every stage instead of just this one.
-		if ($valCheck==21 || $valCheck==22) {
-			$boolQuery['bool']['filter'][] = [
-				'term' => [
-					'job_master_status_id' => (int) 8
-				]
-			];
-		}
-
 		if ($valCheck==22) {
 			$today = date('Y-m-d');  
 			$next30 = date('Y-m-d', strtotime('+30 days'));
