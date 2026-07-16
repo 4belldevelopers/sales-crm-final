@@ -6,7 +6,7 @@
 > decision, finish a phase, or learn something non-obvious, append it here (newest on top
 > in each section) and, if it's an architecture decision, also add an ADR.
 
-Last updated: 2026-06-27 (added code-documentation rule; resolved `metronics` = Metronic theme).
+Last updated: 2026-07-16 (documented client-job stage-ownership & visibility business logic).
 
 ---
 
@@ -21,6 +21,22 @@ Last updated: 2026-06-27 (added code-documentation rule; resolved `metronics` = 
 - **Test coverage:** essentially none (default Breeze scaffolding only) — high regression risk.
 
 ## 2. Decision log (append-only; newest first)
+- *2026-07-16* — **Client-job candidate pipeline: stage-ownership & visibility rules
+  documented for the first time**, reconstructed from the product owner's explanation
+  and verified against the `master_status` table + controller code (not previously
+  written down anywhere). Core rule: the agency owns InReview(8)↔Sourcing(1)↔Reject(9)
+  pre-handoff; the client owns Sourcing(1) through Rejected(7) post-handoff and can
+  never revert a candidate to InReview; candidates at stage 8/9 must stay invisible to
+  the client until sourced. Full writeup + enforcement locations:
+  [docs/CLIENT_JOB_STAGE_OWNERSHIP.md](../docs/CLIENT_JOB_STAGE_OWNERSHIP.md). Found (and,
+  at various points, fixed) several real bugs in this area along the way — a
+  `client_stage_submit()` validation gap that let the agency reject from any stage, a
+  live `dd()` crashing backward stage moves, Reject(7) only being reachable from Joined
+  instead of any active stage, and a genuine visibility leak in
+  `ProductCompanyAppTrackerController::data()` (zero exclusion of stage 8/9, unlike its
+  own `loadcounter()`/`index()` which already excluded them correctly). See the new doc
+  for current status of each — some of these were reverted/reapplied mid-session as part
+  of an unrelated production incident, so re-verify before trusting fix state.
 - *2026-06-28* — **Design direction locked: clean, beautiful, ICON-BASED, NO 3D.**
   Font = **Poppins** app-wide; **max 14px**; follow Metronic; 2D charts only
   (no Three.js/WebGL/3D). Updated UI_UX_STANDARDS, ENTERPRISE_PLAYBOOK §4, and the UI rule

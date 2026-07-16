@@ -436,66 +436,65 @@
     </script>
 
     <script>
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" (btn-success) label the
+        // row partial already renders server-side for ac_status==1 (see
+        // candidates_request_ajax.blade.php) — rather than the previous
+        // location.reload(), which made the row (and every other row's
+        // scroll position/filter state) vanish instantly. The row only
+        // actually disappears once the list is genuinely re-fetched
+        // (pagination, filter, sort, or a real page reload).
+        function benchReqMarkCandidateRowAdded($btn) {
+            $btn.replaceWith('<a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>');
+        }
+
         $(document).ready(function() {
-            $(document).on("click", ".add_to_list", function() {
-                var jobId = $(this).attr('data-row-id');
-                var recomndedId = $(this).attr('data-recomnded-id');
-                var condidateId = $(this).attr('data-condidate-id');
-                var elm = $(this);
-                swal({
-                        title: "Are you sure?",
-                        text: "Add to list!",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: '#DD6B55',
-                        confirmButtonText: 'Yes, I am sure!',
-                        cancelButtonText: "No, cancel it!",
-                        closeOnConfirm: false,
-                        closeOnCancel: false,
-                        preConfirm: () => {
-                            // Disable the confirm button
-                            swal.showLoading();
+            $(document).on("click", ".add_to_list", function(e) {
+                e.preventDefault();
 
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    resolve();
-                                }, 2000); // Simulate async operation, e.g., AJAX request
-                            });
-                        }
+                var $btn = $(this);
+
+                // 🔒 Prevent double click
+                if ($btn.hasClass('processing')) {
+                    return false;
+                }
+
+                var jobId = $btn.attr('data-row-id');
+                var recomndedId = $btn.attr('data-recomnded-id');
+                var condidateId = $btn.attr('data-condidate-id');
+
+                // No confirmation dialog — a single click starts the add
+                // immediately; the spinner below is the only "processing"
+                // feedback needed, and the result comes back as a toast.
+                var originalHtml = $btn.html();
+                $btn.addClass('processing')
+                    .prop('disabled', true)
+                    .css('pointer-events', 'none')
+                    .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
+
+                function restoreButton() {
+                    $btn.removeClass('processing')
+                        .prop('disabled', false)
+                        .css('pointer-events', '')
+                        .html(originalHtml);
+                }
+
+                var url = "{{ route('service_company.jobs.add_to_list', ':id') }}";
+                url = url.replace(':id', jobId) + "?recomndedId=" + recomndedId +
+                    "&condidateId=" + condidateId;
+
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    success: function(response) {
+                        benchReqMarkCandidateRowAdded($btn);
+                        benchReqToast.fire({ icon: 'success', title: 'Added successfully to public bench' });
                     },
-                    function(isConfirm) {
-                        if (isConfirm) {
-                            $('.sa-confirm-button-container .confirm').prop('disabled', true);
-                            var url = "{{ route('service_company.jobs.add_to_list', ':id') }}";
-                            url = url.replace(':id', jobId) + "?recomndedId=" + recomndedId +
-                                "&condidateId=" + condidateId;
-                            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                            $.ajax({
-                                type: 'GET',
-                                url: url,
-                                // beforeSend: function() {
-                                //     elm.parent().html('<img src="' + baseurl +
-                                //         '" height="35px" width="100%">');
-                                // },
-                                success: function(response) {
-                                    swal("Recommend!", "Add successfully public bench!",
-                                        "success");
-                                    setTimeout(() => {
-                                        location.reload();
-                                    }, 1000);
-                                }
-
-
-                            });
-
-
-
-                        } else {
-
-                            swal("Cancelled", "", "error");
-
-                        }
-                    });
+                    error: function() {
+                        restoreButton();
+                        benchReqToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
+                    }
+                });
             });
 
         });

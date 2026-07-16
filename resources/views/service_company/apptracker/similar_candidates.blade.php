@@ -2435,25 +2435,20 @@
             }
         });
 
-        // After a successful add, the candidate no longer belongs in THIS
-        // list — removing its row locally and decrementing the on-screen
-        // counters is equivalent to what a full fetchCandidates() re-fetch
-        // would show, but with zero extra server round-trips and no
-        // re-run of the results aggregation (which was also the source of
-        // the "count changes by a large, unrelated amount after one add"
-        // symptom — that aggregation is an approximate Elasticsearch
-        // cardinality count, not a bug in the add action itself, and
-        // simply not re-running it after every single add sidesteps it).
-        function simfRemoveCandidateRowAfterAdd($btn) {
-            var $row = $btn.closest('tr');
-            $row.fadeOut(250, function() {
-                $row.remove();
-                ['#similar_counter', '#simf_footer_number'].forEach(function(sel) {
-                    var $el = $(sel);
-                    var n = parseInt($el.text(), 10);
-                    if (!isNaN(n) && n > 0) $el.text(n - 1);
-                });
-            });
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline (see similar_existing_ajax.blade.php's $existingCandidatesQuery
+        // branch) — rather than fading/removing the row. The row only
+        // actually disappears once the list is genuinely re-fetched
+        // (pagination, filter, sort, or a real page reload), which is when
+        // the server-side exclusion naturally takes over. This avoids the
+        // "did that actually work, where did the row go?" confusion of an
+        // instant removal.
+        function simfMarkCandidateRowAdded($btn) {
+            $btn.closest('div.d-flex.flex-column').html(
+                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+            );
         }
 
         $(document).on('click', '.add_to_inreview', function(e) {
@@ -2465,104 +2460,90 @@
             if ($btn.hasClass('processing')) {
                 return false;
             }
-            $btn.addClass('processing')
-                .addClass('disabled')
-                .css('pointer-events', 'none');
 
-
-            var button = $(this); // Store the button element for later use
-
-            var id = $(this).data('row-id');
-            var source_from_type = $(this).data('row-source_from_type');
-            var source_jobid = $(this).data('row-jobid');
-            var source_tab = $(this).data('row-from');
-            var wiseId = $(this).data('row-wiseid');
-            // alert(wiseId);
+            var id = $btn.data('row-id');
+            var source_from_type = $btn.data('row-source_from_type');
+            var source_jobid = $btn.data('row-jobid');
+            var source_tab = $btn.data('row-from');
+            var wiseId = $btn.data('row-wiseid');
 
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+            // No confirmation dialog — a single click starts the add
+            // immediately; the spinner below is the only "processing"
+            // feedback needed, and the result comes back as a toast.
+            var originalHtml = $btn.html();
+            $btn.addClass('processing')
+                .prop('disabled', true)
+                .css('pointer-events', 'none')
+                .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
+
+            function restoreButton() {
+                $btn.removeClass('processing')
+                    .prop('disabled', false)
+                    .css('pointer-events', '')
+                    .html(originalHtml);
+            }
+
+            var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+            var inner_token = "{{ csrf_token() }}";
+            var eventId = 9;
+
+            $.ajax({
+                type: 'POST',
+                url: inner_url,
+                beforeSend: function() {},
+                data: {
+                    '_token': inner_token,
+                    'event': 'internaldatabaseaccess',
+                    'app_id': id,
+                    'source_jobid': source_jobid,
+                    'eventId': eventId
                 },
-                buttonsStyling: false
-            })
+                success: function(response) {
+                    if (response.status == "success") {
+                        $.ajax({
+                            type: 'GET',
+                            url: url,
+                            data: {
+                                'id': id,
+                                'source_from_type': source_from_type,
+                                'source_jobid': source_jobid,
+                                'source_tab': source_tab,
+                                'wiseId': wiseId
+                            },
+                            success: function(response) {
+                                if (response.status == 'coinCheck') {
+                                    restoreButton();
+                                    simfToast.fire({ icon: 'warning', title: response.message });
+                                    return false;
+                                }
 
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
-
-
-                    var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
-                    var inner_token = "{{ csrf_token() }}";
-                    var eventId = 9;
-
-                    // Disable the button
-                    button.prop('disabled', true);
-
-                    $.ajax({
-                        type: 'POST',
-                        url: inner_url,
-                        beforeSend: function() {},
-                        data: {
-                            '_token': inner_token,
-                            'event': 'internaldatabaseaccess',
-                            'app_id': id,
-                            'source_jobid': source_jobid,
-                            'eventId': eventId
-                        },
-                        success: function(response) {
-                            if (response.status == "success") {
-                                $.ajax({
-                                    type: 'GET',
-                                    url: url,
-                                    data: {
-                                        'id': id,
-                                        'source_from_type': source_from_type,
-                                        'source_jobid': source_jobid,
-                                        'source_tab': source_tab,
-                                        'wiseId': wiseId
-                                    },
-                                    success: function(response) {
-
-
-                                        if (response.status == 'coinCheck') {
-                                            simfToast.fire({ icon: 'warning', title: response.message });
-                                            return false;
-                                        }
-
-                                        if (response.status == 'success') {
-                                            // Enable the button again if needed
-                                            button.prop('disabled', false);
-
-                                            simfRemoveCandidateRowAfterAdd(button);
-                                            simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
-                                        }
-                                    }
-                                });
-                            } else if (response.status == "info") {
-                                simfToast.fire({ icon: 'error', title: response.message });
+                                if (response.status == 'success') {
+                                    simfMarkCandidateRowAdded($btn);
+                                    simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
+                                } else {
+                                    restoreButton();
+                                }
+                            },
+                            error: function() {
+                                restoreButton();
+                                simfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                             }
-                        }
-                    });
-
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
+                        });
+                    } else if (response.status == "info") {
+                        restoreButton();
+                        simfToast.fire({ icon: 'error', title: response.message });
+                    } else {
+                        restoreButton();
+                    }
+                },
+                error: function() {
+                    restoreButton();
+                    simfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                 }
-            })
+            });
         });
 
 
