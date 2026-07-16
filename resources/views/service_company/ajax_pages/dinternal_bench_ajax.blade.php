@@ -53,24 +53,56 @@
                     $skilltag = '';
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
-                    $percentage =  GeneralMethod::skill_percentage($row->job_id,$skillArr);
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
-                    }
 
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
+                    $percentage=0;
+                    $matches = $row->matched_skill_count;
+                    $totalElements = count($requiredSkillsForDisplay ?? []);
+                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                    $matchPercentage = min($matchPercentage, 100);
+                    $percentage = round($matchPercentage, 1);
+
+                    // Match % badge — color reflects the numeric match score, same
+                    // thresholds/colors used across the other apptracker tabs: >90
+                    // green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
+                    if ($percentage == 0) {
                         $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
+                    } elseif ($percentage < 50) {
                         $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
+                    } elseif ($percentage <= 90) {
                         $matchBg = '#fef3c7'; $matchColor = '#d97706';
                     } else {
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
-                    $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
+                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$percentage.'%</span>';
+
+                    // Matched skill highlighting, three tiers — mirrors
+                    // internal_bench_ajax.blade.php: a match against a STARRED
+                    // (mandatory) requirement is a different signal than a match
+                    // against a skill that was just typed but not starred.
+                    // $row->matched_skills and $row->matched_mandatory_skills are
+                    // both computed server-side (GeneralMethod::matchedSkillsList())
+                    // in dinternal_bench_data_ajax()'s must+should hybrid query.
+                    $matchedSkillsArr = $row->matched_skills ?? [];
+                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
+                    $optionalMatched = array_values(array_udiff($matchedSkillsArr, $mandatoryMatched, 'strcasecmp'));
+                    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+
+                    foreach ($mandatoryMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($optionalMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
+                    }
 
                     echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 				<a href="javascript:void(0);"   data-row-id="' .
