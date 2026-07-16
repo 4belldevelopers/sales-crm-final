@@ -841,40 +841,14 @@
             <!-- Stage end  -->
             <td>
                 @php
-                    $source_from_id = @$row->candidate_id;
-                    $recCounter = 0;
-                    $recCounter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_id', @$row->candidate_id)
-                        //->where('source_from_type', 0)
-                        ->where('source_jobid', @$jobid)
-                        /*->orWhere(function ($query) use($source_from_id, $jobid) {
-																								$query->where('source_application_id', '=', $source_from_id)
-																								->where('source_from_type', '=', '1')
-																								->where('source_jobid', '=', $jobid);
-																					})*/
-                        ->count();
+                    $candId = @$row->candidate_id;
+                    $recCounter = isset($recCounterMap[$candId]) ? 1 : 0;
 
                     $source_from_type = 0;
-                    $public_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 2)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', @$row->candidate_id)
-                        ->count();
-
-                    if ($public_bench_conter > 0) {
+                    if (isset($publicByAppMap[$candId])) {
                         $source_from_type = 2;
                     }
-
-                    $internal_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 1)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', @$row->candidate_id)
-                        ->count();
-
-                    if ($internal_bench_conter > 0) {
+                    if (isset($internalByAppMap[$candId])) {
                         $source_from_type = 1;
                     }
 
@@ -884,24 +858,9 @@
                             @$row->wiseId .
                             ' </div>';
                     } else {
-                        $public_bench_conter = DB::table('rec_candidate_assign')
-                            ->select('id')
-                            ->where('source_from_type', '=', 2)
-                            ->where('source_company_id', '=', $company_id)
-                            ->where('source_jobid', '=', $jobid)
-                            ->where('parent_id', '=', @$row->candidate_id)
-                            ->count();
-                        $internal_bench_conter = DB::table('rec_candidate_assign')
-                            ->select('id')
-                            ->where('source_from_type', '=', 1)
-                            ->where('source_company_id', '=', $company_id)
-                            ->where('source_jobid', '=', $jobid)
-                            ->where('parent_id', '=', @$row->candidate_id)
-                            ->count();
-                            $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                            ->select('job_application_id')
-                            ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', $row->candidate_id)->count();
+                        $public_bench_conter = isset($publicByParentMap[$candId]) ? 1 : 0;
+                        $internal_bench_conter = isset($internalByParentMap[$candId]) ? 1 : 0;
+                        $existingCandidatesQuery = isset($existingMap[$candId]) ? 1 : 0;
 
                         if ($public_bench_conter > 0) {
                             $html =
@@ -914,8 +873,8 @@
                             '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } else {
                             $html =
-                                '<div class="d-flex flex-column"> 
-												<a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' .
+                                '<div class="d-flex flex-column">
+													<a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' .
                                 @$source_from_type .
                                 '"  data-row-id="' .
                                 @$row->candidate_id .
@@ -925,7 +884,7 @@
                                 @$jobid .
                                 '">
 													Add to Job
-												</a> 
+												</a>
 											</div>';
                         }
                     }

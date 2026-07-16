@@ -55,6 +55,7 @@ use App\Services\NotificationMailService;
 use App\Jobs\ElasticCompanyIndex;
 use App\Services\ElasticService;
 use App\Jobs\ElasticCandidateIndex;
+use App\Jobs\ElasticBenchCandidateIndex;
 
 class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 {
@@ -1951,9 +1952,44 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				|| ($min_salary !== null && $min_salary !== '' && $min_salary != 0.00)
 				|| ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00);
 			$search = $freeTextSearch;
+			// Batched replacement for the 5 rec_candidate_assign/add_job_wise_condidates
+			// COUNT queries similar_existing_ajax.blade.php used to run once per row (N+1).
+			$candidateIdsForAdded = collect($data)->pluck('candidate_id')->filter()->unique()->values()->all();
+			$recByJob = DB::table('rec_candidate_assign')
+				->where('source_jobid', $jobid)
+				->get(['source_from_id', 'source_from_type', 'parent_id']);
+			$recCounterMap = [];
+			$publicByParentMap = [];
+			$internalByParentMap = [];
+			foreach ($recByJob as $r) {
+				if ($r->source_from_id) {
+					$recCounterMap[$r->source_from_id] = true;
+				}
+				if ($r->parent_id) {
+					if ((int) $r->source_from_type === 2) {
+						$publicByParentMap[$r->parent_id] = true;
+					} elseif ((int) $r->source_from_type === 1) {
+						$internalByParentMap[$r->parent_id] = true;
+					}
+				}
+			}
+			$recByCompany = DB::table('rec_candidate_assign')
+				->where('source_company_id', $company_id)
+				->whereIn('source_from_type', [1, 2])
+				->whereIn('source_application_id', $candidateIdsForAdded)
+				->get(['source_application_id', 'source_from_type']);
+			$publicByAppMap = [];
+			$internalByAppMap = [];
+			foreach ($recByCompany as $r) {
+				if ((int) $r->source_from_type === 2) {
+					$publicByAppMap[$r->source_application_id] = true;
+				} elseif ((int) $r->source_from_type === 1) {
+					$internalByAppMap[$r->source_application_id] = true;
+				}
+			}
 			// dd($data);
 			$responseData  =[
-				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search'))->render(),
+				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search','recCounterMap','publicByParentMap','internalByParentMap','publicByAppMap','internalByAppMap','existingMap'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -3290,8 +3326,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 							];
 							GeneralMethod::teamRankElastic($teamRankElastic);
 			
-			// ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
-			GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);			
+			ElasticBenchCandidateIndex::dispatch($source_from_id)->onConnection('emails');
 
 
 		}
@@ -3717,7 +3752,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 
 
-			GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
+			ElasticBenchCandidateIndex::dispatch($application_id)->onConnection('emails');
 
 		}
 
@@ -3902,7 +3937,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
-		GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+		ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
 
 
 		return Reply::dataOnly(['status' => 'success']);
@@ -5818,8 +5853,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			// Single batched lookup for the "Added" badge instead of one add_job_wise_condidates
+			// query per row inside internal_bench_ajax.blade.php.
+			$addedJobApplicationIds = array_flip(DB::table('add_job_wise_condidates')->where('job_id', $jobid)->pluck('job_application_id')->all());
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','addedJobApplicationIds'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -7899,8 +7937,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$sal_mode = request('sal_mode');
 		$min_salary_currency = request('min_salary_currency');
 		$app_int_outsource = request('app_int_outsource');
+		// Single batched lookup for the "Added" badge instead of one add_job_wise_condidates
+		// query per row inside public_bench_ajax.blade.php.
+		$addedJobApplicationIds = array_flip(DB::table('add_job_wise_condidates')->where('job_id', $jobid)->pluck('job_application_id')->all());
 		$responseData = [
-			'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','boostbenchApplications','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+			'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','boostbenchApplications','requiredSkills','modeFilter','currencyFilter','symbolsFilter','addedJobApplicationIds'))->render(),
 			'total'=>$total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
@@ -8983,6 +9024,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 		}
+		$existingMap = array_flip($existingCandidatesQuery);
 		$boolQuery['bool']['must_not'][] = [
 			'terms' => [
 				'job_master_status_id' => [5, 6]
@@ -9086,8 +9128,43 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			// Batched replacement for the 5 rec_candidate_assign/add_job_wise_condidates
+			// COUNT queries dsimilar_existing_ajax.blade.php used to run once per row (N+1).
+			$candidateIdsForAdded = collect($data)->pluck('id')->filter()->unique()->values()->all();
+			$recByJob = DB::table('rec_candidate_assign')
+				->where('source_jobid', $jobid)
+				->get(['source_from_id', 'source_from_type', 'parent_id']);
+			$recCounterMap = [];
+			$publicByParentMap = [];
+			$internalByParentMap = [];
+			foreach ($recByJob as $r) {
+				if ($r->source_from_id) {
+					$recCounterMap[$r->source_from_id] = true;
+				}
+				if ($r->parent_id) {
+					if ((int) $r->source_from_type === 2) {
+						$publicByParentMap[$r->parent_id] = true;
+					} elseif ((int) $r->source_from_type === 1) {
+						$internalByParentMap[$r->parent_id] = true;
+					}
+				}
+			}
+			$recByCompany = DB::table('rec_candidate_assign')
+				->where('source_company_id', $company_id)
+				->whereIn('source_from_type', [1, 2])
+				->whereIn('source_application_id', $candidateIdsForAdded)
+				->get(['source_application_id', 'source_from_type']);
+			$publicByAppMap = [];
+			$internalByAppMap = [];
+			foreach ($recByCompany as $r) {
+				if ((int) $r->source_from_type === 2) {
+					$publicByAppMap[$r->source_application_id] = true;
+				} elseif ((int) $r->source_from_type === 1) {
+					$internalByAppMap[$r->source_application_id] = true;
+				}
+			}
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','recCounterMap','publicByParentMap','internalByParentMap','publicByAppMap','internalByAppMap','existingMap'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -10191,9 +10268,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			// Single batched lookup for the "Added" badge instead of one add_job_wise_condidates
+			// query per row inside dinternal_bench_ajax.blade.php.
+			$addedJobApplicationIds = array_flip(DB::table('add_job_wise_condidates')->where('job_id', $jobid)->pluck('job_application_id')->all());
 
 			$responseData = [
-				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','addedJobApplicationIds'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
