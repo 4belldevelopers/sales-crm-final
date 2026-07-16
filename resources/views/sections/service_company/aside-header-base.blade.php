@@ -491,6 +491,11 @@ $productAllowCompany = GeneralMethod::companiesType();
                                             class="menu-title">Overview</span> </span> </a>
                             </div>
                             <div class="menu-item">
+                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=transactions"> <span
+                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
+                                            class="menu-title">Transactions</span> </span> </a>
+                            </div>
+                            <div class="menu-item">
                                 <a class="" href="{{ route('service_company.subscribe.transectionLog') }}?pagetype=operationaltab&page=1">
                                     <span
                                         class="menu-link {{ request()->is('subscribe/transection-log') ? 'active' : '' }}">

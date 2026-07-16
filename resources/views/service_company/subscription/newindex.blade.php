@@ -544,6 +544,7 @@
                         <!--begin::Tab nav-->
                         <ul class="wallet-tab-nav">
                             <li><a href="javascript:;" class="wallet-tab-link wt-active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
+                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
                         </ul>
                         <!--end::Tab nav-->
                     </div>
@@ -553,6 +554,7 @@
                         <div id="wallet-pane-overview" class="wallet-tab-pane">
                         <div class="row g-5 g-xl-10 mb-5 mb-xl-10 px-5">
                             <div class="col-xl-12 col-lg-12">
+                                <div id="overview-only-section">
 
                                 <!--begin::Current Plan card - Operational-->
                                 <div class="cp-card operational-packages mb-5">
@@ -917,6 +919,7 @@
                                 <!--end::Overview extras - Sales-->
 
                                 </div>
+                                </div>{{-- end::overview-only-section --}}
                                 <!--end::wallet-pane-overview-->
 
                                 <div id="wallet-pane-packages" class="wallet-tab-pane" style="display:none">
@@ -1386,10 +1389,7 @@
 
                                 <!--begin::wallet-pane-transactions-->
                                 <div id="wallet-pane-transactions" class="wallet-tab-pane" style="display:none">
-                                    <div id="walletTransactionsContent" class="text-center text-muted py-15">
-                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                        Loading transactions...
-                                    </div>
+                                    @include('service_company.ajax_pages.subscription_transactions', ['cart_transaction_history' => $cart_transaction_history])
                                 </div>
                                 <!--end::wallet-pane-transactions-->
 
@@ -1491,38 +1491,46 @@
                 }
             });
 
-            // Wallet Center: top-level tab switching (Overview / Packages /
-            // Transactions / Invoices / Billing / Settings). Pure client-side
-            // show/hide — all tab content is already in the DOM except
-            // Transactions, which is lazy-loaded once via AJAX on first view.
-            var walletTransactionsLoaded = false;
+            // Wallet Center tab switching.
+            // wallet-pane-overview is a permanent outer wrapper — never hidden.
+            // Overview-specific content lives in #overview-only-section inside it.
+            // All other panes (transactions, packages…) are also inside that wrapper.
+            // So we hide/show #overview-only-section and the target pane, not the wrapper.
+            window.switchWalletCenterTab = function(tab, noScroll) {
+                // Hide all inner panes (packages, transactions, etc.) but NOT the outer overview wrapper
+                $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
 
-            window.switchWalletCenterTab = function(tab) {
-                $('.wallet-tab-pane').hide();
-                $('#wallet-pane-' + tab).show();
+                if (tab === 'overview') {
+                    $('#overview-only-section').show();
+                } else {
+                    $('#overview-only-section').hide();
+                    $('#wallet-pane-' + tab).show();
+                }
+
                 $('.wallet-tab-link').removeClass('wt-active');
                 $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('wt-active');
 
-                if (tab === 'transactions' && !walletTransactionsLoaded) {
-                    walletTransactionsLoaded = true;
-                    $.ajax({
-                        url: "{{ route('service_company.transactions.subscriptionAjax') }}",
-                        type: 'GET',
-                        success: function(response) {
-                            $('#walletTransactionsContent').html(response.html);
-                        },
-                        error: function() {
-                            walletTransactionsLoaded = false;
-                            $('#walletTransactionsContent').html(
-                                '<div class="text-center text-danger py-10">Could not load transactions. Please try again.</div>'
-                            );
-                        }
-                    });
+                // Scroll to the tab nav so table content is visible from the top.
+                // noScroll=true is used on initial page load to avoid jarring jump.
+                if (!noScroll) {
+                    var $nav = $('.wallet-tab-nav');
+                    if ($nav.length) {
+                        $('html, body').animate({ scrollTop: $nav.offset().top - 20 }, 150);
+                    }
                 }
             };
 
-            // Always activate Overview on load — only one tab exists now.
-            switchWalletCenterTab('overview');
+            // On load: switch to hash tab if valid, otherwise default to overview.
+            function applyHashTab(fromHashChange) {
+                var match = /tab=([a-z]+)/.exec(window.location.hash || '');
+                if (match && $('#wallet-pane-' + match[1]).length) {
+                    switchWalletCenterTab(match[1], !fromHashChange);
+                } else {
+                    switchWalletCenterTab('overview', !fromHashChange);
+                }
+            }
+            applyHashTab(false);
+            $(window).on('hashchange', function() { applyHashTab(true); });
 
 
             $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {
@@ -1709,6 +1717,35 @@
                     }
                 });
 
+            });
+
+            // AJAX pagination for the Transactions tab.
+            // Intercepts clicks on any pagination link inside the transactions pane,
+            // calls the subscriptionAjax endpoint with the correct ?page= param,
+            // and swaps the pane content in-place — no full page reload.
+            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
+
+            $(document).on('click', '#wallet-pane-transactions .pagination a.page-link', function (e) {
+                e.preventDefault();
+                var href = $(this).attr('href');
+                var page = 1;
+                var match = /[?&]page=(\d+)/.exec(href);
+                if (match) page = parseInt(match[1], 10);
+
+                var $pane = $('#wallet-pane-transactions');
+                $pane.css('opacity', '0.5');
+
+                $.ajax({
+                    url: txAjaxUrl,
+                    type: 'GET',
+                    data: { page: page },
+                    success: function (res) {
+                        $pane.html(res.html).css('opacity', '1');
+                    },
+                    error: function () {
+                        $pane.css('opacity', '1');
+                    }
+                });
             });
         </script>
 @endpush

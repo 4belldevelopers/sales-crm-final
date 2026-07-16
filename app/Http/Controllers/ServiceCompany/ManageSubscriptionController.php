@@ -161,9 +161,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 
         $this->top_up_logs_sal =   DB::table('top_up_logs')->select('top_up_logs.*')->leftJoin('carts','carts.id','=','top_up_logs.cart_id')->where('top_up_logs.event_type','=','sales')->where('top_up_logs.company_id','=',$company_id)->get();
 
-        // Transaction history (with Razorpay status sync) now lives on its own
-        // page — see transactions() — so this heavy per-load query + curl
-        // sync no longer runs on every Subscription page visit.
+        $this->cart_transaction_history = $this->loadTransactionHistory($company_id);
 
         $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $this->package_active_all = DB::table('package_active')->join('package_invoice','package_invoice.id','=','package_active.package_invoice_id')->join('package_order_items','package_order_items.invoice_id','=','package_invoice.id')->join('package_features','package_features.id','=','package_order_items.feature_id')->select('package_active.*','package_features.title','package_features.field_name','package_features.id as gg_is')->where('package_active.company_id', $company_id)->get();
