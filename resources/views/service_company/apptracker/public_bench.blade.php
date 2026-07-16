@@ -951,7 +951,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control abf-search-input" name="inputJobSearch"
-                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                    placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
                             </div>
                             <div class="abf-sort-wrap" id="abf_sort_wrap">
                                 <span class="abf-sort-icon">
