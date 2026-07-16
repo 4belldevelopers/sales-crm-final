@@ -4,16 +4,9 @@
     </script>
     
     <style>
-         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesCopy {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesCopy {
-                width: 1200px;
-            }
+         #kt_activitiesCopy {
+            width: 80% !important;
+            max-width: 80% !important;
         }
 
         .selectednotice {
@@ -41,8 +34,8 @@
 #kt_content_container,.content-area,.main-content{width:100%;max-width:100%;}
 
 #kt_activitiesCopy{
- width:100%!important;
- max-width:100%!important;
+ width:80%!important;
+ max-width:80%!important;
 }
 
 .table-container,

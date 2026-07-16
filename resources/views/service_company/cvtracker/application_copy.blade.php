@@ -6,7 +6,9 @@
 .symbol1 > img,
 .symbol1 .symbol-label1{width: 32px!important; height: 32px!important;}
 .table > :not(caption) > * > *{padding: 0rem 0.4rem;}
-
+/* hide HM (team) and Partners (handshake) columns */
+#copyJobTable tr td:nth-child(8),
+#copyJobTable tr td:nth-child(9) { display: none !important; }
 </style>
 <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
   <input type="hidden" name="hid_job_id" id="hid_job_id" value="" />
@@ -40,16 +42,6 @@
               <th class="">Location</th>
               <th class="">Status</th>
               <th class="">Date</th>
-              <th class=""><i class="fa fa-users" aria-hidden="true" style="font-size:17px"></i></th>
-              <th class=""><i class="fa fa-handshake" aria-hidden="true" style="font-size:17px"></i></th>
-              <th class="">TOT</th>
-              <th class="" >SOU</th>
-              <th class="" >SCR</th>
-              <th class="" >EVA</th>
-              <th class="" >NEO</th>
-              <th class="" >OFF</th>
-              <th class="">JOI</th>
-              <th class="" >REJ</th>
             </tr>
           </thead>
 		   <tbody class="text-gray-600 fw-bold" id="copyJobTable">
@@ -189,18 +181,6 @@
 										
 										{ data: 'Status', name: 'Status' , orderable: false, searchable: false},
 										{ data: 'Date', name: 'Date' , orderable: false, searchable: false},
-										{ data: 'HM', name: 'HM' , orderable: false, searchable: false},
-										{ data: 'Partners', name: 'Partners' , orderable: false, searchable: false},
-										{ data: 'TOT', name: 'TOT' , orderable: false, searchable: false},
-										
-										{ data: 'SOU', name: 'SOU' , orderable: false, searchable: false},					
-										{ data: 'SCR', name: 'SCR' , orderable: false, searchable: false},
-										{ data: 'EVA', name: 'EVA' , orderable: false, searchable: false},
-										{ data: 'NEO', name: 'NEO' , orderable: false, searchable: false},
-										{ data: 'OFF', name: 'OFF' , orderable: false, searchable: false},
-										
-										{ data: 'JOI', name: 'JOI' , orderable: false, searchable: false},
-										{ data: 'REJ', name: 'REJ' , orderable: false, searchable: false}	   
 									],
 				//timeout		: 500000,
            		async		: false
