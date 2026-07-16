@@ -22,9 +22,16 @@
             color: white !important;
         }
 
+        .table-custom-class {
+            table-layout: fixed;
+            width: 100%;
+        }
         .table-custom-class tbody tr {
-            height: 82px;
+            height: 102px;
             position: relative;
+        }
+        .table-custom-class td, .table-custom-class th {
+            overflow: hidden;
         }
         
     </style>
@@ -73,8 +80,8 @@ table{
 }
 
 tbody td{
- white-space:normal!important;
- word-break:break-word;
+ white-space:normal;
+ word-break:normal;
 }
 
 .candidate-cell{
@@ -1544,13 +1551,14 @@ table{
                                     <thead>
                                         <!--begin::Table row-->
                                         <tr class="fw-bolder text-muted">
-                                            <th class="">Candidate</th>
-                                            <th class="">Experience</th>
-                                            <th class="">Skills</th>
-                                            <th class="">Availability</th>
-                                            <th class="">Location</th>
-                                            <th class="">Expected Salary</th>
-                                            <th class="">Action</th>
+                                            <th style="width:18%;">Talent</th>
+                                            <th style="width:8%;">Experience</th>
+                                            <th style="width:12%;">Skills</th>
+                                            <th style="width:11%;">Availability</th>
+                                            <th style="width:12%;">Location</th>
+                                            <th style="width:12%;">Bench Status</th>
+                                            <th style="width:13%;">Expected Salary</th>
+                                            <th style="width:14%;">Action</th>
                                         </tr>
                                         <!--end::Table row-->
                                     </thead>
