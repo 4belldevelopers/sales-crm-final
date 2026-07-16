@@ -366,7 +366,7 @@
                      if($row->status==1){
                       
                         $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a><span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title=""> '.@$row->posted_by.'</span> </div>';
+                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a><span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title=""> '.@$row->posted_by.'</span> </div>';
                      }else{
                         
                        
