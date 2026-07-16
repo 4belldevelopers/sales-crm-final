@@ -142,6 +142,132 @@
     color: #334155;
 }
 
+/* Search + Sort toolbar — same visual language as
+   similar_candidates.blade.php's simf-toolbar-card (no Filter button here,
+   this page keeps its existing Kanban stage pills). caf- prefix (ClientApp
+   Filter) to keep this page's styles/JS distinct from the plf-/ibf-/abf-/
+   simf-prefixed ones on other AppTracker tabs. */
+.caf-toolbar-card {
+    border: 1px solid #eef0f4;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    font-family: 'Poppins', sans-serif;
+}
+.caf-search-wrap,
+.caf-sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e4e6ef;
+    border-radius: 10px;
+    padding: 0 14px;
+    height: 44px;
+}
+.caf-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.caf-sort-wrap {
+    flex-shrink: 0;
+    width: 220px;
+    position: relative;
+}
+.caf-search-icon,
+.caf-sort-icon {
+    color: #99a1b7;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.caf-search-icon svg,
+.caf-sort-icon svg {
+    flex-shrink: 0;
+    display: block;
+}
+.caf-search-input.form-control {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 13.5px;
+    line-height: 42px;
+    height: 42px;
+}
+.caf-sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #3f4254;
+    text-align: left;
+}
+.caf-sort-btn:focus { outline: none; }
+.caf-sort-btn span {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.caf-sort-btn .chevron {
+    flex-shrink: 0;
+    color: #99a1b7;
+    transition: transform .15s;
+}
+.caf-sort-btn.open .chevron {
+    transform: rotate(180deg);
+}
+.caf-sort-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 100%;
+    width: max-content;
+    max-width: 280px;
+    background: #fff;
+    border: 1px solid #eef0f4;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+    padding: 6px;
+    z-index: 60;
+    max-height: 320px;
+    overflow-y: auto;
+}
+.caf-sort-item {
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #3f4254;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.caf-sort-item:hover {
+    background: #f8f9fb;
+}
+.caf-sort-item.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+@media (max-width: 992px) {
+    .caf-sort-wrap { width: 160px; }
+}
+@media (max-width: 768px) {
+    .caf-search-wrap { flex-basis: 100%; }
+    .caf-sort-wrap { width: 140px; }
+}
+
 /* Hiring Pipeline card */
 .hp-toolbar-card .card-body {
     padding: 14px 16px;
@@ -572,15 +698,27 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
          @include('sections.service_company.clientappHeader',['tabactive'=>$tabactive])
       </div>
         
-        <div class="card hp-toolbar-card mb-4">
+        <div class="card mb-4 caf-toolbar-card">
             <div class="card-body py-3">
-                <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                    <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="caf-search-wrap" style="position: relative;">
+                        <span class="caf-search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                        </span>
+                        <input type="text" class="form-control caf-search-input" name="inputJobSearch"
+                            value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" autocomplete="off" />
                     </div>
-                    <div style="width: 220px; flex-shrink: 0;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
+                    <div class="caf-sort-wrap" id="caf_sort_wrap">
+                        <span class="caf-sort-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                        </span>
+                        <button type="button" class="caf-sort-btn" id="caf_sort_btn">
+                            <span id="caf_sort_label">Best Match</span>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
+                            <option value="Show All">Sort</option>
+                            <option value="10" selected="">Best Match</option>
                             <option value="1">Newest to Oldest (Upload Date)</option>
                             <option value="2">Oldest to Newest (Upload Date)</option>
                             <option value="3">Low to High (Salary)</option>
@@ -590,6 +728,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                             <option value="7">High to Low (Experience) </option>
                             <option value="8">Low to High (Experience)</option>
                         </select>
+                        <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
                     </div>
                 </div>
             </div>
@@ -901,9 +1040,66 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
+    // Non-blocking toast for simple pass/fail notifications, same pattern
+    // as similar_candidates.blade.php's simfToast. Chained Swal.fire()
+    // flows elsewhere on this page (stage transitions, "No Internet" hard
+    // stops) stay as blocking dialogs since they gate a subsequent .then().
+    const cafToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
+
     @if(session('packageStatus'))
-    Swal.fire("Failed", "{{ session('packageStatus') }}" , "warning");	
+    cafToast.fire({ icon: 'warning', title: "{{ session('packageStatus') }}" });
     @endif
+
+    // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
+    // simfRenderSortPanel — reads options straight from the real
+    // #sortingfilter <select> (single source of truth), keeps that
+    // select's value in sync so filtersdataget()/fetchCandidates() are
+    // unaffected, only replaces how the option list is PRESENTED.
+    function cafRenderSortPanel() {
+        var $panel = $('#caf_sort_panel').empty();
+        var current = $('#sortingfilter').val();
+        $('#sortingfilter option').each(function() {
+            var $opt = $(this);
+            var val = $opt.attr('value');
+            var label = $opt.text();
+            $('<div class="caf-sort-item"></div>').text(label)
+                .toggleClass('active', val === current)
+                .on('click', function() {
+                    $('#sortingfilter').val(val);
+                    $('#caf_sort_label').text(label);
+                    cafCloseSortPanel();
+                    filtersdataget();
+                })
+                .appendTo($panel);
+        });
+    }
+    function cafOpenSortPanel() {
+        cafRenderSortPanel();
+        $('#caf_sort_panel').removeClass('d-none');
+        $('#caf_sort_btn').addClass('open');
+    }
+    function cafCloseSortPanel() {
+        $('#caf_sort_panel').addClass('d-none');
+        $('#caf_sort_btn').removeClass('open');
+    }
+    $(document).on('click', '#caf_sort_btn', function(e) {
+        e.stopPropagation();
+        if ($('#caf_sort_panel').hasClass('d-none')) cafOpenSortPanel();
+        else cafCloseSortPanel();
+    });
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#caf_sort_wrap').length) cafCloseSortPanel();
+    });
 
    
    $( document ).ready(function() {
@@ -1484,17 +1680,17 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
-	$('.chk_list').click(function(){ 
-		
+	$('.chk_list').click(function(){
+
 		if($(".chk_list").prop('checked') == true){
 			var chk_list 	=	$('.chk_list').val();
       $('.custom_hide').addClass("d-none");
-			$('.chk_list_item').attr('checked','checked');
+			$('.chk_list_item').prop('checked', true);
 		}else{
-			$('.chk_list_item').removeAttr('checked');		
+			$('.chk_list_item').prop('checked', false);
       $('.custom_hide').removeClass("d-none");
 		}
-	});	
+	});
 
 </script>
 <script>
@@ -1732,7 +1928,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 															}
    									})  
 				}else{
-							Swal.fire("Warning", 'Only Sourcing stage update!', "info");	
+							cafToast.fire({ icon: 'info', title: 'Only Sourcing stage update!' });
               
                      $('#client_stage_sub_stage_new').modal('hide');
 				}
@@ -1760,11 +1956,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 							var jobStatus = $(this).data('job-status');
 							if (jobStatus === 'hold' || jobStatus === 'inactive') {
 								var statusLabel = jobStatus === 'hold' ? 'Hold' : 'Closed';
-								Swal.fire(
-									'Position ' + statusLabel,
-									'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.',
-									'warning'
-								);
+								cafToast.fire({
+									icon: 'warning',
+									title: 'Position ' + statusLabel,
+									text: 'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.'
+								});
 								return false;
 							}
 

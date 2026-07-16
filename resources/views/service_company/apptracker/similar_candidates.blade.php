@@ -1136,7 +1136,7 @@
                                     <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </button>
                                 <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Best Match</option>
+                                    <option value="10" selected="">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
@@ -1914,8 +1914,14 @@
                     <!--begin::Card body-->
                     <div class="card-body pt-3 px-5" style="position: relative;">
                       <!-- Circle loader only (Bootstrap/Metronic's own spinner-border,
-                           same pattern used elsewhere in this app) — no text label. -->
-                      <div class="loadingMessage" style="display: none; position: absolute; inset: 0; z-index: 10; align-items: center; justify-content: center; background: rgba(255,255,255,.7);">
+                           same pattern used elsewhere in this app) — no text label.
+                           position:fixed + viewport-centered (not absolute/inset:0
+                           relative to .card-body): the card body's height grows with
+                           the candidate list, so centering "within the card" could
+                           place the spinner well below the visible viewport on a long
+                           list or when scrolled — this keeps it in the center of the
+                           actual screen regardless of scroll position or row count. -->
+                      <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
                           <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
                       </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
@@ -2409,7 +2415,47 @@
         }
     </script>
     <script>
-        
+        // Small top-right toast, auto-dismissing, pause-on-hover — SweetAlert2's
+        // own documented toast mode, so no new notification library is added.
+        // Replaces the old success/fail/cancel POPUP modals (which blocked the
+        // screen and needed a click to dismiss) per design feedback; the "Are
+        // you sure?" CONFIRMATION dialog below is intentionally left as a real
+        // modal — it's the one safety check before an action the app itself
+        // describes as irreversible, and removing it would be a functionality
+        // change, not a presentation one.
+        const simfToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        // After a successful add, the candidate no longer belongs in THIS
+        // list — removing its row locally and decrementing the on-screen
+        // counters is equivalent to what a full fetchCandidates() re-fetch
+        // would show, but with zero extra server round-trips and no
+        // re-run of the results aggregation (which was also the source of
+        // the "count changes by a large, unrelated amount after one add"
+        // symptom — that aggregation is an approximate Elasticsearch
+        // cardinality count, not a bug in the add action itself, and
+        // simply not re-running it after every single add sidesteps it).
+        function simfRemoveCandidateRowAfterAdd($btn) {
+            var $row = $btn.closest('tr');
+            $row.fadeOut(250, function() {
+                $row.remove();
+                ['#similar_counter', '#simf_footer_number'].forEach(function(sel) {
+                    var $el = $(sel);
+                    var n = parseInt($el.text(), 10);
+                    if (!isNaN(n) && n > 0) $el.text(n - 1);
+                });
+            });
+        }
+
         $(document).on('click', '.add_to_inreview', function(e) {
             e.preventDefault(); // 🚫 stop anchor default behavior
 
@@ -2458,10 +2504,9 @@
                      $btn.removeClass('processing disabled')
                         .css('pointer-events', '');
 
-                        
+
                     var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
                     var inner_token = "{{ csrf_token() }}";
-                    var inner_baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                     var eventId = 9;
 
                     // Disable the button
@@ -2494,9 +2539,7 @@
 
 
                                         if (response.status == 'coinCheck') {
-                                            Swal.fire("Success",
-                                                ` ${response.message}`,
-                                                "warning");
+                                            simfToast.fire({ icon: 'warning', title: response.message });
                                             return false;
                                         }
 
@@ -2504,32 +2547,19 @@
                                             // Enable the button again if needed
                                             button.prop('disabled', false);
 
-                                            // tableLoad('load');
-                                            var page = $('#paginationcandidate .active_disabled').data('page');
-                                            fetchCandidates(page);
-                                            swalWithBootstrapButtons.fire(
-                                                'In-Review!',
-                                                'Selected request has been In-Review.',
-                                                'success'
-                                            )
+                                            simfRemoveCandidateRowAfterAdd(button);
+                                            simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
                                         }
                                     }
                                 });
                             } else if (response.status == "info") {
-                                swalWithBootstrapButtons.fire('Fail!', response.message,
-                                    'error')
+                                simfToast.fire({ icon: 'error', title: response.message });
                             }
                         }
                     });
 
                 } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire(
-                        'Cancelled',
-                        'Selected request is safe',
-                        'error'
-                    );
-                    
-                     $btn.removeClass('processing disabled')
+                    $btn.removeClass('processing disabled')
                         .css('pointer-events', '');
                 }
             })
@@ -2630,6 +2660,13 @@
                     $('#similar_counter').html(response.total);
                     $('#simf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    // The header card's hint (see apptrackerHeader.blade.php)
+                    // says "job defaults" by default — correct everywhere
+                    // EXCEPT here, since this specific number IS the live,
+                    // current-filter result once fetched. Swap the tooltip
+                    // so it doesn't contradict what the page just showed.
+                    $('#apth_hint_similar_counter').attr('title',
+                        'This is your current filter selection on this page — the same card on other tabs shows this job\'s default count instead.');
                 },
                 error: function(xhr) {
                     // Never leave the loading overlay stuck or the list blank on
