@@ -364,10 +364,13 @@
             </td>
             <td>
                 @php
-                    $isAddedToJob = isset($addedJobApplicationIds[$row->id]);
+                    $existingCandidatesQuery = DB::table('add_job_wise_condidates')
+                        ->select('job_application_id')
+                        ->where('add_job_wise_condidates.job_id', '=', $jobid)
+                        ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
 
                     if($row->status==2){
-                        if ($isAddedToJob) {
+                        if ($existingCandidatesQuery > 0) {
                             $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         }elseif($row->countforadd >= 3){
                             $html = '<div class="d-flex flex-column"> 
