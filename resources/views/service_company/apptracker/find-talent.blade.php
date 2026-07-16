@@ -1553,12 +1553,11 @@ table{
                                         <tr class="fw-bolder text-muted">
                                             <th style="width:18%;">Talent</th>
                                             <th style="width:8%;">Experience</th>
-                                            <th style="width:12%;">Skills</th>
-                                            <th style="width:11%;">Availability</th>
-                                            <th style="width:12%;">Location</th>
-                                            <th style="width:12%;">Bench Status</th>
-                                            <th style="width:13%;">Expected Salary</th>
-                                            <th style="width:14%;">Action</th>
+                                            <th style="width:13%;">Skills</th>
+                                            <th style="width:12%;">Availability</th>
+                                            <th style="width:13%;">Location</th>
+                                            <th style="width:14%;">Expected Salary</th>
+                                            <th style="width:15%;">Action</th>
                                         </tr>
                                         <!--end::Table row-->
                                     </thead>

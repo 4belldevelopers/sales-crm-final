@@ -713,7 +713,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
                         </span>
                         <button type="button" class="caf-sort-btn" id="caf_sort_btn">
-                            <span id="caf_sort_label">Best Match</span>
+                            <span id="caf_sort_label">Newest to Oldest (Upload Date)</span>
                             <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                         </button>
                         <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
