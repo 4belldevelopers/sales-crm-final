@@ -380,64 +380,6 @@
         .brf-select-dd-item input {
             accent-color: #2563eb;
         }
-        .brf-loc-inputwrap {
-            position: relative;
-        }
-        .brf-loc-chevron {
-            position: absolute;
-            top: 50%;
-            right: 8px;
-            transform: translateY(-50%);
-            width: 22px;
-            height: 22px;
-            border: none;
-            background: transparent;
-            color: #99a1b7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            transition: transform .15s;
-        }
-        .brf-loc-chevron.open {
-            transform: translateY(-50%) rotate(180deg);
-        }
-        .brf-loc-suggestions {
-            margin-top: 10px;
-            border: 1px solid #eef0f4;
-            border-radius: 8px;
-            padding: 10px;
-            background: #fafbfc;
-        }
-        .brf-loc-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #99a1b7;
-            margin-bottom: 6px;
-        }
-        .brf-loc-chip-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-        .brf-loc-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #fff;
-            border: 1px solid #e4e6ef;
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 11.5px;
-            font-weight: 500;
-            color: #3f4254;
-        }
-        .brf-loc-chip:hover {
-            border-color: #93c5fd;
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
         .brf-pill-row {
             display: flex;
             flex-wrap: wrap;
@@ -913,7 +855,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control brf-search-input" name="inputJobSearch"
-                                    value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" onchange="filtersdataget()" autocomplete="off" />
+                                    value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
                             </div>
                             <div class="brf-sort-wrap" id="brf_sort_wrap">
                                 <span class="brf-sort-icon">
@@ -1140,143 +1082,6 @@
                                 </div>
                                 <!--end::Skills-->
 
-                                <!--begin::Location-->
-                                <div class="brf-section">
-                                    <div class="brf-section-head">
-                                        <span class="brf-icon brf-icon-green">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                                        </span>
-                                        <div>
-                                            <div class="brf-section-title">Current Location</div>
-                                            <div class="brf-section-desc">Current location of candidate</div>
-                                        </div>
-                                    </div>
-                                    <div class="brf-section-body">
-                                        <div class="brf-loc-inputwrap" id="brf_loc_inputwrap">
-                                            <input class="form-control form-control-solid"
-                                                value="" id="kt_tagify_location"
-                                                placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
-                                            <button type="button" class="brf-loc-chevron" id="brf_loc_chevron" title="Show suggestions">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                                            </button>
-                                        </div>
-                                        <script>
-                                            var inputloc = document.querySelector("#kt_tagify_location");
-                                            var tagifylocation = new Tagify(inputloc, {
-                                                whitelist: [],
-                                                maxTags: 10,
-                                                templates: {
-                                                    tag: function(tagData) {
-                                                        const value = tagData.value || '';
-                                                        return `
-                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
-                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                                                        ${this.getAttributes(tagData)}
-                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
-                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
-                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
-                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
-                                                    </tag>
-                                                `;
-                                                    }
-                                                },
-                                                dropdown: {
-                                                    maxItems: 20,
-                                                    classname: "",
-                                                    enabled: 0,
-                                                    closeOnSelect: true,
-                                                    /* appendTarget prevents the dropdown from being clipped
-                                                       by .brf-body's overflow:hidden/auto. */
-                                                    appendTarget: document.body
-                                                }
-                                            });
-                                            tagifylocation.on('dropdown:select', function(e) {
-                                                tagifylocation.addTags([e.detail.data.value]);
-                                                brfCloseLocPanel();
-                                            });
-                                            tagifylocation.on('add', function(e) {
-                                                brfUpdateActiveFiltersUI();
-                                                brfCloseLocPanel();
-                                            });
-                                            tagifylocation.on('remove', function(e) {
-                                                brfUpdateActiveFiltersUI();
-                                            });
-
-                                            function brfDebounceLoc(func, delay) {
-                                                let timer;
-                                                return function (...args) {
-                                                    clearTimeout(timer);
-                                                    timer = setTimeout(() => func.apply(this, args), delay);
-                                                };
-                                            }
-
-                                            const brfFetchSuggestionsLoc = brfDebounceLoc(function(query) {
-                                                $.ajax({
-                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
-                                                    method: 'GET',
-                                                    success: function(data) {
-                                                        if (Array.isArray(data)) {
-                                                            tagifylocation.settings.whitelist = data;
-                                                            brfCloseLocPanel();
-                                                            tagifylocation.dropdown.show.call(tagifylocation, query);
-                                                        } else {
-                                                            console.error("Invalid API response format: Expected array.");
-                                                        }
-                                                    },
-                                                    error: function(err) {
-                                                        console.error("Error fetching cities:", err);
-                                                    }
-                                                });
-                                            }, 200);
-
-                                            tagifylocation.on('input', function(e) {
-                                                var query = e.detail.value.trim();
-                                                if (query.length < 2) return;
-                                                brfCloseLocPanel();
-                                                brfFetchSuggestionsLoc(query);
-                                            });
-                                        </script>
-
-                                        <div class="brf-loc-suggestions d-none" id="brf_loc_panel">
-                                            <div class="brf-loc-label">Popular Locations</div>
-                                            <div class="brf-loc-chip-row">
-                                                <button type="button" class="brf-loc-chip" data-city="Bangalore">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                                                    Bangalore
-                                                </button>
-                                                <button type="button" class="brf-loc-chip" data-city="Hyderabad">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
-                                                    Hyderabad
-                                                </button>
-                                                <button type="button" class="brf-loc-chip" data-city="Pune">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V10l6-4 6 4v11M9 21v-5h6v5"/></svg>
-                                                    Pune
-                                                </button>
-                                                <button type="button" class="brf-loc-chip" data-city="Mumbai">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 21v-4h6v4"/></svg>
-                                                    Mumbai
-                                                </button>
-                                                <button type="button" class="brf-loc-chip" data-city="Chennai">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-6 8 6v12M10 21v-6h4v6"/></svg>
-                                                    Chennai
-                                                </button>
-                                                <button type="button" class="brf-loc-chip" data-city="Remote">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-                                                    Remote
-                                                </button>
-                                            </div>
-                                            <div class="brf-loc-label mt-2">Other Suggestions</div>
-                                            <div class="brf-loc-chip-row">
-                                                <button type="button" class="brf-loc-chip" data-city="Noida">Noida</button>
-                                                <button type="button" class="brf-loc-chip" data-city="Gurgaon">Gurgaon</button>
-                                                <button type="button" class="brf-loc-chip" data-city="Kolkata">Kolkata</button>
-                                                <button type="button" class="brf-loc-chip" data-city="Ahmedabad">Ahmedabad</button>
-                                                <button type="button" class="brf-loc-chip" data-city="Chandigarh">Chandigarh</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--end::Location-->
 
                                 <!--begin::Education-->
                                 <div class="brf-section">
@@ -2280,7 +2085,6 @@
             var cus_search = $('#kt_tagify_users').val();
             var min_exp = $('#min_exp').val();
             var max_exp = $('#max_exp').val();
-            var kt_tagify_location = $('#kt_tagify_location').val();
             var min_sal = $('#min_sal').val();
             var max_sal = $('#max_sal').val();
             var min_salary_currency = $('#min_salary_currency').val();
@@ -2303,7 +2107,6 @@
                 cus_search:(cus_search),
                 min_exp:min_exp,
                 max_exp:max_exp,
-                kt_tagify_location:kt_tagify_location,
                 min_sal:min_sal,
                 max_sal:max_sal,
                 min_salary_currency:min_salary_currency,
@@ -2401,56 +2204,6 @@
         $(document).ready(brfEnforceDrawerLayout);
         $(window).on('resize', brfEnforceDrawerLayout);
         $(document).on('click', '#kt_brf_filter_toggle, #kt_brf_filter_close', brfEnforceDrawerLayout);
-
-        $(document).on('click', '.brf-loc-chip', function() {
-            var city = $(this).data('city');
-            var $btn = $(this);
-            if (typeof tagifylocation === 'undefined' || !city) return;
-            $btn.prop('disabled', true);
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(city),
-                method: 'GET',
-                success: function(data) {
-                    $btn.prop('disabled', false);
-                    if (Array.isArray(data) && data.length > 0) {
-                        var match = data.find(function(item) {
-                            return String(item).toLowerCase().indexOf(city.toLowerCase()) === 0;
-                        }) || data[0];
-                        tagifylocation.addTags([match]);
-                        brfCloseLocPanel();
-                    }
-                },
-                error: function() {
-                    $btn.prop('disabled', false);
-                }
-            });
-        });
-
-        function brfOpenLocPanel() {
-            $('#brf_loc_panel').removeClass('d-none');
-            $('#brf_loc_chevron').addClass('open');
-        }
-        function brfCloseLocPanel() {
-            $('#brf_loc_panel').addClass('d-none');
-            $('#brf_loc_chevron').removeClass('open');
-        }
-        $(document).ready(function() {
-            if (typeof tagifylocation !== 'undefined') {
-                tagifylocation.on('focus', brfOpenLocPanel);
-            }
-        });
-        $(document).on('click', '#brf_loc_chevron', function() {
-            if ($('#brf_loc_panel').hasClass('d-none')) {
-                brfOpenLocPanel();
-            } else {
-                brfCloseLocPanel();
-            }
-        });
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('#brf_loc_inputwrap, #brf_loc_panel').length) {
-                brfCloseLocPanel();
-            }
-        });
 
         // Salary-in-words hints (min_sal/max_sal) — same helper set as
         // In-house Bench's drawer.
@@ -2557,12 +2310,6 @@
                 });
             }
 
-            if (typeof tagifylocation !== 'undefined') {
-                tagifylocation.value.forEach(function(tag) {
-                    chips.push({ label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
-                });
-            }
-
             if (typeof brfEducationSelected !== 'undefined') {
                 brfEducationSelected.slice().forEach(function(val) {
                     chips.push({
@@ -2651,11 +2398,6 @@
                         cat: 'skill', label: tag.value, mandatory: !!tag.checked,
                         clear: function() { tagify.removeTags(tag.value); }
                     });
-                });
-            }
-            if (typeof tagifylocation !== 'undefined') {
-                tagifylocation.value.forEach(function(tag) {
-                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
                 });
             }
             if (typeof brfEducationSelected !== 'undefined') {
@@ -2766,7 +2508,6 @@
 
         $(document).on('click', '#brf_clear_all', function() {
             if (typeof tagify !== 'undefined') tagify.removeAllTags();
-            if (typeof tagifylocation !== 'undefined') tagifylocation.removeAllTags();
             $('.brf-edu-check').prop('checked', false);
             $('.brf-edu-check[value=""]').prop('checked', true);
             brfEducationSelected = [];
@@ -2799,8 +2540,6 @@
             brfSnapshot = {
                 skills: (typeof tagify !== 'undefined')
                     ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
-                locations: (typeof tagifylocation !== 'undefined')
-                    ? tagifylocation.value.map(function(t) { return t.value; }) : [],
                 education: (typeof brfEducationSelected !== 'undefined') ? brfEducationSelected.slice() : [],
                 min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
                 min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
@@ -2816,10 +2555,6 @@
             if (typeof tagify !== 'undefined') {
                 tagify.removeAllTags();
                 if (brfSnapshot.skills.length) tagify.addTags(brfSnapshot.skills);
-            }
-            if (typeof tagifylocation !== 'undefined') {
-                tagifylocation.removeAllTags();
-                if (brfSnapshot.locations.length) tagifylocation.addTags(brfSnapshot.locations);
             }
             brfEducationSelected = brfSnapshot.education.slice();
             $('.brf-edu-check').prop('checked', false);
