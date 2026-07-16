@@ -1101,7 +1101,7 @@
                             </div>
                             <div class="dib-header-actions">
                                 <div class="dib-showall-bar" id="dib_showall_bar">
-                                    <span class="dib-showall-label">Show All</span>
+                                    <span class="dib-showall-label">Show All In-house Bench</span>
                                     <label class="dib-switch" title="Show all active in-house bench candidates — filters lock while this is on">
                                         <input type="checkbox" id="dib_showall_toggle">
                                         <span class="dib-switch-slider"></span>
@@ -2769,6 +2769,14 @@
             dibCaptureSnapshot();
             dibAppliedExpanded = false;
             dibRenderAppliedFiltersCard();
+
+            // Same as clicking Apply: takes effect immediately AND closes
+            // the drawer, so the refreshed list is actually visible instead
+            // of sitting behind the still-open drawer/overlay. dibApplying
+            // must be set first so the close lifecycle doesn't treat this
+            // as a discard and restore the pre-toggle filters.
+            dibApplying = true;
+            $('#kt_dib_filter_close').trigger('click');
         });
 
         /* ------------------------------------------------------------------

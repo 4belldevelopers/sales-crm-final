@@ -1128,7 +1128,7 @@
                             </div>
                             <div class="ibf-header-actions">
                                 <div class="ibf-showall-bar" id="ibf_showall_bar">
-                                    <span class="ibf-showall-label">Show All</span>
+                                    <span class="ibf-showall-label">Show All In-house Bench</span>
                                     <label class="ibf-switch" title="Show all active in-house bench candidates — filters lock while this is on">
                                         <input type="checkbox" id="ibf_showall_toggle">
                                         <span class="ibf-switch-slider"></span>
@@ -2796,6 +2796,14 @@
             ibfCaptureSnapshot();
             ibfAppliedExpanded = false;
             ibfRenderAppliedFiltersCard();
+
+            // Same as clicking Apply: takes effect immediately AND closes
+            // the drawer, so the refreshed list is actually visible instead
+            // of sitting behind the still-open drawer/overlay. ibfApplying
+            // must be set first so the close lifecycle doesn't treat this
+            // as a discard and restore the pre-toggle filters.
+            ibfApplying = true;
+            $('#kt_internal_bench_filter_close').trigger('click');
         });
 
         /* ------------------------------------------------------------------
