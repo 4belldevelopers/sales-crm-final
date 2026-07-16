@@ -2518,18 +2518,22 @@
             }
 
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
-            if (minExp || maxExp) {
+            var minExpChanged = minExp !== '' && minExp !== ibfDefaultRange.minExp;
+            var maxExpChanged = maxExp !== '' && maxExp !== ibfDefaultRange.maxExp;
+            if (minExpChanged || maxExpChanged) {
                 chips.push({
                     label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
-                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                    clear: function() { $('#min_exp').val(ibfDefaultRange.minExp); $('#max_exp').val(ibfDefaultRange.maxExp); }
                 });
             }
 
             var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
-            if (minSal || maxSal) {
+            var minSalChanged = minSal !== '' && minSal !== ibfDefaultRange.minSal;
+            var maxSalChanged = maxSal !== '' && maxSal !== ibfDefaultRange.maxSal;
+            if (minSalChanged || maxSalChanged) {
                 chips.push({
                     label: (minSal || '0') + '-' + (maxSal || 'Any'),
-                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                    clear: function() { $('#min_sal').val(ibfDefaultRange.minSal); $('#max_sal').val(ibfDefaultRange.maxSal); }
                 });
             }
 
@@ -2646,17 +2650,21 @@
                 });
             }
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
-            if (minExp || maxExp) {
+            var minExpChanged = minExp !== '' && minExp !== ibfDefaultRange.minExp;
+            var maxExpChanged = maxExp !== '' && maxExp !== ibfDefaultRange.maxExp;
+            if (minExpChanged || maxExpChanged) {
                 items.push({
                     cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
-                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                    clear: function() { $('#min_exp').val(ibfDefaultRange.minExp); $('#max_exp').val(ibfDefaultRange.maxExp); }
                 });
             }
             var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
-            if (minSal || maxSal) {
+            var minSalChanged = minSal !== '' && minSal !== ibfDefaultRange.minSal;
+            var maxSalChanged = maxSal !== '' && maxSal !== ibfDefaultRange.maxSal;
+            if (minSalChanged || maxSalChanged) {
                 items.push({
                     cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
-                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                    clear: function() { $('#min_sal').val(ibfDefaultRange.minSal); $('#max_sal').val(ibfDefaultRange.maxSal); }
                 });
             }
             var noticeEl = $('[name="app_int_notice"]:checked');
@@ -2903,6 +2911,16 @@
             ibfRenderAppliedFiltersCard();
             $('#kt_internal_bench_filter_close').trigger('click');
         });
+
+        // The job's own computed defaults (min_exp/max_exp/min_sal/max_sal
+        // pre-selected on load, e.g. min_exp="0" for Freshers) are real,
+        // meaningful values — but they aren't something the user actually
+        // applied, so they shouldn't show up as an Active Filters chip
+        // ("0-Any Yrs") until the user changes them away from this baseline.
+        var ibfDefaultRange = {
+            minExp: $('#min_exp').val(), maxExp: $('#max_exp').val(),
+            minSal: $('#min_sal').val(), maxSal: $('#max_sal').val()
+        };
 
         $(document).ready(function() {
             setTimeout(ibfUpdateActiveFiltersUI, 600);

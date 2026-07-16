@@ -2491,18 +2491,22 @@
             }
 
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
-            if (minExp || maxExp) {
+            var minExpChanged = minExp !== '' && minExp !== dibDefaultRange.minExp;
+            var maxExpChanged = maxExp !== '' && maxExp !== dibDefaultRange.maxExp;
+            if (minExpChanged || maxExpChanged) {
                 chips.push({
                     label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
-                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                    clear: function() { $('#min_exp').val(dibDefaultRange.minExp); $('#max_exp').val(dibDefaultRange.maxExp); }
                 });
             }
 
             var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
-            if (minSal || maxSal) {
+            var minSalChanged = minSal !== '' && minSal !== dibDefaultRange.minSal;
+            var maxSalChanged = maxSal !== '' && maxSal !== dibDefaultRange.maxSal;
+            if (minSalChanged || maxSalChanged) {
                 chips.push({
                     label: (minSal || '0') + '-' + (maxSal || 'Any'),
-                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                    clear: function() { $('#min_sal').val(dibDefaultRange.minSal); $('#max_sal').val(dibDefaultRange.maxSal); }
                 });
             }
 
@@ -2618,18 +2622,29 @@
                     items.push({ cat: 'company', label: tag.value, clear: function() { tagifyCompany.removeTags(tag.value); } });
                 });
             }
+            // A field only counts as an actual applied filter if it's both
+            // non-empty AND different from the job's own computed default
+            // (dibDefaultRange) — min_exp/min_sal both default to a real
+            // "0", so a plain truthiness check showed a chip ("0-Any Yrs")
+            // for a value the user never actually touched, and a blank/
+            // cleared field (e.g. after Show All) must never show a chip
+            // even if that happens to differ from the default too.
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
-            if (minExp || maxExp) {
+            var minExpChanged = minExp !== '' && minExp !== dibDefaultRange.minExp;
+            var maxExpChanged = maxExp !== '' && maxExp !== dibDefaultRange.maxExp;
+            if (minExpChanged || maxExpChanged) {
                 items.push({
                     cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
-                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                    clear: function() { $('#min_exp').val(dibDefaultRange.minExp); $('#max_exp').val(dibDefaultRange.maxExp); }
                 });
             }
             var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
-            if (minSal || maxSal) {
+            var minSalChanged = minSal !== '' && minSal !== dibDefaultRange.minSal;
+            var maxSalChanged = maxSal !== '' && maxSal !== dibDefaultRange.maxSal;
+            if (minSalChanged || maxSalChanged) {
                 items.push({
                     cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
-                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                    clear: function() { $('#min_sal').val(dibDefaultRange.minSal); $('#max_sal').val(dibDefaultRange.maxSal); }
                 });
             }
             var noticeEl = $('[name="app_int_notice"]:checked');
@@ -2876,6 +2891,16 @@
             dibRenderAppliedFiltersCard();
             $('#kt_dib_filter_close').trigger('click');
         });
+
+        // The job's own computed defaults (min_exp/max_exp/min_sal/max_sal
+        // pre-selected on load, e.g. min_exp="0" for Freshers) are real,
+        // meaningful values — but they aren't something the user actually
+        // applied, so they shouldn't show up as an Active Filters chip
+        // ("0-Any Yrs") until the user changes them away from this baseline.
+        var dibDefaultRange = {
+            minExp: $('#min_exp').val(), maxExp: $('#max_exp').val(),
+            minSal: $('#min_sal').val(), maxSal: $('#max_sal').val()
+        };
 
         $(document).ready(function() {
             setTimeout(dibUpdateActiveFiltersUI, 600);
