@@ -386,20 +386,10 @@
                 @php
 
                     $html = '';
-                    $recCounter = 0;
-                    $recCounter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_id', @$row->id)
-                        ->where('source_jobid', @$jobid)
-                        ->count();
-
-                        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                            ->select('job_application_id')
-                            ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
+                    $isAddedToJob = isset($addedJobApplicationIds[$row->id]);
 
                     if($row->status==2){
-                        if ($existingCandidatesQuery > 0) {
+                        if ($isAddedToJob) {
                             $html =
                                 '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } else {
