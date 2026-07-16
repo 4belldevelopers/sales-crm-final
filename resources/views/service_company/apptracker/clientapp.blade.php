@@ -718,8 +718,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                         </button>
                         <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
                             <option value="Show All">Sort</option>
-                            <option value="10" selected="">Best Match</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
+                            <option value="10">Best Match</option>
+                            <option value="1" selected="">Newest to Oldest (Upload Date)</option>
                             <option value="2">Oldest to Newest (Upload Date)</option>
                             <option value="3">Low to High (Salary)</option>
                             <option value="4">High to Low (Salary)</option>
