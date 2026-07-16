@@ -2774,6 +2774,13 @@
                 dibCaptureSnapshot();
                 dibShowAllPreState = dibSnapshot;
                 $('#dib_clear_all').trigger('click');
+                // #dib_clear_all only resets the drawer's own fields — the
+                // toolbar free-text search box (#kt_tagify_2) is a separate
+                // field that fetchCandidates() always sends as its own
+                // "search" param, so leftover text there would silently
+                // keep filtering results even with every drawer filter
+                // cleared, making "Show All" not actually show all.
+                $('#kt_tagify_2').val('');
             } else if (dibShowAllPreState) {
                 dibSnapshot = dibShowAllPreState;
                 dibRestoreSnapshot();
