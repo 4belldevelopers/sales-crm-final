@@ -214,15 +214,15 @@
                 @php
                     $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode =
                         '';
-                    $pay_rate_currency = $currencySymbole[$jobCurrency ? @$jobCurrency : 0];
-                    $bill_rate_currency = $currencySymbole[$jobCurrency ? @$jobCurrency : 0];
+                    $pay_rate_currency = $currencySymbole[$jobCurrency ?: 0] ?? '';
+                    $bill_rate_currency = $currencySymbole[$jobCurrency ?: 0] ?? '';
 
                     $currencymain = GeneralMethod::currency(); // Currency code
-                    $currency = $currencymain[@$min_salary_currency];
+                    $currency = $currencymain[@$min_salary_currency ?: 0];
                     $convertedAmounEctc = GeneralMethod::conversionRates($currency, $row->ectc_yearly, 0);
                     $convertedAmounCtc = GeneralMethod::conversionRates($currency, $row->ctc_yearly, 0);
-                    $bill_rate_amount = $convertedAmounEctc[$sal_mode];
-                    $pay_rate_amount = $convertedAmounCtc[$sal_mode];
+                    $bill_rate_amount = $convertedAmounEctc[(int)($sal_mode ?? 0)] ?? 0;
+                    $pay_rate_amount = $convertedAmounCtc[(int)($sal_mode ?? 0)] ?? 0;
 
                     
 
@@ -233,8 +233,8 @@
                     $pay_rate_amount = explode('.', $pay_rate_amount)[0];
                     $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount ? @$billFormatViewSalary->amount : 0);
                     $bill_rate_amount = explode('.', $bill_rate_amount)[0];
-                    $pay_rate_mode = $salaryMode[$jobMode ? @$jobMode : 0];
-                    $bill_rate_mode = $salaryMode[$jobMode ? @$jobMode : 0];
+                    $pay_rate_mode = $salaryMode[$jobMode ?: 0] ?? '';
+                    $bill_rate_mode = $salaryMode[$jobMode ?: 0] ?? '';
 
                     echo '<div class="d-flex flex-column">
 					 <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
@@ -256,7 +256,7 @@
                 @php
                     $npArr = ['Notice period', 'Available from', 'Immediate'];
                     $npDate = $row->np_id;
-                    $npLabel = $npArr[$row->serving_notice_period_mode];
+                    $npLabel = $npArr[(int)($row->serving_notice_period_mode ?? 0)] ?? 'Notice period';
                     if ($row->serving_notice_period_mode == 0) {
                         $npDate = $row->np_id . ' Days';
                         if ($npDate == 1) {
@@ -385,6 +385,7 @@
             <td>
                 @php
 
+                    $html = '';
                     $recCounter = 0;
                     $recCounter = DB::table('rec_candidate_assign')
                         ->select('id')
