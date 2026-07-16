@@ -33,6 +33,14 @@ jobs:
             cd ${{ secrets.PROD_PATH }}
 
             ###########################################################
+            # PATH: appleboy/ssh-action runs a non-login shell, which
+            # never sources the profile that puts nvm's node/npm on PATH.
+            # Without this, `node`/`npm` are "command not found" here even
+            # though they're installed and used fine in a normal SSH login.
+            ###########################################################
+            export PATH="/www/server/nvm/versions/node/v24.13.1/bin:$PATH"
+
+            ###########################################################
             # ALWAYS BRING SITE BACK ONLINE EVEN IF DEPLOYMENT FAILS
             ###########################################################
             trap 'php artisan up || true' EXIT
