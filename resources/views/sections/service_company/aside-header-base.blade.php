@@ -491,30 +491,9 @@ $productAllowCompany = GeneralMethod::companiesType();
                                             class="menu-title">Overview</span> </span> </a>
                             </div>
                             <div class="menu-item">
-                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=packages"> <span
-                                        class="menu-link {{ request()->is('service_company/new-subscribe/newindex') ? 'active' : '' }}">
-                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Packages</span> </span> </a>
-                            </div>
-                            <div class="menu-item">
                                 <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=transactions"> <span
                                         class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
                                             class="menu-title">Transactions</span> </span> </a>
-                            </div>
-                            <div class="menu-item">
-                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=invoices"> <span
-                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Invoices</span> </span> </a>
-                            </div>
-                            <div class="menu-item">
-                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=billing"> <span
-                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Billing</span> </span> </a>
-                            </div>
-                            <div class="menu-item">
-                                <a class="" href="{{ route('service_company.subscribe.newindex') }}#tab=settings"> <span
-                                        class="menu-link"> <span class="menu-bullet"><span class="bullet bullet-dot"></span></span> <span
-                                            class="menu-title">Settings</span> </span> </a>
                             </div>
                             <div class="menu-item">
                                 <a class="" href="{{ route('service_company.subscribe.transectionLog') }}?pagetype=operationaltab&page=1">

@@ -162,7 +162,21 @@
                     // change and a Bootstrap-tooltip re-init isn't guaranteed
                     // to run against freshly-injected markup; a native title
                     // works with zero JS dependency regardless.
-                    $missingSkills = array_values(array_diff($requiredSkills, array_map('strtolower', $skillArr)));
+                    // A plain array_diff() compared required skill KEYWORDS
+                    // ("java") against the candidate's own matched skill TEXT
+                    // ("java developer") as exact strings — never equal, so a
+                    // required skill the candidate actually has (via a
+                    // differently-worded skill entry) still showed up in the
+                    // tooltip as "Missing". Same phrase-prefix check
+                    // matched_skills itself was computed with.
+                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
+                        foreach ($skillArr as $matched) {
+                            if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }));
                     $matchTooltipParts = [];
                     if (!empty($skillArr)) {
                         $matchTooltipParts[] = 'Matched: ' . implode(', ', array_map('ucfirst', $skillArr));

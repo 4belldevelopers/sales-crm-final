@@ -2269,7 +2269,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					
 				// 	dd($skillArr, $candidateSkills);
 
-				$matchedSkills = array_intersect($skillArr, $candidateSkills);
+				// array_intersect() required an exact string match between
+				// the searched skill keyword ("java") and the candidate's
+				// own skill entry ("java developer") — same phrase-prefix
+				// fix as GeneralMethod::matchedSkillsList()/skill_percentage().
+				$matchedSkills = GeneralMethod::matchedSkillsList($candidateSkills, $skillArr);
 
 				$matchedCount = count($matchedSkills);
 

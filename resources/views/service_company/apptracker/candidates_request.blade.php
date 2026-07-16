@@ -7,6 +7,133 @@
             height: 82px;
             position: relative;
         }
+
+        /* Search + Sort toolbar — same visual language as
+           similar_candidates.blade.php's simf-toolbar-card (no Filter
+           button/drawer here, this page has no skill/location/salary
+           search). brf- prefix (Bench Request Filter) to keep this page's
+           styles/JS distinct from the ibf-/abf-/simf-/plf- prefixed ones on
+           other AppTracker tabs. */
+        .brf-toolbar-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        .brf-search-wrap,
+        .brf-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+        .brf-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .brf-sort-wrap {
+            flex-shrink: 0;
+            width: 220px;
+            position: relative;
+        }
+        .brf-search-icon,
+        .brf-sort-icon {
+            color: #99a1b7;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .brf-search-icon svg,
+        .brf-sort-icon svg {
+            flex-shrink: 0;
+            display: block;
+        }
+        .brf-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13.5px;
+            line-height: 42px;
+            height: 42px;
+        }
+        .brf-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .brf-sort-btn:focus { outline: none; }
+        .brf-sort-btn span {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .brf-sort-btn .chevron {
+            flex-shrink: 0;
+            color: #99a1b7;
+            transition: transform .15s;
+        }
+        .brf-sort-btn.open .chevron {
+            transform: rotate(180deg);
+        }
+        .brf-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .brf-sort-item {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .brf-sort-item:hover {
+            background: #f8f9fb;
+        }
+        .brf-sort-item.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        @media (max-width: 992px) {
+            .brf-sort-wrap { width: 160px; }
+        }
+        @media (max-width: 768px) {
+            .brf-search-wrap { flex-basis: 100%; }
+            .brf-sort-wrap { width: 140px; }
+        }
     </style>
 @endpush
 
@@ -203,19 +330,27 @@
                     @include('sections.service_company.apptrackerHeader',['tabactive'=>$tabactive])
                 </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4 brf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                            <div class="flex-grow-1" style="min-width: 0;">
-                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                    value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="brf-search-wrap" style="position: relative;">
+                                <span class="brf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control brf-search-input" name="inputJobSearch"
+                                    value="" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" onchange="filtersdataget()" autocomplete="off" />
                             </div>
-                            <div style="width: 200px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                    onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
+                            <div class="brf-sort-wrap" id="brf_sort_wrap">
+                                <span class="brf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="brf-sort-btn" id="brf_sort_btn">
+                                    <span id="brf_sort_label">Best Match</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
+                                    <option value="Show All">Sort</option>
+                                    <option value="10" selected="">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
@@ -227,6 +362,7 @@
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
+                                <div class="brf-sort-panel d-none" id="brf_sort_panel"></div>
                             </div>
                             <div style="width: 160px; flex-shrink: 0;">
                                 <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
@@ -237,21 +373,6 @@
                                     <option value="111">India</option>
                                 </select>
                             </div>
-                            <div style="width: 140px; flex-shrink: 0;">
-                                <button type="button"
-                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                                fill="black"></path>
-                                        </svg>
-                                    </span>
-                                    Filter
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -260,7 +381,9 @@
                 <div class="card">
                     <!--begin::Card body-->
                     <div class="card-body pt-3 px-5">
-                        <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                        <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                            <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                        </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
                             id="candidates_request">
                             <thead>
@@ -304,8 +427,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
     <script>
-        var input2 = document.querySelector("#kt_tagify_2");
-        new Tagify(input2);
+        // Was Tagify-wrapped, but candidates_request_data_ajax() never reads
+        // cus_search as an actual filter (this page has no skill/location
+        // search — see the plan for why), so the tag-chip UI was cosmetic
+        // and conflicted with the plain-input toolbar styling below. Left
+        // as a plain text field, same as similar_candidates.blade.php's own
+        // #kt_tagify_2 search box.
     </script>
 
     <script>
@@ -647,13 +774,70 @@
 
         });
 
+        // Non-blocking toast for simple pass/fail notifications, same pattern
+        // as similar_candidates.blade.php's simfToast. The stage-update
+        // success below stays a blocking Swal.fire() since it gates a
+        // chained .then() (closing the stage modal).
+        const benchReqToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
+        // simfRenderSortPanel — reads options straight from the real
+        // #sortingfilter <select>, keeps that select's value in sync so
+        // filtersdataget()/fetchCandidates() are unaffected, only replaces
+        // how the option list is PRESENTED.
+        function brfRenderSortPanel() {
+            var $panel = $('#brf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="brf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#brf_sort_label').text(label);
+                        brfCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function brfOpenSortPanel() {
+            brfRenderSortPanel();
+            $('#brf_sort_panel').removeClass('d-none');
+            $('#brf_sort_btn').addClass('open');
+        }
+        function brfCloseSortPanel() {
+            $('#brf_sort_panel').addClass('d-none');
+            $('#brf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#brf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#brf_sort_panel').hasClass('d-none')) brfOpenSortPanel();
+            else brfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#brf_sort_wrap').length) brfCloseSortPanel();
+        });
+
         $(document).ready(function() {
             $(document).on("click", "#custom_stage_submit", function(e) {
                 e.preventDefault();
 
                 var master_status = $('input[name="master_status"]:checked').val();
                 if (master_status == 8) {
-                    Swal.fire("Warning", 'Stage can not be update, please select other option !', "info");
+                    benchReqToast.fire({ icon: 'info', title: 'Stage can not be updated, please select other option!' });
                 } else {
                     $.ajax({
                         url: '{{ route('service_company.job-applications.stage_submit') }}',
@@ -862,7 +1046,7 @@
             var country = $('#country').val();
             var cus_search = $('#kt_tagify_2').val();
 
-            $('.loadingMessage').css({ display: 'block' });
+            $('.loadingMessage').css({ display: 'flex' });
             $.ajax({
                 url: `{!! route('service_company.apptracker.candidates_request_data_ajax') !!}?page=${page}`,
                 type: 'GET',
