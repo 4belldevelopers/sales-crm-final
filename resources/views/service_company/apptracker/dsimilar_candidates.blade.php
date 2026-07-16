@@ -2126,9 +2126,9 @@
         }
 
         // Small top-right toast, auto-dismissing, pause-on-hover — SweetAlert2's
-        // own documented toast mode. Only non-chained success/fail notices are
-        // converted to this; the "Are you sure?" confirmation below stays a
-        // real blocking modal since it gates the actual AJAX call.
+        // own documented toast mode. Replaces the old "Are you sure?" confirm
+        // modal entirely — a single click starts the add immediately, same as
+        // Similar Candidates/In-house Bench Talents.
         const dsfToast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -2141,65 +2141,80 @@
             }
         });
 
-        $(document).on('click', '.add_to_inreview', function() {
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline — rather than re-fetching the list (which would make it
+        // vanish immediately). The row only actually disappears once the
+        // list is genuinely re-fetched (pagination, filter, sort, or a real
+        // page reload).
+        function dsfMarkCandidateRowAdded($btn) {
+            $btn.closest('div.d-flex.flex-column').html(
+                '<a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>'
+            );
+        }
 
-            var id = $(this).data('row-id');
-            var source_from_type = $(this).data('row-source_from_type');
-            var source_jobid = $(this).data('row-jobid');
-            var source_tab = $(this).data('row-from');
+        $(document).on('click', '.add_to_inreview', function(e) {
+            e.preventDefault();
+
+            var $btn = $(this);
+
+            // 🔒 Prevent double click
+            if ($btn.hasClass('processing')) {
+                return false;
+            }
+
+            var id = $btn.data('row-id');
+            var source_from_type = $btn.data('row-source_from_type');
+            var source_jobid = $btn.data('row-jobid');
+            var source_tab = $btn.data('row-from');
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+            // No confirmation dialog — a single click starts the add
+            // immediately; the spinner below is the only "processing"
+            // feedback needed, and the result comes back as a toast.
+            var originalHtml = $btn.html();
+            $btn.addClass('processing')
+                .prop('disabled', true)
+                .css('pointer-events', 'none')
+                .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
+
+            function restoreButton() {
+                $btn.removeClass('processing')
+                    .prop('disabled', false)
+                    .css('pointer-events', '')
+                    .html(originalHtml);
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {
+                    'id': id,
+                    'source_from_type': source_from_type,
+                    'source_jobid': source_jobid,
+                    'source_tab': source_tab
                 },
-                buttonsStyling: false
-            })
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
+                success: function(response) {
+                    if (response.status == 'coinCheck') {
+                        restoreButton();
+                        dsfToast.fire({ icon: 'warning', title: response.message });
+                        return false;
+                    }
 
-                    $.ajax({
-                        type: 'GET',
-                        url: url,
-                        data: {
-                            'id': id,
-                            'source_from_type': source_from_type,
-                            'source_jobid': source_jobid,
-                            'source_tab': source_tab
-                        },
-                        success: function(response) {
-                            if (response.status == 'success') {
-                                if (response.status == 'coinCheck') {
-                                    dsfToast.fire({ icon: 'warning', title: response.message });
-                                    return false;
-                                }
-
-                                // tableLoad('load');
-                                var page = $('#paginationcandidate .active_disabled').data('page');
-                                fetchCandidates(page);
-                                dsfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
-                            }
-                        }
-                    });
-
-
-
-                } else if (
-                    result.dismiss === Swal.DismissReason.cancel
-                ) {
-                    dsfToast.fire({ icon: 'error', title: 'Selected request is safe' });
+                    if (response.status == 'success') {
+                        dsfMarkCandidateRowAdded($btn);
+                        dsfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
+                    } else {
+                        restoreButton();
+                    }
+                },
+                error: function() {
+                    restoreButton();
+                    dsfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                 }
-            })
+            });
         });
 
         $(document).ready(function() {
