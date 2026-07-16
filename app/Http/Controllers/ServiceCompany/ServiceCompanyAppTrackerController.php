@@ -2646,6 +2646,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			]
 		];
 
+		// Both Notice Period Date sorts only make sense for candidates who
+		// are actually serving notice (stage 8) — mirrors allDataAjax()'s
+		// identical restriction, which this method was missing entirely, so
+		// these sorts used to reorder every stage instead of just this one.
+		if ($valCheck==21 || $valCheck==22) {
+			$boolQuery['bool']['filter'][] = [
+				'term' => [
+					'job_master_status_id' => (int) 8
+				]
+			];
+		}
+
 		if ($valCheck==22) {
 			$today = date('Y-m-d');  
 			$next30 = date('Y-m-d', strtotime('+30 days'));
@@ -2723,12 +2735,39 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'size' => $size,
 				'sort' => $sort,
 				'query' => $boolQuery,
-				'aggs' => [
-					'status_counts' => [
-						'terms' => [
-							'field' => 'job_master_status_id'
+			]
+		];
+
+		// Kanban stage-pill counts (Sourcing/Screening/.../Rejected) — same
+		// shape and same [7,9]-as-Rejected definition as this page's own
+		// initial-load aggs above, but scoped ONLY by jobId+ClientComID (not
+		// by whichever stage tab or filters are currently active), so every
+		// pill always reflects the true per-stage total. fetchCandidates()'s
+		// success handler already expects these exact keys
+		// (response.SourcingCounter etc.) — they just weren't being
+		// returned, so the pills used to freeze at their page-load values
+		// after any filter/sort/paginate action.
+		$counterParams = [
+			'index' => ELASTIC_CANDIDATES,
+			'body' => [
+				'size' => 0,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term' => ['jobId' => $jobid]],
+							['term' => ['ClientComID' => $company_id]],
 						]
 					]
+				],
+				'aggs' => [
+					'allCandidate' => ['value_count' => ['field' => 'id']],
+					'Sourcing' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+					'Screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
+					'Interview' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+					'Negotiation' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
+					'Offered' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
+					'Joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+					'Rejected' => ['filter' => ['terms' => ['job_master_status_id' => [7, 9]]]],
 				]
 			]
 		];
@@ -2736,6 +2775,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
 			$total = 0;
 			$data = [];
+			$allCandidateCounter = $SourcingCounter = $ScreeningCounter = $InterviewCounter = 0;
+			$NegotiationCounter = $OfferedCounter = $JoinedCounter = $RejectedCounter = 0;
 		}else{
 			$response = $this->elasticService->getClient()->search($params);
 			$total = $response['hits']['total']['value'] ?? 0;
@@ -2743,16 +2784,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				return $hit['_source'];
 			}, $response['hits']['hits']);
 
-			// Extract status-wise count
-			$statusCounts = [];
-			if (isset($response['aggregations']['status_counts']['buckets'])) {
-				foreach ($response['aggregations']['status_counts']['buckets'] as $bucket) {
-					$statusCounts[$bucket['key']] = $bucket['doc_count'];
-				}
-			}
-
+			$counterResponse = $this->elasticService->getClient()->search($counterParams);
+			$allCandidateCounter = $counterResponse['aggregations']['allCandidate']['value'] ?? 0;
+			$SourcingCounter = $counterResponse['aggregations']['Sourcing']['doc_count'] ?? 0;
+			$ScreeningCounter = $counterResponse['aggregations']['Screening']['doc_count'] ?? 0;
+			$InterviewCounter = $counterResponse['aggregations']['Interview']['doc_count'] ?? 0;
+			$NegotiationCounter = $counterResponse['aggregations']['Negotiation']['doc_count'] ?? 0;
+			$OfferedCounter = $counterResponse['aggregations']['Offered']['doc_count'] ?? 0;
+			$JoinedCounter = $counterResponse['aggregations']['Joined']['doc_count'] ?? 0;
+			$RejectedCounter = $counterResponse['aggregations']['Rejected']['doc_count'] ?? 0;
 		}
-	
+
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
@@ -2769,189 +2811,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$app_int_outsource = request('app_int_outsource');
 		$responseData = [
 			'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid'))->render(),
+			'total' => $total,
+			'allCandidateCounter' => $allCandidateCounter,
+			'SourcingCounter' => $SourcingCounter,
+			'ScreeningCounter' => $ScreeningCounter,
+			'InterviewCounter' => $InterviewCounter,
+			'NegotiationCounter' => $NegotiationCounter,
+			'OfferedCounter' => $OfferedCounter,
+			'JoinedCounter' => $JoinedCounter,
+			'RejectedCounter' => $RejectedCounter,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		
-		
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_APP_TIME));
 
 		return response()->json($responseData);
-
-
-
-
-
-		$jobApplications = DB::table('job_applications')
-			->select(
-				'job_applications.*',
-				'jobs.title',
-				'jobs.max_salary_currency',
-				'jobs.max_sal_mode',
-				'job_locations.location',
-				'application_status.status as a_status',
-				'clients.name as client_name',
-				'users.name as posted_by',
-				'users.image as posted_by_image',
-				'qualification_master.name as qualification_name',
-				'master_status.name',
-				'master_status.css_style',
-				'state_list.state as state_name',
-				'city_list.city as indian_city_name',
-				'master_status.id as available_status',
-				'companies.company_name',
-				'add_job_wise_condidates.master_status_id as masterstatusid',
-				'add_job_wise_condidates.child_status_id as childstatusid',
-				'add_job_wise_condidates.id as condidate_id'
-			)->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-			->join('master_status', function ($join) {
-				$join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-			})
-			->join('jobs', function ($join) {
-				$join->on('jobs.id', 'add_job_wise_condidates.job_id');
-			})
-			// ->join('jobs', 'jobs.id', 'job_applications.job_id')
-			->join('recommendation_relation', 'recommendation_relation.job_id', 'jobs.id')
-			// ->leftjoin('master_status', 'master_status.id', 'job_applications.master_status_id')
-			->leftjoin('job_skills', 'jobs.id', 'job_skills.job_id')
-			->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-			->leftjoin('clients', 'clients.id', 'jobs.client_id')
-			->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
-			->leftjoin('companies', 'companies.id', 'users.company_id')
-			->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-			->leftjoin('application_status', 'application_status.id', 'job_applications.status_id')
-			->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-			->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id');
-		if (\request('search') != "") {
-			$search = request('search');
-			// $jobApplications = $jobApplications->where('job_applications.full_name', 'LIKE', "%$search%");
-		}
-		if (\request('cus_search') != "") {
-
-			$jobApplications = $jobApplications->where(function ($query) use ($custom_search, $company_id) {
-				$query->where('job_applications.full_name', 'like', "%{$custom_search}%");
-				$query->orWhere('job_applications.email', 'like', "%{$custom_search}%");
-				$query->orWhere('job_applications.phone', 'like', "%{$custom_search}%");
-				$query->orWhere('users.name', 'like', "%{$custom_search}%");
-				$query->orWhere('companies.company_name', 'like', "%{$custom_search}%");
-			});
-		}
-		if ($request->mstatus_id != 'all') {
-			if ($request->mstatus_id == 7) {
-				$jobApplications = $jobApplications->whereIn('add_job_wise_condidates.master_status_id', array(7, 9));
-			} else {
-				$jobApplications = $jobApplications->where('add_job_wise_condidates.master_status_id', $request->mstatus_id);
-			}
-		}
-		if ($request->jobid != '') {
-			$jobApplications = $jobApplications->where('add_job_wise_condidates.job_id', $request->jobid);
-		}
-		$jobApplications = $jobApplications->where('add_job_wise_condidates.thirdparty_company_id', auth()->user()->company_id);
-		$jobApplications = $jobApplications->where('recommendation_relation.to_company_id', auth()->user()->company_id);
-
-		$customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
-		if (\request('sortingfilter') != "") {
-			$valCheck = request('sortingfilter');
-			if ($valCheck == 1) {
-				$jobApplications = $jobApplications->orderBy('add_job_wise_condidates.created_at', 'DESC');
-			} elseif ($valCheck == 2) {
-				$jobApplications = $jobApplications->orderBy('add_job_wise_condidates.created_at', 'ASC');
-			} elseif ($valCheck == 3) {
-				$jobApplications = $jobApplications->orderBy('job_applications.ctc', 'ASC');
-			} elseif ($valCheck == 4) {
-				$jobApplications = $jobApplications->orderBy('job_applications.ctc', 'DESC');
-			} elseif ($valCheck == 5) {
-				$jobApplications = $jobApplications->orderBy('job_applications.np_id', 'ASC');
-			} elseif ($valCheck == 6) {
-				$jobApplications = $jobApplications->orderBy('job_applications.np_id', 'DESC');
-			} elseif ($valCheck == 7) {
-				$jobApplications = $jobApplications->orderBy('job_applications.total_exp', 'DESC');
-			} elseif ($valCheck == 8) {
-				$jobApplications = $jobApplications->orderBy('job_applications.total_exp', 'ASC');
-			} elseif ($valCheck == 9) {
-				$jobApplications = $jobApplications->orderByRaw("FIELD(job_applications.np_id, 'Immediate') DESC")
-					->orderBy('np_id', 'DESC');
-			} else {
-				$jobApplications = $jobApplications->orderByRaw("FIELD(add_job_wise_condidates.master_status_id, " . implode(',', $customOrder) . ")");
-				$jobApplications = $jobApplications->orderby('add_job_wise_condidates.id', 'DESC');
-			}
-
-		} else {
-			$jobApplications = $jobApplications->orderByRaw("FIELD(add_job_wise_condidates.master_status_id, " . implode(',', $customOrder) . ")");
-			$jobApplications = $jobApplications->orderby('add_job_wise_condidates.id', 'DESC');
-		}
-
-		$jobApplications = $jobApplications->groupBy('add_job_wise_condidates.id');
-		
-		$perPage = 10;
-		$page = $request->get('page', 1);
-		// dd($page);
-		$total = count($jobApplications->get());
-		// dd($total);
-		$data = $jobApplications->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-		// dd($total,$data);
-		$jobid = @$request->jobid;
-
-		$pagination = [
-			'total' => $total,
-			'current_page' => $page,
-			'last_page' => ceil($total / $perPage),
-			'listType' => 'allcandidate',
-		];
-		// dd($pagination);
-		$userPermissions = $this->userPermissions;
-		$app_int_activity = request('app_int_activity');
-		$app_int_status = request('app_int_status');
-		$app_int_notice = request('app_int_notice');
-		$sal_mode = request('sal_mode');
-		$min_salary_currency = request('min_salary_currency');
-		$app_int_outsource = request('app_int_outsource');
-
-		$applicationCounter = DB::table('job_applications')
-			->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-
-			->where('add_job_wise_condidates.job_id', '=',$jobid)
-			->where('add_job_wise_condidates.thirdparty_company_id', auth()->user()->company_id)
-			->select(
-				DB::raw("count(add_job_wise_condidates.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined"),
-				DB::raw(
-					"SUM(CASE WHEN add_job_wise_condidates.master_status_id = 7 THEN 1 WHEN add_job_wise_condidates.master_status_id = 9 THEN 1 ELSE 0 END) AS Rejected"
-				)
-			)
-			->groupBy('add_job_wise_condidates.job_id')
-			->first();
-
-			$allCandidateCounter	=	@$applicationCounter->allCandidate > 0 ? @$applicationCounter->allCandidate : 0; 	
-			$SourcingCounter		=	@$applicationCounter->Sourcing > 0 ? @$applicationCounter->Sourcing : 0;
-			$ScreeningCounter		=	@$applicationCounter->Screening > 0 ? @$applicationCounter->Screening : 0 ;		
-			$InterviewCounter		=	@$applicationCounter->Interview > 0 ? @$applicationCounter->Interview : 0;	
-			$NegotiationCounter		=	@$applicationCounter->Negotiation > 0 ? @$applicationCounter->Negotiation : 0;	
-			$OfferedCounter			=	@$applicationCounter->Offered > 0 ? @$applicationCounter->Offered : 0;	
-			$JoinedCounter			=	@$applicationCounter->Joined > 0 ? @$applicationCounter->Joined : 0; 	
-			$RejectedCounter		=	@$applicationCounter->Rejected > 0 ? @$applicationCounter->Rejected : 0;
-
-
-		return response()->json([
-			'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid'))->render(),
-			'allCandidateCounter'=>$allCandidateCounter,
-			'SourcingCounter'=>$SourcingCounter,
-			'ScreeningCounter'=>$ScreeningCounter,
-			'InterviewCounter'=>$InterviewCounter,
-			'NegotiationCounter'=>$NegotiationCounter,
-			'OfferedCounter'=>$OfferedCounter,
-			'JoinedCounter'=>$JoinedCounter,
-			'RejectedCounter'=>$RejectedCounter,
-			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		]);
-
-
 	}
 	public function rec_candidate_assign(Request $request)
 	{
