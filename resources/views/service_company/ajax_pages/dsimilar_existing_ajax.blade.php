@@ -806,7 +806,7 @@
 
                     if ($recCounter > 0) {
                         $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                     } else {
                         $public_bench_conter = DB::table('rec_candidate_assign')
                             ->select('id')
@@ -831,13 +831,13 @@
 
                         if ($public_bench_conter > 0) {
                             $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } elseif ($internal_bench_conter > 0) {
                             $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         }elseif($existingCandidatesQuery){
                             $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } else {
                             $html =
                                 '<div class="d-flex flex-column"> 
