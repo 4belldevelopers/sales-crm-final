@@ -1,37 +1,223 @@
-set -e
+name: Deploy to Production (hire.jero.works)
 
-cd ${{ secrets.PROD_PATH }}
+# MANUAL ONLY. Production never deploys automatically.
+# After staging is verified and you've merged `staging` into `main`,
+# go to the Actions tab -> this workflow -> "Run workflow" to deploy.
+on:
+  workflow_dispatch:
 
-trap 'php artisan up || true' EXIT
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
-php artisan down --render="errors::503" || true
+jobs:
+  deploy:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
 
-echo ">> Pulling latest main code"
-git fetch origin main
-git reset --hard origin/main
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          command_timeout: 30m
 
-echo ">> Installing PHP deps"
-composer install --no-dev --optimize-autoloader --no-interaction
+          script: |
+            set -e
 
-echo ">> Installing Node packages"
-npm ci
+            cd ${{ secrets.PROD_PATH }}
 
-echo ">> Building frontend"
-npm run build
+            ###########################################################
+            # ALWAYS BRING SITE BACK ONLINE EVEN IF DEPLOYMENT FAILS
+            ###########################################################
+            trap 'php artisan up || true' EXIT
 
-echo ">> Running migrations"
-php artisan migrate --force
+            echo "=================================================="
+            echo "🚀 JERO PRODUCTION DEPLOYMENT"
+            echo "Started: $(date)"
+            echo "Server : $(hostname)"
+            echo "Path   : $(pwd)"
+            echo "=================================================="
 
-echo ">> Clearing caches"
-php artisan optimize:clear
+            ###########################################################
+            # ENVIRONMENT CHECK
+            ###########################################################
 
-echo ">> Rebuilding caches"
-php artisan optimize
+            echo ""
+            echo ">> Checking environment"
 
-echo ">> Restarting queues"
-php artisan queue:restart || true
+            php -v
+            composer --version
+            node -v
+            npm -v
 
-echo ">> Reloading Octane"
-php artisan octane:reload || true
+            ###########################################################
+            # MAINTENANCE MODE
+            ###########################################################
 
-echo "✅ Production deployment completed"
+            echo ""
+            echo ">> Enabling maintenance mode"
+
+            php artisan down --render="errors::503" || true
+
+            ###########################################################
+            # UPDATE SOURCE CODE
+            ###########################################################
+
+            echo ""
+            echo ">> Updating source code"
+
+            GIT_SSH_COMMAND="ssh -i /root/.ssh/github_production" git fetch origin main
+
+            GIT_SSH_COMMAND="ssh -i /root/.ssh/github_production" git reset --hard origin/main
+
+            # NOTE: intentionally no `git clean -fd` here — this repo's
+            # .gitignore excludes .env and storage/app/{public,private}
+            # (real uploaded candidate/company files live there). Cleaning
+            # untracked files would delete production secrets and live
+            # uploads on every deploy. `reset --hard` already syncs every
+            # tracked file; nothing further is needed.
+
+            echo ""
+            echo ">> Current Commit"
+
+            git log -1 --oneline
+
+            ###########################################################
+            # COMPOSER
+            ###########################################################
+
+            echo ""
+            echo ">> Installing Composer dependencies"
+
+            export COMPOSER_ALLOW_SUPERUSER=1
+
+            composer install \
+                --no-dev \
+                --prefer-dist \
+                --optimize-autoloader \
+                --classmap-authoritative \
+                --no-interaction
+
+            ###########################################################
+            # FRONTEND BUILD
+            ###########################################################
+
+            if [ -f package-lock.json ]; then
+
+              echo ""
+              echo ">> Installing Node packages"
+
+              export NODE_ENV=production
+
+              npm ci
+
+              echo ""
+              echo ">> Building frontend"
+
+              npm run build
+
+            else
+
+              echo ""
+              echo ">> No package-lock.json found. Skipping frontend build."
+
+            fi
+
+            ###########################################################
+            # DATABASE
+            ###########################################################
+
+            echo ""
+            echo ">> Running database migrations"
+
+            php artisan migrate --force
+
+            ###########################################################
+            # CACHE
+            ###########################################################
+
+            echo ""
+            echo ">> Clearing old caches"
+
+            php artisan optimize:clear
+
+            echo ""
+            echo ">> Rebuilding caches"
+
+            php artisan config:cache
+
+            # route:cache is skipped: this repo currently has ~59 duplicate
+            # route names (pre-existing, unrelated to any one feature),
+            # which makes route:cache fail outright and, under `set -e`,
+            # would abort the rest of this deploy (queue/horizon/reverb/
+            # octane restarts and the health check below would never run).
+            # route:clear ensures no stale cached route file lingers
+            # instead. Routing still works without the cache, just without
+            # that perf optimization, until the duplicate names are
+            # cleaned up. Keep this in sync with deploy-staging.yml.
+            php artisan route:clear
+
+            php artisan view:cache
+
+            php artisan event:cache || true
+
+            ###########################################################
+            # RESTART SERVICES
+            ###########################################################
+
+            echo ""
+            echo ">> Restarting Laravel services"
+
+            php artisan queue:restart || true
+
+            php artisan horizon:terminate || true
+
+            php artisan reverb:restart || true
+
+            echo ""
+            echo ">> Full Octane restart"
+
+            # FrankenPHP + OPcache: `octane:reload` only gracefully reloads
+            # worker threads, which re-read the SAME cached bytecode — so
+            # new code silently never takes effect. A full process
+            # stop/start is required to clear OPcache and actually load the
+            # freshly deployed code. Same fix as deploy-staging.yml.
+            php artisan octane:stop || true
+            sleep 3
+            setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            sleep 5
+            php artisan octane:status || true
+
+            ###########################################################
+            # DISABLE MAINTENANCE MODE
+            ###########################################################
+
+            echo ""
+            echo ">> Disabling maintenance mode"
+
+            php artisan up
+
+            ###########################################################
+            # HEALTH CHECK
+            ###########################################################
+
+            echo ""
+            echo ">> Running health check"
+
+            curl -fsS https://hire.jero.works > /dev/null
+
+            ###########################################################
+            # COMPLETE
+            ###########################################################
+
+            echo ""
+            echo "=================================================="
+            echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
+            echo "Finished: $(date)"
+            echo "=================================================="
