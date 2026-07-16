@@ -97,7 +97,7 @@
             z-index: 1400 !important;
         }
 
-        /* Website Candidates filter drawer (replaces the old #apptrackerfilter modal).
+        /* Career Page filter drawer (replaces the old #apptrackerfilter modal).
            Naming convention: wcf-* (mirrors In-house Bench Talents' ibf-*/Agency Bench's
            abf-*/Similar Candidates' simf-* 1:1, renamed so these pages' drawer
            styles/scripts never collide if ever loaded together). */
@@ -806,7 +806,7 @@
             // This route is shared by both flows (an agency's own jobs AND jobs a
             // direct client shared with this company), but the two flows have
             // completely different sibling tabs — a direct-client job only has
-            // Total/Similar/In-house Bench/Website Candidates (the "d"-prefixed
+            // Total/Similar/In-house Bench/Career Page (the "d"-prefixed
             // routes + clientappHeader), it has no Agency Bench or Bench Talent
             // Request tabs at all. Reaching this page from a client job used to
             // always render the full 6-tab apptrackerHeader with own-job URLs,
