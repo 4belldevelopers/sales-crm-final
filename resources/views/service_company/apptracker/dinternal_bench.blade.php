@@ -181,55 +181,29 @@
         }
 
         /* Show All Inhouse Bench — a mode switch, not a filter field, so it
-           lives in its own bar between the header and the filter form
-           rather than as one more row inside the sections below. */
+           lives in the header itself (right corner, next to Close) rather
+           than as a row inside the sections below. */
+        .dib-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
         .dib-showall-bar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 14px 20px;
-            background: #f8fafc;
-            border-bottom: 1px solid #eef0f4;
-            flex-shrink: 0;
-            transition: background-color .15s;
-        }
-        .dib-showall-bar.active {
-            background: #eff6ff;
-        }
-        .dib-showall-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .dib-showall-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: #e0e7ff;
-            color: #4f46e5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: background-color .15s, color .15s;
-        }
-        .dib-showall-bar.active .dib-showall-icon {
-            background: #2563eb;
-            color: #fff;
+            gap: 8px;
         }
         .dib-showall-label {
-            font-size: 13px;
-            font-weight: 700;
-            color: #181c32;
-            line-height: 1.3;
-        }
-        .dib-showall-desc {
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 600;
             color: #7e8299;
             line-height: 1.3;
-            margin-top: 1px;
+            white-space: nowrap;
+            transition: color .15s;
+        }
+        .dib-showall-bar.active .dib-showall-label {
+            color: #2563eb;
         }
         /* Custom switch — a native checkbox styled as an iOS-style toggle,
            same enterprise visual language as the rest of the drawer. */
@@ -1055,7 +1029,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
                                 <input type="text" class="form-control dib-search-input" name="inputJobSearch"
-                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                    placeholder="Search by candidate name, skills, education or location..." id="kt_tagify_2" autocomplete="off" />
                             </div>
                             <div class="dib-sort-wrap" id="dib_sort_wrap">
                                 <span class="dib-sort-icon">
@@ -1125,29 +1099,20 @@
                                     <p class="dib-subtitle">Refine your search across your in-house bench</p>
                                 </div>
                             </div>
-                            <button type="button" class="dib-close" id="kt_dib_filter_close" title="Close">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                            </button>
+                            <div class="dib-header-actions">
+                                <div class="dib-showall-bar" id="dib_showall_bar">
+                                    <span class="dib-showall-label">Show All</span>
+                                    <label class="dib-switch" title="Show all active in-house bench candidates — filters lock while this is on">
+                                        <input type="checkbox" id="dib_showall_toggle">
+                                        <span class="dib-switch-slider"></span>
+                                    </label>
+                                </div>
+                                <button type="button" class="dib-close" id="kt_dib_filter_close" title="Close">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                </button>
+                            </div>
                         </div>
                         <!--end::Header-->
-
-                        <!--begin::Show All mode switch-->
-                        <div class="dib-showall-bar" id="dib_showall_bar">
-                            <div class="dib-showall-info">
-                                <span class="dib-showall-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </span>
-                                <div>
-                                    <div class="dib-showall-label">Show All Inhouse Bench</div>
-                                    <div class="dib-showall-desc">View the full active roster — filters below are locked while this is on</div>
-                                </div>
-                            </div>
-                            <label class="dib-switch" title="Show all active in-house bench candidates">
-                                <input type="checkbox" id="dib_showall_toggle">
-                                <span class="dib-switch-slider"></span>
-                            </label>
-                        </div>
-                        <!--end::Show All mode switch-->
 
                         <!--begin::Body-->
                         <div class="dib-body">
