@@ -146,7 +146,8 @@
                            . ucwords(mb_substr(@$row->current_designation, 0, 22)) . '
                         </a>
                     </div>
-                    <div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;">'
+                    <div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;">
+                        <span style="font-size:10px;font-weight:600;color:#7e8299;margin-right:4px;">Skills</span>'
                         . $skilltag .
                     '</div>';
                 @endphp
@@ -156,9 +157,8 @@
             <td>
                 @php
                     echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' . $formattedExperience . ' Y</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . ($rel_formattedExperience ?: '—') . ' Y</span>'
-                        . ($workMode ? '<span class="fw-bold d-block" style="font-size:10px;color:#7c3aed;">' . $workMode . '</span>' : '') .
+                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' . $formattedExperience . ' Y</a>'
+                        . ($workMode ? '<span class="fw-bold d-block" style="font-size:10px;color:#7c3aed;">' . $workMode . '</span>' : '<span class="text-muted fw-bold d-block fs-7">—</span>') .
                     '</div>';
                 @endphp
             </td>
@@ -210,36 +210,19 @@
                 @endphp
             </td>
 
-            {{-- Bench Status --}}
-            <td>
-                @php
-                    $benchDaysCount = null;
-                    if (!empty($row->created_at)) {
-                        $benchDaysCount = (int) Carbon::parse($row->created_at)->diffInDays(Carbon::now());
-                    }
-                    $benchDaysClass = ($benchDaysCount !== null && $benchDaysCount > 30) ? 'text-danger' : 'text-warning';
-                @endphp
-                <div class="d-flex flex-column">
-                    <span class="fw-bold fs-6" style="color:#0891b2;">Bench</span>
-                    <span class="fw-bold text-muted d-block fs-7">Open For Work</span>
-                    @if($benchDaysCount !== null)
-                        <span class="fw-bolder d-block fs-7 {{ $benchDaysClass }}">{{ $benchDaysCount }} Days</span>
-                    @endif
-                </div>
-            </td>
-
             {{-- Expected Salary --}}
             <td>
                 @php
                     echo '<div class="d-flex flex-column">
                         <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">'
                             . @$bill_rate_currency . $bill_rate_amount
-                            . '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' . mb_substr($bill_rate_mode, 0, 1) . '</span>
+                            . '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' . $bill_rate_mode . '</span>
                         </a>
                         <span class="fw-bold d-block fs-7" style="color:' . $comission_color . ';">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
                             ' . $comission_label . '
                         </span>
+                        <span class="fw-bold d-block fs-7" style="color:#6d7991;">Service</span>
                     </div>';
                 @endphp
             </td>
@@ -271,7 +254,7 @@
     @endforeach
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-        <td colspan="8" style="text-align: center; color: black;">
+        <td colspan="7" style="text-align: center; color: black;">
             No data available in table
         </td>
     </tr>
