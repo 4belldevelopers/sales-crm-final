@@ -11132,39 +11132,80 @@ protected $elasticService;
  
                     $currentOrder = $stages[$currentStageId]['order'];
                     $newOrder     = $stages[$newStageId]['order'];
- 
+
                     $currentName  = $stages[$currentStageId]['display'];
                     $newName      = $stages[$newStageId]['display'];
                     $nextStage    = collect($stages)->firstWhere('order', $currentOrder + 1)['display'] ?? 'Next Step';
- 
-                    // 🔹 Check if jumping ahead
-                    if ($newOrder > $currentOrder + 1) {
+
+                    // InReview(8) and agency-Rejected(9) are the submitting
+                    // agency's own territory — once a candidate is sourced
+                    // (currentStageId 1-7), control belongs to the client
+                    // company, not the agency, and the agency can no longer
+                    // change its stage at all (not even to reject via 9).
+                    $isAgencySubmission = ((int) $addJobWiseCondidate->thirdparty_company_id === (int) $company_id)
+                        && (int) $addJobWiseCondidate->thirdparty_company_id > 0;
+
+                    // The only valid moves touching InReview/agency-Rejected:
+                    // 8->1 (agency sources it), 8->9 (agency rejects pre-
+                    // sourcing), 9->8 (agency un-rejects, back to review).
+                    // 9->1 directly is explicitly NOT allowed — it must go
+                    // back through InReview first.
+                    $isSpecialAgencyEdge = ($currentStageId == 8 && in_array($newStageId, [1, 9], true))
+                        || ($currentStageId == 9 && $newStageId == 8);
+
+                    if ($currentStageId == 9 && $newStageId == 1) {
                         return Reply::dataOnly([
                             'status' => 'candidatevalidation',
-                            'message' => "You cannot jump directly from
-                                        <b style='color:#EF4444;'>{$currentName}</b>
-                                        to <b style='color:#3B82F6;'>{$newName}</b>.<br>
-                                        Please complete the required step in
-                                        <b style='color:#F59E0B;'>{$nextStage}</b> first."
+                            'message' => 'Move this candidate back to InReview before sourcing it again.'
                         ]);
                     }
- 
-                    // dd($newOrder,$currentOrder);
- 
-                    // 🔹 Check if going backward
-                    if ($newOrder < $currentOrder) {
-						dd($currentOrder != $newOrder+1);
-                    if($currentOrder != $newOrder+1){
+
+                    if (!$isSpecialAgencyEdge && $isAgencySubmission && !in_array($currentStageId, [8, 9], true)) {
                         return Reply::dataOnly([
+                            'status' => 'candidatevalidation',
+                            'message' => 'This candidate has already been sourced — only the client company can change its stage now.'
+                        ]);
+                    }
+
+                    // The company can never send a candidate back to
+                    // InReview once it's been sourced — that stage belongs
+                    // to the agency, and reverting it isn't the company's
+                    // call to make.
+                    if (!$isSpecialAgencyEdge && $newStageId == 8) {
+                        return Reply::dataOnly([
+                            'status' => 'candidatevalidation',
+                            'message' => 'A candidate cannot be moved back to InReview once sourced.'
+                        ]);
+                    }
+
+                    if (!$isSpecialAgencyEdge) {
+                        // 🔹 Check if jumping ahead — Rejected(7) is reachable
+                        // directly from any active company stage, so it's
+                        // exempt from the "no skipping ahead" rule.
+                        if ($newStageId != 7 && $newOrder > $currentOrder + 1) {
+                            return Reply::dataOnly([
                                 'status' => 'candidatevalidation',
-                                'message' => "You cannot move backward from
+                                'message' => "You cannot jump directly from
                                             <b style='color:#EF4444;'>{$currentName}</b>
-                                            to <b style='color:#F59E0B;'>{$newName}</b>."
+                                            to <b style='color:#3B82F6;'>{$newName}</b>.<br>
+                                            Please complete the required step in
+                                            <b style='color:#F59E0B;'>{$nextStage}</b> first."
                             ]);
+                        }
+
+                        // 🔹 Check if going backward
+                        if ($newOrder < $currentOrder) {
+                            if($currentOrder != $newOrder+1){
+                                return Reply::dataOnly([
+                                        'status' => 'candidatevalidation',
+                                        'message' => "You cannot move backward from
+                                                    <b style='color:#EF4444;'>{$currentName}</b>
+                                                    to <b style='color:#F59E0B;'>{$newName}</b>."
+                                    ]);
+                            }
+                        }
                     }
- 
-                    }
- 
+
                     $sourcing=0; $screening=0;  $evaluation=0;  $negotiation=0;
                     // if (!isset($stages[$currentStageId]) || !isset($stages[$newStageId])) {
  
