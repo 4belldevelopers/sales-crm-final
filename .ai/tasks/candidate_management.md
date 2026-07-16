@@ -20,6 +20,17 @@ See full traces in [DATA_FLOW.md](../../docs/DATA_FLOW.md) §1, §2, §6.
   (via Observer → ES job). **Don't bypass the observer.**
 - `duplicate` flag, `is_viewed`, `rating` are tracked per application.
 - Matching/`skill_match` is business logic — don't alter without confirmation.
+- **Client-job pipeline (agency submits candidates to a client's job) has a stage-ownership
+  split**: agency owns InReview(8)↔Sourcing(1)↔Reject(9), client owns Sourcing(1) through
+  Rejected(7); client can never revert to InReview; candidates at stage 8/9 must stay
+  invisible to the client until sourced.
+- **Any future search bar / sort / filter work on an AppTracker candidate-list page**
+  should reuse the design + logic already built for Similar Candidates / In-house Bench
+  Talents / Agency Bench Talents / Total Candidates In Job (and their client-job
+  mirrors) — adjust only the business logic specific to that page's own data (ES index,
+  field names, available filters, sort tiebreak). Don't reinvent or copy blindly.
+  Full rules + `master_status` table + enforcement locations + the search/sort/filter
+  convention: [CLIENT_JOB_STAGE_OWNERSHIP.md](../../docs/CLIENT_JOB_STAGE_OWNERSHIP.md).
 
 ## Common files
 - Controllers: `ServiceCompany/ServiceCompanyJobApplicationController.php` 🔴,
