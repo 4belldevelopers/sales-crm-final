@@ -121,12 +121,17 @@ jobs:
               echo ""
               echo ">> Installing Node packages"
 
-              export NODE_ENV=production
-
+              # NODE_ENV=production must NOT be set before `npm ci` — every
+              # frontend build tool (vite, laravel-vite-plugin, tailwindcss,
+              # postcss) lives in devDependencies, and npm skips installing
+              # devDependencies entirely when NODE_ENV=production is set,
+              # which left `vite` missing and broke the build step below.
               npm ci
 
               echo ""
               echo ">> Building frontend"
+
+              export NODE_ENV=production
 
               npm run build
 
