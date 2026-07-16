@@ -2134,9 +2134,8 @@
     </script>
     <script>
         // Small top-right toast, auto-dismissing, pause-on-hover — SweetAlert2's
-        // own documented toast mode. Only non-chained success/fail notices are
-        // converted to this; the "Are you sure?" confirmation below stays a
-        // real blocking modal since it gates the actual AJAX call.
+        // own documented toast mode. All add_to_inreview notices go through
+        // this — there's no confirmation modal in this flow anymore.
         const ibfToast = Swal.mixin({
             toast: true,
             position: 'top-end',
