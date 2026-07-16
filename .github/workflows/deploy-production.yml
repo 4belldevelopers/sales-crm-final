@@ -1,5 +1,11 @@
 name: Deploy to Production (hire.jero.works)
 
+<<<<<<< HEAD
+=======
+# MANUAL ONLY. Production never deploys automatically.
+# After staging is verified and you've merged `staging` into `main`,
+# go to the Actions tab -> this workflow -> "Run workflow" to deploy.
+>>>>>>> staging
 on:
   workflow_dispatch:
 
@@ -30,6 +36,7 @@ jobs:
             cd ${{ secrets.PROD_PATH }}
 
             ###########################################################
+<<<<<<< HEAD
             # ALWAYS BRING SITE BACK ONLINE EVEN IF DEPLOYMENT FAILS
             ###########################################################
             trap 'php artisan up || true' EXIT
@@ -57,6 +64,43 @@ jobs:
             # MAINTENANCE MODE
             ###########################################################
 
+=======
+            # PATH: appleboy/ssh-action runs a non-login shell, which
+            # never sources the profile that puts nvm's node/npm on PATH.
+            # Without this, `node`/`npm` are "command not found" here even
+            # though they're installed and used fine in a normal SSH login.
+            ###########################################################
+            export PATH="/www/server/nvm/versions/node/v24.13.1/bin:$PATH"
+
+            ###########################################################
+            # ALWAYS BRING SITE BACK ONLINE EVEN IF DEPLOYMENT FAILS
+            ###########################################################
+            trap 'php artisan up || true' EXIT
+
+            echo "=================================================="
+            echo "🚀 JERO PRODUCTION DEPLOYMENT"
+            echo "Started: $(date)"
+            echo "Server : $(hostname)"
+            echo "Path   : $(pwd)"
+            echo "=================================================="
+
+            ###########################################################
+            # ENVIRONMENT CHECK
+            ###########################################################
+
+            echo ""
+            echo ">> Checking environment"
+
+            php -v
+            composer --version
+            node -v
+            npm -v
+
+            ###########################################################
+            # MAINTENANCE MODE
+            ###########################################################
+
+>>>>>>> staging
             echo ""
             echo ">> Enabling maintenance mode"
 
@@ -73,7 +117,16 @@ jobs:
 
             GIT_SSH_COMMAND="ssh -i /root/.ssh/github_production" git reset --hard origin/main
 
+<<<<<<< HEAD
             git clean -fd
+=======
+            # NOTE: intentionally no `git clean -fd` here — this repo's
+            # .gitignore excludes .env and storage/app/{public,private}
+            # (real uploaded candidate/company files live there). Cleaning
+            # untracked files would delete production secrets and live
+            # uploads on every deploy. `reset --hard` already syncs every
+            # tracked file; nothing further is needed.
+>>>>>>> staging
 
             echo ""
             echo ">> Current Commit"
@@ -143,7 +196,22 @@ jobs:
             echo ">> Rebuilding caches"
 
             php artisan config:cache
+<<<<<<< HEAD
             php artisan route:cache
+=======
+
+            # route:cache is skipped: this repo currently has ~59 duplicate
+            # route names (pre-existing, unrelated to any one feature),
+            # which makes route:cache fail outright and, under `set -e`,
+            # would abort the rest of this deploy (queue/horizon/reverb/
+            # octane restarts and the health check below would never run).
+            # route:clear ensures no stale cached route file lingers
+            # instead. Routing still works without the cache, just without
+            # that perf optimization, until the duplicate names are
+            # cleaned up. Keep this in sync with deploy-staging.yml.
+            php artisan route:clear
+
+>>>>>>> staging
             php artisan view:cache
 
             php artisan event:cache || true
@@ -161,7 +229,32 @@ jobs:
 
             php artisan reverb:restart || true
 
+<<<<<<< HEAD
             php artisan octane:reload || true
+=======
+            echo ""
+            echo ">> Full Octane restart"
+
+            # FrankenPHP + OPcache: `octane:reload` only gracefully reloads
+            # worker threads, which re-read the SAME cached bytecode — so
+            # new code silently never takes effect. A full process
+            # stop/start is required to clear OPcache and actually load the
+            # freshly deployed code. Same fix as deploy-staging.yml.
+            php artisan octane:stop || true
+            sleep 3
+            setsid nohup bash start-octane.sh > storage/logs/octane-start.log 2>&1 < /dev/null &
+            sleep 5
+            php artisan octane:status || true
+
+            ###########################################################
+            # DISABLE MAINTENANCE MODE
+            ###########################################################
+
+            echo ""
+            echo ">> Disabling maintenance mode"
+
+            php artisan up
+>>>>>>> staging
 
             ###########################################################
             # HEALTH CHECK
