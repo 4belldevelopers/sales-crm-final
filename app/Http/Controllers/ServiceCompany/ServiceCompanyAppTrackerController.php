@@ -55,7 +55,6 @@ use App\Services\NotificationMailService;
 use App\Jobs\ElasticCompanyIndex;
 use App\Services\ElasticService;
 use App\Jobs\ElasticCandidateIndex;
-use App\Jobs\ElasticBenchCandidateIndex;
 
 class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 {
@@ -3412,7 +3411,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 							];
 							GeneralMethod::teamRankElastic($teamRankElastic);
 			
-			ElasticBenchCandidateIndex::dispatch($source_from_id)->onConnection('emails');
+			// Horizon isn't consuming this queue in this environment — jobs sit
+			// unprocessed and the candidate never reflects in the UI. Reverted
+			// to synchronous until a worker is confirmed running.
+			GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);
 
 
 		}
@@ -3838,7 +3840,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 
 
-			ElasticBenchCandidateIndex::dispatch($application_id)->onConnection('emails');
+			// Horizon isn't consuming this queue in this environment — jobs sit
+			// unprocessed and the candidate never reflects in the UI. Reverted
+			// to synchronous until a worker is confirmed running.
+			GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
 
 		}
 
@@ -4023,7 +4028,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
-		ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
+		// Horizon isn't consuming this queue in this environment — jobs sit
+		// unprocessed and the candidate never reflects in Total Candidates In
+		// Job. Reverted to synchronous until a worker is confirmed running.
+		GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
 
 
 		return Reply::dataOnly(['status' => 'success']);
