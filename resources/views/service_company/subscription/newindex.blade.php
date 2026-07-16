@@ -425,10 +425,6 @@
                                 </h1>
                                 <div class="text-gray-500 fs-8">Manage all your wallets, packages, coins and transactions in one place.</div>
                             </div>
-                            <a href="javascript:;" class="btn btn-sm wallet-buy-coins-btn"
-                                onclick="switchWalletCenterTab('packages'); return false;">
-                                <i class="fa fa-coins me-1"></i> <span id="walletBuyCoinsLabel">Buy Coins</span>
-                            </a>
                         </div>
 
                         <!--begin::Wallet cards-->
@@ -548,11 +544,6 @@
                         <!--begin::Tab nav-->
                         <ul class="wallet-tab-nav">
                             <li><a href="javascript:;" class="wallet-tab-link wt-active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="packages" onclick="switchWalletCenterTab('packages');return false;"><i class="fa fa-box"></i> Packages</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="invoices" onclick="switchWalletCenterTab('invoices');return false;"><i class="fa fa-file-invoice"></i> Invoices</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="billing" onclick="switchWalletCenterTab('billing');return false;"><i class="fa fa-credit-card"></i> Billing</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="settings" onclick="switchWalletCenterTab('settings');return false;"><i class="fa fa-cog"></i> Settings</a></li>
                         </ul>
                         <!--end::Tab nav-->
                     </div>
@@ -1530,16 +1521,8 @@
                 }
             };
 
-            // Deep-link support: sidebar links append #tab=<name> to open a specific tab.
-            // Runs on load AND on hash change (so sidebar clicks work while already on this page).
-            function applyHashTab() {
-                var match = /tab=([a-z]+)/.exec(window.location.hash || '');
-                if (match && $('#wallet-pane-' + match[1]).length) {
-                    switchWalletCenterTab(match[1]);
-                }
-            }
-            applyHashTab();
-            $(window).on('hashchange', applyHashTab);
+            // Always activate Overview on load — only one tab exists now.
+            switchWalletCenterTab('overview');
 
 
             $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {
