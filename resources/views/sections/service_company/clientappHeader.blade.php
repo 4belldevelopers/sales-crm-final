@@ -1,7 +1,7 @@
 @php
     // Hero KPI cards for the client-job AppTracker header (Pool / Similar / In-house
     // Bench tabs only — a direct-client job has no Agency Bench, Bench Talent
-    // Request, or Website Candidates tabs at all; those sourcing channels don't
+    // Request, or Career Page tabs at all; those sourcing channels don't
     // apply to a job this company doesn't own, and career_apply.blade.php isn't
     // built to be reached from this flow. Same visual language as
     // sections/service_company/apptrackerHeader.blade.php; titles/colors kept in
