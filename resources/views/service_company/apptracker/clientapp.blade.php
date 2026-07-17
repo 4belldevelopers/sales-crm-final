@@ -82,6 +82,30 @@
     display: none !important;
 }
 
+/* Print — the "Print" button clones the already-rendered checked rows (no
+   extra server request) into this hidden container, then hands off to the
+   browser's own print dialog. Same pattern as CV Tracker/apptracker index. */
+#aptk_print_area { display: none; }
+@media print {
+    body * { visibility: hidden; }
+    #aptk_print_area, #aptk_print_area * { visibility: visible; }
+    #aptk_print_area {
+        display: block;
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    #aptk_print_area h2 { font-size: 16px; margin: 0 0 4px; }
+    #aptk_print_area .aptk-print-meta { font-size: 11px; color: #666; margin-bottom: 14px; }
+    #aptk_print_area table { width: 100%; border-collapse: collapse; }
+    #aptk_print_area th, #aptk_print_area td {
+        border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left;
+        vertical-align: top;
+    }
+    #aptk_print_area .form-check { display: none !important; }
+}
+
 /* Row selection action bar — hidden until candidates are checked, then sits
    directly above the results table. */
 .aptk-selection-bar {
@@ -830,7 +854,9 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
         {{-- Row selection action bar — hidden until candidates are checked. Reuses the
              exact same trigger classes as the legacy toolbar buttons (fwd_resume /
              application_copy) — this page has no working mass_mail/export handlers, so
-             those buttons are intentionally omitted here. --}}
+             those buttons are intentionally omitted here. Print is a new addition: it's
+             purely client-side (clones the checked rows already on the page), so it
+             doesn't need a working server-side handler the way mass_mail/export would. --}}
         <div class="aptk-selection-bar" id="aptk_selection_bar">
             <div class="form-check form-check-sm form-check-custom form-check-solid">
                 <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked title="Clear selection" />
@@ -846,6 +872,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                     <span class="svg-icon svg-icon-primary svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                     </span> Copy
+                </a>
+                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary aptk_print_btn" title="Export the selected candidates using your browser's print dialog">
+                    <span class="svg-icon svg-icon-primary svg-icon-1x">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    </span> Export
                 </a>
             </div>
             <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
@@ -883,6 +914,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
           </table>
           <!--end::Table-->
           <div id="paginationcandidate"></div>
+          {{-- Print target — populated client-side from the checked rows already
+               on this page (see the .aptk_print_btn click handler); no server
+               round-trip involved. --}}
+          <div id="aptk_print_area"></div>
           @endif </div>
         <!--end::Card body-->
       </div>
@@ -1714,6 +1749,38 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		}
 		updateAptkSelectionBar();
 	 });
+
+	// Purely client-side — clones the checked rows' already-rendered markup
+	// (no new request, no server load) into #aptk_print_area and hands off
+	// to the browser's own print dialog. Same pattern as CV Tracker/apptracker.
+	$(document).on('click', '.aptk_print_btn', function() {
+		var $checked = $('.chk_list_item:checked');
+		if ($checked.length === 0) {
+			cafToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
+			return false;
+		}
+
+		var $table = $('<table></table>');
+		var $thead = $('#myTable thead tr').clone();
+		$thead.find('th').first().remove(); // drop the checkbox header column
+		$table.append($('<thead></thead>').append($thead));
+
+		var $tbody = $('<tbody></tbody>');
+		$checked.each(function() {
+			var $row = $(this).closest('tr').clone();
+			$row.find('td').first().remove(); // drop the checkbox cell
+			$tbody.append($row);
+		});
+		$table.append($tbody);
+
+		var $printArea = $('#aptk_print_area').empty();
+		$printArea.append('<h2>Candidates Summary</h2>');
+		$printArea.append('<div class="aptk-print-meta">Printed ' +
+			new Date().toLocaleString() + ' — ' + $checked.length + ' candidate(s)</div>');
+		$printArea.append($table);
+
+		window.print();
+	});
 
 	$(document).on('click', '.chk_list_item', ()=>{
 	   var i=0;

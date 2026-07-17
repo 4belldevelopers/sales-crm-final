@@ -597,7 +597,7 @@
                                     fill="black" />
                             </svg>
                         </span>
-                        Print </button>
+                        Export </button>
                 </div>
 
                 <div class="before-event d-flex align-items-center position-relative my-1 me-3 custom_hide">
@@ -1429,10 +1429,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                             </span> Copy
                         </a>
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Print the selected candidates using your browser's print dialog">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Export the selected candidates using your browser's print dialog">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                            </span> Print
+                            </span> Export
                         </a>
                     </div>
                     <button type="button" class="cvh-selection-close" id="cvh_selection_close" title="Clear selection">
