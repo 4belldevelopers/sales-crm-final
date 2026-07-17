@@ -233,16 +233,14 @@
         <table class="table align-middle table-row-dashed fs-6">
           <thead>
             <tr class="fw-bolder text-muted">
-              <th>Talent Name</th>
-              <th>Exp.</th>
-              <th>Rates</th>
-              <th>Education</th>
-              <th>Availability</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Upload</th>
-              <th>Relationship Manager</th>
-              <th>Action</th>
+              <th style="min-width:180px;">Talent</th>
+              <th style="min-width:90px;">Experience</th>
+              <th style="min-width:110px;">Availability</th>
+              <th style="min-width:110px;">Location</th>
+              <th style="min-width:130px;">Expected Salary</th>
+              <th style="min-width:130px;">Bench Status</th>
+              <th style="min-width:130px;">Relationship Manager</th>
+              <th style="min-width:100px;">Action</th>
             </tr>
           </thead>
           <tbody class="text-gray-600 fw-bold" id="copyJobTable"></tbody>
