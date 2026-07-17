@@ -96,6 +96,31 @@
             display: none !important;
         }
 
+        /* Print — the "Print" button clones the already-rendered checked rows
+           (no extra server request) into this hidden container, then hands
+           off to the browser's own print dialog. Same pattern as CV
+           Tracker's #cvh_print_area. */
+        #aptk_print_area { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #aptk_print_area, #aptk_print_area * { visibility: visible; }
+            #aptk_print_area {
+                display: block;
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            #aptk_print_area h2 { font-size: 16px; margin: 0 0 4px; }
+            #aptk_print_area .aptk-print-meta { font-size: 11px; color: #666; margin-bottom: 14px; }
+            #aptk_print_area table { width: 100%; border-collapse: collapse; }
+            #aptk_print_area th, #aptk_print_area td {
+                border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left;
+                vertical-align: top;
+            }
+            #aptk_print_area .form-check { display: none !important; }
+        }
+
         /* Row selection action bar — same design/position as CV Tracker's
            #cvh_selection_bar: hidden until candidates are checked, then sits directly
            above the results table. */
@@ -890,13 +915,11 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                             </span> Copy
                         </a>
-                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
-                                </svg>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Export the selected candidates using your browser's print dialog">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                             </span> Export
-                        </button>
+                        </a>
                     </div>
                     <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -933,6 +956,10 @@
                                 </tbody>
                             </table>
                             <div id="paginationcandidate"></div>
+                            {{-- Print target — populated client-side from the checked rows already
+                                 on this page (see the .exportRecord click handler); no server
+                                 round-trip involved. --}}
+                            <div id="aptk_print_area"></div>
                         @endif
                     </div>
                 </div>
@@ -1505,75 +1532,39 @@
 
         $(document).ready(function() {
 
+          // Replaces the old server-side Excel export — purely client-side:
+          // clones the checked rows' already-rendered markup (no new
+          // request, no server load) into #aptk_print_area and hands off to
+          // the browser's own print dialog. Same pattern as CV Tracker.
           $(document).on('click', '.exportRecord', function() {
 
-                var action_type = $(this).val();
-                var id = 0;
-                var url =
-                "{{ route('service_company.candidateexport.candidate-job-applications', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var token = "{{ csrf_token() }}";
-                var jobId = "{{ @$job->id }}";
-                var arr = [];
-                var jobIdArr = [jobId];
-                $('.chk_list_item:checked').each(function() {
+                var $checked = $('.chk_list_item:checked');
+                if ($checked.length === 0) {
+                    poolToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
+                    return false;
+                }
 
-                    var jobId = $(this).attr('data-jobId');
-                    var wiid = $(this).attr('data-wiid');
-                    arr.push(wiid);
+                var $sourceTable = $('#candidatetList').closest('table');
+                var $table = $('<table></table>');
+                var $thead = $sourceTable.find('thead tr').clone();
+                $thead.find('th').first().remove(); // drop the checkbox header column
+                $table.append($('<thead></thead>').append($thead));
+
+                var $tbody = $('<tbody></tbody>');
+                $checked.each(function() {
+                    var $row = $(this).closest('tr').clone();
+                    $row.find('td').first().remove(); // drop the checkbox cell
+                    $tbody.append($row);
                 });
+                $table.append($tbody);
 
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'GET',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr
-                    },
-                    beforeSend: function() {
-                        $('.exportRecord').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
+                var $printArea = $('#aptk_print_area').empty();
+                $printArea.append('<h2>Candidates Summary</h2>');
+                $printArea.append('<div class="aptk-print-meta">Printed ' +
+                    new Date().toLocaleString() + ' — ' + $checked.length + ' candidate(s)</div>');
+                $printArea.append($table);
 
-                        if (response.status == 'info') {
-                            poolToast.fire({ icon: 'warning', title: response.message });
-
-                            $('.exportRecord').html(
-                                '<span class="svg-icon svg-icon-primary svg-icon-1x"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <rect x="0" y="0" width="24" height="24"></rect><path d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z" fill="#000000" fill-rule="nonzero"></path><path d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z" fill="#000000" opacity="0.3"></path></g></svg></span> Export '
-                                );
-
-                            return false;
-                        }
-
-
-                        window.location.href = response.file_url;
-
-                        setTimeout(() => {
-                            $('.exportRecord').text('Export');
-                            $.ajax({
-                                type: 'GET',
-                                url: "{{ route('service_company.unlink.sample-job-applications', ':id') }}",
-                                data: {
-                                    '_token': token,
-                                    '_method': 'GET',
-                                    'file_name': response.file_name
-                                },
-                                beforeSend: function() {},
-                                success: function(response) {
-
-
-                                }
-                            });
-
-                        }, 2000);
-                    }
-                });
-
-
+                window.print();
             });
 
             $(document).on('click', '#custom_stage_submit', async function(e) {
