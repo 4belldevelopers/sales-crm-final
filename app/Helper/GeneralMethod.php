@@ -668,10 +668,25 @@ END:VCALENDAR";
 
 
     }
+	/** Format a number as compact K/M (e.g. 24500 → "24.5K", 1200000 → "1.2M") */
+	public static function formatK($num): string
+	{
+		$num = (float) $num;
+		if ($num >= 1_000_000) {
+			$val = $num / 1_000_000;
+			return rtrim(rtrim(number_format($val, 1), '0'), '.') . 'M';
+		}
+		if ($num >= 1_000) {
+			$val = $num / 1_000;
+			return rtrim(rtrim(number_format($val, 1), '0'), '.') . 'K';
+		}
+		return number_format($num, 0);
+	}
+
 	public static function salaryMode()
 	{
-		$array 	=	array(	
-							0	=>	"Annual", 
+		$array 	=	array(
+							0	=>	"Annual",
 							1	=>	"Monthly", 
 							2	=>	"Hourly"
 						);

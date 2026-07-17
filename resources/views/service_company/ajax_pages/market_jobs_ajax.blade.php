@@ -113,9 +113,9 @@
         $ctc = $convertedAmounCtc[$mod];
 
         $max_salary = '';
-        $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
+        $max_salary = GeneralMethod::formatK($ectc);
         $min_salary = '';
-        $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
+        $min_salary = GeneralMethod::formatK($ctc);
 
         $work_type = 'Work From Office';
         if($row->work_type=='no'){

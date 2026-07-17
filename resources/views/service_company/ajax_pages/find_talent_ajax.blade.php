@@ -116,7 +116,7 @@
         $billFormatViewSalary = GeneralMethod::formatViewSalary($row->bill_rate_amount, $currency_code, $sal_mode ?? 0);
         $bill_rate_currency   = $currencySymbole[$billFormatViewSalary->currency] ?? '';
         $bill_rate_mode       = $salaryMode[$sal_mode ?? 0] ?? '';
-        $bill_rate_amount     = explode('.', GeneralMethod::thousandsCurrencyFormat($billFormatViewSalary->amount))[0];
+        $bill_rate_amount     = GeneralMethod::formatK($billFormatViewSalary->amount);
         $comission_label      = $row->comission_type == 1 ? 'Free' : 'Paid';
         $comission_color      = $row->comission_type == 1 ? '#16a34a' : '#16a34a'; // both green ✓
     @endphp
