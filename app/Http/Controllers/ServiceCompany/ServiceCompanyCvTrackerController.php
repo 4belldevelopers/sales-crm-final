@@ -345,6 +345,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 		}
 
+		// Feeds the row partial's skill-chip highlighting: which entered Skills
+		// filter terms are starred (mandatory, shown blue) vs unstarred
+		// (optional, shown green). Both stay empty when no Skills filter is
+		// applied at all, which the partial reads as "fall back to highlighting
+		// against each row's own job's required skills instead."
+		$mandatorySkillsForDisplay = !empty($checkedSkills ?? []) ? array_values(array_map('strtolower', array_column($checkedSkills, 'value'))) : [];
+		$optionalSkillsForDisplay = !empty($uncheckedSkills ?? []) ? array_values(array_map('strtolower', array_column($uncheckedSkills, 'value'))) : [];
+
 		$previousUrl = url()->previous();
 		$path = parse_url($previousUrl, PHP_URL_PATH); 
 		$segments = explode('/', trim($path, '/'));
@@ -1404,8 +1412,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			];
 		}
 
+		// CV Tracker isn't job-scoped — each row can belong to a different job —
+		// so the "no filter applied" default highlight/match-% falls back to
+		// EACH row's own job's required skills, not one shared set. Batched
+		// once per page of results (distinct jobIds only) instead of a
+		// per-row query.
+		$jobSkillsByJobId = [];
+		if ($page_view === 'all_candidates') {
+			$jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
+			if (!empty($jobIdsOnPage)) {
+				DB::table('job_metronics_skills')
+					->whereIn('job_id', $jobIdsOnPage)
+					->select('job_id', 'skill_name')
+					->get()
+					->each(function ($r) use (&$jobSkillsByJobId) {
+						$jobSkillsByJobId[$r->job_id][] = strtolower(trim($r->skill_name));
+					});
+			}
+		}
+
 		$responseData = [
-			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
+			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter','mandatorySkillsForDisplay','optionalSkillsForDisplay','jobSkillsByJobId'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			'counts' => $offerCounts,
