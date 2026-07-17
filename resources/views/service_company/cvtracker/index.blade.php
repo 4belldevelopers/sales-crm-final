@@ -91,21 +91,31 @@
             height: 82px;
             position: relative;
         }
-        .tagify__tag {
-            display: flex;
-            align-items: center;
-        }
-
+        /* Tagify chip star toggle — visual properties are set as inline styles in the
+           JS template (see the Skills tagify below) so they can't be overridden by
+           plugins.bundle.css (loaded mid-body after this <style> block). Only the
+           interactive checked state is here. */
         .tagify__tag .star {
-            margin-left: 5px;
             cursor: pointer;
-            font-size: 21px;
-            position: relative;
-            top: -5px;
         }
-
         .tagify__tag .star.checked {
-            color: #ef1632;
+            color: #eab308 !important;
+        }
+        .tagify__tag__removeBtn,
+        .tagify__tag__removeBtn::before,
+        .tagify__tag__removeBtn::after {
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            content: none !important;
+        }
+        .tagify__tag__removeBtn:hover {
+            background: rgba(37,99,235,.28) !important;
+            color: #1d4ed8 !important;
+        }
+        /* Location autocomplete dropdown is appended to <body> (appendTarget:document.body)
+           so it needs a z-index above the filter drawer (z-index:1200) and its backdrop. */
+        body > .tagify__dropdown {
+            z-index: 1400 !important;
         }
 
         /* ============================================================
@@ -160,19 +170,6 @@
         .cvh-tab.stage-rejected.active    { color: #ff0202; background: rgba(255,2,2,.10); }
         @media (max-width: 768px) { .cvh-tabs { flex-wrap: wrap; } .cvh-tab { flex: 1 1 33%; border-right: none; border-bottom: 1px solid #f1f5f9; padding: 8px 4px; } .cvh-tab-label { font-size: 10.5px; } }
 
-        /* Search + filter — own card, sized to match the compact search bar already used
-           on the Bench Candidates page (.jw-card/.dash-search there: 34px controls, 8px
-           card padding) rather than the taller Metronic "lg" defaults this row had. */
-        .cvh-search-card { margin-bottom: 14px; border-radius: 10px; }
-        .cvh-search-card .card-body { padding: 8px 10px; }
-        .cvh-search-card .custm-bg { margin: 0 !important; flex-wrap: nowrap !important; }
-        .cvh-search-card .form-control,
-        .cvh-search-card .form-select,
-        .cvh-search-card .btn { height: 34px !important; min-height: 34px !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 12px !important; border-radius: 8px !important; }
-        .cvh-search-wrap { padding-left: 0 !important; }
-        .cvh-search-wrap .cvh-search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px; pointer-events: none; z-index: 2; }
-        .cvh-search-wrap .form-control { padding-left: 30px !important; }
-
         /* Selected-rows action bar */
         .cvh-selection-bar { display: none; align-items: center; gap: 14px; background: #fff; border: 1px solid #e5e9f2; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-family: 'Poppins', sans-serif; flex-wrap: wrap; }
         .cvh-selection-bar.show { display: flex; }
@@ -192,6 +189,214 @@
            (resources/views/service_company/applicationoffer/index.blade.php .ot-page-head) */
         .cvh-page-title, .cvh-page-title a { font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important; font-family: 'Poppins', sans-serif; }
         .cvh-page-sub { font-size: 11px; color: #64748b; margin: 2px 0 0; font-family: 'Poppins', sans-serif; }
+
+        /* ==================================================================
+           Enterprise toolbar redesign: search / sort / filter (cvh-tb-*).
+           Mirrors the Similar Candidates / Bench Requests toolbar pattern —
+           #kt_tagify_2 is a plain free-text field (name/skills/role/location),
+           the Filter button is the drawer's only entry point, and the Active
+           Filters card below is the single place structured filters summarize.
+        ================================================================== */
+        .cvh-tb-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        .cvh-tb-search-wrap,
+        .cvh-tb-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+        .cvh-tb-search-wrap { flex: 1 1 auto; min-width: 0; }
+        .cvh-tb-sort-wrap { flex-shrink: 0; width: 220px; position: relative; }
+        .cvh-tb-search-icon,
+        .cvh-tb-sort-icon { color: #99a1b7; flex-shrink: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+        .cvh-tb-search-icon svg,
+        .cvh-tb-sort-icon svg { flex-shrink: 0; display: block; }
+        .cvh-tb-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13.5px;
+            line-height: 42px;
+            height: 42px;
+        }
+        /* Custom Sort control — the real <select id="sortingfilter"> stays hidden
+           underneath purely so filtersdataget()/fetchCandidates() keep reading it
+           unchanged; only the presentation is replaced with this button + panel. */
+        .cvh-tb-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .cvh-tb-sort-btn:focus { outline: none; }
+        .cvh-tb-sort-btn span { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cvh-tb-sort-btn .chevron { flex-shrink: 0; color: #99a1b7; transition: transform .15s; }
+        .cvh-tb-sort-btn.open .chevron { transform: rotate(180deg); }
+        .cvh-tb-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .cvh-tb-sort-item { padding: 9px 12px; font-size: 12.5px; font-weight: 500; color: #3f4254; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+        .cvh-tb-sort-item:hover { background: #f8f9fb; }
+        .cvh-tb-sort-item.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+        .cvh-tb-filter-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+            padding: 0 16px !important;
+            flex-shrink: 0;
+            background: #2563eb !important;
+            border: 1px solid #2563eb !important;
+            color: #fff !important;
+        }
+        .cvh-tb-filter-btn:hover { background: #1d4ed8 !important; }
+        @media (max-width: 992px) { .cvh-tb-sort-wrap { width: 160px; } }
+        @media (max-width: 768px) { .cvh-tb-search-wrap { flex-basis: 100%; } .cvh-tb-sort-wrap { width: 140px; } }
+
+        /* ==================================================================
+           Applied Filters summary card (cvh-af-*) — lives on the main page
+           above the results table, hidden until Apply Filters is clicked.
+        ================================================================== */
+        .cvh-af-card { border: 1px solid #eef0f4; border-radius: 14px; background: #fff; padding: 16px 18px; margin-bottom: 16px; font-family: 'Poppins', sans-serif; }
+        .cvh-af-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .cvh-af-title { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: #181c32; }
+        .cvh-af-count { background: #2563eb; color: #fff; font-size: 11px; font-weight: 700; border-radius: 50%; min-width: 19px; height: 19px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+        .cvh-af-clearall { font-size: 12px; font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .cvh-af-clearall:hover { color: #b91c1c; }
+        .cvh-af-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cvh-af-chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; border: 1px solid transparent; white-space: nowrap; }
+        .cvh-af-chip .ic { display: inline-flex; align-items: center; flex-shrink: 0; }
+        .cvh-af-chip .star { font-size: 12px; line-height: 1; }
+        .cvh-af-chip-remove { cursor: pointer; opacity: .55; display: inline-flex; align-items: center; margin-left: 2px; }
+        .cvh-af-chip-remove:hover { opacity: 1; }
+        .cvh-af-chip.cat-skill      { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
+        .cvh-af-chip.cat-location   { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+        .cvh-af-chip.cat-education  { background: #eff6ff; color: #2563eb; border-color: #dbeafe; text-transform: uppercase; }
+        .cvh-af-chip.cat-experience { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .cvh-af-chip.cat-salary     { background: #ecfeff; color: #0e7490; border-color: #cffafe; }
+        .cvh-af-chip.cat-notice     { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .cvh-af-chip.cat-status     { background: #fdf2f8; color: #be185d; border-color: #fbcfe8; }
+        .cvh-af-chip.cat-activity   { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+        .cvh-af-more { display: inline-flex; align-items: center; gap: 4px; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; cursor: pointer; }
+        .cvh-af-more:hover { background: #e5e7eb; }
+
+        /* ==================================================================
+           Filter drawer (cvh-flt-*) — replaces the old #apptrackerfilter
+           Bootstrap modal. Force the drawer to a fixed, viewport-bound box so
+           only .cvh-flt-body scrolls internally.
+        ================================================================== */
+        #kt_cvtracker_filter_drawer.cvh-flt-drawer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: auto !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            z-index: 1200;
+        }
+        #cvh_flt_card.cvh-flt-card {
+            display: flex !important;
+            flex-direction: column !important;
+            font-family: 'Poppins', sans-serif;
+            position: relative !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+        }
+        .cvh-flt-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 20px 16px; border-bottom: 1px solid #eef0f4; flex-shrink: 0; }
+        .cvh-flt-header-icon { width: 40px; height: 40px; border-radius: 10px; background: #eef2ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cvh-flt-title { font-size: 17px; font-weight: 700; color: #181c32; margin: 0; }
+        .cvh-flt-count-pill { background: #2563eb; color: #fff; font-size: 11px; font-weight: 700; border-radius: 50%; min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+        .cvh-flt-subtitle { font-size: 12px; color: #7e8299; margin: 2px 0 0; }
+        .cvh-flt-close { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent; color: #7e8299; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cvh-flt-close:hover { background: #f1f5f9; color: #334155; }
+        .cvh-flt-activebar { padding: 12px 0; border-bottom: 1px solid #eef0f4; }
+        .cvh-flt-activebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .cvh-flt-activebar-label { font-size: 12px; font-weight: 600; color: #181c32; }
+        .cvh-flt-clearall { font-size: 12px; font-weight: 500; color: #dc2626; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .cvh-flt-clearall:hover { color: #b91c1c; }
+        .cvh-flt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .cvh-flt-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; border-radius: 8px; padding: 5px 7px 5px 10px; font-size: 11.5px; font-weight: 500; }
+        .cvh-flt-chip.mandatory { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+        .cvh-flt-chip-remove { width: 15px; height: 15px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,0,0,.06); cursor: pointer; flex-shrink: 0; }
+        .cvh-flt-chip-remove:hover { background: rgba(0,0,0,.14); }
+        #cvh_flt_card .cvh-flt-body { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 4px 20px 16px; }
+        #cvh_flt_card .cvh-flt-header,
+        #cvh_flt_card .cvh-flt-footer { flex-shrink: 0 !important; }
+        .cvh-flt-section { padding: 16px 0; border-bottom: 1px solid #f1f2f6; }
+        .cvh-flt-section-last { border-bottom: none; }
+        .cvh-flt-section-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+        .cvh-flt-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cvh-flt-icon-blue { background: #eef2ff; color: #4f46e5; }
+        .cvh-flt-icon-green { background: #ecfdf5; color: #059669; }
+        .cvh-flt-icon-purple { background: #f5f3ff; color: #7c3aed; }
+        .cvh-flt-icon-amber { background: #fffbeb; color: #b45309; }
+        .cvh-flt-icon-rose { background: #fff1f2; color: #be123c; }
+        .cvh-flt-icon-pink { background: #fdf2f8; color: #be185d; }
+        .cvh-flt-icon-sky { background: #f0f9ff; color: #0369a1; }
+        .cvh-flt-section-title { font-size: 13.5px; font-weight: 600; color: #181c32; display: flex; align-items: center; gap: 6px; }
+        .cvh-flt-section-desc { font-size: 11.5px; color: #99a1b7; margin-top: 1px; }
+        .cvh-flt-badge-primary { font-size: 9.5px; font-weight: 600; color: #2563eb; background: #dbeafe; border-radius: 4px; padding: 1px 6px; }
+        .cvh-flt-mini-label { font-size: 11px; font-weight: 500; color: #7e8299; margin-bottom: 4px; display: block; }
+        .cvh-flt-salary-row { flex-wrap: nowrap; }
+        .cvh-flt-salary-row > [class^="col-"] { padding-left: 4px; padding-right: 4px; min-width: 0; }
+        .cvh-flt-salary-row .form-select,
+        .cvh-flt-salary-row .form-control { font-size: 11px; padding-left: 8px; padding-right: 8px; }
+        .cvh-flt-salary-row .form-select { padding-right: 20px; }
+        .cvh-flt-pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cvh-flt-pill-row .btn-check { position: absolute; opacity: 0; pointer-events: none; }
+        .cvh-flt-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid #e4e6ef; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 500; color: #3f4254; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
+        .cvh-flt-pill-row .btn-check:checked + .cvh-flt-pill { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+        .cvh-flt-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 20px; border-top: 1px solid #eef0f4; background: #f8f9fb; flex-shrink: 0; flex-wrap: wrap; }
+        .cvh-flt-footer-count { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .cvh-flt-footer-icon { width: 36px; height: 36px; border-radius: 8px; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cvh-flt-footer-number { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.2; }
+        .cvh-flt-footer-label { font-size: 10.5px; color: #7e8299; }
+        .cvh-flt-footer-actions { display: flex; gap: 6px; }
+        .cvh-flt-footer-actions .btn { font-size: 11.5px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; }
+        @media (max-width: 576px) {
+            .cvh-flt-footer { flex-direction: column; align-items: stretch; }
+            .cvh-flt-footer-actions { justify-content: stretch; }
+            .cvh-flt-footer-actions .btn { flex: 1 1 auto; justify-content: center; }
+        }
 
     </style>
     <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
@@ -360,760 +565,6 @@
         </div>
     </div>
 
-     <!--Start Popup-->
-     <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Filter</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"
-                        id="apptrackerfilter_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                viewBox="0 0 24 24" fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                    rx="1" transform="rotate(-45 6 17.3137)"></rect>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)"></rect>
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-                <div class="apptrackerfilter_body_content" id="">
-                    <div class="modal-body" style="padding: 2em;">
-                        <form id="createSchedule" class="ajax-form" method="post">
-                            <div class="d-flex flex-column mb-8">
-                                <label class="form-label required">Enter skills to filter candidate</label>
-                                <input class="form-control form-control-solid d-flex align-items-center"
-                                    name="kt_tagify_users" value="{{ @$default_skill }}" placeholder=""
-                                    id="kt_tagify_users" />
-                                <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-                                <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
-                                <script>
-                                   
-                                    const inputElm = document.querySelector('#kt_tagify_users');
-
-                                    const tagify = new Tagify(inputElm, {
-                                        templates: {
-                                            tag: function(tagData) {
-                                                tagData = tagData || {};
-                                                const value = tagData.value || '';
-                                                const isChecked = tagData.checked ? 'checked' : '';
-                                                return `
-                                            <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                                                <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                <div>
-                                                    <span class="star ${isChecked}">🟌</span>
-                                                    <span class="tagify__tag-text">${value}</span>
-                                                </div>
-                                            </tag>
-                                        `;
-                                            }
-                                        },
-                                        transformTag: function(tagData) {
-                                           if (!tagData.hasOwnProperty('checked')) {
-                                                tagData.checked = true; // ⭐ auto select
-                                            }
-                                            return tagData;
-                                        }
-                                    });
-
-                                    tagify.on('add', function(e) {
-
-                                        const tagElm = e.detail.tag;
-
-                                        setTimeout(() => {
-
-                                            // get correct data reference from Tagify
-                                            const tagData = tagify.getSetTagData(tagElm);
-
-                                            if (tagData) {
-                                                tagData.checked = false; // ✅ update real data
-                                            }
-
-                                            // update UI
-                                            const star = tagElm.querySelector('.star');
-                                            if (star) {
-                                                star.classList.remove('checked');
-                                            }
-
-                                            // sync everything
-                                            tagify.updateValueByDOMTags();
-
-                                        }, 200);
-
-                                    });
-
-                                    // ⭐ CLICK STAR TO TOGGLE
-                                    document.addEventListener('click', function(e) {
-
-                                        if (e.target.classList.contains('star')) {
-
-                                            const tagElm = e.target.closest('.tagify__tag');
-
-                                            // toggle UI
-                                            e.target.classList.toggle('checked');
-
-                                            // get correct tag data
-                                            const tagData = tagify.getSetTagData(tagElm);
-
-                                            if (tagData) {
-                                                tagData.checked = e.target.classList.contains('checked');
-                                                tagify.updateValueByDOMTags();
-                                            }
-                                        }
-                                    });
-
-
-                                    function autoclickstar() {
-                                        setTimeout(() => {
-                                            var starElement = document.querySelector('.star');
-                                            starElement.click();
-                                            setTimeout(() => {
-                                                starElement.click();
-                                            }, 200);
-                                        }, 500);
-                                    }
-
-                                    function debounceskill(func, delay) {
-                                        let timeoutskill;
-                                        return function(...args) {
-                                            clearTimeout(timeoutskill);
-                                            timeoutskill = setTimeout(() => func.apply(this, args), delay);
-                                        };
-                                    }
-                                                
-                                    const fetchSuggestionsSkills = debounceskill(function(query) {
-                                        $.ajax({
-                                            url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-                                            method: 'GET',
-                                            success: function(data) {
-                                                console.warn("Fetched Skill: ", data);
-
-                                                if (Array.isArray(data)) {
-                                                    tagify.settings.whitelist = data; // Update whitelist
-                                                    // tagify.dropdown.show(query); // Show suggestions
-                                                    tagify.dropdown.show.call(tagify);
-                                                } else {
-                                                    console.error("Invalid API response format: Expected array.");
-                                                }
-                                            },
-                                            error: function(err) {
-                                                console.error("Error fetching Skill:", err);
-                                            }
-                                        });
-                                    }, 200); 
-
-                                    // Listen for user input to trigger API call
-                                    tagify.on('input', function(e) {
-                                        var query = e.detail.value.trim();
-                                        if (query.length < 1) return;
-                                        fetchSuggestionsSkills(query);
-                                    });
-                                    // new Tagify(inputElm);   
-                                </script>
-                                <!--<textarea class="form-control form-control-solid" rows="4" name=""
-                                    placeholder="Enter your Skills/Keywords..."></textarea>-->
-                            </div>
-
-                            <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <label class="form-label">Select location for candidate</label>
-                                    <input class="form-control form-control-solid"
-                                        value="" id="kt_tagify_location"
-                                        placeholder="Enter your Location..." />
-                                    <!--<input class="form-control form-control-solid" value="" name="tags" placeholder="Enter your Location...">-->
-                                    <script>
-                                        // The DOM elements you wish to replace with Tagify
-                                        var inputloc = document.querySelector("#kt_tagify_location");
-                                        var cities = @json($cities);
-                                        // Initialize Tagify script on the above inputs
-                                        var tagifylocation = new Tagify(inputloc, {
-                                            whitelist: [],
-                                            // enforceWhitelist: true, // Prevents users from adding custom values  
-                                            maxTags: 10,
-                                            dropdown: {
-                                                maxItems: 20, // <- mixumum allowed rendered suggestions
-                                                classname: "", // <- custom classname for this dropdown, so it could be targeted
-                                                enabled: 0, // <- show suggestions on focus
-                                                closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
-                                            }
-                                        });
-                                        // Prevent creating tags on blur or enter key
-                                        tagifylocation.on('input', function(e) {
-                                            tagifylocation.dropdown.show(); // show the dropdown immediately
-                                        });
-
-                                        // Create tags only on select
-                                        tagifylocation.on('dropdown:select', function(e) {
-                                            tagifylocation.addTags([e.detail.data.value]);
-                                        });
-                                        tagifylocation.on('add', function(e) {
-                                            // alert(cities);
-                                            // Remove the tag if it wasn't selected from the dropdown
-                                            // if (!cities.includes(e.detail.data.value)) {
-                                            //     setTimeout(() => {
-                                            //         tagifylocation.removeTag(e.detail.data.value);
-                                            //     }, 500);
-
-                                            // }
-                                        });
-
-
-                                        function debounce(func, delay) {
-                                            let timer;
-                                            return function (...args) {
-                                                clearTimeout(timer);
-                                                timer = setTimeout(() => func.apply(this, args), delay);
-                                            };
-                                        }
-
-                                            // Debounced function to fetch suggestions
-                                        const fetchSuggestions = debounce(function(query) {
-                                            $.ajax({
-                                                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-                                                method: 'GET',
-                                                success: function(data) {
-                                                    console.warn("Fetched Cities: ", data);
-
-                                                    if (Array.isArray(data)) {
-                                                        tagifylocation.settings.whitelist = data; // Update whitelist
-                                                        // tagifylocation.dropdown.show(query); // Show suggestions
-                                                        tagifylocation.dropdown.show.call(tagifylocation);
-                                                    } else {
-                                                        console.error("Invalid API response format: Expected array.");
-                                                    }
-                                                },
-                                                error: function(err) {
-                                                    console.error("Error fetching cities:", err);
-                                                }
-                                            });
-                                        }, 200); // 300ms delay
-
-                                        // Listen for user input to trigger API call
-                                        tagifylocation.on('input', function(e) {
-                                            var query = e.detail.value.trim();
-                                            if (query.length < 2) return;
-                                            fetchSuggestions(query);
-                                        });
-
-                                        setTimeout(() => {
-                                        var city = "{{@$default_loc}}";
-                                        if(city !=''){
-                                            var cityName = city.split(" | ")[0]; // Get the first part (Ballia)
-                                            fetchSuggestions(cityName);
-                                        }
-                                        }, 100);
-                                        setTimeout(() => {
-                                            var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
-                            
-                                            if (defaultLocation) {
-                                                tagifylocation.addTags([defaultLocation]); // Add the default location as a tag
-                                                tagifylocation.dropdown.hide();
-                                            }
-                                        }, 5000); // 3 seconds delay
-
-                                    </script>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-column mb-8">
-                                <label class="form-label">Education</label>
-
-
-                                <input class="form-control form-control-solid" value=""
-                                    id="kt_tagify_education" placeholder="About Education..." />
-                                <!--<input class="form-control form-control-solid" value="" name="tags" placeholder="Enter your Location...">-->
-                                <script>
-                                    // The DOM elements you wish to replace with Tagify
-                                    var inputdeducation = document.querySelector("#kt_tagify_education");
-                                    var qualification = @json($qualificationTag);
-                                    var tagifyqualification = new Tagify(inputdeducation, {
-                                        whitelist: qualification,
-                                        maxTags: 10,
-                                        dropdown: {
-                                            maxItems: 20, // <- mixumum allowed rendered suggestions
-                                            classname: "", // <- custom classname for this dropdown, so it could be targeted
-                                            enabled: 0, // <- show suggestions on focus
-                                            closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
-                                        }
-                                    });
-
-                                    // Prevent creating tags on blur or enter key
-                                    tagifyqualification.on('input', function(e) {
-                                        tagifyqualification.dropdown.show(); // show the dropdown immediately
-                                    });
-
-                                    // Create tags only on select
-                                    tagifyqualification.on('dropdown:select', function(e) {
-                                        tagifyqualification.addTags([e.detail.data.value]);
-                                    });
-                                    tagifyqualification.on('add', function(e) {
-                                        // alert(qualification);
-                                        // Remove the tag if it wasn't selected from the dropdown
-                                        if (!qualification.includes(e.detail.data.value)) {
-                                            setTimeout(() => {
-                                                tagifyqualification.removeTag(e.detail.data.value);
-                                            }, 200);
-
-                                        }
-                                    });
-                                </script>
-                            </div>
-
-
-
-                            <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                <div class="col-lg-6">
-                                    <label class="form-label required">Minimum Experience in years:</label>
-                                    <select class="form-select form-select-solid" name="min_exp"
-                                        id="min_exp">
-                                        <option value="" selected="">Select
-                                            Experience</option>
-                                        <option value="0">Freshers
-                                        </option>
-                                        @for ($i = 1; $i <= 30; $i++)
-                                            <option value="{{ $i }}">{{ $i }}
-                                                &nbsp; Year{{ $i >= 1 ? 's' : '' }}</option>
-                                        @endfor
-                                    </select>
-                                    <div class="fv-plugins-message-container"></div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <label class="form-label required">Maximum Experience in years:</label>
-                                    <select class="form-select form-select-solid" name="max_exp"
-                                        id="max_exp">
-                                        <option value="" selected="">Select
-                                            Experience</option>
-                                        <option value="0">Freshers
-                                        </option>
-                                        @for ($i = 1; $i <= 30; $i++)
-                                            <option value="{{ $i }}">{{ $i }}
-                                                &nbsp; Year{{ $i >= 1 ? 's' : '' }}</option>
-                                        @endfor
-                                    </select>
-                                    <div class="fv-plugins-message-container" id="experience_error" style="color: red !important;text-align: center;"></div>
-                                </div>
-                            </div>
-
-                            <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                <div class="col-lg-12">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="row">
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">Currency</label>
-                                                    <select class="form-select form-select-solid"
-                                                        arial-label="Select Currency" name="min_salary_currency"
-                                                        id="min_salary_currency">
-                                                        <option value="">Select currency</option>
-                                                        <option value="0">INR</option>
-                                                        <option value="1">EUR</option>
-                                                        <option value="2">JPY</option>
-                                                        <option value="3">GBP</option>
-                                                        <option value="4">USD</option>
-                                                        <option value="5">AED</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">Mode</label>
-                                                    <select class="form-select form-select-solid"
-                                                        arial-label="Select Currency" name="sal_mode" id="sal_mode">
-                                                        <option value="">Select Mode</option>
-                                                        <option value="0">Annual</option>
-                                                        <option value="1">Monthly</option>
-                                                        <option value="2">Hourly</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="row">
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">Minimum Salary:</label>
-                                                    <input type="number"
-                                                        class="form-control form-control-lg form-control-solid"
-                                                        name="min_sal" id="min_sal" placeholder="Enter min salary"
-                                                        value="">
-                                                    <div class="fv-plugins-message-container"></div>
-                                                    <span class="form-text text-muted minimum_salary_word"></span>
-                                                </div>
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">Maximum Salary:</label>
-                                                    <input type="number"
-                                                        class="form-control form-control-lg form-control-solid"
-                                                        name="max_sal" id="max_sal" placeholder="Enter max salary"
-                                                        value="">
-                                                    <div class="fv-plugins-message-container"></div>
-                                                </div>
-                                                <span class="form-text text-muted" id="salary_error" style="    color: red !important;text-align: center;"></span>
-                                            </div>
-                                        </div>
-
-
-
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-column mb-8 fv-row fv-plugins-icon-container">
-                                <label class="form-label required">Notice Period/Availability to join</label>
-                                <div class="d-flex flex-stack gap-5 mb-3">
-
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="1" id="app_int_notice1"
-                                            checked="&quot;checked&quot;">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice1">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">Any</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="8" id="app_int_notice8">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice8">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-6">Immediate</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    <div class="col-lg-3">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="9" id="app_int_notice9">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice9">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-6">Served
-                                                    Notice</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    <div class="col-lg-4">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="7" id="app_int_notice7">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice7">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-6">Currently
-                                                    Serving Notice</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-
-
-
-
-
-
-                                </div>
-                                <div class="d-flex flex-stack gap-5 mb-3">
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="2" id="app_int_notice2">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice2">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">0-15
-                                                    Days</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="3" id="app_int_notice3">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice3">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">1
-                                                    Month</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="4" id="app_int_notice4">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice4">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">2
-                                                    Months</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="5" id="app_int_notice5">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice5">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">3
-                                                    Months</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-                                    <div class="col-lg-3">
-                                        <input type="radio" class="btn-check app_int_notice"
-                                            name="app_int_notice" value="6" id="app_int_notice6">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_notice6">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-6">More than 3
-                                                    Months</span>
-                                            </span>
-                                        </label>
-                                    </div>
-
-
-
-                                </div>
-                            </div>
-
-                            <div class="d-flex flex-column mb-8">
-                                <label class="form-label required">Stages</label>
-                                <div class="row py-5 mb-3">
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="0" id="app_int_status0"
-                                            checked="&quot;checked&quot;">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status0">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">All</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="8" id="app_int_status8">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status8">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Inreview</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="1" id="app_int_status1">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status1">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Sourcing</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="2" id="app_int_status2">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status2">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Screening</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="3" id="app_int_status3">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status3">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Evaluation</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="5" id="app_int_status5">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status5">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">Offer</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                     <div class="col-lg-2 mt-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="6" id="app_int_status6">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status6">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">Joined</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2 mt-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="4" id="app_int_status4">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status4">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Negotiation</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2 mt-2">
-                                        <input type="radio" class="btn-check app_int_status"
-                                            name="app_int_status" value="7" id="app_int_status7">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_status7">
-                                            <span class="d-block fw-bold text-start">
-                                                <span
-                                                    class="text-dark-800 fw-bolder d-block fs-5">Rejected</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div class="d-flex flex-column mb-8">
-                                <label class="form-label required">Activity</label>
-                                <div class="row py-5 mb-3">
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="1" id="app_int_activity1"
-                                            checked="&quot;checked&quot;">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity1">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">All</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="2" id="app_int_activity2">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity2">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">30
-                                                    Days</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="3" id="app_int_activity3">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity3">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">60
-                                                    Days</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="4" id="app_int_activity4">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity4">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">90
-                                                    Days</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="5" id="app_int_activity5">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity5">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">180
-                                                    Days</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity"
-                                            name="app_int_activity" value="6" id="app_int_activity6">
-                                        <label
-                                            class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                            for="app_int_activity6">
-                                            <span class="d-block fw-bold text-start">
-                                                <span class="text-dark-800 fw-bolder d-block fs-5">1
-                                                    Year</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-
-
-
-
-                        </form>
-                    </div>
-                    <!--<div class="modal-footer" style="display: table;">-->
-                    <!--  <button type="button" class="btn btn-light-danger btn-sm p-1" data-dismiss="modal">Close <i class="fa fa-circle fa-sm"></i> </button>-->
-                    <!--  <button type="button" class="btn btn-light-success btn-sm p-1" id="" onclick="newUpdateJobstatus()">Update <i class="fa fa-spinner fa-sm"></i> </button>-->
-                    <!--</div>-->
-                    <div class="modal-footer flex-center">
-                        <div class="div1">
-                            <button type="button" id="" class="btn btn-secondary me-3"
-                                data-dismiss="modal">Close</button>
-                            <button type="button" id="changetextupdate" class="btn btn-primary"
-                                onclick="filtersdataget()">
-                                <span class="indicator-label changetextupdate">Submit</span></button>
-                        </div>
-                    </div>
-                    <script src="https://servicetesting.4bell.com/assets/node_modules/moment/moment.js?ver=1553620716"
-                        type="text/javascript"></script>
-                    <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716">
-                    </script>
-                    <script
-                        src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716"
-                        type="text/javascript"></script>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!--End Popup-->
-
-
     <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-3">
@@ -1152,85 +603,645 @@
                     @endforeach
                 </div>
 
-                {{-- ── Search + Filter (separate card) ── --}}
-                <div class="card cvh-search-card">
-                <div class="card-body">
-                <div class="d-flex align-items-center flex-wrap custm-bg mb-0">
-                    <div class="col-lg-4 d-flex align-items-center px-2 cvh-search-wrap" style="width:65%;position: relative;">
-                        <i class="fa fa-search cvh-search-ico"></i>
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                            value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onchange="filtersdataget()" />
-                            <div style="position: absolute; top: 0px; right: 36px;">
-                               <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
+                {{-- ── Search + Sort + Filter toolbar (cvh-tb-* — mirrors the Similar Candidates /
+                     Bench Requests enterprise toolbar redesign: bordered search box, a custom
+                     sort dropdown skinned over the real #sortingfilter <select> (single source
+                     of truth for filtersdataget()), and a primary Filter button with an
+                     active-count badge that opens the cvh-flt-* drawer below. ── --}}
+                <div class="card cvh-tb-card mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="cvh-tb-search-wrap" style="position: relative;">
+                                <span class="cvh-tb-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control cvh-tb-search-input" name="inputJobSearch"
+                                    value="" placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" autocomplete="off" />
+                                <div style="position: absolute; top: 50%; right: 12px; transform: translateY(-50%);">
+                                    <div id="loader_search" class="loader_search hidden_search"></div>
+                                </div>
                             </div>
-
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="sortingfilter" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                            onchange="filtersdataget()">
-                            <option value="Show All" selected="">Sort</option>
-                            <option value="1">Newest to Oldest (Upload Date)</option>
-                            <option value="2">Oldest to Newest (Upload Date)</option>
-                            <!--<option value="3">Low to High (Salary)</option>-->
-                            <!--<option value="4">High to Low (Salary)</option>-->
-                            <!--<option value="9">Notice Period (Immediate)</option>-->
-                            <option value="21">Notice Period (Immediate)</option>
-                            <option value="22">Notice Period (Serving)</option>
-                            <option value="7">High to Low (Experience) </option>
-                            <option value="8">Low to High (Experience)</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                        <button type="button"
-                            class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end"
-                            data-bs-toggle="modal" data-bs-target="#apptrackerfilter">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                        fill="black"></path>
-                                </svg>
-                            </span>
-                            Filter
-                        </button>
-                    </div>
-
-                    <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                            id="country" data-dropdown-css-class="w-150px"
-                            data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
-                            style="border: 1px solid #ffffff;" onchange="filtersdataget()">
-                            <option value="" selected="selected">Location</option>
-                            @if (@$countries)
-                                @foreach ($countries as $val_co)
-                                    <option value="{{ $val_co->id }}">{{ $val_co->country_name }}</option>
-                                @endforeach
-                            @endif
-
-                        </select>
-                    </div>
-                    <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-                        <button type="button"
-                            class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4"
-                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                        fill="black"></path>
-                                </svg>
-                            </span>
-                            Filter
-                        </button>
+                            <div class="cvh-tb-sort-wrap" id="cvh_sort_wrap">
+                                <span class="cvh-tb-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="cvh-tb-sort-btn" id="cvh_sort_btn">
+                                    <span id="cvh_sort_label">Sort</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
+                                    id="sortingfilter" data-dropdown-css-class="w-150px" style="display:none;"
+                                    onchange="filtersdataget()">
+                                    <option value="Show All" selected="">Sort</option>
+                                    <option value="1">Newest to Oldest (Upload Date)</option>
+                                    <option value="2">Oldest to Newest (Upload Date)</option>
+                                    <option value="21">Notice Period (Immediate)</option>
+                                    <option value="22">Notice Period (Serving)</option>
+                                    <option value="7">High to Low (Experience) </option>
+                                    <option value="8">Low to High (Experience)</option>
+                                    <option value="30">Best Match</option>
+                                </select>
+                                <div class="cvh-tb-sort-panel d-none" id="cvh_sort_panel"></div>
+                            </div>
+                            <button type="button" id="kt_cvtracker_filter_toggle"
+                                class="btn cvh-tb-filter-btn position-relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span>Filter<span id="cvh_filter_count_text"></span></span>
+                                <span class="badge badge-circle badge-primary cvh-tb-count-badge d-none" id="cvh_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                {{-- ── Applied Filters summary card — hidden until Apply Filters is clicked ── --}}
+                <div class="cvh-af-card d-none" id="cvh_applied_card">
+                    <div class="cvh-af-head">
+                        <span class="cvh-af-title">
+                            Active Filters
+                            <span class="cvh-af-count" id="cvh_applied_count">0</span>
+                        </span>
+                        <a href="javascript:void(0);" class="cvh-af-clearall" id="cvh_applied_clear_all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                            Clear All
+                        </a>
+                    </div>
+                    <div class="cvh-af-chips" id="cvh_applied_chips"></div>
                 </div>
+                {{-- ── End Applied Filters summary card ── --}}
+
+                {{-- ── Filter Drawer (cvh-flt-* — right-side Metronic drawer, replaces the old
+                     #apptrackerfilter Bootstrap modal). Every field id/name below is unchanged
+                     from the previous modal — fetchCandidates() and the shared backend
+                     allcandidates() controller method read these exact same ids. ── --}}
+                <div id="kt_cvtracker_filter_drawer" class="bg-body cvh-flt-drawer" data-kt-drawer="true" data-kt-drawer-name="cvtracker-filter"
+                    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+                    data-kt-drawer-width="{default:'92%', 'sm': '80%'}" data-kt-drawer-direction="end"
+                    data-kt-drawer-toggle="#kt_cvtracker_filter_toggle" data-kt-drawer-close="#kt_cvtracker_filter_close">
+                    <div id="cvh_flt_card" class="card shadow-none rounded-0 w-100 h-100 cvh-flt-card">
+                        <!--begin::Header-->
+                        <div class="cvh-flt-header">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="cvh-flt-header-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                </span>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h3 class="cvh-flt-title">Filter Candidates</h3>
+                                        <span class="cvh-flt-count-pill" id="cvh_header_count">0</span>
+                                    </div>
+                                    <p class="cvh-flt-subtitle">Refine your search and find the best talent</p>
+                                </div>
+                            </div>
+                            <button type="button" class="cvh-flt-close" id="kt_cvtracker_filter_close" title="Close">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <!--end::Header-->
+
+                        <!--begin::Body-->
+                        <div class="cvh-flt-body">
+                            <form id="createSchedule" class="ajax-form" method="post">
+
+                                <!--begin::Active filters — inside scroll area so it flows with the sections -->
+                                <div class="cvh-flt-activebar d-none" id="cvh_active_bar">
+                                    <div class="cvh-flt-activebar-head">
+                                        <span class="cvh-flt-activebar-label">Active Filters <span id="cvh_active_count">(0)</span></span>
+                                        <a href="javascript:void(0);" class="cvh-flt-clearall" id="cvh_clear_all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                            Clear All
+                                        </a>
+                                    </div>
+                                    <div class="cvh-flt-chips" id="cvh_active_chips"></div>
+                                </div>
+                                <!--end::Active filters-->
+
+                                <!--begin::Skills-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-blue">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Skills <span class="cvh-flt-badge-primary">Primary</span></div>
+                                            <div class="cvh-flt-section-desc">Add skills to find relevant candidates — click ★ to make a skill mandatory</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <input class="form-control form-control-solid d-flex align-items-center"
+                                            name="kt_tagify_users" value="{{ @$default_skill }}" placeholder=""
+                                            id="kt_tagify_users" />
+                                        <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+                                        <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
+                                        <script>
+                                            const inputElm = document.querySelector('#kt_tagify_users');
+
+                                            const tagify = new Tagify(inputElm, {
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        tagData = tagData || {};
+                                                        const value = tagData.value || '';
+                                                        const isChecked = tagData.checked ? 'checked' : '';
+                                                        const mandatoryClass = tagData.checked ? 'cvh-flt-mandatory-tag' : '';
+                                                        const starGlyph = tagData.checked ? '★' : '☆';
+                                                        const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
+                                                        const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
+                                                        const starColor = tagData.checked ? '#eab308' : '#94a3b8';
+                                                        const textColor = tagData.checked ? '#1d4ed8' : '#3730a3';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
+                                                        <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                    </tag>
+                                                `;
+                                                    }
+                                                },
+                                                transformTag: function(tagData) {
+                                                    tagData.checked = tagData.checked || false;
+                                                    return tagData;
+                                                }
+                                            });
+
+                                            // Toggle mandatory (star) on click of EITHER the star itself
+                                            // OR the keyword text next to it.
+                                            document.addEventListener('click', function(e) {
+                                                const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+                                                if (toggleTarget) {
+                                                    const tagElm = toggleTarget.closest('.tagify__tag');
+                                                    if (!tagElm) return;
+                                                    const starEl = tagElm.querySelector('.star');
+                                                    const textEl = tagElm.querySelector('.tagify__tag-text');
+                                                    if (!starEl || !textEl) return;
+                                                    const value = textEl.textContent;
+
+                                                    starEl.classList.toggle('checked');
+                                                    const nowChecked = starEl.classList.contains('checked');
+
+                                                    starEl.textContent = nowChecked ? '★' : '☆';
+                                                    starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
+                                                    tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
+                                                    tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
+                                                    textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
+                                                    tagElm.classList.toggle('cvh-flt-mandatory-tag', nowChecked);
+
+                                                    const tagData = tagify.value.find(tag => tag.value === value);
+                                                    if (tagData) {
+                                                        setTimeout(() => {
+                                                            tagData.checked = nowChecked;
+                                                            tagify.updateValueByDOMTags();
+                                                            updateCvActiveFiltersUI();
+                                                        }, 500);
+                                                    }
+                                                }
+                                            });
+
+                                            function debounceskill(func, delay) {
+                                                let timeoutskill;
+                                                return function(...args) {
+                                                    clearTimeout(timeoutskill);
+                                                    timeoutskill = setTimeout(() => func.apply(this, args), delay);
+                                                };
+                                            }
+
+                                            const fetchSuggestionsSkills = debounceskill(function(query) {
+                                                $.ajax({
+                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                                                    method: 'GET',
+                                                    success: function(data) {
+                                                        if (Array.isArray(data)) {
+                                                            tagify.settings.whitelist = data;
+                                                            tagify.dropdown.show.call(tagify);
+                                                        } else {
+                                                            console.error("Invalid API response format: Expected array.");
+                                                        }
+                                                    },
+                                                    error: function(err) {
+                                                        console.error("Error fetching Skill:", err);
+                                                    }
+                                                });
+                                            }, 200);
+
+                                            tagify.on('input', function(e) {
+                                                var query = e.detail.value.trim();
+                                                if (query.length < 1) return;
+                                                fetchSuggestionsSkills(query);
+                                            });
+                                            tagify.on('add', updateCvActiveFiltersUI);
+                                            tagify.on('remove', updateCvActiveFiltersUI);
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end::Skills-->
+
+                                <!--begin::Location-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-green">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Location</div>
+                                            <div class="cvh-flt-section-desc">Preferred cities or work locations</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <input class="form-control form-control-solid"
+                                            value="" id="kt_tagify_location"
+                                            placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                        <script>
+                                            var inputloc = document.querySelector("#kt_tagify_location");
+                                            var cities = @json($cities);
+                                            var tagifylocation = new Tagify(inputloc, {
+                                                whitelist: [],
+                                                maxTags: 10,
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        const value = tagData.value || '';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                    </tag>
+                                                `;
+                                                    }
+                                                },
+                                                dropdown: {
+                                                    maxItems: 20,
+                                                    classname: "",
+                                                    enabled: 0,
+                                                    closeOnSelect: true,
+                                                    /* appendTarget prevents the dropdown from being
+                                                       clipped by .cvh-flt-body's overflow:hidden/auto —
+                                                       see the matching z-index rule on
+                                                       body > .tagify__dropdown above. */
+                                                    appendTarget: document.body
+                                                }
+                                            });
+                                            tagifylocation.on('dropdown:select', function(e) {
+                                                tagifylocation.addTags([e.detail.data.value]);
+                                            });
+                                            tagifylocation.on('add', updateCvActiveFiltersUI);
+                                            tagifylocation.on('remove', updateCvActiveFiltersUI);
+
+                                            function debounce(func, delay) {
+                                                let timer;
+                                                return function (...args) {
+                                                    clearTimeout(timer);
+                                                    timer = setTimeout(() => func.apply(this, args), delay);
+                                                };
+                                            }
+
+                                            const fetchSuggestions = debounce(function(query) {
+                                                $.ajax({
+                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+                                                    method: 'GET',
+                                                    success: function(data) {
+                                                        if (Array.isArray(data)) {
+                                                            tagifylocation.settings.whitelist = data;
+                                                            tagifylocation.dropdown.show.call(tagifylocation);
+                                                        } else {
+                                                            console.error("Invalid API response format: Expected array.");
+                                                        }
+                                                    },
+                                                    error: function(err) {
+                                                        console.error("Error fetching cities:", err);
+                                                    }
+                                                });
+                                            }, 200);
+
+                                            tagifylocation.on('input', function(e) {
+                                                var query = e.detail.value.trim();
+                                                if (query.length < 2) return;
+                                                fetchSuggestions(query);
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end::Location-->
+
+                                <!--begin::Education-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-purple">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Education</div>
+                                            <div class="cvh-flt-section-desc">Highest qualification</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <input class="form-control form-control-solid" value=""
+                                            id="kt_tagify_education" placeholder="About Education..." />
+                                        <script>
+                                            var inputdeducation = document.querySelector("#kt_tagify_education");
+                                            var qualification = @json($qualificationTag);
+                                            var tagifyqualification = new Tagify(inputdeducation, {
+                                                whitelist: qualification,
+                                                maxTags: 10,
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        const value = tagData.value || '';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;text-transform:uppercase;">
+                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                    </tag>
+                                                `;
+                                                    }
+                                                },
+                                                dropdown: {
+                                                    maxItems: 20,
+                                                    classname: "",
+                                                    enabled: 0,
+                                                    closeOnSelect: false
+                                                }
+                                            });
+
+                                            tagifyqualification.on('dropdown:select', function(e) {
+                                                tagifyqualification.addTags([e.detail.data.value]);
+                                            });
+                                            tagifyqualification.on('add', function(e) {
+                                                if (!qualification.includes(e.detail.data.value)) {
+                                                    setTimeout(() => {
+                                                        tagifyqualification.removeTag(e.detail.data.value);
+                                                    }, 200);
+                                                }
+                                                updateCvActiveFiltersUI();
+                                            });
+                                            tagifyqualification.on('remove', updateCvActiveFiltersUI);
+
+                                            tagifyqualification.on('input', function(e) {
+                                                var query = e.detail.value.trim();
+                                                if (query.length < 1) return;
+                                                tagifyqualification.dropdown.show(query);
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                                <!--end::Education-->
+
+                                <!--begin::Experience-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-green">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Experience (Years)</div>
+                                            <div class="cvh-flt-section-desc">Total work experience</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <label class="cvh-flt-mini-label">Minimum Experience</label>
+                                                <select class="form-select form-select-solid" name="min_exp" id="min_exp">
+                                                    <option value="" selected="">Select Experience</option>
+                                                    <option value="0">Freshers</option>
+                                                    @for ($i = 1; $i <= 30; $i++)
+                                                        <option value="{{ $i }}">{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                    @endfor
+                                                </select>
+                                                <div class="fv-plugins-message-container"></div>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="cvh-flt-mini-label">Maximum Experience</label>
+                                                <select class="form-select form-select-solid" name="max_exp" id="max_exp">
+                                                    <option value="" selected="">Select Experience</option>
+                                                    <option value="0">Freshers</option>
+                                                    @for ($i = 1; $i <= 30; $i++)
+                                                        <option value="{{ $i }}">{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                                    @endfor
+                                                </select>
+                                                <div class="fv-plugins-message-container" id="experience_error" style="color:red !important;text-align:center;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Experience-->
+
+                                <!--begin::Salary-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-amber">
+                                            <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Salary (CTC)</div>
+                                            <div class="cvh-flt-section-desc">Salary range with currency &amp; mode</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <div class="row g-2 cvh-flt-salary-row">
+                                            <div class="col-3">
+                                                <label class="cvh-flt-mini-label">Currency</label>
+                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
+                                                    <option value="">Select currency</option>
+                                                    <option value="0">INR</option>
+                                                    <option value="1">EUR</option>
+                                                    <option value="2">JPY</option>
+                                                    <option value="3">GBP</option>
+                                                    <option value="4">USD</option>
+                                                    <option value="5">AED</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-3">
+                                                <label class="cvh-flt-mini-label">Mode</label>
+                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode" id="sal_mode">
+                                                    <option value="">Select Mode</option>
+                                                    <option value="0">Annual</option>
+                                                    <option value="1">Monthly</option>
+                                                    <option value="2">Hourly</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-3">
+                                                <label class="cvh-flt-mini-label">Min Salary</label>
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Enter min salary" value="">
+                                                <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted minimum_salary_word"></span>
+                                            </div>
+                                            <div class="col-3">
+                                                <label class="cvh-flt-mini-label">Max Salary</label>
+                                                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Enter max salary" value="">
+                                                <div class="fv-plugins-message-container"></div>
+                                                <span class="form-text text-muted maximum_salary_word"></span>
+                                            </div>
+                                            <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Salary-->
+
+                                <!--begin::Notice Period-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-rose">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Notice Period / Availability</div>
+                                            <div class="cvh-flt-section-desc">Time to join</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <div class="cvh-flt-pill-row" data-radio-group="app_int_notice">
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="1" id="app_int_notice1" checked>
+                                            <label class="cvh-flt-pill" for="app_int_notice1">Any</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="8" id="app_int_notice8">
+                                            <label class="cvh-flt-pill" for="app_int_notice8">Immediate</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="2" id="app_int_notice2">
+                                            <label class="cvh-flt-pill" for="app_int_notice2">0-15 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="3" id="app_int_notice3">
+                                            <label class="cvh-flt-pill" for="app_int_notice3">1 Month</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="4" id="app_int_notice4">
+                                            <label class="cvh-flt-pill" for="app_int_notice4">2 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="5" id="app_int_notice5">
+                                            <label class="cvh-flt-pill" for="app_int_notice5">3 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="6" id="app_int_notice6">
+                                            <label class="cvh-flt-pill" for="app_int_notice6">More than 3 Months</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="9" id="app_int_notice9">
+                                            <label class="cvh-flt-pill" for="app_int_notice9">Served Notice Period</label>
+
+                                            <input type="radio" class="btn-check app_int_notice" name="app_int_notice" value="7" id="app_int_notice7">
+                                            <label class="cvh-flt-pill" for="app_int_notice7">Currently Serving Notice</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Notice Period-->
+
+                                <!--begin::Stages-->
+                                <div class="cvh-flt-section">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-pink">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Stages</div>
+                                            <div class="cvh-flt-section-desc">Current stage in the pipeline</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <div class="cvh-flt-pill-row" data-radio-group="app_int_status">
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="0" id="app_int_status0" checked>
+                                            <label class="cvh-flt-pill" for="app_int_status0">All</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="8" id="app_int_status8">
+                                            <label class="cvh-flt-pill" for="app_int_status8">Inreview</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="1" id="app_int_status1">
+                                            <label class="cvh-flt-pill" for="app_int_status1">Sourcing</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="2" id="app_int_status2">
+                                            <label class="cvh-flt-pill" for="app_int_status2">Screening</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="3" id="app_int_status3">
+                                            <label class="cvh-flt-pill" for="app_int_status3">Evaluation</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="5" id="app_int_status5">
+                                            <label class="cvh-flt-pill" for="app_int_status5">Offer</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="6" id="app_int_status6">
+                                            <label class="cvh-flt-pill" for="app_int_status6">Joined</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="4" id="app_int_status4">
+                                            <label class="cvh-flt-pill" for="app_int_status4">Negotiation</label>
+
+                                            <input type="radio" class="btn-check app_int_status" name="app_int_status" value="7" id="app_int_status7">
+                                            <label class="cvh-flt-pill" for="app_int_status7">Rejected</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Stages-->
+
+                                <!--begin::Activity-->
+                                <div class="cvh-flt-section cvh-flt-section-last">
+                                    <div class="cvh-flt-section-head">
+                                        <span class="cvh-flt-icon cvh-flt-icon-sky">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
+                                        </span>
+                                        <div>
+                                            <div class="cvh-flt-section-title">Activity</div>
+                                            <div class="cvh-flt-section-desc">Last active on JeroATS</div>
+                                        </div>
+                                    </div>
+                                    <div class="cvh-flt-section-body">
+                                        <div class="cvh-flt-pill-row" data-radio-group="app_int_activity">
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked>
+                                            <label class="cvh-flt-pill" for="app_int_activity1">All</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
+                                            <label class="cvh-flt-pill" for="app_int_activity2">30 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
+                                            <label class="cvh-flt-pill" for="app_int_activity3">60 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
+                                            <label class="cvh-flt-pill" for="app_int_activity4">90 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
+                                            <label class="cvh-flt-pill" for="app_int_activity5">180 Days</label>
+
+                                            <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
+                                            <label class="cvh-flt-pill" for="app_int_activity6">1 Year</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--end::Activity-->
+
+                            </form>
+                        </div>
+                        <!--end::Body-->
+
+                        <!--begin::Footer-->
+                        <div class="cvh-flt-footer">
+                            <div class="cvh-flt-footer-count">
+                                <span class="cvh-flt-footer-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </span>
+                                <div>
+                                    <div class="cvh-flt-footer-number" id="cvh_footer_number">0</div>
+                                    <div class="cvh-flt-footer-label">Candidates Match</div>
+                                </div>
+                            </div>
+                            <div class="cvh-flt-footer-actions">
+                                <button type="button" class="btn btn-sm btn-light" id="cvh_close_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                    Close
+                                </button>
+                                <button type="button" class="btn btn-sm btn-light" id="cvh_reset_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                                    Reset
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" id="cvh_apply_btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                        <!--end::Footer-->
+                    </div>
                 </div>
+                <!--End Filter Drawer-->
 
                 {{-- ── Stage Tabs (separate card, ES-backed counts) — sits directly above
                      the candidate list, below the search/filter bar. ── --}}
@@ -1330,7 +1341,14 @@
                 <div class="card">
                     <div class="card-body pt-3 px-5" style="position: relative">
                         @if (in_array('view_job_applications', $userPermissions))
-                           <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                           {{-- Circle loader only (Bootstrap/Metronic's own spinner-border) — no text
+                                label. position:fixed + viewport-centered (not absolute/inset:0 relative
+                                to .card-body): the card body's height grows with the candidate list, so
+                                centering "within the card" could place the spinner well below the
+                                visible viewport on a long list or when scrolled. --}}
+                           <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                               <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                           </div>
                             <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
                                 id="myTable">
                                 <thead>
@@ -1758,26 +1776,23 @@
 
         var table;
         
-        document.getElementById('kt_tagify_2').addEventListener('keyup', function() {
-               fetchCandidates();
+        // Free-text search box: Enter re-runs the same fetchCandidates() call the
+        // sort dropdown and pagination already use — no separate endpoint, and no
+        // auto-apply on every keystroke/blur (previously fired fetchCandidates() on
+        // every keyup, and again onchange/blur — both removed in favor of this
+        // single Enter-triggered handler, matching the rest of the redesigned pages).
+        $(document).on('keydown', '#kt_tagify_2', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                fetchCandidates();
+            }
         });
 
         function filtersdataget() {
-            $('.changetextupdate').text('Searching....!');
-            setTimeout(() => {
-                // tableLoad('load');
-                fetchCandidates();
-            }, 1000);
-            var $this = $('#apptrackerfilter');
-            // $this.fadeOut(2000, function() {
-            $this.modal('hide');
-            // });
-            setTimeout(() => {
-                $('#apptrackerfilter_close').click();
-                $('.changetextupdate').text('Submit')
-            }, 2000);
-
-
+            // Used by the sort dropdown's onchange — the filter drawer itself has
+            // its own Apply/Reset buttons that call fetchCandidates() directly,
+            // this just covers the sort-only auto-apply case.
+            fetchCandidates();
         }
 
         function tableLoad(type) {
@@ -2360,14 +2375,14 @@
         setCvTabsCardBorder($('.cvh-tab.active').attr('data-color'));
         function fetchCandidates(page = page_no, search = '') {
             var clientid = '1';
-           
+
+            $('.loadingMessage').css({ display: 'flex' });
             if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            
+
             // document.getElementById("loader_search").classList.remove("hidden");
             $.ajax({
                 url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${page}`,
@@ -2401,6 +2416,14 @@
                     localStorage.setItem('currentPage', 1);
                     $('#paginationcandidate').html(response.pagination);
                     updateCvHeroStats(response.candidateStats);
+                },
+                error: function(xhr) {
+                    // Never leave the loading overlay stuck or the list blank on
+                    // a failed request — surface what went wrong instead.
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    console.error('allcandidates failed:', xhr.status, xhr.responseText);
                 }
             });
         }
@@ -2447,5 +2470,490 @@
 
 
 
+    </script>
+    <script>
+        // Small top-right toast, auto-dismissing, pause-on-hover — SweetAlert2's own
+        // documented toast mode. Used only for filter Apply/Clear feedback; every other
+        // modal/confirmation dialog on this page (stage change, mass mail, etc.) is
+        // untouched.
+        const cvhToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2200,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        // Custom Sort dropdown. Reads options straight from the real #sortingfilter
+        // <select> (single source of truth) and keeps that select's value in sync so
+        // filtersdataget()/fetchCandidates() are unaffected — only the presentation of
+        // the option list changes, since a native <select>'s open dropdown can't be
+        // styled cross-browser.
+        function cvhRenderSortPanel() {
+            var $panel = $('#cvh_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="cvh-tb-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#cvh_sort_label').text(label);
+                        cvhCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function cvhOpenSortPanel() {
+            cvhRenderSortPanel();
+            $('#cvh_sort_panel').removeClass('d-none');
+            $('#cvh_sort_btn').addClass('open');
+        }
+        function cvhCloseSortPanel() {
+            $('#cvh_sort_panel').addClass('d-none');
+            $('#cvh_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#cvh_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#cvh_sort_panel').hasClass('d-none')) cvhOpenSortPanel();
+            else cvhCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#cvh_sort_wrap').length) cvhCloseSortPanel();
+        });
+    </script>
+    <script>
+        /* Drawer width = 80% of the actual content area (i.e. 20% less than the full
+           page width, excluding the vertical sidebar) — same sizing convention as the
+           other redesigned filter drawers on this app. Recalculated on resize and right
+           before the drawer opens, so it stays correct if the sidebar collapses/expands. */
+        function cvhSetDrawerWidth() {
+            var wrapper = document.getElementById('kt_wrapper');
+            var contentWidth = wrapper ? wrapper.getBoundingClientRect().width : window.innerWidth;
+            if (!contentWidth) contentWidth = window.innerWidth;
+            var drawerWidth = Math.round(contentWidth * 0.8);
+            var drawerEl = document.getElementById('kt_cvtracker_filter_drawer');
+            if (drawerEl) {
+                drawerEl.style.width = drawerWidth + 'px';
+            }
+        }
+        $(document).ready(cvhSetDrawerWidth);
+        $(window).on('resize', cvhSetDrawerWidth);
+        $(document).on('click', '#kt_cvtracker_filter_toggle', cvhSetDrawerWidth);
+
+        /* Metronic's base .drawer class ships its own (non-!important) "overflow: auto"
+           rule, loaded after this page's inline <style> block — stylesheet-only
+           overrides have proven unreliable here, so these are set as genuine inline
+           !important styles via JS, guaranteeing only .cvh-flt-body scrolls and the
+           header/active-filters/footer stay pinned. */
+        function cvhEnforceDrawerLayout() {
+            var drawerEl = document.getElementById('kt_cvtracker_filter_drawer');
+            var cardEl = document.getElementById('cvh_flt_card');
+            var bodyEl = cardEl ? cardEl.querySelector('.cvh-flt-body') : null;
+            var headerEl = cardEl ? cardEl.querySelector('.cvh-flt-header') : null;
+            var footerEl = cardEl ? cardEl.querySelector('.cvh-flt-footer') : null;
+            if (drawerEl) {
+                drawerEl.style.setProperty('overflow', 'hidden', 'important');
+                drawerEl.style.setProperty('position', 'fixed', 'important');
+                drawerEl.style.setProperty('top', '0', 'important');
+                drawerEl.style.setProperty('bottom', '0', 'important');
+                drawerEl.style.setProperty('height', '100vh', 'important');
+            }
+            if (cardEl) {
+                cardEl.style.setProperty('display', 'block', 'important');
+                cardEl.style.setProperty('position', 'relative', 'important');
+                cardEl.style.setProperty('overflow', 'hidden', 'important');
+                cardEl.style.setProperty('height', '100vh', 'important');
+                cardEl.style.setProperty('max-height', '100vh', 'important');
+            }
+            if (bodyEl) {
+                var headerH = headerEl ? headerEl.offsetHeight : 0;
+                var footerH = footerEl ? footerEl.offsetHeight : 0;
+                var available = Math.max(window.innerHeight - headerH - footerH, 100);
+                bodyEl.style.setProperty('position', 'absolute', 'important');
+                bodyEl.style.setProperty('left', '0', 'important');
+                bodyEl.style.setProperty('right', '0', 'important');
+                bodyEl.style.setProperty('top', headerH + 'px', 'important');
+                bodyEl.style.setProperty('height', available + 'px', 'important');
+                bodyEl.style.setProperty('max-height', available + 'px', 'important');
+                bodyEl.style.setProperty('overflow-y', 'auto', 'important');
+                bodyEl.style.setProperty('overflow-x', 'hidden', 'important');
+            }
+            if (footerEl) {
+                footerEl.style.setProperty('position', 'absolute', 'important');
+                footerEl.style.setProperty('left', '0', 'important');
+                footerEl.style.setProperty('right', '0', 'important');
+                footerEl.style.setProperty('bottom', '0', 'important');
+            }
+        }
+        $(document).ready(cvhEnforceDrawerLayout);
+        $(window).on('resize', cvhEnforceDrawerLayout);
+        $(document).on('click', '#kt_cvtracker_filter_toggle, #kt_cvtracker_filter_close', cvhEnforceDrawerLayout);
+
+        /* ------------------------------------------------------------------
+           Filter drawer glue: the Active Filters chip bar (inside the drawer,
+           previewing DRAFT edits) and the Applied Filters summary card (on the
+           main page, reflecting only the last-APPLIED state).
+        ------------------------------------------------------------------ */
+
+        // The min_exp/max_exp/min_sal/max_sal fields have no job-derived default on
+        // this page (CV Tracker is company-wide, not scoped to a single job) — they
+        // start genuinely blank. This baseline is still captured, matching the same
+        // pattern used on the job-scoped filter drawers elsewhere in the app, so an
+        // unchanged value never renders as a false "active filter" chip.
+        var cvhDefaultRange = {
+            minExp: $('#min_exp').val(), maxExp: $('#max_exp').val(),
+            minSal: $('#min_sal').val(), maxSal: $('#max_sal').val()
+        };
+
+        function updateCvActiveFiltersUI() {
+            var chips = [];
+
+            if (typeof tagify !== 'undefined') {
+                tagify.value.forEach(function(tag) {
+                    chips.push({
+                        label: tag.value,
+                        mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.value.forEach(function(tag) {
+                    chips.push({ label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+            if (typeof tagifyqualification !== 'undefined') {
+                tagifyqualification.value.forEach(function(tag) {
+                    chips.push({ label: String(tag.value).toUpperCase(), clear: function() { tagifyqualification.removeTags(tag.value); } });
+                });
+            }
+
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            var expChanged = (minExp !== '' && minExp !== cvhDefaultRange.minExp) || (maxExp !== '' && maxExp !== cvhDefaultRange.maxExp);
+            if (expChanged) {
+                chips.push({
+                    label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(cvhDefaultRange.minExp); $('#max_exp').val(cvhDefaultRange.maxExp); }
+                });
+            }
+
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            var salChanged = (minSal !== '' && minSal !== cvhDefaultRange.minSal) || (maxSal !== '' && maxSal !== cvhDefaultRange.maxSal);
+            if (salChanged) {
+                chips.push({
+                    label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(cvhDefaultRange.minSal); $('#max_sal').val(cvhDefaultRange.maxSal); }
+                });
+            }
+
+            var noticeEl = $('[name="app_int_notice"]:checked');
+            if (noticeEl.val() && noticeEl.val() !== '1') {
+                chips.push({
+                    label: noticeEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_notice1').prop('checked', true); }
+                });
+            }
+            var statusEl = $('[name="app_int_status"]:checked');
+            if (statusEl.val() && statusEl.val() !== '0') {
+                chips.push({
+                    label: statusEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_status0').prop('checked', true); }
+                });
+            }
+            var activityEl = $('[name="app_int_activity"]:checked');
+            if (activityEl.val() && activityEl.val() !== '1') {
+                chips.push({
+                    label: activityEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_activity1').prop('checked', true); }
+                });
+            }
+
+            var $chips = $('#cvh_active_chips').empty();
+            chips.forEach(function(c) {
+                var $chip = $('<span class="cvh-flt-chip"></span>').toggleClass('mandatory', !!c.mandatory);
+                if (c.mandatory) {
+                    $chip.append($('<span style="color:#eab308;"></span>').text('★ ')).append($('<span></span>').text(c.label));
+                } else {
+                    $chip.append($('<span></span>').text(c.label));
+                }
+                $chip.append($('<span class="cvh-flt-chip-remove">&times;</span>').on('click', function() {
+                    c.clear();
+                    updateCvActiveFiltersUI();
+                }));
+                $chips.append($chip);
+            });
+
+            var n = chips.length;
+            $('#cvh_active_bar').toggleClass('d-none', n === 0);
+            $('#cvh_active_count').text('(' + n + ')');
+            $('#cvh_header_count').text(n);
+            $('#cvh_count_badge').toggleClass('d-none', n === 0).text(n);
+            $('#cvh_filter_count_text').text(n > 0 ? ' (' + n + ')' : '');
+        }
+
+        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', function() {
+            updateCvActiveFiltersUI();
+            if (typeof cvhEnforceDrawerLayout === 'function') cvhEnforceDrawerLayout();
+        });
+        $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', updateCvActiveFiltersUI);
+
+        /* Applied Filters summary card (main page, above the results table). Reads the
+           exact same underlying sources as updateCvActiveFiltersUI() so the two never
+           disagree, just grouped/colored by category. Rendered on Apply/Reset/initial
+           load — not on every keystroke inside the drawer. */
+        var CVH_APPLIED_VISIBLE_CAP = 8;
+        var cvhAppliedExpanded = false;
+
+        function cvhCategoryIcon(cat) {
+            var paths = {
+                skill: '<path d="m8 6-6 6 6 6M16 6l6 6-6 6"/>',
+                location: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+                education: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>',
+                experience: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+                notice: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+                status: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/>',
+                activity: '<path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>'
+            };
+            if (cat === 'salary') {
+                return '<span style="font-size:11px;font-weight:700;line-height:1;">₹</span>';
+            }
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (paths[cat] || '') + '</svg>';
+        }
+
+        function cvhBuildAppliedItems() {
+            var items = [];
+            if (typeof tagify !== 'undefined') {
+                tagify.value.forEach(function(tag) {
+                    items.push({
+                        cat: 'skill', label: tag.value, mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.value.forEach(function(tag) {
+                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+            if (typeof tagifyqualification !== 'undefined') {
+                tagifyqualification.value.forEach(function(tag) {
+                    items.push({ cat: 'education', label: String(tag.value).toUpperCase(), clear: function() { tagifyqualification.removeTags(tag.value); } });
+                });
+            }
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            var expChanged = (minExp !== '' && minExp !== cvhDefaultRange.minExp) || (maxExp !== '' && maxExp !== cvhDefaultRange.maxExp);
+            if (expChanged) {
+                items.push({
+                    cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(cvhDefaultRange.minExp); $('#max_exp').val(cvhDefaultRange.maxExp); }
+                });
+            }
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            var salChanged = (minSal !== '' && minSal !== cvhDefaultRange.minSal) || (maxSal !== '' && maxSal !== cvhDefaultRange.maxSal);
+            if (salChanged) {
+                items.push({
+                    cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(cvhDefaultRange.minSal); $('#max_sal').val(cvhDefaultRange.maxSal); }
+                });
+            }
+            var noticeEl = $('[name="app_int_notice"]:checked');
+            if (noticeEl.val() && noticeEl.val() !== '1') {
+                items.push({
+                    cat: 'notice', label: noticeEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_notice1').prop('checked', true); }
+                });
+            }
+            var statusEl = $('[name="app_int_status"]:checked');
+            if (statusEl.val() && statusEl.val() !== '0') {
+                items.push({
+                    cat: 'status', label: statusEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_status0').prop('checked', true); }
+                });
+            }
+            var activityEl = $('[name="app_int_activity"]:checked');
+            if (activityEl.val() && activityEl.val() !== '1') {
+                items.push({
+                    cat: 'activity', label: activityEl.next('.cvh-flt-pill').text(),
+                    clear: function() { $('#app_int_activity1').prop('checked', true); }
+                });
+            }
+            return items;
+        }
+
+        // Removing a chip from this card acts on already-APPLIED filters, so (unlike
+        // drawer edits) it re-fetches immediately instead of waiting for Apply, and
+        // refreshes the drawer's own snapshot so reopening it shows the same picture.
+        function cvhAppliedChipRemoved() {
+            fetchCandidates();
+            if (typeof updateCvActiveFiltersUI === 'function') updateCvActiveFiltersUI();
+            if (typeof cvhCaptureSnapshot === 'function') cvhCaptureSnapshot();
+            cvhRenderAppliedFiltersCard();
+        }
+
+        function cvhRenderAppliedFiltersCard() {
+            var items = cvhBuildAppliedItems();
+            var $chips = $('#cvh_applied_chips').empty();
+            var visible = cvhAppliedExpanded ? items : items.slice(0, CVH_APPLIED_VISIBLE_CAP);
+
+            visible.forEach(function(it) {
+                var $chip = $('<span class="cvh-af-chip"></span>').addClass('cat-' + it.cat);
+                $chip.append('<span class="ic">' + cvhCategoryIcon(it.cat) + '</span>');
+                if (it.mandatory) {
+                    $chip.append($('<span class="star"></span>').text('★'));
+                }
+                $chip.append($('<span></span>').text(it.label));
+                $chip.append(
+                    $('<span class="cvh-af-chip-remove">&times;</span>').on('click', function() {
+                        it.clear();
+                        cvhAppliedChipRemoved();
+                    })
+                );
+                $chips.append($chip);
+            });
+
+            if (!cvhAppliedExpanded && items.length > CVH_APPLIED_VISIBLE_CAP) {
+                var remaining = items.length - CVH_APPLIED_VISIBLE_CAP;
+                $chips.append(
+                    $('<span class="cvh-af-more"></span>').text('+' + remaining + ' More').on('click', function() {
+                        cvhAppliedExpanded = true;
+                        cvhRenderAppliedFiltersCard();
+                    })
+                );
+            }
+
+            $('#cvh_applied_card').toggleClass('d-none', items.length === 0);
+            $('#cvh_applied_count').text(items.length);
+        }
+
+        $(document).on('click', '#cvh_applied_clear_all', function() {
+            $('#cvh_clear_all').trigger('click');
+            fetchCandidates();
+            if (typeof cvhCaptureSnapshot === 'function') cvhCaptureSnapshot();
+            cvhAppliedExpanded = false;
+            cvhRenderAppliedFiltersCard();
+            cvhToast.fire({ icon: 'success', title: 'Filters cleared' });
+        });
+
+        $(document).on('click', '#cvh_clear_all', function() {
+            if (typeof tagify !== 'undefined') tagify.removeAllTags();
+            if (typeof tagifylocation !== 'undefined') tagifylocation.removeAllTags();
+            if (typeof tagifyqualification !== 'undefined') tagifyqualification.removeAllTags();
+            $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
+            updateCvActiveFiltersUI();
+        });
+
+        $(document).on('click', '#cvh_reset_btn', function() {
+            $('#cvh_clear_all').trigger('click');
+            fetchCandidates();
+            // Reset is an explicit apply of the cleared state, so make the cleared
+            // filters the new baseline — otherwise closing the drawer afterwards would
+            // "restore" the pre-reset values.
+            cvhCaptureSnapshot();
+            cvhAppliedExpanded = false;
+            cvhRenderAppliedFiltersCard();
+        });
+
+        /* ------------------------------------------------------------------
+           Draft-until-Apply behaviour. Nothing the user changes inside the drawer
+           takes effect until they click "Apply Filters". If they close the drawer by
+           any other means (Close button, header X, overlay, ESC) their unsaved edits
+           are discarded and every field reverts to the last-applied state.
+        ------------------------------------------------------------------ */
+        var cvhSnapshot = null;
+        var cvhApplying = false;
+
+        function cvhCaptureSnapshot() {
+            cvhSnapshot = {
+                skills: (typeof tagify !== 'undefined') ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
+                locations: (typeof tagifylocation !== 'undefined') ? tagifylocation.value.map(function(t) { return t.value; }) : [],
+                education: (typeof tagifyqualification !== 'undefined') ? tagifyqualification.value.map(function(t) { return t.value; }) : [],
+                min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
+                min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
+                min_salary_currency: $('#min_salary_currency').val(), sal_mode: $('#sal_mode').val(),
+                notice: $('[name="app_int_notice"]:checked').val(),
+                status: $('[name="app_int_status"]:checked').val(),
+                activity: $('[name="app_int_activity"]:checked').val()
+            };
+        }
+
+        function cvhRestoreSnapshot() {
+            if (!cvhSnapshot) return;
+            if (typeof tagify !== 'undefined') {
+                tagify.removeAllTags();
+                if (cvhSnapshot.skills.length) tagify.addTags(cvhSnapshot.skills);
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.removeAllTags();
+                if (cvhSnapshot.locations.length) tagifylocation.addTags(cvhSnapshot.locations);
+            }
+            if (typeof tagifyqualification !== 'undefined') {
+                tagifyqualification.removeAllTags();
+                if (cvhSnapshot.education.length) tagifyqualification.addTags(cvhSnapshot.education);
+            }
+            $('#min_exp').val(cvhSnapshot.min_exp);
+            $('#max_exp').val(cvhSnapshot.max_exp);
+            $('#min_sal').val(cvhSnapshot.min_sal);
+            $('#max_sal').val(cvhSnapshot.max_sal);
+            $('#min_salary_currency').val(cvhSnapshot.min_salary_currency);
+            $('#sal_mode').val(cvhSnapshot.sal_mode);
+            $('.minimum_salary_word, .maximum_salary_word').text('');
+            if (cvhSnapshot.notice) $('[name="app_int_notice"][value="' + cvhSnapshot.notice + '"]').prop('checked', true);
+            if (cvhSnapshot.status) $('[name="app_int_status"][value="' + cvhSnapshot.status + '"]').prop('checked', true);
+            if (cvhSnapshot.activity) $('[name="app_int_activity"][value="' + cvhSnapshot.activity + '"]').prop('checked', true);
+            updateCvActiveFiltersUI();
+        }
+
+        function cvhBindDrawerLifecycle() {
+            var el = document.getElementById('kt_cvtracker_filter_drawer');
+            if (!el || typeof KTDrawer === 'undefined' || !KTDrawer.getInstance) {
+                return setTimeout(cvhBindDrawerLifecycle, 300);
+            }
+            var inst = KTDrawer.getInstance(el);
+            if (!inst) { return setTimeout(cvhBindDrawerLifecycle, 300); }
+            inst.on('kt.drawer.shown', function() {
+                cvhApplying = false;
+                cvhCaptureSnapshot();
+                cvhEnforceDrawerLayout();
+                setTimeout(cvhEnforceDrawerLayout, 50);
+            });
+            inst.on('kt.drawer.after.hidden', function() {
+                if (!cvhApplying) cvhRestoreSnapshot();
+                cvhApplying = false;
+            });
+        }
+        $(document).ready(cvhBindDrawerLifecycle);
+
+        // Close discards unsaved edits (handled by the restore-on-hide hook above);
+        // Apply commits them: run the fetch, mark this close as an intentional apply
+        // so the hook does NOT revert, then close the drawer.
+        $(document).on('click', '#cvh_close_btn', function() {
+            $('#kt_cvtracker_filter_close').trigger('click');
+        });
+        $(document).on('click', '#cvh_apply_btn', function() {
+            cvhApplying = true;
+            fetchCandidates();
+            cvhAppliedExpanded = false;
+            cvhRenderAppliedFiltersCard();
+            cvhToast.fire({ icon: 'success', title: 'Filters applied' });
+            $('#kt_cvtracker_filter_close').trigger('click');
+        });
+
+        $(document).ready(function() {
+            setTimeout(updateCvActiveFiltersUI, 600);
+            // Seed a baseline snapshot from the server-provided defaults so a very
+            // first close-without-apply reverts correctly even if the shown event
+            // hasn't fired yet.
+            setTimeout(cvhCaptureSnapshot, 800);
+            setTimeout(cvhRenderAppliedFiltersCard, 700);
+        });
     </script>
 @endpush

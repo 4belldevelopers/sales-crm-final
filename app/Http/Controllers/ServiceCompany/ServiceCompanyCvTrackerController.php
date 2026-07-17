@@ -406,6 +406,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			// dd($chkAdminRole);
 
 		$sort = [];
+		// $requiredSkills is only ever assigned above inside the cus_search_skill
+		// branch — default it here so case 30 (Best Match) can safely check it
+		// even when no skill filter was entered.
+		$requiredSkills = $requiredSkills ?? [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -605,6 +609,53 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				break;
 			case 15:
 				$sort[] = ['of_offer_amount' => ['order' => 'desc', 'unmapped_type' => 'float']];
+				break;
+			case 30: // Best Match — CV Tracker has no single job to derive default
+				// skills from (unlike the AppTracker family), so this ranks by how
+				// many of the Skills filter's entered/starred terms ($requiredSkills,
+				// already computed above from cus_search_skill) each candidate
+				// matches. With no skills entered there's nothing to rank against,
+				// so it falls back to the same newest-first the default case uses.
+				if (empty($requiredSkills)) {
+					$sort[] = ['created_at' => ['order' => 'desc']];
+				} else {
+					$sort[] = [
+						'_script' => [
+							'type' => 'number',
+							'script' => [
+								'lang' => 'painless',
+								'source' => "
+									def candidateSkills = [];
+									if (params._source.containsKey('job_application_skills')) {
+										for (item in params._source.job_application_skills) {
+											if (item.containsKey('skills') && item.skills != null) {
+												candidateSkills.add(item.skills.toString().toLowerCase());
+											}
+										}
+									}
+									def designation = params._source.containsKey('current_designation') && params._source.current_designation != null
+										? params._source.current_designation.toString().toLowerCase() : '';
+									int matchCount = 0;
+									for (req in params.skills) {
+										boolean found = designation.contains(req);
+										if (!found) {
+											for (cand in candidateSkills) {
+												if (cand.contains(req)) { found = true; break; }
+											}
+										}
+										if (found) { matchCount += 1; }
+									}
+									return matchCount;
+								",
+								'params' => [
+									'skills' => array_values($requiredSkills)
+								]
+							],
+							'order' => 'desc'
+						]
+					];
+					$sort[] = ['created_at' => ['order' => 'desc']];
+				}
 				break;
 			default:
 				$sort[] = ['created_at' => ['order' => 'desc']];
