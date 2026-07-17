@@ -408,6 +408,45 @@
         .cvh-flt-select-dd-item:last-child { border-bottom: none; }
         .cvh-flt-select-dd-item:hover { background: #f8f9fb; }
         .cvh-flt-select-dd-item input { accent-color: #2563eb; }
+        /* Skills/Location suggestion dropdown — Tagify's own stable class names
+           (already relied on elsewhere in this file for the tag-chip template),
+           styled here purely at the CSS level so it works regardless of the
+           bundled Tagify version's JS template-hook support. */
+        .tagify__dropdown__wrapper {
+            border: 1px solid #e4e6ef !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 24px -4px rgba(24, 28, 50, 0.12), 0 2px 6px -2px rgba(24, 28, 50, 0.06) !important;
+            overflow: hidden;
+            margin-top: 6px !important;
+        }
+        .tagify__dropdown__itemsList {
+            max-height: 260px;
+            padding: 4px 0 !important;
+        }
+        .tagify__dropdown__item {
+            padding: 9px 14px !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            font-size: 12.5px;
+            color: #3f4254;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid #f5f6f8;
+            transition: background-color .12s ease;
+        }
+        .tagify__dropdown__item:last-child { border-bottom: none; }
+        .tagify__dropdown__item--active,
+        .tagify__dropdown__item:hover {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
+        .tagify__dropdown__item mark {
+            background: none;
+            color: inherit;
+            font-weight: 700;
+            padding: 0;
+        }
         .cvh-flt-pill-row .btn-check { position: absolute; opacity: 0; pointer-events: none; }
         .cvh-flt-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid #e4e6ef; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 500; color: #3f4254; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
         .cvh-flt-pill-row .btn-check:checked + .cvh-flt-pill { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 600; }
@@ -840,7 +879,7 @@
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
                                                             tagify.settings.whitelist = data;
-                                                            tagify.dropdown.show.call(tagify);
+                                                            tagify.dropdown.show.call(tagify, query);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
