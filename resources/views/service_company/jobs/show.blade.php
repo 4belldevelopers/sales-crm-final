@@ -1299,7 +1299,7 @@ $end_date   =	date('d-M-Y', $date);
                             @if(@$tabshow)
                                 @if($viewmore)
                                     @if($agencyView)
-                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}" data-toggle="modal" data-target="#status_stage">
+                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}">
                                         <i class="fas fa-sync-alt"></i>Change Status
                                         <i class="fas fa-chevron-down" style="margin-left:4px;font-size:10px;"></i>
                                     </button>
