@@ -12314,17 +12314,13 @@ END:VCALENDAR";
 				'query' => $boolQuerytBenchRequest,
 			]
 		];
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_REQUEST)) {
 			$total_RequestBenchApplications = 0;
 				$data = [];
 		}else{
 				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs BEFORE collapse
-				$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-				// Count of current page records (after pagination & collapse)
-				$records = $response['hits']['hits'] ?? [];
-				$total_RequestBenchApplications = count($records);
+				// This total reflects ALL matching docs, not just the current page.
+				$total_RequestBenchApplications = $response['hits']['total']['value'] ?? 0;
 		}
 		//####################################  END  Bench Talent Request
 

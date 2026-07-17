@@ -1126,7 +1126,7 @@
                                     </div>
                                     <div class="wcf-section-body">
                                         <input class="form-control form-control-solid d-flex align-items-center"
-                                            name="kt_tagify_users" value="{{ @$default_skill }}" placeholder=""
+                                            name="kt_tagify_users" value="" placeholder=""
                                             id="kt_tagify_users" />
                                         <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
                                         <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
@@ -1254,7 +1254,7 @@
                                     <div class="wcf-section-body">
                                         <div class="wcf-loc-inputwrap" id="wcf_loc_inputwrap">
                                             <input class="form-control form-control-solid"
-                                                value="{{ $default_loc }}" id="kt_tagify_location"
+                                                value="" id="kt_tagify_location"
                                                 placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
                                             <button type="button" class="wcf-loc-chevron" id="wcf_loc_chevron" title="Show suggestions">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -1343,22 +1343,6 @@
                                                 fetchSuggestions(query);
                                             });
 
-                                            setTimeout(() => {
-                                                var city = "{{ @$default_loc }}";
-                                                if (city !== '') {
-                                                    var cityName = city.split(" | ")[0];
-                                                    fetchSuggestions(cityName);
-                                                }
-                                            }, 100);
-                                            setTimeout(() => {
-                                                var defaultLocation = {!! json_encode(@$default_loc) !!};
-
-                                                if (defaultLocation) {
-                                                    tagifylocation.addTags([defaultLocation]);
-                                                    tagifylocation.dropdown.hide();
-                                                }
-                                                wcfUpdateActiveFiltersUI();
-                                            }, 5000);
                                         </script>
 
                                         <div class="d-flex mt-3">
@@ -1446,10 +1430,7 @@
                                             // Drives the same #kt_tagify_education hidden field the backend
                                             // already reads (JSON array of {value:"..."} objects, matched
                                             // against qualification_master.name).
-                                            var wcfEducationSelected = (function() {
-                                                var initial = @json($qualification ? [$qualification] : []);
-                                                return initial.filter(Boolean);
-                                            })();
+                                            var wcfEducationSelected = [];
 
                                             function wcfSyncEducationInput() {
                                                 var payload = wcfEducationSelected.map(function(v) { return { value: v }; });

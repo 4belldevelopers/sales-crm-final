@@ -881,15 +881,6 @@
                                 </select>
                                 <div class="brf-sort-panel d-none" id="brf_sort_panel"></div>
                             </div>
-                            <div style="width: 160px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="country" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" data-kt-table-widget-3="filter_status"
-                                    style="border: 1px solid #ffffff;" onchange="filtersdata()">
-                                    <option value="110" selected="selected">Location</option>
-                                    <option value="111">India</option>
-                                </select>
-                            </div>
                             <button type="button" id="kt_brf_filter_toggle"
                                 class="btn brf-filter-btn position-relative">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
@@ -2078,7 +2069,6 @@
             // never-set field and is no longer read at all.
             var inputSearch = $('#kt_tagify_2').val();
             var sortingfilter = $('#sortingfilter').val();
-            var country = $('#country').val();
             // New Skills Tagify field — JSON array of {value, checked},
             // matching what candidates_request_data_ajax() decodes as
             // cus_search via json_decode(..., true).
@@ -2103,7 +2093,6 @@
                 mstatus_id:mstatus_id,
                 search:inputSearch,
                 sortingfilter:sortingfilter,
-                country:country,
                 cus_search:(cus_search),
                 min_exp:min_exp,
                 max_exp:max_exp,
