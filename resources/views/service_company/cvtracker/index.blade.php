@@ -571,7 +571,7 @@
                                     fill="black" />
                             </svg>
                         </span>
-                        Export </button>
+                        Download </button>
                 </div>
 
                 <div class="before-event d-flex align-items-center position-relative my-1 me-3 custom_hide">
@@ -966,7 +966,7 @@
 
                                             const fetchSuggestions = debounce(function(query) {
                                                 $.ajax({
-                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+                                                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
@@ -1403,13 +1403,11 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                             </span> Copy
                         </a>
-                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
-                                </svg>
-                            </span> Export
-                        </button>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Download a print-ready PDF summary of the selected candidates">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                            </span> Download
+                        </a>
                     </div>
                     <button type="button" class="cvh-selection-close" id="cvh_selection_close" title="Clear selection">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1688,73 +1686,26 @@
 
 
 
+          // Replaces the old Excel/CSV export — downloads a single combined,
+          // print-ready PDF summary of just the checked candidates. Free/
+          // ungated (no coin deduction), unlike the export it replaces.
           $(document).on('click', '.exportRecord', function() {
 
-                var action_type = $(this).val();
-                var id = 0;
-                var url = "{{ route('service_company.candidateexport.candidate-job-applications', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var token = "{{ csrf_token() }}";
-
-                var arr = [];
-                var jobIdArr = [];
+                var ids = [];
                 $('.chk_list_item:checked').each(function() {
-
-                    var jobId = $(this).attr('data-jobId');
                     var wiseid = $(this).attr('data-wiseid');
-                    arr.push(wiseid);
-                    jobIdArr.push(jobId);
+                    if (wiseid) ids.push(wiseid);
                 });
 
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'GET',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr
-                    },
-                    beforeSend: function() {
-                        $('.exportRecord').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
+                if (ids.length === 0) {
+                    cvhToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
+                    return false;
+                }
 
-                        if (response.status == 'info') {
-                            Swal.fire("Success", ` ${response.message}`, "warning");
-                            $('.exportRecord').html(
-                                '<span class="svg-icon svg-icon-primary svg-icon-1x"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <rect x="0" y="0" width="24" height="24"></rect><path d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z" fill="#000000" fill-rule="nonzero"></path><path d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z" fill="#000000" opacity="0.3"></path></g></svg></span> Export '
-                                );
-                            return false;
-                        }
+                var url = "{{ route('service_company.cvtracker.print_selected_candidates') }}" +
+                    '?' + ids.map(function(id) { return 'ids[]=' + encodeURIComponent(id); }).join('&');
 
-                        window.location.href = response.file_url;
-                        //  return false;
-
-                        setTimeout(() => {
-                            $('.exportRecord').text('Export');
-                            $.ajax({
-                                type: 'GET',
-                                url: "{{ route('service_company.unlink.sample-job-applications', ':id') }}",
-                                data: {
-                                    '_token': token,
-                                    '_method': 'GET',
-                                    'file_name': response.file_name
-                                },
-                                beforeSend: function() {},
-                                success: function(response) {
-
-
-                                }
-                            });
-
-                        }, 2000);
-                    }
-                });
-
-
+                window.location.href = url;
             });
 
             $('#inputSearch').keyup(function() {
