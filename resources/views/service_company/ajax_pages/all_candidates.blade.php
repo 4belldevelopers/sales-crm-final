@@ -533,9 +533,9 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        htmlspecialchars(ucwords(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
+                        htmlspecialchars(strtoupper(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 15)) .
+                        strtoupper(mb_substr(@$row->qualification_name, 0, 15)) .
                         '</span>
                     </div>';
                 @endphp
