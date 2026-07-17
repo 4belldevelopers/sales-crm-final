@@ -12474,19 +12474,33 @@ END:VCALENDAR";
 
 	}
 	public static function whatsappConnectCheck($id){
-		
-		$instance 		= self :: getInstance($id);
-		$baseUrl 		= self :: baseUrl();
-		if(!$instance){
-           return null;
+
+		$instance = self::getInstance($id);
+		$baseUrl  = self::baseUrl();
+		if (!$instance) {
+            return null;
 		}
+
+        /* Check live connection state first — must be 'open' to count as connected */
+        try {
+            $stateResponse = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key')
+            ])->get($baseUrl . "/instance/connectionState/" . $instance->instance_name);
+            $stateData = $stateResponse->json();
+            $state = $stateData['instance']['state'] ?? $stateData['state'] ?? null;
+            if ($state !== 'open') {
+                return null;
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+
 		$responseConnected = Http::withHeaders([
 			'apikey' => config('services.evolution.global_key')
 		])->get(
 			$baseUrl."/instance/fetchInstances"
 		);
 		$dataConnected = $responseConnected->json();
-		// dd($dataConnected);
 		$connectedNumber = collect($dataConnected)
 			->firstWhere('name', @$instance->instance_name)['ownerJid'] ?? null;
 

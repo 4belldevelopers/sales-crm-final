@@ -344,54 +344,31 @@
         });
 
         $(document).on("click",".request-send", function(){
-           
-            var ele = $(this);
-            var jobId  = $(this).attr('data-jobId');
-            var conId  = $(this).attr('data-conId');
-            var elm = $(this);
-            
-            swal({
-                title: "Are you sure?",
-                text: " Do you want to Submit Candidate request on this Job?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: '#DD6B55',
-                confirmButtonText: 'Yes, I am sure!',
-                cancelButtonText: "No, cancel it!",
-                closeOnConfirm: false,
-                closeOnCancel: false
-            },
-            function(isConfirm){
-                if (isConfirm){
-                    var url   		=	"{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
-                    url     		=	url.replace(':id', jobId)+"?conId="+conId;
-                    var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-                    $.ajax({
-                                type  		: 'GET',
-                                url   		: url,
-                                success 	: function (response) {
-                                    if(response.status=='success'){
-                                    swal("Recommend!", "Candidates are successfully Recommend!", "success");
-                                    var jobId  = ele.attr('data-jobId');
-                                    var conId  = ele.attr('data-conId');
-                                    var matlaccess = 1;
-                                    var url   		=	"{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
-                                    url     		=	url.replace(':id', jobId)+"?conId="+conId+"?matlaccess="+matlaccess;                  
-                                    // tableLoad('load');
-                                    fetchCandidatesbench()
-                                    }else{
-                                    fetchCandidatesbench();
-                                    swal("Recommend Failed", response.message, "warning").then(function(){
-                                        fetchCandidatesbench();
-                                    });
-                                    }
-                                }
-                        });
+            var ele   = $(this);
+            var jobId = ele.attr('data-jobId');
+            var conId = ele.attr('data-conId');
 
-                } else {
+            ele.prop('disabled', true).text('Sending…');
 
-                    swal("Cancelled", "", "error");
+            var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
+            url = url.replace(':id', jobId) + "?conId=" + conId;
 
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    if (response.status == 'success') {
+                        showToastr('success', 'Bench request sent successfully!', 'Success');
+                        fetchCandidatesbench();
+                    } else {
+                        showToastr('error', response.message || 'Request failed.', 'Error');
+                        ele.prop('disabled', false).text('Send Bench Request');
+                        fetchCandidatesbench();
+                    }
+                },
+                error: function() {
+                    showToastr('error', 'Something went wrong.', 'Error');
+                    ele.prop('disabled', false).text('Send Bench Request');
                 }
             });
         });
