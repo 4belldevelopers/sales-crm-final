@@ -1290,25 +1290,15 @@ $(document).on('change', '#max_exp_bench', function () {
 $(document).on('click', '.deleteBtn', function (e){
     e.preventDefault();
     var userid = $(this).data('userid');
-    if(confirm("Are you sure?")){
-        $.post('/whatsapp/delete',{
-            _token:'{{ csrf_token() }}',
-             userid: userid
-        },function(res){
-            alert("Instance deleted");
-            // $('#deleteBtn').addClass('d-none');
-            $('.connectBtn').css('right', '10px');
-            $('.sendwhatsapp_connected_'+userid).addClass('d-none');
-            $('.sendwhatsapp_connect_'+userid).removeClass('d-none');
-            // if(res.status == 404){
-                // Change button class
-               
-                // Show connected number
-                $('#f_phone_'+userid).text(res.connectedNumberGet);
-
-            // }
-        });
-    }
+    $.post('{{ url('/whatsapp/delete') }}',{
+        _token:'{{ csrf_token() }}',
+         userid: userid
+    },function(res){
+        $('.connectBtn').css('right', '10px');
+        $('.sendwhatsapp_connected_'+userid).addClass('d-none');
+        $('.sendwhatsapp_connect_'+userid).removeClass('d-none');
+        $('#f_phone_'+userid).text(res.connectedNumberGet);
+    });
 });
 
     $(document).on('click', '.sendwhatsapp_panel', function (){
