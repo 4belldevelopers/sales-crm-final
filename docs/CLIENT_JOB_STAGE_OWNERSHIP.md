@@ -169,7 +169,33 @@ session's build order:
 
 ...and their client-job-flow mirrors (`dsimilar_candidates`, `dinternal_bench`,
 `clientapp`), which were built by replicating exactly these four onto the client-job
-pipeline.
+pipeline. **CV Tracker** (`cvtracker/index.blade.php` / `ServiceCompanyCvTrackerController::allcandidates()`)
+was later ported onto this same pattern too — it's the one page in the family that's
+**not job-scoped** (a global, company-wide candidate list) and whose `allcandidates()`
+method is shared with Offer Tracker/Joining Tracker via a `status_cus` branch — any
+future change to CV Tracker's filter/sort must not touch those other two branches.
+
+**Education field — one specific, easy-to-get-wrong sub-convention**: the Education
+filter is a **checkbox checklist dropdown** (a button showing "Any Education" or the
+selected values, opening a panel of checkboxes — `Any` / `Any Degree` / `Any Post
+Graduation` / `Any Graduation` / `10th` / `12th` / etc from `qualificationTag`), **not**
+a free-typed Tagify field — even though it drives the same hidden `#kt_tagify_education`
+JSON-array input the backend already reads. Multi-select (checking a specific value
+unchecks "Any" and vice versa). See `similar_candidates.blade.php`'s
+`simf_edu_dd`/`simfEducationSelected` for the canonical implementation — CV Tracker's
+port initially shipped with the old free-typed Tagify version by mistake; if you see
+that pattern anywhere else in this family, it's the wrong one and should be fixed to
+match this.
+
+**Two other easy-to-drop details when porting this pattern to a new page**, both found
+missing/broken on CV Tracker's first port and worth checking for on any future one:
+- Location Tagify's autocomplete: `tagifylocation.dropdown.show.call(tagifylocation, query)`
+  — the `query` argument is required (it's what the dropdown filters/matches against);
+  dropping it silently breaks the location suggestion dropdown.
+- Salary-in-words hints (`.minimum_salary_word`/`.maximum_salary_word` spans next to
+  `#min_sal`/`#max_sal`): needs the full `Ones`/`Teens`/`Tens` word-conversion helper set
+  and its `keyup` handlers copied over too, not just the empty `<span>` markup — see
+  `candidates_request.blade.php`'s `brfConvertToWords`/`brfCapitalizeFirstLetter`.
 
 **Both the design and the logic carry over as the default**, not just the visual
 layout:
