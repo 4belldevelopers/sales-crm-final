@@ -284,7 +284,7 @@
                 });
     });
 
-	function fetchCandidatesbench(page = 1, search = '') {
+	window.fetchCandidatesbench = function fetchCandidatesbench(page = 1, search = '') {
             var clientid = '1';
             if($('#kt_tagify_2').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
@@ -343,35 +343,7 @@
 
         });
 
-        $(document).on("click",".request-send", function(){
-            var ele   = $(this);
-            var jobId = ele.attr('data-jobId');
-            var conId = ele.attr('data-conId');
-
-            ele.prop('disabled', true).text('Sending…');
-
-            var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
-            url = url.replace(':id', jobId) + "?conId=" + conId;
-
-            $.ajax({
-                type: 'GET',
-                url: url,
-                success: function(response) {
-                    if (response.status == 'success') {
-                        showToastr('success', 'Bench request sent successfully!', 'Success');
-                        fetchCandidatesbench();
-                    } else {
-                        showToastr('error', response.message || 'Request failed.', 'Error');
-                        ele.prop('disabled', false).text('Send Bench Request');
-                        fetchCandidatesbench();
-                    }
-                },
-                error: function() {
-                    showToastr('error', 'Something went wrong.', 'Error');
-                    ele.prop('disabled', false).text('Send Bench Request');
-                }
-            });
-        });
+        /* .request-send handler is registered once in market-jobs.blade.php to avoid duplicate bindings */
 
        $(document).on("click",".changetextupdatebench", function(e){
         e.preventDefault();
