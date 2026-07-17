@@ -14451,6 +14451,7 @@ protected $elasticService;
 			$company_id = auth()->user()->company_id;
 			$companyOrClientName = $this->job && $this->job->client_id ? GeneralMethod::companyOrClientName($this->job->client_id) : null;
 			$this->clientName = @$companyOrClientName->companyOrclientName;
+			$this->clientTypeLabel = $companyOrClientName ? ((@$companyOrClientName->selfCompany == 1) ? 'Internal Client' : 'External Client') : null;
 
 			$this->jobLocation = DB::table('client_location_jobs')
 				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
