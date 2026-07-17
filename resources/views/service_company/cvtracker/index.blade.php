@@ -382,6 +382,32 @@
         .cvh-flt-salary-row .form-control { font-size: 11px; padding-left: 8px; padding-right: 8px; }
         .cvh-flt-salary-row .form-select { padding-right: 20px; }
         .cvh-flt-pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cvh-flt-select-dd { position: relative; }
+        .cvh-flt-select-dd-btn {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+            background: #f9f9f9; border: 1px solid #e4e6ef; border-radius: 8px;
+            padding: 9px 12px; font-size: 12.5px; color: #3f4254; text-align: left;
+        }
+        .cvh-flt-select-dd-btn span {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;
+            /* Education/qualification data is always displayed uppercase, regardless of
+               how it was entered/stored — see docs/UI_UX_STANDARDS.md. Display-only. */
+            text-transform: uppercase;
+        }
+        .cvh-flt-edu-name { text-transform: uppercase; }
+        .cvh-flt-select-dd-btn svg { flex-shrink: 0; color: #99a1b7; }
+        .cvh-flt-select-dd-panel {
+            margin-top: 6px; border: 1px solid #e4e6ef; border-radius: 8px;
+            background: #fff; max-height: 220px; overflow-y: auto;
+        }
+        .cvh-flt-select-dd-item {
+            display: flex; align-items: center; gap: 8px; padding: 9px 12px;
+            font-size: 12.5px; color: #3f4254; cursor: pointer; margin: 0;
+            border-bottom: 1px solid #f5f6f8;
+        }
+        .cvh-flt-select-dd-item:last-child { border-bottom: none; }
+        .cvh-flt-select-dd-item:hover { background: #f8f9fb; }
+        .cvh-flt-select-dd-item input { accent-color: #2563eb; }
         .cvh-flt-pill-row .btn-check { position: absolute; opacity: 0; pointer-events: none; }
         .cvh-flt-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid #e4e6ef; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 500; color: #3f4254; cursor: pointer; transition: border-color .15s, background-color .15s, color .15s; }
         .cvh-flt-pill-row .btn-check:checked + .cvh-flt-pill { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 600; }
@@ -906,7 +932,7 @@
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
                                                             tagifylocation.settings.whitelist = data;
-                                                            tagifylocation.dropdown.show.call(tagifylocation);
+                                                            tagifylocation.dropdown.show.call(tagifylocation, query);
                                                         } else {
                                                             console.error("Invalid API response format: Expected array.");
                                                         }
@@ -939,55 +965,68 @@
                                         </div>
                                     </div>
                                     <div class="cvh-flt-section-body">
-                                        <input class="form-control form-control-solid" value=""
-                                            id="kt_tagify_education" placeholder="About Education..." />
+                                        <input type="hidden" id="kt_tagify_education" value="" />
+                                        <div class="cvh-flt-select-dd" id="cvh_edu_dd">
+                                            <button type="button" class="cvh-flt-select-dd-btn" id="cvh_edu_dd_btn">
+                                                <span id="cvh_edu_dd_label">Any Education</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                            <div class="cvh-flt-select-dd-panel d-none" id="cvh_edu_dd_panel">
+                                                <label class="cvh-flt-select-dd-item">
+                                                    <input type="checkbox" class="cvh-flt-edu-check" value="" checked>
+                                                    <span>Any</span>
+                                                </label>
+                                                @foreach ($qualificationTag as $qval)
+                                                    <label class="cvh-flt-select-dd-item">
+                                                        <input type="checkbox" class="cvh-flt-edu-check" value="{{ $qval }}">
+                                                        <span class="cvh-flt-edu-name">{{ $qval }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
                                         <script>
-                                            var inputdeducation = document.querySelector("#kt_tagify_education");
-                                            var qualification = @json($qualificationTag);
-                                            var tagifyqualification = new Tagify(inputdeducation, {
-                                                whitelist: qualification,
-                                                maxTags: 10,
-                                                templates: {
-                                                    tag: function(tagData) {
-                                                        const value = tagData.value || '';
-                                                        return `
-                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
-                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                                                        ${this.getAttributes(tagData)}
-                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;text-transform:uppercase;">
-                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
-                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
-                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
-                                                    </tag>
-                                                `;
-                                                    }
-                                                },
-                                                dropdown: {
-                                                    maxItems: 20,
-                                                    classname: "",
-                                                    enabled: 0,
-                                                    closeOnSelect: false
-                                                }
-                                            });
+                                            // Drives the same #kt_tagify_education hidden field the backend
+                                            // already reads (JSON array of {value:"..."} objects, matched
+                                            // against qualification_master.name) — checklist dropdown,
+                                            // multi-select, no job-scoped default (this page isn't job-scoped).
+                                            var cvhEducationSelected = [];
 
-                                            tagifyqualification.on('dropdown:select', function(e) {
-                                                tagifyqualification.addTags([e.detail.data.value]);
-                                            });
-                                            tagifyqualification.on('add', function(e) {
-                                                if (!qualification.includes(e.detail.data.value)) {
-                                                    setTimeout(() => {
-                                                        tagifyqualification.removeTag(e.detail.data.value);
-                                                    }, 200);
-                                                }
+                                            function cvhSyncEducationInput() {
+                                                var payload = cvhEducationSelected.map(function(v) { return { value: v }; });
+                                                $('#kt_tagify_education').val(JSON.stringify(payload));
+                                                $('#cvh_edu_dd_label').text(cvhEducationSelected.length ? cvhEducationSelected.join(', ') : 'Any Education');
                                                 updateCvActiveFiltersUI();
-                                            });
-                                            tagifyqualification.on('remove', updateCvActiveFiltersUI);
+                                            }
 
-                                            tagifyqualification.on('input', function(e) {
-                                                var query = e.detail.value.trim();
-                                                if (query.length < 1) return;
-                                                tagifyqualification.dropdown.show(query);
+                                            $(document).on('change', '.cvh-flt-edu-check', function() {
+                                                var val = $(this).val();
+                                                if (val === '') {
+                                                    if ($(this).is(':checked')) {
+                                                        $('.cvh-flt-edu-check').not(this).prop('checked', false);
+                                                        cvhEducationSelected = [];
+                                                    }
+                                                } else {
+                                                    $('.cvh-flt-edu-check[value=""]').prop('checked', false);
+                                                    if ($(this).is(':checked')) {
+                                                        if (cvhEducationSelected.indexOf(val) === -1) cvhEducationSelected.push(val);
+                                                    } else {
+                                                        cvhEducationSelected = cvhEducationSelected.filter(function(v) { return v !== val; });
+                                                        if (cvhEducationSelected.length === 0) $('.cvh-flt-edu-check[value=""]').prop('checked', true);
+                                                    }
+                                                }
+                                                cvhSyncEducationInput();
                                             });
+
+                                            $(document).on('click', '#cvh_edu_dd_btn', function() {
+                                                $('#cvh_edu_dd_panel').toggleClass('d-none');
+                                            });
+                                            $(document).on('click', function(e) {
+                                                if (!$(e.target).closest('#cvh_edu_dd').length) {
+                                                    $('#cvh_edu_dd_panel').addClass('d-none');
+                                                }
+                                            });
+
+                                            $(document).ready(cvhSyncEducationInput);
                                         </script>
                                     </div>
                                 </div>
@@ -2630,11 +2669,14 @@
                     chips.push({ label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
                 });
             }
-            if (typeof tagifyqualification !== 'undefined') {
-                tagifyqualification.value.forEach(function(tag) {
-                    chips.push({ label: String(tag.value).toUpperCase(), clear: function() { tagifyqualification.removeTags(tag.value); } });
+            cvhEducationSelected.slice().forEach(function(val) {
+                chips.push({
+                    label: val.toUpperCase(),
+                    clear: function() {
+                        $('.cvh-flt-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
+                    }
                 });
-            }
+            });
 
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
             var expChanged = (minExp !== '' && minExp !== cvhDefaultRange.minExp) || (maxExp !== '' && maxExp !== cvhDefaultRange.maxExp);
@@ -2705,6 +2747,45 @@
         });
         $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', updateCvActiveFiltersUI);
 
+        // Salary-in-words hints (min_sal/max_sal) — same helper set as
+        // In-house Bench's / Bench Talent Requests' drawers.
+        var cvhOnes = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+        var cvhTeens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+        var cvhTens = ['', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+        function cvhCapitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        function cvhConvertToWords(num) {
+            if (isNaN(num)) return '';
+            if (num < 10) {
+                return cvhOnes[num];
+            } else if (num < 20) {
+                return cvhTeens[num - 10];
+            } else if (num < 100) {
+                return cvhTens[Math.floor(num / 10)] + ' ' + cvhOnes[num % 10];
+            } else if (num < 1000) {
+                return cvhOnes[Math.floor(num / 100)] + ' hundred ' + cvhConvertToWords(num % 100);
+            } else if (num < 100000) {
+                return cvhConvertToWords(Math.floor(num / 1000)) + ' thousand ' + cvhConvertToWords(num % 1000);
+            } else if (num < 10000000) {
+                return cvhConvertToWords(Math.floor(num / 100000)) + ' lakh ' + cvhConvertToWords(num % 100000);
+            } else if (num < 1000000000) {
+                return cvhConvertToWords(Math.floor(num / 10000000)) + ' crore ' + cvhConvertToWords(num % 10000000);
+            }
+            return "Number out of range";
+        }
+
+        $(document).on('keyup', '#min_sal', function() {
+            var number = parseInt($('#min_sal').val());
+            $('.minimum_salary_word').text(isNaN(number) ? '' : cvhCapitalizeFirstLetter(cvhConvertToWords(number)));
+        });
+        $(document).on('keyup', '#max_sal', function() {
+            var number = parseInt($('#max_sal').val());
+            $('.maximum_salary_word').text(isNaN(number) ? '' : cvhCapitalizeFirstLetter(cvhConvertToWords(number)));
+        });
+
         /* Applied Filters summary card (main page, above the results table). Reads the
            exact same underlying sources as updateCvActiveFiltersUI() so the two never
            disagree, just grouped/colored by category. Rendered on Apply/Reset/initial
@@ -2743,11 +2824,14 @@
                     items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
                 });
             }
-            if (typeof tagifyqualification !== 'undefined') {
-                tagifyqualification.value.forEach(function(tag) {
-                    items.push({ cat: 'education', label: String(tag.value).toUpperCase(), clear: function() { tagifyqualification.removeTags(tag.value); } });
+            cvhEducationSelected.slice().forEach(function(val) {
+                items.push({
+                    cat: 'education', label: val.toUpperCase(),
+                    clear: function() {
+                        $('.cvh-flt-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
+                    }
                 });
-            }
+            });
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
             var expChanged = (minExp !== '' && minExp !== cvhDefaultRange.minExp) || (maxExp !== '' && maxExp !== cvhDefaultRange.maxExp);
             if (expChanged) {
@@ -2845,7 +2929,10 @@
         $(document).on('click', '#cvh_clear_all', function() {
             if (typeof tagify !== 'undefined') tagify.removeAllTags();
             if (typeof tagifylocation !== 'undefined') tagifylocation.removeAllTags();
-            if (typeof tagifyqualification !== 'undefined') tagifyqualification.removeAllTags();
+            cvhEducationSelected = [];
+            $('.cvh-flt-edu-check').prop('checked', false);
+            $('.cvh-flt-edu-check[value=""]').prop('checked', true);
+            cvhSyncEducationInput();
             $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
             $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
             updateCvActiveFiltersUI();
@@ -2875,7 +2962,7 @@
             cvhSnapshot = {
                 skills: (typeof tagify !== 'undefined') ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
                 locations: (typeof tagifylocation !== 'undefined') ? tagifylocation.value.map(function(t) { return t.value; }) : [],
-                education: (typeof tagifyqualification !== 'undefined') ? tagifyqualification.value.map(function(t) { return t.value; }) : [],
+                education: cvhEducationSelected.slice(),
                 min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
                 min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
                 min_salary_currency: $('#min_salary_currency').val(), sal_mode: $('#sal_mode').val(),
@@ -2895,10 +2982,16 @@
                 tagifylocation.removeAllTags();
                 if (cvhSnapshot.locations.length) tagifylocation.addTags(cvhSnapshot.locations);
             }
-            if (typeof tagifyqualification !== 'undefined') {
-                tagifyqualification.removeAllTags();
-                if (cvhSnapshot.education.length) tagifyqualification.addTags(cvhSnapshot.education);
+            cvhEducationSelected = cvhSnapshot.education.slice();
+            $('.cvh-flt-edu-check').prop('checked', false);
+            if (cvhEducationSelected.length === 0) {
+                $('.cvh-flt-edu-check[value=""]').prop('checked', true);
+            } else {
+                cvhEducationSelected.forEach(function(v) {
+                    $('.cvh-flt-edu-check[value="' + String(v).replace(/"/g, '\\"') + '"]').prop('checked', true);
+                });
             }
+            cvhSyncEducationInput();
             $('#min_exp').val(cvhSnapshot.min_exp);
             $('#max_exp').val(cvhSnapshot.max_exp);
             $('#min_sal').val(cvhSnapshot.min_sal);
