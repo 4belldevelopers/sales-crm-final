@@ -74,12 +74,14 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
   .jsd-hero-row i { color: #a1a5b7; font-size: 11px; width: 13px; text-align: center; flex-shrink: 0; }
   .jsd-hero-row.status-active { color: #17c653; }
   .jsd-hero-row .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .jsd-hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #f5f9ff; color: #3e97ff; border: 1px solid #dce8ff; border-radius: 6px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; margin: 3px 0; width: fit-content; }
+  .jsd-hero-row.jsd-client-text { color: #3e97ff; }
+  .jsd-hero-row.jsd-client-text i { color: #3e97ff; }
   .jsd-hero-date-wrap { display: flex; border-left: 1px solid #eef0f4; }
   .jsd-hero-date-col { padding: 16px 18px; min-width: 130px; }
-  .jsd-hero-date-col + .jsd-hero-date-col { border-left: 1px solid #eef0f4; }
   .jsd-hero-date { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; margin-top: 8px; }
   .jsd-hero-date i { color: #a1a5b7; font-size: 11px; }
+  .jsd-hero-date.jsd-expiry { font-size: 11px; font-weight: 500; color: #7e8299; margin-top: 5px; }
+  .jsd-hero-date.jsd-expiry i { color: #cdd4e0; }
 
   @media (max-width: 1200px) {
     .jsd-hero { grid-template-columns: 1fr 1fr; }
@@ -182,6 +184,9 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
       @if($hasSalary)
       <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format((float) $job->min_salary) }}K – {{ number_format((float) $job->max_salary) }}K {{ $salaryModeLetter }}</div>
       @endif
+      @if($clientTypeLabel)
+      <div class="jsd-hero-row jsd-client-text"><i class="fas fa-building"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</div>
+      @endif
     </div>
 
     <!-- Hiring & location -->
@@ -189,9 +194,6 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
       <div class="jsd-hero-label">Hiring &amp; Location</div>
       @if($currentMeta)
       <div class="jsd-hero-row" style="color:{{ $currentMeta['color'] }};"><span class="dot"></span>{{ $currentMeta['label'] }}</div>
-      @endif
-      @if($clientTypeLabel)
-      <span class="jsd-hero-badge"><i class="fas fa-building"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</span>
       @endif
       @if($cityName)
       <div class="jsd-hero-row"><i class="fas fa-location-dot"></i>{{ ucwords($cityName) }}</div>
@@ -204,13 +206,10 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
       <div class="jsd-hero-date-col">
         <div class="jsd-hero-label">Job Posted</div>
         <div class="jsd-hero-date"><i class="fas fa-calendar"></i>{{ @$job->created_at ? date('d M Y', strtotime($job->created_at)) : '—' }}</div>
+        @if(@$job->closeType == 1 && @$job->end_date)
+        <div class="jsd-hero-date jsd-expiry"><i class="fas fa-hourglass-half"></i>Expires {{ date('d M Y', strtotime($job->end_date)) }}</div>
+        @endif
       </div>
-      @if(@$job->closeType == 1 && @$job->end_date)
-      <div class="jsd-hero-date-col">
-        <div class="jsd-hero-label">Automatically Closed</div>
-        <div class="jsd-hero-date"><i class="fas fa-calendar-xmark"></i>{{ date('d M Y', strtotime($job->end_date)) }}</div>
-      </div>
-      @endif
     </div>
   </div>
 
