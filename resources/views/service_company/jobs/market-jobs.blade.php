@@ -1312,7 +1312,35 @@ $(document).on('click', '.client-show-detail', function (){
 
 
 
-																      
+								
+        /* ── Send Bench Request — bound once here to prevent duplicate calls when drawer reloads ── */
+        $(document).on("click", ".request-send", function () {
+            var ele   = $(this);
+            var jobId = ele.attr('data-jobId');
+            var conId = ele.attr('data-conId');
+            ele.prop('disabled', true).text('Sending…');
+            var url = "{{ route('service_company.jobs.recommandedrequestcondidate', ':id') }}";
+            url = url.replace(':id', jobId) + "?conId=" + conId;
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function (response) {
+                    if (response.status == 'success') {
+                        showToastr('success', 'Bench request sent successfully!', 'Success');
+                    } else {
+                        showToastr('error', response.message || 'Request failed.', 'Error');
+                        ele.prop('disabled', false).text('Send Bench Request');
+                    }
+                    if (typeof window.fetchCandidatesbench === 'function') {
+                        window.fetchCandidatesbench();
+                    }
+                },
+                error: function () {
+                    showToastr('error', 'Something went wrong.', 'Error');
+                    ele.prop('disabled', false).text('Send Bench Request');
+                }
+            });
+        });
 </script>
 @endpush
 
