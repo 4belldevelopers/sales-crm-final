@@ -12026,9 +12026,12 @@ END:VCALENDAR";
 			];
 		}
 
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryInternalBench['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
-
-		
 		// Build the final query
 		$params = [
 			'index' => ELASTIC_CANDIDATES_BENCH,
@@ -12259,6 +12262,11 @@ END:VCALENDAR";
 			];
 		}
 
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryMarketBench['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params = [
@@ -12308,7 +12316,6 @@ END:VCALENDAR";
 		$boolQuerytBenchRequest = [
 			'bool' => [
 				'should' => [
-					// First condition
 					[
 						'bool' => [
 							'must' => array_merge([
@@ -12319,7 +12326,11 @@ END:VCALENDAR";
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' => [] // We'll add all filters here
+				'must_not' => [
+					// Exclude already-added candidates from the tab counter too.
+					['term' => ['ac_status' => 1]],
+				],
+				'filter' => []
 			]
 		];
 		$params = [
@@ -12361,9 +12372,16 @@ END:VCALENDAR";
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' =>[] // We'll add all filters here
+				'filter' =>[], // We'll add all filters here
+				'must_not' => []
 			]
 		];
+
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryCareer['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params_career = [

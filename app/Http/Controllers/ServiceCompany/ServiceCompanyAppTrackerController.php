@@ -4476,7 +4476,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$boolQuery = [
 			'bool' => [
 				'should' => [
-					// First condition
 					[
 						'bool' => [
 							'must' => array_merge([
@@ -4487,7 +4486,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' => $filters // We'll add all filters here
+				'must_not' => [
+					// Exclude already-added candidates (ac_status=1) so they
+					// don't appear in the list and are not counted in the total.
+					['term' => ['ac_status' => 1]],
+				],
+				'filter' => $filters
 			]
 		];
 
@@ -5746,16 +5750,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
 			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
-			// if (!empty($existingCandidatesQuery)) {
-			// 		$boolQuery['bool']['must_not'][] = [
-			// 			'terms' => [
-			// 				'id' => $existingCandidatesQuery
-			// 			]
-			// 		];
-			// }
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 		if ($valCheck==22) {
-			$today = date('Y-m-d');  
+			$today = date('Y-m-d');
 			$next30 = date('Y-m-d', strtotime('+30 days'));
 
 			// Serving candidates filter
@@ -6836,7 +6840,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
 		}
 
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
+		if (!empty($existingCandidatesQuery)) {
+			if (!isset($boolQuery['bool']['must_not'])) {
+				$boolQuery['bool']['must_not'] = [];
+			}
+			$boolQuery['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params = [
@@ -7900,16 +7914,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		}
 
 
-		// $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-		// 	->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-			
-		// 	if (!empty($existingCandidatesQuery)) {
-		// 		$boolQuery['bool']['must_not'][] = [
-		// 			'terms' => [
-		// 				'id' => $existingCandidatesQuery
-		// 			]
-		// 		];
-		// }
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
+
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 
 		// Build the final query
@@ -10182,16 +10196,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		
 
-		// $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-		// 	->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
-		// 	if (!empty($existingCandidatesQuery)) {
-		// 		$boolQuery['bool']['must_not'][] = [
-		// 			'terms' => [
-		// 				'id' => $existingCandidatesQuery
-		// 			]
-		// 		];
-		// }
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 
 
