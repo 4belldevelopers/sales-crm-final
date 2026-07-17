@@ -1481,6 +1481,58 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 			
 		}
 			
+		/* Career Page Settings */
+		public function careerPageSettings()
+		{
+			$company_id       = auth()->user()->company_id;
+			$this->company    = DB::table('companies')->where('id', $company_id)->first();
+			$this->global     = DB::table('global_settings')->first();
+			try {
+				$this->careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+			} catch (\Exception $e) {
+				/* Table not yet created — run the migration SQL below */
+				DB::statement("CREATE TABLE IF NOT EXISTS `company_career_settings` (
+					`id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+					`company_id` bigint(20) UNSIGNED NOT NULL,
+					`primary_color` varchar(20) DEFAULT '#2563EB',
+					`secondary_color` varchar(20) DEFAULT '#10B981',
+					`font_family` varchar(50) DEFAULT 'Poppins',
+					`default_language` varchar(10) DEFAULT 'en',
+					`currency` varchar(10) DEFAULT 'INR',
+					`page_layout` varchar(20) DEFAULT 'modern',
+					`jobs_display` varchar(20) DEFAULT 'card',
+					`career_page_status` tinyint(1) DEFAULT 1,
+					`created_at` timestamp NULL DEFAULT NULL,
+					`updated_at` timestamp NULL DEFAULT NULL,
+					PRIMARY KEY (`id`),
+					UNIQUE KEY `company_career_settings_company_id_unique` (`company_id`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+				$this->careerSettings = null;
+			}
+			return view('service_company.career-page.settings', $this->data);
+		}
+
+		public function careerPageSettingsSave(Request $request)
+		{
+			$company_id = auth()->user()->company_id;
+			$data = [
+				'primary_color'    => $request->primary_color,
+				'secondary_color'  => $request->secondary_color,
+				'font_family'      => $request->font_family,
+				'default_language' => $request->default_language,
+				'currency'         => $request->currency,
+				'page_layout'      => $request->page_layout,
+				'jobs_display'     => $request->jobs_display,
+				'career_page_status' => $request->has('career_page_status') ? 1 : 0,
+				'updated_at'       => now(),
+			];
+			DB::table('company_career_settings')->updateOrInsert(
+				['company_id' => $company_id],
+				array_merge($data, ['company_id' => $company_id, 'created_at' => now()])
+			);
+			return Reply::success('Career page settings saved successfully.');
+		}
+
 		public function google($id)
     	{			
 			$company_id      			=	auth()->user()->company_id;
