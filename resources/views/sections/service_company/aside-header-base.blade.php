@@ -508,24 +508,44 @@ $productAllowCompany = GeneralMethod::companiesType();
                 @endif
 
 
-                    <!--begin::Staffing Partners-->
-                    <div class="menu-item"> 
-                        <a  id="shareJobsBtn" data-url="{{url('career-jobs/'.str_replace(' ','-',$companyName).'/' .(auth()->user()->company_id))}}"
-                            class="menu-link {{ request()->is('career-jobs*') ? 'active' : '' }}">
+                    <!--begin::Career Website-->
+                    <div data-kt-menu-trigger="click"
+                        class="menu-item menu-accordion {{ request()->is('career-jobs*') ? 'show' : '' }}">
+                        <span class="menu-link">
                             <span class="menu-icon">
-                                    <span class="menu-icon">
-                                        <!--begin::Svg Icon-->
-                                        <span class="svg-icon svg-icon-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M10 2h4a2 2 0 0 1 2 2v2h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2V4a2 2 0 0 1 2-2Zm0 4h4V4h-4v2ZM6 10v10h12V10H6Z"/>
-                                            </svg>
-                                        </span>
-                                        <!--end::Svg Icon-->
-                                    </span>
+                                <span class="svg-icon svg-icon-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M10 2h4a2 2 0 0 1 2 2v2h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2V4a2 2 0 0 1 2-2Zm0 4h4V4h-4v2ZM6 10v10h12V10H6Z"/>
+                                    </svg>
+                                </span>
                             </span>
-                                        
-                        <span class="menu-title" id="changeTextShare">Career Website</span> </a> </div>
-                        <!--end::Staffing Partners-->
+                            <span class="menu-title" id="changeTextShare">Career Website</span>
+                            <span class="menu-arrow"></span>
+                        </span>
+                        <div class="menu-sub menu-sub-accordion">
+                            <!--begin::Jobs-->
+                            <div class="menu-item">
+                                <a id="shareJobsBtn"
+                                   data-url="{{ url('career-jobs/'.str_replace(' ','-',$companyName).'/'.auth()->user()->company_id) }}"
+                                   href="javascript:void(0);"
+                                   class="menu-link {{ request()->is('career-jobs*') ? 'active' : '' }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Jobs</span>
+                                </a>
+                            </div>
+                            <!--end::Jobs-->
+                            <!--begin::Settings-->
+                            <div class="menu-item">
+                                <a href="{{ route('service_company.career.page.settings') }}"
+                                   class="menu-link {{ request()->is('service_company/career-page/settings*') ? 'active' : '' }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Settings</span>
+                                </a>
+                            </div>
+                            <!--end::Settings-->
+                        </div>
+                    </div>
+                    <!--end::Career Website-->
                
 
             </div>
