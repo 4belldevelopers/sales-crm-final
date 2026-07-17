@@ -865,7 +865,7 @@ function updateSelectedFilters() {
 
      let hiring_type = document.getElementById('hiring_type').value;
      
-        $('#sortingfilter').val(hiring_type).trigger('change');
+        $('#sortingfilter').val(hiring_type);
 
     // if(hiring_type==2){
     //     htmlTop += `Hiring Type  : Full-Time Hiring
@@ -1285,7 +1285,7 @@ function filtersdataget() {
 
         $(document).ready(function() {
             // $.noConflict();
-            
+
             setTimeout(() => {
                 fetchClientConpanyAgency();
             }, 200);
