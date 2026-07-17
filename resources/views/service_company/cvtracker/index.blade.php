@@ -118,6 +118,32 @@
             z-index: 1400 !important;
         }
 
+        /* Print — the "Print" button clones the already-rendered checked
+           rows (no extra server request, everything comes from the current
+           page) into this hidden container, then triggers the browser's own
+           print dialog. Hidden on screen; @media print flips it to the only
+           visible thing on the page. */
+        #cvh_print_area { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #cvh_print_area, #cvh_print_area * { visibility: visible; }
+            #cvh_print_area {
+                display: block;
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            #cvh_print_area h2 { font-size: 16px; margin: 0 0 4px; }
+            #cvh_print_area .cvh-print-meta { font-size: 11px; color: #666; margin-bottom: 14px; }
+            #cvh_print_area table { width: 100%; border-collapse: collapse; }
+            #cvh_print_area th, #cvh_print_area td {
+                border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left;
+                vertical-align: top;
+            }
+            #cvh_print_area .form-check { display: none !important; }
+        }
+
         /* ============================================================
            CV Tracker — Hero KPI stats
            Data source: Elasticsearch only, riding the existing
@@ -571,7 +597,7 @@
                                     fill="black" />
                             </svg>
                         </span>
-                        Download </button>
+                        Print </button>
                 </div>
 
                 <div class="before-event d-flex align-items-center position-relative my-1 me-3 custom_hide">
@@ -1403,10 +1429,10 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                             </span> Copy
                         </a>
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Download a print-ready PDF summary of the selected candidates">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Print the selected candidates using your browser's print dialog">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-                            </span> Download
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            </span> Print
                         </a>
                     </div>
                     <button type="button" class="cvh-selection-close" id="cvh_selection_close" title="Clear selection">
@@ -1453,6 +1479,10 @@
                                 </tbody>
                             </table>
                             <div id="paginationcandidate"></div>
+                            {{-- Print target — populated client-side from the checked rows already
+                                 on this page (see the .exportRecord click handler); nothing here
+                                 until the user clicks Print, no server round-trip involved. --}}
+                            <div id="cvh_print_area"></div>
                         @endif
                     </div>
                 </div>
@@ -1687,25 +1717,39 @@
 
 
           // Replaces the old Excel/CSV export — downloads a single combined,
-          // print-ready PDF summary of just the checked candidates. Free/
-          // ungated (no coin deduction), unlike the export it replaces.
+          // Replaces the old server-side PDF download — purely client-side:
+          // clones the checked rows' already-rendered markup (no new
+          // request, no server load) into #cvh_print_area and hands off to
+          // the browser's own print dialog (Save as PDF works the same way
+          // from there, at the user's discretion, with zero server cost).
           $(document).on('click', '.exportRecord', function() {
 
-                var ids = [];
-                $('.chk_list_item:checked').each(function() {
-                    var wiseid = $(this).attr('data-wiseid');
-                    if (wiseid) ids.push(wiseid);
-                });
-
-                if (ids.length === 0) {
+                var $checked = $('.chk_list_item:checked');
+                if ($checked.length === 0) {
                     cvhToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
                     return false;
                 }
 
-                var url = "{{ route('service_company.cvtracker.print_selected_candidates') }}" +
-                    '?' + ids.map(function(id) { return 'ids[]=' + encodeURIComponent(id); }).join('&');
+                var $table = $('<table></table>');
+                var $thead = $('#myTable thead tr').clone();
+                $thead.find('th').first().remove(); // drop the checkbox header column
+                $table.append($('<thead></thead>').append($thead));
 
-                window.location.href = url;
+                var $tbody = $('<tbody></tbody>');
+                $checked.each(function() {
+                    var $row = $(this).closest('tr').clone();
+                    $row.find('td').first().remove(); // drop the checkbox cell
+                    $tbody.append($row);
+                });
+                $table.append($tbody);
+
+                var $printArea = $('#cvh_print_area').empty();
+                $printArea.append('<h2>Candidates Summary</h2>');
+                $printArea.append('<div class="cvh-print-meta">Printed ' +
+                    new Date().toLocaleString() + ' — ' + $checked.length + ' candidate(s)</div>');
+                $printArea.append($table);
+
+                window.print();
             });
 
             $('#inputSearch').keyup(function() {
