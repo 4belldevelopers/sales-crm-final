@@ -6588,10 +6588,85 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 					
 				}else{
-					return Reply::dataOnly(['status' => 'error', 'url' => '']);	
+					return Reply::dataOnly(['status' => 'error', 'url' => '']);
 				}
 
 	}
 
+	/**
+	 * Combined print-friendly PDF for the candidates checked on CV Tracker —
+	 * replaces the old Excel/CSV export button. Free/ungated (no coin
+	 * deduction, unlike the export it replaces) since this is a lightweight
+	 * summary sheet, not a bulk data extract.
+	 */
+	public function printSelectedCandidates(Request $request)
+	{
+		$ids = array_filter((array) $request->input('ids', []));
+		$company_id = auth()->user()->company_id;
+
+		if (empty($ids)) {
+			abort(400, 'No candidates selected.');
+		}
+
+		$boolQuery = [
+			'bool' => [
+				'must' => [
+					['terms' => ['id' => array_values($ids)]],
+					['term' => ['company_id' => $company_id]],
+				],
+			],
+		];
+
+		$candidates = [];
+		if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+			$response = $this->elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES,
+				'body' => [
+					'size' => count($ids),
+					'sort' => [['wiseId' => ['order' => 'desc', 'unmapped_type' => 'long']]],
+					'query' => $boolQuery,
+				],
+			]);
+
+			$symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
+			$symbolsValue = !empty($symbolsValue) ? $symbolsValue : [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD', 5 => 'AED'];
+
+			$candidates = array_map(function ($hit) use ($symbolsValue) {
+				$row = (object) $hit['_source'];
+
+				$skills = collect(data_get($row, 'job_application_skills', []))
+					->pluck('skills')->filter()->unique()->values()->implode(', ');
+
+				$notice = $row->np_id ?? '';
+				if (!empty($notice) && ($row->serving_notice_period_mode ?? 0) == 0) {
+					$notice = $notice . ' Day' . ($notice == 1 ? '' : 's');
+				} elseif (!empty($notice) && $notice !== 'Immediate') {
+					$notice = date('d M Y', strtotime($notice));
+				}
+
+				$symbol = $symbolsValue[$row->min_salary_currency ?? 0] ?? 'INR';
+				$ectc = isset($row->ectc_yearly) ? GeneralMethod::thousandsCurrencyFormat($row->ectc_yearly) : '';
+
+				return (object) [
+					'full_name' => $row->full_name ?? '',
+					'email' => $row->email ?? '',
+					'phone' => $row->phone ?? '',
+					'current_designation' => $row->current_designation ?? '',
+					'current_company' => $row->current_company ?? '',
+					'total_exp' => $row->total_exp ?? '',
+					'city_name' => $row->city_name ?? '',
+					'skills' => $skills,
+					'notice' => $notice ?: 'N/A',
+					'salary' => $ectc !== '' ? ($symbol . ' ' . $ectc . ' / yr') : 'N/A',
+					'job_title' => $row->title ?? '',
+					'client_name' => $row->client_name ?? '',
+				];
+			}, $response['hits']['hits'] ?? []);
+		}
+
+		$pdf = app('dompdf.wrapper');
+		$pdf->loadView('service_company.cvtracker.print-candidates', compact('candidates'));
+		return $pdf->download('Candidates-Summary-' . date('Y-m-d_His') . '.pdf');
+	}
 
 }

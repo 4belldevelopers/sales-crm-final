@@ -274,6 +274,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('cvtracker/candidateRightSideBar/{id?}', [ServiceCompanyCvTrackerController::class,'candidateRightSideBar'])->name('cvtracker.candidateRightSideBar');
 						Route::get('cvtracker/export/{clients}/{jobs}/{source}/{search_passport}/{search_np_id}/{status}/{start}/{length}', [ServiceCompanyCvTrackerController::class,'export'])->name('cvtracker.export');	
 						Route::get('cvtracker/copyjobtable', [ServiceCompanyCvTrackerController::class,'copyjobtable'])->name('cvtracker.copyjobtable');
+						Route::get('cvtracker/print-selected-candidates', [ServiceCompanyCvTrackerController::class,'printSelectedCandidates'])->name('cvtracker.print_selected_candidates');
 						
 						Route::get('benchTalents/list/{id?}', [ServiceCompanyJobsController::class,'btlisting'])->name('jobs.btlisting');
 
