@@ -47,11 +47,6 @@ $currencyIcon = $currencyIcons[$job->min_salary_currency ?? 0] ?? $currencyIcons
 $salaryModeLetter = isset($salaryModeArr[$job->min_sal_mode]) ? strtoupper(substr($salaryModeArr[$job->min_sal_mode], 0, 1)) : '';
 $hasSalary = @$job->min_salary > 0 || @$job->max_salary > 0;
 
-$clientTypeLabel = null;
-if ($companyOrClientName) {
-    $clientTypeLabel = (@$companyOrClientName->selfCompany == 1) ? 'Internal Client' : 'External Client';
-}
-
 $avatarSource = $clientName ?: @$job->title ?: 'J';
 $avatarInitial = strtoupper(substr(trim($avatarSource), 0, 1));
 $avatarOrd = ord(strtolower($avatarInitial ?: 'j'));

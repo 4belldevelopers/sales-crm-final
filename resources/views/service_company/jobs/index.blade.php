@@ -637,7 +637,12 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 					success : function (response) {
 						if (response.status == "success") {
 							$('#status_body_content').html(response.view);
+						} else {
+							$('#status_body_content').html('<div class="text-center py-20 text-danger">Could not load the job status details. Please close and try again.</div>');
 						}
+					},
+					error : function () {
+						$('#status_body_content').html('<div class="text-center py-20 text-danger">Something went wrong loading this job\'s status. Please close and try again.</div>');
 					}
 		});
 });
