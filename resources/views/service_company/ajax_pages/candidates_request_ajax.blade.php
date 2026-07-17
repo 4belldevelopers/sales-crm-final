@@ -9,6 +9,10 @@
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
 
+    // Valid days from features table (id=4) — same source candidateRequestAutoExpiredAfterValidDate() uses.
+    $benchExpireFeature = DB::table('features')->where('id', 4)->first();
+    $benchExpireDays = (int) (@$benchExpireFeature->days ?: 30);
+
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -481,14 +485,15 @@
                         $posted_by_image = url('public/user-uploads/team_profile_img/' . @$row->posted_by_image);
                     }
                     $dateupdate = GeneralMethod::ymdTodmyNotTime($row->updated_at);
-                    $comission_type = $row->comission_type == 1 ? 'Free' : 'Paid ';
+                    $comission_type = $row->comission_type == 1 ? 'Free' : 'Paid';
+
                     echo '<div class="d-flex flex-column">
 				  <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="" data-bs-original-title="">' .
                         $dateupdate .
                         '</span>
 				 <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip">' .
                         $comission_type .
-                        '</span> 
+                        '</span>
 				  </div>
 				  ';
 
@@ -496,24 +501,37 @@
             </td>
             <td>
                 @php
+                    // Expiry date = created_at + configured days (features id=4)
+                    $expireDate = '';
+                    $expireColor = '#d97706';
+                    if (!empty($row->created_at)) {
+                        $expireTs = strtotime("+{$benchExpireDays} days", strtotime($row->created_at));
+                        $expireDate = date('d M y', $expireTs);
+                        $expireColor = ($expireTs < time() || $row->ac_status == 2) ? '#dc2626' : '#d97706';
+                    }
+
                     $name = '';
-                
+
                     if ($row->ac_status==0) {
-                        echo ' <div class="d-flex flex-column">
+                        echo '<div class="d-flex flex-column">
                             <a href="javascript:void(0);" data-row-id="' . @$row->source_jobid .'" data-recomnded-id="' . @$row->rec_candidate_assign_id .'" data-condidate-id="' .@$row->id .'" class="btn btn-sm btn-primary add_to_list">Add to job</a>
+                            <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
                         </div>';
-                    }elseif($row->ac_status==1){
-                            echo '<div class="d-flex flex-column">
+                    } elseif ($row->ac_status==1) {
+                        echo '<div class="d-flex flex-column">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>
-                        </div> ';
-                    } elseif($row->ac_status==2){
-                            echo '<div class="d-flex flex-column">
+                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+                        </div>';
+                    } elseif ($row->ac_status==2) {
+                        echo '<div class="d-flex flex-column">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-danger">Expired</a>
-                        </div> ';
-                    }else{
+                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+                        </div>';
+                    } else {
                         echo '<div class="d-flex flex-column">
 				      <a href="javascript:void(0);" class="btn btn-sm btn-danger">Removed</a>
-			  </div> ';
+                      <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+			      </div>';
                     }
                 @endphp
             </td>
