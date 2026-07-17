@@ -39,20 +39,64 @@ elseif (@$job->work_type == 'other') { $workType = 'Hybrid'; }
 $cityName = @$jobLocation->city_name ?: @$jobLocation->city;
 
 $lastLog = $statusLogs->first();
+
+// ---- Hero card data (salary, client badge, avatar initial) ----
+$currencyIcons = \App\Helper\GeneralMethod::currencySymbole();
+$salaryModeArr = \App\Helper\GeneralMethod::salaryMode();
+$currencyIcon = $currencyIcons[$job->min_salary_currency ?? 0] ?? $currencyIcons[0];
+$salaryModeLetter = isset($salaryModeArr[$job->min_sal_mode]) ? strtoupper(substr($salaryModeArr[$job->min_sal_mode], 0, 1)) : '';
+$hasSalary = @$job->min_salary > 0 || @$job->max_salary > 0;
+
+$clientTypeLabel = null;
+if ($companyOrClientName) {
+    $clientTypeLabel = (@$companyOrClientName->selfCompany == 1) ? 'Internal Client' : 'External Client';
+}
+
+$avatarSource = $clientName ?: @$job->title ?: 'J';
+$avatarInitial = strtoupper(substr(trim($avatarSource), 0, 1));
+$avatarOrd = ord(strtolower($avatarInitial ?: 'j'));
+if ($avatarOrd >= 97 && $avatarOrd <= 101) { $avatarColors = ['#fff5f8', '#f1416c']; }
+elseif ($avatarOrd >= 102 && $avatarOrd <= 106) { $avatarColors = ['#fff8ec', '#ffa800']; }
+elseif ($avatarOrd >= 107 && $avatarOrd <= 111) { $avatarColors = ['#f5f8ff', '#3e97ff']; }
+elseif ($avatarOrd >= 112 && $avatarOrd <= 116) { $avatarColors = ['#eafcf3', '#17c653']; }
+else { $avatarColors = ['#f5f5fa', '#5e6278']; }
 ?>
 <style>
   .jsd-wrap { padding: 20px 28px 28px; font-family: 'Poppins', sans-serif; color: #3f4254; }
   .jsd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
-  /* ---- Job info card ---- */
-  .jsd-jobcard { display: flex; align-items: flex-start; gap: 14px; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; background: #fff; }
-  .jsd-jobcard .ic { width: 46px; height: 46px; border-radius: 10px; background: #f5f8ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .jsd-jobcard .title { font-size: 15px; font-weight: 700; color: #181c32; line-height: 1.3; }
-  .jsd-jobcard .sub { font-size: 11.5px; color: #7e8299; font-weight: 500; margin-top: 2px; }
-  .jsd-meta-row { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 10px; }
-  .jsd-meta-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: #3f4254; }
-  .jsd-meta-item i { color: #a1a5b7; font-size: 11px; width: 12px; text-align: center; }
-  .jsd-meta-item.status-pill { padding: 2px 10px; border-radius: 6px; font-weight: 600; }
+  /* ---- Hero / job info card ---- */
+  .jsd-hero { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.05fr) auto; gap: 0; border: 1px solid #eef0f4; border-radius: 12px; margin-bottom: 22px; background: #fff; overflow: hidden; }
+  .jsd-hero-col { padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #eef0f4; min-width: 0; }
+  .jsd-hero-col:first-child { border-left: none; }
+  .jsd-hero-label { font-size: 10px; font-weight: 700; color: #3e97ff; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 9px; }
+  .jsd-hero-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .jsd-hero-avatar { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+  .jsd-hero-title { font-size: 14.5px; font-weight: 700; color: #181c32; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jsd-hero-cat { font-size: 11.5px; color: #3e97ff; font-weight: 500; margin-top: 2px; }
+  .jsd-hero-client { font-size: 11.5px; color: #7e8299; font-weight: 400; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jsd-hero-row { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; padding: 3px 0; }
+  .jsd-hero-row i { color: #a1a5b7; font-size: 11px; width: 13px; text-align: center; flex-shrink: 0; }
+  .jsd-hero-row.status-active { color: #17c653; }
+  .jsd-hero-row .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .jsd-hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #f5f9ff; color: #3e97ff; border: 1px solid #dce8ff; border-radius: 6px; padding: 2px 9px; font-size: 10.5px; font-weight: 600; margin: 3px 0; width: fit-content; }
+  .jsd-hero-date-wrap { display: flex; border-left: 1px solid #eef0f4; }
+  .jsd-hero-date-col { padding: 16px 18px; min-width: 130px; }
+  .jsd-hero-date-col + .jsd-hero-date-col { border-left: 1px solid #eef0f4; }
+  .jsd-hero-date { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; margin-top: 8px; }
+  .jsd-hero-date i { color: #a1a5b7; font-size: 11px; }
+
+  @media (max-width: 1200px) {
+    .jsd-hero { grid-template-columns: 1fr 1fr; }
+    .jsd-hero-date-wrap { grid-column: 1 / -1; border-top: 1px solid #eef0f4; border-left: none; }
+  }
+  @media (max-width: 640px) {
+    .jsd-hero { grid-template-columns: 1fr; }
+    .jsd-hero-col { border-left: none; border-top: 1px solid #eef0f4; }
+    .jsd-hero-col:first-child { border-top: none; }
+    .jsd-hero-date-wrap { flex-direction: column; border-left: none; border-top: 1px solid #eef0f4; }
+    .jsd-hero-date-col + .jsd-hero-date-col { border-left: none; border-top: 1px solid #eef0f4; }
+  }
 
   /* ---- Section headers ---- */
   .jsd-sec-head { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
@@ -123,29 +167,56 @@ $lastLog = $statusLogs->first();
 </style>
 
 <div class="jsd-wrap">
-  <div class="jsd-jobcard">
-    <div class="ic"><i class="fas fa-briefcase"></i></div>
-    <div>
-      <div class="title">{{ @$job->title }}</div>
-      <div class="sub">{{ @$job->cat_name }}{{ @$clientName ? ' · '.$clientName : '' }}</div>
-      <div class="jsd-meta-row">
-        <span class="jsd-meta-item"><i class="fas fa-clock"></i>{{ @$job->min_exp }}–{{ @$job->max_exp }} Years</span>
-        @if($cityName)
-        <span class="jsd-meta-item"><i class="fas fa-location-dot"></i>{{ ucwords($cityName) }}</span>
-        @endif
-        <span class="jsd-meta-item"><i class="fas fa-house-laptop"></i>{{ $workType }}</span>
-        <span class="jsd-meta-item"><i class="fas fa-users"></i>{{ @$job->total_positions }} Opening(s)</span>
-        @if(@$job->created_at)
-        <span class="jsd-meta-item"><i class="fas fa-calendar"></i>Posted {{ date('d M Y', strtotime($job->created_at)) }}</span>
-        @endif
-        @if(@$job->closeType == 1 && @$job->end_date)
-        <span class="jsd-meta-item"><i class="fas fa-calendar-xmark"></i>Auto-closes {{ date('d M Y', strtotime($job->end_date)) }}</span>
-        @endif
+  <div class="jsd-hero">
+    <!-- Identity -->
+    <div class="jsd-hero-col">
+      <div class="jsd-hero-id">
+        <div class="jsd-hero-avatar" style="background:{{ $avatarColors[0] }};color:{{ $avatarColors[1] }};">{{ $avatarInitial }}</div>
+        <div style="min-width:0;">
+          <div class="jsd-hero-title" title="{{ @$job->title }}">{{ @$job->title }}</div>
+          @if(@$job->cat_name)<div class="jsd-hero-cat">{{ $job->cat_name }}</div>@endif
+          @if($clientName)<div class="jsd-hero-client" title="{{ $clientName }}">{{ $clientName }}</div>@endif
+        </div>
       </div>
     </div>
-    @if($currentMeta)
-    <span class="jsd-meta-item status-pill" style="margin-left:auto;color:{{ $currentMeta['color'] }};background:{{ $currentMeta['bg'] }};"><i class="fas fa-circle" style="font-size:6px;color:{{ $currentMeta['color'] }};"></i>{{ $currentMeta['label'] }}</span>
-    @endif
+
+    <!-- Experience & compensation -->
+    <div class="jsd-hero-col">
+      <div class="jsd-hero-label">Experience</div>
+      <div class="jsd-hero-row"><i class="fas fa-clock"></i>{{ @$job->min_exp }} – {{ @$job->max_exp }} Years</div>
+      @if($hasSalary)
+      <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format((float) $job->min_salary) }}K – {{ number_format((float) $job->max_salary) }}K {{ $salaryModeLetter }}</div>
+      @endif
+    </div>
+
+    <!-- Hiring & location -->
+    <div class="jsd-hero-col">
+      <div class="jsd-hero-label">Hiring &amp; Location</div>
+      @if($currentMeta)
+      <div class="jsd-hero-row" style="color:{{ $currentMeta['color'] }};"><span class="dot"></span>{{ $currentMeta['label'] }}</div>
+      @endif
+      @if($clientTypeLabel)
+      <span class="jsd-hero-badge"><i class="fas fa-building"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</span>
+      @endif
+      @if($cityName)
+      <div class="jsd-hero-row"><i class="fas fa-location-dot"></i>{{ ucwords($cityName) }}</div>
+      @endif
+      <div class="jsd-hero-row"><i class="fas fa-house-laptop"></i>{{ $workType }}</div>
+    </div>
+
+    <!-- Dates -->
+    <div class="jsd-hero-date-wrap">
+      <div class="jsd-hero-date-col">
+        <div class="jsd-hero-label">Job Posted</div>
+        <div class="jsd-hero-date"><i class="fas fa-calendar"></i>{{ @$job->created_at ? date('d M Y', strtotime($job->created_at)) : '—' }}</div>
+      </div>
+      @if(@$job->closeType == 1 && @$job->end_date)
+      <div class="jsd-hero-date-col">
+        <div class="jsd-hero-label">Automatically Closed</div>
+        <div class="jsd-hero-date"><i class="fas fa-calendar-xmark"></i>{{ date('d M Y', strtotime($job->end_date)) }}</div>
+      </div>
+      @endif
+    </div>
   </div>
 
   <div class="jsd-grid" style="display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start;">
