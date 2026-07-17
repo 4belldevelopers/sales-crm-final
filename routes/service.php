@@ -403,7 +403,10 @@ Route::group(['middleware' => 'auth'], function () {
 						//#############       	START CUSTOM REPORT MANAGEMENT  
 						Route::resource('customreport', ServiceCompanyCustomreportController::class);                            					
 						//END	  			
-						//#############			START COMPANY ACCOUNT   
+						//#############			START COMPANY ACCOUNT
+
+						Route::get('career-page/settings', [ServiceCompanyAccountSettingsController::class,'careerPageSettings'])->name('career.page.settings');
+						Route::post('career-page/settings/save', [ServiceCompanyAccountSettingsController::class,'careerPageSettingsSave'])->name('career.page.settings.save');
 
 						Route::get('account/google/{id?}', [ServiceCompanyAccountSettingsController::class,'google'])->name('account.google');
 						Route::resource('account', ServiceCompanyAccountSettingsController::class);	
