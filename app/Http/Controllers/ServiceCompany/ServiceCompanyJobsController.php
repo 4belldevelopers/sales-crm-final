@@ -14473,6 +14473,16 @@ protected $elasticService;
 				->orderByDesc('job_status_logs.created_at')
 				->limit(8)
 				->get();
+
+			// "Job Posted" on the hero card reflects the most recent time this job was set back
+			// to Hiring (re-activation), not the original creation date — falls back to jobs.created_at
+			// for jobs that have never been reactivated (no matching log yet).
+			$lastActivatedLog = DB::table('job_status_logs')
+				->where('job_id', $this->id)
+				->where('to_status', 'active')
+				->orderByDesc('created_at')
+				->first();
+			$this->postedDisplayDate = $lastActivatedLog->created_at ?? @$this->job->created_at;
 		}
 		$view = view('service_company.jobs.status', $this->data)->render();
 		// dd($view);
@@ -14525,7 +14535,10 @@ protected $elasticService;
            
 			    $data['auto_date_job'] = $start_date;
 			    $data['end_date'] = $end_date;
-				$data['closeType'] =0;
+				// Keep closeType=1 (auto-close still configured) so this recompute runs again on every
+				// future close -> reopen cycle, not just the first one. Previously reset to 0 here, which
+				// silently disabled the "auto-close in N days" behaviour after a single reactivation.
+				$data['closeType'] = 1;
 		   }
 
 		   $data['auto_date_job'] = Carbon::today();
