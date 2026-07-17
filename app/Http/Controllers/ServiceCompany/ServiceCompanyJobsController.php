@@ -15,6 +15,7 @@ use App\Helper\Reply;
 use App\Helper\GeneralMethod;
 use App\Http\Requests\StoreJob;
 use App\Models\Job;
+use App\Models\JobStatusLog;
 use App\Models\OpenworkspaceJob;
 use App\Models\JobCategory;
 use App\Models\JobLocation;
@@ -14441,7 +14442,36 @@ protected $elasticService;
 	{
 		$this->id = $id;
 		if ($this->id) {
-			$this->job = DB::table('jobs')->select('*')->where('id', '=', $this->id)->first();
+			$this->job = DB::table('jobs')
+				->select('jobs.*', 'job_categories.name as cat_name')
+				->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+				->where('jobs.id', '=', $this->id)
+				->first();
+
+			$company_id = auth()->user()->company_id;
+			$companyOrClientName = $this->job && $this->job->client_id ? GeneralMethod::companyOrClientName($this->job->client_id) : null;
+			$this->clientName = @$companyOrClientName->companyOrclientName;
+
+			$this->jobLocation = DB::table('client_location_jobs')
+				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+				->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+				->select('client_location.city', 'city_list.city as city_name')
+				->where('client_location_jobs.job_id', $this->id)
+				->first();
+
+			// Impact Preview / Status Summary counts — cheap, indexed single-table lookups, no N+1.
+			$this->candidatesCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->count();
+			$this->vendorsCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->where('thirdparty_company_id', '!=', 0)->distinct()->count('thirdparty_company_id');
+			$this->interviewsCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->where('master_status_id', 3)->count();
+
+			// Status Timeline — most recent transitions first, capped so the drawer stays light.
+			$this->statusLogs = DB::table('job_status_logs')
+				->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+				->select('job_status_logs.from_status', 'job_status_logs.to_status', 'job_status_logs.created_at', 'users.name as changed_by_name')
+				->where('job_status_logs.job_id', $this->id)
+				->orderByDesc('job_status_logs.created_at')
+				->limit(8)
+				->get();
 		}
 		$view = view('service_company.jobs.status', $this->data)->render();
 		// dd($view);
@@ -14454,9 +14484,9 @@ protected $elasticService;
 		$company_id = auth()->user()->company_id;
 		$job_id = $_REQUEST['job_id'];
 		$status = $_REQUEST['status'];
-		
+		$rawToStatus = $status; // raw enum value, kept before $status gets swapped for the "Hiring" display label below
 
-		
+
 
 		$data = array();
 
@@ -14513,6 +14543,16 @@ protected $elasticService;
 		   
 
 		DB::table('jobs')->where('id', @$job_id)->limit(1)->update($data);
+
+		// Status Timeline audit row for the Job Status drawer — one append-only entry per transition.
+		JobStatusLog::create([
+			'job_id' => $job_id,
+			'company_id' => $company_id,
+			'from_status' => $job->status,
+			'to_status' => $rawToStatus,
+			'changed_by' => auth()->id(),
+			'created_at' => Carbon::now(),
+		]);
 
 		$this->activeJobCounter = DB::table('jobs')->select('id')->where('status', '=', 'active')->where('company_id', '=', $company_id)->count();
 		$this->inactiveJobCounter = DB::table('jobs')->select('id')->where('status', '=', 'inactive')->where('company_id', '=', $company_id)->count();

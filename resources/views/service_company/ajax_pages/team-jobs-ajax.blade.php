@@ -120,7 +120,7 @@
 
     if ($status == 'Active') { $status = 'Hiring'; }
     if ($status == 'Inactive') { $status = 'Closed'; }
-    $ulink = '<span data-row-id="' .@$row->id .'" class="badge-hiring ' .@$class .' status_stage" data-toggle="modal" data-target="#status_stage">' . $status .'</span>';
+    $ulink = '<span data-row-id="' .@$row->id .'" class="badge-hiring ' .@$class .' status_stage">' . $status .'</span>';
     if (($row->final_status == 2 || $row->final_status == 3) && @$row->to_company_id == auth()->user()->company_id) {
         $status = 'Removed';
         $class = 'closed-bg';

@@ -6635,12 +6635,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			abort(400, 'No candidates selected.');
 		}
 
+		// Ownership check mirrors allcandidates()'s own visibility rule: a
+		// candidate belongs to this company either because it was submitted
+		// by them (company_id) or because they're the client it was
+		// recommended to (ClientComID) — matching only company_id (as an
+		// earlier version of this method did) silently dropped client-
+		// recommended candidates from the selection even though they were
+		// visible and checkable in the list itself.
 		$boolQuery = [
 			'bool' => [
 				'must' => [
 					['terms' => ['id' => array_values($ids)]],
-					['term' => ['company_id' => $company_id]],
 				],
+				'should' => [
+					['term' => ['company_id' => $company_id]],
+					['term' => ['ClientComID' => $company_id]],
+				],
+				'minimum_should_match' => 1,
 			],
 		];
 
