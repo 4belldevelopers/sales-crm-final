@@ -125,17 +125,16 @@
 
             $recommendation_text = __('messages.internal_tag').' '.$clientTypeJob;
             $badge ="badge-internal";
-            $svg = '<svg width="9" height="9" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"/>
-                    <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="2.5"/>
-                  </svg>';
+            // Internal Client: building icon, blue — sized/boxed to match the .exp-row /
+            // .sal-row icons above it (.badge-type i/svg CSS) for clean alignment.
+            $svg = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
             if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
                 $recommendation_text = $clientTypeJob.' '.__('messages.clinet_tag');
                 $badge ="badge-client";
                 // Direct Client only: handshake icon, same green as .badge-client's own text
                 // colour (#09b760) — same icon/colour used on the bench "Placed" listing for
                 // this exact concept (bench-place-candidate-ajax.blade.php).
-                $svg = '<i class="fas fa-handshake" style="color:#09b760;font-size:9px;"></i>';
+                $svg = '<i class="fas fa-handshake" style="color:#09b760;"></i>';
             }
 
             $status = $active = $hold = $inactive = $class = $recommendation_id = '';
@@ -155,7 +154,9 @@
             // actually change the status (enforced server-side too, in
             // ServiceCompanyJobsController::newUpdateJobstatus()).
             $isDirectClientJob = $recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id;
-            $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring ' .@$class .' status_stage">' . $status .'</span>';
+            // Same status icons as the Job Status drawer's cards (Hiring/Hold/Closed).
+            $statusIcon = $status == 'Hiring' ? 'fa-user-group' : ($status == 'Hold' ? 'fa-pause' : 'fa-box-archive');
+            $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring status-ic ' .@$class .' status_stage"><i class="fas ' .$statusIcon .'"></i>' . $status .'</span>';
             $final_status = '';
             if (
                 ($row->final_status == 2 || $row->final_status == 3) &&
