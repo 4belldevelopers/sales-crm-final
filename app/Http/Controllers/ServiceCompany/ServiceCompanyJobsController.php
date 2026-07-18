@@ -14451,7 +14451,23 @@ protected $elasticService;
 			$company_id = auth()->user()->company_id;
 			$companyOrClientName = $this->job && $this->job->client_id ? GeneralMethod::companyOrClientName($this->job->client_id) : null;
 			$this->clientName = @$companyOrClientName->companyOrclientName;
-			$this->clientTypeLabel = $companyOrClientName ? 'Internal Client' : null;
+
+			// Internal Client / Direct Client — same real client-relationship check and the same
+			// translation strings/icon used by the bench "Placed" listing (bench-place-candidate-ajax.blade.php)
+			// for this exact concept, kept consistent here rather than inventing new wording.
+			if ($companyOrClientName) {
+				if (@$companyOrClientName->selfCompany == 1) {
+					$this->clientTypeLabel = __('messages.internal_client_tag');
+					$this->clientTypeIcon = 'fa-building-shield';
+					$this->clientTypeColor = '#3e97ff';
+				} else {
+					$this->clientTypeLabel = __('messages.direct_clinet_tag');
+					$this->clientTypeIcon = 'fa-handshake';
+					$this->clientTypeColor = '#17c653';
+				}
+			} else {
+				$this->clientTypeLabel = null;
+			}
 
 			$this->jobLocation = DB::table('client_location_jobs')
 				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
