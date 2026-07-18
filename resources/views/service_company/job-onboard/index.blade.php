@@ -498,10 +498,12 @@
         el.addEventListener('click', function () { activateTab(this.dataset.jumpTab); });
     });
 
-    /* pagination (delegated) */
+    /* pagination (delegated) — the pagination partial (ajax_pages/
+       pagination.blade.php) renders buttons with class .pagi-page/
+       .pagi-arrow, not .page-link, so this was never matching anything. */
     document.getElementById('jt_pagination').addEventListener('click', function (e) {
-        var link = e.target.closest('.page-link');
-        if (!link || link.classList.contains('disabled')) return;
+        var link = e.target.closest('.pagi-page, .pagi-arrow');
+        if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
         e.preventDefault();
         var pg = parseInt(link.dataset.page, 10);
         if (!pg) return;

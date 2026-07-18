@@ -2049,83 +2049,40 @@
                     return; // ⛔ STOP EXECUTION
             }
 
+            // This trigger is only ever active for a candidate already at
+            // InReview(8) — see all_candidates.blade.php's row-level gating,
+            // which inerts the .client_stage_sub_stage class entirely for
+            // any other stage. The coin-spend confirmation ("Add to
+            // In-Review!") + validateClientPackage check belonged to a
+            // first-time submit-to-client action this trigger can no longer
+            // reach (coins were already spent to get here), so it now opens
+            // the drawer directly — matching what
+            // apptracker/clientapp.blade.php's own equivalent trigger
+            // already does.
             var app_id = $(this).data('row-id');
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
-                },
-                buttonsStyling: false
-            })
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    var inner_url =
-                        "{{ route('service_company.auth-custom-package.validateClientPackage') }}";
-                    var inner_token = "{{ csrf_token() }}";
-                    var eventId = 4;
-                    $.ajax({
-                        type: 'POST',
-                        url: inner_url,
-                        beforeSend: function() {},
-                        data: {
-                            '_token': inner_token,
-                            'event': 'CVACCESS',
-                            'app_id': app_id,
-                            'eventId': eventId
-                        },
-                        success: function(response) {
 
-                            if (response.status == "success") {
+            $('#stage_body_content').html('').hide();
+            $('#client_stage_body_content').html(
+                '<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>'
+            ).show();
+            $('#custom_stage_submit').hide();
+            $('#int_stage_submit').hide();
+            $('#csd_drawer_toggle').trigger('click');
 
-                                $('#stage_body_content').html('').hide();
-                                $('#client_stage_body_content').html(
-                                    '<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>'
-                                ).show();
-                                $('#custom_stage_submit').hide();
-                                $('#int_stage_submit').hide();
-                                $('#csd_drawer_toggle').trigger('click');
-
-                                var url =
-                                    "{{ route('service_company.job-applications.client_stage_body_content', ':id') }}";
-                                url = url.replace(':id', app_id);
-                                $.ajax({
-                                    type: 'GET',
-                                    url: url,
-                                    success: function(response) {
-                                        if (response.status == "success") {
-                                            $('#client_stage_body_content').html(
-                                                response.view);
-                                            $('#csd_drawer_subtitle').text($(
-                                                '#client_stage_body_content .csd-info-name'
-                                            ).first().text());
-                                        }
-                                    }
-                                });
-
-                            } else if (response.status == "info") {
-                                swalWithBootstrapButtons.fire('Fail!', response.message,
-                                    'error')
-                            }
-                        }
-                    });
-
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire(
-                        'Cancelled',
-                        'Selected request is safe :)',
-                        'error'
-                    )
+            var url = "{{ route('service_company.job-applications.client_stage_body_content', ':id') }}";
+            url = url.replace(':id', app_id);
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    if (response.status == "success") {
+                        $('#client_stage_body_content').html(response.view);
+                        $('#csd_drawer_subtitle').text($(
+                            '#client_stage_body_content .csd-info-name'
+                        ).first().text());
+                    }
                 }
-
-            })
+            });
         });
 
         $(document).on('click', '#int_stage_submit', function(e) {
@@ -2152,7 +2109,7 @@
                             // table._fnDraw();
 
                         } else if (response.status == "info") {
-                            swalWithBootstrapButtons.fire('Fail!', response.message, 'error')
+                            Swal.fire('Fail!', response.message, 'error')
                         }
 
                     }
@@ -2361,22 +2318,23 @@
             //  $.noConflict();
            
             fetchCandidates();
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            // The pagination partial (ajax_pages/pagination.blade.php) renders
+            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
+            // handler was listening for a class that doesn't exist anywhere in
+            // the actual markup, so clicking a page number did nothing at all.
+            var cvhPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (cvhPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                cvhPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cvhPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cvhPaginationLoading = false;
                 });
             });
 
@@ -2409,7 +2367,7 @@
             }
 
             // document.getElementById("loader_search").classList.remove("hidden");
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${page}`,
                 type: 'GET',
                 data: {
