@@ -225,13 +225,7 @@
         font-size: 11.5px;
         font-weight: 500;
         color: var(--text-dark);
-      }
-      .exp-row svg,
-      .sal-row svg {
-        width: 13px;
-        height: 13px;
-        color: var(--text-light);
-        flex-shrink: 0;
+        line-height: 1;
       }
       .sal-row {
         display: flex;
@@ -241,6 +235,25 @@
         width: 150px;
         font-weight: 500;
         color: var(--text-dark);
+        line-height: 1;
+      }
+      /* One identical 13x13 flex-centred icon box for every row in this column — the clock
+         (svg), the currency symbol (a Font Awesome <i>, not an svg — the old ".sal-row svg"
+         rule never matched it, which is why it never got sized/centred like the others),
+         and the client-type badge icon below. Same box model regardless of icon technology
+         is what actually makes the column line up. */
+      .exp-row svg,
+      .sal-row svg,
+      .sal-row i {
+        width: 13px;
+        height: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-light);
+        flex-shrink: 0;
+        font-size: 11px;
+        line-height: 13px;
       }
 
       /* FIX 4: job-type badge inside col-exp as 3rd item — plain icon+text, no pill
@@ -326,31 +339,28 @@
         font-size: 11px;
         line-height: 12px;
       }
-      .loc-row {
+      .loc-row, .mode-row {
         display: flex;
         align-items: center;
         gap: 4px;
         font-size: 11.5px;
         color: var(--text-mid);
         font-weight: 500;
+        line-height: 1;
       }
-      .loc-row svg {
-        width: 12px;
-        height: 12px;
-        color: var(--text-light);
-      }
-      .mode-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 11.5px;
-        color: var(--text-mid);
-        font-weight: 500;
-      }
+      /* Same 12x12 flex-centred box as .badge-hiring i above — one consistent icon
+         geometry for every row in this column, same as the Experience column's 13x13. */
+      .loc-row svg,
       .mode-row svg {
         width: 12px;
         height: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: var(--text-light);
+        flex-shrink: 0;
+        font-size: 11px;
+        line-height: 12px;
       }
 
       /* ── COL 4 ── */
