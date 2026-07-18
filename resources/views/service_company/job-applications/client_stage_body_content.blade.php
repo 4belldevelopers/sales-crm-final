@@ -3,7 +3,23 @@
 @endphp
 
 @php
-    $csdcInitial = strtoupper(substr(trim(@$application->full_name), 0, 1)) ?: '?';
+    // Several source fields are nullable (full_name, current_designation,
+    // qualification's relation, city/state/country), and when $qualification
+    // isn't found the controller leaves it as '' (a string, not an object) so
+    // ->name resolves to null too. Casting to string before every
+    // strtoupper()/ucwords()/substr() call avoids passing null into them:
+    // Laravel promotes that "deprecated null argument" notice into a thrown
+    // ErrorException (500), and `@` only suppresses the property access
+    // itself, not the null value it produces.
+    $csdcFullName = (string) (@$application->full_name ?? '');
+    $csdcDesig = (string) (@$application->current_designation ?? '');
+    $csdcQualName = (string) (@$qualification->name ?? '');
+    $csdcCityName = (string) (@$row_city_name ?? '');
+    $csdcCountryName = (string) (@$row_country_name ?? '');
+    $csdcSubmittedBy = (string) (@$application->submitted_by_name ?? '');
+    $csdcJobTitle = (string) (@$application->title ?? '');
+
+    $csdcInitial = strtoupper(substr(trim($csdcFullName), 0, 1)) ?: '?';
 
     $np = @$application->np_id;
     if (empty($np)) {
@@ -13,8 +29,6 @@
     } elseif (@$application->serving_notice_period_mode == 1 && $np != 'Immediate') {
         $np = GeneralMethod::ymdTodmyNotTime($application->np_id);
     }
-
-    $company_or_client = GeneralMethod::companyDetailsByClient(@$application->job_id);
 
     // Same palette as the plain-flow partial (stage_body_content.blade.php) —
     // duplicated here since each modal/drawer body partial is already
@@ -95,17 +109,17 @@
         <div class="csd-info-card">
             <div class="csd-info-avatar">{{ $csdcInitial }}</div>
             <div>
-                <div class="csd-info-name">{{ ucwords(@$application->full_name) }}</div>
-                <div class="csd-info-desig">{{ ucwords(@$application->current_designation) }}</div>
+                <div class="csd-info-name">{{ ucwords($csdcFullName) }}</div>
+                <div class="csd-info-desig">{{ ucwords($csdcDesig) }}</div>
             </div>
             <div class="csd-info-grid">
                 <div class="csd-info-item"><div class="lbl">Experience</div><div class="val">{{ @$application->total_exp }}+ yrs</div></div>
                 <div class="csd-info-item"><div class="lbl">Salary</div><div class="val">{!! @$expected_ctc !!}</div></div>
                 <div class="csd-info-item"><div class="lbl">Notice Period</div><div class="val">{{ @$np }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Qualification</div><div class="val">{{ ucwords(@$qualification->name) }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Location</div><div class="val">{{ @$row_city_name }}, {{ strtoupper(substr(@$row_country_name, 0, 2)) }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Source</div><div class="val">{{ @$application->submitted_by_name }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Job</div><div class="val" data-toggle="tooltip" title="{{ @$application->title }}">{{ substr(ucwords(@$application->title), 0, 22) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Qualification</div><div class="val">{{ ucwords($csdcQualName) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Location</div><div class="val">{{ $csdcCityName }}, {{ strtoupper(substr($csdcCountryName, 0, 2)) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Source</div><div class="val">{{ $csdcSubmittedBy }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Job</div><div class="val" data-toggle="tooltip" title="{{ $csdcJobTitle }}">{{ substr(ucwords($csdcJobTitle), 0, 22) }}</div></div>
             </div>
         </div>
 
@@ -119,7 +133,7 @@
             @if(!empty($master_status))
                 @foreach($master_status as $mstatus)
                     @php
-                        $csdKey = strtolower(@$mstatus->text_name);
+                        $csdKey = strtolower((string) (@$mstatus->text_name ?? ''));
                         $csdMeta = $csdStageMeta[$csdKey] ?? ['label' => @$mstatus->name, 'color' => '#7e8299', 'bg' => '#eef0f2', 'icon' => 'M12 6v6l4 2'];
                         $csdChk = ($mstatus->id == @$application->master_status_id) ? 'checked="checked"' : '';
                         $csdIsCurrent = ($mstatus->id == @$application->master_status_id);

@@ -8,7 +8,23 @@
      * plain PHP value instead of building an HTML string, since the new markup
      * renders the initial itself.
      */
-    $csdInitial = strtoupper(substr(trim(@$application->full_name), 0, 1)) ?: '?';
+    // Several source fields (full_name, current_designation, qualification's
+    // relation, city/state/country) are nullable — and when $qualification
+    // isn't found the controller leaves it as '' (a string, not an object),
+    // so ->name silently resolves to null too. Casting to string before every
+    // strtoupper()/ucwords()/substr() call avoids passing null into them:
+    // Laravel promotes that "deprecated null argument" notice into a thrown
+    // ErrorException (500), and the `@` operator only suppresses the property
+    // access itself, not the null value it produces.
+    $csdFullName = (string) (@$application->full_name ?? '');
+    $csdDesig = (string) (@$application->current_designation ?? '');
+    $csdQualName = (string) (@$qualification->name ?? '');
+    $csdCityName = (string) (@$row_city_name ?? '');
+    $csdCountryName = (string) (@$row_country_name ?? '');
+    $csdSubmittedBy = (string) (@$application->submitted_by_name ?? '');
+    $csdJobTitle = (string) (@$application->title ?? '');
+
+    $csdInitial = strtoupper(substr(trim($csdFullName), 0, 1)) ?: '?';
 
     $np = @$application->np_id;
     if (empty($np)) {
@@ -18,8 +34,6 @@
     } elseif (@$application->serving_notice_period_mode == 1 && $np != 'Immediate') {
         $np = GeneralMethod::ymdTodmyNotTime($application->np_id);
     }
-
-    $company_or_client = GeneralMethod::companyDetailsByClient(@$application->job_id);
 
     /*
      * Stage color/icon palette — reuses the exact hex values already
@@ -112,24 +126,27 @@
         <div class="csd-info-card">
             <div class="csd-info-avatar">{{ $csdInitial }}</div>
             <div>
-                <div class="csd-info-name">{{ ucwords(@$application->full_name) }}</div>
-                <div class="csd-info-desig">{{ ucwords(@$application->current_designation) }}</div>
+                <div class="csd-info-name">{{ ucwords($csdFullName) }}</div>
+                <div class="csd-info-desig">{{ ucwords($csdDesig) }}</div>
             </div>
             <div class="csd-info-grid">
                 <div class="csd-info-item"><div class="lbl">Experience</div><div class="val">{{ @$application->total_exp }}+ yrs</div></div>
                 <div class="csd-info-item"><div class="lbl">Salary</div><div class="val">{!! @$expected_ctc !!}</div></div>
                 <div class="csd-info-item"><div class="lbl">Notice Period</div><div class="val">{{ @$np }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Qualification</div><div class="val">{{ ucwords(@$qualification->name) }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Location</div><div class="val">{{ @$row_city_name }}, {{ strtoupper(substr(@$row_country_name, 0, 2)) }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Source</div><div class="val">{{ @$application->submitted_by_name }}</div></div>
-                <div class="csd-info-item"><div class="lbl">Job</div><div class="val" data-toggle="tooltip" title="{{ @$application->title }}">{{ substr(ucwords(@$application->title), 0, 22) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Qualification</div><div class="val">{{ ucwords($csdQualName) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Location</div><div class="val">{{ $csdCityName }}, {{ strtoupper(substr($csdCountryName, 0, 2)) }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Source</div><div class="val">{{ $csdSubmittedBy }}</div></div>
+                <div class="csd-info-item"><div class="lbl">Job</div><div class="val" data-toggle="tooltip" title="{{ $csdJobTitle }}">{{ substr(ucwords($csdJobTitle), 0, 22) }}</div></div>
             </div>
         </div>
 
         @php
+            // $master_status is a Collection of stdClass rows — iterate it
+            // directly rather than (array)-casting it, which would grab the
+            // Collection object's own internal properties instead of its rows.
             $csdCurrentKey = null;
-            foreach ((array) $master_status as $mstatus) {
-                if ($mstatus->id == @$application->master_status_id) { $csdCurrentKey = strtolower(@$mstatus->text_name); }
+            foreach ($master_status ?? [] as $mstatus) {
+                if ($mstatus->id == @$application->master_status_id) { $csdCurrentKey = strtolower((string) (@$mstatus->text_name ?? '')); }
             }
             $csdNextKey = null;
             if ($csdCurrentKey !== null) {
@@ -149,7 +166,7 @@
             @if(!empty($master_status))
                 @foreach($master_status as $mstatus)
                     @php
-                        $csdKey = strtolower(@$mstatus->text_name);
+                        $csdKey = strtolower((string) (@$mstatus->text_name ?? ''));
                         $csdMeta = $csdStageMeta[$csdKey] ?? ['label' => @$mstatus->name, 'color' => '#7e8299', 'bg' => '#eef0f2', 'icon' => 'M12 6v6l4 2'];
                         $csdChk = ($mstatus->id == @$application->master_status_id) ? 'checked="checked"' : '';
                         $csdIsCurrent = ($mstatus->id == @$application->master_status_id);
