@@ -85,8 +85,6 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
   .jsd-hero-row { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; padding: 3px 0; }
   .jsd-hero-row i { color: #a1a5b7; font-size: 11px; width: 13px; text-align: center; flex-shrink: 0; }
   .jsd-hero-row .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .jsd-hero-row.jsd-client-text { color: #3e97ff; }
-  .jsd-hero-row.jsd-client-text i { color: #3e97ff; }
   .jsd-hero-date-col { padding: 16px 18px; min-width: 130px; }
   .jsd-hero-date { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; margin-top: 8px; }
   .jsd-hero-date i { color: #a1a5b7; font-size: 11px; }
@@ -170,7 +168,7 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
       <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format($job->min_salary / 1000) }}K – {{ number_format($job->max_salary / 1000) }}K {{ $salaryModeLetter }}</div>
       @endif
       @if($clientTypeLabel)
-      <div class="jsd-hero-row jsd-client-text"><i class="fas fa-building"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</div>
+      <div class="jsd-hero-row jsd-client-text" style="color:{{ $clientTypeColor }};"><i class="fas {{ $clientTypeIcon }}" style="color:{{ $clientTypeColor }};"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</div>
       @endif
     </div>
 
