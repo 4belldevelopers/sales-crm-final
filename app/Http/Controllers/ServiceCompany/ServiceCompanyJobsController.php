@@ -14519,8 +14519,14 @@ protected $elasticService;
 			    $start_date = date('Y-m-d');
                 $end_date = date('Y-m-d', strtotime($start_date. ' + '.@$daysDifference.' days'));
 		        $job->start_date = 	$start_date;
-           
+
 			    $data['auto_date_job'] = $start_date;
+			    // start_date must be persisted too, not just set on the in-memory $job object —
+			    // otherwise it stays frozen at the original creation date forever while end_date
+			    // keeps advancing each cycle, so daysDifference (and the auto-close duration
+			    // derived from it) grows longer every time the job is reopened instead of staying
+			    // fixed at the originally-selected N days.
+			    $data['start_date'] = $start_date;
 			    $data['end_date'] = $end_date;
 				// Keep closeType=1 (auto-close still configured) so this recompute runs again on every
 				// future close -> reopen cycle, not just the first one. Previously reset to 0 here, which
