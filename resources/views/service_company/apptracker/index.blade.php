@@ -1539,6 +1539,8 @@
                 var comment = $('#comment').val();
                 if (master_status == 8 && comment=='') {
                     poolToast.fire({ icon: 'info', title: 'InReview Comment Required!' });
+                } else if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                    poolToast.fire({ icon: 'info', title: 'Please select a sub stage to continue.' });
                 } else {
                     $("#custom_stage_submit").prop("disabled", true);
                     $("#custom_stage_submit").html(

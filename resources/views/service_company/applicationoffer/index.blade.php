@@ -848,6 +848,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
         var ms = $('input[name="master_status"]:checked').val();
         var cm = $('#comment').val();
         if (ms == 8 && !cm) { Swal.fire("Warning",'InReview Comment Required!',"info"); return; }
+        if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) { Swal.fire("Warning",'Please select a sub stage to continue.',"info"); return; }
         $(this).prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
         $.ajax({
             url:'{{ route('service_company.job-applications.stage_submit') }}', type:'POST',

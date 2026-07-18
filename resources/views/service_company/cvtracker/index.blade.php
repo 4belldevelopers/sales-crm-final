@@ -2133,6 +2133,10 @@
             e.preventDefault();
             var master_status = $('input[name="master_status"]:checked').val();
             if ((master_status == 1) || (master_status == 7) || (master_status == 9)) {
+                if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                    Swal.fire("Warning", 'Please select a sub stage to continue.', "info");
+                    return;
+                }
                 $.ajax({
                     url: '{{ route('service_company.job-applications.client_stage_submit') }}',
                     container: '#status_frm',
@@ -2222,6 +2226,8 @@
             var comment = $('#comment').val();
             if (master_status == 8 && comment=='') {
                 Swal.fire("Warning", 'InReview Comment Required !', "info");
+            } else if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                Swal.fire("Warning", 'Please select a sub stage to continue.', "info");
             } else {
                 $("#custom_stage_submit").prop("disabled", true);
                 $("#custom_stage_submit").html(
