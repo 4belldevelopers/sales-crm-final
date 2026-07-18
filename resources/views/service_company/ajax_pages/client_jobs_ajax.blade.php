@@ -147,7 +147,14 @@
             if ($status == 'Inactive') {
                 $status = 'Closed';
             }
-            $ulink ='<span data-row-id="' .@$row->id .'" class="badge-hiring ' .@$class .' status_stage">' . $status .'</span>';
+            // A Direct Client job (recommended to this company, not owned by
+            // it) stays clickable — the click handler (jobs/index.blade.php)
+            // checks data-direct-client and shows a toast instead of opening
+            // the status drawer, since only the owning company may actually
+            // change the status (enforced server-side too, in
+            // ServiceCompanyJobsController::newUpdateJobstatus()).
+            $isDirectClientJob = $recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id;
+            $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring ' .@$class .' status_stage">' . $status .'</span>';
             $final_status = '';
             if (
                 ($row->final_status == 2 || $row->final_status == 3) &&

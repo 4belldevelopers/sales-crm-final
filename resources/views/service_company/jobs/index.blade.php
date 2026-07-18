@@ -625,6 +625,23 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
   $(document).on('click', '#status_sub_stage_close', function () { $('#status_drawer_close').trigger('click'); });
 
   $(document).on('click', '.status_stage', function () {
+		// Direct Client jobs (recommended to this company, not owned by it)
+		// stay clickable, but only the owning company may actually change
+		// the status — enforced server-side too, in
+		// ServiceCompanyJobsController::newUpdateJobstatus(). Notify instead
+		// of opening a drawer whose submit would just get rejected.
+		if ($(this).data('direct-client') == 1) {
+			Swal.fire({
+				toast: true,
+				position: 'top-end',
+				icon: 'warning',
+				title: 'Direct Client Jobs status cannot be changed by Agencies',
+				showConfirmButton: false,
+				timer: 3000,
+				timerProgressBar: true
+			});
+			return false;
+		}
 		$('#status_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
 		$('#status_confirm_btn').prop('disabled', true).css('background', '');
 		$('.changetextupdate').text('Update Status');

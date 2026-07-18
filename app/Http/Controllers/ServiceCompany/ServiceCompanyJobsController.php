@@ -14499,6 +14499,16 @@ protected $elasticService;
 		
 		$job = Job::find($job_id);
 
+		// A job posted by another company and merely recommended/assigned to
+		// this agency (a "Direct Client" job on the Client Jobs tab) is not
+		// this company's to change the status of — only the company that
+		// owns the job (jobs.company_id) may transition it. Without this,
+		// any agency with access to the status drawer could flip a client's
+		// own job to Closed/Hold/Hiring.
+		if (!$job || (int) $job->company_id !== (int) $company_id) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Only the company that owns this job can change its status.']);
+		}
+
 		if($status=='active'){
 
 			$today = Carbon::today();
