@@ -1965,6 +1965,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 				
    				var master_status	=	$('input[name="master_status"]:checked').val();
    				if((master_status == 1) || (master_status == 7) || (master_status == 9) ){
+            if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                cafToast.fire({ icon: 'info', title: 'Please select a sub stage to continue.' });
+                return;
+            }
             $('#int_stage_submit').prop('disabled',true);
             $('.indicator-label').hide();
             $('.indicator-progress').show();
