@@ -187,7 +187,10 @@ END:VCALENDAR";
 		$map = [
 			['duplicate',       $svgCopy,       '#f1416c', '#fdedf0', 'Duplicate profile'],
 			['not interest',    $svgClock,      '#ffa800', '#fff4de', 'Candidate not interested'],
+			['not looking',     $svgClock,      '#ffa800', '#fff4de', 'Not actively looking'],
+			['not relevant',    $svgUser,       '#3e97ff', '#eef4ff', 'Profile not relevant to role'],
 			['mismatch',        $svgUser,       '#3e97ff', '#eef4ff', 'Does not match role'],
+			['stability',       $svgAlert,      '#ffa800', '#fff4de', 'Stability concerns'],
 			['high salary',     $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
 			['salary',          $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
 			['compensation',    $svgDollar,     '#17c653', '#eafcf3', 'Compensation expectations high'],
@@ -197,6 +200,7 @@ END:VCALENDAR";
 			['proxy',           $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
 			['no show',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
 			['noshow',          $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['backed',          $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
 			['back out',        $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
 			['backout',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
 			['onboard',         $svgUserCheck,  '#17c653', '#eafcf3', 'Candidate onboarded'],
