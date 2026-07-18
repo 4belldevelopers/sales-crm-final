@@ -14450,48 +14450,8 @@ protected $elasticService;
 		$this->id = $id;
 		if ($this->id) {
 			$this->job = DB::table('jobs')
-				->select('jobs.*', 'job_categories.name as cat_name')
-				->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
 				->where('jobs.id', '=', $this->id)
 				->first();
-
-			$company_id = auth()->user()->company_id;
-			$companyOrClientName = $this->job && $this->job->client_id ? GeneralMethod::companyOrClientName($this->job->client_id) : null;
-			$this->clientName = @$companyOrClientName->companyOrclientName;
-
-			// Internal Client / Direct Client — same real client-relationship check and the same
-			// translation strings/icon used by the bench "Placed" listing (bench-place-candidate-ajax.blade.php)
-			// for this exact concept, kept consistent here rather than inventing new wording.
-			if ($companyOrClientName) {
-				if (@$companyOrClientName->selfCompany == 1) {
-					$this->clientTypeLabel = __('messages.internal_client_tag');
-					$this->clientTypeIcon = 'fa-building-shield';
-					$this->clientTypeColor = '#3e97ff';
-				} else {
-					$this->clientTypeLabel = __('messages.direct_clinet_tag');
-					$this->clientTypeIcon = 'fa-handshake';
-					$this->clientTypeColor = '#17c653';
-				}
-			} else {
-				$this->clientTypeLabel = null;
-			}
-
-			$this->jobLocation = DB::table('client_location_jobs')
-				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-				->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-				->select('client_location.city', 'city_list.city as city_name')
-				->where('client_location_jobs.job_id', $this->id)
-				->first();
-
-			// "Job Posted" on the hero card reflects the most recent time this job was set back
-			// to Hiring (re-activation), not the original creation date — falls back to jobs.created_at
-			// for jobs that have never been reactivated (no matching log yet).
-			$lastActivatedLog = DB::table('job_status_logs')
-				->where('job_id', $this->id)
-				->where('to_status', 'active')
-				->orderByDesc('created_at')
-				->first();
-			$this->postedDisplayDate = $lastActivatedLog->created_at ?? @$this->job->created_at;
 
 			// "Last updated by" footer — most recent status change of any kind, for attribution only.
 			$this->lastStatusChange = DB::table('job_status_logs')

@@ -3,8 +3,8 @@
  * Job Status drawer body — AJAX-injected into #status_body_content (see
  * service_company.jobs.index's #status_drawer). Same business rule as before
  * (Hiring=active enables the career page + vendor submissions + candidate
- * applications; Hold/Closed disable them), presented as: hero job summary,
- * status cards, and an Impact Preview comparison table. No sidebar/timeline/
+ * applications; Hold/Closed disable them), presented as: status cards and an
+ * Impact Preview comparison table. No hero job summary, sidebar, timeline, or
  * stats panel by design — kept to exactly what the approved layout shows.
  */
 $statusVal = @$job->status;
@@ -30,30 +30,6 @@ $statusMeta = [
     ],
 ];
 
-$currentMeta = $statusMeta[$statusVal] ?? null;
-
-$workType = 'Work From Office';
-if (@$job->work_type == 'yes') { $workType = 'Remote'; }
-elseif (@$job->work_type == 'other') { $workType = 'Hybrid'; }
-
-$cityName = @$jobLocation->city_name ?: @$jobLocation->city;
-
-// ---- Hero card data (salary, client badge, avatar initial) ----
-$currencyIcons = \App\Helper\GeneralMethod::currencySymbole();
-$salaryModeArr = \App\Helper\GeneralMethod::salaryMode();
-$currencyIcon = $currencyIcons[$job->min_salary_currency ?? 0] ?? $currencyIcons[0];
-$salaryModeLetter = isset($salaryModeArr[$job->min_sal_mode]) ? strtoupper(substr($salaryModeArr[$job->min_sal_mode], 0, 1)) : '';
-$hasSalary = @$job->min_salary > 0 || @$job->max_salary > 0;
-
-$avatarSource = $clientName ?: @$job->title ?: 'J';
-$avatarInitial = strtoupper(substr(trim($avatarSource), 0, 1));
-$avatarOrd = ord(strtolower($avatarInitial ?: 'j'));
-if ($avatarOrd >= 97 && $avatarOrd <= 101) { $avatarColors = ['#fff5f8', '#f1416c']; }
-elseif ($avatarOrd >= 102 && $avatarOrd <= 106) { $avatarColors = ['#fff8ec', '#ffa800']; }
-elseif ($avatarOrd >= 107 && $avatarOrd <= 111) { $avatarColors = ['#f5f8ff', '#3e97ff']; }
-elseif ($avatarOrd >= 112 && $avatarOrd <= 116) { $avatarColors = ['#eafcf3', '#17c653']; }
-else { $avatarColors = ['#f5f5fa', '#5e6278']; }
-
 // ---- Impact Preview cell icon: driven by column severity, not the text value ----
 $jsdCellIcon = function ($val, $key) {
     if ($val === 'active') return ['fa-check', '#17c653'];
@@ -71,33 +47,6 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
 <style>
   .jsd-wrap { padding: 20px 28px 24px; font-family: 'Poppins', sans-serif; color: #3f4254; }
   .jsd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
-
-  /* ---- Hero / job info card ---- */
-  .jsd-hero { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.05fr) auto auto; gap: 0; border: 1px solid #eef0f4; border-radius: 12px; margin-bottom: 22px; background: #fff; overflow: hidden; }
-  .jsd-hero-col { padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #eef0f4; min-width: 0; }
-  .jsd-hero-col:first-child { border-left: none; }
-  .jsd-hero-label { font-size: 10px; font-weight: 700; color: #3e97ff; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 9px; }
-  .jsd-hero-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .jsd-hero-avatar { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
-  .jsd-hero-title { font-size: 14.5px; font-weight: 700; color: #181c32; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .jsd-hero-cat { font-size: 11.5px; color: #3e97ff; font-weight: 500; margin-top: 2px; }
-  .jsd-hero-client { font-size: 11.5px; color: #7e8299; font-weight: 400; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .jsd-hero-row { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; padding: 3px 0; }
-  .jsd-hero-row i { color: #a1a5b7; font-size: 11px; width: 13px; text-align: center; flex-shrink: 0; }
-  .jsd-hero-row .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .jsd-hero-date-col { padding: 16px 18px; min-width: 130px; }
-  .jsd-hero-date { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; margin-top: 8px; }
-  .jsd-hero-date i { color: #a1a5b7; font-size: 11px; }
-
-  @media (max-width: 1200px) {
-    .jsd-hero { grid-template-columns: 1fr 1fr; }
-    .jsd-hero-date-col { grid-column: span 1; border-top: 1px solid #eef0f4; }
-  }
-  @media (max-width: 640px) {
-    .jsd-hero { grid-template-columns: 1fr; }
-    .jsd-hero-col, .jsd-hero-date-col { border-left: none !important; border-top: 1px solid #eef0f4; }
-    .jsd-hero-col:first-child { border-top: none; }
-  }
 
   /* ---- Section headers ---- */
   .jsd-sec-head { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
@@ -152,58 +101,6 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
 </style>
 
 <div class="jsd-wrap">
-  <div class="jsd-hero">
-    <!-- Identity -->
-    <div class="jsd-hero-col">
-      <div class="jsd-hero-id">
-        <div class="jsd-hero-avatar" style="background:{{ $avatarColors[0] }};color:{{ $avatarColors[1] }};">{{ $avatarInitial }}</div>
-        <div style="min-width:0;">
-          <div class="jsd-hero-title" title="{{ @$job->title }}">{{ @$job->title }}</div>
-          @if(@$job->cat_name)<div class="jsd-hero-cat">{{ $job->cat_name }}</div>@endif
-          @if($clientName)<div class="jsd-hero-client" title="{{ $clientName }}">{{ $clientName }}</div>@endif
-        </div>
-      </div>
-    </div>
-
-    <!-- Experience & compensation -->
-    <div class="jsd-hero-col">
-      <div class="jsd-hero-label">Experience</div>
-      <div class="jsd-hero-row"><i class="fas fa-clock"></i>{{ @$job->min_exp }} – {{ @$job->max_exp }} Years</div>
-      @if($hasSalary)
-      <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format($job->min_salary / 1000) }}K – {{ number_format($job->max_salary / 1000) }}K {{ $salaryModeLetter }}</div>
-      @endif
-      @if($clientTypeLabel)
-      <div class="jsd-hero-row jsd-client-text" style="color:{{ $clientTypeColor }};"><i class="fas {{ $clientTypeIcon }}" style="color:{{ $clientTypeColor }};"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</div>
-      @endif
-    </div>
-
-    <!-- Hiring & location -->
-    <div class="jsd-hero-col">
-      <div class="jsd-hero-label">Hiring &amp; Location</div>
-      @if($currentMeta)
-      <div class="jsd-hero-row" style="color:{{ $currentMeta['color'] }};"><span class="dot"></span>{{ $currentMeta['label'] }}</div>
-      @endif
-      @if($cityName)
-      <div class="jsd-hero-row"><i class="fas fa-location-dot"></i>{{ ucwords($cityName) }}</div>
-      @endif
-      <div class="jsd-hero-row"><i class="fas fa-house-laptop"></i>{{ $workType }}</div>
-    </div>
-
-    <!-- Job Posted -->
-    <div class="jsd-hero-date-col">
-      <div class="jsd-hero-label">Job Posted</div>
-      <div class="jsd-hero-date"><i class="fas fa-calendar"></i>{{ @$postedDisplayDate ? date('d M Y', strtotime($postedDisplayDate)) : '—' }}</div>
-    </div>
-
-    <!-- Automatically Closed -->
-    @if(@$job->closeType == 1 && @$job->end_date)
-    <div class="jsd-hero-date-col">
-      <div class="jsd-hero-label">Automatically Closed</div>
-      <div class="jsd-hero-date"><i class="fas fa-calendar-xmark"></i>{{ date('d M Y', strtotime($job->end_date)) }}</div>
-    </div>
-    @endif
-  </div>
-
   <form id="createSchedule" class="ajax-form" method="post">
     <input type="hidden" name="_token" value="{{ csrf_token() }}">
     <input type="hidden" name="job_id" id="job_id" value="{{ @$job->id }}" />
