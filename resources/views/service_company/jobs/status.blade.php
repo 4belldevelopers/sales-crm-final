@@ -167,7 +167,7 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
       <div class="jsd-hero-label">Experience</div>
       <div class="jsd-hero-row"><i class="fas fa-clock"></i>{{ @$job->min_exp }} – {{ @$job->max_exp }} Years</div>
       @if($hasSalary)
-      <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format((float) $job->min_salary) }}K – {{ number_format((float) $job->max_salary) }}K {{ $salaryModeLetter }}</div>
+      <div class="jsd-hero-row">{!! $currencyIcon !!}&nbsp;{{ number_format($job->min_salary / 1000) }}K – {{ number_format($job->max_salary / 1000) }}K {{ $salaryModeLetter }}</div>
       @endif
       @if($clientTypeLabel)
       <div class="jsd-hero-row jsd-client-text"><i class="fas fa-building"></i>{{ $clientTypeLabel }} · #{{ @$job->id }}</div>
