@@ -11105,7 +11105,41 @@ protected $elasticService;
                 if($data->job_master_status_id==7){
                     // dd($data->job_master_status_id);
                     $stage_point_tb = DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->first();
-                   
+
+                    // Same backward-recovery guard stage_submit() applies when
+                    // un-rejecting: resume at exactly the stage left off at,
+                    // or (if it had already reached Offered/Joined) restart at
+                    // Sourcing — no skipping to an arbitrary stage in between.
+                    if($stage_point_tb){
+                        if($stage_point_tb->stage_id !=5 && $stage_point_tb->stage_id !=6){
+                            if($stage_point_tb->stage_id!=$master_status){
+                                $currentName  = $stages[$master_status]['display'];
+                                $newName      = $stages[$stage_point_tb->stage_id]['display'];
+                                return Reply::dataOnly([
+                                    'status' => 'candidatevalidation',
+                                    'message' => "You cannot move backward from
+                                                <b style='color:#EF4444;'>Rejected</b>
+                                                to <b style='color:#F59E0B;'>{$currentName}</b>..<br>
+                                            Please complete the required step in
+                                            <b style='color:#F59E0B;'>{$newName}</b> first."
+                                ]);
+                            }
+                        }elseif($stage_point_tb->stage_id==5 || $stage_point_tb->stage_id==6){
+                            if($master_status !=1){
+                                $currentName  = $stages[$master_status]['display'];
+                                $newName      = $stages[$stage_point_tb->stage_id]['display'];
+                                return Reply::dataOnly([
+                                    'status' => 'candidatevalidation',
+                                    'message' => "You cannot move backward from
+                                                <b style='color:#EF4444;'>Rejected</b>
+                                                to <b style='color:#F59E0B;'>{$currentName}</b>..<br>
+                                            Please complete the required step in
+                                            <b style='color:#F59E0B;'>{$newName}</b> first."
+                                ]);
+                            }
+                        }
+                    }
+
                     DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->delete();
                     //  dd($master_status);
                     $values = array(
@@ -11115,10 +11149,10 @@ protected $elasticService;
                     'user_id' => $data->submitted_by,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d')
- 
+
                 );
                 DB::table('stage_point_tb')->insert($values);
- 
+
                 }else{
  
                     if (!isset($stages[$currentStageId]) || !isset($stages[$newStageId])) {
