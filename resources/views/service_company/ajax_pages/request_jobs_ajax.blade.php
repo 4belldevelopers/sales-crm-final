@@ -198,7 +198,7 @@
                   {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
                 </div>
                 <div class="sal-row">
-                  {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} {{ $min_sal_mode }}
+                  {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
                 </div>
                 <!-- FIX 4: job type badge here -->
                 <span class="badge-type {{ $badge }}">
