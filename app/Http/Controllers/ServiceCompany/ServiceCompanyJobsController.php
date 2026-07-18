@@ -1756,6 +1756,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 		$userPermissions = $this->userPermissions;
@@ -2886,6 +2887,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -3203,6 +3205,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -3470,6 +3473,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 		$userPermissions = $this->userPermissions;
@@ -3976,6 +3980,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -5023,6 +5028,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -10865,6 +10871,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
