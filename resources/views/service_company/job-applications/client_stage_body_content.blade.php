@@ -86,7 +86,7 @@
 
         <div class="csd-info-name d-none">{{ ucwords($csdcFullName) }}</div>
 
-        <div class="csd-notice"><i class="fa fa-info-circle"></i> This is a client-owned job — you can move the candidate back to InReview or mark Sourcing/Rejected only; other stages are managed by the client.</div>
+        <div class="csd-notice"><i class="fa fa-info-circle"></i> This is a client-managed job. In Review and Rejected are private to your team. Moving a candidate to Sourcing makes the profile visible to the client, after which all subsequent hiring stages are managed by the client.</div>
 
         <div class="csd-sec-head">
             <span class="csd-sec-num">1</span>
@@ -126,14 +126,16 @@
 
         @php
             // Sub Stage starts hidden when: this application's current stage
-            // is Rejected(7) (client flow shows Comment instead, unchanged
-            // business rule) or InReview(8) (agency-only, no sub-stages by
-            // design), when requisition_owner==0 (agency's own territory —
-            // unchanged), or simply when there's no data for it yet.
+            // is InReview(8) (agency-only, no sub-stages by design), when
+            // requisition_owner==0 (agency's own territory — unchanged), or
+            // simply when there's no data for it yet. Rejected(7) now shows
+            // its rejection-reason tiles here too (previously force-hidden
+            // in favor of the comment box only — fixed per explicit request;
+            // the comment box still shows alongside it, unchanged).
             $csdcCurrentId = (int) (@$application->master_status_id ?? 0);
             $csdcSubHiddenInitially = empty($candidate_status_Arr)
                 || (int) (@$requisition_owner ?? 1) === 0
-                || in_array($csdcCurrentId, [7, 8], true);
+                || $csdcCurrentId === 8;
         @endphp
         <div id="main_substage" @if($csdcSubHiddenInitially) style="display:none;" @endif>
             <div class="csd-sec-head subStageSection">
@@ -180,18 +182,23 @@
 
     // requisition_owner: same server-computed flag the old modal used to
     // decide whether the sub-stage section applies at all for this
-    // application — unchanged.
+    // application — unchanged. (No unconditional show/hide here anymore —
+    // that used to force #main_substage visible on every load whenever
+    // requisition_owner != 0, regardless of InReview or data availability,
+    // fighting with the PHP-computed initial state below and with
+    // csdcSelectStage's own logic on every click.)
     var csdcRequisitionOwner = {!! (int) @$requisition_owner !!};
-    if (csdcRequisitionOwner == 0) { $('#main_substage').hide(); } else { $('#main_substage').show(); }
 
     /*
-     * Reproduces the exact gating the old client_stage_body_content inline
-     * script had (submit only actionable for stage ids 1/9/7, comment box
-     * shown only for 7, sub-stage list hidden for 8) — rewritten cleanly
+     * Reproduces the submit-actionable gating the old inline script had
+     * (stage ids 1/9/7 only, comment box shown for 7) — rewritten cleanly
      * against the new pill markup instead of `.btn-check` toggle buttons.
-     * The submit button itself now lives in the page's drawer topbar
-     * (#int_stage_submit, shown/hidden here); its own click handler and
-     * client_stage_submit() validation are untouched.
+     * Sub Stage visibility for Rejected(7) is no longer force-hidden in
+     * favor of the comment box — it now shows its rejection-reason tiles
+     * the same way every other fetchable stage does. The submit button
+     * itself lives in the page's drawer topbar (#int_stage_submit, shown/
+     * hidden here); its own click handler and client_stage_submit()
+     * validation are untouched.
      */
     function csdcSelectStage(el) {
         var id = $(el).data('master-status-id');
@@ -209,14 +216,18 @@
             $('#int_stage_submit').hide();
         }
 
-        // Rejected(7) shows the Comment box instead of Sub Stage (unchanged
-        // business rule); InReview(8) never has sub-stages by design, so
-        // there's nothing to fetch. Every other stage's Sub Stage visibility
-        // is decided purely by whether the backend actually has data for it.
         if (id == 7) {
-            $('#main_substage').hide();
             $('#comment_div').show();
-        } else if (id == 8 || csdcRequisitionOwner == 0) {
+        }
+
+        // InReview(8) never has sub-stages by design, so there's nothing to
+        // fetch; requisition_owner==0 is the agency's own private territory
+        // (no sub-stage editing there either). Every other stage's Sub Stage
+        // visibility — including Rejected(7), which now shows its
+        // rejection-reason tiles here too instead of being force-hidden in
+        // favor of the comment box only — is decided purely by whether the
+        // backend actually has data for it.
+        if (id == 8 || csdcRequisitionOwner == 0) {
             $('#main_substage').hide();
         } else {
             csdcFetchSubStage(id);
