@@ -318,11 +318,12 @@
   #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
   #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
   #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
-  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 24px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
   #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
-  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-  #csd_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
-  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 24px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+  #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
+  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
+  #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e4e6ef; }
   #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
   #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
 </style>
@@ -334,7 +335,7 @@
   <div class="d-flex flex-column h-100 w-100">
     <div class="sd-topbar">
       <div class="sd-topbar-left">
-        <span class="sd-topbar-ico"><i class="fas fa-route"></i></span>
+        <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
         <div>
           <div class="sd-topbar-title">Change Candidate Stage</div>
           <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
@@ -343,9 +344,10 @@
       <div class="sd-topbar-right">
         <button type="button" class="sd-btn-cancel" id="stage_sub_stage_close">Cancel</button>
         <button type="button" class="sd-btn-confirm" id="custom_stage_submit">
-          <span class="indicator-label">Submit</span>
+          <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>
         </button>
-        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-xmark"></i></span>
+        <span class="sd-divider"></span>
+        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-times"></i></span>
       </div>
     </div>
     <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
