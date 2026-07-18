@@ -134,7 +134,12 @@ $footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S'
   .jsd-impact-table thead th.col-inactive { color: #c22851; }
   .jsd-impact-table tbody th { font-weight: 600; color: #3f4254; white-space: nowrap; }
   .jsd-impact-table tbody tr:last-child td, .jsd-impact-table tbody tr:last-child th { border-bottom: none; }
-  .jsd-impact-table td.jsd-cell { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #3f4254; }
+  /* .jsd-cell is the inner <span> inside each <td>, not the <td> itself — the selector
+     must target it directly, not "td.jsd-cell" (which never matches anything since the
+     class never actually lands on the <td>). That mismatch was why the icon and text
+     had no gap: this rule simply never applied. */
+  .jsd-impact-table .jsd-cell { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #3f4254; }
+  .jsd-impact-table .jsd-cell i { width: 13px; height: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
   .jsd-impact-table td.jsd-current-col { background: #f2fdf7; }
   .jsd-impact-table td.jsd-target-col { background: #f5f9ff; }
 

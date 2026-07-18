@@ -110,7 +110,7 @@
         $isDirectClientJob = $recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id;
         // Same status icons as the Job Status drawer's cards (Hiring/Hold/Closed).
         $statusIcon = $status == 'Hiring' ? 'fa-user-group' : ($status == 'Hold' ? 'fa-pause' : 'fa-box-archive');
-        $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring status-ic ' .@$class .' status_stage"><i class="fas ' .$statusIcon .'"></i>' . $status .'</span>';
+        $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring ' .@$class .' status_stage"><i class="fas ' .$statusIcon .'"></i>' . $status .'</span>';
         $final_status = '';
         if (
             ($row->final_status == 2 || $row->final_status == 3) &&
