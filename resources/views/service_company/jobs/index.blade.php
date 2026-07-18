@@ -846,12 +846,6 @@ $(document).on('click', '.client-hm-listing', function ()
                 fetchCandidates(page, $('#search').val());
             });
 
-            $(document).on('change', '#rowsPerPageSelect', function() {
-                pageSize = $(this).val();
-                localStorage.setItem('jobsPageSize', pageSize);
-                fetchCandidates(1, $('#search').val());
-            });
-
         });
 
 
@@ -859,7 +853,8 @@ $(document).on('click', '.client-hm-listing', function ()
                 if (!page_no) {
                     page_no = 1;
                 }
-          var pageSize = localStorage.getItem('jobsPageSize') || 10;
+          localStorage.removeItem('jobsPageSize'); // stale value from before page size was fixed at 10
+          var pageSize = 10;
 
 
         function fetchCandidates(page = page_no, search = '', size = pageSize) {

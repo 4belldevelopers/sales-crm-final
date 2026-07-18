@@ -44,12 +44,13 @@
     font-size:13px; color:#94A3B8; padding:0 4px;
     display:flex; align-items:center;
 }
-/* Per-page dropdown */
+/* Fixed page-size label (10 / page) — not interactive, no selector */
 .pagi-perpage{
-    height:32px; padding:0 8px;
+    height:32px; padding:0 10px;
+    display:inline-flex; align-items:center;
     border:1.5px solid #E5E9F0; border-radius:8px;
     font-size:13px; font-weight:500; color:#374151;
-    background:#fff; outline:none; cursor:pointer;
+    background:#fff;
     font-family:'Poppins',sans-serif; margin-left:8px;
 }
 </style>
@@ -97,14 +98,10 @@
             <i class="ti ti-chevron-right"></i>
         </button>
 
-        {{-- Per-page selector --}}
+        {{-- Page size is fixed at 10 (kept as plain text, not a selector) — smaller,
+             consistent payloads for every listing this component is used on. --}}
         @if(isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
-        <select class="pagi-perpage" id="rowsPerPageSelect">
-            <option value="10"  {{ $perPage == 10  ? 'selected' : '' }}>10 / page</option>
-            <option value="25"  {{ $perPage == 25  ? 'selected' : '' }}>25 / page</option>
-            <option value="50"  {{ $perPage == 50  ? 'selected' : '' }}>50 / page</option>
-            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100 / page</option>
-        </select>
+        <span class="pagi-perpage">10 / page</span>
         @endif
     </div>
 </div>
