@@ -834,36 +834,39 @@ $(document).on('click', '.client-hm-listing', function ()
             // $.noConflict();
 
             fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
+
+            // Pagination bar markup (service_company.ajax_pages.pagination) uses .pagi-page /
+            // .pagi-arrow buttons and a #rowsPerPageSelect dropdown, not the old .page-link
+            // links this handler used to target — that mismatch is why Next/page-numbers and
+            // the per-page selector did nothing. Disabled states (.pagi-disabled /
+            // .pagi-active-disabled) already carry pointer-events:none in CSS, so clicks on
+            // them never reach here; the :not() below is just a defensive second check.
+            $(document).on('click', '#pagination .pagi-page:not(.pagi-active-disabled), #pagination .pagi-arrow:not(.pagi-disabled)', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('active_disabled')) return;
+                if (!page) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('active_disabled');
+                fetchCandidates(page, $('#search').val());
+            });
 
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+            $(document).on('change', '#rowsPerPageSelect', function() {
+                pageSize = $(this).val();
+                localStorage.setItem('jobsPageSize', pageSize);
+                fetchCandidates(1, $('#search').val());
             });
 
         });
 
-       
+
           var page_no = localStorage.getItem('currentPageJobs');
                 if (!page_no) {
                     page_no = 1;
                 }
-                
+          var pageSize = localStorage.getItem('jobsPageSize') || 10;
 
-        function fetchCandidates(page = page_no, search = '') {
+
+        function fetchCandidates(page = page_no, search = '', size = pageSize) {
             var clientid = '1';
             if($('.inputJobSearch').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
@@ -871,7 +874,7 @@ $(document).on('click', '.client-hm-listing', function ()
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -879,13 +882,14 @@ $(document).on('click', '.client-hm-listing', function ()
                   search : $('#inputSearch').val(),
                   custom_hiringtype : $('#hiringtype').val(),
                   employment_type : $('#employment_type').val(),
-                  custom_search : $('.inputJobSearch').val()
+                  custom_search : $('.inputJobSearch').val(),
+                  size : size
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    localStorage.setItem('currentPageJobs', 1);
+                    localStorage.setItem('currentPageJobs', page);
                     $('#allJobList').html(response.html);
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
