@@ -14460,20 +14460,6 @@ protected $elasticService;
 				->where('client_location_jobs.job_id', $this->id)
 				->first();
 
-			// Impact Preview / Status Summary counts — cheap, indexed single-table lookups, no N+1.
-			$this->candidatesCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->count();
-			$this->vendorsCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->where('thirdparty_company_id', '!=', 0)->distinct()->count('thirdparty_company_id');
-			$this->interviewsCount = DB::table('job_applications')->where('job_id', $this->id)->whereNull('deleted_at')->where('master_status_id', 3)->count();
-
-			// Status Timeline — most recent transitions first, capped so the drawer stays light.
-			$this->statusLogs = DB::table('job_status_logs')
-				->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
-				->select('job_status_logs.from_status', 'job_status_logs.to_status', 'job_status_logs.created_at', 'users.name as changed_by_name')
-				->where('job_status_logs.job_id', $this->id)
-				->orderByDesc('job_status_logs.created_at')
-				->limit(8)
-				->get();
-
 			// "Job Posted" on the hero card reflects the most recent time this job was set back
 			// to Hiring (re-activation), not the original creation date — falls back to jobs.created_at
 			// for jobs that have never been reactivated (no matching log yet).
@@ -14483,6 +14469,14 @@ protected $elasticService;
 				->orderByDesc('created_at')
 				->first();
 			$this->postedDisplayDate = $lastActivatedLog->created_at ?? @$this->job->created_at;
+
+			// "Last updated by" footer — most recent status change of any kind, for attribution only.
+			$this->lastStatusChange = DB::table('job_status_logs')
+				->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+				->select('job_status_logs.created_at', 'users.name as changed_by_name')
+				->where('job_status_logs.job_id', $this->id)
+				->orderByDesc('job_status_logs.created_at')
+				->first();
 		}
 		$view = view('service_company.jobs.status', $this->data)->render();
 		// dd($view);

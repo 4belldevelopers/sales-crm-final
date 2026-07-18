@@ -1,11 +1,11 @@
 <?php
 /*
  * Job Status drawer body — AJAX-injected into #status_body_content (see
- * service_company.jobs.index's #status_drawer). Rewritten from the old
- * dropdown/2-bullet modal into a fuller status-change review screen, same
- * business rule as before (Hiring=active enables the career page + vendor
- * submissions + candidate applications; Hold/Closed disable them), just
- * expressed as a richer comparison instead of one bullet list at a time.
+ * service_company.jobs.index's #status_drawer). Same business rule as before
+ * (Hiring=active enables the career page + vendor submissions + candidate
+ * applications; Hold/Closed disable them), presented as: hero job summary,
+ * status cards, and an Impact Preview comparison table. No sidebar/timeline/
+ * stats panel by design — kept to exactly what the approved layout shows.
  */
 $statusVal = @$job->status;
 
@@ -38,8 +38,6 @@ elseif (@$job->work_type == 'other') { $workType = 'Hybrid'; }
 
 $cityName = @$jobLocation->city_name ?: @$jobLocation->city;
 
-$lastLog = $statusLogs->first();
-
 // ---- Hero card data (salary, client badge, avatar initial) ----
 $currencyIcons = \App\Helper\GeneralMethod::currencySymbole();
 $salaryModeArr = \App\Helper\GeneralMethod::salaryMode();
@@ -55,13 +53,27 @@ elseif ($avatarOrd >= 102 && $avatarOrd <= 106) { $avatarColors = ['#fff8ec', '#
 elseif ($avatarOrd >= 107 && $avatarOrd <= 111) { $avatarColors = ['#f5f8ff', '#3e97ff']; }
 elseif ($avatarOrd >= 112 && $avatarOrd <= 116) { $avatarColors = ['#eafcf3', '#17c653']; }
 else { $avatarColors = ['#f5f5fa', '#5e6278']; }
+
+// ---- Impact Preview cell icon: driven by column severity, not the text value ----
+$jsdCellIcon = function ($val, $key) {
+    if ($val === 'active') return ['fa-check', '#17c653'];
+    $color = $val === 'hold' ? '#ffa800' : '#f1416c';
+    if (in_array($key, ['interviews', 'offers'])) return ['fa-bullseye', $color];
+    if ($val === 'hold' && in_array($key, ['candidates', 'notify'])) return ['fa-pause', $color];
+    if ($val === 'hold') return ['fa-circle-exclamation', $color];
+    return ['fa-xmark', $color];
+};
+
+$footerName = @$lastStatusChange->changed_by_name;
+$footerDate = @$lastStatusChange->created_at ?: @$job->updated_at;
+$footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S';
 ?>
 <style>
-  .jsd-wrap { padding: 20px 28px 28px; font-family: 'Poppins', sans-serif; color: #3f4254; }
+  .jsd-wrap { padding: 20px 28px 24px; font-family: 'Poppins', sans-serif; color: #3f4254; }
   .jsd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
   /* ---- Hero / job info card ---- */
-  .jsd-hero { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.05fr) auto; gap: 0; border: 1px solid #eef0f4; border-radius: 12px; margin-bottom: 22px; background: #fff; overflow: hidden; }
+  .jsd-hero { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.05fr) auto auto; gap: 0; border: 1px solid #eef0f4; border-radius: 12px; margin-bottom: 22px; background: #fff; overflow: hidden; }
   .jsd-hero-col { padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #eef0f4; min-width: 0; }
   .jsd-hero-col:first-child { border-left: none; }
   .jsd-hero-label { font-size: 10px; font-weight: 700; color: #3e97ff; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 9px; }
@@ -72,27 +84,21 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
   .jsd-hero-client { font-size: 11.5px; color: #7e8299; font-weight: 400; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .jsd-hero-row { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; padding: 3px 0; }
   .jsd-hero-row i { color: #a1a5b7; font-size: 11px; width: 13px; text-align: center; flex-shrink: 0; }
-  .jsd-hero-row.status-active { color: #17c653; }
   .jsd-hero-row .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
   .jsd-hero-row.jsd-client-text { color: #3e97ff; }
   .jsd-hero-row.jsd-client-text i { color: #3e97ff; }
-  .jsd-hero-date-wrap { display: flex; border-left: 1px solid #eef0f4; }
   .jsd-hero-date-col { padding: 16px 18px; min-width: 130px; }
   .jsd-hero-date { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #181c32; margin-top: 8px; }
   .jsd-hero-date i { color: #a1a5b7; font-size: 11px; }
-  .jsd-hero-date.jsd-expiry { font-size: 11px; font-weight: 500; color: #7e8299; margin-top: 5px; }
-  .jsd-hero-date.jsd-expiry i { color: #cdd4e0; }
 
   @media (max-width: 1200px) {
     .jsd-hero { grid-template-columns: 1fr 1fr; }
-    .jsd-hero-date-wrap { grid-column: 1 / -1; border-top: 1px solid #eef0f4; border-left: none; }
+    .jsd-hero-date-col { grid-column: span 1; border-top: 1px solid #eef0f4; }
   }
   @media (max-width: 640px) {
     .jsd-hero { grid-template-columns: 1fr; }
-    .jsd-hero-col { border-left: none; border-top: 1px solid #eef0f4; }
+    .jsd-hero-col, .jsd-hero-date-col { border-left: none !important; border-top: 1px solid #eef0f4; }
     .jsd-hero-col:first-child { border-top: none; }
-    .jsd-hero-date-wrap { flex-direction: column; border-left: none; border-top: 1px solid #eef0f4; }
-    .jsd-hero-date-col + .jsd-hero-date-col { border-left: none; border-top: 1px solid #eef0f4; }
   }
 
   /* ---- Section headers ---- */
@@ -102,18 +108,18 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
   .jsd-sec-sub { font-size: 11px; color: #7e8299; font-weight: 400; margin-top: 1px; }
 
   /* ---- Status cards ---- */
-  .jsd-status-row { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+  .jsd-status-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
   .jsd-status-card { flex: 1 1 220px; border: 1.5px solid #eef0f4; border-radius: 12px; padding: 16px; cursor: pointer; background: #fff; position: relative; transition: border-color .15s, box-shadow .15s, background .15s; }
   .jsd-status-card:hover { border-color: #cdd4e0; }
   .jsd-status-card.is-current { border-color: #17c653; background: #f2fdf7; }
-  .jsd-status-card.is-selected { border-color: #3e97ff; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset; }
+  .jsd-status-card.is-selected { box-shadow: 0 0 0 1px currentColor inset; }
   .jsd-status-card .top { display: flex; align-items: center; gap: 10px; }
   .jsd-status-card .ic { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
   .jsd-status-card .nm { font-size: 14px; font-weight: 700; color: #181c32; }
   .jsd-status-card .ds { font-size: 10.5px; color: #7e8299; }
   .jsd-status-card .chk { position: absolute; top: 14px; right: 14px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #cdd4e0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; }
   .jsd-status-card.is-current .chk { border-color: #17c653; background: #17c653; color: #fff; }
-  .jsd-status-card.is-selected .chk { border-color: #3e97ff; background: #3e97ff; color: #fff; }
+  .jsd-status-card.is-selected .chk { color: #fff; }
   .jsd-status-card ul { list-style: none; margin: 12px 0 0; padding: 0; }
   .jsd-status-card ul li { font-size: 11px; font-weight: 500; color: #3f4254; padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
   .jsd-status-card ul li i { font-size: 10px; margin-top: 2px; flex-shrink: 0; }
@@ -122,45 +128,24 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
   .jsd-status-card[data-status="inactive"] ul li i { color: #f1416c; }
 
   /* ---- Impact preview table ---- */
-  .jsd-impact-table { width: 100%; border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; border-collapse: collapse; margin-bottom: 8px; }
+  .jsd-impact-table { width: 100%; border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; border-collapse: collapse; }
   .jsd-impact-table th, .jsd-impact-table td { padding: 10px 14px; font-size: 11.5px; text-align: left; border-bottom: 1px solid #f4f5f8; }
-  .jsd-impact-table thead th { background: #f8f9fb; font-size: 10.5px; font-weight: 600; color: #7e8299; text-transform: uppercase; letter-spacing: .3px; }
+  .jsd-impact-table thead th { background: #f8f9fb; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
   .jsd-impact-table thead th.col-active { color: #17845a; }
   .jsd-impact-table thead th.col-hold { color: #b5720a; }
   .jsd-impact-table thead th.col-inactive { color: #c22851; }
   .jsd-impact-table tbody th { font-weight: 600; color: #3f4254; white-space: nowrap; }
   .jsd-impact-table tbody tr:last-child td, .jsd-impact-table tbody tr:last-child th { border-bottom: none; }
-  .jsd-impact-table td.jsd-current-col { background: #f2fdf7; font-weight: 600; }
-  .jsd-impact-table td.jsd-target-col { background: #f5f9ff; font-weight: 600; }
+  .jsd-impact-table td.jsd-cell { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #3f4254; }
+  .jsd-impact-table td.jsd-current-col { background: #f2fdf7; }
+  .jsd-impact-table td.jsd-target-col { background: #f5f9ff; }
 
-  /* ---- Right sidebar ---- */
-  .jsd-side-card { border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 18px; background: #fff; margin-bottom: 16px; }
-  .jsd-side-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 12px; }
-  .jsd-side-title i { color: #3e97ff; }
-  .jsd-kv { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 11.5px; }
-  .jsd-kv .k { color: #7e8299; font-weight: 500; }
-  .jsd-kv .v { font-weight: 600; color: #181c32; }
-  .jsd-pill { padding: 2px 10px; border-radius: 6px; font-size: 10.5px; font-weight: 700; }
-  .jsd-side-divider { border-top: 1px dashed #eef0f4; margin: 10px 0; }
-  .jsd-affect-label { font-size: 10.5px; font-weight: 600; color: #a1a5b7; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; }
-  .jsd-important { background: #fff8ec; border: 1px solid #ffe3b0; border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; margin-top: 6px; }
-  .jsd-important i { color: #ffa800; font-size: 14px; margin-top: 1px; }
-  .jsd-important .txt { font-size: 10.5px; font-weight: 500; color: #7e6a3f; line-height: 1.45; }
-
-  .jsd-tl-item { display: flex; gap: 10px; position: relative; padding-bottom: 18px; }
-  .jsd-tl-item:last-child { padding-bottom: 0; }
-  .jsd-tl-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; position: relative; z-index: 1; }
-  .jsd-tl-item .line { position: absolute; left: 4px; top: 12px; bottom: -6px; width: 2px; background: #eef0f4; }
-  .jsd-tl-item:last-child .line { display: none; }
-  .jsd-tl-item .lbl { font-size: 12px; font-weight: 700; color: #181c32; }
-  .jsd-tl-item .meta { font-size: 10.5px; color: #a1a5b7; margin-top: 1px; }
-  .jsd-tl-item.upcoming .lbl, .jsd-tl-item.upcoming .dot { color: #cdd4e0; background: #fff; border: 2px solid #cdd4e0; }
-
-  .jsd-lastupdated { font-size: 10.5px; color: #a1a5b7; padding-top: 4px; }
-
-  @media (max-width: 992px) {
-    .jsd-grid { grid-template-columns: 1fr !important; }
-  }
+  /* ---- Footer ---- */
+  .jsd-footer { display: flex; align-items: center; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #eef0f4; }
+  .jsd-footer-avatar { width: 30px; height: 30px; border-radius: 50%; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .jsd-footer-text { font-size: 11px; color: #7e8299; }
+  .jsd-footer-text b { color: #3f4254; font-weight: 600; }
+  .jsd-footer-text .sep { margin: 0 6px; }
 </style>
 
 <div class="jsd-wrap">
@@ -201,149 +186,98 @@ else { $avatarColors = ['#f5f5fa', '#5e6278']; }
       <div class="jsd-hero-row"><i class="fas fa-house-laptop"></i>{{ $workType }}</div>
     </div>
 
-    <!-- Dates -->
-    <div class="jsd-hero-date-wrap">
-      <div class="jsd-hero-date-col">
-        <div class="jsd-hero-label">Job Posted</div>
-        <div class="jsd-hero-date"><i class="fas fa-calendar"></i>{{ @$job->created_at ? date('d M Y', strtotime($job->created_at)) : '—' }}</div>
-        @if(@$job->closeType == 1 && @$job->end_date)
-        <div class="jsd-hero-date jsd-expiry"><i class="fas fa-hourglass-half"></i>Expires {{ date('d M Y', strtotime($job->end_date)) }}</div>
-        @endif
+    <!-- Job Posted -->
+    <div class="jsd-hero-date-col">
+      <div class="jsd-hero-label">Job Posted</div>
+      <div class="jsd-hero-date"><i class="fas fa-calendar"></i>{{ @$postedDisplayDate ? date('d M Y', strtotime($postedDisplayDate)) : '—' }}</div>
+    </div>
+
+    <!-- Automatically Closed -->
+    @if(@$job->closeType == 1 && @$job->end_date)
+    <div class="jsd-hero-date-col">
+      <div class="jsd-hero-label">Automatically Closed</div>
+      <div class="jsd-hero-date"><i class="fas fa-calendar-xmark"></i>{{ date('d M Y', strtotime($job->end_date)) }}</div>
+    </div>
+    @endif
+  </div>
+
+  <form id="createSchedule" class="ajax-form" method="post">
+    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="job_id" id="job_id" value="{{ @$job->id }}" />
+
+    <div class="jsd-sec-head">
+      <span class="jsd-sec-num">1</span>
+      <div><div class="jsd-sec-title">Choose New Status</div><div class="jsd-sec-sub">Select the new status for this job position</div></div>
+    </div>
+    <div class="jsd-status-row">
+      @foreach($statusMeta as $val => $meta)
+      <div class="jsd-status-card {{ $val === $statusVal ? 'is-current' : '' }}" data-status="{{ $val }}" style="color:{{ $meta['color'] }};" onclick="jsdSelectStatus(this)">
+        <input type="radio" class="master_status d-none" name="status" value="{{ $val }}" id="jsd_{{ $val }}">
+        <span class="chk"><i class="fas fa-check"></i></span>
+        <div class="top">
+          <span class="ic" style="background:{{ $meta['bg'] }};color:{{ $meta['color'] }};"><i class="fas {{ $meta['icon'] }}"></i></span>
+          <div>
+            <div class="nm">{{ $meta['label'] }}</div>
+            <div class="ds">{{ $meta['desc'] }}</div>
+          </div>
+        </div>
+        <ul>
+          @foreach($meta['bullets'] as $b)
+          <li><i class="fas {{ $val === 'active' ? 'fa-check' : ($val === 'hold' ? 'fa-circle-exclamation' : 'fa-xmark') }}"></i>{{ $b }}</li>
+          @endforeach
+        </ul>
       </div>
+      @endforeach
+    </div>
+  </form>
+
+  <div class="jsd-sec-head">
+    <span class="jsd-sec-num">2</span>
+    <div><div class="jsd-sec-title">Impact Preview</div><div class="jsd-sec-sub">See what will change when you update the status</div></div>
+  </div>
+  <table class="jsd-impact-table">
+    <thead>
+      <tr>
+        <th>Feature / Action</th>
+        <th class="col-active">Hiring{{ $statusVal === 'active' ? ' (Current)' : '' }}</th>
+        <th class="col-hold">Hold{{ $statusVal === 'hold' ? ' (Current)' : '' }}</th>
+        <th class="col-inactive">Closed{{ $statusVal === 'inactive' ? ' (Current)' : '' }}</th>
+      </tr>
+    </thead>
+    <tbody id="jsd_impact_body">
+      @php
+        $rows = [
+          'Career Page Visibility' => 'career',
+          'Vendor Submission' => 'vendor',
+          'Candidate Applications' => 'candidates',
+          'Interviews' => 'interviews',
+          'Offer Creation' => 'offers',
+          'Notifications / Alerts' => 'notify',
+        ];
+      @endphp
+      @foreach($rows as $label => $key)
+      <tr>
+        <th>{{ $label }}</th>
+        @foreach(['active','hold','inactive'] as $val)
+        @php [$cellIcon, $cellColor] = $jsdCellIcon($val, $key); @endphp
+        <td class="jsd-cell-{{ $val }} {{ $val === $statusVal ? 'jsd-current-col' : '' }}">
+          <span class="jsd-cell"><i class="fas {{ $cellIcon }}" style="color:{{ $cellColor }};"></i>{{ $statusMeta[$val][$key] }}</span>
+        </td>
+        @endforeach
+      </tr>
+      @endforeach
+    </tbody>
+  </table>
+
+  <div class="jsd-footer">
+    <div class="jsd-footer-avatar">{{ $footerInitial }}</div>
+    <div class="jsd-footer-text">
+      Last updated by <b>{{ $footerName ?: 'System' }}</b>
+      @if($footerDate)<span class="sep">|</span>{{ date('d M Y, h:i A', strtotime($footerDate)) }}@endif
     </div>
   </div>
 
-  <div class="jsd-grid" style="display:grid;grid-template-columns:1fr 300px;gap:22px;align-items:start;">
-    <div>
-      <form id="createSchedule" class="ajax-form" method="post">
-        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="job_id" id="job_id" value="{{ @$job->id }}" />
-
-        <div class="jsd-sec-head">
-          <span class="jsd-sec-num">1</span>
-          <div><div class="jsd-sec-title">Choose New Status</div><div class="jsd-sec-sub">Select the new status for this job position</div></div>
-        </div>
-        <div class="jsd-status-row">
-          @foreach($statusMeta as $val => $meta)
-          <div class="jsd-status-card {{ $val === $statusVal ? 'is-current' : '' }}" data-status="{{ $val }}" onclick="jsdSelectStatus(this)">
-            <input type="radio" class="master_status d-none" name="status" value="{{ $val }}" id="jsd_{{ $val }}">
-            <span class="chk"><i class="fas fa-check"></i></span>
-            <div class="top">
-              <span class="ic" style="background:{{ $meta['bg'] }};color:{{ $meta['color'] }};"><i class="fas {{ $meta['icon'] }}"></i></span>
-              <div>
-                <div class="nm">{{ $meta['label'] }}</div>
-                <div class="ds">{{ $meta['desc'] }}</div>
-              </div>
-            </div>
-            <ul>
-              @foreach($meta['bullets'] as $b)
-              <li><i class="fas {{ $val === 'active' ? 'fa-check' : ($val === 'hold' ? 'fa-circle-exclamation' : 'fa-xmark') }}"></i>{{ $b }}</li>
-              @endforeach
-            </ul>
-          </div>
-          @endforeach
-        </div>
-      </form>
-
-      <div class="jsd-sec-head">
-        <span class="jsd-sec-num">2</span>
-        <div><div class="jsd-sec-title">Impact Preview</div><div class="jsd-sec-sub">See what will change when you update the status</div></div>
-      </div>
-      <table class="jsd-impact-table">
-        <thead>
-          <tr>
-            <th>Feature / Action</th>
-            <th class="col-active">Hiring{{ $statusVal === 'active' ? ' (Current)' : '' }}</th>
-            <th class="col-hold">Hold{{ $statusVal === 'hold' ? ' (Current)' : '' }}</th>
-            <th class="col-inactive">Closed{{ $statusVal === 'inactive' ? ' (Current)' : '' }}</th>
-          </tr>
-        </thead>
-        <tbody id="jsd_impact_body">
-          @php
-            $rows = [
-              'Career Page Visibility' => 'career',
-              'Vendor Submission' => 'vendor',
-              'Candidate Applications' => 'candidates',
-              'Interviews' => 'interviews',
-              'Offer Creation' => 'offers',
-              'Notifications / Alerts' => 'notify',
-            ];
-          @endphp
-          @foreach($rows as $label => $key)
-          <tr>
-            <th>{{ $label }}</th>
-            @foreach(['active','hold','inactive'] as $val)
-            <td class="jsd-cell-{{ $val }} {{ $val === $statusVal ? 'jsd-current-col' : '' }}">{{ $statusMeta[$val][$key] }}</td>
-            @endforeach
-          </tr>
-          @endforeach
-        </tbody>
-      </table>
-    </div>
-
-    <div>
-      <div class="jsd-side-card">
-        <div class="jsd-side-title"><i class="fas fa-shield-halved"></i>Status Summary</div>
-        <div class="jsd-kv"><span class="k">Current Status</span><span class="v"><span class="jsd-pill" style="color:{{ $currentMeta['color'] ?? '#7e8299' }};background:{{ $currentMeta['bg'] ?? '#f5f8fa' }};">{{ $currentMeta['label'] ?? 'N/A' }}</span></span></div>
-        <div class="jsd-kv"><span class="k">New Status</span><span class="v" id="jsd_new_status"><span class="jsd-pill" style="color:#a1a5b7;background:#f5f8fa;">Select status</span></span></div>
-        <div class="jsd-kv"><span class="k">Effective</span><span class="v">Immediately</span></div>
-        <div class="jsd-side-divider"></div>
-        <div class="jsd-affect-label">This change will affect</div>
-        <div class="jsd-kv"><span class="k"><i class="fas fa-user-group" style="width:14px;color:#a1a5b7;"></i> Candidates</span><span class="v">{{ (int) @$candidatesCount }}</span></div>
-        <div class="jsd-kv"><span class="k"><i class="fas fa-building" style="width:14px;color:#a1a5b7;"></i> Vendors</span><span class="v">{{ (int) @$vendorsCount }}</span></div>
-        <div class="jsd-kv"><span class="k"><i class="fas fa-clock" style="width:14px;color:#a1a5b7;"></i> Interviews</span><span class="v">{{ (int) @$interviewsCount }}</span></div>
-        <div class="jsd-kv"><span class="k"><i class="fas fa-file" style="width:14px;color:#a1a5b7;"></i> Career Page</span><span class="v" id="jsd_career_val">{{ $currentMeta['career'] ?? '—' }}</span></div>
-        <div class="jsd-important" id="jsd_important_box" style="{{ $statusVal === 'active' ? 'display:none;' : '' }}">
-          <i class="fas fa-triangle-exclamation"></i>
-          <div class="txt" id="jsd_important_txt">
-            @if($statusVal === 'inactive')
-              This job is Closed — it is removed from the career page and vendors cannot submit new candidates.
-            @elseif($statusVal === 'hold')
-              This job is on Hold — it is removed from the career page and vendors cannot submit new candidates.
-            @else
-              Select a new status to preview its impact.
-            @endif
-          </div>
-        </div>
-      </div>
-
-      <div class="jsd-side-card">
-        <div class="jsd-side-title"><i class="fas fa-timeline"></i>Status Timeline</div>
-        @forelse($statusLogs as $log)
-        <div class="jsd-tl-item">
-          <span class="dot" style="background:{{ $statusMeta[$log->to_status]['color'] ?? '#a1a5b7' }};"></span>
-          <span class="line"></span>
-          <div>
-            <div class="lbl">{{ $statusMeta[$log->to_status]['label'] ?? ucfirst($log->to_status) }}</div>
-            <div class="meta">{{ date('d M Y, h:i A', strtotime($log->created_at)) }} · {{ $log->changed_by_name ?? 'System' }}</div>
-          </div>
-        </div>
-        @empty
-        <div class="jsd-tl-item">
-          <span class="dot" style="background:#a1a5b7;"></span>
-          <span class="line"></span>
-          <div>
-            <div class="lbl">Job Created</div>
-            <div class="meta">{{ @$job->created_at ? date('d M Y', strtotime($job->created_at)) : '—' }} · No status changes recorded yet</div>
-          </div>
-        </div>
-        @endforelse
-        <div class="jsd-tl-item upcoming">
-          <span class="dot"></span>
-          <div>
-            <div class="lbl">Upcoming</div>
-            <div class="meta">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="jsd-lastupdated">
-        Last updated {{ $lastLog ? 'by '.($lastLog->changed_by_name ?? 'System').' · '.date('d M Y, h:i A', strtotime($lastLog->created_at)) : (@$job->updated_at ? date('d M Y, h:i A', strtotime($job->updated_at)) : '—') }}
-      </div>
-
-      <div class="form-group" id="status_msg" style="text-align:center;font-weight:500;color:#17c653;margin-top:10px;font-size:11.5px;"></div>
-    </div>
-  </div>
+  <div id="status_msg" style="text-align:center;font-weight:500;color:#17c653;margin-top:10px;font-size:11.5px;"></div>
 </div>
 
 <script type="text/javascript">
@@ -357,23 +291,11 @@ function jsdSelectStatus(el) {
     $(el).addClass('is-selected');
 
     var meta = JSD_STATUS_META[val];
-    $('#jsd_new_status').html('<span class="jsd-pill" style="color:' + meta.color + ';background:' + meta.bg + ';">' + meta.label + '</span>');
-    $('#jsd_career_val').text(meta.career);
 
     $('.jsd-impact-table td.jsd-target-col').removeClass('jsd-target-col');
     $('.jsd-cell-' + val).addClass('jsd-target-col');
 
-    if (val === 'active') {
-        $('#jsd_important_box').hide();
-    } else {
-        var msg = val === 'inactive'
-            ? 'This job will be Closed — removed from the career page, vendor submissions disabled, and the job archived.'
-            : 'This job will be put on Hold — removed from the career page and vendor submissions disabled until resumed.';
-        $('#jsd_important_txt').text(msg);
-        $('#jsd_important_box').show();
-    }
-
-    $('#status_confirm_btn').prop('disabled', false);
+    $('#status_confirm_btn').prop('disabled', false).css('background', meta.color);
     $('.changetextupdate').text('Update Status to ' + meta.label);
 }
 

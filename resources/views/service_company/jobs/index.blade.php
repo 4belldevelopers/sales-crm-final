@@ -626,7 +626,8 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
   $(document).on('click', '.status_stage', function () {
 		$('#status_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
-		$('#status_confirm_btn').prop('disabled', true);
+		$('#status_confirm_btn').prop('disabled', true).css('background', '');
+		$('.changetextupdate').text('Update Status');
 		$('#status_drawer_toggle').trigger('click');
 		var id        	=	$(this).data('row-id');
 		var url       	=	"{{ route('service_company.jobs.editJobStatus',':id') }}";
