@@ -8255,19 +8255,24 @@ protected $elasticService;
 		$html = '';
 		// dd($candidate_status_Arr);
 		if (!empty($candidate_status_Arr)) {
-			$cnt = 1;
 			foreach ($candidate_status_Arr as $cstatus) {
+				$csdMeta = GeneralMethod::csdSubStatusMeta(@$cstatus->name);
+				$csdName = e(@$cstatus->name);
+				$csdDesc = $csdMeta['desc'] !== '' ? '<div class="ds">' . e($csdMeta['desc']) . '</div>' : '';
 
-				$html .= '<div class="div' . $cnt . ' d-inline-block ws-25 px-2">
-									<input type="radio" class="btn-check" name="sub_stages" value="' . @$cstatus->id . '" id="screening' . $cnt . '">
-									<label
-										class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-										for="screening' . $cnt . '"> <span class="d-block fw-bold text-start"> <span
-												class="text-dark-800 fw-bolder d-block fs-5">' . @$cstatus->name . '</span> </span>
-									</label>
+				// Same .csd-sub-tile markup/classes the two body-content
+				// Blade partials render initially — this AJAX response (used
+				// by both the plain and client-gated drawers) must match so
+				// switching stages mid-drawer looks identical to the first
+				// paint. onclick calls the shared, flow-aware csdSelectSub().
+				$html .= '<div class="csd-sub-tile" onclick="csdSelectSub(this)">
+									<input type="radio" class="d-none" name="sub_stages" value="' . @$cstatus->id . '" id="sub_stage_' . @$cstatus->id . '">
+									<span class="ic" style="background:' . $csdMeta['bg'] . ';color:' . $csdMeta['color'] . ';"><i class="fas ' . $csdMeta['icon'] . '"></i></span>
+									<div class="txt">
+										<div class="nm">' . $csdName . '</div>
+										' . $csdDesc . '
+									</div>
 								</div>';
-
-				$cnt++;
 			}
 		}
 		// dd($html);

@@ -149,42 +149,52 @@ END:VCALENDAR";
 
 	}
 	/**
-	 * Font Awesome icon for a candidate_status (sub-stage/rejection-reason) row —
-	 * these are free-text, per-company admin-entered names with no icon column in
-	 * the DB, so the icon is inferred client-render-time via keyword match. Used by
-	 * the Change Candidate Stage drawer (stage_body_content/client_stage_body_content)
-	 * as a display-only affordance; never affects what's actually submitted.
+	 * Icon + color + short description for a candidate_status (sub-stage/
+	 * rejection-reason) row — these are free-text, per-company admin-entered
+	 * names with no icon/description column in the DB, so all three are
+	 * inferred client-render-time via keyword match. Used by the Change
+	 * Candidate Stage drawer (stage_body_content/client_stage_body_content/
+	 * child_stage) as a display-only affordance; never affects what's
+	 * actually submitted (still just the candidate_status.id).
 	 */
-	public static function csdSubStatusIcon($name)
+	public static function csdSubStatusMeta($name)
 	{
-		$name = strtolower((string) $name);
+		$n = strtolower((string) $name);
+		// [needle, icon, color, bg, description] — first match wins, so more
+		// specific phrases are listed before their broader/generic overlaps.
 		$map = [
-			'duplicate'     => 'fa-copy',
-			'not interest'  => 'fa-circle-xmark',
-			'mismatch'      => 'fa-triangle-exclamation',
-			'no show'       => 'fa-user-slash',
-			'noshow'        => 'fa-user-slash',
-			'hold'          => 'fa-pause',
-			'schedul'       => 'fa-calendar-check',
-			'interview'     => 'fa-calendar-check',
-			'salary'        => 'fa-money-bill',
-			'compensation'  => 'fa-money-bill',
-			'offer'         => 'fa-file-signature',
-			'background'    => 'fa-shield-halved',
-			'bgv'           => 'fa-shield-halved',
-			'reject'        => 'fa-ban',
-			'decline'       => 'fa-ban',
-			'withdraw'      => 'fa-door-open',
-			'unresponsive'  => 'fa-phone-slash',
-			'not contact'   => 'fa-phone-slash',
-			'joined'        => 'fa-user-check',
+			['duplicate',       'fa-copy',           '#f1416c', '#fdedf0', 'Duplicate profile'],
+			['not interest',    'fa-clock',          '#ffa800', '#fff4e0', 'Candidate not interested'],
+			['mismatch',        'fa-user',           '#3e97ff', '#eef4ff', 'Does not match role'],
+			['high salary',     'fa-sack-dollar',    '#17c653', '#eafcf3', 'Salary expectations high'],
+			['salary',          'fa-sack-dollar',    '#17c653', '#eafcf3', 'Salary expectations high'],
+			['compensation',    'fa-sack-dollar',    '#17c653', '#eafcf3', 'Compensation expectations high'],
+			['notice',          'fa-calendar-days',  '#7239ea', '#f8f5ff', 'Notice period too long'],
+			['interview reject','fa-circle-xmark',   '#f1416c', '#fdedf0', 'Rejected in interview'],
+			['fake',            'fa-masks-theater',  '#ffa800', '#fff4e0', 'Fake or proxy candidate'],
+			['proxy',           'fa-masks-theater',  '#ffa800', '#fff4e0', 'Fake or proxy candidate'],
+			['no show',         'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['noshow',          'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['back out',        'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['backout',         'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['onboard',         'fa-user-check',     '#17c653', '#eafcf3', 'Candidate onboarded'],
+			['hold',            'fa-pause',          '#ffa800', '#fff4e0', 'On hold'],
+			['schedul',         'fa-calendar-check', '#3e97ff', '#eef4ff', 'Interview scheduled'],
+			['background',      'fa-shield-halved',  '#3e97ff', '#eef4ff', 'Background check pending'],
+			['bgv',             'fa-shield-halved',  '#3e97ff', '#eef4ff', 'Background check pending'],
+			['withdraw',        'fa-door-open',      '#7e8299', '#eef0f2', 'Candidate withdrew'],
+			['unresponsive',    'fa-phone-slash',    '#7e8299', '#eef0f2', 'Candidate unresponsive'],
+			['not contact',     'fa-phone-slash',    '#7e8299', '#eef0f2', 'Unable to reach candidate'],
+			['reject',          'fa-ban',            '#f1416c', '#fdedf0', 'Rejected'],
+			['declin',          'fa-ban',            '#f1416c', '#fdedf0', 'Declined'],
+			['other',           'fa-circle-plus',    '#ffa800', '#fff4e0', 'Add custom reason'],
 		];
-		foreach ($map as $needle => $icon) {
-			if (strpos($name, $needle) !== false) {
-				return $icon;
+		foreach ($map as [$needle, $icon, $color, $bg, $desc]) {
+			if (strpos($n, $needle) !== false) {
+				return ['icon' => $icon, 'color' => $color, 'bg' => $bg, 'desc' => $desc];
 			}
 		}
-		return 'fa-circle-dot';
+		return ['icon' => 'fa-circle-dot', 'color' => '#7e8299', 'bg' => '#eef0f2', 'desc' => ''];
 	}
 	/**
 	 * Human-friendly display label for a permission group_name on the Roles & Permissions
