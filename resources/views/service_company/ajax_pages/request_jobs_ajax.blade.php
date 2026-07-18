@@ -72,7 +72,8 @@
         // $min_sal_mode = $salaryMode[$row->min_sal_mode];
         // $max_sal_mode = $salaryMode[$row->max_sal_mode];
         
-        $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
+        // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
+        $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
         $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
 
         $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
