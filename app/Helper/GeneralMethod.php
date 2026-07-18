@@ -156,45 +156,67 @@ END:VCALENDAR";
 	 * Candidate Stage drawer (stage_body_content/client_stage_body_content/
 	 * child_stage) as a display-only affordance; never affects what's
 	 * actually submitted (still just the candidate_status.id).
+	 *
+	 * 'icon' is inline SVG inner-markup (stroke-based, 24x24 viewBox), not a
+	 * Font Awesome class — this app only has Font Awesome **4.7.0** loaded
+	 * (see demo/css/font-awesome.min.css), which predates the fa5/6 "fas"
+	 * prefix and most icon names a newer FA cheat-sheet would suggest; SVG
+	 * matches the existing $hpStages/stage-pill icon convention and renders
+	 * reliably regardless of which icon font happens to be loaded.
 	 */
 	public static function csdSubStatusMeta($name)
 	{
 		$n = strtolower((string) $name);
+		$svgCopy       = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+		$svgClock      = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>';
+		$svgUser       = '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/>';
+		$svgDollar     = '<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>';
+		$svgCalendar   = '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>';
+		$svgXCircle    = '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>';
+		$svgAlert      = '<path d="M10.3 4 2 18a1.8 1.8 0 0 0 1.5 2.7h17a1.8 1.8 0 0 0 1.5-2.7L13.7 4a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>';
+		$svgUserX      = '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M17 9l4 4M21 9l-4 4"/>';
+		$svgUserCheck  = '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6"/><path d="M15 13l2.5 2.5L22 11"/>';
+		$svgPause      = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+		$svgShield     = '<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3Z"/>';
+		$svgLogOut     = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>';
+		$svgPlusCircle = '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>';
+		$svgDot        = '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>';
+
 		// [needle, icon, color, bg, description] — first match wins, so more
 		// specific phrases are listed before their broader/generic overlaps.
 		$map = [
-			['duplicate',       'fa-copy',           '#f1416c', '#fdedf0', 'Duplicate profile'],
-			['not interest',    'fa-clock',          '#ffa800', '#fff4e0', 'Candidate not interested'],
-			['mismatch',        'fa-user',           '#3e97ff', '#eef4ff', 'Does not match role'],
-			['high salary',     'fa-sack-dollar',    '#17c653', '#eafcf3', 'Salary expectations high'],
-			['salary',          'fa-sack-dollar',    '#17c653', '#eafcf3', 'Salary expectations high'],
-			['compensation',    'fa-sack-dollar',    '#17c653', '#eafcf3', 'Compensation expectations high'],
-			['notice',          'fa-calendar-days',  '#7239ea', '#f8f5ff', 'Notice period too long'],
-			['interview reject','fa-circle-xmark',   '#f1416c', '#fdedf0', 'Rejected in interview'],
-			['fake',            'fa-masks-theater',  '#ffa800', '#fff4e0', 'Fake or proxy candidate'],
-			['proxy',           'fa-masks-theater',  '#ffa800', '#fff4e0', 'Fake or proxy candidate'],
-			['no show',         'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate did not show up'],
-			['noshow',          'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate did not show up'],
-			['back out',        'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate backed out'],
-			['backout',         'fa-user-slash',     '#f1416c', '#fdedf0', 'Candidate backed out'],
-			['onboard',         'fa-user-check',     '#17c653', '#eafcf3', 'Candidate onboarded'],
-			['hold',            'fa-pause',          '#ffa800', '#fff4e0', 'On hold'],
-			['schedul',         'fa-calendar-check', '#3e97ff', '#eef4ff', 'Interview scheduled'],
-			['background',      'fa-shield-halved',  '#3e97ff', '#eef4ff', 'Background check pending'],
-			['bgv',             'fa-shield-halved',  '#3e97ff', '#eef4ff', 'Background check pending'],
-			['withdraw',        'fa-door-open',      '#7e8299', '#eef0f2', 'Candidate withdrew'],
-			['unresponsive',    'fa-phone-slash',    '#7e8299', '#eef0f2', 'Candidate unresponsive'],
-			['not contact',     'fa-phone-slash',    '#7e8299', '#eef0f2', 'Unable to reach candidate'],
-			['reject',          'fa-ban',            '#f1416c', '#fdedf0', 'Rejected'],
-			['declin',          'fa-ban',            '#f1416c', '#fdedf0', 'Declined'],
-			['other',           'fa-circle-plus',    '#ffa800', '#fff4e0', 'Add custom reason'],
+			['duplicate',       $svgCopy,       '#f1416c', '#fdedf0', 'Duplicate profile'],
+			['not interest',    $svgClock,      '#ffa800', '#fff4de', 'Candidate not interested'],
+			['mismatch',        $svgUser,       '#3e97ff', '#eef4ff', 'Does not match role'],
+			['high salary',     $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
+			['salary',          $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
+			['compensation',    $svgDollar,     '#17c653', '#eafcf3', 'Compensation expectations high'],
+			['notice',          $svgCalendar,   '#7239ea', '#f8f5ff', 'Notice period too long'],
+			['interview reject',$svgXCircle,    '#f1416c', '#fdedf0', 'Rejected in interview'],
+			['fake',            $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
+			['proxy',           $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
+			['no show',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['noshow',          $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['back out',        $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['backout',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['onboard',         $svgUserCheck,  '#17c653', '#eafcf3', 'Candidate onboarded'],
+			['hold',            $svgPause,      '#ffa800', '#fff4de', 'On hold'],
+			['schedul',         $svgCalendar,   '#3e97ff', '#eef4ff', 'Interview scheduled'],
+			['background',      $svgShield,     '#3e97ff', '#eef4ff', 'Background check pending'],
+			['bgv',             $svgShield,     '#3e97ff', '#eef4ff', 'Background check pending'],
+			['withdraw',        $svgLogOut,     '#7e8299', '#eef0f2', 'Candidate withdrew'],
+			['unresponsive',    $svgXCircle,    '#7e8299', '#eef0f2', 'Candidate unresponsive'],
+			['not contact',     $svgXCircle,    '#7e8299', '#eef0f2', 'Unable to reach candidate'],
+			['reject',          $svgXCircle,    '#f1416c', '#fdedf0', 'Rejected'],
+			['declin',          $svgXCircle,    '#f1416c', '#fdedf0', 'Declined'],
+			['other',           $svgPlusCircle, '#ffa800', '#fff4de', 'Add custom reason'],
 		];
 		foreach ($map as [$needle, $icon, $color, $bg, $desc]) {
 			if (strpos($n, $needle) !== false) {
 				return ['icon' => $icon, 'color' => $color, 'bg' => $bg, 'desc' => $desc];
 			}
 		}
-		return ['icon' => 'fa-circle-dot', 'color' => '#7e8299', 'bg' => '#eef0f2', 'desc' => ''];
+		return ['icon' => $svgDot, 'color' => '#7e8299', 'bg' => '#eef0f2', 'desc' => ''];
 	}
 	/**
 	 * Human-friendly display label for a permission group_name on the Roles & Permissions

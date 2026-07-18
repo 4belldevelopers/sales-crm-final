@@ -8265,9 +8265,12 @@ protected $elasticService;
 				// by both the plain and client-gated drawers) must match so
 				// switching stages mid-drawer looks identical to the first
 				// paint. onclick calls the shared, flow-aware csdSelectSub().
+				// csdMeta['icon'] is inline SVG inner-markup (not a Font
+				// Awesome class — this app only has FA 4.7.0 loaded, which
+				// lacks the icon names/prefix a newer cheat-sheet suggests).
 				$html .= '<div class="csd-sub-tile" onclick="csdSelectSub(this)">
 									<input type="radio" class="d-none" name="sub_stages" value="' . @$cstatus->id . '" id="sub_stage_' . @$cstatus->id . '">
-									<span class="ic" style="background:' . $csdMeta['bg'] . ';color:' . $csdMeta['color'] . ';"><i class="fas ' . $csdMeta['icon'] . '"></i></span>
+									<span class="ic" style="background:' . $csdMeta['bg'] . ';color:' . $csdMeta['color'] . ';"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' . $csdMeta['icon'] . '</svg></span>
 									<div class="txt">
 										<div class="nm">' . $csdName . '</div>
 										' . $csdDesc . '

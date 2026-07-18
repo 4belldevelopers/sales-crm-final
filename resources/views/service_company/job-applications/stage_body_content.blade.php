@@ -25,12 +25,13 @@
     /*
      * Stage color/icon palette — reuses the exact hex values already
      * established as the app-wide "Pipeline Stages" convention
-     * ($hpStages in apptracker/index.blade.php). InReview has no existing
-     * convention anywhere in the codebase; #7239ea/eye is a new, clearly
-     * distinct choice for this agency-private stage, not a preserved one.
+     * ($hpStages in apptracker/index.blade.php). InReview's color is the
+     * one the OLD modal already used (`bg-light-warning text-warning` on
+     * #lbl_master_status_8) — Metronic's "warning" theme color, #ffa800 /
+     * #fff4de (see public/css/style.bundle.css) — not an invented one.
      */
     $csdStageMeta = [
-        'inreview'   => ['label' => 'InReview',   'color' => '#7239ea', 'bg' => '#f8f5ff', 'icon' => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
+        'inreview'   => ['label' => 'InReview',   'color' => '#ffa800', 'bg' => '#fff4de', 'icon' => 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-1-8-11-8Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z'],
         'sourcing'   => ['label' => 'Sourcing',   'color' => '#7e8299', 'bg' => '#eef0f2', 'icon' => 'M21 21l-4.35-4.35M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'],
         'screening'  => ['label' => 'Screening',  'color' => '#c000ff', 'bg' => '#f9e6ff', 'icon' => 'M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4'],
         'evaluation' => ['label' => 'Evaluation', 'color' => '#2896ff', 'bg' => '#e8f4ff', 'icon' => 'M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.563.563 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
@@ -39,7 +40,6 @@
         'joined'     => ['label' => 'Joined',      'color' => '#06c732', 'bg' => '#e3fbe9', 'icon' => 'M9 12.75 11.25 15 15 9.75M21 12c0 4.556-3.04 8.36-7.2 9.575a1.5 1.5 0 0 1-1.6 0C8.04 20.36 5 16.556 5 12V6.75a1.5 1.5 0 0 1 1.5-1.5c1.657 0 3.156-.64 4.243-1.686a1.5 1.5 0 0 1 2.014 0A6.703 6.703 0 0 0 17.5 5.25 1.5 1.5 0 0 1 19 6.75V12Z'],
         'rejected'   => ['label' => 'Rejected',    'color' => '#ff0202', 'bg' => '#ffe3e3', 'icon' => 'M9.75 9.75l4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'],
     ];
-    $csdOrder = ['sourcing', 'screening', 'evaluation', 'negotation', 'offer', 'joined'];
 
     // Quick Notes — new, built from scratch (no equivalent existed before).
     // Purely a client-side convenience: clicking a chip appends the phrase to
@@ -75,9 +75,6 @@
         .csd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
         .csd-sec-sub { font-size: 10.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
 
-        .csd-reco { display: flex; align-items: center; gap: 8px; background: #eef9f2; border: 1px solid #cdf0da; color: #17845a; border-radius: 10px; padding: 8px 14px; font-size: 11.5px; font-weight: 500; margin-bottom: 14px; }
-        .csd-reco i { color: #17c653; }
-
         .csd-stage-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
         .csd-pill { flex: 1 1 96px; max-width: 128px; border: 1.5px solid #eef0f4; border-radius: 12px; padding: 10px 8px; cursor: pointer; background: #fff; text-align: center; position: relative; transition: border-color .15s, box-shadow .15s, background .15s; }
         .csd-pill:hover { border-color: #cdd4e0; }
@@ -87,16 +84,19 @@
         .csd-pill.is-current { background: #f8f9fb; }
         .csd-pill.is-current .nm::after { content: 'Current'; display: block; font-size: 8.5px; font-weight: 500; color: #a1a5b7; text-transform: uppercase; margin-top: 2px; }
         .csd-pill.is-selected { box-shadow: 0 0 0 2px currentColor inset; }
-        .csd-pill .chk { position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #cdd4e0; display: flex; align-items: center; justify-content: center; font-size: 8px; color: transparent; }
-        .csd-pill.is-selected .chk { color: #fff; }
+        .csd-pill .chk { position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #cdd4e0; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .csd-pill .chk svg { width: 9px; height: 9px; stroke: transparent; }
+        .csd-pill.is-selected .chk { background: currentColor; border-color: currentColor; }
+        .csd-pill.is-selected .chk svg { stroke: #fff; }
         .csd-stage-sep { flex-shrink: 0; color: #cbd2e0; font-size: 13px; }
         .csd-stage-sep-bar { flex-shrink: 0; color: #cbd2e0; font-size: 16px; font-weight: 300; margin: 0 2px; }
 
-        .csd-sub-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+        .csd-sub-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
         .csd-sub-tile { border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; display: flex; align-items: flex-start; gap: 10px; transition: border-color .15s, box-shadow .15s; }
         .csd-sub-tile:hover { border-color: #cdd4e0; }
         .csd-sub-tile.is-selected { border-color: #3e97ff; box-shadow: 0 0 0 1px #3e97ff inset; background: #f5f9ff; }
-        .csd-sub-tile .ic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .csd-sub-tile .ic { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .csd-sub-tile .ic svg { width: 14px; height: 14px; }
         .csd-sub-tile .txt .nm { font-size: 11.5px; font-weight: 700; color: #181c32; }
         .csd-sub-tile .txt .ds { font-size: 9.5px; color: #a1a5b7; font-weight: 500; margin-top: 1px; }
 
@@ -133,24 +133,6 @@
             </div>
         </div>
 
-        @php
-            // $master_status is a Collection of stdClass rows — iterate it
-            // directly rather than (array)-casting it, which would grab the
-            // Collection object's own internal properties instead of its rows.
-            $csdCurrentKey = null;
-            foreach ($master_status ?? [] as $mstatus) {
-                if ($mstatus->id == @$application->master_status_id) { $csdCurrentKey = strtolower((string) (@$mstatus->text_name ?? '')); }
-            }
-            $csdNextKey = null;
-            if ($csdCurrentKey !== null) {
-                $csdIdx = array_search($csdCurrentKey, $csdOrder);
-                if ($csdIdx !== false && isset($csdOrder[$csdIdx + 1])) { $csdNextKey = $csdOrder[$csdIdx + 1]; }
-            }
-        @endphp
-        @if($csdNextKey && isset($csdStageMeta[$csdNextKey]))
-        <div class="csd-reco"><i class="fas fa-sparkles"></i> Recommended Next: <b>&nbsp;{{ $csdStageMeta[$csdNextKey]['label'] }}</b>&nbsp;— based on the candidate's current progress.</div>
-        @endif
-
         <div class="csd-sec-head">
             <span class="csd-sec-num">1</span>
             <div><div class="csd-sec-title">Choose New Stage</div><div class="csd-sec-sub">Select the stage to move this candidate to</div></div>
@@ -174,7 +156,7 @@
                     @endphp
                     <div class="csd-pill {{ $csdIsCurrent ? 'is-current' : '' }} master_status_div" data-master-status-id="{{ @$mstatus->id }}" style="color:{{ $csdMeta['color'] }};" onclick="csdSelectStage(this)">
                         <input type="radio" class="d-none master_status" name="master_status" value="{{ @$mstatus->id }}" {{ $csdChk }} id="{{ @$mstatus->text_name }}">
-                        <span class="chk"><i class="fas fa-check"></i></span>
+                        <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
                         <span class="ic" style="background:{{ $csdMeta['bg'] }};color:{{ $csdMeta['color'] }};">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $csdMeta['icon'] }}"/></svg>
                         </span>
@@ -184,7 +166,7 @@
                         @if(($csdKeysList[$loop->index + 1] ?? null) === 'rejected')
                             <span class="csd-stage-sep-bar">|</span>
                         @else
-                            <span class="csd-stage-sep"><i class="fas fa-chevron-right"></i></span>
+                            <span class="csd-stage-sep"><i class="fa fa-chevron-right"></i></span>
                         @endif
                     @endunless
                 @endforeach
@@ -194,7 +176,7 @@
         <div id="main_substage" @if(empty($candidate_status_Arr)) style="display:none;" @endif>
             <div class="csd-sec-head subStageSection">
                 <span class="csd-sec-num">2</span>
-                <div><div class="csd-sec-title">Sub Stage</div><div class="csd-sec-sub">Optional — narrows down the reason within this stage</div></div>
+                <div><div class="csd-sec-title">Sub Stage</div><div class="csd-sec-sub">Select the specific reason for this stage change</div></div>
             </div>
             <div class="csd-sub-row" id="substage">
                 @if(!empty($candidate_status_Arr))
@@ -205,7 +187,9 @@
                         @endphp
                         <div class="csd-sub-tile {{ $csdSubChk ? 'is-selected' : '' }}" onclick="csdSelectSub(this)">
                             <input type="radio" class="d-none" name="sub_stages" value="{{ $cantData->id }}" id="sub_stage_{{ $cantData->id }}" {{ $csdSubChk ? 'checked="checked"' : '' }}>
-                            <span class="ic" style="background:{{ $csdSubMeta['bg'] }};color:{{ $csdSubMeta['color'] }};"><i class="fas {{ $csdSubMeta['icon'] }}"></i></span>
+                            <span class="ic" style="background:{{ $csdSubMeta['bg'] }};color:{{ $csdSubMeta['color'] }};">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $csdSubMeta['icon'] !!}</svg>
+                            </span>
                             <div class="txt">
                                 <div class="nm">{{ $cantData->name }}</div>
                                 @if($csdSubMeta['desc'])<div class="ds">{{ $csdSubMeta['desc'] }}</div>@endif
@@ -229,6 +213,7 @@
 
 <script>
     window.CSD_QUICK_NOTES = {!! json_encode($csdQuickNotes) !!};
+    window.CSD_STAGE_META = {!! json_encode($csdStageMeta) !!};
 
     // child_stage responses rarely change mid-session (candidate_status is
     // per-company admin-entered reference data) — caching per master_status_id
@@ -242,6 +227,7 @@
 
         $('.csd-pill').removeClass('is-selected');
         $(el).addClass('is-selected');
+        csdUpdateSubmitButton($(el).find('input.master_status').attr('id'));
 
         // Comment box stays available for every stage (mandatory-for-InReview
         // is still enforced at submit time in #custom_stage_submit, unchanged).
@@ -253,6 +239,18 @@
         csdFetchSubStage(id);
 
         csdRenderQuickNotes();
+    }
+
+    // Recolors/relabels the drawer's own footer submit button ("Update Stage
+    // to X") to match the selected stage — same idea as jobs/status.blade.php's
+    // jsdSelectStatus(), just against #custom_stage_submit instead of
+    // #status_confirm_btn. The button itself lives in the page's drawer
+    // topbar, not in this AJAX-loaded partial, so it's targeted by id.
+    function csdUpdateSubmitButton(textName) {
+        var meta = textName && window.CSD_STAGE_META[textName];
+        if (!meta) { return; }
+        $('#custom_stage_submit').css('background', meta.color);
+        $('#custom_stage_submit .csdChangeLabel').text('Update Stage to ' + meta.label);
     }
 
     function csdFetchSubStage(id) {
@@ -320,4 +318,5 @@
     }
 
     csdRenderQuickNotes();
+    csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
 </script>
