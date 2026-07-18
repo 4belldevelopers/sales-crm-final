@@ -1,21 +1,11 @@
 @php
-    use App\Helper\GeneralMethod;
-@endphp
-
-@php
-    // full_name/current_designation are nullable — cast to string before
-    // strtoupper()/ucwords()/substr() so a null value never reaches them:
-    // Laravel promotes that "deprecated null argument" notice into a thrown
-    // ErrorException (500), and `@` only suppresses the property access
-    // itself, not the null value it produces.
+    // full_name is nullable — cast to string before it ever reaches a string
+    // function: Laravel promotes the "deprecated null argument" notice into a
+    // thrown ErrorException (500), and `@` only suppresses the property
+    // access itself, not the null value it produces. Kept as a hidden
+    // element (not a visible hero card, removed per request) purely so each
+    // page's drawer topbar JS can read the candidate's name into its subtitle.
     $csdcFullName = (string) (@$application->full_name ?? '');
-    $csdcDesig = (string) (@$application->current_designation ?? '');
-    $csdcSubmittedBy = (string) (@$application->submitted_by_name ?? '');
-    $csdcCompanyName = (string) (@$company->company_name ?? '');
-    $csdcJobTitle = (string) (@$application->title ?? '');
-    $csdcCompanyOrClient = (string) (GeneralMethod::companyDetailsByClient(@$application->job_id) ?? '');
-
-    $csdcInitial = strtoupper(substr(trim($csdcFullName), 0, 1)) ?: '?';
 
     // Same palette as the plain-flow partial (stage_body_content.blade.php) —
     // duplicated here since each modal/drawer body partial is already
@@ -47,15 +37,6 @@
         .csd-wrap { padding: 4px 2px 10px; font-family: 'Poppins', sans-serif; color: #3f4254; }
         .csd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
-        .csd-info-card { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; background: #f8f9fb; border: 1px solid #eef0f4; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; }
-        .csd-info-avatar { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .csd-info-name { font-size: 14px; font-weight: 700; color: #181c32; }
-        .csd-info-desig { font-size: 11px; color: #7e8299; }
-        .csd-info-grid { display: flex; flex-wrap: wrap; gap: 18px 26px; flex: 1 1 auto; }
-        .csd-info-item .lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .3px; color: #a1a5b7; font-weight: 600; }
-        .csd-info-item .val { font-size: 12px; font-weight: 600; color: #3f4254; margin-top: 1px; }
-        .csd-info-item .sub { font-size: 10.5px; font-weight: 500; color: #7e8299; margin-top: 1px; }
-
         .csd-sec-head { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
         .csd-sec-num { width: 22px; height: 22px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .csd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
@@ -77,8 +58,9 @@
         .csd-pill .chk svg { width: 9px; height: 9px; stroke: transparent; }
         .csd-pill.is-selected .chk { background: currentColor; border-color: currentColor; }
         .csd-pill.is-selected .chk svg { stroke: #fff; }
-        .csd-stage-sep { flex-shrink: 0; color: #cbd2e0; font-size: 13px; }
-        .csd-stage-sep-bar { flex-shrink: 0; color: #cbd2e0; font-size: 16px; font-weight: 300; margin: 0 2px; }
+        .csd-stage-sep { flex-shrink: 0; color: #a1a5b7; display: flex; align-items: center; }
+        .csd-stage-sep svg { width: 12px; height: 12px; }
+        .csd-stage-sep-bar { flex-shrink: 0; color: #a1a5b7; font-size: 18px; font-weight: 300; line-height: 1; margin: 0 2px; }
 
         .csd-sub-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
         .csd-sub-tile { border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; display: flex; align-items: flex-start; gap: 10px; transition: border-color .15s, box-shadow .15s; }
@@ -102,25 +84,7 @@
         <input type="hidden" name="application_id" id="application_id" value="{{ @$application->id }}" />
         <input type="hidden" name="job_wise_condidates_id" id="job_wise_condidates_id" value="{{ @$application->job_wise_condidates_id }}" />
 
-        <div class="csd-info-card">
-            <div class="csd-info-avatar">{{ $csdcInitial }}</div>
-            <div>
-                <div class="csd-info-name">{{ ucwords($csdcFullName) }}</div>
-                <div class="csd-info-desig">{{ ucwords($csdcDesig) }}</div>
-            </div>
-            <div class="csd-info-grid">
-                <div class="csd-info-item">
-                    <div class="lbl">Ownership</div>
-                    <div class="val">{{ $csdcSubmittedBy }}</div>
-                    <div class="sub">{{ ucwords($csdcCompanyName) }}</div>
-                </div>
-                <div class="csd-info-item">
-                    <div class="lbl">Job Details</div>
-                    <div class="val" data-toggle="tooltip" title="{{ $csdcJobTitle }}">{{ substr(ucwords($csdcJobTitle), 0, 22) }}</div>
-                    <div class="sub" data-toggle="tooltip" title="{{ $csdcCompanyOrClient }}">{{ substr(ucwords($csdcCompanyOrClient), 0, 22) }}</div>
-                </div>
-            </div>
-        </div>
+        <div class="csd-info-name d-none">{{ ucwords($csdcFullName) }}</div>
 
         <div class="csd-notice"><i class="fa fa-info-circle"></i> This is a client-owned job — you can move the candidate back to InReview or mark Sourcing/Rejected only; other stages are managed by the client.</div>
 
@@ -153,7 +117,7 @@
                         @if(($csdKeysList[$loop->index + 1] ?? null) === 'rejected')
                             <span class="csd-stage-sep-bar">|</span>
                         @else
-                            <span class="csd-stage-sep"><i class="fa fa-chevron-right"></i></span>
+                            <span class="csd-stage-sep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
                         @endif
                     @endunless
                 @endforeach

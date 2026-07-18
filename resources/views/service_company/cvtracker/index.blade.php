@@ -1498,9 +1498,9 @@
       #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
       #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
       #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
-      #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 24px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+      #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
       #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
-      #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 24px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+      #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
       #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
       #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
       #csd_drawer .sd-btn-confirm .indicator-progress { display: none; }
@@ -2234,7 +2234,8 @@
                     data: $('#status_frm').serialize(),
                     success: function(response) {
                         $("#custom_stage_submit").prop("disabled", false);
-                        $("#custom_stage_submit").html(`<span class="indicator-label">Submit</span>`);
+                        $("#custom_stage_submit").html(`<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>`);
+                        csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
                         if (response.status == 'success') {
                             Swal.fire("Success", 'Application stage update successfully !', "success")
                                 .then(function() {
