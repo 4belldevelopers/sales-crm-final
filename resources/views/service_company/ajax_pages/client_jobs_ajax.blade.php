@@ -130,10 +130,10 @@
             if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
                 $recommendation_text = $clientTypeJob.' '.__('messages.clinet_tag');
                 $badge ="badge-client";
-                $svg = '<svg width="9" height="9" fill="none" viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2.5"></path>
-                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2.5"></circle>
-                  </svg>';
+                // Direct Client only: handshake icon, same green as .badge-client's own text
+                // colour (#09b760) — same icon/colour used on the bench "Placed" listing for
+                // this exact concept (bench-place-candidate-ajax.blade.php).
+                $svg = '<i class="fas fa-handshake" style="color:#09b760;font-size:9px;"></i>';
             }
 
             $status = $active = $hold = $inactive = $class = $recommendation_id = '';
