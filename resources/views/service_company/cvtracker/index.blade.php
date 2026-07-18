@@ -2130,7 +2130,7 @@
 
             e.preventDefault();
             var master_status = $('input[name="master_status"]:checked').val();
-            if ((master_status == 1) || (master_status == 9)) {
+            if ((master_status == 1) || (master_status == 7) || (master_status == 9)) {
                 $.ajax({
                     url: '{{ route('service_company.job-applications.client_stage_submit') }}',
                     container: '#status_frm',
