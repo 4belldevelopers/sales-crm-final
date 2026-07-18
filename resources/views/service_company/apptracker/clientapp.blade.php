@@ -2172,22 +2172,23 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
             fetchCandidates();
 
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            // The pagination partial (ajax_pages/pagination.blade.php) renders
+            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
+            // handler was listening for a class that doesn't exist anywhere in
+            // the actual markup, so clicking a page number did nothing at all.
+            var cafPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (cafPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                cafPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cafPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cafPaginationLoading = false;
                 });
             });
 
@@ -2204,7 +2205,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             $('.loadingMessage').css({
                 display: 'block'
             });
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.apptracker.clientappdata_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {

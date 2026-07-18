@@ -1920,23 +1920,24 @@
             // $.noConflict();
 
             fetchCandidates();
-            
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+
+            // The pagination partial (ajax_pages/pagination.blade.php) renders
+            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
+            // handler was listening for a class that doesn't exist anywhere in
+            // the actual markup, so clicking a page number did nothing at all.
+            var aptkPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (aptkPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                aptkPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 });
             });
 
@@ -1976,7 +1977,7 @@
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
