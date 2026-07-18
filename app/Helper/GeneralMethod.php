@@ -144,10 +144,48 @@ END:VCALENDAR";
 	}
 	public static function ymdTodmyNotTime($originalDate)
 	{
-		
+
 		return  date("d M y", strtotime($originalDate));
-	
-	}	
+
+	}
+	/**
+	 * Font Awesome icon for a candidate_status (sub-stage/rejection-reason) row —
+	 * these are free-text, per-company admin-entered names with no icon column in
+	 * the DB, so the icon is inferred client-render-time via keyword match. Used by
+	 * the Change Candidate Stage drawer (stage_body_content/client_stage_body_content)
+	 * as a display-only affordance; never affects what's actually submitted.
+	 */
+	public static function csdSubStatusIcon($name)
+	{
+		$name = strtolower((string) $name);
+		$map = [
+			'duplicate'     => 'fa-copy',
+			'not interest'  => 'fa-circle-xmark',
+			'mismatch'      => 'fa-triangle-exclamation',
+			'no show'       => 'fa-user-slash',
+			'noshow'        => 'fa-user-slash',
+			'hold'          => 'fa-pause',
+			'schedul'       => 'fa-calendar-check',
+			'interview'     => 'fa-calendar-check',
+			'salary'        => 'fa-money-bill',
+			'compensation'  => 'fa-money-bill',
+			'offer'         => 'fa-file-signature',
+			'background'    => 'fa-shield-halved',
+			'bgv'           => 'fa-shield-halved',
+			'reject'        => 'fa-ban',
+			'decline'       => 'fa-ban',
+			'withdraw'      => 'fa-door-open',
+			'unresponsive'  => 'fa-phone-slash',
+			'not contact'   => 'fa-phone-slash',
+			'joined'        => 'fa-user-check',
+		];
+		foreach ($map as $needle => $icon) {
+			if (strpos($name, $needle) !== false) {
+				return $icon;
+			}
+		}
+		return 'fa-circle-dot';
+	}
 	/**
 	 * Human-friendly display label for a permission group_name on the Roles & Permissions
 	 * screens. Display-only remap agreed with the product owner — the underlying DB

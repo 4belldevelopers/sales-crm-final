@@ -930,42 +930,53 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <!--end::Content-->
 
 
-<!--begin::Stage sub stage popup-->
-<!--<div class="modal fade" id="client_stage_sub_stage" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header flex-stack">
-        <h2>Stage and sub stage</h2>
-        <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal"  id="client_stage_sub_stage_close"> <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-          </svg>
-          </span> </div>
+<!--begin::Stage sub stage drawer-->
+<style>
+  #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+  #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+  #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+  #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  #csd_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
+  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+  #csd_drawer .sd-btn-confirm .indicator-progress { display: none; }
+  #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+  #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+</style>
+<div id="csd_drawer_toggle" style="display:none;"></div>
+<div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="sd-topbar">
+      <div class="sd-topbar-left">
+        <span class="sd-topbar-ico"><i class="fas fa-route"></i></span>
+        <div>
+          <div class="sd-topbar-title">Change Candidate Stage</div>
+          <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
+        </div>
       </div>
-      <div class="client_stage_body_content" id="client_stage_body_content"></div>
+      <div class="sd-topbar-right">
+        <button type="button" class="sd-btn-cancel" id="client_stage_sub_stage_new_close">Cancel</button>
+        <button type="button" class="sd-btn-confirm" id="int_stage_submit">
+          <span class="indicator-label">Submit</span>
+          <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+        </button>
+        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-xmark"></i></span>
+      </div>
     </div>
-  </div>
-</div>-->
-
-<div class="modal fade" id="client_stage_sub_stage_new" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header flex-stack">
-        <h2>Stage and sub stage</h2>
-        <div class="btn btn-sm btn-icon btn-active-color-primary close" data-bs-dismiss="modal" data-dismiss="modal"  id="client_stage_sub_stage_new_close"> <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-          </svg>
-          </span> </div>
-      </div>
+    <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
       <div class="client_stage_body_content" id="client_stage_body_content"></div>
     </div>
   </div>
 </div>
 
-<!--end::Stage sub stage popup-->
+<!--end::Stage sub stage drawer-->
 
 
 
@@ -1940,7 +1951,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <script> 
 	
 	 $(document).ready(function(){
-   
+
+   		$('body').on('click', '#client_stage_sub_stage_new_close', function(){
+   				$('#csd_drawer_close').trigger('click');
+   		});
+
    		$('body').on('click', '#int_stage_submit', function(e){
    			
    				e.preventDefault();
@@ -1962,7 +1977,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                       $('.indicator-progress').hide();
                                   if(response.status == 'coinCheck'){
    																	 Swal.fire("Failed",` ${response.message}` , "warning").then(function(){
-                                      $('#client_stage_sub_stage_new').modal('hide');
+                                      $('#csd_drawer_close').trigger('click');
                                      });	
                                     return false;
    																}
@@ -1970,7 +1985,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 																				if(response.status == 'success'){
 																					   Swal.fire("Success", 'Application stage update successfully !', "success").then(function(){ 
 																						// $('#stage_sub_stage').modal('hide');
-                                               $('#client_stage_sub_stage_new').modal('hide');
+                                               $('#csd_drawer_close').trigger('click');
 																					 });
 																					    
 																						// var table;
@@ -1985,11 +2000,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 								   
 																				}else if (response.status == 'cvpending'){ 																					 
 																					 Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function(){ 
-                                                                                    $("#stage_sub_stage_close").click();
+                                                                                    $('#csd_drawer_close').trigger('click');
 																					});	
 																				}else if (response.status == 'candidatevalidation'){ 																					 
 																					 Swal.fire("Warning", response.message, "warning").then(function(){ 
-                                                                                    $("#stage_sub_stage_close").click();
+                                                                                    $('#csd_drawer_close').trigger('click');
 																					});	
 																				}
 															}
@@ -1997,11 +2012,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 				}else{
 							cafToast.fire({ icon: 'info', title: 'Only Sourcing stage update!' });
               
-                     $('#client_stage_sub_stage_new').modal('hide');
+                     $('#csd_drawer_close').trigger('click');
 				}
-				 
-   				e.run();	
-   						
    		});
    
    })
@@ -2102,7 +2114,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
               //   													buttonsStyling	: false
               // })
 		
-		          $('#client_stage_sub_stage_new').modal('show');  
+		          $('#client_stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+			          $('#csd_drawer_toggle').trigger('click');
 		  
 		  
 		 					// var inner_url 				=	"{{ route('service_company.auth-custom-package.validateClientPackage') }}";
@@ -2130,10 +2143,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                   success 	:	function (response) {
                                       if (response.status == "success") {
                                           $('#client_stage_body_content').html(response.view);
+                                          $('#csd_drawer_subtitle').text($('#client_stage_body_content .csd-info-name').first().text());
                                       }
                           }
-                          
-              });		
+
+              });
 										
               // }
               // else if (response.status == "info"){ 																					 

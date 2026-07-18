@@ -310,24 +310,48 @@
     @endif
 </div>
 
-{{-- Stage change modal (preserved) --}}
-<div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header flex-stack">
-                <h2>Stage and sub stage</h2>
-                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="stage_sub_stage_close">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
-                        </svg>
-                    </span>
-                </div>
-            </div>
-            <div class="stage_body_content" id="stage_body_content"></div>
+{{-- Change Candidate Stage drawer --}}
+<style>
+  #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+  #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+  #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+  #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  #csd_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
+  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+  #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+  #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+</style>
+<div id="csd_drawer_toggle" style="display:none;"></div>
+<div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="sd-topbar">
+      <div class="sd-topbar-left">
+        <span class="sd-topbar-ico"><i class="fas fa-route"></i></span>
+        <div>
+          <div class="sd-topbar-title">Change Candidate Stage</div>
+          <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
         </div>
+      </div>
+      <div class="sd-topbar-right">
+        <button type="button" class="sd-btn-cancel" id="stage_sub_stage_close">Cancel</button>
+        <button type="button" class="sd-btn-confirm" id="custom_stage_submit">
+          <span class="indicator-label">Submit</span>
+        </button>
+        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-xmark"></i></span>
+      </div>
     </div>
+    <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
+      <div class="stage_body_content" id="stage_body_content"></div>
+    </div>
+  </div>
 </div>
 
 </div>{{-- /container-fluid --}}
@@ -483,12 +507,22 @@
         fetchTable(false);
     });
 
-    /* Stage sub-stage modal (preserved from the original page) */
+    /* Stage sub-stage drawer */
+    $(document).on('click', '#stage_sub_stage_close', function () {
+        $('#csd_drawer_close').trigger('click');
+    });
+
     $(document).on('click', '.stage_sub_stage', function () {
-        $('#stage_body_content').html('');
+        $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+        $('#csd_drawer_toggle').trigger('click');
         var id  = $(this).data('row-id');
         var url = '{{ route('service_company.job-applications.stage_body_content', ':id') }}'.replace(':id', id);
-        $.ajax({ type:'GET', url:url, success:function(r){ if(r.status=='success') $('#stage_body_content').html(r.view); } });
+        $.ajax({ type:'GET', url:url, success:function(r){
+            if(r.status=='success') {
+                $('#stage_body_content').html(r.view);
+                $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
+            }
+        } });
     });
 
     $(document).on('click', '#custom_stage_submit', function (e) {

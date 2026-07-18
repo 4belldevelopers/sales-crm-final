@@ -1491,49 +1491,54 @@
     </div>
 
 
-    <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Stage and sub stage</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"
-                        id="stage_sub_stage_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)"/>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)"/>
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-                <div class="stage_body_content" id="stage_body_content"></div>
+    <style>
+      #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+      #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+      #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+      #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+      #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+      #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+      #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+      #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+      #csd_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
+      #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+      #csd_drawer .sd-btn-confirm .indicator-progress { display: none; }
+      #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+      #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+    </style>
+    <div id="csd_drawer_toggle" style="display:none;"></div>
+    <div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+      <div class="d-flex flex-column h-100 w-100">
+        <div class="sd-topbar">
+          <div class="sd-topbar-left">
+            <span class="sd-topbar-ico"><i class="fas fa-route"></i></span>
+            <div>
+              <div class="sd-topbar-title">Change Candidate Stage</div>
+              <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
             </div>
+          </div>
+          <div class="sd-topbar-right">
+            <button type="button" class="sd-btn-cancel" id="stage_sub_stage_close">Cancel</button>
+            <button type="button" class="sd-btn-confirm" id="custom_stage_submit" style="display:none;">
+              <span class="indicator-label">Submit</span>
+              <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+            </button>
+            <button type="button" class="sd-btn-confirm" id="int_stage_submit" style="display:none;">
+              <span class="indicator-label">Submit</span>
+              <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+            </button>
+            <span class="sd-close" id="csd_drawer_close"><i class="fa fa-xmark"></i></span>
+          </div>
         </div>
-    </div>
-
-
-    <div class="modal fade" id="client_stage_sub_stage_new" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Stage and sub stage</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close   client_stage_sub_stage_new_close "
-                        data-dismiss="modal" id="client_stage_sub_stage_new_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span> </div>
-                </div>
-                <div class="client_stage_body_content" id="client_stage_body_content"></div>
-            </div>
+        <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
+          <div class="stage_body_content" id="stage_body_content"></div>
+          <div class="client_stage_body_content" id="client_stage_body_content"></div>
         </div>
+      </div>
     </div>
 
 
@@ -2021,7 +2026,11 @@
     </script>
 
     <script>
-        $(document).on('click', '.client_stage_sub_stage', async function() {
+        $(document).on('click', '#stage_sub_stage_close', function() {
+            $('#csd_drawer_close').trigger('click');
+        });
+
+        $(document).on('click', '.client_stage_sub_stage', async function(e) {
 
             e.preventDefault();
             const connectedsubclient = await isInternetAvailable();
@@ -2035,8 +2044,6 @@
                             confirmButton: "btn btn-warning"
                         }
                     });
-                    $('body').removeClass('modal-open');
-                    $('.modal-backdrop').remove();
                     return; // ⛔ STOP EXECUTION
             }
 
@@ -2061,7 +2068,6 @@
                     var inner_url =
                         "{{ route('service_company.auth-custom-package.validateClientPackage') }}";
                     var inner_token = "{{ csrf_token() }}";
-                    var inner_baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                     var eventId = 4;
                     $.ajax({
                         type: 'POST',
@@ -2077,7 +2083,14 @@
 
                             if (response.status == "success") {
 
-                                $('#client_stage_sub_stage_new').modal('show');
+                                $('#stage_body_content').html('').hide();
+                                $('#client_stage_body_content').html(
+                                    '<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>'
+                                ).show();
+                                $('#custom_stage_submit').hide();
+                                $('#int_stage_submit').hide();
+                                $('#csd_drawer_toggle').trigger('click');
+
                                 var url =
                                     "{{ route('service_company.job-applications.client_stage_body_content', ':id') }}";
                                 url = url.replace(':id', app_id);
@@ -2088,6 +2101,9 @@
                                         if (response.status == "success") {
                                             $('#client_stage_body_content').html(
                                                 response.view);
+                                            $('#csd_drawer_subtitle').text($(
+                                                '#client_stage_body_content .csd-info-name'
+                                            ).first().text());
                                         }
                                     }
                                 });
@@ -2108,10 +2124,6 @@
                 }
 
             })
-        });
-
-        $(document).on('click', '.client_stage_sub_stage_new_close', function() {
-            $('#client_stage_sub_stage_new').modal('hide');
         });
 
         $(document).on('click', '#int_stage_submit', function(e) {
@@ -2143,11 +2155,13 @@
                 Swal.fire("Warning", 'Only Sourcing stage update!', "info");
             }
 
-            e.run();
-
         });
 
-        
+        // Stage-pill click handling for the plain flow now lives in
+        // stage_body_content.blade.php itself (csdSelectStage), the same way
+        // Job Status's drawer keeps jsdSelectStatus with its own partial —
+        // it's the single source of truth for all 5 pages that use it, so it
+        // no longer needs a page-level .master_status_div handler here too.
         $(document).on('click', '.stage_sub_stage', async function(e) {
           e.preventDefault();
           const connectedsub = await isInternetAvailable();
@@ -2161,12 +2175,15 @@
                           confirmButton: "btn btn-warning"
                       }
                   });
-                  $('body').removeClass('modal-open');
-                  $('.modal-backdrop').remove();
                   return; // ⛔ STOP EXECUTION
             }
-            $('#stage_body_content').html('');
-            $('#client_stage_body_content').html('');
+            $('#client_stage_body_content').html('').hide();
+            $('#stage_body_content').html(
+                '<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>'
+            ).show();
+            $('#custom_stage_submit').show();
+            $('#int_stage_submit').hide();
+            $('#csd_drawer_toggle').trigger('click');
             var id = $(this).data('row-id');
             var url = "{{ route('service_company.job-applications.stage_body_content', ':id') }}";
             url = url.replace(':id', id);
@@ -2176,84 +2193,10 @@
                 success: function(response) {
                     if (response.status == "success") {
                         $('#stage_body_content').html(response.view);
+                        $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
                     }
                 }
             });
-        });
-
-        $(document).on('click', '.master_status_div', function(e) {
-
-            e.preventDefault();
-
-            var id = $(this).data('master-status-id');
-            $("#master_status_" + id).attr('checked', true);
-            $('#main_substage').show();
-            $('#comment_div').show();
-
-            $("#inreview").attr('checked', false);
-            $("#sourcing").attr('checked', false);
-            $("#screening").attr('checked', false);
-            $("#evaluation").attr('checked', false);
-            $("#negotation").attr('checked', false);
-            $("#offer").attr('checked', false);
-            $("#joined").attr('checked', false);
-            $("#rejected").attr('checked', false);
-            if (id == 1) {
-                $("#sourcing").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('sourcing-bg');
-            } else if (id == 2) {
-                $("#screening").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('screening-bg');
-            } else if (id == 3) {
-                $("#evaluation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('interview');
-            } else if (id == 4) {
-                $("#negotation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-negotation');
-            } else if (id == 5) {
-                $("#offer").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-offer');
-            } else if (id == 6) {
-                $("#joined").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-joined');
-            } else if (id == 7) {
-                $("#rejected").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-rejected');
-                // $('#main_substage').hide();	
-                $('#comment_div').show();
-            } else if (id == 8) {
-                $("#inreview").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('bg-light-warning text-warning');
-                $('#main_substage').hide();
-            }
-
-            if (id > 0 && (id != 8)) {
-
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var url = "{{ route('service_company.job-applications.child_stage', ':id') }}";
-                url = url.replace(':id', id);
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    contentType: false,
-                    cache: false,
-                    processData: false,
-                    beforeSend: function() {
-                        $('#substage').html('<img src="' + baseurl + '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (response.html == '') {
-                                $('#main_substage').hide();
-                            }
-                            $('#substage').html('');
-                            $('#substage').html(response.html);
-                        }
-                    }
-                });
-            }
-
-            e.run();
         });
 
         $(document).on('click', '#custom_stage_submit', async function(e) {
