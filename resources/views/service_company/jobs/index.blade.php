@@ -632,13 +632,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 		// of opening a drawer whose submit would just get rejected.
 		if ($(this).data('direct-client') == 1) {
 			Swal.fire({
-				toast: true,
-				position: 'top-end',
 				icon: 'warning',
-				title: 'Direct Client Jobs status cannot be changed by Agencies',
-				showConfirmButton: false,
-				timer: 3000,
-				timerProgressBar: true
+				title: 'Restricted',
+				text: 'Direct Client Job Status cannot be changed by Agencies'
 			});
 			return false;
 		}

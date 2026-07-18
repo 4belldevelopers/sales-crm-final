@@ -1299,7 +1299,12 @@ $end_date   =	date('d-M-Y', $date);
                             @if(@$tabshow)
                                 @if($viewmore)
                                     @if($agencyView)
-                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}">
+                                    @php
+                                        // Same Direct Client check used on the jobs list — a job recommended to
+                                        // this agency isn't this agency's to change the status of.
+                                        $isDirectClientJob = $recommendation_id > 0 && @$to_company_id == auth()->user()->company_id;
+                                    @endphp
+                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}" data-direct-client="{{ $isDirectClientJob ? '1' : '0' }}">
                                         <i class="fas fa-sync-alt"></i>Change Status
                                         <i class="fas fa-chevron-down" style="margin-left:4px;font-size:10px;"></i>
                                     </button>
