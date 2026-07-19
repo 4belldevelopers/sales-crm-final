@@ -8250,7 +8250,18 @@ protected $elasticService;
 		$company_id = "";
 		$company_id = auth()->user()->company_id;
 
-		$master_status_id = $id;
+		// Rejected has two master_status ids — 7 (client-side/"custom client"
+		// Rejected, reachable once sourced) and 9 ("agency-Rejected", the one
+		// actually shown in the normal agency-self-view drawer, reachable
+		// straight from InReview). Settings > Interview Process only ever
+		// lets a company configure candidate_status rows for parent=7 — there
+		// is no form field for parent=9 at all — so without this fold,
+		// child_stage(9) (the id the standard drawer submits) would ALWAYS
+		// come back empty, even when Rejected reasons ARE configured, since
+		// they're stored under parent=7. Both ids represent the same
+		// conceptual "Rejected" reason list to the company, just gated to a
+		// different client relationship type.
+		$master_status_id = ((int) $id === 9) ? 7 : $id;
 		// dd($master_status_id,$company_id);
 		$candidate_status_Arr = DB::table('candidate_status')
 			->select('*')
