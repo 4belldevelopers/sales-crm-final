@@ -11119,19 +11119,26 @@ protected $elasticService;
 		// exact moment a third-party candidate becomes the client's
 		// responsibility (InReview -> Sourcing). Purely advisory: never blocks
 		// this transition, only adds an extra field to the success response
-		// at the end of this method (see below).
-		$crossAgencyDuplicateMatches = null;
+		// at the end of this method (see below). Ownership arbitration (who
+		// "wins" — Company Recruiter reservation vs first-agency-to-Sourcing)
+		// lives in GeneralMethod::resolveDuplicateOwnership(); this row only
+		// gets flagged if it loses that race, not merely because a match
+		// exists somewhere.
+		$isDuplicateLoser = false;
 		if ($master_status == 1 && (int) $addJobWiseCondidate->master_status_id === 8) {
 			$ownerCompany = Company::find($addJobWiseCondidate->company_id);
 			if ($ownerCompany && $ownerCompany->enable_cross_agency_duplicate) {
 				$candidateContact = DB::table('job_applications')->select('email', 'phone')->where('id', $application_id)->first();
 				if ($candidateContact) {
-					$crossAgencyDuplicateMatches = GeneralMethod::checkJobWideDuplicate(
+					$ownership = GeneralMethod::resolveDuplicateOwnership(
+						$addJobWiseCondidate->company_id,
 						$addJobWiseCondidate->job_id,
 						$candidateContact->email,
 						$candidateContact->phone,
-						$addJobWiseCondidate_id
+						$addJobWiseCondidate_id,
+						true // this row is transitioning to Sourcing right now
 					);
+					$isDuplicateLoser = in_array($addJobWiseCondidate_id, $ownership->duplicateRowIds);
 				}
 			}
 		}
@@ -11554,7 +11561,7 @@ protected $elasticService;
 		// full attribution is a client/job-owner-side concern (see
 		// all_apptracker.blade.php), not part of this agency-facing response.
 		$successResponse = ['status' => 'success', 'message' => 'Application stage update successfully !'];
-		if (!empty($crossAgencyDuplicateMatches) && $crossAgencyDuplicateMatches->count() > 0) {
+		if ($isDuplicateLoser) {
 			$successResponse['crossAgencyDuplicate'] = true;
 		}
 		return Reply::dataOnly($successResponse);

@@ -616,61 +616,167 @@ END:VCALENDAR";
 	}
 
 	/**
-	 * Cross-tenant, job-scoped duplicate lookup for the opt-in cross-agency
-	 * duplicate pool (client_stage_submit()'s InReview->Sourcing hook and the
-	 * job-owner's AppTracker row display). Deliberately separate from
-	 * checkDuplicateCandidate() above — that one stays company-scoped and
-	 * untouched; this one intentionally spans every company/agency submitting
-	 * to the same job, with normalized email/phone matching (strip
-	 * spaces/dashes from phone, lowercase+trim email).
+	 * Resolves candidate OWNERSHIP across every submitter matching by
+	 * email/phone (agencies + the job-owning company's own team), per the
+	 * hierarchy the user specified:
 	 *
-	 * @param  int|string  $excludeId  the add_job_wise_condidates row currently
-	 *         transitioning — excluded so it never matches itself.
-	 * @return \Illuminate\Support\Collection of matches: company_name, stage_name, created_at
+	 *   - A Company Recruiter row reserves ownership the instant it's
+	 *     CREATED — even at InReview — unless an agency already reached
+	 *     Sourcing before that moment. Company rows are never
+	 *     privacy-protected (it's the company's own job), so they're
+	 *     compared/flagged regardless of their own current stage.
+	 *   - An Agency row only ever earns ownership by being the FIRST agency
+	 *     to reach Sourcing — uploading first counts for nothing on its own.
+	 *     An agency row is only ever compared/flagged once it has itself
+	 *     reached Sourcing; still-InReview agency rows stay fully private,
+	 *     win or lose.
+	 *   - Ownership never flips once decided, no matter how far the loser
+	 *     later progresses.
+	 *
+	 * Scope reuses the job-owning company's own `app_duplicate` setting
+	 * (1 = Job wise -> this $jobId only; 2 = Overall System -> every job
+	 * that company owns) rather than inventing a third setting. Deliberately
+	 * separate from checkDuplicateCandidate() above, which stays
+	 * company-scoped and untouched.
+	 *
+	 * @param  int         $ownerCompanyId  the job-owning company whose app_duplicate setting governs scope
+	 * @param  int         $jobId           the job the current row belongs to (used when scope is job-wise)
+	 * @param  string      $email
+	 * @param  string      $phone
+	 * @param  int|string|null $currentRowId  the add_job_wise_condidates row calling this, if any
+	 * @param  bool        $treatCurrentRowAsJustSourcedNow  true only when called at the exact
+	 *         moment $currentRowId is transitioning to Sourcing — its own timeline entry for
+	 *         that transition doesn't exist yet at that point, so it can't be found by the query.
+	 * @return object{ownerRowId: int|null, duplicateRowIds: int[], rows: \Illuminate\Support\Collection}
 	 */
-	public static function checkJobWideDuplicate($jobId, $email, $phone, $excludeId = null)
+	public static function resolveDuplicateOwnership($ownerCompanyId, $jobId, $email, $phone, $currentRowId = null, $treatCurrentRowAsJustSourcedNow = false)
 	{
+		$empty = (object) ['ownerRowId' => null, 'duplicateRowIds' => [], 'rows' => collect()];
+
 		$normalizedEmail = strtolower(trim((string) $email));
 		$normalizedPhone = preg_replace('/\D+/', '', (string) $phone);
-
 		if ($normalizedEmail === '' && $normalizedPhone === '') {
-			return collect();
+			return $empty;
 		}
 
-		return DB::table('add_job_wise_condidates as ajwc')
+		$appDuplicateMode = (int) (DB::table('companies')->where('id', $ownerCompanyId)->value('app_duplicate') ?? 0);
+
+		$query = DB::table('add_job_wise_condidates as ajwc')
 			->join('job_applications as ja', 'ja.id', '=', 'ajwc.job_application_id')
 			->leftJoin('master_status as ms', 'ms.id', '=', 'ajwc.master_status_id')
 			->leftJoin('companies as sub_com', 'sub_com.id', '=', 'ajwc.thirdparty_company_id')
-			->leftJoin('companies as own_com', 'own_com.id', '=', 'ajwc.company_id')
-			->where('ajwc.job_id', $jobId)
-			->when($excludeId, function ($query) use ($excludeId) {
-				$query->where('ajwc.id', '!=', $excludeId);
-			})
-			->where(function ($query) use ($normalizedEmail, $normalizedPhone) {
+			->leftJoin('companies as own_com', 'own_com.id', '=', 'ajwc.company_id');
+
+		if ($appDuplicateMode == 2) {
+			$eligibleJobIds = DB::table('jobs')->where('company_id', $ownerCompanyId)->pluck('id');
+			$query->whereIn('ajwc.job_id', $eligibleJobIds);
+		} else {
+			$query->where('ajwc.job_id', $jobId);
+		}
+
+		$rows = $query->where(function ($q) use ($normalizedEmail, $normalizedPhone) {
 				if ($normalizedEmail !== '') {
-					$query->orWhereRaw('LOWER(TRIM(ja.email)) = ?', [$normalizedEmail]);
+					$q->orWhereRaw('LOWER(TRIM(ja.email)) = ?', [$normalizedEmail]);
 				}
 				if ($normalizedPhone !== '') {
-					$query->orWhereRaw("REGEXP_REPLACE(ja.phone, '[^0-9]', '') = ?", [$normalizedPhone]);
+					$q->orWhereRaw("REGEXP_REPLACE(ja.phone, '[^0-9]', '') = ?", [$normalizedPhone]);
 				}
 			})
 			->select(
-				'ajwc.id as add_job_wise_condidates_id',
+				'ajwc.id',
+				'ajwc.job_id',
+				'ajwc.job_application_id',
 				'ajwc.thirdparty_company_id',
 				'ajwc.company_id',
-				'ms.name as stage_name',
+				'ajwc.master_status_id',
 				'ajwc.created_at',
+				'ms.name as stage_name',
 				'sub_com.company_name as submitting_company_name',
 				'own_com.company_name as owning_company_name'
 			)
-			->orderBy('ajwc.created_at', 'desc')
 			->get()
 			->map(function ($row) {
-				$row->company_name = ((int) $row->thirdparty_company_id > 0)
-					? $row->submitting_company_name
-					: $row->owning_company_name;
+				$row->is_company_row = (int) $row->thirdparty_company_id === 0;
+				$row->company_name = $row->is_company_row ? $row->owning_company_name : $row->submitting_company_name;
 				return $row;
 			});
+
+		if ($rows->isEmpty()) {
+			return $empty;
+		}
+
+		// Batch-fetch every row's "first ever reached Sourcing" timestamp in
+		// one query — not one query per row. Resolved dynamically rather than
+		// assuming the literal string "Sourcing", in case the stored name
+		// differs from every $stages array's 'display' label.
+		$sourcingLabel = DB::table('master_status')->where('id', 1)->value('name');
+		$firstSourcedMap = [];
+		if ($sourcingLabel) {
+			$timelineQuery = DB::table('timeline')
+				->select('application_id', 'job_id', DB::raw('MIN(create_at) as first_sourced_at'))
+				->where('master_process_name', $sourcingLabel)
+				->where(function ($q) use ($rows) {
+					foreach ($rows as $r) {
+						$q->orWhere(function ($qq) use ($r) {
+							$qq->where('application_id', $r->job_application_id)->where('job_id', $r->job_id);
+						});
+					}
+				})
+				->groupBy('application_id', 'job_id')
+				->get();
+			foreach ($timelineQuery as $t) {
+				$firstSourcedMap[$t->application_id . ':' . $t->job_id] = $t->first_sourced_at;
+			}
+		}
+
+		$rows = $rows->map(function ($row) use ($firstSourcedMap, $currentRowId, $treatCurrentRowAsJustSourcedNow) {
+			$key = $row->job_application_id . ':' . $row->job_id;
+			$firstSourcedAt = $firstSourcedMap[$key] ?? null;
+			if ($currentRowId !== null && (string) $row->id === (string) $currentRowId && $treatCurrentRowAsJustSourcedNow) {
+				$firstSourcedAt = now()->toDateTimeString();
+			}
+			$row->first_sourced_at = $firstSourcedAt;
+			return $row;
+		});
+
+		$firstCompanyRow = $rows->filter(fn($r) => $r->is_company_row)
+			->sortBy(fn($r) => strtotime($r->created_at))
+			->first();
+
+		$firstSourcedAgencyRow = $rows->filter(fn($r) => !$r->is_company_row && $r->first_sourced_at !== null)
+			->sortBy(fn($r) => strtotime($r->first_sourced_at))
+			->first();
+
+		$owner = null;
+		if ($firstCompanyRow && (!$firstSourcedAgencyRow || strtotime($firstCompanyRow->created_at) < strtotime($firstSourcedAgencyRow->first_sourced_at))) {
+			$owner = $firstCompanyRow; // Company Recruiter Reservation
+		} elseif ($firstSourcedAgencyRow) {
+			$owner = $firstSourcedAgencyRow; // Agency Ownership — first to Sourcing
+		}
+
+		$duplicateRowIds = [];
+		foreach ($rows as $row) {
+			if ($owner && (string) $row->id === (string) $owner->id) {
+				continue; // the owner itself is never its own duplicate
+			}
+			if ($row->is_company_row) {
+				// Never privacy-protected — flagged regardless of its own stage.
+				if ($owner) {
+					$duplicateRowIds[] = $row->id;
+				}
+			} else {
+				// Agency rows stay private until they themselves reach Sourcing.
+				if ($owner && $row->first_sourced_at !== null) {
+					$duplicateRowIds[] = $row->id;
+				}
+			}
+		}
+
+		return (object) [
+			'ownerRowId' => $owner->id ?? null,
+			'duplicateRowIds' => $duplicateRowIds,
+			'rows' => $rows,
+		];
 	}
 
 	public static function getUserContribution($user_id)
