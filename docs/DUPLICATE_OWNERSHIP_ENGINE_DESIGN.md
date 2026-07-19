@@ -1,4 +1,17 @@
-# Centralized Duplicate Ownership Engine — Technical Design Review
+# Centralized Duplicate Ownership Engine — Technical Design Review (Revision 1, SUPERSEDED)
+
+> **SUPERSEDED 2026-07-19 (same day).** After reviewing this revision, the user
+> reframed the whole effort from "duplicate detection" to a core, authoritative
+> **Ownership Engine** with much stronger requirements (full Master-Tracker
+> traceability, event history, rebuild/recovery, determinism, explainability, a full
+> concurrency/scale review for 50,000 concurrent recruiters). That revision lives in
+> **[OWNERSHIP_ENGINE_DESIGN.md](OWNERSHIP_ENGINE_DESIGN.md)** and is the current design
+> to review/approve. This file is kept for history only — its core algorithm (§1) was
+> carried forward and re-verified against the full, literal Master Tracker (recovered
+> from this session's own earlier turn) in the new document; everything below this
+> banner is otherwise unchanged from when it was written.
+
+---
 
 > Status: **DESIGN REVIEW ONLY — NOT IMPLEMENTED.** Nothing in this document has been
 > built. Per explicit instruction (2026-07-19), this is the design to approve *before*
