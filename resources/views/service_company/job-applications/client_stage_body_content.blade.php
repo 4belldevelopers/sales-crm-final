@@ -125,16 +125,19 @@
         </div>
 
         @php
-            // Sub Stage starts hidden when: this application's current stage
-            // is InReview(8) (agency-only, no sub-stages by design), when
-            // requisition_owner==0 (agency's own territory — unchanged), or
-            // simply when there's no data for it yet. Rejected(7) now shows
-            // its rejection-reason tiles here too (previously force-hidden
-            // in favor of the comment box only — fixed per explicit request;
-            // the comment box still shows alongside it, unchanged).
+            // Sub Stage starts hidden only when: this application's current
+            // stage is InReview(8) (agency-only, no sub-stages by design), or
+            // simply when there's no data for it yet. requisition_owner==0
+            // used to force-hide this for EVERY other stage too — including
+            // Rejected(7) — which silently suppressed a recruiter's own
+            // rejection-reason tiles on a client-managed job even though they
+            // are the ones authorized to reject from InReview in the first
+            // place. Removed: sub-stage visibility for every non-InReview
+            // stage (Rejected included) is now decided purely by whether the
+            // backend actually has data for it, matching the comment box
+            // (which already shows for Rejected regardless of ownership).
             $csdcCurrentId = (int) (@$application->master_status_id ?? 0);
             $csdcSubHiddenInitially = empty($candidate_status_Arr)
-                || (int) (@$requisition_owner ?? 1) === 0
                 || $csdcCurrentId === 8;
         @endphp
         <div id="main_substage" @if($csdcSubHiddenInitially) style="display:none;" @endif>
@@ -180,15 +183,6 @@
     window.CSD_STAGE_META = {!! json_encode($csdStageMeta) !!};
     window.CSD_SUBSTAGE_CACHE = window.CSD_SUBSTAGE_CACHE || {};
 
-    // requisition_owner: same server-computed flag the old modal used to
-    // decide whether the sub-stage section applies at all for this
-    // application — unchanged. (No unconditional show/hide here anymore —
-    // that used to force #main_substage visible on every load whenever
-    // requisition_owner != 0, regardless of InReview or data availability,
-    // fighting with the PHP-computed initial state below and with
-    // csdcSelectStage's own logic on every click.)
-    var csdcRequisitionOwner = {!! (int) @$requisition_owner !!};
-
     /*
      * Reproduces the submit-actionable gating the old inline script had
      * (stage ids 1/9/7 only, comment box shown for 7) — rewritten cleanly
@@ -221,13 +215,14 @@
         }
 
         // InReview(8) never has sub-stages by design, so there's nothing to
-        // fetch; requisition_owner==0 is the agency's own private territory
-        // (no sub-stage editing there either). Every other stage's Sub Stage
-        // visibility — including Rejected(7), which now shows its
-        // rejection-reason tiles here too instead of being force-hidden in
-        // favor of the comment box only — is decided purely by whether the
-        // backend actually has data for it.
-        if (id == 8 || csdcRequisitionOwner == 0) {
+        // fetch. Every other stage's Sub Stage visibility — including
+        // Rejected(7) — is decided purely by whether the backend actually
+        // has data for it. (requisition_owner==0 used to also suppress this
+        // for every non-InReview stage, which silently hid a recruiter's own
+        // rejection-reason tiles on a client-managed job even though they're
+        // the one authorized to reject from InReview in the first place —
+        // removed.)
+        if (id == 8) {
             $('#main_substage').hide();
         } else {
             csdcFetchSubStage(id);

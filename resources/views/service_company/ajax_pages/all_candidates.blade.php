@@ -740,12 +740,18 @@
                     if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
                         $stage_default_css = 'client_stage_sub_stage';
                     }
+                    // Once sourced, stage ownership passes to the client — this
+                    // used to strip the trigger class entirely (a dead badge
+                    // that did nothing on click). Now it's a live trigger that
+                    // surfaces a notice explaining that, instead of silently
+                    // doing nothing (see client_stage_locked_notice handler in
+                    // cvtracker/index.blade.php).
                     if (
                         $row->thirdparty_company_id > 0 &&
                         $row->thirdparty_company_id == $company_id &&
                         $row->job_master_status_id != 8
                     ) {
-                        $stage_default_css = '';
+                        $stage_default_css = 'client_stage_locked_notice';
                     }
                     $name = '';
                     if ($row->job_master_status_id == 8) {
@@ -761,14 +767,15 @@
                             $name = @$childStatus->name;
                         }
                     }
+                    $stageModalAttrs = ($stage_default_css === 'client_stage_locked_notice')
+                        ? ''
+                        : ' data-toggle="modal" data-target="#' . $stage_default_css . '"';
                     echo '<div class="d-flex flex-column">
-                            <a href="javascript.void(0);" data-row-id="' .
+                            <a href="javascript:void(0);" data-row-id="' .
                                     @$row->wiseId .
                                     '" class="d-flex flex-column ' .
                                     $stage_default_css .
-                                    '" data-toggle="modal" data-target="#' .
-                                    $stage_default_css .
-                                    '">
+                                    '"' . $stageModalAttrs . '>
                                 <span class="badge fw-bolder fs-6 ' .
                                     @$row->css_style .
                                     ' px-2 py-1">' .

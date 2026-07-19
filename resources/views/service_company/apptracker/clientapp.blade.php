@@ -1108,6 +1108,39 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     cafToast.fire({ icon: 'warning', title: "{{ session('packageStatus') }}" });
     @endif
 
+    // Once a client-owned candidate has been sourced, the Job Stage badge
+    // is no longer a stage-change trigger (that authority now belongs to
+    // the client) — it's this notice instead, so the recruiter understands
+    // why the row no longer opens the drawer, rather than it silently doing
+    // nothing.
+    $(document).on('click', '.client_stage_locked_notice', function (e) {
+        e.preventDefault();
+        Swal.fire({
+            width: 460,
+            padding: '1.75em',
+            showCloseButton: true,
+            showConfirmButton: true,
+            confirmButtonText: 'Understood',
+            confirmButtonColor: '#2563EB',
+            html: `
+                <div style="font-family:'Poppins',sans-serif;text-align:left;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                        <span style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>
+                        </span>
+                        <div style="font-size:15px;font-weight:700;color:#181c32;line-height:1.3;">This Stage Is Managed by the Client</div>
+                    </div>
+                    <div style="font-size:13px;line-height:1.65;color:#4b5563;">
+                        This candidate has been sourced and is now part of the client's active hiring pipeline. From this point forward, every stage decision — review, evaluation, offer, and rejection — is owned and managed directly by the client's hiring team.
+                    </div>
+                    <div style="font-size:13px;line-height:1.65;color:#4b5563;margin-top:10px;">
+                        To discuss this candidate's progress or request a stage change, please coordinate with the client's Hiring Manager.
+                    </div>
+                </div>
+            `
+        });
+    });
+
     // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
     // simfRenderSortPanel — reads options straight from the real
     // #sortingfilter <select> (single source of truth), keeps that
