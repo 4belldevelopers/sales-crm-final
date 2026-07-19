@@ -201,8 +201,8 @@
     <div class="d-flex align-items-center py-1">
 
       @if(in_array("add_schedule", $userPermissions)) 
-        <a href="javascript:void(0);" id="app_interview_schedule" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 {{ $dnone }}" data-toggle="modal" 
-        data-target="#interview_schedule" rel="{{@$application->wiseId}}"> <span class="svg-icon svg-icon-primary svg-icon-1x">
+        <a href="javascript:void(0);" id="app_interview_schedule" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 {{ $dnone }}"
+        rel="{{@$application->wiseId}}"> <span class="svg-icon svg-icon-primary svg-icon-1x">
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
               <polygon points="0 0 24 0 24 24 0 24"></polygon>
@@ -2017,9 +2017,9 @@
                     $bookbtn1 = 'book-btn';
                     $bookbtn2 = 'book-btn';
                     $bookbtn3 = 'book-btn';
-                    $modal1 = 'data-toggle=modal data-target=#interview_schedule';
-                    $modal2 = 'data-toggle=modal data-target=#interview_schedule';
-                    $modal3 = 'data-toggle=modal data-target=#interview_schedule';
+                    $modal1 = '';
+                    $modal2 = '';
+                    $modal3 = '';
                     $date1 =  \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d h:i:s');
                       $date2 =  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d h:i:s');
                       $date3 =  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d h:i:s');

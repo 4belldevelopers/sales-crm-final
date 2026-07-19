@@ -1,10 +1,9 @@
 <?php
 use App\Helper\GeneralMethod;
-// dd("jd");
 $defaultTimeZone = GeneralMethod::defaultTimeZone();
 $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
-     $currency_code =  GeneralMethod::defaultCurrency();
-     $country_code =  GeneralMethod::countryCodeFun();
+$currency_code =  GeneralMethod::defaultCurrency();
+$country_code =  GeneralMethod::countryCodeFun();
 ?>
 <style>
     #interviewDate::-webkit-inner-spin-button,
@@ -27,14 +26,131 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     #kt_activitiesIntTeamtra {
         z-index: 99999999999 !important;
     }
+    .tox-statusbar__branding {
+        display: none
+    }
+
+    /* ===================================================================
+       Interview Schedule drawer content — enterprise right-drawer layout.
+       Scoped under .isd-wrap so it never leaks into the rest of the app.
+       Real inputs/selects keep their original ids/names so every existing
+       script (submitForm, getInterviewModeChild, getVideoMeetingUrl,
+       accessEmailTemplate, the panel/contact-person modal) works unchanged.
+       =================================================================== */
+    .isd-wrap { font-family: 'Poppins', sans-serif; color: #3f4254; }
+    .isd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+
+    .isd-actionbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 10px 20px; background: #fff; border-bottom: 1px solid #eef0f4; }
+    .isd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .isd-btn-cancel:hover { background: #f8f9fb; }
+    .isd-btn-primary { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left; line-height: 1.3; }
+    .isd-btn-primary small { display: block; font-size: 10px; font-weight: 400; opacity: .85; }
+    .isd-btn-primary:hover { filter: brightness(.94); }
+    .isd-btn-primary:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
+    .isd-btn-back { border: 1px solid #e4e6ef; background: #fff; color: #3e97ff; border-radius: 8px; padding: 9px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+
+    .isd-info-strip { display: flex; align-items: center; gap: 26px; padding: 14px 20px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+    .isd-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+    .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 200px; }
+    .isd-info-name { font-size: 13.5px; font-weight: 700; color: #181c32; }
+    .isd-info-role { font-size: 11px; color: #7e8299; margin-top: 1px; }
+    .isd-info-block { display: flex; flex-direction: column; gap: 2px; }
+    .isd-info-label { font-size: 10.5px; color: #7e8299; font-weight: 500; }
+    .isd-info-value { font-size: 12.5px; font-weight: 700; color: #181c32; }
+
+    .isd-body { display: flex; align-items: flex-start; }
+    .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px 30px; }
+    .isd-sidebar { flex: 0 0 34%; max-width: 320px; padding: 16px 16px 30px; border-left: 1px solid #eef0f4; background: #fbfbfd; }
+
+    .isd-sec { margin-bottom: 22px; }
+    .isd-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .isd-sec-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .isd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
+    .isd-sec-sub { font-size: 10.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
+
+    .isd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
+    .isd-field label .req { color: #f64e60; }
+    .isd-field input, .isd-field select, .isd-field textarea { width: 100%; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 7px 9px; font-size: 12px; color: #181c32; background: #f8f9fb; }
+    .isd-field input:disabled, .isd-field select:disabled, .isd-field textarea:disabled { color: #b5b5c3; cursor: not-allowed; background: #f1f1f4; }
+    .isd-soon { display: inline-flex; align-items: center; font-size: 9px; font-weight: 600; color: #a1a5b7; background: #f1f1f4; border-radius: 5px; padding: 2px 6px; margin-left: 4px; text-transform: uppercase; letter-spacing: .3px; }
+
+    .isd-cal-row { display: flex; gap: 10px; margin-top: 4px; }
+    .isd-cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px dashed #e4e6ef; border-radius: 8px; padding: 8px; font-size: 11.5px; font-weight: 600; color: #b5b5c3; background: #f8f9fb; cursor: not-allowed; }
+
+    .isd-tile-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .isd-tile { flex: 1 1 100px; max-width: 138px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; background: #fff; position: relative; transition: .15s; }
+    .isd-tile:hover { border-color: #cdd4e0; }
+    .isd-tile.is-selected { border-color: #3e97ff; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset; }
+    .isd-tile .ic { width: 28px; height: 28px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; background: #eef4ff; color: #3e97ff; }
+    .isd-tile .nm { font-size: 10.5px; font-weight: 700; color: #181c32; }
+    .isd-tile.is-disabled { cursor: not-allowed; opacity: .55; }
+    .isd-tile .chk { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 50%; background: #3e97ff; color: #fff; display: none; align-items: center; justify-content: center; font-size: 8px; }
+    .isd-tile.is-selected .chk { display: flex; }
+    .isd-leaf-label { font-size: 10px; font-weight: 600; color: #a1a5b7; text-transform: uppercase; letter-spacing: .3px; margin: 2px 0 8px; }
+
+    .isd-link-row { position: relative; }
+    .isd-link-row input { padding-right: 88px; }
+    .isd-link-actions { position: absolute; right: 5px; top: 5px; display: flex; gap: 4px; }
+    .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 10px; }
+    .isd-icon-btn:hover { background: #f8f9fb; color: #3e97ff; }
+
+    .isd-panel-add { display: flex; gap: 8px; margin-bottom: 10px; }
+    .isd-panel-add input { flex: 1; }
+    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 0 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .isd-btn-add-panel:hover { background: #f5f9ff; }
+    .isd-panel-list { display: flex; flex-direction: column; gap: 8px; }
+    .isd-panel-row { display: flex; align-items: center; gap: 10px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 7px 10px; }
+    .isd-panel-row .isd-avatar { width: 30px; height: 30px; font-size: 11px; }
+    .isd-panel-name { font-size: 11.5px; font-weight: 700; color: #181c32; word-break: break-all; }
+    .isd-panel-tags { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+    .isd-role-tag { font-size: 9px; font-weight: 600; color: #b5b5c3; background: #f1f1f4; border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
+    .isd-panel-del { width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+    .isd-panel-del:hover { background: #fff5f8; }
+    .isd-check-avail { font-size: 10.5px; color: #b5b5c3; margin-top: 10px; cursor: not-allowed; display: inline-flex; align-items: center; gap: 6px; }
+
+    .isd-notify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .isd-notify { display: flex; align-items: flex-start; gap: 9px; border: 1.5px solid #eef0f4; border-radius: 9px; padding: 8px 10px; }
+    .isd-notify input[type=checkbox] { margin-top: 2px; width: 14px; height: 14px; accent-color: #3e97ff; flex-shrink: 0; }
+    .isd-notify .t { font-size: 11px; font-weight: 600; color: #181c32; }
+    .isd-notify .d { font-size: 9.5px; color: #7e8299; }
+    .isd-notify.is-disabled .t, .isd-notify.is-disabled .d { color: #b5b5c3; }
+
+    .isd-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 14px 15px; margin-bottom: 14px; }
+    .isd-card-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+    .isd-card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #3e97ff; flex-shrink: 0; }
+    .isd-sum-row { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; }
+    .isd-sum-row:last-child { border-bottom: none; }
+    .isd-sum-ico { width: 24px; height: 24px; border-radius: 7px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+    .isd-sum-label { font-size: 9.5px; color: #7e8299; font-weight: 500; }
+    .isd-sum-value { font-size: 11.5px; font-weight: 700; color: #181c32; margin-top: 1px; word-break: break-word; }
+    .isd-sum-value.muted { color: #b5b5c3; font-weight: 600; }
+    .isd-status-chip { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .isd-status-chip.incomplete { background: #fff4de; color: #ffa800; }
+    .isd-status-chip.ready { background: #e3fbe9; color: #06c732; }
+
+    .isd-avail-card { position: relative; }
+    .isd-avail-blur { filter: blur(2.5px); opacity: .5; pointer-events: none; }
+    .isd-soon-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .isd-soon-badge { background: #fff; border: 1px solid #eef0f4; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-radius: 8px; padding: 5px 12px; font-size: 10.5px; font-weight: 700; color: #7e8299; }
+    .isd-quick-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 11px; }
+    .isd-quick-row .k { color: #7e8299; }
+    .isd-quick-row .v { color: #181c32; font-weight: 700; text-align: right; }
+
+    .isd-hidden-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
+
+    .isd-email-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #eef0f4; }
+    .isd-email-title { font-size: 14px; font-weight: 700; color: #181c32; }
+    .isd-email-body { padding: 18px 20px; }
+    .isd-email-foot { position: sticky; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: #fff; border-top: 1px solid #eef0f4; }
 </style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
     crossorigin="anonymous"></script>
 
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
     if (CKEDITOR.env.ie && CKEDITOR.env.version < 9)
-
         CKEDITOR.tools.enableHtml5Elements(document);
     CKEDITOR.config.height = 350;
     CKEDITOR.config.width = 'auto';
@@ -69,37 +185,22 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
 
     })();
 
-
     initSample();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // $.noConflict();  
-
     setTimeout(() => {
-          
           var defaultTimeFormat = '{{$defaultTimeFormat}}';
-         
-          if(defaultTimeFormat==1){
 
+          if(defaultTimeFormat==1){
             flatpickr("#interviewTime", {
                 enableTime: true,
                 noCalendar: true,
                 dateFormat: "h:i K",
                 minuteIncrement: 1
             });
-
-            // $("#interviewTime").flatpickr({
-            //     enableTime: true,
-            //     noCalendar: true,
-            //     dateFormat: "h:i K",
-            //     minuteIncrement: 1 ,  
-            //     // defaultDate: new Date()    
-            // });
-
           }else{
-            
             flatpickr("#interviewTime", {
                 enableTime: true,
                 noCalendar: true,
@@ -107,18 +208,8 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 time_24hr: true,
                 minuteIncrement: 1
             });
-
-            // $("#interviewTime").flatpickr({
-            //     enableTime: true,
-            //     noCalendar: true,
-            //     dateFormat: "H:i",       // 24-hour format
-            //     time_24hr: true,         // Enable 24-hour dropdown
-            //     minuteIncrement: 1,
-            //     // defaultDate: new Date()
-            // });
-
           }
-  
+
             flatpickr("#interviewDate", {
                 dateFormat: "d-m-Y",
                 altInput: true,
@@ -128,24 +219,8 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                     instance.altInput.style.width = "129px";
                 }
             });
-
-          
-            // $("#interviewDate").flatpickr({
-            //     dateFormat: "d-m-Y",    // Custom date format 
-            //     altInput: true,                // Enable alternative input
-            //     altFormat: "d-M-Y",  
-            //     minDate: "today",       // Set minimum date to today
-            //     onReady: function(selectedDates, dateStr, instance) {
-            //             instance.altInput.style.width = "129px"; // Set the desired width
-            //         }
-            //                 // defaultDate: new Date() // Set maximum date
-            // });
-
-          
       }, 500);
 
-
-      
     function accessEmailTemplate(template_id, application_id) {
 
         var interviewers = $('#panellist').val();
@@ -189,9 +264,7 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                         $('#editor1').val(response.template_description);
                     }, 500);
                 },
-                complete: function(data) {
-                    //$('#childStatus_'+current_application_id).html('');
-                }
+                complete: function(data) {}
             });
         } else {
             $('#subject').val('');
@@ -199,11 +272,7 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
         }
     }
 </script>
-<style>
-    .tox-statusbar__branding {
-        display: none
-    }
-</style>
+
 <form class="form fv-plugins-bootstrap fv-plugins-framework" id="app_interview_create_frm" name="app_interview_create_frm"
     method="post" enctype="multipart/form-data">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -213,754 +282,489 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     <input type="hidden" name="jobId" id="jobId" value="{{ @$application->jobId }}" />
     <input type="hidden" name="master_status_id" id="master_status_id" value="{{ @$application->master_status_id }}" />
     <input type="hidden" name="child_status_id" id="child_status_id" value="{{ @$application->child_status_id }}" />
-    <div id="div_interview_schedule_first">
-        <div class="modal-header flex-stack">
-            <h2>Interview Schedule</h2>
-            <div class="btn btn-sm btn-icon btn-active-light-danger" id="data-dismiss" data-dismiss="modal"> <span
-                    class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="currentColor">
-                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                            transform="rotate(-45 6 17.3137)" />
-                        <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                            transform="rotate(45 7.41422 6)" />
-                    </svg>
-                </span> </div>
+
+    @php
+        $isdFullName = trim(@$application->full_name);
+        $isdInitial = $isdFullName !== '' ? strtoupper($isdFullName[0]) : '?';
+    @endphp
+
+    <div id="div_interview_schedule_first" class="isd-wrap">
+        <div class="isd-actionbar">
+            <button type="button" class="isd-btn-cancel" id="data-dismiss">Cancel</button>
+            <button type="button" class="isd-btn-primary" id="isdSubmitBtn" onclick="submitForm();">
+                <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
+                <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+            </button>
         </div>
-        <div class="modal-body scroll-y py-0 px-lg-7">
-            <div data-kt-element="options">
-                <div class="py-5">
-                    <table class="table align-middle table-row-dashed fs-6" id="">
-                        <!--begin::Table Head-->
-                        <thead>
-                            <!--begin::Table row-->
-                            <tr class="fw-bolder text-muted" role="row">
-                                <th class="">Name</th>
-                                {{-- <th class="">Contacts</th> --}}
-                                <th class="">Exp.</th>
-                                <th class="">Salary</th>
-                                <th class="">Notice Period</th>
-                                <th class="">Qualification</th>
-                                <th class="">Location</th>
-                                <th class="">Source</th>
-                                <th class="">Job</th>
-                                <th class="">Stage</th>
-                            </tr>
-                            <!--end::Table row-->
-                        </thead>
-                        <!--end::Table Head-->
-                        <tbody class="text-gray-600 fw-bold">
-                            <tr>
-                                @php
 
-                                    $bgTextDecore = $strVal = '';
-                                    $str = trim(@$application->full_name);
-                                    $str = $strVal = strtolower($str[0]);
-                                    $str = ord($str);
-                                    if ($str >= 97 && $str <= 101) {
-                                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                    } elseif ($str >= 102 && $str <= 106) {
-                                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                    } elseif ($str >= 107 && $str <= 111) {
-                                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                    } elseif ($str >= 112 && $str <= 116) {
-                                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                    } elseif ($str >= 117 && $str <= 121) {
-                                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                    } else {
-                                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                    }
-
-                                @endphp
-                                <td class="d-flex align-items-center border-0">
-                                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5">
-                                        <a href="javascript:void(0);">
-                                            <div class="symbol-label fs-3 {{ @$bgTextDecore }} border-radius-5">
-                                                {{ strtoupper(@$strVal) }}</div>
-                                        </a>
-                                    </div>
-                                    <div class="d-flex flex-column">
-                                        <a href="javascript:void(0);"
-                                            class="text-dark fw-bolder text-hover-primary fs-6">
-                                            {{ ucwords(@$application->full_name) }} </a>
-                                        <a href="javascript:void(0);"
-                                            class="text-muted fw-bold d-block fs-7 text-hover-primary">
-                                            {{ ucwords(@$application->current_designation) }}</a>
-                                    </div>
-                                </td>
-
-                                {{-- <td>
-                                    <div class="d-flex flex-column"> 
-                                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6"> {{@$application->phone}}</a> 
-                                        <a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary" data-toggle="tooltip" title="{{@$application->email}}"> 
-                                            {{substr(ucwords(@$application->email), 0, 10)}}
-                                        </a> 
-                                    </div>
-                                </td> --}}
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">{{ @$application->total_exp }}+</span>
-                                        <span
-                                            class="text-muted fw-bold d-block fs-7">{{ @$application->rel_exp }}+</span>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">{!! @$expected_ctc !!}</span>
-                                        @if (@$application->condidate_type == 'other')
-                                            <span class="text-muted fw-bold d-block fs-7">{!! @$current_ctc !!}</span>
-                                        @endif
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">
-
-                                            @php
-
-                                                $np = $application->np_id;
-                                                if (empty($np)) {
-                                                    $np = 'N/A';
-                                                }
-                                                if ($application->serving_notice_period_mode == 0) {
-                                                    if (!empty($application->np_id)) {
-                                                        $np = $application->np_id . '  Days';
-                                                    }
-                                                } elseif ($application->serving_notice_period_mode == 1) {
-                                                    $np = date('d M y', strtotime($application->np_id));
-                                                } else {
-                                                    $np = $application->np_id;
-                                                }
-                                                echo $np;
-
-                                            @endphp
-
-                                        </span>
-                                        <span
-                                            class="text-muted fw-bold d-block fs-7">{{ @$application->current_company }}</span>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span
-                                            class="text-dark fw-bolder fs-6">{{ @$application->qualification_name }}</span>
-                                        <span
-                                            class="text-muted fw-bold d-block fs-7">{{ substr(ucwords(@$application->skills), 0, 15) }}</span>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">{{ @$row_city_name }}</span>
-                                        <span
-                                            class="text-muted fw-bold d-block fs-7">{{ substr(@$row_state_name, 0, 6) }}
-                                            | {{ @$row_country_name }}</span>
-                                    </div>
-                                </td>
-
-                                <td>
-
-                                    @php
-                                        $posted_by_image = '';
-                                        if (!empty($application->posted_by_image)) {
-                                            $posted_by_image = @$application->posted_by_image;
-                                        }
-
-
-                                        if($application->company_id != $application->ClientComID && $application->ClientComID != 0 && $application->ClientComID > 0){
-                                            $spokperson = DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $application->jobId)->where('job_assign.company_id', $application->ClientComID)->first();
-                                            $rowpostedby = @$spokperson->name;
-                                        }else{
-                                            $rowpostedby = $application->submitted_by_name;
-                                        }
-
-                                    @endphp
-
-                                    <div class="d-flex flex-column">
-                                        <div class="symbol-group symbol-hover">
-                                            <div class="symbol symbol-30 symbol-circle" data-toggle="tooltip"
-                                                data-placement="top"
-                                                title="{{ substr(@$rowpostedby, 0, 10) }}">
-                                                <span
-                                                    class="text-dark fw-bolder fs-6">{{ substr(@$rowpostedby, 0, 20) }}</span>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        class="text-muted fw-bold d-block fs-7">{{ substr(@$submitted_by_company, 0, 10) }}</span>
-                                </td>
-
-                                <td>
-                                    <div class="d-flex flex-column">
-                                        <span
-                                            class="text-dark fw-bolder fs-6">{{ substr(@$application->job_title, 0, 10) }}</span>
-                                        <span
-                                            class="text-muted fw-bold d-block fs-7">{{ substr(@$application->client_name, 0, 10) }}</span>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <a href="javascript:void(0);" class="d-flex flex-column">
-                                        <span
-                                            class="badge fw-bolder fs-6 {{ @$application->master_status_style }} px-2 py-1">
-                                            {{ substr(trim(@$application->master_status_name), 0, 10) }}
-                                        </span>
-                                        <span
-                                            class="text-muted fw-bold text-muted d-block fs-7">{{ substr(@$child_status_name, 0, 10) }}</span>
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-
-                    @php
-                        $fresh_check = $reschedule_check = '';
-                        if ($reschedule == 1) {
-                            $reschedule_check = 'checked="checked"';
-                        } else {
-                            $fresh_check = 'checked="checked"';
-                        }
-                    @endphp
-                    <div class="row">
-                        <div class="col-lg-3">
-                            <label class="text-dark mb-0 mt-3 fw-bolder fs-5">Select Time Zone</label>
-                            <div class="row py-3 mb-3 px-3">
-
-                                <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
-                                    <option value="" >Select a timezone...</option>
-                                      @if(!empty($timezone))
-                                       <!-- Popular Time Zones -->
-                                            <optgroup label="Popular Time Zones">
-                                              @foreach($timezone as $tval)
-                                                  @if($tval->priority)
-                                                      @php
-                                                          $sel = '';
-                                                          if ($defaultTimeZone === $tval->time_zone) {
-                                                              $sel = 'selected="selected"';
-                                                          }
-                                                      @endphp
-                                                      {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
-                                                  @endif
-                                              @endforeach
-                                          </optgroup>
-                  
-                                          <!-- Other Time Zones -->
-                                          <optgroup label="All Time Zones">
-                                              @foreach($timezone as $tval)
-                                                  @if(!$tval->priority) {{-- Non-priority time zones --}}
-                                                      @php
-                                                          $sel = '';
-                                                          if ($defaultTimeZone === $tval->time_zone) {
-                                                              $sel = 'selected="selected"';
-                                                          }
-                                                      @endphp
-                                                      {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
-                                                  @endif
-                                              @endforeach
-                                          </optgroup>
-                                      @endif
-                                  </select>
-                                  <input type="hidden" class="btn-check" name="interview_type" value="1"
-                                        id="fresh" {{ @$fresh_check }}>
-
-                                {{-- <div class="col-lg-6 px-2">
-                                    <input type="radio" class="btn-check" name="interview_type" value="1"
-                                        id="fresh" {{ @$fresh_check }}>
-                                    <label
-                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                        for="fresh"> <span class="d-block fw-bold text-start"> <span
-                                                class="text-dark-800 fw-bolder d-block fs-5">Fresh</span> </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-6 px-2">
-                                    <input type="radio" class="btn-check" name="interview_type" value="2"
-                                        id="reschedule" {{ @$reschedule_check }}>
-                                    <label
-                                        class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-                                        for="reschedule"> <span class="d-block fw-bold text-start"> <span
-                                                class="text-dark-800 fw-bolder d-block fs-5">Reschedule</span> </span>
-                                    </label>
-                                </div> --}}
-                                <span class="form-text text-muted">Please select Time Zone</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                           
-                             
-
-                            <label class="text-dark mb-0 mt-3 fw-bolder fs-5 px-2">Date and Time</label>
-                            <div class="row my-3 px-3">
-                                <input class="form-control form-control-solid" placeholder="Select date" name="interviewDate" id="interviewDate" value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly" style="width: 50%;">
-
-                                <input class="form-control form-control-solid" placeholder="Select Time" name="interviewTime" id="interviewTime" value="{{ (($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('h:i A') : '') }}" type="text" readonly="readonly" style="width: 48%; margin-left: 4px;">
-
-                                {{-- <input class="form-control form-control-solid" placeholder="Select a date & time"
-                                    name="interviewDate" id="interviewDate" type="datetime-local"
-                                    onclick="this.showPicker()"> --}}
-                            </div>
-                            <span class="form-text text-muted">Please select date & time</span>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="text-dark mb-0 mt-3 fw-bolder fs-5 px-2">Interview Mode</label>
-                            <div class="row py-3 mb-3 px-3">
-                                <select name="interview_mode" id="interview_mode"
-                                    onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                    class="form-select form-select-solid">
-                                    <option value="">Select Interview Mode</option>
-
-                                    @if (!empty($interview_mode))
-                                        @foreach ($interview_mode as $int_mode_val)
-                                            <option value="{{ @$int_mode_val->id }}" {{ @$datatmode == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-
-                                </select>
-                                <span class="form-text text-muted">Please select mode</span>
-                            </div>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="text-dark mb-0 mt-3 fw-bolder fs-5 px-2">Interview Sub Mode</label>
-                            <div class="row py-3 mb-3 px-3"> <span id="childInterview">
-                                    <select class="form-select form-select-solid" name="interview_mode_lavel"
-                                        id="interview_mode_lavels" data-style="">
-                                        <option value="">Select mode</option>
-                                    </select>
-                                </span> <span class="form-text text-muted">Please select mode</span> </div>
-                        </div>
-                    </div>
-                    <div class="row" style="display:none" id="url_div">
-                        <div class="col-lg-12">
-                            <label
-                                class="text-dark my-3 fw-bolder fs-5 d-flex justify-content-between align-items-center"><span
-                                    id="lbl_call_mode">&nbsp;</span></label>
-                            <input type="text" name="url" id="url"
-                                class="form-control form-control-solid">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-12" style="position: relative;">
-                            <label
-                                class="text-dark my-3 fw-bolder fs-5 d-flex justify-content-between align-items-center">
-                                Select Interview Panel </label>
-                            <input class="form-control form-control-solid in_tr_email_panel" data-panel="1" name="panellist" id="panellist"
-                                placeholder="Enter panellist" value="">
-                            <div class="" style="position: absolute; right: 10px; top: 35.3px;">
-
-                                 <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel"
-                                    data-bs-toggle="modal" data-panel="1" data-bs-target="#kt_modal_create_project" style="    padding: 10px;">Add Interview Panel</a>
-
-
-                                {{-- <a href="javascript:;" class="btn btn-primary btn-sm add_panel"
-                                    data-bs-toggle="modal" data-bs-target="#kt_modal_create_project" style="height: 43px; padding: 12px;">Add Interview Panel</a> --}}
-                            </div>
-                        </div>
-                        <span class="form-text text-muted">Please select panel list</span>
-                    </div>
+        <div class="isd-info-strip">
+            <div class="isd-info-cand">
+                <div class="isd-avatar bg-light-primary text-primary">{{ $isdInitial }}</div>
+                <div>
+                    <div class="isd-info-name">{{ ucwords($isdFullName) }}</div>
+                    <div class="isd-info-role">{{ ucwords(@$application->current_designation) }}</div>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer flex-center">
-            <div class="div1">
-                <button type="close" id="" class="btn btn-secondary me-3"
-                    data-dismiss="modal">Cancel</button>
-                <input type="hidden" name="mailstatus" id="mailstatus" value="0">
-                <input type="hidden" name="email_template_set" id="email_template_set" value="0">
-                <button type="button" id="submitbtn" class="btn btn-light-primary me-3" onclick="submitForm();">
-                    <span class="indicator-label">Save</span> <span class="indicator-progress">Please wait...<span
-                            class="spinner-border spinner-border-sm align-middle ms-2"></span></span> </button>
+            <div class="isd-info-block">
+                <span class="isd-info-label">Applied For</span>
+                <span class="isd-info-value">{{ @$application->job_title }}</span>
             </div>
-            <div class="div1 position-absolute end-0 me-9">
-                <!-- <button type="button" id="" class="btn btn-secondary">Rescheduled</button> -->
-                <button type="button" class="btn btn-light-dark btn-hover-dark" id="send_email_invies">Send Email
-                    Invites</button>
+            <div class="isd-info-block">
+                <span class="isd-info-label">Job ID</span>
+                <span class="isd-info-value">{{ @$application->jobId }}</span>
+            </div>
+            <div class="isd-info-block">
+                <span class="isd-info-label">Current Stage</span>
+                <span class="badge fw-bolder {{ @$application->master_status_style }} px-2 py-1">{{ trim(@$application->master_status_name) }}</span>
             </div>
         </div>
-    </div>
-    <div id="div_interview_schedule_second" style="display:none">
-        <!--begin::Modal header-->
-        <div class="modal-header flex-stack">
-            <!--begin::Title-->
-            <h2>Interview Schedule Email</h2>
-            <!--end::Title-->
-            <!--begin::Close-->
-            <div class="btn btn-sm btn-icon btn-active-color-primary" data-dismiss="modal">
-                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                <span class="svg-icon svg-icon-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none">
-                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                            transform="rotate(-45 6 17.3137)" fill="black" />
-                        <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                            transform="rotate(45 7.41422 6)" fill="black" />
-                    </svg>
-                </span>
-                <!--end::Svg Icon-->
-            </div>
-            <!--end::Close-->
-        </div>
-        <!--end::Modal header-->
-        <!--begin::Modal body-->
-        <div class="modal-body scroll-y py-0 px-lg-7">
-            <div data-kt-element="options">
-                <div class="py-5">
-                    <!--begin::Template-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
-                        <div class="col-lg-10 col-xl-10">
-                            <select name="email_template" id="email_template" class="form-control form-control-solid"
-                                onchange="accessEmailTemplate(this.value, {{ @$application->id }} );">
-                                <option value="">Select Pre Define Email Template </option>
-                                @if (!empty($email_template))
-                                    @foreach ($email_template as $email_temp)
-                                        {
-                                        @if ($email_temp->tempForInterview == 1 && $selfCompany == 1)
-                                            <option value="{{ $email_temp->e_temp_id }}">
-                                                {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
-                                            </option>
-                                        @endif
-                                        @if ($selfCompany == '')
-                                            <option value="{{ $email_temp->e_temp_id }}">
-                                                {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
-                                            </option>
-                                        @endif
-                                    @endforeach
+
+        <div class="isd-body">
+            <div class="isd-main">
+
+                <!-- Section 1: Interview Details -->
+                <div class="isd-sec">
+                    <div class="isd-sec-head">
+                        <span class="isd-sec-num" style="background:#3e97ff;">1</span>
+                        <div><div class="isd-sec-title">Interview Details</div><div class="isd-sec-sub">When &amp; for how long</div></div>
+                    </div>
+                    <div class="isd-grid">
+                        <div class="isd-field">
+                            <label>Date <span class="req">*</span></label>
+                            <input class="form-control" placeholder="Select date" name="interviewDate" id="interviewDate"
+                                value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly">
+                        </div>
+                        <div class="isd-field">
+                            <label>Time <span class="req">*</span></label>
+                            <input class="form-control" placeholder="Select time" name="interviewTime" id="interviewTime"
+                                value="{{ (($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('h:i A') : '') }}" type="text" readonly="readonly">
+                        </div>
+                        <div class="isd-field">
+                            <label>Timezone <span class="req">*</span></label>
+                            <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone...">
+                                <option value="">Select a timezone...</option>
+                                @if(!empty($timezone))
+                                    <optgroup label="Popular Time Zones">
+                                        @foreach($timezone as $tval)
+                                            @if($tval->priority)
+                                                @php $sel = ($defaultTimeZone === $tval->time_zone) ? 'selected="selected"' : ''; @endphp
+                                                {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
+                                            @endif
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="All Time Zones">
+                                        @foreach($timezone as $tval)
+                                            @if(!$tval->priority)
+                                                @php $sel = ($defaultTimeZone === $tval->time_zone) ? 'selected="selected"' : ''; @endphp
+                                                {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
+                                            @endif
+                                        @endforeach
+                                    </optgroup>
                                 @endif
                             </select>
-                            <span class="form-text text-muted">Please select email template</span>
+                        </div>
+                        <div class="isd-field">
+                            <label>Duration <span class="isd-soon">Coming soon</span></label>
+                            <select disabled><option>45 Minutes</option></select>
+                        </div>
+                        <div class="isd-field">
+                            <label>Interview Round <span class="isd-soon">Coming soon</span></label>
+                            <select disabled><option>—</option></select>
                         </div>
                     </div>
-                    <!--end::Template-->
-                    <!--begin::From email-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">From</label>
-                        <div class="col-lg-10 col-xl-10">
-                            <input type="text" name="from_email" id="from_email"
-                                placeholder="Ex: example@test.com" class="form-control form-control-solid"
-                                value="{{ @$from_email }}" readonly>
-                            <span class="form-text text-muted">Please enter email</span>
+                    <div class="isd-field" style="margin-top:10px;">
+                        <label>Add to Calendar <span class="isd-soon">Coming soon</span></label>
+                        <div class="isd-cal-row">
+                            <div class="isd-cal-btn">Google Calendar</div>
+                            <div class="isd-cal-btn">Outlook Calendar</div>
                         </div>
                     </div>
-                    <!--end::From email-->
-                    <!--begin::To email-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">To</label>
-                        <div class="col-lg-10 col-xl-10">
-                            <input type="text" name="to_email" id="to_email" placeholder="Ex: demo@test.com"
-                                class="form-control form-control-solid" value="{{ @$application->email }}" readonly>
-                            <span class="form-text text-muted">Please enter email</span>
-                        </div>
-                    </div>
-                    <!--end::To email-->
-                    <!--begin::CC email-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">CC</label>
-                        <div class="col-lg-10 col-xl-10" style="position: relative;">
-                            <input type="text" name="cc_email" id="cc_email" placeholder="Ex: example2@test.com"
-                                class="form-control form-control-solid" value="">
-                            <span class="form-text text-muted">Please enter email</span>
+                    <input type="hidden" class="btn-check" name="interview_type" value="1" id="fresh" {{ (@$reschedule == 1) ? '' : 'checked="checked"' }}>
+                </div>
 
-                            <div class="" style="position: absolute; right: 13px; top: 4px;">
-                                <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel"
-                                    data-bs-toggle="modal" data-panel="0" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
+                <!-- Section 2: Interview Mode -->
+                <div class="isd-sec">
+                    <div class="isd-sec-head">
+                        <span class="isd-sec-num" style="background:#c000ff;">2</span>
+                        <div><div class="isd-sec-title">Interview Mode</div><div class="isd-sec-sub">How will interview happen</div></div>
+                    </div>
+
+                    <div class="isd-field"><label>Select Interview Mode <span class="req">*</span></label></div>
+                    <div class="isd-tile-row" id="isdFamilyTiles"></div>
+                    <div id="isdLeafSection" style="display:none;">
+                        <div class="isd-leaf-label">Choose an option</div>
+                        <div class="isd-tile-row" id="isdLeafTiles"></div>
+                    </div>
+
+                    <select name="interview_mode" id="interview_mode" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="isd-hidden-native">
+                        <option value="">Select Interview Mode</option>
+                        @if (!empty($interview_mode))
+                            @foreach ($interview_mode as $int_mode_val)
+                                <option value="{{ @$int_mode_val->id }}" {{ @$datatmode == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                    <span id="childInterview" class="isd-hidden-native">
+                        <select name="interview_mode_lavel" id="interview_mode_lavels" data-style="">
+                            <option value="">Select mode</option>
+                        </select>
+                    </span>
+
+                    <div class="row" style="display:none" id="url_div">
+                        <div class="col-lg-12">
+                            <label class="text-dark my-3 fw-bolder fs-5 d-flex justify-content-between align-items-center"><span id="lbl_call_mode">&nbsp;</span></label>
+                            <input type="text" name="url" id="url" class="form-control form-control-solid">
+                        </div>
+                    </div>
+                    <div class="isd-field" id="isdMeetingLinkWrap" style="display:none;">
+                        <label>Meeting Link <span class="req">*</span></label>
+                        <div class="isd-link-row">
+                            <input type="text" id="isdMeetingLinkDisplay" readonly>
+                            <div class="isd-link-actions">
+                                <span class="isd-icon-btn" title="Open" id="isdLinkOpen">&#8599;</span>
+                                <span class="isd-icon-btn" title="Refresh" id="isdLinkRefresh">&#8635;</span>
+                                <span class="isd-icon-btn" title="Copy" id="isdLinkCopy">&#128203;</span>
                             </div>
                         </div>
                     </div>
-                    <!--end::CC email-->
-                    <!--begin::Subject-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
-                        <div class="col-lg-10 col-xl-10">
-                            <input type="text" name="subject" id="subject"
-                                placeholder="Ex: Re-Schedule Interview" class="form-control form-control-solid">
-                            <span class="form-text text-muted">Please enter subject</span>
-                        </div>
+                </div>
+
+                <!-- Section 3: Interview Panel -->
+                <div class="isd-sec">
+                    <div class="isd-sec-head">
+                        <span class="isd-sec-num" style="background:#06c732;">3</span>
+                        <div><div class="isd-sec-title">Interview Panel</div><div class="isd-sec-sub">Who will interview</div></div>
                     </div>
-                    <!--end::Subject-->
-                    <!--begin::Body-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
-                        <div class="col-lg-10 col-xl-10">
-                            <textarea id="editor1" name="editor1" class="form-control form-control-solid" row="10" placeholder="">&nbsp;</textarea>
-                            <span class="form-text text-muted">Please enter email content</span>
-                        </div>
+                    <div class="isd-panel-add">
+                        <input class="form-control form-control-solid in_tr_email_panel" data-panel="1" id="isdPanelInput"
+                            placeholder="Enter panellist name or email">
+                        <a href="javascript:;" class="isd-btn-add-panel in_tr_email_panel" data-bs-toggle="modal" data-panel="1"
+                            data-bs-target="#kt_modal_create_project">+ Add Interview Panel</a>
                     </div>
-                    <!--end::Body-->
-                    <!--begin::Upload Files-->
-                    <div class="form-group row mb-4">
-                        <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Upload Files
-                            (2MB)</label>
-                        <div class="col-xl-10 col-lg-10">
-                            <input type="file" name="attachment" id="attachment"
-                                class="dropzone-select btn btn-sm btn-primary me-2" />
-                        </div>
+                    <input class="form-control form-control-solid in_tr_email_panel isd-hidden-native" data-panel="1" name="panellist" id="panellist"
+                        placeholder="Enter panellist" value="">
+                    <div class="isd-panel-list" id="isdPanelList"></div>
+                    <div class="isd-check-avail">Check Availability for All Panelists <span class="isd-soon">Coming soon</span></div>
+                </div>
+
+                <!-- Section 4: Notifications -->
+                <div class="isd-sec">
+                    <div class="isd-sec-head">
+                        <span class="isd-sec-num" style="background:#ff7a00;">4</span>
+                        <div><div class="isd-sec-title">Notifications</div><div class="isd-sec-sub">Who should be notified</div></div>
                     </div>
-                    <!--end::Upload Files-->
+                    <div class="isd-notify-grid">
+                        <label class="isd-notify"><input type="checkbox" id="isdNotifyEmail" checked><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span></label>
+                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span></label>
+                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span></label>
+                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span></label>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <a href="javascript:void(0);" id="send_email_invies" style="font-size:11.5px;font-weight:600;color:#3e97ff;">Customize &amp; send invite email &rarr;</a>
+                    </div>
+                </div>
+
+                <div class="isd-sec">
+                    <div class="isd-field">
+                        <label>Notes / Special Instructions <span class="isd-soon">Coming soon</span></label>
+                        <textarea rows="3" disabled placeholder="Not available yet"></textarea>
+                    </div>
+                </div>
+
+                <input type="hidden" name="mailstatus" id="mailstatus" value="0">
+                <input type="hidden" name="email_template_set" id="email_template_set" value="0">
+            </div>
+
+            <div class="isd-sidebar">
+                <div class="isd-card">
+                    <div class="isd-card-title"><span class="dot"></span>Interview Summary</div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#128197;</div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#127760;</div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#127916;</div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#128101;</div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#9993;</div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico">&#9989;</div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
+                </div>
+
+                <div class="isd-card isd-avail-card">
+                    <div class="isd-card-title"><span class="dot" style="background:#06c732;"></span>Candidate Availability</div>
+                    <div class="isd-avail-blur">
+                        <div class="isd-quick-row"><span class="k">Mon</span><span class="v">—</span></div>
+                        <div class="isd-quick-row"><span class="k">Tue</span><span class="v">—</span></div>
+                        <div class="isd-quick-row"><span class="k">Wed</span><span class="v">—</span></div>
+                    </div>
+                    <div class="isd-soon-overlay"><span class="isd-soon-badge">Coming soon</span></div>
+                </div>
+
+                <div class="isd-card">
+                    <div class="isd-card-title"><span class="dot" style="background:#ffa800;"></span>Quick Info</div>
+                    <div class="isd-quick-row"><span class="k">Job ID</span><span class="v">{{ @$application->jobId }}</span></div>
+                    <div class="isd-quick-row"><span class="k">Applied For</span><span class="v">{{ @$application->job_title }}</span></div>
+                    <div class="isd-quick-row"><span class="k">Current Stage</span><span class="v">{{ trim(@$application->master_status_name) }}</span></div>
+                    <div class="isd-quick-row"><span class="k">Source</span><span class="v">{{ @$submitted_by_company }}</span></div>
                 </div>
             </div>
         </div>
-        <!--begin::Modal body-->
-        <!--begin::Modal footer-->
-        <div class="modal-footer flex-center">
-            <div class="div1">
-                <!--begin::Cancel-->
-                <button type="close" id="" class="btn btn-light-dark me-3"
-                    data-dismiss="modal">Cancel</button>
-                <!--end::Cancel-->
-                <!--begin::Back-->
-                <button type="button" id="" class="btn btn-light-info me-3 divback">Back</button>
-                <!--end::Back-->
-                <!--begin::Send Email-->
-                <button type="button" id="sendEmailBtn" class="btn btn-light-primary sendEmailBtn"> <span
-                        class="indicator-label">Send Email</span> <span class="indicator-progress">Please wait...
-                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
-                <!--end::Send Email-->
-            </div>
-            <!--<span style="position: absolute;right: 2%;"></span>-->
-            <div class="div2 position-absolute end-0 me-5 d-none"> </div>
+    </div>
+
+    <div id="div_interview_schedule_second" class="isd-wrap" style="display:none">
+        <div class="isd-email-head">
+            <div class="isd-email-title">Interview Schedule Email</div>
+            <button type="button" class="isd-btn-cancel" id="isdSecondClose">Cancel</button>
         </div>
-        <!--end::Modal footer-->
+        <div class="isd-email-body">
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
+                <div class="col-lg-10 col-xl-10">
+                    <select name="email_template" id="email_template" class="form-control form-control-solid"
+                        onchange="accessEmailTemplate(this.value, {{ @$application->id }} );">
+                        <option value="">Select Pre Define Email Template </option>
+                        @if (!empty($email_template))
+                            @foreach ($email_template as $email_temp)
+                                @if ($email_temp->tempForInterview == 1 && $selfCompany == 1)
+                                    <option value="{{ $email_temp->e_temp_id }}">
+                                        {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
+                                    </option>
+                                @endif
+                                @if ($selfCompany == '')
+                                    <option value="{{ $email_temp->e_temp_id }}">
+                                        {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
+                                    </option>
+                                @endif
+                            @endforeach
+                        @endif
+                    </select>
+                    <span class="form-text text-muted">Please select email template</span>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">From</label>
+                <div class="col-lg-10 col-xl-10">
+                    <input type="text" name="from_email" id="from_email" placeholder="Ex: example@test.com" class="form-control form-control-solid" value="{{ @$from_email }}" readonly>
+                    <span class="form-text text-muted">Please enter email</span>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">To</label>
+                <div class="col-lg-10 col-xl-10">
+                    <input type="text" name="to_email" id="to_email" placeholder="Ex: demo@test.com" class="form-control form-control-solid" value="{{ @$application->email }}" readonly>
+                    <span class="form-text text-muted">Please enter email</span>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">CC</label>
+                <div class="col-lg-10 col-xl-10" style="position: relative;">
+                    <input type="text" name="cc_email" id="cc_email" placeholder="Ex: example2@test.com" class="form-control form-control-solid" value="">
+                    <span class="form-text text-muted">Please enter email</span>
+                    <div class="" style="position: absolute; right: 13px; top: 4px;">
+                        <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel" data-bs-toggle="modal" data-panel="0" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
+                <div class="col-lg-10 col-xl-10">
+                    <input type="text" name="subject" id="subject" placeholder="Ex: Re-Schedule Interview" class="form-control form-control-solid">
+                    <span class="form-text text-muted">Please enter subject</span>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
+                <div class="col-lg-10 col-xl-10">
+                    <textarea id="editor1" name="editor1" class="form-control form-control-solid" row="10" placeholder="">&nbsp;</textarea>
+                    <span class="form-text text-muted">Please enter email content</span>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Upload Files (2MB)</label>
+                <div class="col-xl-10 col-lg-10">
+                    <input type="file" name="attachment" id="attachment" class="dropzone-select btn btn-sm btn-primary me-2" />
+                </div>
+            </div>
+        </div>
+        <div class="isd-email-foot">
+            <button type="button" class="isd-btn-back divback">Back</button>
+            <button type="button" id="sendEmailBtn" class="isd-btn-primary">
+                <span class="indicator-label">Send Email</span>
+                <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+            </button>
+        </div>
     </div>
 </form>
-<!--begin::Form-->
 
-
-           
-   
-
-
- <!--begin::Add Contact Person Modal-->
-    <div class="modal modal fade" tabindex="-1" aria-hidden="true" id="add_team_member">
-        <div class="modal-dialog modal-dialog-centered mw-650px">
-            <div class="modal-content">
-                <div class="modal-header" id="add_team_member_header">
-                    <h2 class="fw-bolder">Add Contact Person</h2>
-                    <div class="btn btn-icon btn-sm modal-close-team">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" fill="black" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" fill="black" />
-                            </svg>
-                        </span>
-                    </div>
-
-
+<!--begin::Add Contact Person Modal-->
+<div class="modal modal fade" tabindex="-1" aria-hidden="true" id="add_team_member">
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-content">
+            <div class="modal-header" id="add_team_member_header">
+                <h2 class="fw-bolder">Add Contact Person</h2>
+                <div class="btn btn-icon btn-sm modal-close-team">
+                    <span class="svg-icon svg-icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
+                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
+                        </svg>
+                    </span>
                 </div>
-                <div class="modal-body scroll-y mx-5">
-                    <form id="add_team_member_form" name="add_team_member_form" class="form" action="#"
-                        method="post">
-                        <meta name="csrf-token" content="{{ csrf_token() }}" />
-                        @csrf
-                        @method('POST')
-                        <div class="row client-cperson-row">
-                            <div class="row client-cperson-container" style="position: relative;">
-                                <span class="form-text text-muted form-label fw-bolder countContact"
-                                    style="position: absolute; top: 0;"></span>
-                                <div class="col-xl-12">
-                                    <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="text" name="cp_name" id="cp_name_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter person name">
-                                        <span class="form-text text-muted">Please enter contact person name</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12">
-                                    <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="email" name="cp_email" id="cp_email_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter email">
-                                        <span class="form-text text-muted">Please enter contact email</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12">
-                                    <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="number" name="cp_number" id="cp_number_0"
-                                            class="form-control form-control-lg form-control-solid rounded me-5"
-                                            value="" placeholder="Enter contact number">
-                                            <input type="hidden" value="{{ @$country_code }}" id="phone_country_code" name="phone_country_code">
-                                        <span class="form-text text-muted">Please enter contact number</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-
-                                <div class="col-xl-12">
-                                    <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container"
-                                        id="remove">
-                                        <input type="text" name="cp_desigination" id="cp_desigination_0"
-                                            class="form-control form-control-lg form-control-solid rounded" value=""
-                                            placeholder="Enter desigination" style="">
-                                        <span class="form-text text-muted">Please enter desigination</span>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="client_idMail" id="client_idMail" value="{{$application->client_id}}">
-                                <input type="hidden" name="jobIdMail" id="jobIdMail" value="{{$application->jobId}}">
-                                <input type="hidden" name="self_company" id="self_company" value="{{$application->self_company}}">
-                                <input type="hidden" name="client_name" id="client_name" value="{{$application->client_name}}">
-                                 <input type="hidden" name="panelValue" id="panelValue" value="1">
-
-                                <div class="text-center col-xl-12">
-                                    <button type="reset" class="btn btn-light me-3 modal-close-team">Close</button>
-                                    <button class="btn btn-primary "
-                                        id="hiring_contact_person_add"> <span class="indicator-label">Submit</span> <span
-                                            class="indicator-progress">Please wait... <span
-                                                class="spinner-border spinner-border-sm align-middle ms-2"></span> </span>
-                                    </button>
+            </div>
+            <div class="modal-body scroll-y mx-5">
+                <form id="add_team_member_form" name="add_team_member_form" class="form" action="#" method="post">
+                    <meta name="csrf-token" content="{{ csrf_token() }}" />
+                    @csrf
+                    @method('POST')
+                    <div class="row client-cperson-row">
+                        <div class="row client-cperson-container" style="position: relative;">
+                            <span class="form-text text-muted form-label fw-bolder countContact" style="position: absolute; top: 0;"></span>
+                            <div class="col-xl-12">
+                                <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container" id="remove">
+                                    <input type="text" name="cp_name" id="cp_name_0" class="form-control form-control-lg form-control-solid rounded me-5" value="" placeholder="Enter person name">
+                                    <span class="form-text text-muted">Please enter contact person name</span>
+                                    <div class="fv-plugins-message-container"></div>
                                 </div>
                             </div>
+                            <div class="col-xl-12">
+                                <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container" id="remove">
+                                    <input type="email" name="cp_email" id="cp_email_0" class="form-control form-control-lg form-control-solid rounded me-5" value="" placeholder="Enter email">
+                                    <span class="form-text text-muted">Please enter contact email</span>
+                                    <div class="fv-plugins-message-container"></div>
+                                </div>
+                            </div>
+                            <div class="col-xl-12">
+                                <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container" id="remove">
+                                    <input type="number" name="cp_number" id="cp_number_0" class="form-control form-control-lg form-control-solid rounded me-5" value="" placeholder="Enter contact number">
+                                    <input type="hidden" value="{{ @$country_code }}" id="phone_country_code" name="phone_country_code">
+                                    <span class="form-text text-muted">Please enter contact number</span>
+                                    <div class="fv-plugins-message-container"></div>
+                                </div>
+                            </div>
+                            <div class="col-xl-12">
+                                <div class="form-group mb-0 mt-7 client-cperson-container-child fv-plugins-icon-container" id="remove">
+                                    <input type="text" name="cp_desigination" id="cp_desigination_0" class="form-control form-control-lg form-control-solid rounded" value="" placeholder="Enter desigination" style="">
+                                    <span class="form-text text-muted">Please enter desigination</span>
+                                    <div class="fv-plugins-message-container"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="client_idMail" id="client_idMail" value="{{$application->client_id}}">
+                            <input type="hidden" name="jobIdMail" id="jobIdMail" value="{{$application->jobId}}">
+                            <input type="hidden" name="self_company" id="self_company" value="{{$application->self_company}}">
+                            <input type="hidden" name="client_name" id="client_name" value="{{$application->client_name}}">
+                            <input type="hidden" name="panelValue" id="panelValue" value="1">
+
+                            <div class="text-center col-xl-12">
+                                <button type="reset" class="btn btn-light me-3 modal-close-team">Close</button>
+                                <button class="btn btn-primary " id="hiring_contact_person_add"> <span class="indicator-label">Submit</span> <span
+                                        class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span>
+                                </button>
+                            </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    <!--end::Add  Contact Person popup-->
+</div>
+<!--end::Add  Contact Person popup-->
 
-
-{{-- <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script> --}}
-{{-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script> --}}
 <script src="https://preview.keenthemes.com/html/metronic/docs/assets/plugins/global/plugins.bundle.js"></script>
 <script>
     $(document).ready(function() {
 
-
         const primaryPhoneInput = window.intlTelInput(document.querySelector("#cp_number_0"), {
-      separateDialCode: true,
-      initialCountry: "{{ $country_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
+            separateDialCode: true,
+            initialCountry: "{{ $country_code }}",
+            preferredCountries: ["in", "us", "gb", "ca", "au"],
+        });
 
+        function updateCountryCode(inputField, hiddenField) {
+            const selectedCountryData = inputField.getSelectedCountryData();
+            const countryCode = selectedCountryData.iso2;
+            $(hiddenField).val(countryCode);
+        }
+        $("#cp_number_0").on("input change", function () {
+            updateCountryCode(primaryPhoneInput, "#phone_country_code");
+        });
 
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
+        $(".iti__flag-container").on("click", function (event) {
+            const targetInput = $(event.target).closest(".iti").find("input");
+            if (targetInput.is("#cp_number_0")) {
+                updateCountryCode(primaryPhoneInput, "#phone_country_code");
+            }
+        });
 
-    }
-    // Update country code on input or country flag selection
-    $("#cp_number_0").on("input change", function () {
-      updateCountryCode(primaryPhoneInput, "#phone_country_code");
-    });
+        setTimeout(function () {
+            $(".iti__flag-container").click();
+        },500);
 
-   
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
+        $(document).on('click', '#hiring_contact_person_add', function (e) {
+            e.preventDefault();
+            var client_id = $('#client_idMail').val();
+            var cp_name_0 = $('#cp_name_0').val();
+            var cp_email_0 = $('#cp_email_0').val();
+            var cp_number_0 = $('#cp_number_0').val();
+            var panel = $('#panelValue').val();
+            var cp_desigination_0 = $('#cp_desigination_0').val();
+            var phone_country_code = $('#phone_country_code').val();
 
-      if (targetInput.is("#cp_number_0")) {
-        updateCountryCode(primaryPhoneInput, "#phone_country_code");
-      } 
-      
-    });
+            if (client_id > 0 && cp_name_0 !='' && cp_email_0 !='' && cp_desigination_0 !='') {
 
-    setTimeout(function () {	
-      $(".iti__flag-container").click();
-    },500);
+                $('.indicator-label').hide();
+                $('#hiring_contact_person_add').attr('disabled',true);
+                $('.indicator-progress').show();
 
-          
+                var token = "{{ csrf_token() }}";
+                var id = client_id;
+                var url = "{{ route('service_company.jobs.mail_contact_person', ':id') }}";
+                url = url.replace(':id', id);
+                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
 
-     $(document).on('click', '#hiring_contact_person_add', function (e) { 
-            // $("#hiring_contact_person_add").on("click", function(e) {
-                e.preventDefault(); // Prevent the default form submission
-                   // $(document).on('click','#hiring_contact_person_add', function() {
-                var client_id = $('#client_idMail').val();
-                var cp_name_0 = $('#cp_name_0').val();
-                var cp_email_0 = $('#cp_email_0').val();
-                var cp_number_0 = $('#cp_number_0').val();
-                 var cp_number_0 = $('#cp_number_0').val();
-                  var panel = $('#panelValue').val();
-                var cp_desigination_0 = $('#cp_desigination_0').val();
-                var phone_country_code = $('#phone_country_code').val();
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {
+                        '_token': token,
+                        'cp_name_0': cp_name_0,
+                        'cp_email_0': cp_email_0,
+                        'cp_number_0': cp_number_0,
+                        'cp_desigination_0': cp_desigination_0,
+                        'phone_country_code': phone_country_code,
+                        'id': id
+                    },
+                    success: function(response) {
+                        $('.indicator-label').show();
+                        $('#hiring_contact_person_add').attr('disabled',false);
+                        $('.indicator-progress').hide();
+                        $('#Iteam_Table').prepend(response.view);
 
-
-                if (client_id > 0 && cp_name_0 !='' && cp_email_0 !='' && cp_desigination_0 !='') {
-
-                    $('.indicator-label').hide();
-                    $('#hiring_contact_person_add').attr('disabled',true);
-                    $('.indicator-progress').show();
-
-                   
-                    var token = "{{ csrf_token() }}";
-                    var id = client_id;
-                    var url = "{{ route('service_company.jobs.mail_contact_person', ':id') }}";
-                    url = url.replace(':id', id);
-                    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                    
-                    $.ajax({
-                        //type  : 'GET',
-                        type: 'POST',
-                        url: url,
-                        data: {
-                            '_token': token,
-                            'cp_name_0': cp_name_0,
-                            'cp_email_0': cp_email_0,
-                            'cp_number_0': cp_number_0,
-                            'cp_desigination_0': cp_desigination_0,
-                            'phone_country_code': phone_country_code,
-                            'id': id
-                        },
-                        success: function(response) {
-                             $('.indicator-label').show();
-                             $('#hiring_contact_person_add').attr('disabled',false);
-                            $('.indicator-progress').hide();
-                           $('#Iteam_Table').prepend(response.view);
-                         
-
-                          if(panel){
-                           var hiring_namager = $('#cc_email').val();
-                          if(hiring_namager==''){
-                            $('#cc_email').val(cp_name_0);
-                          }else{
-                            $('#cc_email').val(hiring_namager+','+cp_name_0);
-                          }
-                          }else{
-                           var hiring_namager = $('#cc_email').val();
-                          if(hiring_namager==''){
-                            $('#cc_email').val(response.contact_person_name);
-                          }else{
-                            $('#cc_email').val(hiring_namager+','+response.contact_person_name);
-                          }
+                        if(panel){
+                            var hiring_namager = $('#cc_email').val();
+                            if(hiring_namager==''){
+                                $('#cc_email').val(cp_name_0);
+                            }else{
+                                $('#cc_email').val(hiring_namager+','+cp_name_0);
+                            }
+                            // keep the chip UI in sync with the underlying #panellist value
+                            isdSyncChipsFromField();
+                        }else{
+                            var hiring_namager2 = $('#cc_email').val();
+                            if(hiring_namager2==''){
+                                $('#cc_email').val(response.contact_person_name);
+                            }else{
+                                $('#cc_email').val(hiring_namager2+','+response.contact_person_name);
+                            }
                         }
-                          $('#add_team_member_form')[0].reset();
-                          $('#add_team_member').modal('hide');
-                        }
-                    });
+                        $('#add_team_member_form')[0].reset();
+                        $('#add_team_member').modal('hide');
+                    }
+                });
 
+            } else {
+                alert("Please Enter the Conract Person Details after Add");
+            }
+        });
 
-                } else {
-                    alert(
-                        "Please Enter the Conract Person Details after Add"
-                        );
-                }
-
-            }); 
-
-            $(document).on('click', '.modal-close-team', function () {
-              $('#add_team_member').modal('hide');
-            
-            });
-
-        
-
-
+        $(document).on('click', '.modal-close-team', function () {
+            $('#add_team_member').modal('hide');
+        });
 
         var update = "{{ @$update }}";
 
@@ -976,7 +780,6 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 } else {
                     $('#interview_mode_lavels').val(interviewmodelavel).change();
                 }
-
             }, 500);
 
             var emailtemplateset = "{{ @$emailtemplateset }}";
@@ -984,24 +787,20 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 $('#email_template').val(emailtemplateset).change();
             }
 
-
             var interviewers = "{{ @$interviewers }}";
             $('#panellist').val(interviewers);
+            isdSyncChipsFromField();
             var interviewmentionlink = "{{ @$interviewmentionlink }}";
             setTimeout(() => {
                 $('#url').val(interviewmentionlink);
             }, 500);
-
         }
 
         setTimeout(() => {
             var currentDate = new Date();
-            var minDate = currentDate.toISOString().slice(0, 16); //Format: "YYYY-MM-DDTHH:mm"
+            var minDate = currentDate.toISOString().slice(0, 16);
             document.getElementById('interviewDate').min = minDate;
         }, 500);
-
-
-
 
         $('body').on('click', '#send_email_invies', function() {
             var interviewDate = $('#interviewDate').val();
@@ -1017,12 +816,10 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 Swal.fire("Required", "Interview Time Zone is required", "warning")
                 return false;
             }
-
             if (interview_mode_lavels == '') {
                 Swal.fire("Required", "Interview Sub Mode is required", "warning")
                 return false;
             }
-
             if (interviewDate == '') {
                 Swal.fire("Required", "Date is required", "warning")
                 return false;
@@ -1032,13 +829,17 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 return false;
             }
 
-
             $('#div_interview_schedule_first').hide();
             $('#div_interview_schedule_second').show();
         });
         $('body').on('click', '.divback', function() {
             $('#div_interview_schedule_first').show();
             $('#div_interview_schedule_second').hide();
+        });
+        // "Cancel" in the email-compose step closes the drawer entirely (same as
+        // the main step's Cancel), distinct from "Back" which just returns a step.
+        $('body').on('click', '#isdSecondClose', function() {
+            $('#interview_schedule_drawer_close').trigger('click');
         });
     });
 
@@ -1053,30 +854,26 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
             Swal.fire("Required", "Interview Mode is required", "warning")
             return false;
         }
-
         if(interview_mode_lavels == ''){
             Swal.fire("Required", "Interview Sub Mode is required", "warning")
             return false;
         }
-
         if(interviewDate == ''){
             Swal.fire("Required", "Date is required", "warning")
             return false;
         }
         if(interviewTime == ''){
-                Swal.fire("Required", "Time is required", "warning")
-                return false;
+            Swal.fire("Required", "Time is required", "warning")
+            return false;
         }
-
         if (timezone == '') {
-                Swal.fire("Required", "Interview Time Zone is required", "warning")
-                return false;
+            Swal.fire("Required", "Interview Time Zone is required", "warning")
+            return false;
         }
 
-        $("#submitbtn").prop("disabled", true);
-        $("#submitbtn").html(
-            `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-        );
+        $("#isdSubmitBtn").prop("disabled", true);
+        $('#isdSubmitBtn .indicator-label').hide();
+        $('#isdSubmitBtn .indicator-progress').show();
 
         $.ajax({
             url: '{{ route('service_company.job-applications.store-schedule') }}',
@@ -1095,17 +892,19 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                         $("#data-dismiss").click();
                     });
                 }
+            },
+            complete: function() {
+                $("#isdSubmitBtn").prop("disabled", false);
+                $('#isdSubmitBtn .indicator-label').show();
+                $('#isdSubmitBtn .indicator-progress').hide();
             }
         })
-
     }
 
-
     $(document).ready(function() {
-
         $(document).on('click', '#sendEmailBtn', function(e) {
             e.preventDefault();
-             $(this).prop('disabled', true);
+            $(this).prop('disabled', true);
             var formData = new FormData($('#app_interview_create_frm')[0]);
             $('.indicator-label').hide();
             $('.indicator-progress').show();
@@ -1114,20 +913,15 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                 container: '#app_interview_create_frm',
                 type: "POST",
                 data: formData,
-                processData: false, // tell jQuery not to process the data
-                contentType: false, // tell jQuery not to set contentType
+                processData: false,
+                contentType: false,
                 redirect: true,
                 success: function(response) {
                     $('.indicator-label').show();
                     $('.indicator-progress').hide();
                     if (response.status == 'faild') {
-                        Swal.fire("Warning", "The file must not be larger than 2 MB ",
-                            "warning").then(function() {
-
-                        });
+                        Swal.fire("Warning", "The file must not be larger than 2 MB ", "warning").then(function() {});
                     }
-
-
                     if (response.status == 'success') {
                         $('#mailstatus').val(1);
                         var email_template = $('#email_template').val();
@@ -1136,9 +930,8 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
                         if (savesend) {
                             submitForm();
                         } else {
-                            Swal.fire("Success", "Interview schedule successfully!",
-                                "success").then(function() {
-                                $("#data-dismiss").click();  
+                            Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
+                                $("#data-dismiss").click();
                             });
                         }
                     }
@@ -1147,12 +940,11 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
         });
     });
 
-    
-
     function getInterviewModeChild(id, job_id) {
         $('#url_div').hide();
         $('#lbl_call_mode').html('');
         $('#url').hide('');
+        $('#isdMeetingLinkWrap').hide();
 
         var url = "{{ route('service_company.job-applications.getinterviewchild', ':id') }}";
         url = url.replace(':id', id);
@@ -1174,10 +966,10 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
             success: function(response) {
                 $('#childInterview').html('');
                 $('#childInterview').html(response.data);
+                isdRenderLeafTiles();
+                isdUpdateSummary();
             },
-            complete: function(data) {
-                //$('#childStatus_'+current_application_id).html('');
-            }
+            complete: function(data) {}
         });
     }
 
@@ -1187,333 +979,289 @@ $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
         $('#url_div').hide();
         $('#url').val('');
         if ((ParentId == 2) && (currentId == 2)) { // FOR GOOGLE
-
             $('#url_div').show();
             $('#url').show();
             $('#lbl_call_mode').show();
             $('#lbl_call_mode').html('Google Meet Link');
             var interviewDate = $('#interviewDate').val();
             var interviewTime = $('#interviewTime').val();
-            if (interviewDate == '') {
-                alert("Please select interview date");
-                return false;
-            }
-            if (interviewTime == '') {
-                alert("Please select interview Time");
-                return false;
-            }
+            if (interviewDate == '') { alert("Please select interview date"); return false; }
+            if (interviewTime == '') { alert("Please select interview Time"); return false; }
             var url = "{{ route('service_company.job-applications.getGoogleVideoUrl', ':currentId') }}";
             url = url.replace(':currentId', currentId);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             var token = "{{ csrf_token() }}";
             $.ajax({
                 type: 'POST',
                 url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'currentId': currentId,
-                    'ParentId': ParentId,
-                    'job_id': job_id,
-                    'interviewDate': interviewDate,
-                    'interviewTime': interviewTime,
-                },
-                beforeSend: function() {
-                    $('#url_div').show();
-                    $('#url').show();
-                    $('#url').attr('placeholder', 'Generating Link .............');
-                },
+                data: { '_token': token, '_method': 'POST', 'currentId': currentId, 'ParentId': ParentId, 'job_id': job_id, 'interviewDate': interviewDate, 'interviewTime': interviewTime },
+                beforeSend: function() { $('#url_div').show(); $('#url').show(); $('#url').attr('placeholder', 'Generating Link .............'); isdSetLinkLoading(); },
                 success: function(response) {
                     if (response.status == "success") {
                         $('#url_div').show();
                         $('#url').val(response.getHangoutLink);
-                        // var newOrganizerEmail = 'neworganizer@example.com';
-                        // $.ajax({
-                        // 		url: 'http://localhost/MEECRUITUAT/index.php/service_company/change-event-organizer/' + response.eventId,
-                        // 		type: 'POST',
-                        // 		data: {
-                        // 			_token: '{{ csrf_token() }}', // CSRF token for security
-                        // 			newOrganizerEmail: newOrganizerEmail
-                        // 		},
-                        // 		success: function(response) {
-                        // 			// Handle the response from the server
-                        // 			console.log('Success:', response);
-                        // 			$('#url').val(response.newLink);	
-                        // 		},
-                        // 		error: function(xhr) {
-                        // 			// Handle errors
-                        // 			console.error('Error:', xhr.responseText);
-                        // 		}
-                        // });
-
                     } else {
-           
-                        Swal.fire({
-                            title: 'Not Available',
-                            text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview`,
-                            icon: 'question',
-                            showCancelButton: false, // Show the cancel button
-                            confirmButtonText: 'Ok',
-                            cancelButtonText: 'No, cancel',
-                            reverseButtons: true // Optional: to reverse the order of the buttons
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // $.ajax({
-                                //     url: '{{ route('redirectToGoogle') }}',
-                                //     method: 'GET',
-                                //     success: function(response) {
-                                //         var newWindow = window.open(response.authUrl,
-                                //             'popupWindow',
-                                //             'width=600,height=400,scrollbars=no,resizable=no'
-                                //             );
-                                //         setTimeout(function() {
-                                //             // newWindow.close();
-                                //             var selectElement = document
-                                //                 .getElementById(
-                                //                     'interview_mode_lavels');
-                                //             selectElement.selectedIndex =
-                                //             0; // Selects the first option
-                                //         }, 5000);
-                                //         // window.location.href = response.authUrl;
-                                //         // Handle the response
-                                //         $('#responseContainer').html('<p>' + response
-                                //             .message + '</p>');
-                                //     },
-                                //     error: function(xhr) {
-                                //         // Handle errors
-                                //         $('#responseContainer').html(
-                                //             '<p>An error occurred: ' + xhr
-                                //             .statusText + '</p>');
-                                //     }
-                                // });
-
-                            } else if (result.isDismissed) {
-                                // Handle the case when the user cancels
-                                console.log(`User cancelled the ${response.getHangoutLink ?? ''} request.`);
-                            }
-                        });
-
-
-
-
+                        Swal.fire({ title: 'Not Available', text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview`, icon: 'question', showCancelButton: false, confirmButtonText: 'Ok', cancelButtonText: 'No, cancel', reverseButtons: true });
                         $('.sub_status').hide();
                     }
+                    isdSyncMeetingLinkDisplay();
                 },
-                // complete: function(data) {}
             });
-
         }
-        if ((ParentId == 2) && (currentId == 5)) { // FOR GOOGLE
-
+        if ((ParentId == 2) && (currentId == 5)) { // Microsoft Teams
             $('#url_div').show();
             $('#url').show();
             $('#lbl_call_mode').show();
             $('#lbl_call_mode').html('Microsoft Teams Meeting Link');
             var interviewDate = $('#interviewDate').val();
             var interviewTime = $('#interviewTime').val();
-            if (interviewDate == '') {
-                alert("Please select interview date");
-                return false;
-            }
-            if (interviewTime == '') {
-                alert("Please select interview Time");
-                return false;
-            }
+            if (interviewDate == '') { alert("Please select interview date"); return false; }
+            if (interviewTime == '') { alert("Please select interview Time"); return false; }
             var url = "{{ route('service_company.job-applications.getGoogleVideoUrl', ':currentId') }}";
             url = url.replace(':currentId', currentId);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             var token = "{{ csrf_token() }}";
             $.ajax({
                 type: 'POST',
                 url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'currentId': currentId,
-                    'ParentId': ParentId,
-                    'job_id': job_id,
-                    'interviewDate': interviewDate,
-                    'interviewTime': interviewTime,
-                },
-                beforeSend: function() {
-                    $('#url_div').show();
-                    $('#url').show();
-                    $('#url').attr('placeholder', 'Generating Link .............');
-                },
+                data: { '_token': token, '_method': 'POST', 'currentId': currentId, 'ParentId': ParentId, 'job_id': job_id, 'interviewDate': interviewDate, 'interviewTime': interviewTime },
+                beforeSend: function() { $('#url_div').show(); $('#url').show(); $('#url').attr('placeholder', 'Generating Link .............'); isdSetLinkLoading(); },
                 success: function(response) {
                     if (response.status == "success") {
                         $('#url_div').show();
                         $('#url').val(response.getHangoutLink);
-
                     } else {
-           
-                        Swal.fire({
-                            title: 'Not Available',
-                            text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview`,
-                            icon: 'question',
-                            showCancelButton: false, // Show the cancel button
-                            confirmButtonText: 'Ok',
-                            cancelButtonText: 'No, cancel',
-                            reverseButtons: true // Optional: to reverse the order of the buttons
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                
-                                
-
-                            } else if (result.isDismissed) {
-                                // Handle the case when the user cancels
-                                console.log(`User cancelled the ${response.getHangoutLink ?? ''} request.`);
-                            }
-                        });
-
-
-
-
+                        Swal.fire({ title: 'Not Available', text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview`, icon: 'question', showCancelButton: false, confirmButtonText: 'Ok', cancelButtonText: 'No, cancel', reverseButtons: true });
                         $('.sub_status').hide();
                     }
+                    isdSyncMeetingLinkDisplay();
                 },
-                // complete: function(data) {}
             });
-
         }
-
-        if ((ParentId == 2) && (currentId == 3)) { // FOR ZOOM
-
+        if ((ParentId == 2) && (currentId == 3)) { // Zoom
             var interviewDate = $('#interviewDate').val();
             var interviewTime = $('#interviewTime').val();
-            if (interviewDate == '') {
-                alert("Please select interview date");
-                return false;
-            }
-            if (interviewTime == '') {
-                alert("Please select interview Time");
-                return false;
-            }
+            if (interviewDate == '') { alert("Please select interview date"); return false; }
+            if (interviewTime == '') { alert("Please select interview Time"); return false; }
             var url = "{{ route('service_company.job-applications.getGoogleVideoUrl', ':currentId') }}";
             url = url.replace(':currentId', currentId);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             var token = "{{ csrf_token() }}";
-
             $.ajax({
                 type: 'POST',
                 url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'currentId': currentId,
-                    'ParentId': ParentId,
-                    'job_id': job_id,
-                    'interviewDate': interviewDate,
-                    'interviewTime': interviewTime
-                },
-                beforeSend: function() {
-                    $('#url_div').show();
-                    $('#url').show();
-                    $('#url').attr('placeholder', 'Generating Link .............');
-                    //$('#url_div').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                },
+                data: { '_token': token, '_method': 'POST', 'currentId': currentId, 'ParentId': ParentId, 'job_id': job_id, 'interviewDate': interviewDate, 'interviewTime': interviewTime },
+                beforeSend: function() { $('#url_div').show(); $('#url').show(); $('#url').attr('placeholder', 'Generating Link .............'); isdSetLinkLoading(); },
                 success: function(response) {
                     if (response.status == "success") {
                         $('#url_div').show();
                         $('#url').show();
                         $('#lbl_call_mode').show();
                         $('#lbl_call_mode').html('Zoom Link');
-                        if (response.mode == 'zoom') {
-                            $('#url').val(response.getHangoutLink);
-                        } else {
-                            $('#url').val('');
-                        }
+                        if (response.mode == 'zoom') { $('#url').val(response.getHangoutLink); } else { $('#url').val(''); }
                     } else {
-
-                        	Swal.fire({
-                        	title: 'Not Available',
-                        	text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview.`,
-                        	icon: 'question',
-                        	showCancelButton: false, // Show the cancel button
-                        	confirmButtonText: 'Ok',
-                        	cancelButtonText: 'No, cancel',
-                        	reverseButtons: true // Optional: to reverse the order of the buttons
-                        }).then((result) => {
-                        	if (result.isConfirmed) {
-                        	// $.ajax({
-                            //     url: '{{ route('redirectToZoom') }}',
-                            //     method: 'GET',
-                            //     success: function(response) {
-                            //         var newWindow = window.open(response.authUrl, 'popupWindow', 'width=600,height=400,scrollbars=no,resizable=no');
-                            //         var selectElement = document.getElementById('interview_mode_lavels');
-                            //             selectElement.selectedIndex = 0; // Selects the first option
-                            //         setTimeout(function() {
-                            //             newWindow.close();
-                            //             var selectElement = document.getElementById('interview_mode_lavels');
-                            //             selectElement.selectedIndex = 0; // Selects the first option
-                            //         }, 5000);
-
-                            //         $('#responseContainer').html('<p>' + response.message + '</p>');
-                            //     },
-                            //     error: function(xhr) {
-                            //         // Handle errors
-                            //         $('#responseContainer').html('<p>An error occurred: ' + xhr.statusText + '</p>');
-                            //     }
-                            // });
-
-                        	} else if (result.isDismissed) {
-                        		// Handle the case when the user cancels
-                        		console.log(`User cancelled the ${response.getHangoutLink ?? ''} request.`);
-                        	}
-                        });
-
-
+                        Swal.fire({ title: 'Not Available', text: `${response.getHangoutLink ?? ''} is currently not available, kindly use other options to schedule the interview.`, icon: 'question', showCancelButton: false, confirmButtonText: 'Ok', cancelButtonText: 'No, cancel', reverseButtons: true });
                         $('.sub_status').hide();
                     }
+                    isdSyncMeetingLinkDisplay();
                 },
                 complete: function(data) {}
             });
         }
-
-        if ((ParentId == 2) && currentId == 6) { // FOR OTHER
-            $('#url_div').show();
-            $('#url').show();
-            $('#lbl_call_mode').show();
-            $('#lbl_call_mode').html('Other Video Link');
-            $('#url').attr('placeholder', 'Enter Link here');
-        } else if ((ParentId == 1) && ((currentId == 1) || (currentId == 4))) { // PHONE CALL
-            $('#url_div').show();
-            $('#url').show();
-            $('#url').attr('placeholder', 'Enter Link here');
-            $('#lbl_call_mode').show();
-            $('#lbl_call_mode').html('');
-            if (currentId == 1) {
-                $('#lbl_call_mode').html('Phone Call');
-                $('#url').val('Phone Call');
-                $("#url").prop("readonly", true);
-            }
-            if (currentId == 4) {
-                $('#lbl_call_mode').html('Skype Call');
-                $('#url').val('Skype Call');
-                $("#url").prop("readonly", true);
-            }
+        if ((ParentId == 2) && currentId == 6) { // Other video
+            $('#url_div').show(); $('#url').show(); $('#lbl_call_mode').show();
+            $('#lbl_call_mode').html('Other Video Link'); $('#url').attr('placeholder', 'Enter Link here');
+            isdSyncMeetingLinkDisplay();
+        } else if ((ParentId == 1) && ((currentId == 1) || (currentId == 4))) { // Phone / Skype
+            $('#url_div').show(); $('#url').show(); $('#url').attr('placeholder', 'Enter Link here');
+            $('#lbl_call_mode').show(); $('#lbl_call_mode').html('');
+            if (currentId == 1) { $('#lbl_call_mode').html('Phone Call'); $('#url').val('Phone Call'); $("#url").prop("readonly", true); }
+            if (currentId == 4) { $('#lbl_call_mode').html('Skype Call'); $('#url').val('Skype Call'); $("#url").prop("readonly", true); }
+            isdSyncMeetingLinkDisplay();
         } else if ((ParentId == 3) && (currentId >= 0)) {
-            $('#url_div').show();
-            $('#url').show();
-            $('#lbl_call_mode').show();
+            $('#url_div').show(); $('#url').show(); $('#lbl_call_mode').show();
             $('#lbl_call_mode').html('Interview Address/Location');
             var location = $('#interview_mode_lavels :selected').text();
-            if (currentId > 0) {
-                $('#url').val(location);
-            }
-
+            if (currentId > 0) { $('#url').val(location); }
+            isdSyncMeetingLinkDisplay();
         }
+        isdUpdateSummary();
     }
     setTimeout(() => {
         let mode = $('#interview_mode').val();
-    
-     let job_id = @json($job_id); // safe conversion
-     if (mode) {     
+        let job_id = @json($job_id);
+        if (mode) {
             getInterviewModeChild(mode,job_id);
         }
     }, 1000);
-     
 
+    /* =====================================================================
+       Presentation-only glue: renders the icon tile-grid on top of the real
+       #interview_mode / #interview_mode_lavels selects (built above), keeps
+       chips in sync with the real #panellist field, and drives the live
+       "Interview Summary" sidebar. None of this changes what gets submitted
+       or how — it only mirrors/sets the same real fields the legacy
+       dropdowns always used.
+       ===================================================================== */
+    var isdFamilyIcons = { 1: '&#128222;', 2: '&#128250;', 3: '&#128101;', 4: '&#8943;' };
+    var isdLeafIcons = { 'google meet':'&#128249;', 'zoom':'&#128249;', 'microsoft teams':'&#128249;', 'skype call':'&#128222;', 'phone call':'&#128222;' };
 
+    function isdLeafIcon(name){
+        var key = (name||'').toLowerCase();
+        return isdLeafIcons[key] || '&#128204;';
+    }
 
+    function isdRenderFamilyTiles(){
+        var wrap = $('#isdFamilyTiles').empty();
+        $('#interview_mode option').each(function(){
+            var val = $(this).val();
+            if (val === '') return;
+            var tile = $('<div class="isd-tile" data-family-val="'+val+'">' +
+                '<span class="chk">&#10003;</span>' +
+                '<div class="ic">'+(isdFamilyIcons[val] || '&#128197;')+'</div>' +
+                '<div class="nm"></div></div>');
+            tile.find('.nm').text($(this).text());
+            if ($(this).is(':selected')) tile.addClass('is-selected');
+            wrap.append(tile);
+        });
+    }
+
+    function isdRenderLeafTiles(){
+        var wrap = $('#isdLeafTiles').empty();
+        var opts = $('#interview_mode_lavels option');
+        var real = opts.filter(function(){ return $(this).val() !== ''; });
+        if (real.length === 0) { $('#isdLeafSection').hide(); return; }
+        $('#isdLeafSection').show();
+        real.each(function(){
+            var val = $(this).val();
+            var tile = $('<div class="isd-tile" data-leaf-val="'+val+'">' +
+                '<span class="chk">&#10003;</span>' +
+                '<div class="ic"></div>' +
+                '<div class="nm"></div></div>');
+            tile.find('.ic').html(isdLeafIcon($(this).text()));
+            tile.find('.nm').text($(this).text());
+            if ($(this).is(':selected')) tile.addClass('is-selected');
+            wrap.append(tile);
+        });
+        // Video mode also gets a disabled "Client Portal" tile — not a real
+        // interview_mode_lavel row, shown for parity with the target design.
+        if ($('#interview_mode').val() == '2') {
+            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic">&#128249;</div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+        }
+    }
+
+    $(document).on('click', '#isdFamilyTiles .isd-tile', function(){
+        var val = $(this).data('family-val');
+        $('#interview_mode').val(val).trigger('change');
+    });
+    $(document).on('click', '#isdLeafTiles .isd-tile[data-leaf-val]', function(){
+        var val = $(this).data('leaf-val');
+        $('#interview_mode_lavels').val(val).trigger('change');
+    });
+    $(document).on('change', '#interview_mode', function(){
+        $('#isdFamilyTiles .isd-tile').removeClass('is-selected');
+        $('#isdFamilyTiles .isd-tile[data-family-val="'+$(this).val()+'"]').addClass('is-selected');
+        $('#isdLeafSection').hide();
+        $('#isdMeetingLinkWrap').hide();
+    });
+    $(document).on('change', '#interview_mode_lavels', function(){
+        $('#isdLeafTiles .isd-tile').removeClass('is-selected');
+        $('#isdLeafTiles .isd-tile[data-leaf-val="'+$(this).val()+'"]').addClass('is-selected');
+    });
+
+    function isdSyncMeetingLinkDisplay(){
+        var visible = $('#url_div').is(':visible');
+        $('#isdMeetingLinkWrap').toggle(visible);
+        $('#isdMeetingLinkDisplay').val($('#url').val());
+        isdUpdateSummary();
+    }
+    function isdSetLinkLoading(){
+        $('#isdMeetingLinkWrap').show();
+        $('#isdMeetingLinkDisplay').val('Generating link...');
+    }
+    $(document).on('click', '#isdLinkRefresh', function(){
+        var parentVal = $('#interview_mode').val();
+        var childVal = $('#interview_mode_lavels').val();
+        var jobId = $('#jobId').val();
+        if (parentVal && childVal) { getVideoMeetingUrl(childVal, parentVal, jobId); }
+    });
+    $(document).on('click', '#isdLinkCopy', function(){
+        var v = $('#isdMeetingLinkDisplay').val();
+        if (v && navigator.clipboard) { navigator.clipboard.writeText(v); }
+    });
+    $(document).on('click', '#isdLinkOpen', function(){
+        var v = $('#isdMeetingLinkDisplay').val();
+        if (v && v.indexOf('http') === 0) { window.open(v, '_blank'); }
+    });
+    // Keep the plain #url input's own manual edits mirrored into the display copy too.
+    $(document).on('input', '#url', function(){ $('#isdMeetingLinkDisplay').val($(this).val()); });
+    $(document).on('input', '#isdMeetingLinkDisplay', function(){ $('#url').val($(this).val()); isdUpdateSummary(); });
+
+    // ---- panel chips: presentation over the real, single #panellist field ----
+    function isdPanelListArray(){
+        var raw = ($('#panellist').val() || '').trim();
+        if (!raw) return [];
+        return raw.split(/[,;]/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+    }
+    function isdRenderPanelChips(){
+        var list = isdPanelListArray();
+        var wrap = $('#isdPanelList').empty();
+        list.forEach(function(entry, idx){
+            var initial = entry.trim()[0] ? entry.trim()[0].toUpperCase() : '?';
+            var row = $('<div class="isd-panel-row"></div>');
+            row.append('<div class="isd-avatar bg-light-success text-success">'+initial+'</div>');
+            row.append('<div class="isd-panel-name">'+$('<div>').text(entry).html()+'</div>');
+            var tags = $('<div class="isd-panel-tags"></div>');
+            tags.append('<span class="isd-role-tag">Role <span style="font-size:8px;">soon</span></span>');
+            tags.append('<span class="isd-role-tag">Available <span style="font-size:8px;">soon</span></span>');
+            var del = $('<button type="button" class="isd-panel-del">&#10005;</button>');
+            del.on('click', function(){
+                list.splice(idx, 1);
+                $('#panellist').val(list.join(','));
+                isdRenderPanelChips();
+                isdUpdateSummary();
+            });
+            tags.append(del);
+            row.append(tags);
+            wrap.append(row);
+        });
+        isdUpdateSummary();
+    }
+    function isdSyncChipsFromField(){ isdRenderPanelChips(); }
+    function isdAddPanelFromInput(){
+        var v = $('#isdPanelInput').val().trim();
+        if (!v) return;
+        var list = isdPanelListArray();
+        list.push(v);
+        $('#panellist').val(list.join(','));
+        $('#isdPanelInput').val('');
+        isdRenderPanelChips();
+    }
+    $('#isdPanelInput').on('keydown', function(e){
+        if (e.key === 'Enter') { e.preventDefault(); isdAddPanelFromInput(); }
+    });
+    $(document).on('blur', '#isdPanelInput', function(){ isdAddPanelFromInput(); });
+
+    // ---- live "Interview Summary" sidebar ----
+    function isdUpdateSummary(){
+        var d = $('#interviewDate').val();
+        var t = $('#interviewTime').val();
+        $('#isdSumDate').text((d && t) ? (d + ' ' + t) : 'Not set').toggleClass('muted', !(d && t));
+        var tz = $('#timezone').val();
+        $('#isdSumTz').text(tz || 'Not set').toggleClass('muted', !tz);
+        var leafText = $('#interview_mode_lavels option:selected').text();
+        var hasMode = $('#interview_mode_lavels').val() ? true : false;
+        $('#isdSumMode').text(hasMode ? leafText : 'Not set').toggleClass('muted', !hasMode);
+        var panelCount = isdPanelListArray().length;
+        $('#isdSumPanel').text(panelCount + ' added');
+        $('#isdSumEmail').text($('#isdNotifyEmail').is(':checked') ? 'Ready to send' : 'Off');
+        var ready = d && t && tz && hasMode && panelCount > 0;
+        $('#isdSumStatus').text(ready ? 'Ready to Schedule' : 'Incomplete')
+            .removeClass('incomplete ready').addClass(ready ? 'ready' : 'incomplete');
+    }
+    $(document).on('change', '#interviewDate, #interviewTime, #timezone, #isdNotifyEmail', isdUpdateSummary);
+
+    $(document).ready(function(){
+        isdRenderFamilyTiles();
+        isdRenderLeafTiles();
+        isdRenderPanelChips();
+        isdUpdateSummary();
+    });
 </script>
