@@ -40,14 +40,16 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-wrap { font-family: 'Poppins', sans-serif; color: #3f4254; }
     .isd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
-    .isd-info-strip { display: flex; align-items: center; gap: 26px; padding: 14px 20px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
-    .isd-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
-    .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 200px; }
-    .isd-info-name { font-size: 13.5px; font-weight: 700; color: #181c32; }
-    .isd-info-role { font-size: 11px; color: #7e8299; margin-top: 1px; }
-    .isd-info-block { display: flex; flex-direction: column; gap: 2px; }
-    .isd-info-label { font-size: 10.5px; color: #7e8299; font-weight: 500; }
-    .isd-info-value { font-size: 12.5px; font-weight: 700; color: #181c32; }
+    .isd-info-strip { padding: 16px 20px; border-bottom: 1px solid #eef0f4; }
+    .isd-info-card { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 20px; }
+    .isd-info-div { width: 1px; align-self: stretch; min-height: 32px; background: #eef0f4; flex-shrink: 0; }
+    .isd-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+    .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 210px; }
+    .isd-info-name { font-size: 14px; font-weight: 700; color: #181c32; }
+    .isd-info-role { font-size: 11.5px; color: #7e8299; margin-top: 2px; }
+    .isd-info-block { display: flex; flex-direction: column; gap: 5px; min-width: 120px; }
+    .isd-info-label { font-size: 10.5px; color: #7e8299; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .isd-info-value { font-size: 13px; font-weight: 700; color: #181c32; }
 
     .isd-body { display: flex; align-items: flex-start; }
     .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px 30px; }
@@ -56,12 +58,15 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-sec { margin-bottom: 18px; }
     .isd-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
     .isd-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .isd-sec-head .isd-btn-add-panel { margin-left: auto; }
     .isd-sec-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .isd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
     .isd-sec-sub { font-size: 10.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
 
     .isd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .isd-grid + .isd-grid { margin-top: 12px; }
+    .isd-grid-details { display: grid; grid-template-columns: 1.7fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 1500px) { .isd-grid-details { grid-template-columns: 1fr 1fr; } }
     .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
     .isd-field label .req { color: #f64e60; }
     .isd-field label i { color: #a1a5b7; font-size: 11px; }
@@ -96,21 +101,20 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 10px; }
     .isd-icon-btn:hover { background: #f8f9fb; color: #3e97ff; }
 
-    .isd-panel-add { display: flex; gap: 8px; margin-bottom: 12px; }
-    .isd-panel-add input { flex: 1; }
-    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 0 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 7px 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
     .isd-btn-add-panel:hover { background: #f5f9ff; }
     .isd-panel-list { display: flex; flex-direction: column; gap: 10px; }
     .isd-panel-empty { font-size: 11.5px; color: #a1a5b7; text-align: center; padding: 10px 0; }
-    .isd-panel-row { display: flex; align-items: center; gap: 12px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 12px; }
-    .isd-panel-row .isd-avatar { width: 38px; height: 38px; font-size: 13px; }
-    .isd-panel-info { min-width: 0; flex: 1 1 auto; }
+    .isd-panel-row { display: flex; align-items: center; gap: 14px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 12px 14px; }
+    .isd-panel-row .isd-avatar { width: 38px; height: 38px; font-size: 13px; flex-shrink: 0; }
+    .isd-panel-cols { display: flex; flex: 1 1 auto; gap: 20px; min-width: 0; flex-wrap: wrap; }
+    .isd-panel-namecol { flex: 1 1 40%; min-width: 130px; }
+    .isd-panel-emailcol { flex: 1 1 40%; min-width: 160px; display: flex; align-items: center; }
     .isd-panel-name { font-size: 12.5px; font-weight: 700; color: #181c32; word-break: break-word; }
-    .isd-panel-email { font-size: 10.5px; color: #7e8299; margin-top: 2px; }
-    .isd-panel-email i { margin-right: 5px; color: #a1a5b7; }
-    .isd-panel-tags { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
-    .isd-role-tag { font-size: 10px; font-weight: 600; color: #3e97ff; background: #eef4ff; border-radius: 6px; padding: 4px 9px; white-space: nowrap; }
-    .isd-panel-del { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+    .isd-panel-designation { font-size: 10.5px; color: #7e8299; margin-top: 3px; }
+    .isd-panel-email { font-size: 11px; color: #7e8299; }
+    .isd-panel-email i { margin-right: 6px; color: #a1a5b7; }
+    .isd-panel-del { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; margin-left: auto; }
     .isd-panel-del:hover { background: #fff5f8; }
     .isd-check-avail { font-size: 10.5px; color: #a1a5b7; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
 
@@ -140,12 +144,13 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-avail-row i { color: #06c732; font-size: 11px; width: 16px; text-align: center; }
     .isd-avail-empty { font-size: 10.5px; color: #a1a5b7; text-align: center; padding: 8px 0; }
 
-    .isd-quick-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 11px; }
-    .isd-quick-row .k { color: #7e8299; display: flex; align-items: center; gap: 6px; }
-    .isd-quick-row .k i { color: #a1a5b7; font-size: 10px; width: 12px; }
-    .isd-quick-row .v { color: #181c32; font-weight: 700; text-align: right; }
-
     .isd-hidden-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
+    /* #url_div is the legacy address/link row — the real #url field it wraps still
+       needs to exist and receive values from getVideoMeetingUrl(), but the new
+       #isdMeetingLinkWrap box below is the only one that should ever be visible;
+       otherwise the same address/link renders twice (legacy code calls .show()
+       on this for every mode). */
+    #url_div { display: none !important; }
 
     .isd-email-inline-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 14px; }
 </style>
@@ -193,6 +198,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     initSample();
 </script>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     setTimeout(() => {
@@ -221,7 +227,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                 altFormat: "d-M-Y",
                 minDate: "today",
                 onReady: function (selectedDates, dateStr, instance) {
-                    instance.altInput.style.width = "110px";
+                    instance.altInput.style.width = "100%";
                 }
             });
       }, 500);
@@ -311,24 +317,29 @@ $country_code =  GeneralMethod::countryCodeFun();
 
     <div id="div_interview_schedule_first" class="isd-wrap">
         <div class="isd-info-strip">
-            <div class="isd-info-cand">
-                <div class="isd-avatar bg-light-primary text-primary">{{ $isdInitial }}</div>
-                <div>
-                    <div class="isd-info-name">{{ ucwords($isdFullName) }}</div>
-                    <div class="isd-info-role">{{ ucwords(@$application->current_designation) }}</div>
+            <div class="isd-info-card">
+                <div class="isd-info-cand">
+                    <div class="isd-avatar bg-light-primary text-primary">{{ $isdInitial }}</div>
+                    <div>
+                        <div class="isd-info-name">{{ ucwords($isdFullName) }}</div>
+                        <div class="isd-info-role">{{ ucwords(@$application->current_designation) }}</div>
+                    </div>
                 </div>
-            </div>
-            <div class="isd-info-block">
-                <span class="isd-info-label">Applied For</span>
-                <span class="isd-info-value">{{ @$application->job_title }}</span>
-            </div>
-            <div class="isd-info-block">
-                <span class="isd-info-label">Job ID</span>
-                <span class="isd-info-value">{{ @$application->jobId }}</span>
-            </div>
-            <div class="isd-info-block">
-                <span class="isd-info-label">Current Stage</span>
-                <span class="badge fw-bolder {{ @$application->master_status_style }} px-2 py-1">{{ trim(@$application->master_status_name) }}</span>
+                <span class="isd-info-div"></span>
+                <div class="isd-info-block">
+                    <span class="isd-info-label">Applied For</span>
+                    <span class="isd-info-value">{{ @$application->job_title }}</span>
+                </div>
+                <span class="isd-info-div"></span>
+                <div class="isd-info-block">
+                    <span class="isd-info-label">Job ID</span>
+                    <span class="isd-info-value">{{ @$application->jobId }}</span>
+                </div>
+                <span class="isd-info-div"></span>
+                <div class="isd-info-block">
+                    <span class="isd-info-label">Current Stage</span>
+                    <span class="badge fw-bolder {{ @$application->master_status_style }} px-2 py-1">{{ trim(@$application->master_status_name) }}</span>
+                </div>
             </div>
         </div>
 
@@ -341,11 +352,11 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <span class="isd-sec-num" style="background:#3e97ff;">1</span>
                         <div><div class="isd-sec-title">Interview Details</div><div class="isd-sec-sub">When &amp; for how long</div></div>
                     </div>
-                    <div class="isd-grid">
+                    <div class="isd-grid-details">
                         <div class="isd-field">
-                            <label><i class="fa fa-calendar"></i> Date &amp; Time <span class="req">*</span></label>
+                            <label><i class="ti ti-calendar"></i> Date &amp; Time <span class="req">*</span></label>
                             <div class="isd-datetime-pill">
-                                <i class="fa fa-calendar"></i>
+                                <i class="ti ti-calendar"></i>
                                 <input class="form-control" placeholder="Select date" name="interviewDate" id="interviewDate"
                                     value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly">
                                 <span class="sep"></span>
@@ -354,7 +365,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                             </div>
                         </div>
                         <div class="isd-field">
-                            <label><i class="fa fa-globe"></i> Timezone <span class="req">*</span></label>
+                            <label><i class="ti ti-world"></i> Timezone <span class="req">*</span></label>
                             <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone...">
                                 <option value="">Select a timezone...</option>
                                 @if(!empty($timezone))
@@ -378,7 +389,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                             </select>
                         </div>
                         <div class="isd-field">
-                            <label><i class="fa fa-clock-o"></i> Duration</label>
+                            <label><i class="ti ti-clock"></i> Duration</label>
                             <select id="isdDuration">
                                 <option value="15">15 Minutes</option>
                                 <option value="30">30 Minutes</option>
@@ -390,23 +401,32 @@ $country_code =  GeneralMethod::countryCodeFun();
                     </div>
                     <div class="isd-grid">
                         <div class="isd-field">
-                            <label><i class="fa fa-list"></i> Interview Round</label>
+                            <label><i class="ti ti-list"></i> Interview Round</label>
                             <select id="isdInterviewRound">
+                                <option value="">Select round</option>
                                 @if(!empty($interview_processes) && count($interview_processes))
-                                    <option value="">Select round</option>
                                     @foreach($interview_processes as $ipRow)
                                         <option value="{{ $ipRow->id }}">{{ ucfirst($ipRow->name) }}</option>
                                     @endforeach
                                 @else
-                                    <option value="">No interview rounds configured</option>
+                                    @php
+                                        $isdStaticRounds = [
+                                            'Screening', 'Technical Round 1', 'Technical Round 2', 'Technical Round 3',
+                                            'Technical Round 4', 'Technical Round 5', 'Technical Round 6', 'Technical Round 7',
+                                            'Hiring Manager Round', 'HR Round', 'Final Round',
+                                        ];
+                                    @endphp
+                                    @foreach($isdStaticRounds as $isdRoundName)
+                                        <option value="{{ $isdRoundName }}">{{ $isdRoundName }}</option>
+                                    @endforeach
                                 @endif
                             </select>
                         </div>
                         <div class="isd-field">
-                            <label><i class="fa fa-calendar-o"></i> Add to Calendar</label>
+                            <label><i class="ti ti-calendar"></i> Add to Calendar</label>
                             <div class="isd-cal-row">
-                                <div class="isd-cal-btn" id="isdGoogleCalBtn"><i class="fa fa-google"></i> Google Calendar</div>
-                                <div class="isd-cal-btn" id="isdOutlookCalBtn"><i class="fa fa-calendar"></i> Outlook Calendar</div>
+                                <div class="isd-cal-btn" id="isdGoogleCalBtn"><i class="ti ti-brand-google"></i> Google Calendar</div>
+                                <div class="isd-cal-btn" id="isdOutlookCalBtn"><i class="ti ti-calendar"></i> Outlook Calendar</div>
                             </div>
                         </div>
                     </div>
@@ -452,9 +472,9 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <div class="isd-link-row">
                             <input type="text" id="isdMeetingLinkDisplay" readonly>
                             <div class="isd-link-actions">
-                                <span class="isd-icon-btn" title="Open" id="isdLinkOpen"><i class="fa fa-external-link"></i></span>
-                                <span class="isd-icon-btn" title="Refresh" id="isdLinkRefresh"><i class="fa fa-refresh"></i></span>
-                                <span class="isd-icon-btn" title="Copy" id="isdLinkCopy"><i class="fa fa-clipboard"></i></span>
+                                <span class="isd-icon-btn" title="Open" id="isdLinkOpen"><i class="ti ti-external-link"></i></span>
+                                <span class="isd-icon-btn" title="Refresh" id="isdLinkRefresh"><i class="ti ti-refresh"></i></span>
+                                <span class="isd-icon-btn" title="Copy" id="isdLinkCopy"><i class="ti ti-clipboard"></i></span>
                             </div>
                         </div>
                     </div>
@@ -465,15 +485,12 @@ $country_code =  GeneralMethod::countryCodeFun();
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#06c732;">3</span>
                         <div><div class="isd-sec-title">Interview Panel</div><div class="isd-sec-sub">Who will interview</div></div>
-                    </div>
-                    <div class="isd-panel-add">
-                        <input class="form-control form-control-solid" id="isdPanelInput" placeholder="Enter panellist name or email">
                         <a href="javascript:;" class="isd-btn-add-panel in_tr_email_panel" data-bs-toggle="modal" data-panel="1"
-                            data-bs-target="#kt_modal_create_project"><i class="fa fa-plus"></i> Add Interview Panel</a>
+                            data-bs-target="#kt_modal_create_project"><i class="ti ti-plus"></i> Add Interview Panel</a>
                     </div>
                     <input class="isd-hidden-native" name="panellist" id="panellist" value="">
                     <div class="isd-panel-list" id="isdPanelList"></div>
-                    <div class="isd-check-avail"><i class="fa fa-clock-o"></i> Panelist availability isn't tracked yet <span class="isd-soon">Coming soon</span></div>
+                    <div class="isd-check-avail"><i class="ti ti-clock"></i> Panelist availability isn't tracked yet <span class="isd-soon">Coming soon</span></div>
                 </div>
 
                 <!-- Section 4: Notifications -->
@@ -483,20 +500,13 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <div><div class="isd-sec-title">Notifications</div><div class="isd-sec-sub">Who should be notified</div></div>
                     </div>
                     <div class="isd-notify-grid">
-                        <label class="isd-notify"><i class="fa fa-envelope"></i><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span><input type="checkbox" id="isdNotifyEmail" checked style="margin-left:auto;"></label>
-                        <label class="isd-notify is-disabled"><i class="fa fa-whatsapp"></i><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
-                        <label class="isd-notify is-disabled"><i class="fa fa-window-maximize"></i><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
-                        <label class="isd-notify is-disabled"><i class="fa fa-calendar"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify"><i class="ti ti-mail"></i><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span><input type="checkbox" id="isdNotifyEmail" checked style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="ti ti-brand-whatsapp"></i><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="ti ti-apps"></i><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="ti ti-calendar"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
                     </div>
                     <div style="margin-top:12px;">
-                        <a href="javascript:void(0);" id="send_email_invies" style="font-size:11.5px;font-weight:600;color:#3e97ff;"><i class="fa fa-pencil"></i> Customize &amp; send invite email</a>
-                    </div>
-                </div>
-
-                <div class="isd-sec isd-card">
-                    <div class="isd-field">
-                        <label>Notes / Special Instructions <span class="isd-soon">Coming soon</span></label>
-                        <textarea rows="3" disabled placeholder="Not available yet"></textarea>
+                        <a href="javascript:void(0);" id="send_email_invies" style="font-size:11.5px;font-weight:600;color:#3e97ff;"><i class="ti ti-pencil"></i> Customize &amp; send invite email</a>
                     </div>
                 </div>
 
@@ -507,12 +517,12 @@ $country_code =  GeneralMethod::countryCodeFun();
             <div class="isd-sidebar">
                 <div class="isd-card">
                     <div class="isd-sidebar-card-title"><span class="dot"></span>Interview Summary</div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-calendar"></i></div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-globe"></i></div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-video-camera"></i></div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-users"></i></div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-envelope"></i></div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-check-circle"></i></div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-calendar"></i></div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-world"></i></div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-video"></i></div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-users"></i></div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-mail"></i></div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-circle-check"></i></div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
                 </div>
 
                 <div class="isd-card">
@@ -520,7 +530,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     @if(count($isdAvailabilitySlots))
                         @foreach($isdAvailabilitySlots as $isdSlot)
                             <div class="isd-avail-row">
-                                <i class="fa fa-check-circle"></i>
+                                <i class="ti ti-circle-check"></i>
                                 <span>{{ \Carbon\Carbon::parse($isdSlot['date'])->format('D, d M · h:i A') }}
                                     @if(!empty($isdSlot['mode'])) &middot; {{ $isdSlot['mode'] }} @endif
                                 </span>
@@ -529,14 +539,6 @@ $country_code =  GeneralMethod::countryCodeFun();
                     @else
                         <div class="isd-avail-empty">No availability shared during application</div>
                     @endif
-                </div>
-
-                <div class="isd-card">
-                    <div class="isd-sidebar-card-title"><span class="dot" style="background:#ffa800;"></span>Quick Info</div>
-                    <div class="isd-quick-row"><span class="k"><i class="fa fa-briefcase"></i>Job ID</span><span class="v">{{ @$application->jobId }}</span></div>
-                    <div class="isd-quick-row"><span class="k"><i class="fa fa-list-alt"></i>Applied For</span><span class="v">{{ @$application->job_title }}</span></div>
-                    <div class="isd-quick-row"><span class="k"><i class="fa fa-star"></i>Current Stage</span><span class="v">{{ trim(@$application->master_status_name) }}</span></div>
-                    <div class="isd-quick-row"><span class="k"><i class="fa fa-user"></i>Source</span><span class="v">{{ @$submitted_by_company }}</span></div>
                 </div>
             </div>
         </div>
@@ -1127,12 +1129,12 @@ $country_code =  GeneralMethod::countryCodeFun();
        or how — it only mirrors/sets the same real fields the legacy
        dropdowns always used.
        ===================================================================== */
-    var isdFamilyIcons = { 1: 'fa-phone', 2: 'fa-video-camera', 3: 'fa-map-marker', 4: 'fa-ellipsis-h' };
-    var isdLeafIcons = { 'google meet':'fa-google', 'zoom':'fa-video-camera', 'microsoft teams':'fa-windows', 'skype call':'fa-skype', 'phone call':'fa-phone' };
+    var isdFamilyIcons = { 1: 'ti-phone', 2: 'ti-video', 3: 'ti-map-pin', 4: 'ti-dots' };
+    var isdLeafIcons = { 'google meet':'ti-brand-google', 'zoom':'ti-brand-zoom', 'microsoft teams':'ti-brand-windows', 'skype call':'ti-brand-skype', 'phone call':'ti-phone' };
 
     function isdLeafIcon(name){
         var key = (name||'').toLowerCase();
-        return isdLeafIcons[key] || 'fa-map-marker';
+        return isdLeafIcons[key] || 'ti-map-pin';
     }
 
     function isdRenderFamilyTiles(){
@@ -1141,8 +1143,8 @@ $country_code =  GeneralMethod::countryCodeFun();
             var val = $(this).val();
             if (val === '') return;
             var tile = $('<div class="isd-tile" data-family-val="'+val+'">' +
-                '<span class="chk"><i class="fa fa-check"></i></span>' +
-                '<div class="ic"><i class="fa '+(isdFamilyIcons[val] || 'fa-calendar')+'"></i></div>' +
+                '<span class="chk"><i class="ti ti-check"></i></span>' +
+                '<div class="ic"><i class="ti '+(isdFamilyIcons[val] || 'ti-calendar')+'"></i></div>' +
                 '<div class="nm"></div></div>');
             tile.find('.nm').text($(this).text());
             if ($(this).is(':selected')) tile.addClass('is-selected');
@@ -1159,10 +1161,10 @@ $country_code =  GeneralMethod::countryCodeFun();
         real.each(function(){
             var val = $(this).val();
             var tile = $('<div class="isd-tile" data-leaf-val="'+val+'">' +
-                '<span class="chk"><i class="fa fa-check"></i></span>' +
+                '<span class="chk"><i class="ti ti-check"></i></span>' +
                 '<div class="ic"></div>' +
                 '<div class="nm"></div></div>');
-            tile.find('.ic').html('<i class="fa '+isdLeafIcon($(this).text())+'"></i>');
+            tile.find('.ic').html('<i class="ti '+isdLeafIcon($(this).text())+'"></i>');
             tile.find('.nm').text($(this).text());
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
@@ -1170,7 +1172,7 @@ $country_code =  GeneralMethod::countryCodeFun();
         // Video mode also gets a disabled "Client Portal" tile — not a real
         // interview_mode_lavel row, shown for parity with the target design.
         if ($('#interview_mode').val() == '2') {
-            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="fa fa-window-maximize"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="ti ti-apps"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
         }
     }
 
@@ -1239,24 +1241,27 @@ $country_code =  GeneralMethod::countryCodeFun();
         var list = isdPanelListArray();
         var wrap = $('#isdPanelList').empty();
         if (list.length === 0) {
-            wrap.append('<div class="isd-panel-empty">No panelists added yet</div>');
+            wrap.append('<div class="isd-panel-empty">No panelists added yet — use "Add Interview Panel" above</div>');
         }
         list.forEach(function(entry, idx){
             var meta = isdPanelMeta[entry];
             var initial = entry.trim()[0] ? entry.trim()[0].toUpperCase() : '?';
             var row = $('<div class="isd-panel-row"></div>');
             row.append('<div class="isd-avatar bg-light-success text-success">'+initial+'</div>');
-            var info = $('<div class="isd-panel-info"></div>');
-            info.append($('<div class="isd-panel-name"></div>').text(entry));
-            if (meta && meta.email) {
-                info.append($('<div class="isd-panel-email"><i class="fa fa-envelope"></i></div>').append(document.createTextNode(meta.email)));
-            }
-            row.append(info);
-            var tags = $('<div class="isd-panel-tags"></div>');
+            var cols = $('<div class="isd-panel-cols"></div>');
+            var nameCol = $('<div class="isd-panel-namecol"></div>');
+            nameCol.append($('<div class="isd-panel-name"></div>').text(entry));
             if (meta && meta.designation) {
-                tags.append($('<span class="isd-role-tag"></span>').text(meta.designation));
+                nameCol.append($('<div class="isd-panel-designation"></div>').text(meta.designation));
             }
-            var del = $('<button type="button" class="isd-panel-del"><i class="fa fa-trash"></i></button>');
+            cols.append(nameCol);
+            var emailCol = $('<div class="isd-panel-emailcol"></div>');
+            if (meta && meta.email) {
+                emailCol.append($('<span class="isd-panel-email"><i class="ti ti-mail"></i></span>').append(document.createTextNode(meta.email)));
+            }
+            cols.append(emailCol);
+            row.append(cols);
+            var del = $('<button type="button" class="isd-panel-del"><i class="ti ti-trash"></i></button>');
             del.on('click', function(){
                 delete isdPanelMeta[entry];
                 list.splice(idx, 1);
@@ -1264,26 +1269,12 @@ $country_code =  GeneralMethod::countryCodeFun();
                 isdRenderPanelChips();
                 isdUpdateSummary();
             });
-            tags.append(del);
-            row.append(tags);
+            row.append(del);
             wrap.append(row);
         });
         isdUpdateSummary();
     }
     function isdSyncChipsFromField(){ isdRenderPanelChips(); }
-    function isdAddPanelFromInput(){
-        var v = $('#isdPanelInput').val().trim();
-        if (!v) return;
-        var list = isdPanelListArray();
-        list.push(v);
-        $('#panellist').val(list.join(','));
-        $('#isdPanelInput').val('');
-        isdRenderPanelChips();
-    }
-    $('#isdPanelInput').on('keydown', function(e){
-        if (e.key === 'Enter') { e.preventDefault(); isdAddPanelFromInput(); }
-    });
-    $(document).on('blur', '#isdPanelInput', function(){ isdAddPanelFromInput(); });
 
     // ---- live "Interview Summary" sidebar ----
     function isdUpdateSummary(){

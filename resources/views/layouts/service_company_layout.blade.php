@@ -520,7 +520,7 @@
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
-        <span class="isd-shell-topbar-ico"><i class="fa fa-calendar"></i></span>
+        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar"></i></span>
         <div>
           <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
           <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
@@ -534,7 +534,7 @@
           <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
         </button>
         <span class="isd-shell-divider"></span>
-        <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="fa fa-times"></i></span>
+        <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="ti ti-x"></i></span>
       </div>
     </div>
     <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
