@@ -4931,41 +4931,34 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$chkAdminRole = $this->user->hasRole('admin');
 		$stage = $request->input('stage');
 
-		$params = [
-        	'index' => ELASTIC_CANDIDATES_BENCH,
-        	'id'    => $bench_id,
-        ];
-        $response = $this->elasticService->getClient()->get($params);
-		$data = (object) $response['_source'];
-		$yourArray = $data->jobs;
-		// ✅ Apply stage filter only if NOT 'all'
-		if ($stage != 'all') {
-			$yourArray = array_filter($yourArray, function ($job) use ($stage) {
-				return isset($job['master_status_id']) && $job['master_status_id'] == $stage;
-			});
-		}
-
-		$jobIds = array_column($yourArray, 'job_id');
-
-
-		$searchQuery = $request->input('q');
 		$page = max((int) $request->input('page', 1), 1);
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 
-		$custom_search = trim(request('custom_search'));
+		// The toolbar search box actually sends 'cus_search' (see
+		// fetchBenchExploreJobCandidateList()) — 'q'/'custom_search' were never
+		// populated by the frontend, which is why free-text search was dead.
+		$custom_search = trim((string) $request->input('cus_search'));
 		$custom_status = request('statusfilter');
+		$bxr_company  = json_decode((string) $request->input('bxr_company', '[]'), true) ?: [];
+		$bxr_location = json_decode((string) $request->input('bxr_location', '[]'), true) ?: [];
+		$bxr_min_sal  = $request->input('bxr_min_sal');
+		$bxr_max_sal  = $request->input('bxr_max_sal');
+		$bxr_activity = $request->input('bxr_activity');
 
 		$cachePayload = [
 			'page' => $page,
 			'size' => $size,
-			'q' => $searchQuery,
 			'company' => $company_id,
 			'stage' => $request->input('stage'),
-			'search' =>$request->input('search'),
-			'cus_search' => $request->input('cus_search'),
+			'cus_search' => $custom_search,
 			'statusfilter' =>$request->input('statusfilter'),
 			'sortingfilter' => $request->input('sortingfilter'),
+			'bxr_company' => $bxr_company,
+			'bxr_location' => $bxr_location,
+			'bxr_min_sal' => $bxr_min_sal,
+			'bxr_max_sal' => $bxr_max_sal,
+			'bxr_activity' => $bxr_activity,
 			'user_id' => $this->user->id,
 			'bench_id' =>$request->input('bench_id')
 		];
@@ -5076,13 +5069,84 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				];
 			}
 
+			// Job status (active/hold/inactive) — $statusArr was computed above but
+			// never actually applied to the query; wiring it to the real indexed
+			// field (jobs.status, denormalized onto each doc as `job_status`) is
+			// what makes the Status filter actually do something.
+			if (!empty($statusArr)) {
+				$filters[] = ['terms' => ['job_status' => $statusArr]];
+			}
+
+			// Free-text search — company name, job title, or the recruiter who
+			// submitted the candidate (matches the toolbar's placeholder text).
+			if ($custom_search !== '') {
+				$must[] = [
+					'multi_match' => [
+						'query'     => $custom_search,
+						'fields'    => ['client_name', 'title', 'posted_by'],
+						'fuzziness' => 'AUTO',
+					],
+				];
+			}
+
+			// Company / Client Name (Tagify — array of {value: "..."} tags)
+			if (!empty($bxr_company)) {
+				$companyShould = [];
+				foreach ($bxr_company as $tag) {
+					$val = is_array($tag) ? ($tag['value'] ?? '') : $tag;
+					if ($val !== '') {
+						$companyShould[] = ['match_phrase' => ['client_name' => $val]];
+					}
+				}
+				if (!empty($companyShould)) {
+					$filters[] = ['bool' => ['should' => $companyShould, 'minimum_should_match' => 1]];
+				}
+			}
+
+			// Job Location (Tagify)
+			if (!empty($bxr_location)) {
+				$locationShould = [];
+				foreach ($bxr_location as $tag) {
+					$val = is_array($tag) ? ($tag['value'] ?? '') : $tag;
+					if ($val !== '') {
+						$locationShould[] = ['match_phrase' => ['city_name' => $val]];
+						$locationShould[] = ['match_phrase' => ['location' => $val]];
+					}
+				}
+				if (!empty($locationShould)) {
+					$filters[] = ['bool' => ['should' => $locationShould, 'minimum_should_match' => 1]];
+				}
+			}
+
+			// Salary / Bill Rate range — compares each job's own stored max_salary
+			// as-is (same convention the sort switch above already uses), no
+			// cross-currency normalization since jobs here can use different
+			// currencies. Needs jobs indexed after the min_salary/max_salary
+			// fields were added to ElasticCandidatesIndex to actually match.
+			if ($bxr_min_sal !== null && $bxr_min_sal !== '') {
+				$filters[] = ['range' => ['max_salary' => ['gte' => (float) $bxr_min_sal]]];
+			}
+			if ($bxr_max_sal !== null && $bxr_max_sal !== '') {
+				$filters[] = ['range' => ['max_salary' => ['lte' => (float) $bxr_max_sal]]];
+			}
+
+			// Activity — how recently this job-application record last changed.
+			if ($bxr_activity !== null && $bxr_activity !== '' && $bxr_activity !== '1') {
+				$activityDays = ['2' => 30, '3' => 60, '4' => 90, '5' => 180, '6' => 365][$bxr_activity] ?? null;
+				if ($activityDays) {
+					$filters[] = ['range' => ['updated_at' => ['gte' => now()->subDays($activityDays)->toIso8601String()]]];
+				}
+			}
+
 			$params = [
 				'index' => ELASTIC_CANDIDATES,
 				'body'  => [
 					'from' => $from,
 					'size' => $size,
+					'sort' => $sort,
 					'query' => [
 						'bool' => [
+							'must'   => $must,
 							'filter' => $filters
 						]
 					]
@@ -5116,67 +5180,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			// cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
 
 			return response()->json($responseData);
-
-			
-
-			
-
-
-
-		// FINAL ELASTIC PARAMS
-		$params = [
-			'index' => ELASTIC_JOBS,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => [
-							[
-								'terms' => [
-									'id' => $jobIds
-								]
-							]
-						],
-					],
-				],
-			],
-		];
-
-		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
-			$total = 0;
-			$data = [];
-		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
-		}
-        //    dd($data);
-		$pagination = [
-			'total' => $total,
-			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
-		];
-
-		$userPermissions = $this->userPermissions;
-		$responseData =  [
-			'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data','userPermissions','company_id','salaryMode','currencySymbole','job_status','feedback_status','bench_id'))->render(),
-			'total' => $total,
-			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		];
-
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
-
-	    return response()->json($responseData);
-
-		
-  
 	}
 	public function bench_explore_listing(Request $request)
 	{
