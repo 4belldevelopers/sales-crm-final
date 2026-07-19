@@ -600,8 +600,15 @@
                         $rowpostedby = $row->posted_by;
                     }
                     // $rowpostedby = ucwords($row->posted_by); post_company_name
-                    
-                    $post_company_name = @$row->post_company_name;
+
+                    // The actual company the recruiter (posted_by user) belongs
+                    // to, via users.company_id — same fix as ClientApp's row
+                    // partial. Falls back to the older fields for any candidate
+                    // not yet re-indexed since this field was added.
+                    $post_company_name = @$row->submitted_by_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->post_company_name;
+                    }
                     if (!$post_company_name) {
                         $post_company_name = @$row->company_name;
                     }

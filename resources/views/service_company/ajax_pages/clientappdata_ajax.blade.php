@@ -581,9 +581,9 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
+                        strtoupper(@$row->qualification_name) .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
+                        strtoupper(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                 </div>';
 
@@ -596,7 +596,17 @@
                     if (!empty($row->posted_by_image)) {
                         $posted_by_image = url('public/user-uploads/team_profile_img/' . @$row->posted_by_image);
                     } 
-                    $post_company_name = @$row->post_company_name;
+                    // The actual company the recruiter (posted_by user) belongs
+                    // to, via users.company_id — not thirdparty_company_id
+                    // (post_company_name) or add_job_wise_condidates.company_id
+                    // (company_name), which don't necessarily match the
+                    // submitting user's own company. Falls back to the older
+                    // fields for any candidate not yet re-indexed since this
+                    // field was added.
+                    $post_company_name = @$row->submitted_by_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->post_company_name;
+                    }
                     if (!$post_company_name) {
                         $post_company_name = @$row->company_name;
                     }
