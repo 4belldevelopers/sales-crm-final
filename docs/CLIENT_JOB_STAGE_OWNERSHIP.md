@@ -9,6 +9,14 @@
 > AppTracker candidate-list pages, not just the client-job ones. Treat this as ground
 > truth for the *rule*; always re-grep the referenced files before changing behavior,
 > since line numbers and exact fix status drift over time.
+>
+> **§8 onward added 2026-07-19** — a follow-up session that redesigned the
+> "Change Candidate Stage" drawer across all 5 candidate-list pages
+> (AppTracker/CV Tracker/ClientApp/Offer Tracker/Joining Tracker), fixed several
+> confirmed bugs in the stage-transition and sub-stage machinery, and added a new
+> duplicate/ownership-arbitration system. §8 confirms §2's two-Rejected-ids table is
+> accurate (it directly explains a bug found this session) and should be read as an
+> extension of this doc, not a separate one.
 
 ## 1. The two pipelines, in one sentence each
 
