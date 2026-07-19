@@ -618,21 +618,13 @@
                         $post_company_name = @$row->company_name;
                     }
 
-                    // Ownership column, row 2: show whichever company actually
-                    // WON the ownership race (Company Recruiter reservation vs.
-                    // first-agency-to-Sourcing), not just whoever happens to be
-                    // the submitter of THIS particular row — those can differ
-                    // once another submitter has already established ownership.
-                    // Falls back to the plain submitter company above if
-                    // resolution finds nothing (e.g. no email/phone to match on).
-                    $ownership = GeneralMethod::resolveDuplicateOwnership($row->company_id, $row->jobId, $row->email, $row->phone, $row->wiseId);
-                    if ($ownership->ownerRowId !== null) {
-                        $ownerRow = $ownership->rows->firstWhere('id', $ownership->ownerRowId);
-                        if ($ownerRow && !empty($ownerRow->company_name)) {
-                            $post_company_name = $ownerRow->company_name;
-                        }
-                    }
-
+                    // Ownership-engine attribution intentionally NOT computed here.
+                    // A centralized Duplicate Ownership Engine (per the finalized
+                    // Master Tracker) is still being designed — see
+                    // docs/CLIENT_JOB_STAGE_OWNERSHIP.md §8.4. Until it exists and
+                    // persists its own verdict, this column shows only the plain
+                    // submitter-company chain above; no per-row ownership
+                    // recalculation happens during Blade rendering anywhere.
 
                     echo '<div class="d-flex flex-column">
 					<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .

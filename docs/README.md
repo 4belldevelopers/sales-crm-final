@@ -49,6 +49,7 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [SECURITY.md](SECURITY.md) — security risk register + remediation program
 - [BUG_REPORT.md](BUG_REPORT.md) — concrete bugs found (with line refs) + fix plan
 - [CLIENT_JOB_STAGE_OWNERSHIP.md](CLIENT_JOB_STAGE_OWNERSHIP.md) — agency ↔ client stage-ownership & candidate-visibility rules for client-job AppTracker pages, the standing search/sort/filter design+logic convention for all AppTracker candidate-list pages, and (§8) the shared stage-change drawer architecture across AppTracker/CV Tracker/ClientApp/Offer/Joining Tracker — row-trigger gating per page, sub-stage/un-reject bugs fixed, and the duplicate-detection/ownership-arbitration system
+- [DUPLICATE_OWNERSHIP_ENGINE_DESIGN.md](DUPLICATE_OWNERSHIP_ENGINE_DESIGN.md) — **design review, not yet implemented** — full schema/index/trigger/concurrency/state-machine/service-architecture/test-plan design for the centralized Duplicate Ownership Engine that will replace the stateless `resolveDuplicateOwnership()`; read this before building that engine
 - [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) — naming standards + SAFE rename procedure (names map to real tables/indices)
 
 ## AI memory & machine-readable context
