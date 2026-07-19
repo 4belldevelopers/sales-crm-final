@@ -8282,6 +8282,54 @@ protected $elasticService;
 		return Reply::dataOnly(['status' => 'success', 'html' => $html]);
 
 	}
+
+	/**
+	 * Builds the "one stage at a time" validation message shared by
+	 * stage_submit() and client_stage_submit() whenever a candidate is
+	 * moved more than one step ahead, or more than one step backward, in
+	 * the stage sequence. Rather than just saying the attempted move is
+	 * blocked, it tells the user exactly which stages ARE reachable from
+	 * where the candidate currently sits (previous / next / Rejected),
+	 * since that's the actionable information they need next.
+	 *
+	 * @param array  $stages       Same order map ($id => ['display' => ..., 'order' => ...]) already built in the caller.
+	 * @param int    $currentOrder Order value of the candidate's current stage.
+	 * @param string $currentName  Display name of the candidate's current stage.
+	 * @param string $targetName   Display name of the stage the user attempted to jump to.
+	 */
+	private function stageSequenceGuardMessage(array $stages, int $currentOrder, string $currentName, string $targetName): string
+	{
+		$prevName = null;
+		$nextName = null;
+		foreach ($stages as $sid => $s) {
+			if ($s['order'] === $currentOrder - 1) {
+				$prevName = $s['display'];
+			}
+			// Rejected (7 in both flows, 9 in the client flow's agency-only
+			// bucket) is always offered separately below — excluded here so
+			// it's never mentioned twice.
+			if ($s['order'] === $currentOrder + 1 && !in_array((int) $sid, [7, 9], true)) {
+				$nextName = $s['display'];
+			}
+		}
+
+		$options = [];
+		if ($prevName) {
+			$options[] = "<b style='color:#F59E0B;'>{$prevName}</b> (previous stage)";
+		}
+		if ($nextName) {
+			$options[] = "<b style='color:#3B82F6;'>{$nextName}</b> (next stage)";
+		}
+		$options[] = "<b style='color:#EF4444;'>Rejected</b>";
+
+		$last = array_pop($options);
+		$optionsText = count($options) ? implode(', ', $options) . ' or ' . $last : $last;
+
+		return "Candidates move through hiring stages one step at a time.<br>"
+			. "From <b style='color:#181c32;'>{$currentName}</b>, you can move to {$optionsText}.<br>"
+			. "Jumping directly to <b style='color:#181c32;'>{$targetName}</b> isn't supported — please select an adjacent stage to continue.";
+	}
+
 	public function stage_submit(Request $request)
 	{
 
@@ -8606,17 +8654,12 @@ protected $elasticService;
 
 					$currentName  = $stages[$currentStageId]['display'];
 					$newName      = $stages[$newStageId]['display'];
-					$nextStage    = collect($stages)->firstWhere('order', $currentOrder + 1)['display'] ?? 'Next Step';
 
 					// 🔹 Check if jumping ahead
 					if ($newOrder > $currentOrder + 1) {
 						return Reply::dataOnly([
 							'status' => 'candidatevalidation',
-							'message' => "You cannot jump directly from 
-										<b style='color:#EF4444;'>{$currentName}</b> 
-										to <b style='color:#3B82F6;'>{$newName}</b>.<br>
-										Please complete the required step in 
-										<b style='color:#F59E0B;'>{$nextStage}</b> first."
+							'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
 						]);
 					}
 
@@ -8624,13 +8667,11 @@ protected $elasticService;
 
 					// 🔹 Check if going backward
 					if ($newOrder < $currentOrder) {
-						
+
 					if($currentOrder != $newOrder+1){
 						return Reply::dataOnly([
 								'status' => 'candidatevalidation',
-								'message' => "You cannot move backward from 
-											<b style='color:#EF4444;'>{$currentName}</b> 
-											to <b style='color:#F59E0B;'>{$newName}</b>."
+								'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
 							]);
 					}
 
@@ -11177,7 +11218,6 @@ protected $elasticService;
 
                     $currentName  = $stages[$currentStageId]['display'];
                     $newName      = $stages[$newStageId]['display'];
-                    $nextStage    = collect($stages)->firstWhere('order', $currentOrder + 1)['display'] ?? 'Next Step';
 
                     // InReview(8) and agency-Rejected(9) are the submitting
                     // agency's own territory — once a candidate is sourced
@@ -11227,11 +11267,7 @@ protected $elasticService;
                         if ($newStageId != 7 && $newOrder > $currentOrder + 1) {
                             return Reply::dataOnly([
                                 'status' => 'candidatevalidation',
-                                'message' => "You cannot jump directly from
-                                            <b style='color:#EF4444;'>{$currentName}</b>
-                                            to <b style='color:#3B82F6;'>{$newName}</b>.<br>
-                                            Please complete the required step in
-                                            <b style='color:#F59E0B;'>{$nextStage}</b> first."
+                                'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
                             ]);
                         }
 
@@ -11240,9 +11276,7 @@ protected $elasticService;
                             if($currentOrder != $newOrder+1){
                                 return Reply::dataOnly([
                                         'status' => 'candidatevalidation',
-                                        'message' => "You cannot move backward from
-                                                    <b style='color:#EF4444;'>{$currentName}</b>
-                                                    to <b style='color:#F59E0B;'>{$newName}</b>."
+                                        'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
                                     ]);
                             }
                         }
