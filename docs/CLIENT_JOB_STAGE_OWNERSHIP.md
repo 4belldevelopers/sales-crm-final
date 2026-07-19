@@ -237,3 +237,168 @@ functionality** — not copied blindly:
 
 In short: **reuse the pattern, don't reinvent it — but don't copy a field or a rule
 onto a page whose actual data doesn't have it.**
+
+---
+
+## 8. The shared drawer architecture (2026-07-19)
+
+Every stage change on **AppTracker, CV Tracker, ClientApp, Offer Tracker, and Joining
+Tracker** goes through exactly one of two controller methods in
+`ServiceCompanyJobApplicationController.php`, both persisting to
+`add_job_wise_condidates.master_status_id`:
+
+| | `stage_submit()` | `client_stage_submit()` |
+|---|---|---|
+| Body partial | `job-applications/stage_body_content.blade.php` | `job-applications/client_stage_body_content.blade.php` |
+| Sub-statuses | `child_stage($id)` — **shared by both** |
+| Coin deduction | Various eventIds elsewhere | Only on the InReview→Sourcing move (event 4) |
+| Duplicate/ownership hook | **None** | Yes — see §8.4 |
+
+Both partials share one visual drawer (icon-coded stage pills, icon-coded sub-status
+tiles, Quick Notes chips, a submit button that recolors/relabels to match the selected
+stage) built this session as a single source of truth — fix one, fix it everywhere.
+Reference/template: `resources/views/service_company/jobs/status.blade.php` (the Job
+Status drawer built earlier, same `data-kt-drawer` mechanism).
+
+### 8.1 Per-page row-trigger gating (which method actually fires)
+
+This is the part easiest to get wrong when touching any of these pages — the row
+partial decides which flow opens, independent of the drawer/partial itself:
+
+- **AppTracker** (`all_apptracker.blade.php`) — **always** the plain flow
+  (`stage_sub_stage` → `stage_submit()`), unconditionally, regardless of
+  `thirdparty_company_id`. This page is the job-owner's aggregated view of every
+  submitter on their own jobs; no client-flow branching exists here at all.
+- **CV Tracker** (`all_candidates.blade.php`) — a **global, company-wide** list (not
+  job-scoped). Trigger is `client_stage_sub_stage` (→ `client_stage_submit()`) only when
+  `thirdparty_company_id > 0 && thirdparty_company_id == company_id` (viewing your own
+  third-party submission) **and** `job_master_status_id == 8` (still InReview). Once
+  that same row is sourced or beyond, the trigger becomes `client_stage_locked_notice`
+  instead — clicking it shows a modal ("This Stage Is Managed by the Client") rather
+  than opening anything; there is **no way to reopen the drawer on this row from this
+  page once it's left InReview** (confirmed by reading the row partial directly — the
+  `<a>`/class only exists for `job_master_status_id == 8`, a plain inert `<span>`
+  otherwise, before this session added the locked-notice trigger onto it).
+- **ClientApp** (`clientappdata_ajax.blade.php`) — same conditional logic as CV Tracker,
+  but this page is **job-scoped** (one specific client-owned job at a time) rather than
+  global. This is the page where an agency actually manages its own submissions to one
+  client job, so it's also where the InReview→Sourcing "becomes visible to the client"
+  moment structurally lives (§8.4).
+- **Offer Tracker / Joining Tracker** — plain flow only; both pages hard-filter to
+  `job_master_status_id` 5/6 (already past the sourcing handoff), so the client-gated
+  branch is structurally unreachable there.
+
+### 8.2 Two confirmed bugs in `child_stage($id)` / sub-stage visibility (fixed)
+
+- **`requisition_owner==0` used to force-hide the entire Sub Stage section for every
+  non-InReview stage**, including Rejected — meant to protect InReview specifically, but
+  written broadly enough to also silently hide a recruiter's own rejection-reason tiles
+  on a client-managed job, even though the recruiter is the one authorized to reject
+  from InReview in the first place. **Fixed**: both the PHP initial-render check and the
+  JS `csdcSelectStage()` gate now only suppress the section for `id == 8` (InReview) —
+  every other stage's visibility is decided purely by whether the backend has data.
+- **`child_stage($id)` didn't account for §2's two Rejected ids.** The normal
+  agency-self-view drawer submits id **9** (per §2's table — the `direct_client=1`
+  row), but Settings → Interview Process (`ServiceCompanyCandidateStatusController::store()`)
+  only ever has a form field for **parent=7** — there is no UI path to ever create
+  `candidate_status` rows with `parent=9`. So `child_stage(9)` always returned empty,
+  even when a company genuinely had Rejected reasons configured (they're stored under
+  `parent=7`). **Fixed**: `child_stage($id)` now folds `id === 9` to `7` before querying
+  `candidate_status`, since both ids represent the same conceptual "Rejected reasons"
+  list to the company — just gated to a different client-relationship type per §2.
+
+### 8.3 Un-reject / resume-point bug (fixed)
+
+`stage_point_tb` records where a candidate should resume if later un-rejected (matched
+against `job_id` + `candidate_id`). The write inside `client_stage_submit()`'s
+non-Rejected `else` branch used to record `'stage_id' => $master_status` — i.e. the
+**target** stage — even when the target itself *was* Rejected(7). That means moving
+InReview(8)→Rejected(7) recorded the resume point as `7`, not `8`, permanently blocking
+any later attempt to un-reject back to InReview (the un-reject check requires the target
+to exactly match the recorded `stage_id`). **Fixed**: the write now uses
+`$resumeStageId = ($newStageId == 7) ? $currentStageId : $master_status` — recording the
+stage being rejected *from*, not the Rejected stage itself. `stage_submit()` (plain
+flow) never had this exact bug — it structurally skips the whole `stage_point_tb` write
+when the target is 7, which happens to leave whatever the last real resume point was
+already correctly in place as a side effect, not by original design.
+
+Un-reject rule, confirmed: you can only move out of Rejected back to the *exact*
+recorded resume stage — or, if the recorded stage was Offered(5)/Joined(6), the only
+valid target is Sourcing(1) (a full restart), enforced identically in both
+`stage_submit()` and `client_stage_submit()`.
+
+### 8.4 Duplicate detection & ownership arbitration (new)
+
+Two independent layers, both new this session, living in `app/Helper/GeneralMethod.php`:
+
+- **`checkDuplicateCandidate($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days, $phone)`**
+  (pre-existing, previously Upload-only) — company-scoped duplicate check
+  (`company_id` OR `thirdparty_company_id`), driven by the per-company `app_duplicate`
+  setting (0=None/1=Job-wise/2=Overall System). Now also wired into every "Add to Job"
+  path that used to skip it entirely: Similar Candidates/Internal Bench/Agency Bench/
+  Career Page (`ServiceCompanyAppTrackerController::rec_candidate_assign()`, all 4
+  `source_from_type` branches) and CV Tracker's "Copy to Other Job"
+  (`ServiceCompanyCvTrackerController::copy_current_selected_applicant()`). Result is
+  stored on a **new** `add_job_wise_condidates.duplicate` column (not
+  `job_applications.duplicate`, which is shared across every job the same candidate
+  profile is later added to and would otherwise bleed a duplicate result across
+  unrelated jobs) — indexed into ES as `wise_duplicate`, read by the row partials
+  alongside the original flag.
+
+- **`resolveDuplicateOwnership($ownerCompanyId, $jobId, $email, $phone, $currentRowId, $treatCurrentRowAsJustSourcedNow)`**
+  — cross-tenant ownership arbitration across every submitter (agencies + the
+  job-owning company's own team) matching by normalized email/phone. Hierarchy:
+  1. **Company Recruiter reservation** — a company-added row reserves ownership the
+     instant it's created, even at InReview, *unless* an agency had already reached
+     Sourcing first. Company rows are never privacy-protected (it's the company's own
+     job), so they're compared/flagged regardless of their own current stage.
+  2. **Agency ownership** — otherwise, the *first* agency to reach Sourcing owns it.
+     Uploading first counts for nothing; only reaching Sourcing first does. An agency
+     row is only ever compared/flagged once it has itself reached Sourcing — still-
+     InReview agency rows stay fully private, win or lose (consistent with §4).
+  3. **Ownership never flips** once decided, no matter how far the loser later
+     progresses.
+  Scope (single job vs. every job the company owns) reuses that company's own
+  `app_duplicate` setting rather than a separate mode. "First reached Sourcing" is
+  read from the `timeline` table (`MIN(create_at)` where `master_process_name` matches
+  whatever `master_status.name` resolves to for id 1) — reused rather than adding a new
+  column, since `timeline` already logs every transition and gives this for free on
+  historical data too.
+  - **Hooked into exactly one place**: `client_stage_submit()`'s InReview(8)→Sourcing(1)
+    transition, gated by a new opt-in company setting
+    (`companies.enable_cross_agency_duplicate`, Account Settings). Purely advisory —
+    never blocks the transition or the coin deduction that happens right before it. The
+    losing agency gets a generic toast (no company/stage attribution — privacy,
+    competitive sensitivity); the job-owning company sees full attribution (which
+    company, what stage, when) as a badge on their own AppTracker row list
+    (`all_apptracker.blade.php`), computed fresh on every render.
+  - **Not** wired into `stage_submit()` (plain flow) — there is no equivalent "just
+    became visible to the client" moment there to attach it to.
+  - Also drives the **"Ownership" column, row 2** on CV Tracker (`all_candidates.blade.php`)
+    and ClientApp (`clientappdata_ajax.blade.php`): shows the arbitration *winner's*
+    company, not just whoever happens to have submitted that specific row — those can
+    differ once another submitter has already established ownership.
+
+### 8.5 Key files (this session's additions)
+
+- `app/Helper/GeneralMethod.php` — `checkDuplicateCandidate()` (existing, now more
+  call sites), `resolveDuplicateOwnership()` (new), `csdSubStatusMeta()` (sub-status
+  icon/color mapping, existing).
+- `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` —
+  `child_stage()` (§8.2 fold fix), `stage_submit()`/`client_stage_submit()` (§8.3
+  resume-point fix, §8.4 hook, `stageSequenceGuardMessage()` — the shared helper behind
+  the "you can only move to X/Y/Rejected" jump-violation message).
+- `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` —
+  `rec_candidate_assign()` (all 4 branches now duplicate-checked).
+- `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` —
+  `copy_current_selected_applicant()` (now duplicate-checked).
+- `resources/views/service_company/job-applications/stage_body_content.blade.php` /
+  `client_stage_body_content.blade.php` — the shared drawer body, icon-coded pills/tiles.
+- `resources/views/service_company/ajax_pages/all_apptracker.blade.php` /
+  `clientappdata_ajax.blade.php` / `all_candidates.blade.php` — row-level trigger
+  gating (§8.1), duplicate badges, Ownership column.
+- `database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php` —
+  `add_job_wise_condidates.duplicate`, `companies.enable_cross_agency_duplicate`.
+  **Run `php artisan migrate` before relying on either column** — not yet applied to
+  the live DB as of this doc update; `database/schema/mysql-schema.sql` and
+  `docs/DB_SCHEMA.md` both mark these two columns as pending for the same reason.
