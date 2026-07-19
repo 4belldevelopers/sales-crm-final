@@ -61,7 +61,12 @@
 
                     $flag = 0;
                     $duplicate = 0;
-                    $duplicate = $row->duplicate;
+                    // wise_duplicate is the per-job-addition flag (Similar
+                    // Candidates/Internal Bench/Career Page/Agency Bench/Copy) —
+                    // job_applications.duplicate alone missed all of those since
+                    // that column is shared across every job the same candidate
+                    // profile is added to.
+                    $duplicate = ($row->duplicate == 1 || @$row->wise_duplicate == 1) ? 1 : 0;
                     $company_id = auth()->user()->roles[0]->company_id;
                     $app_duplicate = auth()->user()->company->app_duplicate;
                     $app_duplicate_days = auth()->user()->company->app_duplicate_days;
@@ -120,6 +125,22 @@
                         }
                     } else {
                         $flag = 0;
+                    }
+
+                    // Cross-agency, job-wide duplicate pool (opt-in) — this list is
+                    // the job-owner's own view (every agency's submissions plus the
+                    // company's own recruiters, on the company's own job), so unlike
+                    // the single-company $flag badge above, this one carries full
+                    // attribution: which company, what stage, when. InReview rows are
+                    // excluded since they aren't the client's to manage yet.
+                    $crossAgencyBadgeHtml = '';
+                    if (!empty(auth()->user()->company->enable_cross_agency_duplicate) && (int) $row->job_master_status_id !== 8) {
+                        $crossAgencyMatches = GeneralMethod::checkJobWideDuplicate($row->job_id, $row->email, $row->phone, $row->wiseId);
+                        if ($crossAgencyMatches->count() > 0) {
+                            $firstMatch = $crossAgencyMatches->first();
+                            $matchTitle = 'Also submitted by ' . ($firstMatch->company_name ?? 'another source') . ' — ' . ($firstMatch->stage_name ?? '') . ' — ' . GeneralMethod::ymdTodmyNotTime($firstMatch->created_at ?? '');
+                            $crossAgencyBadgeHtml = '<span class="badge my-1" style="background:#fef3c7;color:#92400e;font-weight:600;border:1px solid #fde68a;" title="' . htmlspecialchars($matchTitle, ENT_QUOTES) . '">Also in pipeline (' . $crossAgencyMatches->count() . ')</span>';
+                        }
                     }
 
                     if (@$row->condidate_type == 'bench_condidate') {
@@ -235,13 +256,13 @@
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
                                     '.$matchBadge.'
-                                 
+
                                   ' .
-                            $skilltag .
+                            $skilltag . $crossAgencyBadgeHtml .
                             '
-                                         
-                                   
-                                    </div> 	
+
+
+                                    </div>
 					';
                     } else {
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
@@ -283,13 +304,13 @@
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
                                     '.$matchBadge.'
-                                 
+
                                   ' .
-                            $skilltag .
+                            $skilltag . $crossAgencyBadgeHtml .
                             '
-                                         
-                                   
-                                    </div> 	
+
+
+                                    </div>
 					';
                     }
 

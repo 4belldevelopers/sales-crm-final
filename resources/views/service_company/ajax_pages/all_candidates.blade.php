@@ -74,7 +74,12 @@
 
                         $flag = 0;
                         $duplicate = 0;
-                        $duplicate = $row->duplicate;
+                        // wise_duplicate is the per-job-addition flag (Similar
+                        // Candidates/Internal Bench/Career Page/Agency Bench/Copy) —
+                        // job_applications.duplicate alone missed all of those since
+                        // that column is shared across every job the same candidate
+                        // profile is added to.
+                        $duplicate = ($row->duplicate == 1 || @$row->wise_duplicate == 1) ? 1 : 0;
                         $company_id = auth()->user()->roles[0]->company_id;
                         $app_duplicate = auth()->user()->company->app_duplicate;
                         $app_duplicate_days = auth()->user()->company->app_duplicate_days;

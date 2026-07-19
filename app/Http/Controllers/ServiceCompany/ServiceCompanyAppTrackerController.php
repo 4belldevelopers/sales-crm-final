@@ -3108,15 +3108,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			DB::table('rec_candidate_assign')->insert($values);
 			$recCandidateAssignId = DB::getPdo()->lastInsertId();
 
+			// Same email/phone/day-window duplicate check Upload already runs,
+			// extended to this "Add to Job" path — previously skipped entirely.
+			$wiseDuplicate = null;
+			$appDuplicateMode = auth()->user()->company->app_duplicate;
+			if ($appDuplicateMode == 1 || $appDuplicateMode == 2) {
+				$dupCnt = GeneralMethod::checkDuplicateCandidate($source_company_id, $appDuplicateMode, $source_jobid, @$row_data->email, auth()->user()->company->app_duplicate_days, @$row_data->phone);
+				$wiseDuplicate = $dupCnt > 0 ? 1 : 0;
+			}
+
 			$skillArr = explode(',', @$row_data->skills);
 		    $percentage =  GeneralMethod::skill_match_percentage(@$source_jobid,$skillArr);
 
 			$now = now();
-			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'status_id' => @$row_data->status_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
+			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'status_id' => @$row_data->status_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'duplicate' => $wiseDuplicate,'created_at' => $now,'updated_at' => $now);
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
-			
+
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
 				'allapptracker_version_user_'.$this->user->id,				
@@ -3295,6 +3304,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$note = 'Similar Candidate => Public Bench';
 			}
 
+			// Same email/phone/day-window duplicate check Upload already runs,
+			// extended to this "Add to Job" path — previously skipped entirely.
+			$wiseDuplicateInternalBench = null;
+			$appDuplicateModeInternalBench = auth()->user()->company->app_duplicate;
+			if ($appDuplicateModeInternalBench == 1 || $appDuplicateModeInternalBench == 2) {
+				$dupCntInternalBench = GeneralMethod::checkDuplicateCandidate($source_company_id, $appDuplicateModeInternalBench, $source_jobid, @$row_data->email, auth()->user()->company->app_duplicate_days, @$row_data->phone);
+				$wiseDuplicateInternalBench = $dupCntInternalBench > 0 ? 1 : 0;
+			}
+
 			$application_id = "";
 			$application_id = $id; //DB::getPdo()->lastInsertId();
 
@@ -3307,7 +3325,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'event_by_company_id' => auth()->user()->company_id,
 				'event_by_user_id' => auth()->user()->id,
 				'master_process_name' => 'InReview',
-				//'child_process_name'	=>	
+				//'child_process_name'	=>
 				'application_id' => @$application_id,
 				'application_email' => @$row_data->email,
 				'job_id' => @$source_jobid,
@@ -3333,13 +3351,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			$skillArr = explode(',', @$row_data->skills);
 		    $percentage =  GeneralMethod::skill_match_percentage(@$source_jobid,$skillArr);
-			
+
 			$now = now();
-			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
+			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'duplicate' => $wiseDuplicateInternalBench,'created_at' => $now,'updated_at' => $now);
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
-			
+
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
 				'allapptracker_version_user_'.$this->user->id,				
@@ -3512,6 +3530,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			$note = 'Similar Candidate => Agency Bench';
 
+			// Same email/phone/day-window duplicate check Upload already runs,
+			// extended to this "Add to Job" path — previously skipped entirely.
+			$wiseDuplicateAgencyBench = null;
+			$appDuplicateModeAgencyBench = auth()->user()->company->app_duplicate;
+			if ($appDuplicateModeAgencyBench == 1 || $appDuplicateModeAgencyBench == 2) {
+				$dupCntAgencyBench = GeneralMethod::checkDuplicateCandidate($source_company_id, $appDuplicateModeAgencyBench, $source_jobid, @$row_data->email, auth()->user()->company->app_duplicate_days, @$row_data->phone);
+				$wiseDuplicateAgencyBench = $dupCntAgencyBench > 0 ? 1 : 0;
+			}
+
 			$application_id = "";
 			$application_id = $id; //DB::getPdo()->lastInsertId();
 
@@ -3524,7 +3551,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'event_by_company_id' => auth()->user()->company_id,
 				'event_by_user_id' => auth()->user()->id,
 				'master_process_name' => 'InReview',
-				//'child_process_name'	=>	
+				//'child_process_name'	=>
 				'application_id' => @$application_id,
 				'application_email' => @$row_data->email,
 				'job_id' => @$source_jobid,
@@ -3552,11 +3579,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$skillArr = explode(',', @$row_data->skills);
 		    $percentage =  GeneralMethod::skill_match_percentage(@$source_jobid,$skillArr);
 			$now = now();
-			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
+			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'duplicate' => $wiseDuplicateAgencyBench,'created_at' => $now,'updated_at' => $now);
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
-			
+
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
 				'allapptracker_version_user_'.$this->user->id,				
@@ -3907,6 +3934,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			 $note = 'Website => Pool';
 
+			// Same email/phone/day-window duplicate check Upload already runs,
+			// extended to this "Add to Job" path — previously skipped entirely.
+			$wiseDuplicateCareerPage = null;
+			$appDuplicateModeCareerPage = auth()->user()->company->app_duplicate;
+			if ($appDuplicateModeCareerPage == 1 || $appDuplicateModeCareerPage == 2) {
+				$dupCntCareerPage = GeneralMethod::checkDuplicateCandidate($source_company_id, $appDuplicateModeCareerPage, $source_jobid, @$row_data->email, auth()->user()->company->app_duplicate_days, @$row_data->phone);
+				$wiseDuplicateCareerPage = $dupCntCareerPage > 0 ? 1 : 0;
+			}
 
 			$application_id = "";
 			$application_id = $id; //DB::getPdo()->lastInsertId();
@@ -3917,7 +3952,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'event_by_company_id' => auth()->user()->company_id,
 				'event_by_user_id' => auth()->user()->id,
 				'master_process_name' => 'InReview',
-				//'child_process_name'	=>	
+				//'child_process_name'	=>
 				'application_id' => @$application_id,
 				'application_email' => @$row_data->email,
 				'job_id' => @$source_jobid,
@@ -3928,9 +3963,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			$skillArr = explode(',', @$row_data->skills);
 		    $percentage =  GeneralMethod::skill_match_percentage(@$source_jobid,$skillArr);
-			
+
 			$now = now();
-			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => 0, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
+			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => 0, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'duplicate' => $wiseDuplicateCareerPage,'created_at' => $now,'updated_at' => $now);
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();			

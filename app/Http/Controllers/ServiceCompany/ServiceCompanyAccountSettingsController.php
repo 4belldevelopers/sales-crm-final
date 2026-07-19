@@ -904,6 +904,18 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 							$company->app_duplicate_days 			=	'';
 						}
 					}
+					// Opt-in for the cross-agency, job-wide duplicate pool. This
+					// update() method is posted to by more than one settings tab, so
+					// (like every other field here) it must only touch this column
+					// when ITS OWN tab was actually submitted — a plain checkbox
+					// posts nothing when unchecked, so its own presence can't be that
+					// signal. The view pairs the checkbox with a hidden
+					// enable_cross_agency_duplicate_submitted marker unique to this
+					// tab, mirroring how app_duplicate above (mis)uses date_format's
+					// presence for the same purpose, without inheriting that coupling.
+					if ($request->has('enable_cross_agency_duplicate_submitted')) {
+						$company->enable_cross_agency_duplicate = $request->has('enable_cross_agency_duplicate') ? 1 : 0;
+					}
 					if(!empty(@$request->bench_show_mode)){
 						$company->bench_show_mode 			=	(int) @$request->bench_show_mode;
 

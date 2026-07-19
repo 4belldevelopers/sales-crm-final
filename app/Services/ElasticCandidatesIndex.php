@@ -154,6 +154,7 @@ class ElasticCandidatesIndex
                         'add_job_wise_condidates.created_at',
                         'add_job_wise_condidates.company_id',
                         'add_job_wise_condidates.submitted_by',
+                        'add_job_wise_condidates.duplicate as wise_duplicate',
                         'job_applications.deleted_at',
                         'add_job_wise_condidates.job_id as jobId'
                    )
@@ -268,6 +269,7 @@ class ElasticCandidatesIndex
                             'current_ectc_mode' => $application->current_ectc_mode,
                             'current_company' => $application->current_company,
                             'duplicate' => $application->duplicate,
+                            'wise_duplicate' => $application->wise_duplicate,
                             'bill_rate_currency' => $application->bill_rate_currency,
                             'bill_rate_amount' => $application->bill_rate_amount,
                             'bill_rate_mode' => $application->bill_rate_mode,

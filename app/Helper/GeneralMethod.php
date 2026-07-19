@@ -612,8 +612,67 @@ END:VCALENDAR";
 			}
 			
 			
-			return $application_cnt;						
+			return $application_cnt;
 	}
+
+	/**
+	 * Cross-tenant, job-scoped duplicate lookup for the opt-in cross-agency
+	 * duplicate pool (client_stage_submit()'s InReview->Sourcing hook and the
+	 * job-owner's AppTracker row display). Deliberately separate from
+	 * checkDuplicateCandidate() above — that one stays company-scoped and
+	 * untouched; this one intentionally spans every company/agency submitting
+	 * to the same job, with normalized email/phone matching (strip
+	 * spaces/dashes from phone, lowercase+trim email).
+	 *
+	 * @param  int|string  $excludeId  the add_job_wise_condidates row currently
+	 *         transitioning — excluded so it never matches itself.
+	 * @return \Illuminate\Support\Collection of matches: company_name, stage_name, created_at
+	 */
+	public static function checkJobWideDuplicate($jobId, $email, $phone, $excludeId = null)
+	{
+		$normalizedEmail = strtolower(trim((string) $email));
+		$normalizedPhone = preg_replace('/\D+/', '', (string) $phone);
+
+		if ($normalizedEmail === '' && $normalizedPhone === '') {
+			return collect();
+		}
+
+		return DB::table('add_job_wise_condidates as ajwc')
+			->join('job_applications as ja', 'ja.id', '=', 'ajwc.job_application_id')
+			->leftJoin('master_status as ms', 'ms.id', '=', 'ajwc.master_status_id')
+			->leftJoin('companies as sub_com', 'sub_com.id', '=', 'ajwc.thirdparty_company_id')
+			->leftJoin('companies as own_com', 'own_com.id', '=', 'ajwc.company_id')
+			->where('ajwc.job_id', $jobId)
+			->when($excludeId, function ($query) use ($excludeId) {
+				$query->where('ajwc.id', '!=', $excludeId);
+			})
+			->where(function ($query) use ($normalizedEmail, $normalizedPhone) {
+				if ($normalizedEmail !== '') {
+					$query->orWhereRaw('LOWER(TRIM(ja.email)) = ?', [$normalizedEmail]);
+				}
+				if ($normalizedPhone !== '') {
+					$query->orWhereRaw("REGEXP_REPLACE(ja.phone, '[^0-9]', '') = ?", [$normalizedPhone]);
+				}
+			})
+			->select(
+				'ajwc.id as add_job_wise_condidates_id',
+				'ajwc.thirdparty_company_id',
+				'ajwc.company_id',
+				'ms.name as stage_name',
+				'ajwc.created_at',
+				'sub_com.company_name as submitting_company_name',
+				'own_com.company_name as owning_company_name'
+			)
+			->orderBy('ajwc.created_at', 'desc')
+			->get()
+			->map(function ($row) {
+				$row->company_name = ((int) $row->thirdparty_company_id > 0)
+					? $row->submitting_company_name
+					: $row->owning_company_name;
+				return $row;
+			});
+	}
+
 	public static function getUserContribution($user_id)
 	{
 			$contributionArr 	= DB::table('clients')

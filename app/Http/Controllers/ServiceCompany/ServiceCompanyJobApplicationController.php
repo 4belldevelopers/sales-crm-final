@@ -11115,6 +11115,27 @@ protected $elasticService;
 			GeneralMethod::coinsDeductions((int) $addJobWiseCondidate->company_id,$eventId,auth()->user()->id,$addJobWiseCondidate->thirdparty_company_id,'','');
 		}
 
+		// Cross-agency, job-wide duplicate pool (opt-in) — checked only at the
+		// exact moment a third-party candidate becomes the client's
+		// responsibility (InReview -> Sourcing). Purely advisory: never blocks
+		// this transition, only adds an extra field to the success response
+		// at the end of this method (see below).
+		$crossAgencyDuplicateMatches = null;
+		if ($master_status == 1 && (int) $addJobWiseCondidate->master_status_id === 8) {
+			$ownerCompany = Company::find($addJobWiseCondidate->company_id);
+			if ($ownerCompany && $ownerCompany->enable_cross_agency_duplicate) {
+				$candidateContact = DB::table('job_applications')->select('email', 'phone')->where('id', $application_id)->first();
+				if ($candidateContact) {
+					$crossAgencyDuplicateMatches = GeneralMethod::checkJobWideDuplicate(
+						$addJobWiseCondidate->job_id,
+						$candidateContact->email,
+						$candidateContact->phone,
+						$addJobWiseCondidate_id
+					);
+				}
+			}
+		}
+
 
 
 
@@ -11527,7 +11548,16 @@ protected $elasticService;
 		}
 
 
-		return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);
+		// Additive-only: existing keys/shape are unchanged, so any code that
+		// already reads this response is unaffected. Only the generic
+		// boolean is sent here — no company/agency name, no stage detail;
+		// full attribution is a client/job-owner-side concern (see
+		// all_apptracker.blade.php), not part of this agency-facing response.
+		$successResponse = ['status' => 'success', 'message' => 'Application stage update successfully !'];
+		if (!empty($crossAgencyDuplicateMatches) && $crossAgencyDuplicateMatches->count() > 0) {
+			$successResponse['crossAgencyDuplicate'] = true;
+		}
+		return Reply::dataOnly($successResponse);
 
 
 
