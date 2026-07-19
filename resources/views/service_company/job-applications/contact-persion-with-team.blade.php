@@ -175,14 +175,14 @@
                                         <td>
                                             @if(in_array(@$teamVal->email,$cc_email))
 
-                                            <div class="d-flex flex-column"> 
-                                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select_panel btn btn-sm w-130 btn-light-danger" rel="{{ @$teamVal->id }}" data-assign="1" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}">Remove</a> 
+                                            <div class="d-flex flex-column">
+                                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select_panel btn btn-sm w-130 btn-light-danger" rel="{{ @$teamVal->id }}" data-assign="1" data-title="{{ @$teamVal->name }}" data-email="{{ @$teamVal->email }}" data-designation="{{ @$teamVal->display_name }}">Remove</a>
                                             </div>
 
                                             @else
 
-                                            <div class="d-flex flex-column"> 
-                                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select_panel btn btn-sm btn-light-primary w-130" rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}"  >Add</a> 
+                                            <div class="d-flex flex-column">
+                                                <a id="team_select_{{ @$teamVal->id }}" href="javascript:void(0);" class="cp_select_panel btn btn-sm btn-light-primary w-130" rel="{{ @$teamVal->id }}" data-assign="0" data-title="{{ @$teamVal->name }}"  data-email="{{ @$teamVal->email }}" data-designation="{{ @$teamVal->display_name }}"  >Add</a>
                                             </div>
 
                                             @endif

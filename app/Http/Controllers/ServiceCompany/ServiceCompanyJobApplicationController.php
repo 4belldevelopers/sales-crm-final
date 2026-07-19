@@ -6376,7 +6376,14 @@ protected $elasticService;
 	           
 	    }
 		$this->timezone 					=	DB::table('master_timezone')->select('*')->orderByDesc('master_timezone.priority')->get();
-	    
+
+		// Real, company-scoped interview round master data (App\InterviewProcess model
+		// class doesn't exist, so the interview_processes table is read directly here).
+		$this->interview_processes = DB::table('interview_processes')
+			->where('company_id', auth()->user()->company_id)
+			->orderBy('name', 'ASC')
+			->get();
+
 		$this->reschedule = @$_REQUEST['reschedule'];
 		$view = view('service_company.job-applications.interview-create', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
