@@ -492,27 +492,43 @@
   #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }
   #interview_schedule_drawer .isd-shell-btn-cancel { border:1px solid #e4e6ef; background:#fff; color:#3f4254; border-radius:8px; padding:9px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:500; cursor:pointer; }
   #interview_schedule_drawer .isd-shell-btn-cancel:hover { background:#f8f9fb; }
+  #interview_schedule_drawer .isd-shell-btn-back { border:1px solid #e4e6ef; background:#fff; color:#3e97ff; border-radius:8px; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; }
+  #interview_schedule_drawer .isd-shell-btn-back:hover { background:#f5f9ff; }
+  #interview_schedule_drawer .isd-shell-btn-primary { border:none; background:#3e97ff; color:#fff; border-radius:8px; padding:8px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; text-align:left; line-height:1.3; }
+  #interview_schedule_drawer .isd-shell-btn-primary small { display:block; font-size:10px; font-weight:400; opacity:.85; }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover { filter:brightness(.94); }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled { background:#c2c9d6 !important; cursor:not-allowed; }
   #interview_schedule_drawer .isd-shell-divider { width:1px; height:22px; background:#e4e6ef; }
   #interview_schedule_drawer .isd-shell-close { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#7e8299; cursor:pointer; flex-shrink:0; }
   #interview_schedule_drawer .isd-shell-close:hover { background:#f8f9fb; color:#f64e60; }
+
+  /* This drawer is opened from *inside* the already-open Job Details drawer
+     (#kt_activitiesApplication, z-index 999999) — it must render above it,
+     not behind. KTDrawer's shared scrim also needs the same treatment. */
+  #interview_schedule_drawer { z-index: 99999999999 !important; }
+  .drawer-overlay { z-index: 99999999998 !important; }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
     data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
-    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close"
-    style="z-index: 1120 !important;">
+    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
-        <span class="isd-shell-topbar-ico"><i class="fa fa-calendar-alt"></i></span>
+        <span class="isd-shell-topbar-ico"><i class="fa fa-calendar"></i></span>
         <div>
-          <div class="isd-shell-topbar-title">Interview Schedule</div>
+          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
           <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
         </div>
       </div>
       <div class="isd-shell-topbar-right">
+        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
         <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel">Cancel</button>
+        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary">
+          <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
+          <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+        </button>
         <span class="isd-shell-divider"></span>
         <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="fa fa-times"></i></span>
       </div>
@@ -520,6 +536,33 @@
     <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
   </div>
 </div>
+<script>
+  // Single header contract for both steps of the AJAX-loaded interview-schedule
+  // content: the content calls window.isdShellSetStep('main'|'email') when it
+  // switches steps, and this shell adapts its one primary button accordingly
+  // instead of the content drawing its own duplicate header/footer.
+  window.isdShellSetStep = function(step){
+    if (step === 'email') {
+      $('#interview_schedule_drawer_title').text('Interview Schedule Email');
+      $('#interview_schedule_drawer_back').show();
+      $('#interview_schedule_drawer_primary .indicator-label').html('Send Email');
+    } else {
+      $('#interview_schedule_drawer_title').text('Interview Schedule');
+      $('#interview_schedule_drawer_back').hide();
+      $('#interview_schedule_drawer_primary .indicator-label').html('Schedule Interview<small>Confirm &amp; send invitations</small>');
+    }
+  };
+  $(document).on('click', '#interview_schedule_drawer_back', function(){
+    $('.divback').trigger('click');
+  });
+  $(document).on('click', '#interview_schedule_drawer_primary', function(){
+    if ($('#div_interview_schedule_second').is(':visible')) {
+      $('#sendEmailBtn').trigger('click');
+    } else if (typeof submitForm === 'function') {
+      submitForm();
+    }
+  });
+</script>
 <!--end::Interview Schedule drawer-->
 
 <div id="kt_activitiesIntTeam_toggle"></div>
@@ -1878,6 +1921,7 @@ $(document).ready(function(){
               $('#interview_schedule_drawer_toggle').trigger('click');
               KTDrawer.createInstances();
               KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
          							url   		: url,
@@ -2000,14 +2044,15 @@ $(document).ready(function(){
 			var assign					=	$('#team_select_'+rel).attr("data-assign");
 			var title					=	$('#team_select_'+rel).attr("data-title");
 			var email					=	$('#team_select_'+rel).attr("data-email");
-			
+			var designation				=	$('#team_select_'+rel).attr("data-designation");
+
 			if(assign ==0)
 			{
 				$(this).addClass("btn-light-danger");
 				$(this).removeClass("btn-light-primary");
 				$(this).text('Remove');
 				$(this).attr("data-assign", 1);
-				AddEventPanel(title, email);
+				AddEventPanel(title, email, designation);
 			}
 			else if(assign ==1)
 			{
@@ -2020,7 +2065,7 @@ $(document).ready(function(){
 			
 	});
 
-  function AddEventPanel(name, email)
+  function AddEventPanel(name, email, designation)
   {
       var currentValue			=	$('#panellist').val();
       var cc_email				=	$('#cc_email').val();
@@ -2029,9 +2074,9 @@ $(document).ready(function(){
         var includeStr			=	currentValue.includes(name);
         if(includeStr  === false)
         {
-          var assignNewValue	=	currentValue +' , '+name;	
-          $('#panellist').val(assignNewValue);	
-          
+          var assignNewValue	=	currentValue +' , '+name;
+          $('#panellist').val(assignNewValue);
+
           var assignNewEmail	=	cc_email +' , '+email;
           $('#cc_email').val(assignNewEmail);
         }
@@ -2041,6 +2086,7 @@ $(document).ready(function(){
         $('#panellist').val(name);
         $('#cc_email').val(email);
       }
+      if (typeof isdRegisterPanelMeta === 'function') { isdRegisterPanelMeta(name, email, designation); }
       if (typeof isdSyncChipsFromField === 'function') { isdSyncChipsFromField(); }
   }
 
@@ -2554,6 +2600,7 @@ $( document ).ready(function() {
               $('#interview_schedule_drawer_toggle').trigger('click');
               KTDrawer.createInstances();
               KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2579,6 +2626,7 @@ $( document ).ready(function() {
               $('#interview_schedule_drawer_toggle').trigger('click');
               KTDrawer.createInstances();
               KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2595,7 +2643,7 @@ $( document ).ready(function() {
          				});
          });
 
-        $(document).on('click', '#interview_schedule_drawer_cancel, #data-dismiss', function(){
+        $(document).on('click', '#interview_schedule_drawer_cancel', function(){
               $('#interview_schedule_drawer_close').trigger('click');
         });
          
@@ -2678,6 +2726,7 @@ $( document ).ready(function() {
                           $('#interview_schedule_drawer_toggle').trigger('click');
                           KTDrawer.createInstances();
                           KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              window.isdShellSetStep('main');
                           $.ajax({
                                   type  		:	'GET',
                                   url   		:	url,

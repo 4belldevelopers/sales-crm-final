@@ -40,15 +40,6 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-wrap { font-family: 'Poppins', sans-serif; color: #3f4254; }
     .isd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
-    .isd-actionbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 10px 20px; background: #fff; border-bottom: 1px solid #eef0f4; }
-    .isd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-size: 12.5px; font-weight: 500; cursor: pointer; }
-    .isd-btn-cancel:hover { background: #f8f9fb; }
-    .isd-btn-primary { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left; line-height: 1.3; }
-    .isd-btn-primary small { display: block; font-size: 10px; font-weight: 400; opacity: .85; }
-    .isd-btn-primary:hover { filter: brightness(.94); }
-    .isd-btn-primary:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
-    .isd-btn-back { border: 1px solid #e4e6ef; background: #fff; color: #3e97ff; border-radius: 8px; padding: 9px 16px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-
     .isd-info-strip { display: flex; align-items: center; gap: 26px; padding: 14px 20px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
     .isd-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
     .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 200px; }
@@ -62,21 +53,31 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px 30px; }
     .isd-sidebar { flex: 0 0 34%; max-width: 320px; padding: 16px 16px 30px; border-left: 1px solid #eef0f4; background: #fbfbfd; }
 
-    .isd-sec { margin-bottom: 22px; }
-    .isd-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .isd-sec { margin-bottom: 18px; }
+    .isd-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+    .isd-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .isd-sec-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .isd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
     .isd-sec-sub { font-size: 10.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
 
-    .isd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .isd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .isd-grid + .isd-grid { margin-top: 12px; }
     .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
     .isd-field label .req { color: #f64e60; }
+    .isd-field label i { color: #a1a5b7; font-size: 11px; }
     .isd-field input, .isd-field select, .isd-field textarea { width: 100%; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 7px 9px; font-size: 12px; color: #181c32; background: #f8f9fb; }
     .isd-field input:disabled, .isd-field select:disabled, .isd-field textarea:disabled { color: #b5b5c3; cursor: not-allowed; background: #f1f1f4; }
     .isd-soon { display: inline-flex; align-items: center; font-size: 9px; font-weight: 600; color: #a1a5b7; background: #f1f1f4; border-radius: 5px; padding: 2px 6px; margin-left: 4px; text-transform: uppercase; letter-spacing: .3px; }
 
-    .isd-cal-row { display: flex; gap: 10px; margin-top: 4px; }
-    .isd-cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px dashed #e4e6ef; border-radius: 8px; padding: 8px; font-size: 11.5px; font-weight: 600; color: #b5b5c3; background: #f8f9fb; cursor: not-allowed; }
+    .isd-datetime-pill { display: flex; align-items: center; border: 1.5px solid #e4e6ef; border-radius: 8px; background: #f8f9fb; padding: 0 9px; }
+    .isd-datetime-pill i { color: #7e8299; font-size: 12px; margin-right: 8px; }
+    .isd-datetime-pill input { border: none !important; background: transparent !important; padding: 7px 4px !important; width: auto; flex: 1 1 auto; min-width: 0; }
+    .isd-datetime-pill .sep { width: 1px; height: 18px; background: #e4e6ef; flex-shrink: 0; }
+
+    .isd-cal-row { display: flex; gap: 10px; }
+    .isd-cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 9px; font-size: 11.5px; font-weight: 600; color: #3f4254; background: #fff; cursor: pointer; transition: .15s; }
+    .isd-cal-btn:hover { border-color: #3e97ff; color: #3e97ff; background: #f5f9ff; }
+    .isd-cal-btn i { font-size: 13px; }
 
     .isd-tile-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .isd-tile { flex: 1 1 100px; max-width: 138px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; background: #fff; position: relative; transition: .15s; }
@@ -95,30 +96,35 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 10px; }
     .isd-icon-btn:hover { background: #f8f9fb; color: #3e97ff; }
 
-    .isd-panel-add { display: flex; gap: 8px; margin-bottom: 10px; }
+    .isd-panel-add { display: flex; gap: 8px; margin-bottom: 12px; }
     .isd-panel-add input { flex: 1; }
-    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 0 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 0 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
     .isd-btn-add-panel:hover { background: #f5f9ff; }
-    .isd-panel-list { display: flex; flex-direction: column; gap: 8px; }
-    .isd-panel-row { display: flex; align-items: center; gap: 10px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 7px 10px; }
-    .isd-panel-row .isd-avatar { width: 30px; height: 30px; font-size: 11px; }
-    .isd-panel-name { font-size: 11.5px; font-weight: 700; color: #181c32; word-break: break-all; }
-    .isd-panel-tags { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
-    .isd-role-tag { font-size: 9px; font-weight: 600; color: #b5b5c3; background: #f1f1f4; border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
-    .isd-panel-del { width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+    .isd-panel-list { display: flex; flex-direction: column; gap: 10px; }
+    .isd-panel-empty { font-size: 11.5px; color: #a1a5b7; text-align: center; padding: 10px 0; }
+    .isd-panel-row { display: flex; align-items: center; gap: 12px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 12px; }
+    .isd-panel-row .isd-avatar { width: 38px; height: 38px; font-size: 13px; }
+    .isd-panel-info { min-width: 0; flex: 1 1 auto; }
+    .isd-panel-name { font-size: 12.5px; font-weight: 700; color: #181c32; word-break: break-word; }
+    .isd-panel-email { font-size: 10.5px; color: #7e8299; margin-top: 2px; }
+    .isd-panel-email i { margin-right: 5px; color: #a1a5b7; }
+    .isd-panel-tags { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+    .isd-role-tag { font-size: 10px; font-weight: 600; color: #3e97ff; background: #eef4ff; border-radius: 6px; padding: 4px 9px; white-space: nowrap; }
+    .isd-panel-del { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; }
     .isd-panel-del:hover { background: #fff5f8; }
-    .isd-check-avail { font-size: 10.5px; color: #b5b5c3; margin-top: 10px; cursor: not-allowed; display: inline-flex; align-items: center; gap: 6px; }
+    .isd-check-avail { font-size: 10.5px; color: #a1a5b7; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
 
     .isd-notify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .isd-notify { display: flex; align-items: flex-start; gap: 9px; border: 1.5px solid #eef0f4; border-radius: 9px; padding: 8px 10px; }
+    .isd-notify i { color: #7e8299; font-size: 12px; margin-top: 1px; }
     .isd-notify input[type=checkbox] { margin-top: 2px; width: 14px; height: 14px; accent-color: #3e97ff; flex-shrink: 0; }
     .isd-notify .t { font-size: 11px; font-weight: 600; color: #181c32; }
     .isd-notify .d { font-size: 9.5px; color: #7e8299; }
     .isd-notify.is-disabled .t, .isd-notify.is-disabled .d { color: #b5b5c3; }
+    .isd-notify.is-disabled i { color: #cdd4e0; }
 
-    .isd-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 14px 15px; margin-bottom: 14px; }
-    .isd-card-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
-    .isd-card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #3e97ff; flex-shrink: 0; }
+    .isd-sidebar-card-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+    .isd-sidebar-card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #3e97ff; flex-shrink: 0; }
     .isd-sum-row { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; }
     .isd-sum-row:last-child { border-bottom: none; }
     .isd-sum-ico { width: 24px; height: 24px; border-radius: 7px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
@@ -129,20 +135,19 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-status-chip.incomplete { background: #fff4de; color: #ffa800; }
     .isd-status-chip.ready { background: #e3fbe9; color: #06c732; }
 
-    .isd-avail-card { position: relative; }
-    .isd-avail-blur { filter: blur(2.5px); opacity: .5; pointer-events: none; }
-    .isd-soon-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-    .isd-soon-badge { background: #fff; border: 1px solid #eef0f4; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-radius: 8px; padding: 5px 12px; font-size: 10.5px; font-weight: 700; color: #7e8299; }
+    .isd-avail-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; font-size: 11px; }
+    .isd-avail-row:last-child { border-bottom: none; }
+    .isd-avail-row i { color: #06c732; font-size: 11px; width: 16px; text-align: center; }
+    .isd-avail-empty { font-size: 10.5px; color: #a1a5b7; text-align: center; padding: 8px 0; }
+
     .isd-quick-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 11px; }
-    .isd-quick-row .k { color: #7e8299; }
+    .isd-quick-row .k { color: #7e8299; display: flex; align-items: center; gap: 6px; }
+    .isd-quick-row .k i { color: #a1a5b7; font-size: 10px; width: 12px; }
     .isd-quick-row .v { color: #181c32; font-weight: 700; text-align: right; }
 
     .isd-hidden-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
 
-    .isd-email-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #eef0f4; }
-    .isd-email-title { font-size: 14px; font-weight: 700; color: #181c32; }
-    .isd-email-body { padding: 18px 20px; }
-    .isd-email-foot { position: sticky; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: #fff; border-top: 1px solid #eef0f4; }
+    .isd-email-inline-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 14px; }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
@@ -216,7 +221,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                 altFormat: "d-M-Y",
                 minDate: "today",
                 onReady: function (selectedDates, dateStr, instance) {
-                    instance.altInput.style.width = "129px";
+                    instance.altInput.style.width = "110px";
                 }
             });
       }, 500);
@@ -286,17 +291,25 @@ $country_code =  GeneralMethod::countryCodeFun();
     @php
         $isdFullName = trim(@$application->full_name);
         $isdInitial = $isdFullName !== '' ? strtoupper($isdFullName[0]) : '?';
+
+        // Candidate-proposed interview slots, captured during the candidate's own
+        // application submission (job_applications.interviewDateOne..Six /
+        // interview_mode_one..six) — real data, not tracked anywhere else.
+        $isdAvailabilitySlots = [];
+        for ($isdI = 1; $isdI <= 6; $isdI++) {
+            $isdDateField = 'interviewDate' . ['One', 'Two', 'Three', 'Four', 'Five', 'Six'][$isdI - 1];
+            $isdModeField = 'interview_mode_' . ['one', 'two', 'three', 'four', 'five', 'six'][$isdI - 1];
+            $isdSlotDate = @$application->{$isdDateField};
+            if (!empty($isdSlotDate)) {
+                $isdAvailabilitySlots[] = [
+                    'date' => $isdSlotDate,
+                    'mode' => @$application->{$isdModeField},
+                ];
+            }
+        }
     @endphp
 
     <div id="div_interview_schedule_first" class="isd-wrap">
-        <div class="isd-actionbar">
-            <button type="button" class="isd-btn-cancel" id="data-dismiss">Cancel</button>
-            <button type="button" class="isd-btn-primary" id="isdSubmitBtn" onclick="submitForm();">
-                <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
-                <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-            </button>
-        </div>
-
         <div class="isd-info-strip">
             <div class="isd-info-cand">
                 <div class="isd-avatar bg-light-primary text-primary">{{ $isdInitial }}</div>
@@ -323,24 +336,25 @@ $country_code =  GeneralMethod::countryCodeFun();
             <div class="isd-main">
 
                 <!-- Section 1: Interview Details -->
-                <div class="isd-sec">
+                <div class="isd-sec isd-card">
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#3e97ff;">1</span>
                         <div><div class="isd-sec-title">Interview Details</div><div class="isd-sec-sub">When &amp; for how long</div></div>
                     </div>
                     <div class="isd-grid">
                         <div class="isd-field">
-                            <label>Date <span class="req">*</span></label>
-                            <input class="form-control" placeholder="Select date" name="interviewDate" id="interviewDate"
-                                value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly">
+                            <label><i class="fa fa-calendar"></i> Date &amp; Time <span class="req">*</span></label>
+                            <div class="isd-datetime-pill">
+                                <i class="fa fa-calendar"></i>
+                                <input class="form-control" placeholder="Select date" name="interviewDate" id="interviewDate"
+                                    value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly">
+                                <span class="sep"></span>
+                                <input class="form-control" placeholder="Select time" name="interviewTime" id="interviewTime"
+                                    value="{{ (($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('h:i A') : '') }}" type="text" readonly="readonly">
+                            </div>
                         </div>
                         <div class="isd-field">
-                            <label>Time <span class="req">*</span></label>
-                            <input class="form-control" placeholder="Select time" name="interviewTime" id="interviewTime"
-                                value="{{ (($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('h:i A') : '') }}" type="text" readonly="readonly">
-                        </div>
-                        <div class="isd-field">
-                            <label>Timezone <span class="req">*</span></label>
+                            <label><i class="fa fa-globe"></i> Timezone <span class="req">*</span></label>
                             <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone...">
                                 <option value="">Select a timezone...</option>
                                 @if(!empty($timezone))
@@ -364,26 +378,43 @@ $country_code =  GeneralMethod::countryCodeFun();
                             </select>
                         </div>
                         <div class="isd-field">
-                            <label>Duration <span class="isd-soon">Coming soon</span></label>
-                            <select disabled><option>45 Minutes</option></select>
-                        </div>
-                        <div class="isd-field">
-                            <label>Interview Round <span class="isd-soon">Coming soon</span></label>
-                            <select disabled><option>—</option></select>
+                            <label><i class="fa fa-clock-o"></i> Duration</label>
+                            <select id="isdDuration">
+                                <option value="15">15 Minutes</option>
+                                <option value="30">30 Minutes</option>
+                                <option value="45" selected>45 Minutes</option>
+                                <option value="60">60 Minutes</option>
+                                <option value="90">90 Minutes</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="isd-field" style="margin-top:10px;">
-                        <label>Add to Calendar <span class="isd-soon">Coming soon</span></label>
-                        <div class="isd-cal-row">
-                            <div class="isd-cal-btn">Google Calendar</div>
-                            <div class="isd-cal-btn">Outlook Calendar</div>
+                    <div class="isd-grid">
+                        <div class="isd-field">
+                            <label><i class="fa fa-list"></i> Interview Round</label>
+                            <select id="isdInterviewRound">
+                                @if(!empty($interview_processes) && count($interview_processes))
+                                    <option value="">Select round</option>
+                                    @foreach($interview_processes as $ipRow)
+                                        <option value="{{ $ipRow->id }}">{{ ucfirst($ipRow->name) }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="">No interview rounds configured</option>
+                                @endif
+                            </select>
+                        </div>
+                        <div class="isd-field">
+                            <label><i class="fa fa-calendar-o"></i> Add to Calendar</label>
+                            <div class="isd-cal-row">
+                                <div class="isd-cal-btn" id="isdGoogleCalBtn"><i class="fa fa-google"></i> Google Calendar</div>
+                                <div class="isd-cal-btn" id="isdOutlookCalBtn"><i class="fa fa-calendar"></i> Outlook Calendar</div>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" class="btn-check" name="interview_type" value="1" id="fresh" {{ (@$reschedule == 1) ? '' : 'checked="checked"' }}>
                 </div>
 
                 <!-- Section 2: Interview Mode -->
-                <div class="isd-sec">
+                <div class="isd-sec isd-card">
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#c000ff;">2</span>
                         <div><div class="isd-sec-title">Interview Mode</div><div class="isd-sec-sub">How will interview happen</div></div>
@@ -421,50 +452,48 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <div class="isd-link-row">
                             <input type="text" id="isdMeetingLinkDisplay" readonly>
                             <div class="isd-link-actions">
-                                <span class="isd-icon-btn" title="Open" id="isdLinkOpen">&#8599;</span>
-                                <span class="isd-icon-btn" title="Refresh" id="isdLinkRefresh">&#8635;</span>
-                                <span class="isd-icon-btn" title="Copy" id="isdLinkCopy">&#128203;</span>
+                                <span class="isd-icon-btn" title="Open" id="isdLinkOpen"><i class="fa fa-external-link"></i></span>
+                                <span class="isd-icon-btn" title="Refresh" id="isdLinkRefresh"><i class="fa fa-refresh"></i></span>
+                                <span class="isd-icon-btn" title="Copy" id="isdLinkCopy"><i class="fa fa-clipboard"></i></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Section 3: Interview Panel -->
-                <div class="isd-sec">
+                <div class="isd-sec isd-card">
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#06c732;">3</span>
                         <div><div class="isd-sec-title">Interview Panel</div><div class="isd-sec-sub">Who will interview</div></div>
                     </div>
                     <div class="isd-panel-add">
-                        <input class="form-control form-control-solid in_tr_email_panel" data-panel="1" id="isdPanelInput"
-                            placeholder="Enter panellist name or email">
+                        <input class="form-control form-control-solid" id="isdPanelInput" placeholder="Enter panellist name or email">
                         <a href="javascript:;" class="isd-btn-add-panel in_tr_email_panel" data-bs-toggle="modal" data-panel="1"
-                            data-bs-target="#kt_modal_create_project">+ Add Interview Panel</a>
+                            data-bs-target="#kt_modal_create_project"><i class="fa fa-plus"></i> Add Interview Panel</a>
                     </div>
-                    <input class="form-control form-control-solid in_tr_email_panel isd-hidden-native" data-panel="1" name="panellist" id="panellist"
-                        placeholder="Enter panellist" value="">
+                    <input class="isd-hidden-native" name="panellist" id="panellist" value="">
                     <div class="isd-panel-list" id="isdPanelList"></div>
-                    <div class="isd-check-avail">Check Availability for All Panelists <span class="isd-soon">Coming soon</span></div>
+                    <div class="isd-check-avail"><i class="fa fa-clock-o"></i> Panelist availability isn't tracked yet <span class="isd-soon">Coming soon</span></div>
                 </div>
 
                 <!-- Section 4: Notifications -->
-                <div class="isd-sec">
+                <div class="isd-sec isd-card">
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#ff7a00;">4</span>
                         <div><div class="isd-sec-title">Notifications</div><div class="isd-sec-sub">Who should be notified</div></div>
                     </div>
                     <div class="isd-notify-grid">
-                        <label class="isd-notify"><input type="checkbox" id="isdNotifyEmail" checked><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span></label>
-                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span></label>
-                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span></label>
-                        <label class="isd-notify is-disabled"><input type="checkbox" disabled><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span></label>
+                        <label class="isd-notify"><i class="fa fa-envelope"></i><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span><input type="checkbox" id="isdNotifyEmail" checked style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="fa fa-whatsapp"></i><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="fa fa-window-maximize"></i><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="fa fa-calendar"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
                     </div>
-                    <div style="margin-top:10px;">
-                        <a href="javascript:void(0);" id="send_email_invies" style="font-size:11.5px;font-weight:600;color:#3e97ff;">Customize &amp; send invite email &rarr;</a>
+                    <div style="margin-top:12px;">
+                        <a href="javascript:void(0);" id="send_email_invies" style="font-size:11.5px;font-weight:600;color:#3e97ff;"><i class="fa fa-pencil"></i> Customize &amp; send invite email</a>
                     </div>
                 </div>
 
-                <div class="isd-sec">
+                <div class="isd-sec isd-card">
                     <div class="isd-field">
                         <label>Notes / Special Instructions <span class="isd-soon">Coming soon</span></label>
                         <textarea rows="3" disabled placeholder="Not available yet"></textarea>
@@ -477,42 +506,45 @@ $country_code =  GeneralMethod::countryCodeFun();
 
             <div class="isd-sidebar">
                 <div class="isd-card">
-                    <div class="isd-card-title"><span class="dot"></span>Interview Summary</div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#128197;</div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#127760;</div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#127916;</div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#128101;</div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#9993;</div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico">&#9989;</div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
-                </div>
-
-                <div class="isd-card isd-avail-card">
-                    <div class="isd-card-title"><span class="dot" style="background:#06c732;"></span>Candidate Availability</div>
-                    <div class="isd-avail-blur">
-                        <div class="isd-quick-row"><span class="k">Mon</span><span class="v">—</span></div>
-                        <div class="isd-quick-row"><span class="k">Tue</span><span class="v">—</span></div>
-                        <div class="isd-quick-row"><span class="k">Wed</span><span class="v">—</span></div>
-                    </div>
-                    <div class="isd-soon-overlay"><span class="isd-soon-badge">Coming soon</span></div>
+                    <div class="isd-sidebar-card-title"><span class="dot"></span>Interview Summary</div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-calendar"></i></div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-globe"></i></div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-video-camera"></i></div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-users"></i></div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-envelope"></i></div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="fa fa-check-circle"></i></div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
                 </div>
 
                 <div class="isd-card">
-                    <div class="isd-card-title"><span class="dot" style="background:#ffa800;"></span>Quick Info</div>
-                    <div class="isd-quick-row"><span class="k">Job ID</span><span class="v">{{ @$application->jobId }}</span></div>
-                    <div class="isd-quick-row"><span class="k">Applied For</span><span class="v">{{ @$application->job_title }}</span></div>
-                    <div class="isd-quick-row"><span class="k">Current Stage</span><span class="v">{{ trim(@$application->master_status_name) }}</span></div>
-                    <div class="isd-quick-row"><span class="k">Source</span><span class="v">{{ @$submitted_by_company }}</span></div>
+                    <div class="isd-sidebar-card-title"><span class="dot" style="background:#06c732;"></span>Candidate Availability</div>
+                    @if(count($isdAvailabilitySlots))
+                        @foreach($isdAvailabilitySlots as $isdSlot)
+                            <div class="isd-avail-row">
+                                <i class="fa fa-check-circle"></i>
+                                <span>{{ \Carbon\Carbon::parse($isdSlot['date'])->format('D, d M · h:i A') }}
+                                    @if(!empty($isdSlot['mode'])) &middot; {{ $isdSlot['mode'] }} @endif
+                                </span>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="isd-avail-empty">No availability shared during application</div>
+                    @endif
+                </div>
+
+                <div class="isd-card">
+                    <div class="isd-sidebar-card-title"><span class="dot" style="background:#ffa800;"></span>Quick Info</div>
+                    <div class="isd-quick-row"><span class="k"><i class="fa fa-briefcase"></i>Job ID</span><span class="v">{{ @$application->jobId }}</span></div>
+                    <div class="isd-quick-row"><span class="k"><i class="fa fa-list-alt"></i>Applied For</span><span class="v">{{ @$application->job_title }}</span></div>
+                    <div class="isd-quick-row"><span class="k"><i class="fa fa-star"></i>Current Stage</span><span class="v">{{ trim(@$application->master_status_name) }}</span></div>
+                    <div class="isd-quick-row"><span class="k"><i class="fa fa-user"></i>Source</span><span class="v">{{ @$submitted_by_company }}</span></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="div_interview_schedule_second" class="isd-wrap" style="display:none">
-        <div class="isd-email-head">
-            <div class="isd-email-title">Interview Schedule Email</div>
-            <button type="button" class="isd-btn-cancel" id="isdSecondClose">Cancel</button>
-        </div>
-        <div class="isd-email-body">
+        <div class="isd-main" style="padding:20px;">
+            <div class="isd-email-inline-head">Interview Schedule Email</div>
             <div class="form-group row mb-4">
                 <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
                 <div class="col-lg-10 col-xl-10">
@@ -582,13 +614,11 @@ $country_code =  GeneralMethod::countryCodeFun();
                 </div>
             </div>
         </div>
-        <div class="isd-email-foot">
-            <button type="button" class="isd-btn-back divback">Back</button>
-            <button type="button" id="sendEmailBtn" class="isd-btn-primary">
-                <span class="indicator-label">Send Email</span>
-                <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-            </button>
-        </div>
+        <!-- Back/Send Email live in the shared drawer topbar now (window.isdShellSetStep);
+             these stay as hidden proxies so the existing .divback / #sendEmailBtn click
+             handlers below keep working untouched. -->
+        <button type="button" class="divback isd-hidden-native"></button>
+        <button type="button" id="sendEmailBtn" class="isd-hidden-native"></button>
     </div>
 </form>
 
@@ -742,7 +772,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                             }else{
                                 $('#cc_email').val(hiring_namager+','+cp_name_0);
                             }
-                            // keep the chip UI in sync with the underlying #panellist value
+                            if (typeof isdRegisterPanelMeta === 'function') { isdRegisterPanelMeta(cp_name_0, cp_email_0, cp_desigination_0); }
                             isdSyncChipsFromField();
                         }else{
                             var hiring_namager2 = $('#cc_email').val();
@@ -831,15 +861,12 @@ $country_code =  GeneralMethod::countryCodeFun();
 
             $('#div_interview_schedule_first').hide();
             $('#div_interview_schedule_second').show();
+            window.isdShellSetStep('email');
         });
         $('body').on('click', '.divback', function() {
             $('#div_interview_schedule_first').show();
             $('#div_interview_schedule_second').hide();
-        });
-        // "Cancel" in the email-compose step closes the drawer entirely (same as
-        // the main step's Cancel), distinct from "Back" which just returns a step.
-        $('body').on('click', '#isdSecondClose', function() {
-            $('#interview_schedule_drawer_close').trigger('click');
+            window.isdShellSetStep('main');
         });
     });
 
@@ -871,9 +898,9 @@ $country_code =  GeneralMethod::countryCodeFun();
             return false;
         }
 
-        $("#isdSubmitBtn").prop("disabled", true);
-        $('#isdSubmitBtn .indicator-label').hide();
-        $('#isdSubmitBtn .indicator-progress').show();
+        $("#interview_schedule_drawer_primary").prop("disabled", true);
+        $('#interview_schedule_drawer_primary .indicator-label').hide();
+        $('#interview_schedule_drawer_primary .indicator-progress').show();
 
         $.ajax({
             url: '{{ route('service_company.job-applications.store-schedule') }}',
@@ -883,20 +910,20 @@ $country_code =  GeneralMethod::countryCodeFun();
             success: function(response) {
                 if (response.status == 'success') {
                     Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
-                        $("#data-dismiss").click();
+                        $('#interview_schedule_drawer_close').trigger('click');
                         location.reload();
                     });
                 }
                 if (response.status == 'coinCheck') {
                     Swal.fire("Success", ` ${response.message}`, "warning").then(function() {
-                        $("#data-dismiss").click();
+                        $('#interview_schedule_drawer_close').trigger('click');
                     });
                 }
             },
             complete: function() {
-                $("#isdSubmitBtn").prop("disabled", false);
-                $('#isdSubmitBtn .indicator-label').show();
-                $('#isdSubmitBtn .indicator-progress').hide();
+                $("#interview_schedule_drawer_primary").prop("disabled", false);
+                $('#interview_schedule_drawer_primary .indicator-label').show();
+                $('#interview_schedule_drawer_primary .indicator-progress').hide();
             }
         })
     }
@@ -931,7 +958,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                             submitForm();
                         } else {
                             Swal.fire("Success", "Interview schedule successfully!", "success").then(function() {
-                                $("#data-dismiss").click();
+                                $('#interview_schedule_drawer_close').trigger('click');
                             });
                         }
                     }
@@ -1100,12 +1127,12 @@ $country_code =  GeneralMethod::countryCodeFun();
        or how — it only mirrors/sets the same real fields the legacy
        dropdowns always used.
        ===================================================================== */
-    var isdFamilyIcons = { 1: '&#128222;', 2: '&#128250;', 3: '&#128101;', 4: '&#8943;' };
-    var isdLeafIcons = { 'google meet':'&#128249;', 'zoom':'&#128249;', 'microsoft teams':'&#128249;', 'skype call':'&#128222;', 'phone call':'&#128222;' };
+    var isdFamilyIcons = { 1: 'fa-phone', 2: 'fa-video-camera', 3: 'fa-map-marker', 4: 'fa-ellipsis-h' };
+    var isdLeafIcons = { 'google meet':'fa-google', 'zoom':'fa-video-camera', 'microsoft teams':'fa-windows', 'skype call':'fa-skype', 'phone call':'fa-phone' };
 
     function isdLeafIcon(name){
         var key = (name||'').toLowerCase();
-        return isdLeafIcons[key] || '&#128204;';
+        return isdLeafIcons[key] || 'fa-map-marker';
     }
 
     function isdRenderFamilyTiles(){
@@ -1114,8 +1141,8 @@ $country_code =  GeneralMethod::countryCodeFun();
             var val = $(this).val();
             if (val === '') return;
             var tile = $('<div class="isd-tile" data-family-val="'+val+'">' +
-                '<span class="chk">&#10003;</span>' +
-                '<div class="ic">'+(isdFamilyIcons[val] || '&#128197;')+'</div>' +
+                '<span class="chk"><i class="fa fa-check"></i></span>' +
+                '<div class="ic"><i class="fa '+(isdFamilyIcons[val] || 'fa-calendar')+'"></i></div>' +
                 '<div class="nm"></div></div>');
             tile.find('.nm').text($(this).text());
             if ($(this).is(':selected')) tile.addClass('is-selected');
@@ -1132,10 +1159,10 @@ $country_code =  GeneralMethod::countryCodeFun();
         real.each(function(){
             var val = $(this).val();
             var tile = $('<div class="isd-tile" data-leaf-val="'+val+'">' +
-                '<span class="chk">&#10003;</span>' +
+                '<span class="chk"><i class="fa fa-check"></i></span>' +
                 '<div class="ic"></div>' +
                 '<div class="nm"></div></div>');
-            tile.find('.ic').html(isdLeafIcon($(this).text()));
+            tile.find('.ic').html('<i class="fa '+isdLeafIcon($(this).text())+'"></i>');
             tile.find('.nm').text($(this).text());
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
@@ -1143,7 +1170,7 @@ $country_code =  GeneralMethod::countryCodeFun();
         // Video mode also gets a disabled "Client Portal" tile — not a real
         // interview_mode_lavel row, shown for parity with the target design.
         if ($('#interview_mode').val() == '2') {
-            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic">&#128249;</div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="fa fa-window-maximize"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
         }
     }
 
@@ -1195,6 +1222,14 @@ $country_code =  GeneralMethod::countryCodeFun();
     $(document).on('input', '#isdMeetingLinkDisplay', function(){ $('#url').val($(this).val()); isdUpdateSummary(); });
 
     // ---- panel chips: presentation over the real, single #panellist field ----
+    // isdPanelMeta caches {email, designation} for entries added via the real
+    // team-picker (contact-persion-with-team.blade.php's "Add Interview Panel"
+    // drawer) so the chip can show real designation/email instead of guessing.
+    var isdPanelMeta = {};
+    function isdRegisterPanelMeta(name, email, designation){
+        if (!name) return;
+        isdPanelMeta[name.trim()] = { email: (email||'').trim(), designation: (designation||'').trim() };
+    }
     function isdPanelListArray(){
         var raw = ($('#panellist').val() || '').trim();
         if (!raw) return [];
@@ -1203,16 +1238,27 @@ $country_code =  GeneralMethod::countryCodeFun();
     function isdRenderPanelChips(){
         var list = isdPanelListArray();
         var wrap = $('#isdPanelList').empty();
+        if (list.length === 0) {
+            wrap.append('<div class="isd-panel-empty">No panelists added yet</div>');
+        }
         list.forEach(function(entry, idx){
+            var meta = isdPanelMeta[entry];
             var initial = entry.trim()[0] ? entry.trim()[0].toUpperCase() : '?';
             var row = $('<div class="isd-panel-row"></div>');
             row.append('<div class="isd-avatar bg-light-success text-success">'+initial+'</div>');
-            row.append('<div class="isd-panel-name">'+$('<div>').text(entry).html()+'</div>');
+            var info = $('<div class="isd-panel-info"></div>');
+            info.append($('<div class="isd-panel-name"></div>').text(entry));
+            if (meta && meta.email) {
+                info.append($('<div class="isd-panel-email"><i class="fa fa-envelope"></i></div>').append(document.createTextNode(meta.email)));
+            }
+            row.append(info);
             var tags = $('<div class="isd-panel-tags"></div>');
-            tags.append('<span class="isd-role-tag">Role <span style="font-size:8px;">soon</span></span>');
-            tags.append('<span class="isd-role-tag">Available <span style="font-size:8px;">soon</span></span>');
-            var del = $('<button type="button" class="isd-panel-del">&#10005;</button>');
+            if (meta && meta.designation) {
+                tags.append($('<span class="isd-role-tag"></span>').text(meta.designation));
+            }
+            var del = $('<button type="button" class="isd-panel-del"><i class="fa fa-trash"></i></button>');
             del.on('click', function(){
+                delete isdPanelMeta[entry];
                 list.splice(idx, 1);
                 $('#panellist').val(list.join(','));
                 isdRenderPanelChips();
@@ -1258,10 +1304,73 @@ $country_code =  GeneralMethod::countryCodeFun();
     }
     $(document).on('change', '#interviewDate, #interviewTime, #timezone, #isdNotifyEmail', isdUpdateSummary);
 
+    // ---- Add to Calendar: fully client-side, built from the real form fields
+    // (date/time/timezone/duration/meeting link) — no backend/API needed. ----
+    function isdBuildEventDetails(){
+        var d = $('#interviewDate').val();
+        var t = $('#interviewTime').val();
+        if (!d || !t) return null;
+        var dParts = d.split('-');
+        if (dParts.length !== 3) return null;
+        var dd = parseInt(dParts[0], 10), mm = parseInt(dParts[1], 10), yyyy = parseInt(dParts[2], 10);
+
+        var hh, min;
+        var ampmMatch = t.match(/(\d{1,2}):(\d{2})\s*([AaPp][Mm])/);
+        if (ampmMatch) {
+            hh = parseInt(ampmMatch[1], 10);
+            min = parseInt(ampmMatch[2], 10);
+            var ap = ampmMatch[3].toUpperCase();
+            if (ap === 'PM' && hh !== 12) hh += 12;
+            if (ap === 'AM' && hh === 12) hh = 0;
+        } else {
+            var parts24 = t.split(':');
+            hh = parseInt(parts24[0], 10);
+            min = parseInt(parts24[1], 10);
+        }
+
+        var durationMin = parseInt($('#isdDuration').val() || '45', 10);
+        var start = new Date(yyyy, mm - 1, dd, hh, min);
+        var end = new Date(start.getTime() + durationMin * 60000);
+
+        function pad(n){ return (n < 10 ? '0' : '') + n; }
+        function fmt(dt){
+            return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + '00';
+        }
+
+        var candidateName = $.trim($('.isd-info-name').first().clone().children().remove().end().text()) || 'Candidate';
+        return {
+            title: 'Interview: ' + candidateName,
+            start: fmt(start),
+            end: fmt(end),
+            location: $('#isdMeetingLinkDisplay').val() || ''
+        };
+    }
+    $(document).on('click', '#isdGoogleCalBtn', function(){
+        var ev = isdBuildEventDetails();
+        if (!ev) { Swal.fire('Required', 'Please select date and time first', 'warning'); return; }
+        var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(ev.title) +
+            '&dates=' + ev.start + '/' + ev.end + '&location=' + encodeURIComponent(ev.location);
+        window.open(url, '_blank');
+    });
+    $(document).on('click', '#isdOutlookCalBtn', function(){
+        var ev = isdBuildEventDetails();
+        if (!ev) { Swal.fire('Required', 'Please select date and time first', 'warning'); return; }
+        var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTART:' + ev.start + '\r\nDTEND:' + ev.end +
+            '\r\nSUMMARY:' + ev.title + '\r\nLOCATION:' + ev.location + '\r\nEND:VEVENT\r\nEND:VCALENDAR';
+        var blob = new Blob([ics], { type: 'text/calendar' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'interview.ics';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
     $(document).ready(function(){
         isdRenderFamilyTiles();
         isdRenderLeafTiles();
         isdRenderPanelChips();
         isdUpdateSummary();
+        window.isdShellSetStep('main');
     });
 </script>
