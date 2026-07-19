@@ -11288,25 +11288,31 @@ protected $elasticService;
                             'negotiation'=>$negotiation
                     ];
                     GeneralMethod::teamRankElastic($teamRankElastic);
- 
+
                     DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->delete();
-                   
+
+                    // When this move IS a rejection (newStageId 7), the resume
+                    // point must be the stage being rejected FROM, not 7 itself —
+                    // recording 7 here permanently blocked ever moving back to
+                    // InReview/wherever the candidate was, since un-rejecting
+                    // later requires the target to match this recorded stage_id.
+                    $resumeStageId = ($newStageId == 7) ? $currentStageId : $master_status;
                     $values = array(
                         'job_id' => $data->jobId,
                         'candidate_id' => $data->candidate_id,
-                        'stage_id' => $master_status,
+                        'stage_id' => $resumeStageId,
                         'user_id' => $data->submitted_by,
                         'created_at' => date('Y-m-d'),
                         'updated_at' => date('Y-m-d')
- 
+
                     );
                     DB::table('stage_point_tb')->insert($values);
- 
+
                 }
             }
 
 		}
-       
+
 		if($master_status != 9){
 
 			// dd("this is error section ");
