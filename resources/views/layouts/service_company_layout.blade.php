@@ -504,13 +504,17 @@
 
   /* This drawer is opened from *inside* the already-open Job Details drawer
      (#kt_activitiesApplication, z-index 999999) — it must render above it,
-     not behind. KTDrawer's shared scrim also needs the same treatment. */
+     not behind. Its own overlay is deliberately disabled below (data-kt-drawer-overlay="false"):
+     a second shared .drawer-overlay would collide (same z-index) with the Job
+     Details drawer's overlay that's already dimming the page, which made both
+     drawers fight over the same backdrop and close unexpectedly. The page is
+     already dimmed by whichever drawer this one is nested inside; this one
+     just needs to render above it. */
   #interview_schedule_drawer { z-index: 99999999999 !important; }
-  .drawer-overlay { z-index: 99999999998 !important; }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
     data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
     data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
   <div class="d-flex flex-column h-100 w-100">
