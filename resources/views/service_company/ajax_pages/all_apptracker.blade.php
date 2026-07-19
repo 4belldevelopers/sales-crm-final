@@ -129,17 +129,23 @@
 
                     // Cross-agency, job-wide duplicate pool (opt-in) — this list is
                     // the job-owner's own view (every agency's submissions plus the
-                    // company's own recruiters, on the company's own job), so unlike
-                    // the single-company $flag badge above, this one carries full
-                    // attribution: which company, what stage, when. InReview rows are
-                    // excluded since they aren't the client's to manage yet.
+                    // company's own recruiters, on the company's own job). Unlike
+                    // the single-company $flag badge above, this one runs real
+                    // ownership arbitration (GeneralMethod::resolveDuplicateOwnership):
+                    // a Company Recruiter reserves ownership the instant it creates
+                    // the candidate (unless an agency already reached Sourcing
+                    // first); an Agency only earns ownership by being first to
+                    // Sourcing. Only the losing row shows this badge — the owner
+                    // never does, regardless of who else later shows up.
                     $crossAgencyBadgeHtml = '';
                     if (!empty(auth()->user()->company->enable_cross_agency_duplicate) && (int) $row->job_master_status_id !== 8) {
-                        $crossAgencyMatches = GeneralMethod::checkJobWideDuplicate($row->job_id, $row->email, $row->phone, $row->wiseId);
-                        if ($crossAgencyMatches->count() > 0) {
-                            $firstMatch = $crossAgencyMatches->first();
-                            $matchTitle = 'Also submitted by ' . ($firstMatch->company_name ?? 'another source') . ' — ' . ($firstMatch->stage_name ?? '') . ' — ' . GeneralMethod::ymdTodmyNotTime($firstMatch->created_at ?? '');
-                            $crossAgencyBadgeHtml = '<span class="badge my-1" style="background:#fef3c7;color:#92400e;font-weight:600;border:1px solid #fde68a;" title="' . htmlspecialchars($matchTitle, ENT_QUOTES) . '">Also in pipeline (' . $crossAgencyMatches->count() . ')</span>';
+                        $ownership = GeneralMethod::resolveDuplicateOwnership(auth()->user()->company_id, $row->job_id, $row->email, $row->phone, $row->wiseId);
+                        if (in_array($row->wiseId, $ownership->duplicateRowIds)) {
+                            $ownerRow = $ownership->rows->firstWhere('id', $ownership->ownerRowId);
+                            $matchTitle = $ownerRow
+                                ? ('Owned by ' . ($ownerRow->company_name ?? 'another source') . ' — ' . ($ownerRow->stage_name ?? '') . ' — ' . GeneralMethod::ymdTodmyNotTime($ownerRow->created_at ?? ''))
+                                : 'Also in this job\'s pipeline elsewhere';
+                            $crossAgencyBadgeHtml = '<span class="badge my-1" style="background:#fef3c7;color:#92400e;font-weight:600;border:1px solid #fde68a;" title="' . htmlspecialchars($matchTitle, ENT_QUOTES) . '">Duplicate — owned elsewhere</span>';
                         }
                     }
 
