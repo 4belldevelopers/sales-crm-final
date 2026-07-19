@@ -369,15 +369,28 @@ Two independent layers, both new this session, living in `app/Helper/GeneralMeth
     (`companies.enable_cross_agency_duplicate`, Account Settings). Purely advisory —
     never blocks the transition or the coin deduction that happens right before it. The
     losing agency gets a generic toast (no company/stage attribution — privacy,
-    competitive sensitivity); the job-owning company sees full attribution (which
-    company, what stage, when) as a badge on their own AppTracker row list
-    (`all_apptracker.blade.php`), computed fresh on every render.
+    competitive sensitivity).
   - **Not** wired into `stage_submit()` (plain flow) — there is no equivalent "just
     became visible to the client" moment there to attach it to.
-  - Also drives the **"Ownership" column, row 2** on CV Tracker (`all_candidates.blade.php`)
-    and ClientApp (`clientappdata_ajax.blade.php`): shows the arbitration *winner's*
-    company, not just whoever happens to have submitted that specific row — those can
-    differ once another submitter has already established ownership.
+  - **2026-07-19 (later same day) — AppTracker's badge removed.** `all_apptracker.blade.php`
+    briefly called `resolveDuplicateOwnership()` live, per row, on every page render (a
+    real, measured cost: ~4–5 queries per non-InReview row, two of which — the
+    company's `app_duplicate` mode and the "Sourcing" label — don't even vary per row
+    within the same page load and were being re-fetched anyway). **Removed on explicit
+    instruction**: ownership/duplicate state must be decided once, by the centralized
+    engine at its one hook point above, never recomputed during Blade rendering.
+    `all_apptracker.blade.php` now only reflects the pre-existing `$flag`
+    (`$row->duplicate` / `$row->wise_duplicate`, written once at candidate-creation
+    time by `checkDuplicateCandidate()`) — **not** an ownership-engine-arbitrated
+    value, since nothing currently persists `resolveDuplicateOwnership()`'s verdict
+    anywhere; its only effect today is the toast at the hook above. Wiring the engine's
+    result into a persisted, render-safe column is explicitly **not done yet** — flag
+    this doc as stale on that point the moment it is.
+  - The **"Ownership" column, row 2** on CV Tracker (`all_candidates.blade.php`) and
+    ClientApp (`clientappdata_ajax.blade.php`) **still calls `resolveDuplicateOwnership()`
+    live at render time** — the exact same pattern just removed from AppTracker. Not
+    touched by the 2026-07-19 removal above since it wasn't in scope of that specific
+    instruction; revisit for consistency.
 
 ### 8.5 Key files (this session's additions)
 
