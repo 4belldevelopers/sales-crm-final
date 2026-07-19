@@ -386,11 +386,26 @@ Two independent layers, both new this session, living in `app/Helper/GeneralMeth
     anywhere; its only effect today is the toast at the hook above. Wiring the engine's
     result into a persisted, render-safe column is explicitly **not done yet** — flag
     this doc as stale on that point the moment it is.
-  - The **"Ownership" column, row 2** on CV Tracker (`all_candidates.blade.php`) and
-    ClientApp (`clientappdata_ajax.blade.php`) **still calls `resolveDuplicateOwnership()`
-    live at render time** — the exact same pattern just removed from AppTracker. Not
-    touched by the 2026-07-19 removal above since it wasn't in scope of that specific
-    instruction; revisit for consistency.
+  - **Update, same day**: the **"Ownership" column, row 2** on CV Tracker
+    (`all_candidates.blade.php`) and ClientApp (`clientappdata_ajax.blade.php`) had the
+    identical live `resolveDuplicateOwnership()` call — flagged above as inconsistent,
+    now also removed on explicit follow-up instruction. **Standing decision going
+    forward**: no page anywhere may call `resolveDuplicateOwnership()` (or any future
+    replacement) during Blade rendering, and no new persistence gets added ad hoc.
+    Both columns now show only the plain submitter-company chain
+    (`submitted_by_company_name` → `post_company_name` → `company_name`) — the
+    pre-ownership-engine behavior. The **only** remaining call site in the entire
+    codebase is `client_stage_submit()`'s hook (unchanged, since it's neither Blade
+    rendering nor persistence — just an ephemeral, per-request advisory toast).
+  - **Deliberately paused pending a proper design**: a single centralized Duplicate
+    Ownership Engine, built strictly from the finalized Master Tracker (Job vs. Company
+    Overall mode, Company Recruiter reservation, first-agency-to-Sourcing ownership,
+    InReview privacy, lookback period, eligible job statuses, every scenario in the
+    tracker) — only after *that* is designed should persistence fields and execution
+    triggers (candidate creation, InReview→Sourcing, Company Recruiter creation, config
+    changes) be decided. Every UI page should then only ever *read* that engine's
+    output, never recompute it independently. Until then, `resolveDuplicateOwnership()`
+    stays defined in `GeneralMethod.php` but uncalled from any view.
 
 ### 8.5 Key files (this session's additions)
 
