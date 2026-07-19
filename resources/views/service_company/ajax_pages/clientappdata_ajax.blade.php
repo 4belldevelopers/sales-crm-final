@@ -667,11 +667,16 @@
 												</a>
 											</div>';
                     } else {
+                        // Once sourced, stage ownership passes to the client —
+                        // this is no longer a dead badge but a live trigger
+                        // that surfaces a notice explaining that, instead of
+                        // silently doing nothing (see client_stage_locked_notice
+                        // handler in apptracker/clientapp.blade.php).
                         $html =
                             '<div class="d-flex flex-column">
-												<span href="javascript.void(0);" data-row-id="' .
+												<a href="javascript:void(0);" data-row-id="' .
                             @$row->condidate_id .
-                            '" class="d-flex flex-column ">
+                            '" class="d-flex flex-column client_stage_locked_notice">
 													<span class="badge fw-bolder fs-6 ' .
                             @$row->css_style .
                             ' px-2 py-1">' .
@@ -680,7 +685,7 @@
 													<span class="text-muted fw-bold d-block fs-7 px-3 py-1">' .
                             @$name .
                             '</span>
-												</span>
+												</a>
 											</div>';
                     }
 
