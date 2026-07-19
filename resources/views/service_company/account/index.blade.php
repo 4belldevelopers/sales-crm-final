@@ -2345,6 +2345,30 @@ input[type="radio"]:checked {
           </div>
           <div class="form-check"></div>
           <div class="form-text text-muted"></div>
+
+          <!--begin::Cross-agency duplicate pool (opt-in)-->
+          <input type="hidden" name="enable_cross_agency_duplicate_submitted" value="1">
+          <div class="separator separator-dashed my-6"></div>
+          <div class="row">
+            <div class="col-lg-8">
+              <label class="option">
+                <span class="option-control">
+                  <span class="checkbox checkbox-outline">
+                    <input type="checkbox" name="enable_cross_agency_duplicate" value="1"
+                      @if(!empty($account->enable_cross_agency_duplicate)) checked="checked" @endif>
+                    <span></span>
+                  </span>
+                </span>
+                <span class="option-label">
+                  <span class="option-head">
+                    <span class="option-title fs-4 fw-bolder">Cross-Agency Duplicate Detection</span>
+                  </span>
+                  <span class="option-body">When a third-party candidate is moved from InReview to Sourcing on one of your jobs, check whether the same person (matched by email or phone) already exists elsewhere in that job's pipeline — submitted by a different agency, or added directly by your own team. Your recruiters see a generic notice only; you see full details (which agency, what stage, when).</span>
+                </span>
+              </label>
+            </div>
+          </div>
+          <!--end::Cross-agency duplicate pool (opt-in)-->
         </div>
       </div>
       <!--end::Card body-->

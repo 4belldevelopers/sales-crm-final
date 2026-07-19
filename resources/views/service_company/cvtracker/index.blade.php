@@ -2108,6 +2108,14 @@
                             // $.unblockUI();
                             // table._fnDraw();
 
+                            // Cross-agency duplicate pool: generic notice only — no
+                            // company/agency name, no stage detail. Full attribution
+                            // is a client/job-owner-side concern, shown on their own
+                            // AppTracker row list instead.
+                            if (response.crossAgencyDuplicate) {
+                                cvhToast.fire({ icon: 'info', title: 'A candidate with this email or phone already exists in this job\'s pipeline.' });
+                            }
+
                         } else if (response.status == "info") {
                             Swal.fire('Fail!', response.message, 'error')
                         }
