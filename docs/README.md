@@ -48,7 +48,7 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [UI_UX_STANDARDS.md](UI_UX_STANDARDS.md) — Metronic, ≤14px type scale, fits 15.6" + all laptops, auto-fit data
 - [SECURITY.md](SECURITY.md) — security risk register + remediation program
 - [BUG_REPORT.md](BUG_REPORT.md) — concrete bugs found (with line refs) + fix plan
-- [CLIENT_JOB_STAGE_OWNERSHIP.md](CLIENT_JOB_STAGE_OWNERSHIP.md) — agency ↔ client stage-ownership & candidate-visibility rules for client-job AppTracker pages, plus the standing search/sort/filter design+logic convention for all AppTracker candidate-list pages
+- [CLIENT_JOB_STAGE_OWNERSHIP.md](CLIENT_JOB_STAGE_OWNERSHIP.md) — agency ↔ client stage-ownership & candidate-visibility rules for client-job AppTracker pages, the standing search/sort/filter design+logic convention for all AppTracker candidate-list pages, and (§8) the shared stage-change drawer architecture across AppTracker/CV Tracker/ClientApp/Offer/Joining Tracker — row-trigger gating per page, sub-stage/un-reject bugs fixed, and the duplicate-detection/ownership-arbitration system
 - [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) — naming standards + SAFE rename procedure (names map to real tables/indices)
 
 ## AI memory & machine-readable context
