@@ -482,11 +482,45 @@
   <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar" ></div>
 </div>
 
-<div class="modal fade" id="interview_schedule" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content" id="app_interview_schedule_content"></div>
+<style>
+  /* Interview Schedule drawer shell — scoped so it never collides with page-local styles. */
+  #interview_schedule_drawer .isd-shell-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid #eef0f4; flex-wrap:wrap; flex-shrink:0; font-family:'Poppins',sans-serif; }
+  #interview_schedule_drawer .isd-shell-topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
+  #interview_schedule_drawer .isd-shell-topbar-ico { width:42px; height:42px; border-radius:10px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:17px; }
+  #interview_schedule_drawer .isd-shell-topbar-title { font-size:16px; font-weight:700; color:#181c32; line-height:1.3; }
+  #interview_schedule_drawer .isd-shell-topbar-sub { font-size:11.5px; font-weight:400; color:#7e8299; margin-top:1px; }
+  #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }
+  #interview_schedule_drawer .isd-shell-btn-cancel { border:1px solid #e4e6ef; background:#fff; color:#3f4254; border-radius:8px; padding:9px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:500; cursor:pointer; }
+  #interview_schedule_drawer .isd-shell-btn-cancel:hover { background:#f8f9fb; }
+  #interview_schedule_drawer .isd-shell-divider { width:1px; height:22px; background:#e4e6ef; }
+  #interview_schedule_drawer .isd-shell-close { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#7e8299; cursor:pointer; flex-shrink:0; }
+  #interview_schedule_drawer .isd-shell-close:hover { background:#f8f9fb; color:#f64e60; }
+</style>
+<div id="interview_schedule_drawer_toggle" style="display:none;"></div>
+<div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close"
+    style="z-index: 1120 !important;">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="isd-shell-topbar">
+      <div class="isd-shell-topbar-left">
+        <span class="isd-shell-topbar-ico"><i class="fa fa-calendar-alt"></i></span>
+        <div>
+          <div class="isd-shell-topbar-title">Interview Schedule</div>
+          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
+        </div>
+      </div>
+      <div class="isd-shell-topbar-right">
+        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel">Cancel</button>
+        <span class="isd-shell-divider"></span>
+        <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="fa fa-times"></i></span>
+      </div>
+    </div>
+    <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
   </div>
 </div>
+<!--end::Interview Schedule drawer-->
 
 <div id="kt_activitiesIntTeam_toggle"></div>
 <div id="kt_activitiesIntTeam" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle" data-kt-drawer-close="#kt_activitiesIntTeam_close">
@@ -1832,7 +1866,7 @@ $(document).ready(function(){
               var datatime    		=	$(this).attr('data-time');
               var datatmode    		=	$(this).attr('data-mode');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);		   
+         			url     		=	url.replace(':id', id);
               if (datadate && datatime) {
                   let query = [];
                   if (datadate) query.push('datadate=' + encodeURIComponent(datadate));
@@ -1840,19 +1874,21 @@ $(document).ready(function(){
                   if (datatmode) query.push('datatmode=' + encodeURIComponent(datatmode));
                   url += '?' + query.join('&');
               }
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              $('#interview_schedule_drawer_toggle').trigger('click');
+              KTDrawer.createInstances();
+              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
          			$.ajax({
          							type  		: 'GET',
          							url   		: url,
          							beforeSend	: function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          							},
-         							success : function (response) 
+         							success : function (response)
          							{
-                        // $('#interview_schedule').modal('show');
-         								$('#app_interview_schedule_content').html(response.view);		
+         								$('#app_interview_schedule_content').html(response.view);
          							}
-         				});	
+         				});
          });
 
 
@@ -1996,15 +2032,16 @@ $(document).ready(function(){
           var assignNewValue	=	currentValue +' , '+name;	
           $('#panellist').val(assignNewValue);	
           
-          var assignNewEmail	=	cc_email +' , '+email;	
+          var assignNewEmail	=	cc_email +' , '+email;
           $('#cc_email').val(assignNewEmail);
-        }							
+        }
       }
-      else   
+      else
       {
-        $('#panellist').val(name);	
+        $('#panellist').val(name);
         $('#cc_email').val(email);
       }
+      if (typeof isdSyncChipsFromField === 'function') { isdSyncChipsFromField(); }
   }
 
   function DeleteEventPanel(contact_person_name, email)
@@ -2042,8 +2079,9 @@ $(document).ready(function(){
               
         }	
         
-        $('#panellist').val(tem_hiring_namager);		
-        $('#cc_email').val(team_hiring_manager_email);			
+        $('#panellist').val(tem_hiring_namager);
+        $('#cc_email').val(team_hiring_manager_email);
+        if (typeof isdSyncChipsFromField === 'function') { isdSyncChipsFromField(); }
   }
 
 
@@ -2509,11 +2547,13 @@ $( document ).ready(function() {
 						});
 		 });   
         $('body').on('click', '#app_interview_schedule', function(){
-            // localStorage.setItem('toggleOpen', 'true');
          			var id    		=	$(this).attr('rel');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);		   
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			url     		=	url.replace(':id', id);
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              $('#interview_schedule_drawer_toggle').trigger('click');
+              KTDrawer.createInstances();
+              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2521,22 +2561,24 @@ $( document ).ready(function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          											},
          							success 	:	function (response) {
-         																$('#app_interview_schedule_content').html(response.view);	
+         																$('#app_interview_schedule_content').html(response.view);
                                         setTimeout(() => {
                                           $('#kt_activities_scroll').removeAttr('style');
-                                        }, 500);	
+                                        }, 500);
          											}
-         				});	
+         				});
          });
-         
+
          $('body').on('click', '.app_mail_schedule', function(){
                     localStorage.setItem('toggleOpen', 'true');
-                    // $('#interview_schedule').modal('show');
          			var id    		=	$(this).attr('rel');
          			var relint    		=	$(this).attr('relint');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
-         			url     		=	url.replace(':id', id);		   
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			url     		=	url.replace(':id', id);
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              $('#interview_schedule_drawer_toggle').trigger('click');
+              KTDrawer.createInstances();
+              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2544,14 +2586,18 @@ $( document ).ready(function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          											},
          							success 	:	function (response) {
-         							    	   
-         																$('#app_interview_schedule_content').html(response.view);	
-         															
+
+         																$('#app_interview_schedule_content').html(response.view);
+
          																$('#div_interview_schedule_first').hide();
-   			                                $('#div_interview_schedule_second').show();	
+   			                                $('#div_interview_schedule_second').show();
          											}
-         				});	
+         				});
          });
+
+        $(document).on('click', '#interview_schedule_drawer_cancel, #data-dismiss', function(){
+              $('#interview_schedule_drawer_close').trigger('click');
+        });
          
         $('body').on('click', '.add_panel', function(){
          				$('#kt_activitiesIntTeam_toggle').trigger('click');
@@ -2625,11 +2671,13 @@ $( document ).ready(function() {
 
 
                 function flatpickrfunDefine(){
-                          // localStorage.setItem('toggleOpen', 'true');
                           var id    		=	'1';
                           var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-                          url     		=	url.replace(':id', id);		   
-                          var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+                          url     		=	url.replace(':id', id);
+                          var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+                          $('#interview_schedule_drawer_toggle').trigger('click');
+                          KTDrawer.createInstances();
+                          KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
                           $.ajax({
                                   type  		:	'GET',
                                   url   		:	url,
