@@ -3126,6 +3126,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
 
+			// Ownership Engine (Phase 3, isolated/shadow mode — see
+			// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path,
+			// not called inline — runs alongside the duplicate check above without
+			// altering it or this response. Company row only (thirdparty_company_id = 0) —
+			// agency rows never reserve at creation. dispatch() itself is try-caught (not
+			// just the job's own handle()) since a queue-connection failure would otherwise
+			// throw synchronously in this request.
+			if ((int) @$thirdparty_company_id === 0) {
+				try {
+					\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastWiseIs);
+				} catch (\Throwable $e) {
+					\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+						'row_id' => $lastWiseIs,
+						'error' => $e->getMessage(),
+					]);
+				}
+			}
+
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
 				'allapptracker_version_user_'.$this->user->id,				
@@ -3358,6 +3376,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
 
+			// Ownership Engine (Phase 3, isolated/shadow mode — see
+			// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path,
+			// not called inline — runs alongside the duplicate check above without
+			// altering it or this response. Company row only (thirdparty_company_id = 0) —
+			// agency rows never reserve at creation. dispatch() itself is try-caught (not
+			// just the job's own handle()) since a queue-connection failure would otherwise
+			// throw synchronously in this request.
+			if ((int) @$thirdparty_company_id === 0) {
+				try {
+					\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastWiseIs);
+				} catch (\Throwable $e) {
+					\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+						'row_id' => $lastWiseIs,
+						'error' => $e->getMessage(),
+					]);
+				}
+			}
+
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
 				'allapptracker_version_user_'.$this->user->id,				
@@ -3583,6 +3619,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
 			$lastWiseIs = DB::getPdo()->lastInsertId();
+
+			// Ownership Engine (Phase 3, isolated/shadow mode — see
+			// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path,
+			// not called inline — runs alongside the duplicate check above without
+			// altering it or this response. Company row only (thirdparty_company_id = 0) —
+			// agency rows never reserve at creation. dispatch() itself is try-caught (not
+			// just the job's own handle()) since a queue-connection failure would otherwise
+			// throw synchronously in this request.
+			if ((int) @$thirdparty_company_id === 0) {
+				try {
+					\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastWiseIs);
+				} catch (\Throwable $e) {
+					\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+						'row_id' => $lastWiseIs,
+						'error' => $e->getMessage(),
+					]);
+				}
+			}
 
 			$cachekeys = [
 				'allcvtracker_version_user_'.$this->user->id,				
@@ -3968,10 +4022,28 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$insertArr = array('job_id' => @$source_jobid, 'rec_candidate_assign_id' => 0, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1,'skill_match' => $percentage,'duplicate' => $wiseDuplicateCareerPage,'created_at' => $now,'updated_at' => $now);
 
 			DB::table('add_job_wise_condidates')->insert($insertArr);
-			$lastWiseIs = DB::getPdo()->lastInsertId();			
-		
+			$lastWiseIs = DB::getPdo()->lastInsertId();
+
+			// Ownership Engine (Phase 3, isolated/shadow mode — see
+			// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path,
+			// not called inline — runs alongside the duplicate check above without
+			// altering it or this response. Company row only (thirdparty_company_id = 0) —
+			// agency rows never reserve at creation. dispatch() itself is try-caught (not
+			// just the job's own handle()) since a queue-connection failure would otherwise
+			// throw synchronously in this request.
+			if ((int) @$thirdparty_company_id === 0) {
+				try {
+					\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastWiseIs);
+				} catch (\Throwable $e) {
+					\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+						'row_id' => $lastWiseIs,
+						'error' => $e->getMessage(),
+					]);
+				}
+			}
+
 			$cachekeys = [
-				'allcvtracker_version_user_'.$this->user->id,				
+				'allcvtracker_version_user_'.$this->user->id,
 				'allapptracker_version_user_'.$this->user->id,				
 				'allsimilarcandidates_version_user_'.$this->user->id,				
 				'allclientapp_version_user_'.$this->user->id,				

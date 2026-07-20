@@ -511,6 +511,14 @@
      already dimmed by whichever drawer this one is nested inside; this one
      just needs to render above it. */
   #interview_schedule_drawer { z-index: 99999999999 !important; }
+  /* KTDrawer sets height via inline style at runtime (full viewport height,
+     same as every other drawer in the app). That's fine when content is long,
+     but this drawer's content is often shorter than the screen, leaving a
+     large blank white gap below it. Cap it to content height instead, with
+     the viewport as a ceiling so it still scrolls normally for long content. */
+  #interview_schedule_drawer { height: auto !important; max-height: 100vh !important; bottom: auto !important; }
+  #interview_schedule_drawer > .d-flex.flex-column { height: auto !important; max-height: 100vh !important; }
+  #interview_schedule_drawer #app_interview_schedule_content { flex-grow: 0 !important; max-height: calc(100vh - 76px) !important; }
 </style>
 <div id="interview_schedule_drawer_toggle" style="display:none;"></div>
 <div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
@@ -520,7 +528,7 @@
   <div class="d-flex flex-column h-100 w-100">
     <div class="isd-shell-topbar">
       <div class="isd-shell-topbar-left">
-        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar"></i></span>
+        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar-clock"></i></span>
         <div>
           <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
           <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>

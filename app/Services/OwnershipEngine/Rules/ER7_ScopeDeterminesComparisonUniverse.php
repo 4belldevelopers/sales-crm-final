@@ -26,4 +26,13 @@ class ER7_ScopeDeterminesComparisonUniverse
     {
         return $this->scopeResolver->resolve($scopingCompanyId, $jobId);
     }
+
+    /**
+     * Finding 3 (docs/OWNERSHIP_ENGINE_DESIGN.md): app_duplicate = 0 means the scoping
+     * company has not opted into duplicate detection — the engine must not evaluate at all.
+     */
+    public function isEnabled(int $scopingCompanyId): bool
+    {
+        return $this->scopeResolver->isEnabled($scopingCompanyId);
+    }
 }
