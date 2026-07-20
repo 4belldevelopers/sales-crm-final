@@ -53,7 +53,7 @@
 .bxr-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
 .bxr-info{}
 .bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
-.bxr-name{ font-size:22px; font-weight:700; color:#1A1D23; margin:0; }
+.bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
 .bxr-bench-tag{
     display:inline-flex; align-items:center; gap:5px;
     font-size:11px; font-weight:600;
