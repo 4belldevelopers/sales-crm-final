@@ -1,100 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bench Candidates</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href="{{ asset('demo/css/style-bench-candidates.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link rel="canonical" href="" />
-    <link rel="shortcut icon" type="image/x-icon"  href="{{ asset('img/favicon.svg')}}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-    <link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
+    <title>{{ @$account->company_name ?? 'Company' }} – Careers</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('img/favicon.svg') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <style>
-         html {
-                scroll-behavior: auto !important; /* disable smooth hash scrolling */
-            }
-             @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesCopy {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesCopy {
-                width: 1200px;
-            }
-        }
-
-            .custom-pagination {
-        display: flex;
-        gap: 5px;
-        justify-content: flex-end; /* Align pagination to the left */
-        margin-top: 15px;
-    }
-
-    .custom-pagination .page-link {
-        padding: 0.375rem 0.75rem;
-        /* border: 1px solid #ddd; */
-        cursor: pointer;
-        /* background-color: #f8f9fa; */
-        color: #333;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.475rem;
-        height: 2.5rem;
-        min-width: 2.5rem;
-        font-weight: 500;
-        font-size: 1.075rem;
-        /* border-radius: 5px; */
-    }
-
-    .custom-pagination .page-link.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    .pagination-info {
-        text-align: left; /* Align info to the left */
-        margin-bottom: 10px;
-        font-weight: bold;
-    }
-
-    .pagination-wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end; /* Align entire pagination block to the left */
-        width: 100%;
-    }
-    .previous_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-    .next_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-    .active_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-
-        
-    </style>
+    <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet">
+    <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet">
 </head>
 
 @php
@@ -102,679 +16,852 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
-    $salaryMode = GeneralMethod::salaryMode();
+    $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-    $job_status = GeneralMethod::job_status();
-    
+    $job_status      = GeneralMethod::job_status();
+
+    /* ── Template Design colors ── */
+    try { $cS = DB::table('company_career_settings')->where('company_id', $company_id)->first(); }
+    catch (\Exception $e) { $cS = null; }
+    $cpP = $cS->td_color_primary   ?? '#2563EB';
+    $cpS = $cS->td_color_secondary ?? '#1F2937';
+    $cpA = $cS->td_color_accent    ?? '#10B981';
+
+    $companyBrand    = @$account->company_name ?? '4Bell Technology';
+    $companyInitials = strtoupper(substr(trim($companyBrand), 0, 2));
+
+    $statDepts     = $cS->stat_departments ?? 15;
+    $statCountries = $cS->stat_countries   ?? 5;
+    $statEmployees = $cS->stat_employees   ?? '220+';
+    $statRetention = $cS->stat_retention   ?? '95%';
+
+    /* avatar gradient presets – index cycles per card */
+    $avGradients = [
+        'linear-gradient(135deg,#1E3A8A,#3B82F6)',
+        'linear-gradient(135deg,#065F46,#10B981)',
+        'linear-gradient(135deg,#4C1D95,#7C3AED)',
+        'linear-gradient(135deg,#7C2D12,#F97316)',
+        'linear-gradient(135deg,#7F1D1D,#EF4444)',
+        'linear-gradient(135deg,#134E4A,#14B8A6)',
+        'linear-gradient(135deg,#0F172A,#374151)',
+    ];
 @endphp
 
+<style>
+/* ════════════════════════════════════════
+   CAREER JOB PAGE  ·  pixel-matched
+════════════════════════════════════════ */
+:root{
+    --p:  {{ $cpP }};
+    --s:  {{ $cpS }};
+    --a:  {{ $cpA }};
+    --t:  #0F172A;
+    --m:  #64748B;
+    --b:  #E2E8F0;
+    --l:  #F8FAFC;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:auto;}
+body{font-family:'Poppins',sans-serif;font-size:13px;color:var(--t);background:#fff;overflow-x:hidden;}
+a{text-decoration:none;}
+
+/* ── NAVBAR ── */
+.nav{
+    position:sticky;top:0;z-index:999;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 40px;height:62px;
+    background:#fff;border-bottom:1px solid var(--b);
+    box-shadow:0 1px 6px rgba(0,0,0,.06);
+}
+.nav-logo{display:flex;align-items:center;gap:9px;}
+.nav-logo-mark{
+    width:36px;height:36px;border-radius:10px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--s),var(--p));
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:900;color:#fff;
+}
+.nav-logo-name{font-size:14px;font-weight:800;color:var(--s);}
+.nav-links{display:flex;align-items:center;}
+.nav-link{
+    padding:22px 14px;font-size:12px;font-weight:500;color:var(--m);
+    border-bottom:2px solid transparent;transition:color .15s;
+}
+.nav-link:hover{color:var(--p);}
+.nav-link.active{color:var(--p);border-bottom-color:var(--p);font-weight:700;}
+.nav-actions{display:flex;align-items:center;gap:10px;}
+.btn-out{
+    padding:7px 18px;border:1.5px solid var(--b);border-radius:8px;
+    font-size:12px;font-weight:600;color:var(--s);background:#fff;
+    font-family:'Poppins',sans-serif;transition:all .15s;
+}
+.btn-out:hover{border-color:var(--p);color:var(--p);}
+.btn-pri{
+    padding:8px 20px;background:var(--p);border-radius:8px;
+    font-size:12px;font-weight:700;color:#fff;
+    font-family:'Poppins',sans-serif;transition:background .15s;
+}
+.btn-pri:hover{background:#1D4ED8;color:#fff;}
+
+/* ── HERO ── */
+.hero{
+    display:grid;grid-template-columns:56% 44%;
+    padding:56px 40px 48px;gap:40px 40px;align-items:start;
+    background:#fff;
+}
+.hero-search-wrap{
+    grid-column:1/-1;
+    margin-top:-16px;
+}
+.hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;color:var(--p);
+    background:#EFF6FF;border:1px solid #BFDBFE;
+    padding:4px 12px;border-radius:20px;margin-bottom:16px;
+}
+.hero-eyebrow i{font-size:11px;}
+.hero-h1{font-size:38px;font-weight:900;color:var(--s);line-height:1.15;margin-bottom:14px;}
+.hero-h1 span{color:var(--p);}
+.hero-sub{font-size:13px;color:var(--m);line-height:1.7;margin-bottom:22px;max-width:500px;}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px;}
+.hero-tag{
+    display:flex;align-items:center;gap:6px;
+    padding:5px 12px;background:var(--l);border:1px solid var(--b);
+    border-radius:20px;font-size:11px;font-weight:600;color:var(--s);
+}
+.hero-tag i{font-size:11px;color:var(--p);}
+.hero-search{
+    display:flex;align-items:stretch;
+    height:54px;
+    background:#fff;border:2px solid var(--b);border-radius:10px;overflow:hidden;
+    box-shadow:0 6px 24px rgba(37,99,235,.1);
+}
+.hero-search-icon{padding:0 16px;font-size:15px;color:var(--m);display:flex;align-items:center;flex-shrink:0;}
+.hero-search input{
+    flex:1;height:100%;border:none;outline:none;
+    font-size:13px;font-family:'Poppins',sans-serif;color:var(--t);background:transparent;
+    padding:0;
+}
+.hero-search input::placeholder{color:#94A3B8;}
+.hero-search-btn{
+    height:100%;padding:0 28px;background:var(--p);border:none;border-radius:0;
+    font-size:13px;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0;
+    font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:7px;cursor:pointer;
+}
+.hero-search-btn:hover{background:#1D4ED8;}
+/* right images */
+.hero-imgs{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative;}
+.hero-img{
+    border-radius:16px;overflow:hidden;height:220px;
+    background:#E2E8F0;
+}
+.hero-img:first-child{margin-top:28px;}
+.hero-img img{width:100%;height:100%;object-fit:cover;}
+.hero-float{
+    position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);
+    background:#fff;border:1.5px solid var(--b);border-radius:12px;
+    padding:9px 16px;display:flex;align-items:center;gap:10px;
+    box-shadow:0 6px 20px rgba(0,0,0,.09);white-space:nowrap;
+}
+.hero-float-avs{display:flex;}
+.hero-float-avs span{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--p);border:2px solid #fff;margin-left:-7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:800;color:#fff;
+}
+.hero-float-avs span:first-child{margin-left:0;}
+.hero-float-txt{font-size:12px;font-weight:700;color:var(--t);}
+
+/* ── TRUSTED ── */
+.trusted{
+    padding:22px 40px 20px;
+    border-top:1px solid var(--b);border-bottom:1px solid var(--b);
+    background:#fff;
+}
+.trusted-lbl{font-size:11px;font-weight:700;color:var(--t);margin-bottom:16px;}
+.trusted-row{display:flex;align-items:center;gap:0;flex-wrap:nowrap;width:100%;}
+.trusted-item{
+    padding:6px 0;
+    font-size:14px;font-weight:800;white-space:nowrap;
+    display:flex;align-items:center;gap:4px;
+    flex:1;justify-content:center;
+}
+.trusted-item + .trusted-item{ border-left:1px solid var(--b); }
+.trusted-more{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    padding:6px 0;border-left:1px solid var(--b);
+    font-size:13px;font-weight:500;color:var(--m);white-space:nowrap;
+}
+
+/* ── STATS ── */
+.stats{display:flex;background:var(--l);border-bottom:1px solid var(--b);}
+.stat{
+    flex:1;display:flex;align-items:center;gap:13px;
+    padding:18px 26px;border-right:1px solid var(--b);
+}
+.stat:last-child{border-right:none;}
+.stat-icon{
+    width:38px;height:38px;border-radius:10px;flex-shrink:0;
+    background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;
+}
+.stat-icon i{font-size:16px;color:var(--p);}
+.stat-val{font-size:19px;font-weight:800;color:var(--t);line-height:1.1;}
+.stat-lbl{font-size:10px;color:var(--m);margin-top:1px;}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:218px 1fr;margin:0 16px;}
+
+/* ── FILTERS ── */
+.filters{
+    border-right:1px solid var(--b);padding:20px 16px 30px;
+    background:#fff;position:sticky;top:62px;align-self:start;max-height:calc(100vh - 62px);
+    overflow-y:auto;
+}
+.filters::-webkit-scrollbar{width:0;}
+.filter-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.filter-hdr-title{font-size:13px;font-weight:700;color:var(--t);}
+.filter-clear{font-size:11px;font-weight:600;color:var(--p);cursor:pointer;}
+.filter-sec{margin-bottom:0;border-bottom:1px solid var(--b);}
+.filter-sec-hdr{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:12px;font-weight:700;color:var(--t);
+    padding:10px 0;cursor:pointer;
+}
+.filter-sec-hdr i{font-size:10px;color:var(--m);transition:transform .2s;}
+.filter-sec-body{padding-bottom:12px;}
+.f-check{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;}
+.f-check input[type=checkbox]{width:14px;height:14px;accent-color:var(--p);cursor:pointer;flex-shrink:0;}
+.f-check label{font-size:11px;color:#374151;cursor:pointer;line-height:1.3;}
+.f-search{
+    display:flex;align-items:center;gap:6px;
+    border:1.5px solid var(--b);border-radius:7px;padding:5px 9px;margin-bottom:8px;
+}
+.f-search i{font-size:10px;color:var(--m);}
+.f-search input{flex:1;border:none;outline:none;font-size:11px;font-family:'Poppins',sans-serif;color:var(--t);background:transparent;}
+.f-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.f-tag{
+    padding:3px 10px;background:var(--l);border:1px solid var(--b);
+    border-radius:20px;font-size:10px;font-weight:600;color:#374151;cursor:pointer;
+}
+.f-tag:hover,.f-tag.on{background:#EFF6FF;border-color:var(--p);color:var(--p);}
+
+/* ── JOBS AREA ── */
+.jobs-area{padding:20px 28px;background:var(--l);}
+.jobs-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.jobs-count{font-size:15px;font-weight:800;color:var(--t);}
+.jobs-sort{display:flex;align-items:center;gap:8px;}
+.jobs-sort-lbl{font-size:12px;color:var(--m);}
+.jobs-sort select{
+    border:1.5px solid var(--b);border-radius:7px;padding:5px 10px 5px 8px;
+    font-size:12px;font-weight:600;color:var(--t);
+    font-family:'Poppins',sans-serif;background:#fff;cursor:pointer;outline:none;
+}
+
+/* ── JOB CARD ── */
+.job-card{
+    background:#fff;border:1.5px solid var(--b);border-radius:12px;
+    padding:18px 24px 14px;margin-bottom:12px;
+    transition:box-shadow .15s,border-color .15s;
+}
+.job-card:hover{box-shadow:0 4px 20px rgba(37,99,235,.08);border-color:#93C5FD;}
+
+/* main row: drag · avatar · info · meta-cols · right */
+.jc-main{display:flex;align-items:flex-start;gap:12px;}
+
+/* 2×3 dot drag handle */
+.jc-drag{
+    display:grid;grid-template-columns:1fr 1fr;gap:3px;
+    padding-top:6px;cursor:grab;opacity:.25;flex-shrink:0;
+}
+.jc-drag span{display:block;width:4px;height:4px;background:#94A3B8;border-radius:50%;}
+
+/* SQUARE rounded avatar */
+.jc-av{
+    width:54px;height:54px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:900;color:#fff;overflow:hidden;
+    border:1.5px solid rgba(0,0,0,.06);
+}
+.jc-av img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+
+/* title / category / company */
+.jc-info{flex:0 0 180px;min-width:0;}
+.jc-title{font-size:13px;font-weight:700;color:var(--t);margin-bottom:3px;line-height:1.35;}
+.jc-cat{font-size:10px;color:var(--m);margin-bottom:2px;}
+.jc-co{font-size:11px;color:var(--m);font-weight:500;}
+
+/* meta 2-column grid in the centre */
+.jc-meta-cols{
+    flex:1;display:grid;grid-template-columns:1fr 1fr;
+    row-gap:6px;column-gap:10px;align-content:start;
+}
+.jc-mi{display:flex;align-items:center;gap:5px;font-size:11px;color:#374151;}
+.jc-mi i{font-size:11px;color:var(--m);flex-shrink:0;}
+.jc-mi.sal{font-weight:700;color:var(--t);}
+.jc-mi.jid{color:var(--p);font-weight:600;grid-column:1/-1;}
+
+/* right column: [badge · bookmark] then time below */
+.jc-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;min-width:120px;}
+.jc-right-top{display:flex;align-items:center;gap:8px;}
+.jc-badge{
+    padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;
+    white-space:nowrap;border:1.5px solid transparent;
+}
+.badge-hiring{background:#F0FDF4;color:#16A34A;border-color:#86EFAC;}
+.badge-new{background:#EFF6FF;color:#1D4ED8;border-color:#93C5FD;}
+.badge-closed{background:#FEF2F2;color:#DC2626;border-color:#FCA5A5;}
+.badge-hold{background:#FFFBEB;color:#D97706;border-color:#FCD34D;}
+.jc-time{font-size:11px;color:var(--m);text-align:right;}
+.jc-bm{
+    cursor:pointer;color:#94A3B8;transition:color .15s;font-size:15px;
+    width:28px;height:28px;border:1.5px solid var(--b);border-radius:7px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.jc-bm:hover{color:var(--p);border-color:var(--p);}
+
+/* bottom row: skills label + chips | actions */
+.jc-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:8px;}
+.jc-skills-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;flex:1;}
+.jc-skills-lbl{font-size:11px;font-weight:600;color:#374151;margin-right:4px;white-space:nowrap;}
+.jc-skill{
+    padding:3px 10px;background:#F1F5F9;border:none;
+    border-radius:20px;font-size:10px;font-weight:600;color:#475569;
+}
+
+/* action buttons */
+.jc-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.btn-view{
+    padding:7px 18px;border:1.5px solid var(--b);border-radius:8px;
+    font-size:12px;font-weight:600;color:var(--s);background:#fff;
+    cursor:pointer;font-family:'Poppins',sans-serif;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;
+}
+.btn-view:hover{border-color:var(--p);color:var(--p);}
+.btn-apply{
+    padding:7px 22px;background:var(--p);border:none;border-radius:8px;
+    font-size:12px;font-weight:700;color:#fff;
+    cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s;text-decoration:none;display:inline-flex;align-items:center;
+}
+.btn-apply:hover{background:#1D4ED8;color:#fff;}
+
+/* empty state */
+.jobs-empty{text-align:center;padding:60px 20px;}
+.jobs-empty i{font-size:40px;color:var(--b);display:block;margin-bottom:10px;}
+.jobs-empty-t{font-size:14px;font-weight:700;color:var(--t);}
+.jobs-empty-s{font-size:12px;color:var(--m);margin-top:4px;}
+
+/* ── PAGINATION ── */
+.pag{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:18px;}
+.pag-btn{
+    min-width:34px;height:34px;border:1.5px solid var(--b);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;color:var(--t);
+    background:#fff;padding:0 8px;transition:all .15s;
+}
+.pag-btn:hover{border-color:var(--p);color:var(--p);}
+.pag-btn.on{background:var(--p);border-color:var(--p);color:#fff;}
+.pag-btn.off{opacity:.4;pointer-events:none;cursor:not-allowed;}
+.pag-dots{min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--m);}
+
+/* ── BENEFITS ── */
+.benefits{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--b);background:#fff;}
+.benefit{display:flex;align-items:center;gap:14px;padding:22px 24px;border-right:1px solid var(--b);}
+.benefit:last-child{border-right:none;}
+.benefit-icon{width:40px;height:40px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.benefit-icon i{font-size:18px;}
+.benefit-title{font-size:12px;font-weight:700;color:var(--t);}
+.benefit-desc{font-size:10px;color:var(--m);margin-top:2px;}
+
+/* ── FOOTER ── */
+.footer{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 40px;border-top:1px solid var(--b);background:#fff;
+}
+.footer-logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--s);}
+.footer-logo-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--s),var(--p));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;}
+.footer-links{display:flex;align-items:center;gap:20px;}
+.footer-link{font-size:11px;color:var(--m);}
+.footer-link:hover{color:var(--p);}
+.footer-copy{font-size:10px;color:var(--m);margin-top:2px;}
+.footer-socials{display:flex;align-items:center;gap:7px;}
+.footer-social{
+    width:30px;height:30px;border:1.5px solid var(--b);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:var(--m);transition:all .15s;
+}
+.footer-social:hover{border-color:var(--p);color:var(--p);}
+
+@media(max-width:1100px){
+    .hero{grid-template-columns:1fr;}.hero-imgs{display:none;}
+    .main-grid{grid-template-columns:1fr;}.filters{display:none;}
+    .benefits{grid-template-columns:1fr 1fr;}
+}
+</style>
 
 <body>
 
-    <main>
-      
-       
-        <div class="candidate-section" id="candidate-section">
-            <div class="candidate-list">
-
-
-
-            <div class="container text-center" style="margin-top: 40px; margin-bottom: 40px;">
-                <!-- Title -->
-                <h2 class="fw-bold mb-3" style="color:#002855;font-size:33px">Search & Apply for Jobs</h2>
-                
-                <!-- Subtitle -->
-                <p class="mb-4" style="font-size:16px; color:#555;">
-                    Shape your future with us. Search and apply for jobs with a seamless process designed to get you hired faster.
-                </p>
-
-                <!-- Search Box -->
-                <div class="d-flex justify-content-center" style="background: #fff; border-radius: 8px; box-shadow: 0 18px 40px rgba(25, 15, 9, .1); display: inline-block;padding: 10px;width: 100%;">
-                    <form class="d-flex w-100" method="GET" action="">
-                    <input type="text" 
-                            class="form-control me-2 skillSearchValue" 
-                            id="skillSearchValue" 
-                            name="custom_search"
-                            value="{{ request('keyword') }}"
-                            placeholder="Your keyword..." 
-                            style="border-radius: 8px; padding:12px;border: none !important;"/>
-                    <button type="submit"  
-                            class="btn btn-primary px-4 search-button" 
-                            id="skillSearch" 
-                            style="border-radius: 8px;width: 122px;">
-                        <i class="bi bi-search"></i> Search
-                    </button>
-                    </form>
-                </div>
-
-                <!-- Popular Searches -->
-                {{-- <div class="mt-3" style="font-size:15px; color:#222;text-align: left;">
-                    <strong>Popular Searches:</strong> 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">JavaScript</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">PHP</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Laravel</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">.NET</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Java</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">React</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Node.js</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Angular</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Spring Boot</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">Python</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">MySQL</a>, 
-                    <a href="javascript:;" class="stat-label" style="text-decoration:none; color:#111822;">PostgreSQL</a>
-                </div> --}}
-            </div>
-
-
-
-
-                <div class="d-flex mb-15" style="position: relative;">
-                    <div class="text-start" style="position: absolute;left: 0;top: 9px;"> 
-                        <h2>Active Jobs Opening List ({{$total}})</h2>
-                    </div>
-                    <div class="text-end" style="position: absolute;right: 90px;"> 
-                        <form method="GET" action="">
-                            <div class="search-and-filter">
-                                
-                                <select class="filter-select" name="custom_hiringtype" id="custom_hiringtype" onchange="this.form.submit()">
-                                    <option value="All">Sort</option>
-                                    <option value="1">Newest to Oldest (Date)</option>
-                                    <option value="2">Oldest to Newest (Date)</option>
-                                    <option value="3">Low to High (Salary)</option>
-                                    <option value="4">High to Low (Salary)</option>
-                                    <option value="5">A to Z (Company Wise)</option>
-                                    <option value="6">Z to A (Company Wise)</option>
-                                    <option value="7">Full-Time Jobs Only</option>
-                                    <option value="8">Contract Jobs Only</option>
-                                </select>                
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            
-                <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
-                    <thead>
-                        <tr class="fw-bolder text-muted">
-                            <th>Name</th>
-                            <th>Exp</th>
-                            <th>Salary</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                   <tbody>
-    
-
-                    @if (count($data) > 0)
-                        @foreach ($data as $rowArr)
-                        @php
-                        $row = (object) $rowArr;
-
-                        $targetJobId = $row->id;
-
-
-                        
-
-
-                        $match = collect($row->recommendation_relation)->first(function ($item) use ($company_id) {
-                            return ($item['from_company_id'] ?? null) == $company_id
-                                || ($item['to_company_id'] ?? null) == $company_id;
-                        });
-                        $from_company_id = ($match['to_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-                        $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-
-                        $row->final_status   = ($match['to_company_id'] ?? null) == $company_id ? $match['final_status'] : null;
-
-                        $final_status = collect($row->recommendation_relation)->first(function ($item) use ($targetJobId) {
-                            return $item['job_id'] == $targetJobId;
-                        })['final_status'] ?? null;
-
-                       $job_assign_name = collect($row->job_assign)
-                        ->first(function ($item) use ($company_id) {
-                            return ($item['company_id'] ?? null) == $company_id
-                                && (int)($item['spok_user_id'] ?? 0) === (int)($item['user_id'] ?? -1);
-                        })['user_name'] ?? null;
-
-                        // $row->final_status = $final_status;
-                        $row->recommendation_id =$recommendation_id;
-                        $row->to_company_id = $recommendation_id;
-                        $row->from_company_id = $from_company_id;
-                        $row->companyidcount= $row->comId;
-                        $row->clients_name = @$account->company_name;
-
-                        // $final_status_two = collect($row->recommendation_relation)->first(fn($item) => $item['to_company_id'] == 2)['final_status'] ?? null;
-
-                        // $final_status_two = collect($row->recommendation_relation)->first(fn($item) => $item['final_status'] == 2)['final_status'] ?? null;
-
-                        // $final_status_three = collect($row->recommendation_relation)->first(fn($item) => $item['final_status'] == 3)['final_status'] ?? null;
-
-
-
-                        @endphp
-                            <tr style="height: 102px; position: relative;">
-                            
-                                <td class=" d-flex align-items-center">
-                                    @php
-                                        $clients_name = '';
-                                        $bgTextDecore = $strVal = '';
-                                        $str = trim(@$row->title);
-                                        $str = $strVal = strtolower($str[0]);
-                                        $str = ord($str);
-                                        if ($str >= 97 && $str <= 101) {
-                                            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                        } elseif ($str >= 102 && $str <= 106) {
-                                            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                        } elseif ($str >= 107 && $str <= 111) {
-                                            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                        } elseif ($str >= 112 && $str <= 116) {
-                                            $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                        } elseif ($str >= 117 && $str <= 121) {
-                                            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                        } else {
-                                            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                        }
-
-                                        $profile_detail_class = 'show-detail';
-                                        $clients_name = ucwords(mb_substr(@$row->clients_name, 0, 30));
-
-                                        //  dd($ddudud);
-
-                                        $recommendation_id = '';
-                                        $recommendation_id = $row->recommendation_id;
-                                        $recommendation_text = '&nbsp;<i class="bi bi-house" style="color:#00CC00"></i>';
-
-                                        $logo_path = '';
-                                        //$logo_path				=	url('img/client-default.png');
-                                        if (!empty($row->logo_logical_path)) {
-                                            $logo_path = @$row->logo_logical_path;
-
-                                            if (
-                                                $recommendation_id > 0 &&
-                                                @$row->to_company_id == $company_id
-                                            ) {
-                                                $logo_path = @$row->logo;
-                                            }
-                                        }
-
-                                        if ($recommendation_id > 0 && @$row->to_company_id == @$company_id) {
-                                            $recommendation_text =
-                                                '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
-                                            $profile_detail_class = 'client-show-detail';
-                                            $clients_name = ucwords(mb_substr(@$row->company_name, 0, 30));
-
-                                            if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                                                $logo_path = @$row->logo;
-                                            }
-                                        }
-
-                                        if (@$row->self_company == 1) {
-                                            if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                                                $logo_path = @$row->logo;
-                                            }
-                                        }
-                                        $logo_path = GeneralMethod::openCompanyDetails($row->id,$company_id);
-                                        $icon =
-                                            '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-                                                <a href="javascript:void(0);" data-row-id="' .
-                                            $row->id .
-                                            '" class="' .
-                                            $profile_detail_class .
-                                            '">
-                                                <div class="symbol-label ' .
-                                            $bgTextDecore .
-                                            ' border-radius-5">' .
-                                            ucwords($strVal) .
-                                            '</div>
-                                                </a>
-                                            </div>';
-
-                                        $skilltag = '';
-                                        $skilltagclass = '';
-                                        if (empty($limit)) {
-                                            $skillArr = DB::table('job_metronics_skills')
-                                                ->select('*')
-                                                ->where('job_id', $row->id)
-                                                ->where('job_metronics_skills.company_id', '=', $row->comId)
-                                                ->get();
-                                            if (!empty($skillArr)) {
-                                                foreach ($skillArr as $sval) {
-                                                    $skilltag .=
-                                                        '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
-                                                }
-                                            }
-                                        } else {
-                                            $skilltagclass = 'd-none';
-                                        }
-
-                                        if (!empty($logo_path)) {
-                                            $icon =
-                                                '<div data-row-id="' .
-                                                $row->id .
-                                                '"  class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' .
-                                                $profile_detail_class .
-                                                ' border-radius-5">
-                                                                    <a href="javascript:void(0);">
-                                                                        <div class="symbol-label border-radius-5">
-                                                                            <img src="' .
-                                                str_replace('index.php', '', @$logo_path) .
-                                                '" alt="Company Logo" class="border-radius-5 w-100">
-                                                                        </div>
-                                                                    </a>
-                                                                </div>';
-                                        }
-
-                                        echo $icon .
-                                            '<div class="d-flex flex-column">
-                                                <a href="javascript:void(0);" data-row-id="' .
-                                            $row->id .
-                                            '" class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                                            $profile_detail_class .
-                                            '"  data-toggle="tooltip1" title="' .
-                                            ucwords(@$row->title) .
-                                            '" >' .
-                                            ucwords(mb_substr(@$row->title, 0, 30)) .
-                                            '</a> 
-                                                <a href="javascript:void(0);" data-row-id="' .
-                                            $row->id .
-                                            '" class="fw-bold text-muted d-block fs-7 text-hover-primary ' .
-                                            $profile_detail_class .
-                                            '">' .
-                                            $clients_name .
-                                            '</a>
-                                            </div>
-
-                                            <div class="' .
-                                            $skilltagclass .
-                                            '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                                                <span class="badge badge-light-success my-1">Skills:</span>
-
-                                                            ' .
-                                            $skilltag .
-                                            '
-
-                                                    </div>';
-                                    @endphp
-                                </td>
-                                <td>
-                                    @php
-                                        echo '<div class="d-flex flex-column">
-                                        <span class="text-dark fw-bolder fs-6">' .
-                                            @$row->max_exp .
-                                            ' y</span>
-                                        <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                                            @$row->min_exp .
-                                            ' y</span>
-                                    </div>';
-                                    @endphp
-                                </td>
-                                <td>
-                                    @php
-                                            $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary =
-                                                '';
-                                            $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
-                                            $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
-                                            $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-                                            $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
-                                            $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
-                                            $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
-                                            echo '<div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">' .
-                                                $min_salary_currency .
-                                                $max_salary .
-                                                '/' .
-                                                $min_sal_mode .
-                                                '</span>                    
-                                            <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                                                $min_salary_currency .
-                                                $min_salary .
-                                                '/' .
-                                                $max_sal_mode .
-                                                '</span>
-                                        </div>';
-                                    @endphp
-                                </td>
-                                <td>
-                                    @php
-
-                                        $country_id = $country_name = '';
-                                        $jobid = $row->id;
-                                        $client_loc = DB::table('client_location_jobs')
-                                            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                            ->select(
-                                                'client_location.address',
-                                                'client_location.city',
-                                                'client_location.postcode',
-                                                'client_location.country_id',
-                                                'city_list.city as city_name',
-                                            )
-                                            ->where('client_location_jobs.job_id', $jobid)
-                                            ->first();
-
-                                        $country_id = @$client_loc->country_id;
-                                        if (@$country_id > 0) {
-                                            $country_name = GeneralMethod::getCountryName($country_id);
-                                            foreach ($country_name as $cval) {
-                                                $country_name = ucwords($cval['sortname']);
-                                            }
-                                        }
-
-                                        $city = mb_substr(@$client_loc->city, 0, 6);
-                                        // if (@$client_loc->country_id == 101) {
-                                        $city = mb_substr(@$client_loc->city_name, 0, 6);
-                                        // }
-
-                                        $jobLocation = DB::table('client_location_jobs')
-                                            ->where('client_location_jobs.job_id', $jobid)
-                                            ->count();
-
-                                        $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
-
-                                        $employment_type = 'Full-time';
-                                        if ($row->employment_type == 1) {
-                                            $employment_type = 'Contract';
-                                        }
-
-                                        if ($row->work_type == 'yes') {
-                                            echo ' <div class="d-flex flex-column">
-                                                <span class="text-dark fw-bolder fs-6">Remote</span>
-                                                <div class="d-flex align-items-center">
-                                                <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                                ucwords(@$employment_type) .
-                                                '" >' .
-                                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                                '</span>
-                                                </div>
-                                                </div>
-                                            </div>';
-                                        } elseif ($row->work_type == 'no' || $row->work_type =='other') {
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                $client_loc = DB::table('client_city_jobs')
-                                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                    ->select('city_list.city as city_name', 'countries.country_name')
-                                                    ->where('client_city_jobs.job_id', $jobid)
-                                                    ->first();
-                                                $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                                $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-
-                                                echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="text-dark fw-bolder fs-6">' .
-                                                    ucwords(mb_substr(@$city, 0, 10)) .
-                                                    '</span>
-                                                        </div>
-                                                        
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                                    ucwords(@$employment_type) .
-                                                    '" >' .
-                                                    ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                                    '</span>
-                                                    </div>
-                                                    </div>
-                                                </div>';
-                                            } else {
-                                                echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                                        </div>
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                                    ucwords(@$employment_type) .
-                                                    '" >' .
-                                                    ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                                    '</span>
-                                                </div>
-                                                </div>
-                                            </div>';
-                                            }
-                                        } elseif ($row->work_type == 'any') {
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                $client_loc = DB::table('client_city_jobs')
-                                                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                                    ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                                    ->select('city_list.city as city_name', 'countries.country_name')
-                                                    ->where('client_city_jobs.job_id', $jobid)
-                                                    ->first();
-                                                $city = mb_substr(@$client_loc->city_name, 0, 21);
-                                                $country_name = mb_substr(@$client_loc->country_name, 0, 6);
-
-                                                echo ' <div class="d-flex flex-column">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="text-dark fw-bolder fs-6">' .
-                                                    ucwords(mb_substr(@$city, 0, 10)) .
-                                                    '</span>
-                                                        </div>
-                                                        
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                                    ucwords(@$employment_type) .
-                                                    '" >' .
-                                                    ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                                    '</span>
-                                                    </div>
-                                                    </div>
-                                                </div>';
-                                            } else {
-                                                echo ' <div class="d-flex flex-column">
-                                                <div class="d-flex align-items-center">
-                                                <span class="text-dark fw-bolder fs-6">Remote</span>
-                                                &nbsp;|&nbsp;
-                                                        <span class="text-dark fw-bolder fs-6">Multiple</span>
-                                                        </div>
-                                                    <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                                    ucwords(@$employment_type) .
-                                                    '" >' .
-                                                    ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                                    '</span>
-
-                                                </div>
-                                                </div>
-                                            </div>';
-                                            }
-                                        }
-
-                                    @endphp
-                                </td>
-                                <td>
-                                    @php
-                                        $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                                        $status = ucwords($row->status);
-                                        $class = $job_status[$row->status];
-                                        $recommendation_id = $row->recommendation_id;
-                                        if ($status == 'Inactive') {
-                                            $status = 'Closed';
-                                        }
-                                        $final_status = '';
-                                        if (
-                                            ($row->final_status == 2 || $row->final_status == 3) &&
-                                            @$row->to_company_id == @$company_id
-                                        ) {
-                                            $status = 'Removed';
-                                            $class = 'closed-bg';
-                                        }
-
-                                        $ulink =
-                                            '<a href="javascript.void(0);" data-row-id="' .
-                                            @$row->id .
-                                            '" class="d-flex flex-column ' .
-                                            @$class .
-                                            ' status_stage text-hover-success" data-toggle="modal" data-target="#status_stage">' .
-                                            $status .
-                                            '</a>';
-
-                                        $recommendation_text = __('messages.internal_tag');
-                                        if ($recommendation_id > 0 && @$row->to_company_id == @$company_id) {
-                                            $recommendation_text = __('messages.clinet_tag');
-                                            $ulink =
-                                                '<a href="javascript:void(0);" class="fs-6 ' .
-                                                @$class .
-                                                ' text-hover-success">' .
-                                                $status .
-                                                '</a>';
-                                        }
-
-                                        echo '<div class="d-flex flex-column">
-                                        ' .
-                                            $ulink .
-                                            '
-                                        <span class="fw-bold text-muted d-block fs-7">R' .
-                                            @$row->id .
-                                            ' -' .
-                                            $recommendation_text .
-                                            '</span>
-                                        </div>';
-                                    @endphp
-                                </td>
-                                <td>
-                                    @php
-
-                                        $total_positions = '';
-                                        $total_positions = number_format($row->total_positions);
-                                        $hiringManager = '--------';
-                                        // dd($row);
-                                        if(!empty($job_assign_name)){
-                                            $hiringManager = ucwords($job_assign_name);
-                                        }
-
-                                        $created_at = '';
-                                        $created_at = $row->created_at;
-                                        $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                                        echo '<div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">' .
-                                            $newDate .
-                                            '</span>
-                                            <span class="text-muted fw-bold d-block fs-7">' .
-                                            $hiringManager .
-                                            ' </span>
-                                        </div>';
-
-                                    @endphp
-                                </td>
-                                 <td>
-                                     <div class="d-flex flex-column"> 
-                                            <a href="{{ url('job-details/' .(@$row->id) . '/'.$company_id) }}" class="btn btn-sm btn-primary openSideBar" data-row-source_from_type="2" data-row-id="{{$row->id}}" data-row-jobid="" style="width: 115px;">View Details</a> 
-                                    </div>
-                                </td>
-
-                            </tr>
-                        @endforeach
-                        @else
-                            <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-                                <td colspan="7" style="text-align: center; color: black;">
-                                    No data available in table
-                                </td>
-
-                            </tr>
-                    @endif
-                               
-                   
-
-                    </tbody>
-                </table>
-               <?php
-$totalPages = $last_page;
-$currentPage = $current_page;
-
-// How many pages to show on each side of current
-$side = 2;
-
-// Always show first and last page
-?>
-<div class="pagination-wrapper">
-    <div class="custom-pagination">
-
-        <!-- Previous Button -->
-        <?php if ($currentPage > 1): ?>
-            <a href="?page=<?= $currentPage - 1 ?>" class="page-link">Previous</a>
-        <?php else: ?>
-            <span class="page-link disabled">Previous</span>
-        <?php endif; ?>
-
-        <!-- First Page -->
-        <?php if ($currentPage > ($side + 2)): ?>
-            <a href="?page=1" class="page-link">1</a>
-            <span class="page-link">...</span>
-        <?php endif; ?>
-
-        <!-- Page Numbers Around Current -->
-        <?php
-        $start = max(1, $currentPage - $side);
-        $end   = min($totalPages, $currentPage + $side);
-
-        for ($i = $start; $i <= $end; $i++): ?>
-            <?php if ($i == $currentPage): ?>
-                <a href="?page=<?= $i ?>" class="page-link active"><?= $i ?></a>
-            <?php else: ?>
-                <a href="?page=<?= $i ?>" class="page-link"><?= $i ?></a>
-            <?php endif; ?>
-        <?php endfor; ?>
-
-        <!-- Last Page -->
-        <?php if ($currentPage < $totalPages - ($side + 1)): ?>
-            <span class="page-link">...</span>
-            <a href="?page=<?= $totalPages ?>" class="page-link"><?= $totalPages ?></a>
-        <?php endif; ?>
-
-        <!-- Next Button -->
-        <?php if ($currentPage < $totalPages): ?>
-            <a href="?page=<?= $currentPage + 1 ?>" class="page-link">Next</a>
-        <?php else: ?>
-            <span class="page-link disabled">Next</span>
-        <?php endif; ?>
-
+{{-- ════ HERO ════ --}}
+<section class="hero">
+    <div>
+        <div class="hero-eyebrow"><i class="fa-solid fa-star"></i> Top Employer {{ date('Y') }}</div>
+        <h1 class="hero-h1">Build the Future with<br><span>{{ $companyBrand }}</span></h1>
+        <p class="hero-sub">Join our team of innovators and problem solvers who are building products used by thousands of recruiters worldwide.</p>
+        <div class="hero-tags">
+            <div class="hero-tag"><i class="fa-solid fa-user-group"></i> Great People</div>
+            <div class="hero-tag"><i class="fa-regular fa-clock"></i> Flexible Work</div>
+            <div class="hero-tag"><i class="fa-solid fa-chart-line"></i> Learning Growth</div>
+            <div class="hero-tag"><i class="fa-solid fa-rocket"></i> Career Acceleration</div>
+        </div>
     </div>
-</div>
+    <div class="hero-imgs">
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop&auto=format" alt="Team collaboration"></div>
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=220&fit=crop&auto=format" alt="Modern office"></div>
+        <div class="hero-float">
+            <div class="hero-float-avs">
+                @for($i=0;$i<4;$i++)<span>{{ chr(65+$i) }}</span>@endfor
+            </div>
+            <div class="hero-float-txt">Join {{ $statEmployees }} team members</div>
+        </div>
+    </div>
+    <div class="hero-search-wrap">
+        <form method="GET" action="" class="hero-search">
+            <i class="fa-solid fa-magnifying-glass" style="padding:0 16px;font-size:15px;color:var(--m);display:flex;align-items:center;flex-shrink:0;"></i>
+            <input type="text" name="custom_search" value="{{ request('custom_search') }}" placeholder="Search by job title, keyword or skills..." style="flex:1;height:100%;border:none;outline:none;font-size:13px;font-family:'Poppins',sans-serif;color:var(--t);background:transparent;" />
+            <button type="submit" style="height:100%;padding:0 28px;background:var(--p);border:none;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:7px;cursor:pointer;flex-shrink:0;">
+                <i class="fa-solid fa-magnifying-glass"></i> Search Jobs
+            </button>
+        </form>
+    </div>
+</section>
 
-                
+{{-- ════ TRUSTED ════ --}}
+<section class="trusted">
+    <div class="trusted-lbl">Trusted by leading companies</div>
+    <div class="trusted-row">
+        {{-- Amazon --}}
+        <div class="trusted-item" style="font-family:Georgia,serif;">
+            <span style="color:#232F3E;font-size:16px;font-weight:900;letter-spacing:-.5px;">amazon</span><span style="color:#FF9900;font-size:13px;font-weight:700;">.co</span>
+        </div>
+        {{-- Flipkart --}}
+        <div class="trusted-item" style="color:#2874F0;font-size:15px;">
+            Flipkart&nbsp;<i class="fa-solid fa-star" style="color:#F59E0B;font-size:10px;"></i>
+        </div>
+        {{-- Alibaba --}}
+        <div class="trusted-item" style="color:#FF6A00;font-size:15px;font-style:italic;">Alibaba</div>
+        {{-- NYKAA --}}
+        <div class="trusted-item" style="color:#000;font-size:14px;letter-spacing:2px;font-family:'Poppins',sans-serif;">NYKAA</div>
+        {{-- Jio --}}
+        <div class="trusted-item">
+            <span style="background:#0B2547;color:#fff;font-size:12px;font-weight:900;
+                         width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;">Jio</span>
+        </div>
+        {{-- Paytm --}}
+        <div class="trusted-item" style="font-size:15px;">
+            <span style="color:#002970;font-weight:900;">Pay</span><span style="color:#00B9F1;font-weight:900;">tm</span>
+        </div>
+        {{-- BYJU'S --}}
+        <div class="trusted-item" style="color:#6D28D9;font-size:14px;">
+            <span style="background:#6D28D9;color:#fff;font-size:9px;padding:2px 4px;border-radius:3px;margin-right:4px;font-weight:900;">B</span>BYJU'S
+        </div>
+        {{-- 150+ --}}
+        <div class="trusted-more">150+ other clients</div>
+    </div>
+</section>
+
+{{-- ════ STATS ════ --}}
+<section class="stats">
+    <div class="stat"><div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div><div><div class="stat-val">{{ $total }}</div><div class="stat-lbl">Open Positions</div></div></div>
+    <div class="stat"><div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div><div><div class="stat-val">{{ $statDepts }}</div><div class="stat-lbl">Departments</div></div></div>
+    <div class="stat"><div class="stat-icon"><i class="fa-solid fa-globe"></i></div><div><div class="stat-val">{{ $statCountries }}</div><div class="stat-lbl">Countries</div></div></div>
+    <div class="stat"><div class="stat-icon"><i class="fa-solid fa-user-group"></i></div><div><div class="stat-val">{{ $statEmployees }}</div><div class="stat-lbl">Employees</div></div></div>
+    <div class="stat"><div class="stat-icon"><i class="fa-solid fa-heart"></i></div><div><div class="stat-val">{{ $statRetention }}</div><div class="stat-lbl">Employee Retention</div></div></div>
+</section>
+
+{{-- ════ MAIN ════ --}}
+<div class="main-grid">
+
+    {{-- ── FILTER SIDEBAR ── --}}
+    <aside class="filters">
+        <form method="GET" action="" id="filterForm">
+            {{-- preserve search & sort --}}
+            <input type="hidden" name="custom_search"     value="{{ request('custom_search') }}">
+            <input type="hidden" name="custom_hiringtype" value="{{ request('custom_hiringtype','All') }}">
+
+            <div class="filter-hdr">
+                <span class="filter-hdr-title">Filters</span>
+                <a href="{{ url()->current() }}" class="filter-clear">Clear All</a>
             </div>
 
+            {{-- Experience --}}
+            <div class="filter-sec">
+                <div class="filter-sec-hdr" onclick="togSec(this)">
+                    Experience <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="filter-sec-body">
+                    @foreach(['Fresher','1 – 3 Years','3 – 5 Years','5 – 8 Years','8+ Years'] as $ex)
+                    <label class="f-check">
+                        <input type="checkbox" name="filter_exp[]" value="{{ $ex }}" onchange="submitFilters()"
+                            {{ in_array($ex, (array)request('filter_exp',[])) ? 'checked' : '' }}>
+                        <span>{{ $ex }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Department --}}
+            <div class="filter-sec">
+                <div class="filter-sec-hdr" onclick="togSec(this)">
+                    Department <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="filter-sec-body">
+                    @foreach(['All Departments','Engineering','Product','Design','Marketing','Sales','HR','Finance','Support'] as $dp)
+                    <label class="f-check">
+                        <input type="checkbox" name="filter_dept[]" value="{{ $dp }}" onchange="submitFilters()"
+                            {{ in_array($dp, (array)request('filter_dept',[])) ? 'checked' : '' }}>
+                        <span>{{ $dp }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Employment Type --}}
+            <div class="filter-sec">
+                <div class="filter-sec-hdr" onclick="togSec(this)">
+                    Employment Type <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="filter-sec-body">
+                    @foreach(['Full-time','Part-time','Contract','Internship'] as $et)
+                    <label class="f-check">
+                        <input type="checkbox" name="filter_emp_type[]" value="{{ $et }}" onchange="submitFilters()"
+                            {{ in_array($et, (array)request('filter_emp_type',[])) ? 'checked' : '' }}>
+                        <span>{{ $et }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Location --}}
+            <div class="filter-sec">
+                <div class="filter-sec-hdr" onclick="togSec(this)">
+                    Location <i class="fa-solid fa-chevron-up"></i>
+                </div>
+                <div class="filter-sec-body">
+                    <div class="f-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Search location" oninput="filterLocSearch(this)">
+                    </div>
+                    @foreach(['Noida','Bangalore','Hyderabad','Pune','Remote'] as $lc)
+                    <label class="f-check loc-row">
+                        <input type="checkbox" name="filter_location[]" value="{{ $lc }}" onchange="submitFilters()"
+                            {{ in_array($lc, (array)request('filter_location',[])) ? 'checked' : '' }}>
+                        <span>{{ $lc }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Skills --}}
+            <div class="filter-sec" style="border-bottom:none;">
+                <div class="filter-sec-hdr" onclick="togSec(this)">
+                    Skills <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="filter-sec-body">
+                    <div class="f-tags">
+                        @foreach(['JavaScript','React','Node.js','Python','AWS','UI/UX','Java','PHP','Angular','Vue'] as $sk)
+                        <button type="button" name="filter_skills[]" value="{{ $sk }}"
+                            class="f-tag {{ in_array($sk,(array)request('filter_skills',[])) ? 'on' : '' }}"
+                            onclick="toggleSkillTag(this)">{{ $sk }}</button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </form>
+    </aside>
+
+    {{-- ── JOBS LIST ── --}}
+    <div class="jobs-area">
+        <div class="jobs-topbar">
+            <div class="jobs-count">{{ $total }} Open Positions</div>
+            <div class="jobs-sort">
+                <span class="jobs-sort-lbl">Sort by:</span>
+                <form method="GET" action="" id="sortForm">
+                    <input type="hidden" name="custom_search" value="{{ request('custom_search') }}">
+                    <select name="custom_hiringtype" onchange="document.getElementById('sortForm').submit()">
+                        <option value="All" {{ request('custom_hiringtype','All')==='All'?'selected':'' }}>Newest First</option>
+                        <option value="2"   {{ request('custom_hiringtype')==='2'?'selected':'' }}>Oldest First</option>
+                        <option value="3"   {{ request('custom_hiringtype')==='3'?'selected':'' }}>Salary: Low to High</option>
+                        <option value="4"   {{ request('custom_hiringtype')==='4'?'selected':'' }}>Salary: High to Low</option>
+                        <option value="5"   {{ request('custom_hiringtype')==='5'?'selected':'' }}>A to Z (Company)</option>
+                        <option value="7"   {{ request('custom_hiringtype')==='7'?'selected':'' }}>Full-Time Only</option>
+                        <option value="8"   {{ request('custom_hiringtype')==='8'?'selected':'' }}>Contract Only</option>
+                    </select>
+                </form>
             </div>
         </div>
-    </main>
+
+        @if(count($data) > 0)
+            @foreach($data as $idx => $rowArr)
+            @php
+                $row = (object)$rowArr;
+                $avGrad = $avGradients[$idx % count($avGradients)];
+
+                /* first letter of title for avatar */
+                $titleStr    = trim(@$row->title ?? 'J');
+                $firstLetter = strtoupper($titleStr[0] ?? 'J');
+
+                /* recommendation logic */
+                $match = collect($row->recommendation_relation)->first(function($item) use ($company_id){
+                    return ($item['from_company_id'] ?? null) == $company_id
+                        || ($item['to_company_id']   ?? null) == $company_id;
+                });
+                $recId        = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
+                $row->final_status = ($match['to_company_id'] ?? null) == $company_id ? $match['final_status'] : null;
+                $isRec        = ($recId > 0 && @$row->to_company_id == @$company_id);
+                $displayCo    = $isRec
+                    ? ucwords(mb_substr(@$row->company_name, 0, 50))
+                    : ucwords(mb_substr(@$account->company_name, 0, 50));
+
+                /* skills */
+                $skills = DB::table('job_metronics_skills')
+                    ->select('skill_name')
+                    ->where('job_id', $row->id)
+                    ->where('company_id', $row->comId)
+                    ->limit(8)->get();
+
+                /* salary */
+                $minSalMode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
+                $maxSalMode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
+                $minCur     = strip_tags($currencySymbole[@$row->min_salary_currency] ?? '₹');
+                $maxCur     = strip_tags($currencySymbole[@$row->max_salary_currency] ?? '₹');
+                $minSal     = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
+                $maxSal     = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
+
+                /* location */
+                $locLabel = 'Remote';
+                if ($row->work_type !== 'yes') {
+                    $multiCount = DB::table('client_city_jobs')->where('job_id', $row->id)->count();
+                    if ($multiCount > 1) {
+                        $locLabel = 'Multiple';
+                    } else {
+                        $cityRow  = DB::table('client_city_jobs')
+                            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
+                            ->select('city_list.city as cn')
+                            ->where('client_city_jobs.job_id', $row->id)
+                            ->first();
+                        $locLabel = ucwords(mb_substr(@$cityRow->cn, 0, 18)) ?: 'N/A';
+                    }
+                }
+                $workMode   = ($row->work_type === 'yes') ? 'Remote' : 'Hybrid';
+                $empType    = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
+
+                /* status badge */
+                $statusText = ucwords($row->status);
+                if ($statusText === 'Inactive') $statusText = 'Closed';
+                if (($row->final_status == 2 || $row->final_status == 3) && @$row->to_company_id == @$company_id)
+                    $statusText = 'Removed';
+                $daysDiff   = (int)Carbon::parse($row->created_at)->diffInDays(now());
+                $badgeLabel = ($statusText === 'Active')
+                    ? ($daysDiff <= 3 ? 'New' : 'Hiring')
+                    : $statusText;
+                $badgeClass = match($badgeLabel){
+                    'Hiring'            => 'badge-hiring',
+                    'New'               => 'badge-new',
+                    'Closed','Removed'  => 'badge-closed',
+                    default             => 'badge-hold',
+                };
+
+                $timeAgo    = Carbon::parse($row->created_at)->diffForHumans(['parts'=>1]);
+
+                /* company logo */
+                $logoPath   = GeneralMethod::openCompanyDetails($row->id, $company_id);
+
+                /* hiring manager */
+                $hmName = collect($row->job_assign)->first(function($item) use ($company_id){
+                    return ($item['company_id'] ?? null) == $company_id
+                        && (int)($item['spok_user_id'] ?? 0) === (int)($item['user_id'] ?? -1);
+                })['user_name'] ?? null;
+            @endphp
+
+            <div class="job-card">
+                {{-- MAIN ROW: drag · avatar · info · meta-cols · right --}}
+                <div class="jc-main">
+                    <div class="jc-drag">
+                        <span></span><span></span>
+                        <span></span><span></span>
+                        <span></span><span></span>
+                    </div>
+
+                    {{-- Square avatar --}}
+                    <div class="jc-av" style="background:{{ $avGrad }};">
+                        @if(!empty($logoPath))
+                            <img src="{{ str_replace('index.php','',$logoPath) }}" alt="{{ $displayCo }}">
+                        @else
+                            {{ $firstLetter }}
+                        @endif
+                    </div>
+
+                    {{-- Title / category / company --}}
+                    <div class="jc-info">
+                        <div class="jc-title">{{ ucwords(mb_substr(@$row->title, 0, 50)) }}</div>
+                        @if(@$row->job_category_name)
+                        <div class="jc-cat">{{ $row->job_category_name }}</div>
+                        @endif
+                        <div class="jc-co">{{ $displayCo }}</div>
+                    </div>
+
+                    {{-- 2-col meta grid --}}
+                    <div class="jc-meta-cols">
+                        @if(@$row->min_exp || @$row->max_exp)
+                        <div class="jc-mi"><i class="fa-regular fa-clock"></i> {{ @$row->min_exp }} – {{ @$row->max_exp }} Years</div>
+                        @else
+                        <div></div>
+                        @endif
+                        <div class="jc-mi"><i class="fa-solid fa-location-dot"></i> {{ $locLabel }}</div>
+
+                        @if(@$row->min_salary || @$row->max_salary)
+                        <div class="jc-mi sal"><i class="fa-solid fa-indian-rupee-sign"></i> {{ $minCur }}{{ $minSal }}{{ $minSalMode }} – {{ $maxCur }}{{ $maxSal }}{{ $maxSalMode }}</div>
+                        @else
+                        <div></div>
+                        @endif
+                        <div class="jc-mi"><i class="fa-solid fa-house"></i> {{ $workMode }}</div>
+
+                        <div class="jc-mi jid"><i class="fa-solid fa-tag"></i> Job ID: {{ $row->id }}</div>
+                    </div>
+
+                    {{-- Badge + bookmark on same row, time below --}}
+                    <div class="jc-right">
+                        <div class="jc-right-top">
+                            <span class="jc-badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                            <div class="jc-bm"><i class="fa-regular fa-bookmark"></i></div>
+                        </div>
+                        <span class="jc-time">{{ $timeAgo }}</span>
+                    </div>
+                </div>
+
+                {{-- BOTTOM ROW: Skills label + chips | action buttons --}}
+                <div class="jc-bottom">
+                    <div class="jc-skills-row">
+                        @if($skills->count())
+                        <span class="jc-skills-lbl">Skills:</span>
+                        @foreach($skills as $sk)
+                        <span class="jc-skill">{{ ucfirst($sk->skill_name) }}</span>
+                        @endforeach
+                        @endif
+                    </div>
+                    <div class="jc-actions">
+                        <a href="{{ url('job-details/'.@$row->id.'/'.$company_id) }}" class="btn-view">View Job</a>
+                        <a href="{{ url('job-apply/'.@$row->id.'/'.$company_id) }}" class="btn-apply">Apply</a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        @else
+            <div class="jobs-empty">
+                <i class="fa-solid fa-briefcase"></i>
+                <div class="jobs-empty-t">No open positions right now</div>
+                <div class="jobs-empty-s">Check back soon — we're always growing!</div>
+            </div>
+        @endif
+
+        {{-- ── PAGINATION ── --}}
+        @php
+            $tPages = $last_page;
+            $cPage  = $current_page;
+            $side   = 2;
+            $pStart = max(1, $cPage - $side);
+            $pEnd   = min($tPages, $cPage + $side);
+            $qs     = '&custom_search='.urlencode(request('custom_search','')).'&custom_hiringtype='.urlencode(request('custom_hiringtype','All'));
+        @endphp
+        @if($tPages > 1)
+        <div class="pag">
+            <a href="?page={{ max(1,$cPage-1) }}{{ $qs }}" class="pag-btn {{ $cPage<=1?'off':'' }}">
+                <i class="fa-solid fa-chevron-left" style="font-size:9px;"></i>&nbsp;Previous
+            </a>
+            @if($pStart > 2)<a href="?page=1{{ $qs }}" class="pag-btn">1</a><span class="pag-dots">…</span>@endif
+            @for($p=$pStart;$p<=$pEnd;$p++)
+            <a href="?page={{ $p }}{{ $qs }}" class="pag-btn {{ $cPage==$p?'on':'' }}">{{ $p }}</a>
+            @endfor
+            @if($pEnd < $tPages-1)<span class="pag-dots">…</span><a href="?page={{ $tPages }}{{ $qs }}" class="pag-btn">{{ $tPages }}</a>@endif
+            <a href="?page={{ min($tPages,$cPage+1) }}{{ $qs }}" class="pag-btn {{ $cPage>=$tPages?'off':'' }}">
+                Next&nbsp;<i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
+            </a>
+        </div>
+        @endif
+    </div>{{-- /jobs-area --}}
+
+</div>{{-- /main-grid --}}
+
+{{-- ════ BENEFITS ════ --}}
+<section class="benefits">
+    @php $bens=[
+        ['fa-house','#EFF6FF','#2563EB','Flexible Work Culture','Work from anywhere, anytime'],
+        ['fa-heart-pulse','#FFF1F2','#E11D48','Health & Wellness','Health insurance & wellness programs'],
+        ['fa-chart-line','#F0FDF4','#16A34A','Learning & Growth','Continuous learning & upskilling'],
+        ['fa-rocket','#FFF7ED','#F97316','Career Acceleration','Fast-track your growth with us'],
+    ]; @endphp
+    @foreach($bens as [$ico,$bg,$col,$title,$desc])
+    <div class="benefit">
+        <div class="benefit-icon" style="background:{{ $bg }};"><i class="fa-solid {{ $ico }}" style="color:{{ $col }};"></i></div>
+        <div><div class="benefit-title">{{ $title }}</div><div class="benefit-desc">{{ $desc }}</div></div>
+    </div>
+    @endforeach
+</section>
 
 
-    
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>
-<script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
-<script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
-    $(document).on('click', '.stat-label', function(e) {
-        var skill = $(this).text();
-       $('.skillSearchValue').val(skill);
-     });
-  function sendHeight() {
-    window.parent.postMessage(
-      { frameHeight: document.body.scrollHeight },
-      "*"
-    );
-  }
+/* filter section toggle */
+function togSec(hdr){
+    var body = hdr.nextElementSibling, ic = hdr.querySelector('i');
+    if(!body) return;
+    var hidden = body.style.display === 'none';
+    body.style.display = hidden ? '' : 'none';
+    ic.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+}
+/* submit filter form on any checkbox/tag change */
+function submitFilters(){
+    var f = document.getElementById('filterForm');
+    if(f) f.submit();
+}
+/* skill tag toggle — adds hidden input then submits */
+function toggleSkillTag(btn){
+    btn.classList.toggle('on');
+    var form = document.getElementById('filterForm');
+    /* remove existing hidden inputs for this skill */
+    form.querySelectorAll('input[type=hidden][name="filter_skills[]"]').forEach(function(el){
+        if(el.value === btn.value) el.remove();
+    });
+    if(btn.classList.contains('on')){
+        var h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'filter_skills[]'; h.value = btn.value;
+        form.appendChild(h);
+    }
+    submitFilters();
+}
 
-  // Send height on load
-  window.onload = sendHeight;
+/* location search */
+function filterLocSearch(inp){
+    var q = inp.value.toLowerCase();
+    document.querySelectorAll('.loc-row').forEach(function(r){
+        r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
 
-  // Also send height if page resizes (content changes)
-  window.onresize = sendHeight;
+/* bookmark toggle */
+document.querySelectorAll('.jc-bm').forEach(function(bm){
+    bm.addEventListener('click', function(){
+        var ic = this.querySelector('i');
+        ic.classList.toggle('fa-regular');
+        ic.classList.toggle('fa-solid');
+        this.classList.toggle('on');
+    });
+});
+
+/* iframe height reporting */
+function sendHeight(){ window.parent.postMessage({frameHeight:document.body.scrollHeight},'*'); }
+window.onload = sendHeight;
+window.onresize = sendHeight;
 </script>
 
-
-
 </body>
-
 </html>
