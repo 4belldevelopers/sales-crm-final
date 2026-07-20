@@ -112,4 +112,50 @@ class SchemaTest extends TestCase
             $indexes->get('timeline_ownership_backfill_idx')['columns']
         );
     }
+
+    // ---- Phase 8 (Activation Readiness) schema ---------------------------------------
+
+    public function test_ownership_engine_settings_exists_with_a_single_row_defaulting_to_disabled(): void
+    {
+        $this->assertTrue(Schema::hasTable('ownership_engine_settings'));
+        $this->assertTrue(Schema::hasColumns('ownership_engine_settings', [
+            'id', 'globally_enabled', 'kill_switch_active', 'kill_switch_reason',
+            'kill_switch_activated_at', 'created_at', 'updated_at',
+        ]));
+
+        $row = DB::table('ownership_engine_settings')->where('id', 1)->first();
+        $this->assertNotNull($row, 'The migration must seed exactly one settings row (id = 1).');
+
+        // Finding 6: the default must be disabled — activation is a deliberate future action.
+        $this->assertSame(0, (int) $row->globally_enabled);
+        $this->assertSame(0, (int) $row->kill_switch_active);
+    }
+
+    public function test_companies_and_jobs_have_nullable_ownership_engine_enabled_override(): void
+    {
+        $this->assertTrue(Schema::hasColumn('companies', 'ownership_engine_enabled'));
+        $this->assertTrue(Schema::hasColumn('jobs', 'ownership_engine_enabled'));
+
+        // Existing rows must default to NULL (inherit), never to a value that silently
+        // changes behavior for every pre-existing company/job the moment this migration runs.
+        $companyId = DB::table('companies')->insertGetId([
+            'company_name' => 'Schema Test Co',
+            'company_email' => uniqid().'@example.test',
+            'locale' => 'en',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->assertNull(DB::table('companies')->where('id', $companyId)->value('ownership_engine_enabled'));
+    }
+
+    public function test_shadow_comparisons_table_has_the_approved_shape(): void
+    {
+        $this->assertTrue(Schema::hasTable('ownership_engine_shadow_comparisons'));
+        $this->assertTrue(Schema::hasColumns('ownership_engine_shadow_comparisons', [
+            'id', 'subject_row_id', 'scoping_company_id', 'job_id',
+            'legacy_wise_duplicate', 'legacy_profile_duplicate',
+            'engine_ownership_state', 'engine_owner_row_id', 'engine_decision_rule',
+            'category', 'compared_at', 'created_at', 'updated_at',
+        ]));
+    }
 }

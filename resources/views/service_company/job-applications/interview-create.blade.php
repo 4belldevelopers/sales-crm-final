@@ -54,7 +54,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     @media (max-width: 1500px) { .isd-grid-details { grid-template-columns: 1fr 1fr; } }
     .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
     .isd-field label .req { color: #f64e60; }
-    .isd-field label i { color: #a1a5b7; font-size: 11px; }
+    .isd-field label i { color: #a1a5b7; font-size: 14px; }
     .isd-field input, .isd-field select, .isd-field textarea { width: 100%; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 7px 9px; font-size: 12px; color: #181c32; background: #f8f9fb; }
     .isd-field input:disabled, .isd-field select:disabled, .isd-field textarea:disabled { color: #b5b5c3; cursor: not-allowed; background: #f1f1f4; }
     .isd-soon { display: inline-flex; align-items: center; font-size: 9px; font-weight: 600; color: #a1a5b7; background: #f1f1f4; border-radius: 5px; padding: 2px 6px; margin-left: 4px; text-transform: uppercase; letter-spacing: .3px; }
@@ -72,17 +72,18 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-tile { flex: 1 1 100px; max-width: 138px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; background: #fff; position: relative; transition: .15s; }
     .isd-tile:hover { border-color: #cdd4e0; }
     .isd-tile.is-selected { border-color: #3e97ff; border-width: 2px; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset, 0 2px 8px rgba(62,151,255,.18); }
-    .isd-tile .ic { width: 28px; height: 28px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; background: #eef4ff; color: #3e97ff; }
+    .isd-tile .ic { width: 44px; height: 44px; border-radius: 10px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #eef4ff; color: #3e97ff; overflow: hidden; }
+    .isd-tile .ic svg { width: 30px; height: 30px; }
     .isd-tile .nm { font-size: 10.5px; font-weight: 700; color: #181c32; }
     .isd-tile.is-disabled { cursor: not-allowed; opacity: .55; }
-    .isd-tile .chk { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 50%; background: #3e97ff; color: #fff; display: none; align-items: center; justify-content: center; font-size: 8px; }
+    .isd-tile .chk { position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; background: #3e97ff; color: #fff; display: none; align-items: center; justify-content: center; font-size: 10px; }
     .isd-tile.is-selected .chk { display: flex; }
     .isd-leaf-label { font-size: 10px; font-weight: 600; color: #a1a5b7; text-transform: uppercase; letter-spacing: .3px; margin: 2px 0 8px; }
 
     .isd-link-row { position: relative; }
-    .isd-link-row input { padding-right: 88px; }
-    .isd-link-actions { position: absolute; right: 5px; top: 5px; display: flex; gap: 4px; }
-    .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 10px; }
+    .isd-link-row input { padding-right: 108px; }
+    .isd-link-actions { position: absolute; right: 5px; top: 4px; display: flex; gap: 5px; }
+    .isd-icon-btn { width: 30px; height: 30px; border-radius: 7px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 14px; }
     .isd-icon-btn:hover { background: #f8f9fb; color: #3e97ff; }
 
     .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 7px 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
@@ -104,7 +105,7 @@ $country_code =  GeneralMethod::countryCodeFun();
 
     .isd-notify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .isd-notify { display: flex; align-items: flex-start; gap: 9px; border: 1.5px solid #eef0f4; border-radius: 9px; padding: 8px 10px; }
-    .isd-notify i { color: #7e8299; font-size: 12px; margin-top: 1px; }
+    .isd-notify i { color: #7e8299; font-size: 16px; margin-top: 1px; }
     .isd-notify input[type=checkbox] { margin-top: 2px; width: 14px; height: 14px; accent-color: #3e97ff; flex-shrink: 0; }
     .isd-notify .t { font-size: 11px; font-weight: 600; color: #181c32; }
     .isd-notify .d { font-size: 9.5px; color: #7e8299; }
@@ -115,7 +116,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-sidebar-card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #3e97ff; flex-shrink: 0; }
     .isd-sum-row { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; }
     .isd-sum-row:last-child { border-bottom: none; }
-    .isd-sum-ico { width: 24px; height: 24px; border-radius: 7px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+    .isd-sum-ico { width: 30px; height: 30px; border-radius: 8px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .isd-sum-label { font-size: 9.5px; color: #7e8299; font-weight: 500; }
     .isd-sum-value { font-size: 11.5px; font-weight: 700; color: #181c32; margin-top: 1px; word-break: break-word; }
     .isd-sum-value.muted { color: #b5b5c3; font-weight: 600; }
@@ -1091,6 +1092,27 @@ $country_code =  GeneralMethod::countryCodeFun();
        ===================================================================== */
     var isdFamilyIcons = { 1: 'ti-phone-filled', 2: 'ti-video', 3: 'ti-map-pin-filled', 4: 'ti-dots' };
     var isdLeafIcons = { 'google meet':'ti-brand-google-filled', 'zoom':'ti-brand-zoom', 'microsoft teams':'ti-brand-teams', 'skype call':'ti-brand-skype', 'phone call':'ti-phone-filled' };
+    // Custom brand SVGs (full-color, self-contained) — used in place of the
+    // Tabler icon font for the modes an icon was actually supplied for.
+    // Keyed the same way isdFamilyIcons / isdLeafIcons are looked up.
+    var isdCustomSvg = {
+        'family-1': '<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="15%" fill="#20df40"/><path fill="#ffffff" d="M395 338c-10-9-22-17-33-23-23-16-43-17-59 6-10 14-23 16-37 10-39-18-68-43-84-82-8-16-8-31 10-42 9-6 19-14 18-28-1-18-44-78-62-84-8-2-14-2-22 0-41 14-57 46-42 85a451 451 0 0 0 251 248l17 5c26 0 57-25 67-50 9-24-10-34-24-45z"/><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="17" d="M268 138s41-1 72 30c31 30 27 74 27 74m-87-63s18-2 33 14c15 15 13 34 13 34M255 98s64-3 111 44c47 48 43 114 43 114"/></svg>',
+        'family-2': '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M170.666667 256h469.333333c46.933333 0 85.333333 38.4 85.333333 85.333333v341.333334c0 46.933333-38.4 85.333333-85.333333 85.333333H170.666667c-46.933333 0-85.333333-38.4-85.333334-85.333333V341.333333c0-46.933333 38.4-85.333333 85.333334-85.333333z" fill="#4CAF50"/><path d="M938.666667 746.666667l-213.333334-128V405.333333l213.333334-128z" fill="#388E3C"/></svg>',
+        'family-3': '<svg viewBox="-2 0 32 32" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M23.1397 4.05909C20.4929 1.35303 17.2979 0 13.5549 0C9.81179 0 6.61688 1.35303 3.97014 4.05909C1.32338 6.76515 0 10.0317 0 13.8586C0 17.6855 1.32338 20.952 3.97014 23.6582L11.1323 30.9808C12.4615 32.3397 14.6483 32.3397 15.9775 30.9808L23.1397 23.6582C25.7864 20.952 27.1097 17.6855 27.1097 13.8586C27.1097 10.0317 25.7864 6.76515 23.1397 4.05909ZM13.5549 19.0556C13.8886 19.0556 14.2192 19.0223 14.5465 18.9556C14.8739 18.8891 15.1917 18.7906 15.5001 18.66C15.8084 18.5294 16.1014 18.3693 16.3789 18.1798C16.6564 17.9901 16.9131 17.7747 17.1491 17.5334C17.2668 17.4131 17.3785 17.2871 17.4841 17.1556C17.5897 17.024 17.6888 16.8874 17.7813 16.7459C17.8738 16.6044 17.9593 16.4585 18.0378 16.3084C18.1162 16.1583 18.1872 16.0047 18.251 15.8474C18.3147 15.6901 18.3707 15.5301 18.419 15.3672C18.4674 15.2043 18.5078 15.0394 18.5404 14.8725C18.5728 14.7055 18.5972 14.5374 18.6135 14.368C18.6298 14.1986 18.6379 14.0288 18.6379 13.8586C18.6379 13.6884 18.6298 13.5186 18.6135 13.3492C18.5972 13.1798 18.5728 13.0117 18.5404 12.8447C18.5078 12.6778 18.4674 12.5129 18.419 12.35C18.3707 12.1871 18.3147 12.0271 18.251 11.8698C18.1872 11.7125 18.1162 11.5589 18.0378 11.4088C17.9593 11.2587 17.8738 11.1128 17.7813 10.9713C17.6888 10.8298 17.5897 10.6933 17.4841 10.5617C17.3785 10.4301 17.2668 10.3041 17.1491 10.1838C16.9131 9.94249 16.6564 9.72705 16.3789 9.53748C16.1014 9.34789 15.8084 9.18781 15.5001 9.05723C15.1917 8.92664 14.8739 8.82806 14.5465 8.76148C14.2192 8.69491 13.8886 8.66163 13.5549 8.66163C13.2211 8.66163 12.8906 8.69491 12.5632 8.76148C12.2359 8.82806 11.918 8.92664 11.6097 9.05723C11.3013 9.18781 11.0084 9.34789 10.7309 9.53748C10.4534 9.72705 10.1966 9.94249 9.96059 10.1838C9.84288 10.3041 9.73122 10.4301 9.6256 10.5617C9.51999 10.6933 9.42094 10.8298 9.32845 10.9713C9.23596 11.1128 9.15048 11.2587 9.072 11.4088C8.99352 11.5589 8.92243 11.7126 8.85872 11.8698C8.79501 12.0271 8.73899 12.1871 8.69067 12.35C8.64235 12.5129 8.60194 12.6778 8.56946 12.8447C8.53698 13.0117 8.51259 13.1798 8.49628 13.3492C8.47996 13.5186 8.47179 13.6884 8.47179 13.8586C8.47179 14.0288 8.47996 14.1986 8.49628 14.368C8.51259 14.5374 8.53698 14.7055 8.56946 14.8725C8.60194 15.0394 8.64235 15.2043 8.69067 15.3672C8.73899 15.5301 8.79501 15.6902 8.85872 15.8474C8.92243 16.0047 8.99352 16.1583 9.072 16.3084C9.15048 16.4585 9.23596 16.6044 9.32845 16.7459C9.42094 16.8874 9.51999 17.024 9.6256 17.1556C9.73122 17.2871 9.84288 17.4131 9.96059 17.5334C10.1966 17.7747 10.4534 17.9901 10.7309 18.1798C11.0084 18.3693 11.3013 18.5294 11.6097 18.66C11.918 18.7906 12.2359 18.8891 12.5632 18.9556C12.8906 19.0223 13.2211 19.0556 13.5549 19.0556Z" fill="url(#pgf2f1)"/><defs><radialGradient id="pgf2f1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(13.5549) rotate(90) scale(32 27.1097)"><stop stop-color="#A2E458"/><stop offset="1" stop-color="#5AD010"/></radialGradient></defs></svg>',
+        'leaf-google meet': '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path fill="#F5BB41" d="M91.084,20.921L77.229,32.352V18.068c0-3.528-2.84-6.386-6.346-6.386H25.405L3.723,33.502v32.996v15.434c0,3.528,2.84,6.386,6.346,6.386h15.336h45.478c3.506,0,6.346-2.858,6.346-6.386V68.18l13.918,11.485c2.083,1.639,5.13,0.144,5.13-2.522V23.39C96.277,20.692,93.162,19.212,91.084,20.921z M56.076,66.498H25.405V33.502h30.671V50V66.498z"/><path fill="#2167D1" d="M3.723,66.498v15.434c0,3.528,2.84,6.386,6.346,6.386h15.336v-21.82H3.723z"/><rect fill="#3D84F3" height="32.996" width="21.682" x="3.723" y="33.502"/><path fill="#4CA853" d="M91.084,20.921L77.229,32.352V68.18l13.918,11.485c2.083,1.639,5.13,0.144,5.13-2.522V23.39C96.277,20.692,93.162,19.212,91.084,20.921z"/><path fill="#4CA853" d="M56.076,50v16.498H25.405v21.82h45.478c3.506,0,6.346-2.858,6.346-6.386V68.18L56.076,50z"/><polygon fill="#398039" points="77.229,68.18 77.229,32.363 56.076,50"/><polygon fill="#D74F3F" points="3.723,33.502 25.405,33.502 25.405,11.682"/><path fill="#F5BB41" d="M70.883,11.682H25.405v21.82h30.671V50l21.153-17.637v-0.011V18.068C77.229,14.54,74.389,11.682,70.883,11.682z"/></svg>',
+        'leaf-microsoft teams': '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path fill="#5059C9" d="M10.765 6.875h3.616c.342 0 .619.276.619.617v3.288a2.272 2.272 0 01-2.274 2.27h-.01a2.272 2.272 0 01-2.274-2.27V7.199c0-.179.145-.323.323-.323zM13.21 6.225c.808 0 1.464-.655 1.464-1.462 0-.808-.656-1.463-1.465-1.463s-1.465.655-1.465 1.463c0 .807.656 1.462 1.465 1.462z"/><path fill="#7B83EB" d="M8.651 6.225a2.114 2.114 0 002.117-2.112A2.114 2.114 0 008.65 2a2.114 2.114 0 00-2.116 2.112c0 1.167.947 2.113 2.116 2.113zM11.473 6.875h-5.97a.611.611 0 00-.596.625v3.75A3.669 3.669 0 008.488 15a3.669 3.669 0 003.582-3.75V7.5a.611.611 0 00-.597-.625z"/><path fill="#000000" d="M8.814 6.875v5.255a.598.598 0 01-.596.595H5.193a3.951 3.951 0 01-.287-1.476V7.5a.61.61 0 01.597-.624h3.31z" opacity=".1"/><path fill="#000000" d="M8.488 6.875v5.58a.6.6 0 01-.596.595H5.347a3.22 3.22 0 01-.267-.65 3.951 3.951 0 01-.172-1.15V7.498a.61.61 0 01.596-.624h2.985z" opacity=".2"/><path fill="#000000" d="M8.488 6.875v4.93a.6.6 0 01-.596.595H5.08a3.951 3.951 0 01-.172-1.15V7.498a.61.61 0 01.596-.624h2.985z" opacity=".2"/><path fill="#000000" d="M8.163 6.875v4.93a.6.6 0 01-.596.595H5.079a3.951 3.951 0 01-.172-1.15V7.498a.61.61 0 01.596-.624h2.66z" opacity=".2"/><path fill="#000000" d="M8.814 5.195v1.024c-.055.003-.107.006-.163.006-.055 0-.107-.003-.163-.006A2.115 2.115 0 016.593 4.6h1.625a.598.598 0 01.596.594z" opacity=".1"/><path fill="#000000" d="M8.488 5.52v.699a2.115 2.115 0 01-1.79-1.293h1.195a.598.598 0 01.595.594z" opacity=".2"/><path fill="#000000" d="M8.163 5.52v.647a2.115 2.115 0 01-1.465-1.242h.87a.598.598 0 01.595.595z" opacity=".2"/><path fill="url(#pgmt1)" d="M1.597 4.925h5.969c.33 0 .597.267.597.596v5.958a.596.596 0 01-.597.596h-5.97A.596.596 0 011 11.479V5.521c0-.33.267-.596.597-.596z"/><path fill="#ffffff" d="M6.152 7.193H4.959v3.243h-.76V7.193H3.01v-.63h3.141v.63z"/><defs><linearGradient id="pgmt1" x1="2.244" x2="6.906" y1="4.46" y2="12.548" gradientUnits="userSpaceOnUse"><stop stop-color="#5A62C3"/><stop offset=".5" stop-color="#4D55BD"/><stop offset="1" stop-color="#3940AB"/></linearGradient></defs></svg>',
+        'leaf-phone call': '<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="15%" fill="#20df40"/><path fill="#ffffff" d="M395 338c-10-9-22-17-33-23-23-16-43-17-59 6-10 14-23 16-37 10-39-18-68-43-84-82-8-16-8-31 10-42 9-6 19-14 18-28-1-18-44-78-62-84-8-2-14-2-22 0-41 14-57 46-42 85a451 451 0 0 0 251 248l17 5c26 0 57-25 67-50 9-24-10-34-24-45z"/><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="17" d="M268 138s41-1 72 30c31 30 27 74 27 74m-87-63s18-2 33 14c15 15 13 34 13 34M255 98s64-3 111 44c47 48 43 114 43 114"/></svg>',
+        'leaf-other': '<svg viewBox="0 0 512.176 512.176" xmlns="http://www.w3.org/2000/svg"><path fill="#1689FC" d="M253.422 172.886L346.8 79.507c11.341-11.342 26.288-17.016 41.229-17.016 14.94 0 29.887 5.674 41.229 17.016l.068.072c11.296 11.334 16.948 26.251 16.948 41.157 0 14.937-5.673 29.884-17.013 41.226l-95.985 95.987c-6.917 6.917-15.622 11.896-24.986 14.67-9.375 2.775-19.459 3.322-29.103 1.37-12.796-2.59-20.783-9.21-28.727-15.795-16.45-17.096-43.529-18.599-62.063-.065l-.075.075c4.42 13.375 13.19 26.417 24.152 37.514 11.64 11.781 25.634 21.27 39.45 26.58 19.788 7.605 41.42 9.238 62.029 4.903 19.889-4.186 38.83-13.981 54.226-29.377l97.982-97.981c21.144-21.144 31.719-49.029 31.719-76.914 0-27.868-10.561-55.732-31.676-76.872l-.044-.042c-21.145-21.145-49.028-31.719-76.913-31.719-27.886 0-55.769 10.574-76.913 31.717l-97.982 97.983c-5.604 5.604-10.447 11.639-14.522 17.981a108.1 108.1 0 00-5.37 9.341 124.273 124.273 0 0126.274-2.805c11.003 0 22.005 1.459 32.688 4.373z"/><path fill="#5B9FFC" d="M214.476 297.698l37.91-37.911c7.339 6.035 15.038 11.82 26.801 14.202 9.644 1.952 19.728 1.405 29.103-1.37 9.364-2.774 18.069-7.753 24.986-14.67l95.985-95.987c11.34-11.342 17.013-26.289 17.013-41.226 0-14.185-5.118-28.381-15.349-39.488l35.235-35.233.044.042c21.115 21.14 31.676 49.004 31.676 76.872 0 27.885-10.575 55.77-31.719 76.914l-97.982 97.981c-15.396 15.396-34.337 25.191-54.226 29.377-20.609 4.335-42.241 2.702-62.029-4.903-13.034-5.009-26.225-13.737-37.448-24.6z"/><path fill="#A3D4FF" d="M41.107 471.058h.001c45.123 45.124 118.96 45.124 164.083 0l96.531-96.531a114.972 114.972 0 0028.236-46.213c-29.88 4.82-60.152 5.081-76.034.476l-95.341 95.34c-20.391 20.392-53.763 20.394-74.158 0-20.393-20.393-20.392-53.763.001-74.157l94.298-94.297c20.393-20.394 53.763-20.394 74.156-.001 1.992 1.991 6.739 4.885 12.357 7.736 22.287 11.305 43.499 7.568 63.749-9.638a114.963 114.963 0 00-27.264-43.33c-45.123-45.123-118.961-45.123-164.084 0l-96.531 96.531c-45.123 45.123-45.123 118.961 0 164.084z"/><path fill="#BFE0FF" d="M84.045 428.128l-38.208 38.208.002.002c21.143 21.144 49.027 31.718 76.914 31.718 27.886 0 55.769-10.574 76.914-31.718l97.981-97.981c5.798-5.798 10.771-12.039 14.913-18.581a106.457 106.457 0 004.983-8.762l-.685.148a124.32 124.32 0 01-63.515-3.282l-88.581 88.58c-11.342 11.342-26.289 17.016-41.23 17.016-14.185 0-28.382-5.119-39.488-15.348zm213.601-213.601l-35.11 35.11c5.672 4.593 11.642 8.813 19.443 10.391 7.33 1.483 15.056 1.051 22.29-1.09 6.2-1.837 12.019-4.952 16.884-9.214a107.295 107.295 0 00-8.817-16.984c-4.083-6.39-8.98-12.503-14.688-18.212l-.002-.001z"/><path fill="#1A1A1A" fill-rule="nonzero" d="M176.52 176.649a121.866 121.866 0 0111.304-22.38 122.478 122.478 0 0116.419-20.382l97.981-97.981C326.16 11.97 357.709 0 389.247 0c68.144 0 122.929 54.782 122.929 122.929 0 31.54-11.971 63.087-35.906 87.023l-97.982 97.981a121.905 121.905 0 01-42.769 27.74 122.073 122.073 0 01-10.898 21.696 122.37 122.37 0 01-16.864 21.096l-97.981 97.981c-47.639 47.639-126.409 47.641-174.046 0-47.64-47.637-47.639-126.407 0-174.046l97.981-97.981a121.978 121.978 0 0142.809-27.77zm76.824 161.231l-88.581 88.58c-22.575 22.575-59.882 22.575-82.457 0-22.67-22.671-22.669-59.784-.002-82.458l95.984-95.982c8.853-8.852 20.073-14.579 32.443-16.521 25.13-3.947 36.941 5.84 48.833 15.695 6.602 5.474 13.243 10.978 22.415 12.834 7.33 1.483 15.056 1.051 22.29-1.09 6.2-1.837 12.019-4.952 16.884-9.214-16.645-40.465-56.234-66.915-100.419-66.915-27.887 0-55.771 10.574-76.914 31.719l-97.981 97.981c-42.087 42.087-42.088 111.744 0 153.829 42.085 42.088 111.742 42.086 153.828 0l97.981-97.981c5.798-5.798 10.771-12.039 14.913-18.581a106.457 106.457 0 004.983-8.762l-.685.148a124.32 124.32 0 01-63.515-3.282zm78.67-98.887l87.135-87.136c8.552-8.554 12.829-19.836 12.829-31.121a43.808 43.808 0 00-43.949-43.949c-11.285 0-22.57 4.278-31.121 12.829l-88.438 88.44c28.065 11.729 50.64 33.492 63.544 60.937zm-78.592-66.107L346.8 79.507c11.341-11.342 26.288-17.016 41.229-17.016 32.278 0 58.245 25.968 58.245 58.245 0 14.937-5.673 29.884-17.013 41.226l-95.985 95.987c-6.917 6.917-15.622 11.896-24.986 14.67-9.375 2.775-19.459 3.322-29.103 1.37-12.796-2.59-20.783-9.21-28.727-15.795-9.427-7.813-18.791-15.57-37.552-12.624-9.378 1.471-17.887 5.935-24.586 12.634 4.42 13.375 13.19 26.417 24.152 37.514 11.64 11.781 25.634 21.27 39.45 26.58 19.788 7.605 41.42 9.238 62.029 4.903 19.889-4.186 38.83-13.981 54.226-29.377l97.982-97.981c21.144-21.144 31.719-49.029 31.719-76.914A108.31 108.31 0 00389.247 14.296c-27.886 0-55.769 10.574-76.913 31.717l-97.982 97.983c-5.604 5.604-10.447 11.639-14.522 17.981a108.1 108.1 0 00-5.37 9.341 124.273 124.273 0 0126.274-2.805c11.003 0 22.005 1.459 32.688 4.373zm-76.169 96.387l-84.84 84.838c-17.12 17.123-17.121 45.117.002 62.24 17.022 17.023 45.216 17.023 62.239 0l84.217-84.215c-13.02-6.271-25.752-15.483-36.561-26.423-10.645-10.774-19.509-23.299-25.057-36.44z"/></svg>'
+    };
+    function isdSetIconContent($icEl, key, fallbackIconClass){
+        var svg = isdCustomSvg[key];
+        if (svg) {
+            $icEl.html(svg).css({ background: 'transparent' });
+            return true;
+        }
+        $icEl.html('<i class="ti ' + fallbackIconClass + '"></i>');
+        return false;
+    }
     // Brand-ish colors per icon, matching the reference design (each mode gets
     // its own recognizable color instead of one flat blue box).
     var isdIconColors = {
@@ -1113,6 +1135,12 @@ $country_code =  GeneralMethod::countryCodeFun();
         var key = (name||'').toLowerCase();
         return isdLeafIcons[key] || 'ti-map-pin-filled';
     }
+    function isdLeafCustomKey(name){
+        var key = (name||'').toLowerCase();
+        if (isdCustomSvg['leaf-' + key]) return 'leaf-' + key;
+        if (key.indexOf('other') !== -1) return 'leaf-other';
+        return null;
+    }
 
     function isdRenderFamilyTiles(){
         var wrap = $('#isdFamilyTiles').empty();
@@ -1122,10 +1150,11 @@ $country_code =  GeneralMethod::countryCodeFun();
             var iconClass = isdFamilyIcons[val] || 'ti-calendar';
             var tile = $('<div class="isd-tile" data-family-val="'+val+'">' +
                 '<span class="chk"><i class="ti ti-check"></i></span>' +
-                '<div class="ic"><i class="ti '+iconClass+'"></i></div>' +
+                '<div class="ic"></div>' +
                 '<div class="nm"></div></div>');
             tile.find('.nm').text($(this).text());
-            isdColorIcon(tile.find('.ic'), iconClass);
+            var usedCustom = isdSetIconContent(tile.find('.ic'), 'family-' + val, iconClass);
+            if (!usedCustom) { isdColorIcon(tile.find('.ic'), iconClass); }
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
         });
@@ -1139,14 +1168,19 @@ $country_code =  GeneralMethod::countryCodeFun();
         $('#isdLeafSection').show();
         real.each(function(){
             var val = $(this).val();
-            var iconClass = isdLeafIcon($(this).text());
+            var label = $(this).text();
+            var iconClass = isdLeafIcon(label);
             var tile = $('<div class="isd-tile" data-leaf-val="'+val+'">' +
                 '<span class="chk"><i class="ti ti-check"></i></span>' +
                 '<div class="ic"></div>' +
                 '<div class="nm"></div></div>');
-            tile.find('.ic').html('<i class="ti '+iconClass+'"></i>');
-            tile.find('.nm').text($(this).text());
-            isdColorIcon(tile.find('.ic'), iconClass);
+            tile.find('.nm').text(label);
+            var customKey = isdLeafCustomKey(label);
+            var usedCustom = customKey ? isdSetIconContent(tile.find('.ic'), customKey, iconClass) : false;
+            if (!usedCustom) {
+                tile.find('.ic').html('<i class="ti '+iconClass+'"></i>');
+                isdColorIcon(tile.find('.ic'), iconClass);
+            }
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
         });
