@@ -61,12 +61,7 @@
 
                     $flag = 0;
                     $duplicate = 0;
-                    // wise_duplicate is the per-job-addition flag (Similar
-                    // Candidates/Internal Bench/Career Page/Agency Bench/Copy) —
-                    // job_applications.duplicate alone missed all of those since
-                    // that column is shared across every job the same candidate
-                    // profile is added to.
-                    $duplicate = ($row->duplicate == 1 || @$row->wise_duplicate == 1) ? 1 : 0;
+                    $duplicate = $row->duplicate;
                     $company_id = auth()->user()->roles[0]->company_id;
                     $app_duplicate = auth()->user()->company->app_duplicate;
                     $app_duplicate_days = auth()->user()->company->app_duplicate_days;
@@ -126,15 +121,6 @@
                     } else {
                         $flag = 0;
                     }
-
-                    // Ownership/duplicate state is decided entirely by the
-                    // centralized duplicate engine (GeneralMethod::resolveDuplicateOwnership(),
-                    // invoked at the InReview->Sourcing transition in
-                    // client_stage_submit() — see docs/CLIENT_JOB_STAGE_OWNERSHIP.md
-                    // §8.4) — never recomputed here at render time. This row simply
-                    // reflects whatever that engine already persisted via $flag above
-                    // ($row->duplicate / $row->wise_duplicate).
-                    $crossAgencyBadgeHtml = '';
 
                     if (@$row->condidate_type == 'bench_condidate') {
                         $tredmark = '[Bench]';
@@ -249,13 +235,13 @@
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
                                     '.$matchBadge.'
-
+                                 
                                   ' .
-                            $skilltag . $crossAgencyBadgeHtml .
+                            $skilltag .
                             '
-
-
-                                    </div>
+                                         
+                                   
+                                    </div> 	
 					';
                     } else {
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
@@ -297,13 +283,13 @@
                             $skilltagclass .
                             '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
                                     '.$matchBadge.'
-
+                                 
                                   ' .
-                            $skilltag . $crossAgencyBadgeHtml .
+                            $skilltag .
                             '
-
-
-                                    </div>
+                                         
+                                   
+                                    </div> 	
 					';
                     }
 
