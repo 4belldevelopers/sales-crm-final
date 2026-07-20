@@ -2031,14 +2031,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 																						// tableLoad('load');
                                             var page = $('#paginationcandidate .active_disabled').data('page');
                                             fetchCandidates(page);
-
-                                            // Cross-agency duplicate pool: generic notice only — no
-                                            // company/agency name, no stage detail. Full attribution
-                                            // is a client/job-owner-side concern, shown on their own
-                                            // AppTracker row list instead.
-                                            if (response.crossAgencyDuplicate) {
-                                                cafToast.fire({ icon: 'info', title: 'A candidate with this email or phone already exists in this job\'s pipeline.' });
-                                            }
 																						
 																						$.unblockUI();
 																					

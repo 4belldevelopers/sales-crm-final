@@ -33,15 +33,6 @@ queries are auto-filtered by the `company` global scope (`Models/Company.php`), 
 `id`, `name`, `sub_domain` (lowercased), `package_id`, `logo`, `login_background`,
 `status` (active/…), `featured`, `featured_start_date`, `featured_end_date`,
 `licence_expire_on`, `industries`, `timezone`, `stripe_id`/Cashier columns.
-`app_duplicate` (0=None/1=Job-wise/2=Overall System) + `app_duplicate_days` — existing
-per-company duplicate-detection settings (`GeneralMethod::checkDuplicateCandidate()`).
-`enable_cross_agency_duplicate` (tinyint, default 0) — **added by
-`database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php`, pending on
-the live DB until that migration runs.** Opt-in for the cross-agency, job-wide
-duplicate-ownership arbitration (`GeneralMethod::resolveDuplicateOwnership()` — Company
-Recruiter reservation vs. first-agency-to-Sourcing); scope (single job vs. every job this
-company owns) is governed by this same company's own `app_duplicate` value, not a
-separate setting.
 Relations: hasMany `clients`, `application` (JobApplication), `packages`
 (CompanyPackage); belongsTo `package`.
 
@@ -79,13 +70,6 @@ ES mirror: `ats_candidates_bench_elastic`.
 ### `add_job_wise_condidates` (pivot, sic) — links candidates to jobs with match data.
 Columns: `id`, `job_id`, `skill_match`, `existing`, `placed_end_date`,
 `rec_candidate_assign_id`. Central to candidate↔job matching & ES candidate indexing.
-`duplicate` (tinyint, nullable) — **added by
-`database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php`, pending on
-the live DB until that migration runs.** Per-job-addition duplicate flag, set when a
-candidate is added via Similar Candidates/Internal Bench/Career Page/Agency Bench/Copy-to-
-Other-Job — deliberately separate from `job_applications.duplicate`, which is one column
-shared across every job the same candidate profile is later added to and would otherwise
-bleed a duplicate result across unrelated jobs. Indexed into ES as `wise_duplicate`.
 
 ### `documents` (polymorphic) — `documentable_type`, `documentable_id`, `name`
 (e.g. "Resume"), `hashname`. Files stored on S3.
@@ -138,11 +122,7 @@ No migration definitions to read indexes from. **Verify against the live DB.**
 High-probability hot columns that **should** be indexed (confirm before assuming):
 - `job_applications.company_id`, `.job_id`, `.master_status_id`, `.status`, `.email`, `.duplicate`
 - `jobs.company_id`, `.client_id`, `.status`
-- `add_job_wise_condidates.job_id`, `.id`, `.thirdparty_company_id`
-- `timeline.application_id` + `.job_id` + `.master_process_name` (composite) —
-  `GeneralMethod::resolveDuplicateOwnership()` does a `MIN(create_at)` lookup filtered on
-  exactly these three per candidate/job pair; this table has no indexes listed at all
-  today beyond the primary key, so this query currently does a full scan.
+- `add_job_wise_condidates.job_id`, `.id`
 - all `*_id` foreign keys, all `company_id` columns
 
 ---

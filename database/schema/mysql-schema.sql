@@ -21,14 +21,6 @@ CREATE TABLE `add_job_wise_condidates` (
   `placed_end_date` date DEFAULT NULL,
   `existing` int DEFAULT '0',
   `skill_match` double(15,1) DEFAULT '0.0',
-  -- Added by database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php
-  -- (PENDING on the live DB until that migration is run — not yet reflected in a fresh
-  -- SHOW CREATE TABLE dump). Per-job-addition duplicate flag: set at add-time by
-  -- Similar Candidates/Internal Bench/Career Page/Agency Bench/Copy-to-Other-Job, read
-  -- as `wise_duplicate` via ElasticCandidatesIndex. Deliberately separate from
-  -- job_applications.duplicate, which is shared across every job the same candidate
-  -- profile is later added to and would otherwise bleed across jobs.
-  `duplicate` tinyint DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=63804 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -980,13 +972,6 @@ CREATE TABLE `companies` (
   `delete_account_at` datetime DEFAULT NULL,
   `app_duplicate` int NOT NULL DEFAULT '0' COMMENT '0: None, 1: For current job, 2: For overall application',
   `app_duplicate_days` int DEFAULT NULL,
-  -- Added by database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php
-  -- (PENDING on the live DB until that migration is run — not yet reflected in a fresh
-  -- SHOW CREATE TABLE dump). Opt-in for the cross-agency, job-wide duplicate-ownership
-  -- pool (GeneralMethod::resolveDuplicateOwnership()) — off by default. Scope (single
-  -- job vs. every job this company owns) is governed by this same company's existing
-  -- `app_duplicate` value above (1/2), not a separate setting.
-  `enable_cross_agency_duplicate` tinyint NOT NULL DEFAULT '0',
   `zoom_status` int DEFAULT NULL,
   `zoom_api_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `zoom_api_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,

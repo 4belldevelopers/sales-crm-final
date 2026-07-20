@@ -64,12 +64,7 @@
 
                     $flag = 0;
                     $duplicate = 0;
-                    // wise_duplicate is the per-job-addition flag (Similar
-                    // Candidates/Internal Bench/Career Page/Agency Bench/Copy) —
-                    // job_applications.duplicate alone missed all of those since
-                    // that column is shared across every job the same candidate
-                    // profile is added to.
-                    $duplicate = ($row->duplicate == 1 || @$row->wise_duplicate == 1) ? 1 : 0;
+                    $duplicate = $row->duplicate;
                     $company_id = auth()->user()->roles[0]->company_id;
                     $app_duplicate = auth()->user()->company->app_duplicate;
                     $app_duplicate_days = auth()->user()->company->app_duplicate_days;
@@ -615,15 +610,6 @@
                     if (!$post_company_name) {
                         $post_company_name = @$row->company_name;
                     }
-
-                    // Ownership-engine attribution intentionally NOT computed here.
-                    // A centralized Duplicate Ownership Engine (per the finalized
-                    // Master Tracker) is still being designed — see
-                    // docs/CLIENT_JOB_STAGE_OWNERSHIP.md §8.4. Until it exists and
-                    // persists its own verdict, this column shows only the plain
-                    // submitter-company chain above; no per-row ownership
-                    // recalculation happens during Blade rendering anywhere.
-
                     echo '<div class="d-flex flex-column">
 									<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
                         @$row->posted_by .

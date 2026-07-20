@@ -12,11 +12,10 @@
 >
 > **§8 onward added 2026-07-19** — a follow-up session that redesigned the
 > "Change Candidate Stage" drawer across all 5 candidate-list pages
-> (AppTracker/CV Tracker/ClientApp/Offer Tracker/Joining Tracker), fixed several
-> confirmed bugs in the stage-transition and sub-stage machinery, and added a new
-> duplicate/ownership-arbitration system. §8 confirms §2's two-Rejected-ids table is
-> accurate (it directly explains a bug found this session) and should be read as an
-> extension of this doc, not a separate one.
+> (AppTracker/CV Tracker/ClientApp/Offer Tracker/Joining Tracker) and fixed several
+> confirmed bugs in the stage-transition and sub-stage machinery. §8 confirms §2's
+> two-Rejected-ids table is accurate (it directly explains a bug found this session)
+> and should be read as an extension of this doc, not a separate one.
 
 ## 1. The two pipelines, in one sentence each
 
@@ -252,7 +251,6 @@ Tracker** goes through exactly one of two controller methods in
 | Body partial | `job-applications/stage_body_content.blade.php` | `job-applications/client_stage_body_content.blade.php` |
 | Sub-statuses | `child_stage($id)` — **shared by both** |
 | Coin deduction | Various eventIds elsewhere | Only on the InReview→Sourcing move (event 4) |
-| Duplicate/ownership hook | **None** | Yes — see §8.4 |
 
 Both partials share one visual drawer (icon-coded stage pills, icon-coded sub-status
 tiles, Quick Notes chips, a submit button that recolors/relabels to match the selected
@@ -327,106 +325,15 @@ recorded resume stage — or, if the recorded stage was Offered(5)/Joined(6), th
 valid target is Sourcing(1) (a full restart), enforced identically in both
 `stage_submit()` and `client_stage_submit()`.
 
-### 8.4 Duplicate detection & ownership arbitration (new)
+### 8.4 Key files (this session's additions)
 
-Two independent layers, both new this session, living in `app/Helper/GeneralMethod.php`:
-
-- **`checkDuplicateCandidate($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days, $phone)`**
-  (pre-existing, previously Upload-only) — company-scoped duplicate check
-  (`company_id` OR `thirdparty_company_id`), driven by the per-company `app_duplicate`
-  setting (0=None/1=Job-wise/2=Overall System). Now also wired into every "Add to Job"
-  path that used to skip it entirely: Similar Candidates/Internal Bench/Agency Bench/
-  Career Page (`ServiceCompanyAppTrackerController::rec_candidate_assign()`, all 4
-  `source_from_type` branches) and CV Tracker's "Copy to Other Job"
-  (`ServiceCompanyCvTrackerController::copy_current_selected_applicant()`). Result is
-  stored on a **new** `add_job_wise_condidates.duplicate` column (not
-  `job_applications.duplicate`, which is shared across every job the same candidate
-  profile is later added to and would otherwise bleed a duplicate result across
-  unrelated jobs) — indexed into ES as `wise_duplicate`, read by the row partials
-  alongside the original flag.
-
-- **`resolveDuplicateOwnership($ownerCompanyId, $jobId, $email, $phone, $currentRowId, $treatCurrentRowAsJustSourcedNow)`**
-  — cross-tenant ownership arbitration across every submitter (agencies + the
-  job-owning company's own team) matching by normalized email/phone. Hierarchy:
-  1. **Company Recruiter reservation** — a company-added row reserves ownership the
-     instant it's created, even at InReview, *unless* an agency had already reached
-     Sourcing first. Company rows are never privacy-protected (it's the company's own
-     job), so they're compared/flagged regardless of their own current stage.
-  2. **Agency ownership** — otherwise, the *first* agency to reach Sourcing owns it.
-     Uploading first counts for nothing; only reaching Sourcing first does. An agency
-     row is only ever compared/flagged once it has itself reached Sourcing — still-
-     InReview agency rows stay fully private, win or lose (consistent with §4).
-  3. **Ownership never flips** once decided, no matter how far the loser later
-     progresses.
-  Scope (single job vs. every job the company owns) reuses that company's own
-  `app_duplicate` setting rather than a separate mode. "First reached Sourcing" is
-  read from the `timeline` table (`MIN(create_at)` where `master_process_name` matches
-  whatever `master_status.name` resolves to for id 1) — reused rather than adding a new
-  column, since `timeline` already logs every transition and gives this for free on
-  historical data too.
-  - **Hooked into exactly one place**: `client_stage_submit()`'s InReview(8)→Sourcing(1)
-    transition, gated by a new opt-in company setting
-    (`companies.enable_cross_agency_duplicate`, Account Settings). Purely advisory —
-    never blocks the transition or the coin deduction that happens right before it. The
-    losing agency gets a generic toast (no company/stage attribution — privacy,
-    competitive sensitivity).
-  - **Not** wired into `stage_submit()` (plain flow) — there is no equivalent "just
-    became visible to the client" moment there to attach it to.
-  - **2026-07-19 (later same day) — AppTracker's badge removed.** `all_apptracker.blade.php`
-    briefly called `resolveDuplicateOwnership()` live, per row, on every page render (a
-    real, measured cost: ~4–5 queries per non-InReview row, two of which — the
-    company's `app_duplicate` mode and the "Sourcing" label — don't even vary per row
-    within the same page load and were being re-fetched anyway). **Removed on explicit
-    instruction**: ownership/duplicate state must be decided once, by the centralized
-    engine at its one hook point above, never recomputed during Blade rendering.
-    `all_apptracker.blade.php` now only reflects the pre-existing `$flag`
-    (`$row->duplicate` / `$row->wise_duplicate`, written once at candidate-creation
-    time by `checkDuplicateCandidate()`) — **not** an ownership-engine-arbitrated
-    value, since nothing currently persists `resolveDuplicateOwnership()`'s verdict
-    anywhere; its only effect today is the toast at the hook above. Wiring the engine's
-    result into a persisted, render-safe column is explicitly **not done yet** — flag
-    this doc as stale on that point the moment it is.
-  - **Update, same day**: the **"Ownership" column, row 2** on CV Tracker
-    (`all_candidates.blade.php`) and ClientApp (`clientappdata_ajax.blade.php`) had the
-    identical live `resolveDuplicateOwnership()` call — flagged above as inconsistent,
-    now also removed on explicit follow-up instruction. **Standing decision going
-    forward**: no page anywhere may call `resolveDuplicateOwnership()` (or any future
-    replacement) during Blade rendering, and no new persistence gets added ad hoc.
-    Both columns now show only the plain submitter-company chain
-    (`submitted_by_company_name` → `post_company_name` → `company_name`) — the
-    pre-ownership-engine behavior. The **only** remaining call site in the entire
-    codebase is `client_stage_submit()`'s hook (unchanged, since it's neither Blade
-    rendering nor persistence — just an ephemeral, per-request advisory toast).
-  - **Deliberately paused pending a proper design**: a single centralized Duplicate
-    Ownership Engine, built strictly from the finalized Master Tracker (Job vs. Company
-    Overall mode, Company Recruiter reservation, first-agency-to-Sourcing ownership,
-    InReview privacy, lookback period, eligible job statuses, every scenario in the
-    tracker) — only after *that* is designed should persistence fields and execution
-    triggers (candidate creation, InReview→Sourcing, Company Recruiter creation, config
-    changes) be decided. Every UI page should then only ever *read* that engine's
-    output, never recompute it independently. Until then, `resolveDuplicateOwnership()`
-    stays defined in `GeneralMethod.php` but uncalled from any view.
-
-### 8.5 Key files (this session's additions)
-
-- `app/Helper/GeneralMethod.php` — `checkDuplicateCandidate()` (existing, now more
-  call sites), `resolveDuplicateOwnership()` (new), `csdSubStatusMeta()` (sub-status
-  icon/color mapping, existing).
+- `app/Helper/GeneralMethod.php` — `csdSubStatusMeta()` (sub-status icon/color mapping).
 - `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` —
   `child_stage()` (§8.2 fold fix), `stage_submit()`/`client_stage_submit()` (§8.3
-  resume-point fix, §8.4 hook, `stageSequenceGuardMessage()` — the shared helper behind
-  the "you can only move to X/Y/Rejected" jump-violation message).
-- `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` —
-  `rec_candidate_assign()` (all 4 branches now duplicate-checked).
-- `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` —
-  `copy_current_selected_applicant()` (now duplicate-checked).
+  resume-point fix, `stageSequenceGuardMessage()` — the shared helper behind the "you
+  can only move to X/Y/Rejected" jump-violation message).
 - `resources/views/service_company/job-applications/stage_body_content.blade.php` /
   `client_stage_body_content.blade.php` — the shared drawer body, icon-coded pills/tiles.
 - `resources/views/service_company/ajax_pages/all_apptracker.blade.php` /
   `clientappdata_ajax.blade.php` / `all_candidates.blade.php` — row-level trigger
-  gating (§8.1), duplicate badges, Ownership column.
-- `database/migrations/2026_07_19_140013_add_duplicate_detection_columns.php` —
-  `add_job_wise_condidates.duplicate`, `companies.enable_cross_agency_duplicate`.
-  **Run `php artisan migrate` before relying on either column** — not yet applied to
-  the live DB as of this doc update; `database/schema/mysql-schema.sql` and
-  `docs/DB_SCHEMA.md` both mark these two columns as pending for the same reason.
+  gating (§8.1).
