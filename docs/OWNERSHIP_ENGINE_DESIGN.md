@@ -1340,3 +1340,435 @@ finding for that one entry. No other design changes were required — the schema
 (`trigger_source` already included `'manual_rebuild'` as an anticipated value from Phase 1),
 the rule classes (ER1–ER8, unchanged), and the concurrency model (single-cluster-lock
 transactions, unchanged) all needed zero changes to support backfill.
+
+---
+---
+
+# Phase 5: Observability (revised from the original "UI integration / replace" scope)
+
+## Finding 5 (Implementation Rule #8): the original Phase 5 definition contradicts the
+## additive-only / no-cutover-without-approval rule established since
+
+The original 7-phase roadmap (agreed before Phases 1–4 were built) defined Phase 5 as:
+*"UI integration — Replace existing duplicate logic, Read cache only, Zero runtime
+calculations."* Every phase since has been built under an explicit, repeatedly-restated
+constraint: the Ownership Engine stays additive-only, the legacy system stays authoritative,
+and nothing resembling activation/cutover happens without explicit approval. Literal Phase 5
+— swapping any existing UI's data source from the legacy `duplicate` flags to the new
+engine's `ownership_state` — **is** a cutover for the UI layer. It cannot be built under the
+constraints governing every phase so far, and building it anyway would silently activate part
+of the engine without the explicit cutover approval every subsequent phase has been
+conditioned on.
+
+**Resolution**: the more recent, more specific instruction (additive-only; no cutover without
+explicit approval) supersedes the older phase-plan wording. Phase 5 is redefined as
+**Observability**: give whoever is watching production (now serving as the observation
+environment) a way to see what the engine has decided, without touching any existing
+controller, route, Blade file, or API response. This is a CLI-only, read-only tool — it
+reuses the engine's existing read paths (`getCachedState()`, `explain()`) and adds no new
+business logic, satisfying "reuse existing logic wherever possible" / "do not duplicate
+business rules."
+
+**What Phase 5 explicitly does NOT do, and why**: it does not compare legacy `duplicate`
+flags against the new engine's `ownership_state` as if they answer the same question and one
+must be "right." They don't — `checkDuplicateCandidate()`'s `duplicate` flag answers "does
+any match exist in this company's scope," while the engine's `ownership_state` answers "who
+specifically owns this identity in a cross-agency race." (Already established in the Phase 3
+validation guide §9: "these two systems are allowed to disagree.") The observability tool
+surfaces both signals side by side for a human to interpret — it does not assert equivalence
+or flag "disagreements" as bugs.
+
+## Implementation
+
+New Artisan command: `app/Console/Commands/OwnershipEngineReport.php`
+(`ownership-engine:report`). Read-only — issues no writes anywhere. Scoped by `--company=`
+or `--job=` (required, one or the other — an unscoped "report on everything" isn't offered,
+to keep this a deliberate, bounded diagnostic action rather than something that could be run
+carelessly against the whole dataset). For every `add_job_wise_condidates` row in scope,
+prints: the row's identity (email/phone, masked to the local-part + domain for anything
+printed to a shared terminal/log — full PII isn't dumped to stdout), the legacy signals
+(`add_job_wise_condidates.duplicate`, `job_applications.duplicate`), and the engine's own
+state (`ownership_state`, and — via `explain()` — the owning row, decision rule, and reason,
+when determined). Grouped by cluster where the engine has an opinion, so a human reviewer can
+see an entire identity's contenders together rather than one disconnected row at a time.
+
+## Architecture impact
+
+None — no new table, no new column, no new route, no new controller. One new Artisan command
+class, calling only the engine's existing public read methods.
+
+## Database impact
+
+Read-only. No writes of any kind. Every query is either a point lookup (via the engine's
+existing `getCachedState()`/`explain()`) or a bounded scan within the `--company=`/`--job=`
+scope the operator provides — never an unscoped full-table query.
+
+## Performance considerations
+
+Bounded by the operator-provided scope (one company or one job), not by total system size —
+the same discipline as every other read path in this design. No new index needed; reuses the
+existing point-lookup indexes on `ownership_clusters`/`ownership_events`.
+
+## Rollback strategy
+
+Nothing to roll back — it's a read-only reporting command with no state of its own. Simply
+stop running it if it's not useful.
+
+## Risks discovered
+
+- **PII exposure risk in a naive implementation**: an early draft would have printed raw
+  email addresses to whatever terminal/log captures the command's output. Masked in the
+  actual implementation (local-part truncated, domain kept) since this is meant to be run
+  in shared operational contexts (staging/production shells, possibly piped to a log file),
+  not treated as a private debugging session.
+- **False-equivalence risk**: the temptation to make this tool assert "legacy and engine
+  agree/disagree" as a pass/fail signal was explicitly rejected (see above) — the two
+  systems answer different questions, and a tool that implied otherwise would actively
+  mislead whoever reads its output during the observation period.
+
+## Validation notes
+
+No automated test written for this command specifically (it has no business logic of its
+own to test — every decision it displays is already covered by the engine's own test suite
+from Phases 2/4). Manual verification recommended: run `--company=` against a company with
+known backfilled data (from Phase 4) and confirm the printed `ownership_state`/owner
+attribution matches what direct SQL queries against `ownership_clusters`/`ownership_events`
+show for the same rows.
+
+## Remaining work before production cutover
+
+Unchanged from Phase 4's status — nothing in Phase 5 moves the engine closer to activation
+by design. The actual UI-facing "read cache only" work the original Phase 5 wording
+described remains real, pending work — it's simply deferred until cutover is explicitly
+approved, at which point it becomes part of that cutover phase's own scope, not something
+built piecemeal beforehand under the "additive-only" banner.
+
+---
+---
+
+# Phase 6: Validation (partial — what's executable in this environment vs. what genuinely isn't)
+
+## Implementation summary
+
+Added `tests/Feature/OwnershipEngine/DataIntegrityTest.php` — five tests aimed directly at
+the quality requirements restated this turn (deterministic ownership, idempotency,
+transaction safety, event immutability), each testing a distinct property rather than
+inferring it as a side effect of the Master Tracker scenario tests (Phase 2) or backfill
+tests (Phase 4):
+
+- Idempotent double-call produces one event, not two.
+- A prior event's row is byte-for-byte unchanged after further cluster activity — events are
+  appended to, never mutated.
+- A guard exception (agency row passed to `attemptCompanyReservation()`) writes nothing at
+  all — no partial cluster/event/cache state.
+- Two structurally identical scenarios built independently reach identical verdicts —
+  determinism doesn't depend on incidental process/request state.
+- `lockOrCreateCluster()`'s "another transaction already created this cluster" recovery path
+  is exercised by pre-seeding the colliding row (not true concurrent execution, but the same
+  code path a real race would hit).
+
+## What Phase 6 does NOT include, and why — a real, disclosed gap, not a silent omission
+
+- **True multi-connection concurrency testing** (two overlapping transactions racing for the
+  same cluster lock, from two separate DB connections) is not executable in this environment
+  — it needs a real concurrent-execution harness. The structural argument (§8/§23: at most
+  one cluster lock per transaction, deadlock-free by construction) is unchanged and still the
+  basis for correctness, but it has not been empirically proven under real concurrent load
+  here. This remains the single largest gap between "designed to be correct" and "proven
+  correct under load."
+- **Load testing** — no benchmark harness was built. A load test run in this environment,
+  without real database/queue infrastructure to exercise, would not produce numbers worth
+  trusting; building an untested tool to produce untrustworthy numbers isn't a net gain over
+  documenting the approach directly: create N synthetic candidates across M distinct
+  identities in a disposable test company (reusing the fixture helpers already written across
+  the Phase 2/4/6 test files), time `attemptCompanyReservation()`/`claimForAgencySourcing()`
+  calls in aggregate, and compare against the per-event query-count budget already specified
+  in §20 (5 queries typical / 8 cold for reservation, 3 net-new / 6 cold for sourcing) — a
+  real run should match those numbers; a large deviation would indicate a missing index or a
+  regression, not a new discovery about the design.
+- **Failure testing beyond what `DataIntegrityTest`/`AttemptOwnershipCompanyReservationJobTest`
+  cover** — queue-redelivery idempotency (the `event_uuid` mechanism, §22/§25) has a
+  structural design but no executed test proving a genuinely redelivered queue message is a
+  no-op; this needs a real queue connection to exercise honestly, not a mock.
+
+## Design changes
+
+None required this phase — no implementation gap surfaced that contradicted the approved
+design; the gap is entirely in *proving* the design under real concurrency/load, not in the
+design itself.
+
+## Architecture / Database / Performance impact
+
+None — `DataIntegrityTest.php` is test-only, exercises only existing engine methods, writes
+nothing outside the same three objects every other phase already writes to (within the test's
+own transaction, rolled back by `RefreshDatabase` after each test).
+
+## Rollback strategy
+
+N/A — test code only, nothing to roll back in any environment.
+
+## Risks discovered
+
+The concurrency/load gap above is the material one — flagged explicitly rather than implied
+to be covered by the Master Tracker/integrity test suites, which prove correctness of the
+*decision logic*, not correctness *under contention*.
+
+## Validation notes
+
+`php -l` passes on `DataIntegrityTest.php`. Not executed (no MySQL connection here) — same
+limitation as every DB-dependent test written this whole effort.
+
+## Remaining work before production cutover
+
+- Execute every written test suite (Phases 2, 3, 4, 6) against a real MySQL 8 database —
+  still outstanding across the entire project, not new to Phase 6.
+- Run an actual concurrency test: two processes/connections both calling
+  `claimForAgencySourcing()` for the same identity at nearly the same instant, asserting
+  exactly one becomes owner and no deadlock occurs — the one test category that cannot be
+  faked or approximated in this environment and genuinely needs to happen before cutover
+  confidence is warranted.
+- Run the load-test methodology above (or an equivalent) against realistic data volumes.
+
+---
+---
+
+# Phase 7: Cleanup — blocked pending cutover approval, not attempted
+
+## Implementation summary
+
+**Not implemented.** The original Phase 7 scope ("remove old duplicate ownership
+implementation, remove dead code, update documentation") has its core action — removing
+legacy code — explicitly gated behind cutover approval by this turn's own instructions
+("Do not remove or modify the legacy duplicate ownership implementation unless I explicitly
+approve the final cutover"). Attempting Phase 7 now would mean either violating that
+instruction or doing something so hollowed-out it wouldn't be genuine "cleanup." Neither is
+useful. Documentation has been kept continuously current throughout Phases 1–6 already
+(this file), so the one sub-part of Phase 7 that *is* safely doable — "update
+documentation" — is already done as a byproduct of following Rule #8 every phase, not
+deferred.
+
+## Design changes / Architecture / Database / Performance / Rollback
+
+None — nothing was built.
+
+## Risks discovered
+
+None new — this section exists to record that Phase 7 was deliberately not attempted, not to
+report on work that doesn't exist.
+
+## Validation notes
+
+N/A.
+
+## Remaining work before production cutover
+
+All of Phase 7's actual scope: once cutover is explicitly approved, remove
+`resolveDuplicateOwnership()`/`checkDuplicateCandidate()`'s call sites (or the functions
+themselves, if nothing else uses them — re-verify at that time), remove the render-time
+`duplicate`/`wise_duplicate` flag plumbing this replaces, and update
+`docs/CLIENT_JOB_STAGE_OWNERSHIP.md` §8.4 to reflect the new engine as authoritative — none
+of this should happen before that explicit approval, per this turn's own instructions.
+
+---
+---
+
+# Phase 8: Activation Readiness (Feature Flags, Shadow Comparison, Monitoring, Recovery)
+
+## Finding 6 (Implementation Rule #8): the feature-flag hierarchy is a new, independent gate — not a replacement for the `app_duplicate` gate — and it must default to OFF
+
+Two things needed deciding before writing any code.
+
+**1. Composition, not replacement.** `ScopeResolver::isEnabled()` (Finding 3) already gates
+the engine on `companies.app_duplicate` — that gate answers "has this company opted into
+duplicate detection at all," shared with the legacy system, unchanged. This phase's flag
+hierarchy (global / company / job / kill switch) answers a *different* question: "is the
+Ownership Engine itself allowed to run, independent of duplicate-detection mode." These
+compose with AND, not OR — a call only proceeds if **both** gates pass. Precedence within the
+new hierarchy, most specific wins, kill switch overrides everything unconditionally:
+kill switch → job-level override → company-level override → global default.
+
+**2. The global default is `false`.** This is the deliberate, disclosed behavior change:
+Phase 3's `attemptCompanyReservation()`/`claimForAgencySourcing()` have been running
+unconditionally (subject only to the `app_duplicate` gate) since Phase 3 was built. Adding
+this flag, defaulted to enabled, would change nothing observable today. Defaulting it to
+**disabled** is what makes "1. Enable feature flag" a real, meaningful, singular future
+action rather than a no-op — and it's the conservative choice for a mechanism whose explicit
+purpose is giving ops precise, reversible control before wider activation. **Nothing outside
+the engine's own internal processing changes**: every controller call site still runs
+identically (same dispatch, same try/catch, same response) — the engine method itself simply
+returns an undetermined result immediately, the same way it already does for
+`app_duplicate = 0`. `backfillCandidate()` (Phase 4) is deliberately **not** gated by the
+global/company/job flags — it's already an explicit, scoped, manually-invoked operator
+action, and gating it too would block legitimate historical-data preparation *before*
+flipping the live switch on. It **is** gated by the kill switch, unconditionally — an
+emergency stop must stop everything, including a running backfill.
+
+## Implementation
+
+### Schema (additive only — no existing column touched, per the DON'T list)
+
+- `ownership_engine_settings` — single-row (`id = 1`) config table: `globally_enabled`
+  (bool, default `false`), `kill_switch_active` (bool, default `false`),
+  `kill_switch_reason` (nullable text), `kill_switch_activated_at` (nullable timestamp).
+- `companies.ownership_engine_enabled` — nullable boolean, default `null` (`null` = inherit
+  from global; `true`/`false` = explicit company-level override).
+- `jobs.ownership_engine_enabled` — nullable boolean, same inherit-if-null semantics,
+  highest precedence short of the kill switch.
+- `ownership_engine_shadow_comparisons` — records every shadow comparison run (not just
+  "mismatches" — see below), for structured reporting without re-deriving from raw tables
+  each time.
+
+### `FeatureFlags` (new, `app/Services/OwnershipEngine/Support/FeatureFlags.php`)
+
+`isEnabled(int $companyId, ?int $jobId): bool` implements the precedence above. Checked at
+the top of both `attemptCompanyReservation()` and `claimForAgencySourcing()`, before any
+other work (cheapest possible short-circuit when the answer is "no"). Not cached — each
+check is a handful of single-row primary-key lookups (negligible cost; deliberately not
+optimized ahead of a measured need, and an emergency kill switch should never be delayed by
+a cache TTL).
+
+### Shadow comparison — recorded observations, not asserted mismatches (consistent with Finding 5)
+
+`ownership-engine:shadow-compare --company=|--job=` extends the read-only comparison logic
+from Phase 5's `ownership-engine:report` (which only printed to the terminal) to also persist
+each row's comparison into `ownership_engine_shadow_comparisons`, categorized by a documented,
+non-judgmental label — `both_clear`, `legacy_flagged_engine_undetermined`,
+`legacy_clear_engine_owner`, `legacy_flagged_engine_owner`, `legacy_clear_engine_duplicate`,
+`legacy_flagged_engine_duplicate` — never a bare "mismatch = bug" boolean, for the same reason
+Finding 5 rejected that framing: the two systems answer different questions. Splitting the
+"engine hasn't decided yet" case by whether legacy flagged it or not (rather than one flat
+`engine_undetermined` bucket) is more informative — a row legacy flagged that the engine
+hasn't reached yet is a different, more interesting signal than one neither system has an
+opinion on.
+
+### Recovery / Rebuild family (the operation deferred in Finding 4, now built)
+
+New `OwnershipEngine` methods, all operating on **already-recorded, immutable
+`ownership_events`** — never creating new events, only regenerating the
+`ownership_clusters`/cache **projection** from history that already exists (this is what
+distinguishes "rebuild" from Phase 4's "backfill," per Finding 4):
+- `rebuildCluster(int $clusterId): array` — the core primitive: replays a cluster's full
+  event history in `(event_time, id)` order, recomputes `owner_row_id`/`decision_rule`/
+  `decided_at` and every member row's cache column from scratch, and rewrites them.
+- `rebuildClusterForRow(int $rowId): array` — convenience wrapper resolving a row's cluster
+  first ("rebuild single candidate").
+- `rebuildCompany(int $companyId): int` — chunked iteration over every cluster scoped to a
+  company, returns the count of clusters rebuilt.
+- `verifyClusterConsistency(int $clusterId): array` — read-only; returns a list of
+  discrepancies (empty = consistent) between the cluster/cache's current state and what a
+  fresh `rebuildCluster()` replay *would* produce, without writing anything.
+- `detectOrphanEvents(int $limit = 1000): Collection` — events whose `cluster_id` doesn't
+  resolve to an existing cluster row.
+- `detectOrphanClusters(int $limit = 1000): Collection` — clusters with zero events. See
+  "Risks discovered" below — this closes a real, if currently unreachable, gap.
+- `detectCacheInconsistencies(int $limit = 1000): Collection` — rows whose cache columns
+  don't match what their cluster says they should be.
+
+### Operational commands (exact names requested)
+
+- `ownership-engine:health` — kill switch state, global/company-override counts, recent
+  event throughput, basic reachability of the three engine tables.
+- `ownership-engine:verify {--company=|--job=|--cluster=}` — runs
+  `verifyClusterConsistency()`/orphan detection over a scope, read-only, reports findings.
+- `ownership-engine:repair {--cluster=|--company=} {--dry-run}` — runs the rebuild family
+  over a scope; `--dry-run` reports what would change without writing.
+- `ownership-engine:stats {--company=|--job=}` — ownership/cluster/event statistics,
+  duplicate distribution, event throughput, cache hit rate (all derived from existing data —
+  see Metrics below for what is and isn't measurable this way).
+- `ownership-engine:cluster {clusterId}` — single-cluster inspector (full history + current
+  state), the cluster-scoped counterpart to `explain()`.
+- `ownership-engine:candidate {rowId}` — single-row inspector, thin wrapper over `explain()`.
+
+## Metrics — what's honestly derivable from existing data vs. what needs new instrumentation
+
+| Requested | Status |
+|---|---|
+| Event throughput | ✅ derivable — `COUNT(*)`/`event_time` bucketing on `ownership_events`, no new instrumentation needed |
+| Duplicate ownership distribution | ✅ derivable — `ownership_state` counts, grouped by scope |
+| Processing time (per-event) | ✅ derivable — `ownership_events.created_at` (row insert time) vs. `event_time` (decision instant) gives a proxy; not wall-clock request latency, but a real signal from existing columns |
+| Cache hit rate | ⚠️ approximated — "does the cache column already reflect the correct state" can be checked via `verifyClusterConsistency()`, but this isn't a traditional runtime cache hit/miss counter (there is no runtime cache layer to instrument — the "cache" here is the persisted `ownership_state` column itself, always a direct read, not a hit/miss-able cache in the CS sense) |
+| Queue latency | ❌ **not built** — would require timestamping `AttemptOwnershipCompanyReservation` at dispatch and again at `handle()` start, which means touching Phase 3's job/controller code again. Not done this phase, to honor "do not change existing controller behavior" as conservatively as possible; flagged as remaining work if wanted later. |
+| Lock contention | ❌ **not built** — needs live `SHOW ENGINE INNODB STATUS` monitoring or query-time instrumentation around `lockForUpdate()`; no new instrumentation was added to `lockOrCreateCluster()` for the same "don't touch what's already approved and running" conservatism. Structural argument (§8/§23: one lock per transaction) still stands; empirical measurement remains a live-environment activity, same gap already disclosed in Phase 6. |
+
+## Risks discovered
+
+- **Orphan-cluster edge case, closed by this phase's own tooling**: tracing `evaluateAt()`'s
+  rare `!$isDuplicate` no-write branch (documented as "defensively unreachable given current
+  callers") shows it can leave behind a freshly-created, event-less `ownership_clusters` row
+  if ever reached — `detectOrphanClusters()` now exists specifically to catch this if it ever
+  does happen, rather than it going unnoticed. Not a live bug today (no caller currently
+  triggers this path), but worth having a detector for regardless.
+- **Feature-flag check adds 1–3 single-row queries per live call.** Negligible in isolation
+  (primary-key lookups), consistent with every other query-budget number in this design, but
+  worth naming explicitly rather than pretending it's free.
+
+## Remaining work before production cutover
+
+Exactly the three items already stated: enable the feature flag (global, or scoped
+company-by-company via the override), observe production via the monitoring commands built
+this phase, and remove the legacy implementation only after that observation period and
+explicit approval.
+
+---
+---
+
+# Finding 7 (Implementation Rule #8): Finding 6's flag semantics were wrong — corrected before touching code
+
+**Finding 6 is superseded by this section.** Kept above for history, not deleted — but its
+central decision (the flag hierarchy gates whether the engine *processes* live events,
+defaulting to off) is reversed here, on explicit instruction, before any implementation
+changed.
+
+## What was wrong
+
+Finding 6 conflated two genuinely different questions into one flag:
+1. "Should the Ownership Engine process events and build its own history at all?"
+2. "Should the Ownership Engine's decisions be *authoritative* — read by any UI, API, or
+   business logic?"
+
+Gating (1) on a default-off flag meant the engine would sit idle, accumulating no
+`ownership_events`/`ownership_clusters` history and no shadow-comparison data, until someone
+explicitly flips it on — directly working against the stated purpose of running production as
+an observation environment. There is no value in an observation period that starts with an
+empty dataset.
+
+## The corrected model
+
+- **Event processing and ownership calculations are unconditional** (subject only to the
+  existing `app_duplicate` gate from Finding 3, which answers a different, legacy-shared
+  question — unchanged). `attemptCompanyReservation()` and `claimForAgencySourcing()` no
+  longer check the global/company/job flag hierarchy at all — they run continuously, live,
+  in production, building real `ownership_events`/`ownership_clusters`/cache history from
+  real traffic, from the moment this correction ships.
+- **The global/company/job flag hierarchy is repurposed, not removed.** It stops meaning
+  "is the engine allowed to run" and starts meaning **"is the engine authoritative for this
+  scope"** — i.e., it is reserved for the actual cutover mechanism (Phase 7's original,
+  still-unbuilt scope: something reading `ownership_state` instead of the legacy `duplicate`
+  flags). Today, nothing checks this flag for anything — there is no cutover code path yet —
+  so it is genuinely inert, not silently doing something unexpected. `FeatureFlags::isEnabled()`
+  is renamed to `FeatureFlags::isAuthoritative()` to make this unambiguous in the code itself,
+  not just in comments. The default stays `false` — legacy remains authoritative by default,
+  for the right reason now (nothing has approved cutover) rather than the previous, wrong
+  reason (processing itself was gated).
+- **The kill switch changes what it gates, not whether it exists.** It now stops **live
+  processing directly** (`attemptCompanyReservation()`/`claimForAgencySourcing()` both check
+  `isKillSwitchActive()` first, unconditionally) — this is a strengthening, not a weakening:
+  previously the kill switch only stopped `backfillCandidate()`; now it is the single,
+  immediate "stop everything the engine does" control the emergency-stop requirement always
+  implied. `backfillCandidate()`'s existing kill-switch check is unchanged.
+
+## What this means for the earlier `ActivationReadinessTest.php`
+
+Several of its assertions were written to prove the *old* (now-wrong) behavior — "globally
+disabled by default is a no-op," company/job overrides changing whether processing happens.
+Those are rewritten to prove the *new* behavior: processing happens unconditionally regardless
+of the flag hierarchy, and the kill switch (only) stops it. The flag-hierarchy precedence
+logic itself (kill switch > job > company > global) is unchanged and still tested — just
+against `isAuthoritative()`'s now-correct meaning, exercised directly rather than through a
+live-processing side effect that no longer exists.
+
+## Design updates required before implementation continued
+
+Already applied above. No other section of the design needed to change — §3's
+Scenario→Rule→Code→Test matrix, the concurrency model, and the schema are all unaffected;
+this was purely a wiring/semantics correction to one gate.

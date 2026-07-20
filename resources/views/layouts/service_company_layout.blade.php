@@ -486,7 +486,7 @@
   /* Interview Schedule drawer shell — scoped so it never collides with page-local styles. */
   #interview_schedule_drawer .isd-shell-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid #eef0f4; flex-wrap:wrap; flex-shrink:0; font-family:'Poppins',sans-serif; }
   #interview_schedule_drawer .isd-shell-topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
-  #interview_schedule_drawer .isd-shell-topbar-ico { width:42px; height:42px; border-radius:10px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:17px; }
+  #interview_schedule_drawer .isd-shell-topbar-ico { width:48px; height:48px; border-radius:12px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:22px; }
   #interview_schedule_drawer .isd-shell-topbar-title { font-size:16px; font-weight:700; color:#181c32; line-height:1.3; }
   #interview_schedule_drawer .isd-shell-topbar-sub { font-size:11.5px; font-weight:400; color:#7e8299; margin-top:1px; }
   #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }

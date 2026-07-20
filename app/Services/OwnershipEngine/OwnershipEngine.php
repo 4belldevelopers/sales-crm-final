@@ -14,6 +14,7 @@ use App\Services\OwnershipEngine\Rules\ER5_CompanyRowsAlwaysCompared;
 use App\Services\OwnershipEngine\Rules\ER6_AgencyRowsPrivacyShieldedUntilSourced;
 use App\Services\OwnershipEngine\Rules\ER7_ScopeDeterminesComparisonUniverse;
 use App\Services\OwnershipEngine\Rules\ER8_MultiContenderGeneralization;
+use App\Services\OwnershipEngine\Support\FeatureFlags;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,19 @@ use Illuminate\Support\Str;
 /**
  * The single, authoritative Ownership Engine. docs/OWNERSHIP_ENGINE_DESIGN.md.
  *
- * Status: Phases 1-4 implemented, all in shadow mode. Phase 3 wired attemptCompanyReservation()/
- * claimForAgencySourcing() into live trigger points (still additive-only, isolated by
- * try/catch at every call site). Phase 4 added backfillCandidate() for historical data. This
- * engine does not yet replace the existing resolveDuplicateOwnership()/checkDuplicateCandidate()
- * logic, which keeps running unchanged as the production fallback until Phase 6 validation
- * passes (Implementation Rules #4/#5).
+ * Status: Phases 1-8 implemented, all additive/non-authoritative. Phase 3 wired
+ * attemptCompanyReservation()/claimForAgencySourcing() into live trigger points (isolated by
+ * try/catch at every call site). Phase 4 added backfillCandidate() for historical data.
+ * Phase 8 added the kill switch (stops live processing unconditionally) and the
+ * rebuild/verify/orphan-detection family. Per Finding 7 (supersedes Finding 6): live
+ * processing itself is NOT gated by the global/company/job flag hierarchy — that hierarchy
+ * is reserved for the not-yet-built authoritative-cutover mechanism
+ * (FeatureFlags::isAuthoritative(), currently checked by nothing). The engine keeps building
+ * real ownership_events/ownership_clusters/cache history in production continuously, so the
+ * observation period isn't starting from an empty dataset. This engine does not yet replace
+ * the existing resolveDuplicateOwnership()/checkDuplicateCandidate() logic, which keeps
+ * running unchanged as the production fallback until explicit cutover approval
+ * (Implementation Rules #4/#5).
  *
  * §5.2: this is the ONLY class permitted to write ownership_clusters/ownership_events or the
  * ownership_state/ownership_cluster_id/ownership_evaluated_at cache columns on
@@ -44,6 +52,7 @@ class OwnershipEngine
         private readonly ER5_CompanyRowsAlwaysCompared $er5,
         private readonly ER6_AgencyRowsPrivacyShieldedUntilSourced $er6,
         private readonly ER8_MultiContenderGeneralization $er8,
+        private readonly FeatureFlags $flags,
     ) {
     }
 
@@ -63,6 +72,14 @@ class OwnershipEngine
                 'this method is only for company-owned rows (thirdparty_company_id = 0). '.
                 'Agency rows only ever compete via claimForAgencySourcing() — see ER1/ER2.'
             );
+        }
+
+        // Phase 8, Finding 7 (supersedes Finding 6): the kill switch is the only flag that
+        // stops live processing — the global/company/job hierarchy no longer does (it's
+        // reserved for the not-yet-built authoritative-cutover mechanism). Processing stays
+        // unconditional so the engine keeps building real history in production.
+        if ($this->flags->isKillSwitchActive()) {
+            return new OwnershipResult($row->id, null, null);
         }
 
         if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
@@ -98,6 +115,14 @@ class OwnershipEngine
         }
 
         $this->er1->assertMayEvaluate(isCompanyRow: false, hasReachedSourcing: true, rowId: $rowId);
+
+        // Phase 8, Finding 7 (supersedes Finding 6): the kill switch is the only flag that
+        // stops live processing — the global/company/job hierarchy no longer does (it's
+        // reserved for the not-yet-built authoritative-cutover mechanism). Processing stays
+        // unconditional so the engine keeps building real history in production.
+        if ($this->flags->isKillSwitchActive()) {
+            return new OwnershipResult($row->id, null, null);
+        }
 
         if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
             return new OwnershipResult($row->id, null, null);
@@ -232,6 +257,14 @@ class OwnershipEngine
      */
     public function backfillCandidate(int $rowId): array
     {
+        // Phase 8, Finding 6: backfill is a deliberate, scoped, operator-invoked action — not
+        // gated by the global/company/job flags (which would block legitimate historical-data
+        // prep before flipping the live switch on) — but the kill switch stops everything
+        // unconditionally, including a running backfill, with no exceptions.
+        if ($this->flags->isKillSwitchActive()) {
+            return [];
+        }
+
         $row = $this->loadSubjectRow($rowId);
 
         if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
@@ -298,6 +331,210 @@ class OwnershipEngine
         }
 
         return $results;
+    }
+
+    /**
+     * Phase 8 (docs/OWNERSHIP_ENGINE_DESIGN.md, "Recovery / Rebuild family", Finding 4/6) —
+     * the operation deferred in Finding 4: regenerates a cluster's owner/decision_rule/
+     * decided_at and every member row's cache column by replaying its ALREADY-RECORDED,
+     * immutable ownership_events — never creates a new event, unlike backfillCandidate().
+     * Use when the projection (cluster/cache) is suspected stale or corrupted relative to
+     * the event log, which remains the source of truth.
+     *
+     * @return OwnershipResult[]
+     */
+    public function rebuildCluster(int $clusterId): array
+    {
+        return DB::transaction(function () use ($clusterId) {
+            $cluster = OwnershipCluster::where('id', $clusterId)->lockForUpdate()->first();
+            if (!$cluster) {
+                return [];
+            }
+
+            $events = OwnershipEvent::where('cluster_id', $clusterId)
+                ->orderBy('event_time')
+                ->orderBy('id')
+                ->get();
+
+            $ownerRowId = null;
+            $decisionRule = null;
+            $decidedAt = null;
+            $lastEventId = $cluster->last_event_id;
+            $memberStates = [];
+
+            foreach ($events as $event) {
+                $lastEventId = $event->id;
+
+                if ($event->event_type === 'OWNER_ESTABLISHED' && $ownerRowId === null) {
+                    $ownerRowId = (int) $event->new_owner_row_id;
+                    $decisionRule = $event->decision_rule;
+                    $decidedAt = $event->event_time;
+                    $memberStates[$ownerRowId] = OwnershipResult::STATE_OWNER;
+                } elseif ($event->event_type === 'DUPLICATE_MARKED') {
+                    $memberStates[(int) $event->subject_row_id] = OwnershipResult::STATE_DUPLICATE;
+                }
+            }
+
+            $ownerType = match ($decisionRule) {
+                'ER2' => 'company',
+                'ER3' => 'agency',
+                default => null,
+            };
+
+            $cluster->update([
+                'owner_row_id' => $ownerRowId,
+                'owner_type' => $ownerType,
+                'decision_rule' => $decisionRule,
+                'decided_at' => $decidedAt,
+                'last_event_id' => $lastEventId,
+            ]);
+
+            $results = [];
+            foreach ($memberStates as $rowId => $state) {
+                $this->writeCache($rowId, $state, $clusterId, now());
+
+                $results[] = new OwnershipResult(
+                    rowId: $rowId,
+                    state: $state,
+                    clusterId: $clusterId,
+                    ownerRowId: $ownerRowId,
+                    ownerType: $ownerType,
+                    decisionRule: $state === OwnershipResult::STATE_OWNER ? $decisionRule : null,
+                    decidedAt: $decidedAt instanceof Carbon ? $decidedAt->toDateTimeString() : $decidedAt,
+                );
+            }
+
+            return $results;
+        });
+    }
+
+    /** Convenience wrapper: "rebuild single candidate" — resolves the row's cluster first. */
+    public function rebuildClusterForRow(int $rowId): array
+    {
+        $clusterId = DB::table('add_job_wise_condidates')->where('id', $rowId)->value('ownership_cluster_id');
+        if ($clusterId === null) {
+            return [];
+        }
+
+        return $this->rebuildCluster((int) $clusterId);
+    }
+
+    /** Chunked "rebuild company" — replays every cluster scoped to this company. Returns the number of clusters rebuilt. */
+    public function rebuildCompany(int $companyId): int
+    {
+        $count = 0;
+
+        OwnershipCluster::where('scoping_company_id', $companyId)
+            ->orderBy('id')
+            ->chunkById(200, function ($clusters) use (&$count) {
+                foreach ($clusters as $cluster) {
+                    $this->rebuildCluster($cluster->id);
+                    $count++;
+                }
+            });
+
+        return $count;
+    }
+
+    /**
+     * Read-only — compares a cluster's current owner/cache state against what a fresh
+     * rebuildCluster() replay would produce, without writing anything. Empty array = fully
+     * consistent.
+     *
+     * @return string[]
+     */
+    public function verifyClusterConsistency(int $clusterId): array
+    {
+        $cluster = OwnershipCluster::find($clusterId);
+        if (!$cluster) {
+            return ["Cluster #{$clusterId} does not exist."];
+        }
+
+        $events = OwnershipEvent::where('cluster_id', $clusterId)->orderBy('event_time')->orderBy('id')->get();
+
+        $expectedOwnerRowId = null;
+        $expectedDecisionRule = null;
+        $expectedMemberStates = [];
+
+        foreach ($events as $event) {
+            if ($event->event_type === 'OWNER_ESTABLISHED' && $expectedOwnerRowId === null) {
+                $expectedOwnerRowId = (int) $event->new_owner_row_id;
+                $expectedDecisionRule = $event->decision_rule;
+                $expectedMemberStates[$expectedOwnerRowId] = OwnershipResult::STATE_OWNER;
+            } elseif ($event->event_type === 'DUPLICATE_MARKED') {
+                $expectedMemberStates[(int) $event->subject_row_id] = OwnershipResult::STATE_DUPLICATE;
+            }
+        }
+
+        $issues = [];
+
+        if ((int) $cluster->owner_row_id !== (int) $expectedOwnerRowId) {
+            $issues[] = "Cluster #{$clusterId} owner_row_id is {$cluster->owner_row_id}, event history implies {$expectedOwnerRowId}.";
+        }
+        if ($cluster->decision_rule !== $expectedDecisionRule) {
+            $issues[] = "Cluster #{$clusterId} decision_rule is {$cluster->decision_rule}, event history implies {$expectedDecisionRule}.";
+        }
+
+        if (!empty($expectedMemberStates)) {
+            $actualStates = DB::table('add_job_wise_condidates')
+                ->whereIn('id', array_keys($expectedMemberStates))
+                ->pluck('ownership_state', 'id');
+
+            foreach ($expectedMemberStates as $rowId => $expectedState) {
+                $actual = $actualStates[$rowId] ?? null;
+                if ((int) $actual !== $expectedState) {
+                    $actualLabel = $actual === null ? 'null' : (string) $actual;
+                    $issues[] = "Row #{$rowId} cache ownership_state is {$actualLabel}, event history implies {$expectedState}.";
+                }
+            }
+        }
+
+        return $issues;
+    }
+
+    /** Events whose cluster_id doesn't resolve to an existing cluster row. */
+    public function detectOrphanEvents(int $limit = 1000): \Illuminate\Support\Collection
+    {
+        return DB::table('ownership_events as oe')
+            ->leftJoin('ownership_clusters as oc', 'oc.id', '=', 'oe.cluster_id')
+            ->whereNull('oc.id')
+            ->select('oe.id', 'oe.cluster_id', 'oe.subject_row_id', 'oe.event_type', 'oe.event_time')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Clusters with zero events — see docs/OWNERSHIP_ENGINE_DESIGN.md Phase 8 "Risks
+     * discovered": a currently-unreachable but theoretically-possible edge case in
+     * evaluateAt()'s defensive no-write branch, closed by having a detector for it.
+     */
+    public function detectOrphanClusters(int $limit = 1000): \Illuminate\Support\Collection
+    {
+        return DB::table('ownership_clusters as oc')
+            ->leftJoin('ownership_events as oe', 'oe.cluster_id', '=', 'oc.id')
+            ->whereNull('oe.id')
+            ->select('oc.id', 'oc.scoping_company_id', 'oc.scope_mode', 'oc.scope_key', 'oc.created_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    /** Rows whose cache columns disagree with their own cluster's owner_row_id. */
+    public function detectCacheInconsistencies(int $limit = 1000): \Illuminate\Support\Collection
+    {
+        return DB::table('add_job_wise_condidates as ajwc')
+            ->join('ownership_clusters as oc', 'oc.id', '=', 'ajwc.ownership_cluster_id')
+            ->where(function ($q) {
+                $q->where(function ($qq) {
+                    $qq->whereColumn('ajwc.id', '=', 'oc.owner_row_id')
+                        ->where('ajwc.ownership_state', '!=', OwnershipResult::STATE_OWNER);
+                })->orWhere(function ($qq) {
+                    $qq->whereColumn('ajwc.id', '!=', 'oc.owner_row_id')
+                        ->where('ajwc.ownership_state', '!=', OwnershipResult::STATE_DUPLICATE);
+                });
+            })
+            ->select('ajwc.id', 'ajwc.ownership_state', 'oc.owner_row_id', 'oc.id as cluster_id')
+            ->limit($limit)
+            ->get();
     }
 
     /**
