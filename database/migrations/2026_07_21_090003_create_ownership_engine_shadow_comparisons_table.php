@@ -12,6 +12,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('ownership_engine_shadow_comparisons')) {
+            return;
+        }
         Schema::create('ownership_engine_shadow_comparisons', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('subject_row_id');
