@@ -1,7 +1,6 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{{-- Poppins is already loaded once, globally, by the layout — no second font fetch here. --}}
 <style>
 /* ═══════════════════════════════════════════════
    BENCH EXPLORE — EXACT REFERENCE MATCH (bxr-)
@@ -33,18 +32,18 @@
 /* Avatar */
 .bxr-av-wrap{ position:relative; flex-shrink:0; }
 .bxr-avatar{
-    width:82px; height:82px; border-radius:50%;
+    width:82px; height:82px; border-radius:16px;
     object-fit:cover;
     border:3px solid #E8EDF5;
 }
 .bxr-avatar-init{
-    width:82px; height:82px; border-radius:50%;
+    width:82px; height:82px; border-radius:16px;
     background:linear-gradient(135deg,#4F46E5,#7C3AED);
     display:flex; align-items:center; justify-content:center;
     font-size:28px; font-weight:700; color:#fff;
 }
 .bxr-online-dot{
-    position:absolute; bottom:4px; left:4px;
+    position:absolute; bottom:-3px; right:-3px;
     width:14px; height:14px;
     background:#22C55E; border:2.5px solid #fff;
     border-radius:50%;
@@ -56,10 +55,15 @@
 .bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
 .bxr-name{ font-size:22px; font-weight:700; color:#1A1D23; margin:0; }
 .bxr-bench-tag{
+    display:inline-flex; align-items:center; gap:5px;
     font-size:11px; font-weight:600;
     padding:3px 10px; border-radius:20px;
     background:#F0FDF4; color:#16A34A;
     border:1.5px solid #86EFAC;
+}
+.bxr-bench-dot{
+    width:6px; height:6px; border-radius:50%;
+    background:#16A34A; flex-shrink:0;
 }
 .bxr-info-row{
     display:flex; align-items:center; gap:16px;
@@ -624,7 +628,7 @@
         {{-- Row 1: Name + Bench badge --}}
         <div class="bxr-name-row">
           <span class="bxr-name">{{ $candName }}</span>
-          <span class="bxr-bench-tag">+ Bench</span>
+          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>Bench</span>
         </div>
 
         {{-- Row 2: Role  •  Location --}}
