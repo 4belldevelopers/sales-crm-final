@@ -1215,7 +1215,6 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
 
     </div>
 </div>{{-- end row --}}
-</form>
 </div>{{-- end panel-general --}}
 
 {{-- ════════════════ HERO SECTION TAB ════════════════ --}}
@@ -3156,16 +3155,17 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
 
             <div class="td-tpl-grid mt-3" id="tdTemplateGrid">
                 @php
+                $savedTpl = $careerSettings->td_template ?? 'modern';
                 $tdTemplates = [
-                    ['key'=>'modern',    'name'=>'Modern',    'desc'=>'Clean & professional', 'from'=>'#1E3A8A','to'=>'#3B82F6','selected'=>true ],
-                    ['key'=>'corporate', 'name'=>'Corporate', 'desc'=>'Classic & formal',     'from'=>'#1F2937','to'=>'#374151','selected'=>false],
-                    ['key'=>'creative',  'name'=>'Creative',  'desc'=>'Bold & vibrant',       'from'=>'#7C3AED','to'=>'#EC4899','selected'=>false],
-                    ['key'=>'minimal',   'name'=>'Minimal',   'desc'=>'Simple & elegant',     'from'=>'#E2E8F0','to'=>'#CBD5E1','selected'=>false, 'dark_text'=>true],
-                    ['key'=>'tech',      'name'=>'Tech',      'desc'=>'Dark & modern',        'from'=>'#0F172A','to'=>'#1E293B','selected'=>false],
+                    ['key'=>'modern',    'name'=>'Modern',    'desc'=>'Clean & professional', 'from'=>'#1E3A8A','to'=>'#3B82F6'],
+                    ['key'=>'corporate', 'name'=>'Corporate', 'desc'=>'Classic & formal',     'from'=>'#1F2937','to'=>'#374151'],
+                    ['key'=>'creative',  'name'=>'Creative',  'desc'=>'Bold & vibrant',       'from'=>'#7C3AED','to'=>'#EC4899'],
+                    ['key'=>'minimal',   'name'=>'Minimal',   'desc'=>'Simple & elegant',     'from'=>'#E2E8F0','to'=>'#CBD5E1','dark_text'=>true],
+                    ['key'=>'tech',      'name'=>'Tech',      'desc'=>'Dark & modern',        'from'=>'#0F172A','to'=>'#1E293B'],
                 ];
                 @endphp
                 @foreach($tdTemplates as $tt)
-                <div class="td-tpl-card {{ $tt['selected']?'selected':'' }}" onclick="tdSelectTemplate('{{ $tt['key'] }}',this)">
+                <div class="td-tpl-card {{ $tt['key']===$savedTpl?'selected':'' }}" onclick="tdSelectTemplate('{{ $tt['key'] }}',this)">
                     <div class="td-tpl-check"><i class="ti ti-check" style="font-size:10px;color:#fff;"></i></div>
                     <div class="td-tpl-thumb" style="background:linear-gradient(135deg,{{ $tt['from'] }},{{ $tt['to'] }});">
                         <div style="padding:10px 8px;">
@@ -3182,7 +3182,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                 </div>
                 @endforeach
             </div>
-            <input type="hidden" name="td_template" id="tdTemplateInput" value="modern">
+            <input type="hidden" name="td_template" id="tdTemplateInput" value="{{ $careerSettings->td_template ?? 'modern' }}">
         </div>
 
         {{-- 2. CUSTOMIZE DESIGN --}}
@@ -3217,26 +3217,35 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                     <div class="td-design-tab active" id="td-design-colors">
                         <div class="td-design-section-title">Color Scheme</div>
                         <div class="td-design-section-sub">Choose colors for your career page.</div>
+                        @php
+                            $tdCP = $careerSettings->td_color_primary   ?? '#2563EB';
+                            $tdCS = $careerSettings->td_color_secondary ?? '#1F2937';
+                            $tdCA = $careerSettings->td_color_accent    ?? '#10B981';
+                            $tdCB = $careerSettings->td_color_bg        ?? '#FFFFFF';
+                            $tdTM = $careerSettings->td_theme_mode      ?? 'light';
+                            $tdLY = $careerSettings->td_layout          ?? 'wide';
+                            $tdTpl= $careerSettings->td_template        ?? 'modern';
+                        @endphp
                         <div class="td-color-grid">
                             <div>
                                 <div class="td-color-label">Primary Color</div>
                                 <div class="td-color-row">
-                                    <input type="color" class="td-color-swatch" value="#2563EB" id="tdColorPrimary" oninput="document.getElementById('tdColorPrimaryText').value=this.value">
-                                    <input type="text" class="td-color-input" id="tdColorPrimaryText" name="td_color_primary" value="#2563EB" maxlength="7" oninput="syncColorSwatch('tdColorPrimary',this)">
+                                    <input type="color" class="td-color-swatch" value="{{ $tdCP }}" id="tdColorPrimary" oninput="document.getElementById('tdColorPrimaryText').value=this.value;tdUpdatePreview()">
+                                    <input type="text" class="td-color-input" id="tdColorPrimaryText" name="td_color_primary" value="{{ $tdCP }}" maxlength="7" oninput="syncColorSwatch('tdColorPrimary',this);tdUpdatePreview()">
                                 </div>
                             </div>
                             <div>
                                 <div class="td-color-label">Secondary Color</div>
                                 <div class="td-color-row">
-                                    <input type="color" class="td-color-swatch" value="#1F2937" id="tdColorSecondary" oninput="document.getElementById('tdColorSecondaryText').value=this.value">
-                                    <input type="text" class="td-color-input" id="tdColorSecondaryText" name="td_color_secondary" value="#1F2937" maxlength="7" oninput="syncColorSwatch('tdColorSecondary',this)">
+                                    <input type="color" class="td-color-swatch" value="{{ $tdCS }}" id="tdColorSecondary" oninput="document.getElementById('tdColorSecondaryText').value=this.value;tdUpdatePreview()">
+                                    <input type="text" class="td-color-input" id="tdColorSecondaryText" name="td_color_secondary" value="{{ $tdCS }}" maxlength="7" oninput="syncColorSwatch('tdColorSecondary',this);tdUpdatePreview()">
                                 </div>
                             </div>
                             <div>
                                 <div class="td-color-label">Accent Color</div>
                                 <div class="td-color-row">
-                                    <input type="color" class="td-color-swatch" value="#10B981" id="tdColorAccent" oninput="document.getElementById('tdColorAccentText').value=this.value">
-                                    <input type="text" class="td-color-input" id="tdColorAccentText" name="td_color_accent" value="#10B981" maxlength="7" oninput="syncColorSwatch('tdColorAccent',this)">
+                                    <input type="color" class="td-color-swatch" value="{{ $tdCA }}" id="tdColorAccent" oninput="document.getElementById('tdColorAccentText').value=this.value;tdUpdatePreview()">
+                                    <input type="text" class="td-color-input" id="tdColorAccentText" name="td_color_accent" value="{{ $tdCA }}" maxlength="7" oninput="syncColorSwatch('tdColorAccent',this);tdUpdatePreview()">
                                 </div>
                             </div>
                         </div>
@@ -3245,8 +3254,8 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                             <div>
                                 <div class="td-color-label">Background Color</div>
                                 <div class="td-color-row">
-                                    <input type="color" class="td-color-swatch" value="#FFFFFF" id="tdColorBg" oninput="document.getElementById('tdColorBgText').value=this.value">
-                                    <input type="text" class="td-color-input" id="tdColorBgText" name="td_color_bg" value="#FFFFFF" maxlength="7" oninput="syncColorSwatch('tdColorBg',this)">
+                                    <input type="color" class="td-color-swatch" value="{{ $tdCB }}" id="tdColorBg" oninput="document.getElementById('tdColorBgText').value=this.value;tdUpdatePreview()">
+                                    <input type="text" class="td-color-input" id="tdColorBgText" name="td_color_bg" value="{{ $tdCB }}" maxlength="7" oninput="syncColorSwatch('tdColorBg',this);tdUpdatePreview()">
                                 </div>
                             </div>
                             <div>
@@ -3258,16 +3267,17 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                         </div>
                         {{-- Theme mode radios --}}
                         <div class="td-theme-opts">
-                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="light" checked> Light Mode</label>
-                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="dark"> Dark Mode</label>
-                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="system"> System Default</label>
+                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="light" {{ $tdTM==='light'?'checked':'' }}> Light Mode</label>
+                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="dark" {{ $tdTM==='dark'?'checked':'' }}> Dark Mode</label>
+                            <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="system" {{ $tdTM==='system'?'checked':'' }}> System Default</label>
                         </div>
 
                         {{-- Layout Style --}}
                         <div class="td-design-section-title">Layout Style</div>
                         <div class="td-design-section-sub">Choose how content is displayed across the page.</div>
+                        @php $savedLayout = $careerSettings->td_layout ?? 'wide'; @endphp
                         <div class="td-layout-grid" id="tdLayoutGrid">
-                            <div class="td-layout-card selected" onclick="tdSelectLayout('wide',this)">
+                            <div class="td-layout-card {{ $savedLayout==='wide'?'selected':'' }}" onclick="tdSelectLayout('wide',this)">
                                 <div class="td-lc-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                                 <div class="td-lc-thumb">
                                     <div style="display:flex;gap:3px;width:80%;height:20px;">
@@ -3278,7 +3288,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                                 <div class="td-lc-name">Wide</div>
                                 <div class="td-lc-desc">Best for large screens</div>
                             </div>
-                            <div class="td-layout-card" onclick="tdSelectLayout('boxed',this)">
+                            <div class="td-layout-card {{ $savedLayout==='boxed'?'selected':'' }}" onclick="tdSelectLayout('boxed',this)">
                                 <div class="td-lc-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                                 <div class="td-lc-thumb">
                                     <div style="width:55%;height:20px;background:#E2E8F0;border-radius:3px;margin:0 auto;"></div>
@@ -3286,7 +3296,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                                 <div class="td-lc-name">Boxed</div>
                                 <div class="td-lc-desc">Content in a centered container</div>
                             </div>
-                            <div class="td-layout-card" onclick="tdSelectLayout('fullwidth',this)">
+                            <div class="td-layout-card {{ $savedLayout==='fullwidth'?'selected':'' }}" onclick="tdSelectLayout('fullwidth',this)">
                                 <div class="td-lc-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                                 <div class="td-lc-thumb">
                                     <div style="width:100%;height:20px;background:#E2E8F0;border-radius:3px;"></div>
@@ -3295,7 +3305,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                                 <div class="td-lc-desc">Edge to edge layout</div>
                             </div>
                         </div>
-                        <input type="hidden" name="td_layout" id="tdLayoutInput" value="wide">
+                        <input type="hidden" name="td_layout" id="tdLayoutInput" value="{{ $tdLY }}">
                     </div>
 
                     {{-- Other design tabs (hidden) --}}
@@ -3327,7 +3337,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                     <div class="td-design-tab" id="td-design-css" style="display:none;">
                         <div class="td-design-section-title">Custom CSS</div>
                         <div class="td-design-section-sub">Add your own CSS to further customize the look.</div>
-                        <textarea name="td_custom_css" rows="8" style="width:100%;border:1.5px solid #E2E8F0;border-radius:7px;padding:10px;font-size:11px;font-family:'Courier New',monospace;color:#374151;outline:none;resize:vertical;" placeholder="/* Add your custom CSS here */&#10;.career-page { }"></textarea>
+                        <textarea name="td_custom_css" rows="8" style="width:100%;border:1.5px solid #E2E8F0;border-radius:7px;padding:10px;font-size:11px;font-family:'Courier New',monospace;color:#374151;outline:none;resize:vertical;" placeholder="/* Add your custom CSS here */&#10;.career-page { }">{{ $careerSettings->td_custom_css ?? '' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -3340,31 +3350,39 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
             <div style="border:1.5px solid #E2E8F0;border-radius:10px;overflow:hidden;">
                 {{-- Company Logo --}}
                 <div class="td-asset-row" style="padding:14px 16px;">
-                    <div class="td-asset-thumb">
-                        <i class="ti ti-photo" style="font-size:18px;color:#CBD5E1;"></i>
+                    <div class="td-asset-thumb" id="tdLogoThumb">
+                        @if(!empty($careerSettings->td_logo_path))
+                            <img src="{{ asset($careerSettings->td_logo_path) }}" style="max-width:60px;max-height:36px;object-fit:contain;">
+                        @else
+                            <i class="ti ti-photo" style="font-size:18px;color:#CBD5E1;"></i>
+                        @endif
                     </div>
                     <div class="td-asset-info">
                         <div class="td-asset-name">Company Logo</div>
-                        <div class="td-asset-size">Recommended size: 200 × 60px</div>
+                        <div class="td-asset-size">{{ !empty($careerSettings->td_logo_path) ? 'Logo uploaded' : 'Recommended size: 200 × 60px' }}</div>
                     </div>
                     <div class="td-asset-edit" onclick="document.getElementById('tdLogoUpload').click()" title="Upload logo">
                         <i class="ti ti-pencil" style="font-size:14px;"></i>
                     </div>
-                    <input type="file" id="tdLogoUpload" name="td_logo" accept="image/*" style="display:none;">
+                    <input type="file" id="tdLogoUpload" name="td_logo" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdLogoThumb')">
                 </div>
                 {{-- Favicon --}}
                 <div class="td-asset-row" style="padding:14px 16px;border-top:1px solid #F1F5F9;">
-                    <div class="td-asset-thumb">
-                        <i class="ti ti-brand-chrome" style="font-size:16px;color:#CBD5E1;"></i>
+                    <div class="td-asset-thumb" id="tdFaviconThumb">
+                        @if(!empty($careerSettings->td_favicon_path))
+                            <img src="{{ asset($careerSettings->td_favicon_path) }}" style="width:32px;height:32px;object-fit:contain;">
+                        @else
+                            <i class="ti ti-brand-chrome" style="font-size:16px;color:#CBD5E1;"></i>
+                        @endif
                     </div>
                     <div class="td-asset-info">
                         <div class="td-asset-name">Favicon</div>
-                        <div class="td-asset-size">Recommended size: 32 × 32px</div>
+                        <div class="td-asset-size">{{ !empty($careerSettings->td_favicon_path) ? 'Favicon uploaded' : 'Recommended size: 32 × 32px' }}</div>
                     </div>
                     <div class="td-asset-edit" onclick="document.getElementById('tdFaviconUpload').click()" title="Upload favicon">
                         <i class="ti ti-pencil" style="font-size:14px;"></i>
                     </div>
-                    <input type="file" id="tdFaviconUpload" name="td_favicon" accept="image/*" style="display:none;">
+                    <input type="file" id="tdFaviconUpload" name="td_favicon" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdFaviconThumb')">
                 </div>
             </div>
         </div>
@@ -3376,9 +3394,9 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
             <div style="border:1.5px solid #E2E8F0;border-radius:10px;overflow:hidden;">
                 @php
                 $tdOptions = [
-                    ['key'=>'life',      'icon'=>'ti-heart',     'icon_bg'=>'#FFF1F2', 'icon_color'=>'#E11D48', 'name'=>"Show 'Life at Company' Section", 'desc'=>'Display photos and culture content', 'val'=>1],
-                    ['key'=>'testi',     'icon'=>'ti-quote',     'icon_bg'=>'#EFF6FF', 'icon_color'=>'#2563EB', 'name'=>'Show Testimonials',               'desc'=>'Feature employee testimonials',      'val'=>1],
-                    ['key'=>'animation', 'icon'=>'ti-sparkles',  'icon_bg'=>'#F0FDF4', 'icon_color'=>'#16A34A', 'name'=>'Enable Animation',                'desc'=>'Smooth scroll and entrance effects', 'val'=>1],
+                    ['key'=>'life',      'icon'=>'ti-heart',     'icon_bg'=>'#FFF1F2', 'icon_color'=>'#E11D48', 'name'=>"Show 'Life at Company' Section", 'desc'=>'Display photos and culture content', 'val'=> $careerSettings->td_opt_life      ?? 1],
+                    ['key'=>'testi',     'icon'=>'ti-quote',     'icon_bg'=>'#EFF6FF', 'icon_color'=>'#2563EB', 'name'=>'Show Testimonials',               'desc'=>'Feature employee testimonials',      'val'=> $careerSettings->td_opt_testi     ?? 1],
+                    ['key'=>'animation', 'icon'=>'ti-sparkles',  'icon_bg'=>'#F0FDF4', 'icon_color'=>'#16A34A', 'name'=>'Enable Animation',                'desc'=>'Smooth scroll and entrance effects', 'val'=> $careerSettings->td_opt_animation ?? 1],
                 ];
                 @endphp
                 @foreach($tdOptions as $i => $opt)
@@ -3523,6 +3541,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
 </div>
 </div>{{-- end panel-templates --}}
 
+</form>{{-- careerSettingsForm --}}
 </div>{{-- end cps-body --}}
 
 </div>
@@ -3800,6 +3819,50 @@ function syncColorSwatch(swatchId, textInput){
     var val = textInput.value;
     if(/^#[0-9A-Fa-f]{6}$/.test(val)) document.getElementById(swatchId).value = val;
 }
+
+/* Live preview: apply current colors to preview frame */
+function tdUpdatePreview(){
+    var p = document.getElementById('tdColorPrimaryText').value   || '#2563EB';
+    var s = document.getElementById('tdColorSecondaryText').value || '#1F2937';
+    var a = document.getElementById('tdColorAccentText').value    || '#10B981';
+    var b = document.getElementById('tdColorBgText').value        || '#FFFFFF';
+    var frame = document.getElementById('tdPreviewFrame');
+    if(!frame) return;
+    frame.style.setProperty('--tdP', p);
+    frame.style.setProperty('--tdS', s);
+    frame.style.setProperty('--tdA', a);
+    frame.style.background = b;
+    /* update hero gradient */
+    var hero = frame.querySelector('.td-prev-hero');
+    if(hero) hero.style.background = 'linear-gradient(135deg,'+p+','+s+')';
+    /* update nav button */
+    var navBtn = frame.querySelector('.td-prev-nav-btn');
+    if(navBtn) navBtn.style.background = p;
+    /* update search button */
+    var srchBtn = frame.querySelector('.td-prev-hero-search-btn');
+    if(srchBtn) srchBtn.style.background = p;
+    /* update CTA */
+    var cta = frame.querySelector('.td-prev-cta');
+    if(cta) cta.style.background = 'linear-gradient(135deg,'+p+','+s+')';
+    var ctaBtn = frame.querySelector('.td-prev-cta-btn');
+    if(ctaBtn) ctaBtn.style.color = p;
+}
+
+/* Preview uploaded asset inline */
+function tdPreviewAsset(input, thumbId){
+    if(!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+        var box = document.getElementById(thumbId);
+        box.innerHTML = '<img src="'+e.target.result+'" style="max-width:60px;max-height:36px;object-fit:contain;">';
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+/* Apply live preview colors on load */
+document.addEventListener('DOMContentLoaded', function(){
+    tdUpdatePreview();
+});
 
 /* ── Template select (legacy) ── */
 function selectTemplate(key, el){

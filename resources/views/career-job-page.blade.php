@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ @$account->company_name ?? 'Company' }} – Careers</title>
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('img/favicon.svg') }}">
+    @php
+        use Illuminate\Support\Facades\DB as HeadDB;
+        try { $headCS = HeadDB::table('company_career_settings')->where('company_id', $company_id)->first(); } catch(\Exception $e){ $headCS = null; }
+    @endphp
+    <link rel="shortcut icon" type="image/x-icon" href="{{ !empty($headCS->td_favicon_path) ? asset($headCS->td_favicon_path) : asset('img/favicon.svg') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet">
@@ -20,12 +24,20 @@
     $currencySymbole = GeneralMethod::currencySymbole();
     $job_status      = GeneralMethod::job_status();
 
-    /* ── Template Design colors ── */
+    /* ── Template Design settings ── */
     try { $cS = DB::table('company_career_settings')->where('company_id', $company_id)->first(); }
     catch (\Exception $e) { $cS = null; }
-    $cpP = $cS->td_color_primary   ?? '#2563EB';
-    $cpS = $cS->td_color_secondary ?? '#1F2937';
-    $cpA = $cS->td_color_accent    ?? '#10B981';
+    $cpP        = $cS->td_color_primary   ?? '#2563EB';
+    $cpS        = $cS->td_color_secondary ?? '#1F2937';
+    $cpA        = $cS->td_color_accent    ?? '#10B981';
+    $cpBg       = $cS->td_color_bg        ?? '#FFFFFF';
+    $cpTheme    = $cS->td_theme_mode      ?? 'light';
+    $cpTemplate = $cS->td_template        ?? 'modern';
+    $cpLayout   = $cS->td_layout          ?? 'wide';
+    $cpLogoPath = $cS->td_logo_path       ?? null;
+    $cpFavPath  = $cS->td_favicon_path    ?? null;
+    $cpCustomCss= $cS->td_custom_css      ?? '';
+    $cpOptAnim  = $cS->td_opt_animation   ?? 1;
 
     $companyBrand    = @$account->company_name ?? '4Bell Technology';
     $companyInitials = strtoupper(substr(trim($companyBrand), 0, 2));
@@ -55,6 +67,7 @@
     --p:  {{ $cpP }};
     --s:  {{ $cpS }};
     --a:  {{ $cpA }};
+    --bg: {{ $cpBg }};
     --t:  #0F172A;
     --m:  #64748B;
     --b:  #E2E8F0;
@@ -62,7 +75,19 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:auto;}
-body{font-family:'Poppins',sans-serif;font-size:13px;color:var(--t);background:#fff;overflow-x:hidden;}
+body{font-family:'Poppins',sans-serif;font-size:13px;color:var(--t);background:var(--bg);overflow-x:hidden;}
+/* template: {{ $cpTemplate }} | layout: {{ $cpLayout }} | theme: {{ $cpTheme }} */
+@if($cpLayout === 'boxed')
+.hero,.stats-bar,.trusted,.main-grid,.benefits{max-width:1200px;margin-left:auto;margin-right:auto;}
+@elseif($cpLayout === 'fullwidth')
+.hero,.stats-bar,.trusted,.main-grid,.benefits{width:100%;}
+@endif
+@if($cpTheme === 'dark')
+:root{--t:#F1F5F9;--m:#94A3B8;--b:#334155;--l:#1E293B;--bg:#0F172A;}
+body{background:#0F172A;}
+.job-card,.filters,.hero,.trusted,.stats-bar,.benefits-item{background:#1E293B !important;border-color:#334155 !important;}
+.jobs-area{background:#0F172A !important;}
+@endif
 a{text-decoration:none;}
 
 /* ── NAVBAR ── */
@@ -396,12 +421,20 @@ a{text-decoration:none;}
     .benefits{grid-template-columns:1fr 1fr;}
 }
 </style>
+@if(!empty($cpCustomCss))
+<style id="career-custom-css">{{ $cpCustomCss }}</style>
+@endif
 
-<body>
+<body class="career-tpl-{{ $cpTemplate }} career-layout-{{ $cpLayout }}{{ $cpOptAnim ? ' career-anim' : '' }}">
 
 {{-- ════ HERO ════ --}}
 <section class="hero">
     <div>
+        @if(!empty($cpLogoPath))
+        <div style="margin-bottom:14px;">
+            <img src="{{ asset($cpLogoPath) }}" alt="{{ $companyBrand }}" style="max-height:40px;max-width:180px;object-fit:contain;">
+        </div>
+        @endif
         <div class="hero-eyebrow"><i class="fa-solid fa-star"></i> Top Employer {{ date('Y') }}</div>
         <h1 class="hero-h1">Build the Future with<br><span>{{ $companyBrand }}</span></h1>
         <p class="hero-sub">Join our team of innovators and problem solvers who are building products used by thousands of recruiters worldwide.</p>
