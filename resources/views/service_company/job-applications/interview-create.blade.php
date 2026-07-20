@@ -1,25 +1,10 @@
 <?php
 use App\Helper\GeneralMethod;
 $defaultTimeZone = GeneralMethod::defaultTimeZone();
-$defaultTimeFormat = GeneralMethod::defaultTimeFormat();
 $currency_code =  GeneralMethod::defaultCurrency();
 $country_code =  GeneralMethod::countryCodeFun();
 ?>
 <style>
-    #interviewDate::-webkit-inner-spin-button,
-    #interviewDate::-webkit-calendar-picker-indicator {
-        display: none;
-        -webkit-appearance: none;
-    }
-    .hasTime{
-        top: 309.344px;
-        left: 483.25px !important;
-        right: auto;
-    }
-    .flatpickr-calendar.open {
-        position: absolute !important;
-        z-index: 2147483647 !important
-    }
     .swal2-container {
         z-index: 2247483647 !important;
     }
@@ -43,106 +28,105 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-info-strip { padding: 16px 20px; border-bottom: 1px solid #eef0f4; }
     .isd-info-card { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 20px; }
     .isd-info-div { width: 1px; align-self: stretch; min-height: 32px; background: #eef0f4; flex-shrink: 0; }
-    .isd-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14.5px; flex-shrink: 0; }
+    .isd-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
     .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 210px; }
-    .isd-info-name { font-size: 12.5px; font-weight: 700; color: #181c32; }
-    .isd-info-role { font-size: 10.5px; color: #7e8299; margin-top: 2px; }
+    .isd-info-name { font-size: 14px; font-weight: 700; color: #181c32; }
+    .isd-info-role { font-size: 11.5px; color: #7e8299; margin-top: 2px; }
     .isd-info-block { display: flex; flex-direction: column; gap: 5px; min-width: 120px; }
-    .isd-info-label { font-size: 9.5px; color: #7e8299; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
-    .isd-info-value { font-size: 11.5px; font-weight: 700; color: #181c32; }
+    .isd-info-label { font-size: 10.5px; color: #7e8299; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .isd-info-value { font-size: 13px; font-weight: 700; color: #181c32; }
 
     .isd-body { display: flex; align-items: flex-start; }
-    .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px 30px; }
-    .isd-sidebar { flex: 0 0 34%; max-width: 320px; padding: 16px 16px 30px; border-left: 1px solid #eef0f4; background: #fbfbfd; }
+    .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px; }
+    .isd-sidebar { flex: 0 0 34%; max-width: 320px; padding: 16px; border-left: 1px solid #eef0f4; background: #fbfbfd; }
 
     .isd-sec { margin-bottom: 18px; }
     .isd-card { background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
     .isd-sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .isd-sec-head .isd-btn-add-panel { margin-left: auto; }
-    .isd-sec-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .isd-sec-title { font-size: 11.5px; font-weight: 700; color: #181c32; }
-    .isd-sec-sub { font-size: 9.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
+    .isd-sec-num { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .isd-sec-title { font-size: 13px; font-weight: 700; color: #181c32; }
+    .isd-sec-sub { font-size: 10.5px; color: #7e8299; font-weight: 400; margin-top: 1px; }
 
     .isd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
     .isd-grid + .isd-grid { margin-top: 12px; }
     .isd-grid-details { display: grid; grid-template-columns: 1.7fr 1fr 1fr; gap: 12px; }
     @media (max-width: 1500px) { .isd-grid-details { grid-template-columns: 1fr 1fr; } }
-    .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
+    .isd-field label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #3f4254; margin-bottom: 5px; }
     .isd-field label .req { color: #f64e60; }
-    .isd-field label i { color: #a1a5b7; font-size: 10px; }
-    .isd-field input, .isd-field select, .isd-field textarea { width: 100%; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 7px 9px; font-size: 11px; color: #181c32; background: #f8f9fb; }
+    .isd-field label i { color: #a1a5b7; font-size: 11px; }
+    .isd-field input, .isd-field select, .isd-field textarea { width: 100%; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 7px 9px; font-size: 12px; color: #181c32; background: #f8f9fb; }
     .isd-field input:disabled, .isd-field select:disabled, .isd-field textarea:disabled { color: #b5b5c3; cursor: not-allowed; background: #f1f1f4; }
-    .isd-soon { display: inline-flex; align-items: center; font-size: 8px; font-weight: 600; color: #a1a5b7; background: #f1f1f4; border-radius: 5px; padding: 2px 6px; margin-left: 4px; text-transform: uppercase; letter-spacing: .3px; }
+    .isd-soon { display: inline-flex; align-items: center; font-size: 9px; font-weight: 600; color: #a1a5b7; background: #f1f1f4; border-radius: 5px; padding: 2px 6px; margin-left: 4px; text-transform: uppercase; letter-spacing: .3px; }
 
     .isd-datetime-pill { display: flex; align-items: center; border: 1.5px solid #e4e6ef; border-radius: 8px; background: #f8f9fb; padding: 0 9px; }
-    .isd-datetime-pill i { color: #7e8299; font-size: 11px; margin-right: 8px; }
-    .isd-datetime-pill input { border: none !important; background: transparent !important; padding: 7px 4px !important; width: auto; flex: 1 1 auto; min-width: 0; }
+    .isd-datetime-pill input { border: none !important; background: transparent !important; padding: 8px 4px !important; width: auto; flex: 1 1 auto; min-width: 0; color: #181c32; }
     .isd-datetime-pill .sep { width: 1px; height: 18px; background: #e4e6ef; flex-shrink: 0; }
 
     .isd-cal-row { display: flex; gap: 10px; }
-    .isd-cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 9px; font-size: 10.5px; font-weight: 600; color: #3f4254; background: #fff; cursor: pointer; transition: .15s; }
+    .isd-cal-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid #e4e6ef; border-radius: 8px; padding: 9px; font-size: 11.5px; font-weight: 600; color: #3f4254; background: #fff; cursor: pointer; transition: .15s; }
     .isd-cal-btn:hover { border-color: #3e97ff; color: #3e97ff; background: #f5f9ff; }
-    .isd-cal-btn i { font-size: 11.5px; }
+    .isd-cal-btn i { font-size: 13px; }
 
     .isd-tile-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .isd-tile { flex: 1 1 100px; max-width: 138px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; background: #fff; position: relative; transition: .15s; }
     .isd-tile:hover { border-color: #cdd4e0; }
     .isd-tile.is-selected { border-color: #3e97ff; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset; }
-    .isd-tile .ic { width: 28px; height: 28px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; background: #eef4ff; color: #3e97ff; }
-    .isd-tile .nm { font-size: 9.5px; font-weight: 700; color: #181c32; }
+    .isd-tile .ic { width: 28px; height: 28px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; background: #eef4ff; color: #3e97ff; }
+    .isd-tile .nm { font-size: 10.5px; font-weight: 700; color: #181c32; }
     .isd-tile.is-disabled { cursor: not-allowed; opacity: .55; }
     .isd-tile .chk { position: absolute; top: 6px; right: 6px; width: 14px; height: 14px; border-radius: 50%; background: #3e97ff; color: #fff; display: none; align-items: center; justify-content: center; font-size: 8px; }
     .isd-tile.is-selected .chk { display: flex; }
-    .isd-leaf-label { font-size: 9px; font-weight: 600; color: #a1a5b7; text-transform: uppercase; letter-spacing: .3px; margin: 2px 0 8px; }
+    .isd-leaf-label { font-size: 10px; font-weight: 600; color: #a1a5b7; text-transform: uppercase; letter-spacing: .3px; margin: 2px 0 8px; }
 
     .isd-link-row { position: relative; }
     .isd-link-row input { padding-right: 88px; }
     .isd-link-actions { position: absolute; right: 5px; top: 5px; display: flex; gap: 4px; }
-    .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 9px; }
+    .isd-icon-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid #e4e6ef; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7e8299; font-size: 10px; }
     .isd-icon-btn:hover { background: #f8f9fb; color: #3e97ff; }
 
-    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 7px 14px; font-size: 10.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+    .isd-btn-add-panel { border: 1px solid #3e97ff; color: #3e97ff; background: #fff; border-radius: 8px; padding: 7px 14px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
     .isd-btn-add-panel:hover { background: #f5f9ff; }
     .isd-panel-list { display: flex; flex-direction: column; gap: 10px; }
-    .isd-panel-empty { font-size: 10.5px; color: #a1a5b7; text-align: center; padding: 10px 0; }
+    .isd-panel-empty { font-size: 11.5px; color: #a1a5b7; text-align: center; padding: 10px 0; }
     .isd-panel-row { display: flex; align-items: center; gap: 14px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 12px 14px; }
-    .isd-panel-row .isd-avatar { width: 38px; height: 38px; font-size: 11.5px; flex-shrink: 0; }
+    .isd-panel-row .isd-avatar { width: 38px; height: 38px; font-size: 13px; flex-shrink: 0; }
     .isd-panel-cols { display: flex; flex: 1 1 auto; gap: 20px; min-width: 0; flex-wrap: wrap; }
     .isd-panel-namecol { flex: 1 1 40%; min-width: 130px; }
     .isd-panel-emailcol { flex: 1 1 40%; min-width: 160px; display: flex; align-items: center; }
-    .isd-panel-name { font-size: 11px; font-weight: 700; color: #181c32; word-break: break-word; }
-    .isd-panel-designation { font-size: 9.5px; color: #7e8299; margin-top: 3px; }
-    .isd-panel-email { font-size: 10px; color: #7e8299; }
+    .isd-panel-name { font-size: 12.5px; font-weight: 700; color: #181c32; word-break: break-word; }
+    .isd-panel-designation { font-size: 10.5px; color: #7e8299; margin-top: 3px; }
+    .isd-panel-email { font-size: 11px; color: #7e8299; }
     .isd-panel-email i { margin-right: 6px; color: #a1a5b7; }
-    .isd-panel-del { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 11px; flex-shrink: 0; margin-left: auto; }
+    .isd-panel-del { width: 26px; height: 26px; border-radius: 7px; border: none; background: transparent; color: #f64e60; cursor: pointer; font-size: 12px; flex-shrink: 0; margin-left: auto; }
     .isd-panel-del:hover { background: #fff5f8; }
-    .isd-check-avail { font-size: 9.5px; color: #a1a5b7; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
+    .isd-check-avail { font-size: 10.5px; color: #a1a5b7; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; }
 
     .isd-notify-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .isd-notify { display: flex; align-items: flex-start; gap: 9px; border: 1.5px solid #eef0f4; border-radius: 9px; padding: 8px 10px; }
-    .isd-notify i { color: #7e8299; font-size: 11px; margin-top: 1px; }
+    .isd-notify i { color: #7e8299; font-size: 12px; margin-top: 1px; }
     .isd-notify input[type=checkbox] { margin-top: 2px; width: 14px; height: 14px; accent-color: #3e97ff; flex-shrink: 0; }
-    .isd-notify .t { font-size: 10px; font-weight: 600; color: #181c32; }
-    .isd-notify .d { font-size: 8.5px; color: #7e8299; }
+    .isd-notify .t { font-size: 11px; font-weight: 600; color: #181c32; }
+    .isd-notify .d { font-size: 9.5px; color: #7e8299; }
     .isd-notify.is-disabled .t, .isd-notify.is-disabled .d { color: #b5b5c3; }
     .isd-notify.is-disabled i { color: #cdd4e0; }
 
-    .isd-sidebar-card-title { font-size: 11px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+    .isd-sidebar-card-title { font-size: 12px; font-weight: 700; color: #181c32; display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
     .isd-sidebar-card-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #3e97ff; flex-shrink: 0; }
     .isd-sum-row { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; }
     .isd-sum-row:last-child { border-bottom: none; }
-    .isd-sum-ico { width: 24px; height: 24px; border-radius: 7px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
-    .isd-sum-label { font-size: 8.5px; color: #7e8299; font-weight: 500; }
-    .isd-sum-value { font-size: 10.5px; font-weight: 700; color: #181c32; margin-top: 1px; word-break: break-word; }
+    .isd-sum-ico { width: 24px; height: 24px; border-radius: 7px; background: #f5f9ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+    .isd-sum-label { font-size: 9.5px; color: #7e8299; font-weight: 500; }
+    .isd-sum-value { font-size: 11.5px; font-weight: 700; color: #181c32; margin-top: 1px; word-break: break-word; }
     .isd-sum-value.muted { color: #b5b5c3; font-weight: 600; }
-    .isd-status-chip { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+    .isd-status-chip { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; }
     .isd-status-chip.incomplete { background: #fff4de; color: #ffa800; }
     .isd-status-chip.ready { background: #e3fbe9; color: #06c732; }
 
-    .isd-avail-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; font-size: 10px; }
+    .isd-avail-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px dashed #f1f1f4; font-size: 11px; }
     .isd-avail-row:last-child { border-bottom: none; }
-    .isd-avail-row i { color: #06c732; font-size: 10px; width: 16px; text-align: center; }
-    .isd-avail-empty { font-size: 9.5px; color: #a1a5b7; text-align: center; padding: 8px 0; }
+    .isd-avail-row i { color: #06c732; font-size: 11px; width: 16px; text-align: center; }
+    .isd-avail-empty { font-size: 10.5px; color: #a1a5b7; text-align: center; padding: 8px 0; }
 
     .isd-hidden-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
     /* #url_div is the legacy address/link row — the real #url field it wraps still
@@ -152,7 +136,7 @@ $country_code =  GeneralMethod::countryCodeFun();
        on this for every mode). */
     #url_div { display: none !important; }
 
-    .isd-email-inline-head { font-size: 11.5px; font-weight: 700; color: #181c32; margin-bottom: 14px; }
+    .isd-email-inline-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 14px; }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
@@ -198,40 +182,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     initSample();
 </script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    setTimeout(() => {
-          var defaultTimeFormat = '{{$defaultTimeFormat}}';
-
-          if(defaultTimeFormat==1){
-            flatpickr("#interviewTime", {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "h:i K",
-                minuteIncrement: 1
-            });
-          }else{
-            flatpickr("#interviewTime", {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                minuteIncrement: 1
-            });
-          }
-
-            flatpickr("#interviewDate", {
-                dateFormat: "d-m-Y",
-                altInput: true,
-                altFormat: "d-M-Y",
-                minDate: "today",
-                onReady: function (selectedDates, dateStr, instance) {
-                    instance.altInput.style.width = "100%";
-                }
-            });
-      }, 500);
-
     function accessEmailTemplate(template_id, application_id) {
 
         var interviewers = $('#panellist').val();
@@ -356,12 +307,12 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <div class="isd-field">
                             <label><i class="ti ti-calendar"></i> Date &amp; Time <span class="req">*</span></label>
                             <div class="isd-datetime-pill">
-                                <i class="ti ti-calendar"></i>
-                                <input class="form-control" placeholder="Select date" name="interviewDate" id="interviewDate"
-                                    value="{{ (($datadate) ?  \Carbon\Carbon::parse(@$datadate)->format('d-m-Y') : '') }}" type="text" readonly="readonly">
+                                <input name="interviewDate" id="interviewDate" type="date"
+                                    min="{{ date('Y-m-d') }}"
+                                    value="{{ ($datadate) ? \Carbon\Carbon::parse(@$datadate)->format('Y-m-d') : '' }}">
                                 <span class="sep"></span>
-                                <input class="form-control" placeholder="Select time" name="interviewTime" id="interviewTime"
-                                    value="{{ (($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('h:i A') : '') }}" type="text" readonly="readonly">
+                                <input name="interviewTime" id="interviewTime" type="time"
+                                    value="{{ ($datatime) ? \Carbon\Carbon::parse(@$datatime)->format('H:i') : '' }}">
                             </div>
                         </div>
                         <div class="isd-field">
@@ -506,7 +457,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <label class="isd-notify is-disabled"><i class="ti ti-calendar"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
                     </div>
                     <div style="margin-top:12px;">
-                        <a href="javascript:void(0);" id="send_email_invies" style="font-size: 10.5px;font-weight:600;color:#3e97ff;"><i class="ti ti-pencil"></i> Customize &amp; send invite email</a>
+                        <a href="javascript:void(0);" id="send_email_invies" style="font-size: 11.5px;font-weight:600;color:#3e97ff;"><i class="ti ti-pencil"></i> Customize &amp; send invite email</a>
                     </div>
                 </div>
 
@@ -802,7 +753,12 @@ $country_code =  GeneralMethod::countryCodeFun();
 
         if (update) {
             var scheduledate = "{{ @$scheduledate }}";
-            $('#interviewDate').val(scheduledate);
+            if (scheduledate) {
+                // scheduledate is "Y-m-d H:i:s" from the DB; native date/time
+                // inputs need it split into their own ISO pieces.
+                $('#interviewDate').val(scheduledate.substring(0, 10));
+                $('#interviewTime').val(scheduledate.substring(11, 16));
+            }
             var interviewmode = "{{ @$interviewmode }}";
             $('#interview_mode').val(interviewmode).change();
             var interviewmodelavel = "{{ @$interviewmodelavel }}";
@@ -827,12 +783,6 @@ $country_code =  GeneralMethod::countryCodeFun();
                 $('#url').val(interviewmentionlink);
             }, 500);
         }
-
-        setTimeout(() => {
-            var currentDate = new Date();
-            var minDate = currentDate.toISOString().slice(0, 16);
-            document.getElementById('interviewDate').min = minDate;
-        }, 500);
 
         $('body').on('click', '#send_email_invies', function() {
             var interviewDate = $('#interviewDate').val();
@@ -1131,6 +1081,23 @@ $country_code =  GeneralMethod::countryCodeFun();
        ===================================================================== */
     var isdFamilyIcons = { 1: 'ti-phone', 2: 'ti-video', 3: 'ti-map-pin', 4: 'ti-dots' };
     var isdLeafIcons = { 'google meet':'ti-brand-google', 'zoom':'ti-brand-zoom', 'microsoft teams':'ti-brand-windows', 'skype call':'ti-brand-skype', 'phone call':'ti-phone' };
+    // Brand-ish colors per icon, matching the reference design (each mode gets
+    // its own recognizable color instead of one flat blue box).
+    var isdIconColors = {
+        'ti-brand-google': { bg: '#e6f4ea', fg: '#1a7f37' },
+        'ti-brand-zoom':   { bg: '#e8f0fe', fg: '#2d8cff' },
+        'ti-brand-windows':{ bg: '#f1edfd', fg: '#5059c9' },
+        'ti-brand-skype':  { bg: '#e6f7ff', fg: '#00aff0' },
+        'ti-phone':        { bg: '#e6faf3', fg: '#03a678' },
+        'ti-video':        { bg: '#eef4ff', fg: '#3e97ff' },
+        'ti-map-pin':      { bg: '#f7edff', fg: '#a35ee8' },
+        'ti-dots':         { bg: '#f1f1f4', fg: '#a1a5b7' },
+        'ti-apps':         { bg: '#f1f1f4', fg: '#a1a5b7' }
+    };
+    function isdColorIcon($icEl, iconClass){
+        var c = isdIconColors[iconClass];
+        if (c) { $icEl.css({ background: c.bg, color: c.fg }); }
+    }
 
     function isdLeafIcon(name){
         var key = (name||'').toLowerCase();
@@ -1142,11 +1109,13 @@ $country_code =  GeneralMethod::countryCodeFun();
         $('#interview_mode option').each(function(){
             var val = $(this).val();
             if (val === '') return;
+            var iconClass = isdFamilyIcons[val] || 'ti-calendar';
             var tile = $('<div class="isd-tile" data-family-val="'+val+'">' +
                 '<span class="chk"><i class="ti ti-check"></i></span>' +
-                '<div class="ic"><i class="ti '+(isdFamilyIcons[val] || 'ti-calendar')+'"></i></div>' +
+                '<div class="ic"><i class="ti '+iconClass+'"></i></div>' +
                 '<div class="nm"></div></div>');
             tile.find('.nm').text($(this).text());
+            isdColorIcon(tile.find('.ic'), iconClass);
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
         });
@@ -1160,19 +1129,23 @@ $country_code =  GeneralMethod::countryCodeFun();
         $('#isdLeafSection').show();
         real.each(function(){
             var val = $(this).val();
+            var iconClass = isdLeafIcon($(this).text());
             var tile = $('<div class="isd-tile" data-leaf-val="'+val+'">' +
                 '<span class="chk"><i class="ti ti-check"></i></span>' +
                 '<div class="ic"></div>' +
                 '<div class="nm"></div></div>');
-            tile.find('.ic').html('<i class="ti '+isdLeafIcon($(this).text())+'"></i>');
+            tile.find('.ic').html('<i class="ti '+iconClass+'"></i>');
             tile.find('.nm').text($(this).text());
+            isdColorIcon(tile.find('.ic'), iconClass);
             if ($(this).is(':selected')) tile.addClass('is-selected');
             wrap.append(tile);
         });
         // Video mode also gets a disabled "Client Portal" tile — not a real
         // interview_mode_lavel row, shown for parity with the target design.
         if ($('#interview_mode').val() == '2') {
-            wrap.append('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="ti ti-apps"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+            var portalTile = $('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="ti ti-apps"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+            isdColorIcon(portalTile.find('.ic'), 'ti-apps');
+            wrap.append(portalTile);
         }
     }
 
@@ -1196,8 +1169,11 @@ $country_code =  GeneralMethod::countryCodeFun();
     });
 
     function isdSyncMeetingLinkDisplay(){
-        var visible = $('#url_div').is(':visible');
-        $('#isdMeetingLinkWrap').toggle(visible);
+        // #url_div is force-hidden via CSS (kills the old duplicate address row),
+        // so it can no longer be used as a "should we show a link?" signal —
+        // this is only ever called from branches that DO have a link/address to
+        // show, so just show the box unconditionally.
+        $('#isdMeetingLinkWrap').show();
         $('#isdMeetingLinkDisplay').val($('#url').val());
         isdUpdateSummary();
     }
@@ -1298,26 +1274,16 @@ $country_code =  GeneralMethod::countryCodeFun();
     // ---- Add to Calendar: fully client-side, built from the real form fields
     // (date/time/timezone/duration/meeting link) — no backend/API needed. ----
     function isdBuildEventDetails(){
+        // Native <input type="date"> / <input type="time"> already give clean
+        // ISO pieces ("YYYY-MM-DD" / "HH:MM" 24hr) — no format-guessing needed.
         var d = $('#interviewDate').val();
         var t = $('#interviewTime').val();
         if (!d || !t) return null;
         var dParts = d.split('-');
-        if (dParts.length !== 3) return null;
-        var dd = parseInt(dParts[0], 10), mm = parseInt(dParts[1], 10), yyyy = parseInt(dParts[2], 10);
-
-        var hh, min;
-        var ampmMatch = t.match(/(\d{1,2}):(\d{2})\s*([AaPp][Mm])/);
-        if (ampmMatch) {
-            hh = parseInt(ampmMatch[1], 10);
-            min = parseInt(ampmMatch[2], 10);
-            var ap = ampmMatch[3].toUpperCase();
-            if (ap === 'PM' && hh !== 12) hh += 12;
-            if (ap === 'AM' && hh === 12) hh = 0;
-        } else {
-            var parts24 = t.split(':');
-            hh = parseInt(parts24[0], 10);
-            min = parseInt(parts24[1], 10);
-        }
+        var tParts = t.split(':');
+        if (dParts.length !== 3 || tParts.length < 2) return null;
+        var yyyy = parseInt(dParts[0], 10), mm = parseInt(dParts[1], 10), dd = parseInt(dParts[2], 10);
+        var hh = parseInt(tParts[0], 10), min = parseInt(tParts[1], 10);
 
         var durationMin = parseInt($('#isdDuration').val() || '45', 10);
         var start = new Date(yyyy, mm - 1, dd, hh, min);

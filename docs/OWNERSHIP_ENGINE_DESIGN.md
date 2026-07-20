@@ -995,3 +995,91 @@ concrete query/lock/storage reason tied to a specific access pattern in this des
 architecture is ready for implementation sign-off, pending only the product decisions listed
 in §16 (unchanged by this revision) and this revision's own two dropped-index/UUID-format
 corrections (§28), which should be reflected in the actual migration when it's written.
+
+---
+---
+
+# Phase 2 implementation findings (Implementation Rule #8)
+
+Building `app/Services/OwnershipEngine/OwnershipEngine.php` surfaced two places where
+Revision 3's text was wrong or unnecessary. Per Implementation Rule #8 ("if implementation
+uncovers a design issue, stop and update the design document before changing the
+architecture"), both are recorded here; the actual Phase 2 code was written to the
+**corrected** understanding below, not to the literal Revision 3 text.
+
+## Finding 1: there is no "retroactive flip of a different row" case anywhere in the Master Tracker
+
+Revision 3 §18.2/§23/§28 point 4 claimed that an ownership decision can retroactively change
+a *different*, already-existing row's cached state (citing S15/S23 as the example), and
+proposed deferring that write to an async queued job to keep the live critical section
+small.
+
+Re-deriving this by hand against every one of S1–S30 while implementing `evaluate()` shows
+this case does not actually exist. In every scenario, the row whose cache changes is always
+the row that just experienced the triggering event — a company row's own creation
+(`attemptCompanyReservation`) or an agency row's own arrival at Sourcing
+(`claimForAgencySourcing`) — never some other, previously-decided row. Concretely:
+
+- S15/S23 ("agency already owned, company becomes duplicate"): the company row is added
+  **later**, i.e. it *is* the row being created right now. `attemptCompanyReservation()`
+  finds the cluster already owned and marks *this same, brand-new* row Duplicate at the
+  moment of its own creation — not by reaching back to modify some earlier row.
+- Every other scenario follows the same pattern: whichever row is created or newly reaches
+  Sourcing is evaluated once, against whatever the cluster's state already is, and only its
+  own cache is written.
+
+So the live write path never needs to touch more than one `add_job_wise_condidates` row's
+cache per event. **§18.2/§23's "deferred async job for other rows" mechanism does not
+exist in the Phase 2 implementation** — it was a false requirement. The real "many rows
+change at once" case Revision 3 was reaching for is genuinely real, but it only ever occurs
+during **rebuild/replay** (Phase 4), which already has its own explicit batched multi-row
+`UPDATE` (§18.5/§21) — that mechanism is unaffected by this correction; it was never about
+live events to begin with.
+
+**Net effect**: the live critical section is simpler than Revision 3 stated — always exactly
+one cluster read/write plus one triggering-row cache write, never more, and never anything
+deferred to a side queue for correctness reasons. (Company Reservation attempts are still
+queued off the hot creation-request path per §13/§18.1 — that's an unrelated, still-valid
+latency optimization, not the retroactive-flip mechanism being retracted here.)
+
+## Finding 2: `IdentityNormalizer` is unnecessary — the engine never normalizes in PHP
+
+The §9 file tree proposed `app/Services/OwnershipEngine/Support/IdentityNormalizer.php` as a
+hedge for PHP-side email/phone normalization. In practice, every row the engine ever
+evaluates is reached via its `add_job_wise_condidates.job_application_id`, and
+`job_applications.email_normalized`/`phone_normalized` (§7.4's generated, MySQL-computed
+columns, live since Phase 1) already carry the authoritative normalized value for that exact
+row. The engine's `loadSubjectRow()` reads those two columns directly via a join — there is
+no code path where it needs to normalize a raw email/phone string itself, in the live path
+or in the planned Phase 4 backfill (which also only ever reads existing `job_applications`
+rows, never raw user input).
+
+**Net effect**: `IdentityNormalizer` was not built. This isn't a capability gap — it's the
+generated-column design in §7.4 doing exactly what it was intended to do (one authoritative,
+database-computed normalization, never duplicated in PHP) one layer more completely than
+Revision 3's own file tree assumed. `Support/ScopeResolver.php` is unaffected and was built
+as specified.
+
+## What Phase 2 actually built (for traceability against §3/§9)
+
+- `app/Services/OwnershipEngine/OwnershipEngine.php` — `attemptCompanyReservation()`,
+  `claimForAgencySourcing()`, `getCachedState()`, `explain()`, `history()`, plus the shared
+  private `evaluate()`/`lockOrCreateCluster()`/`writeCache()` machinery described above.
+- `Models/OwnershipCluster.php`, `Models/OwnershipEvent.php` — thin Eloquent models, private
+  to this namespace (§5.2).
+- `Rules/ER1..ER8` — one small class per rule, each genuinely called from `evaluate()` (ER1
+  via an explicit guard in `claimForAgencySourcing()`, ER2/ER3 for the "does an owner exist
+  yet" check, ER4 as a self-check invariant before writing a new owner, ER5/ER6 for the
+  "am I the owner" check, ER7 delegating to `ScopeResolver`, ER8 as an `explain()`-only
+  descriptive helper for 3+-contender clusters — not a separate decision branch, since none
+  exists per ER8's own definition).
+- `Support/ScopeResolver.php` — as specified in §7/§24, no `jobs` join.
+- `DataTransferObjects/OwnershipResult.php`, `OwnershipExplanation.php`.
+- Tests: `tests/Unit/OwnershipEngine/RulesTest.php` (pure-logic, no DB — **run and passing**,
+  10/10) and `tests/Feature/OwnershipEngine/MasterTrackerScenariosTest.php` (one test method
+  per S1–S30, against a real database — written and lint-clean, but requires a real MySQL
+  connection to execute, which this environment does not have; the user should run it against
+  staging or a disposable test database).
+- **Not yet wired into any controller/Blade call site** — that's Phase 3. The existing
+  `resolveDuplicateOwnership()`/`checkDuplicateCandidate()` logic is completely untouched and
+  still the only thing production actually reads, per Implementation Rules #4/#5.
