@@ -1228,6 +1228,80 @@ class HomeController extends Controller
 			}
 		}
 
+        /* ── Career page sidebar filters ── */
+
+        // Experience filter — OR logic across selected ranges
+        $filterExp = array_filter((array) $request->input('filter_exp', []));
+        if (!empty($filterExp)) {
+            $expClauses = [];
+            foreach ($filterExp as $exp) {
+                switch ($exp) {
+                    case 'Fresher':
+                        $expClauses[] = ['range' => ['min_exp' => ['lte' => 0]]];
+                        break;
+                    case '1 – 3 Years':
+                        $expClauses[] = ['range' => ['min_exp' => ['gte' => 1, 'lte' => 3]]];
+                        break;
+                    case '3 – 5 Years':
+                        $expClauses[] = ['range' => ['min_exp' => ['gte' => 3, 'lte' => 5]]];
+                        break;
+                    case '5 – 8 Years':
+                        $expClauses[] = ['range' => ['min_exp' => ['gte' => 5, 'lte' => 8]]];
+                        break;
+                    case '8+ Years':
+                        $expClauses[] = ['range' => ['min_exp' => ['gte' => 8]]];
+                        break;
+                }
+            }
+            if (!empty($expClauses)) {
+                $filter[] = ['bool' => ['should' => $expClauses, 'minimum_should_match' => 1]];
+            }
+        }
+
+        // Employment type filter — Full-time=0, Contract=1, Part-time=2, Internship=3
+        $filterEmpType = array_filter((array) $request->input('filter_emp_type', []));
+        if (!empty($filterEmpType)) {
+            $empMap = ['Full-time' => 0, 'Contract' => 1, 'Part-time' => 2, 'Internship' => 3];
+            $empClauses = [];
+            foreach ($filterEmpType as $et) {
+                if (isset($empMap[$et])) {
+                    $empClauses[] = ['term' => ['employment_type' => $empMap[$et]]];
+                }
+            }
+            if (!empty($empClauses)) {
+                $filter[] = ['bool' => ['should' => $empClauses, 'minimum_should_match' => 1]];
+            }
+        }
+
+        // Location filter — nested client_city_jobs.city_name, plus Remote = work_type:'yes'
+        $filterLocation = array_filter((array) $request->input('filter_location', []));
+        if (!empty($filterLocation)) {
+            $locClauses = [];
+            foreach ($filterLocation as $loc) {
+                if (strtolower($loc) === 'remote') {
+                    $locClauses[] = ['term' => ['work_type' => 'yes']];
+                } else {
+                    $locClauses[] = [
+                        'nested' => [
+                            'path'  => 'client_city_jobs',
+                            'query' => ['match' => ['client_city_jobs.city_name' => $loc]],
+                        ],
+                    ];
+                }
+            }
+            $filter[] = ['bool' => ['should' => $locClauses, 'minimum_should_match' => 1]];
+        }
+
+        // Department filter — matches job_category_name field
+        $filterDept = array_filter((array) $request->input('filter_dept', []), fn($d) => $d !== 'All Departments');
+        if (!empty($filterDept)) {
+            $deptClauses = [];
+            foreach (array_values($filterDept) as $dept) {
+                $deptClauses[] = ['match' => ['job_category_name' => $dept]];
+            }
+            $filter[] = ['bool' => ['should' => $deptClauses, 'minimum_should_match' => 1]];
+        }
+
         if (!empty($custom_search)) {
 				
 			$must[] = [
