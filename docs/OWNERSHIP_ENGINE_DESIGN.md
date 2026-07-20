@@ -1191,3 +1191,152 @@ the engine throws — no database needed, since it's a pure mock test) — attem
 via `php artisan test`, but even this DB-free test did not return within 120s in this
 environment, which itself says something about how much of Laravel's boot path expects a
 reachable database here. `php -l` passes on every touched file.
+
+---
+---
+
+# Phase 4: Historical Backfill
+
+## Finding 4 (Implementation Rule #8): "Rebuild" and "Backfill" are two different operations — §9/§10 conflated them
+
+Preparing Phase 4 surfaced a real naming/semantics gap in §9's original method skeleton.
+`§10 (Recovery & Rebuild)` describes regenerating `ownership_clusters`/cache state by
+**replaying already-recorded, immutable `ownership_events`** — used to correct a corrupted
+projection; it never creates a new event, only re-derives the cluster/cache from history that
+already exists. But §9's class skeleton named the *first-ever historical synthesis* operation
+(§10's own "First-ever backfill" paragraph — reading raw `add_job_wise_condidates.created_at`
++ `timeline` for rows that have **no** events yet, and creating brand-new ones) with the same
+method name, `rebuildCandidate()`. These are not the same operation:
+
+- **Backfill** (Phase 4, this section): for rows that have **zero** `ownership_events` —
+  because they predate Phase 3's live wiring — synthesize the historical event sequence once,
+  from raw data, and write it through the exact same rule logic live processing uses.
+- **Rebuild** (§10, unchanged, not built in Phase 4): for rows that already have events, but
+  whose `ownership_clusters`/cache projection is suspected corrupted or stale — replay the
+  existing, immutable log to regenerate the projection. Creates no new events, ever.
+
+**Resolution**: Phase 4 implements `OwnershipEngine::backfillCandidate(int $rowId): array`
+(a new, distinctly-named method — not `rebuildCandidate()`) so the code itself keeps this
+distinction unambiguous. `rebuildJob()`/`rebuildCompany()`/`rebuildSystem()` (the
+replay-existing-events family) are **not built in Phase 4** — they weren't asked for, they
+solve a different problem (data-corruption recovery, not historical gap-filling), and
+building them now would be scope beyond what was requested. §9's skeleton should be read as
+superseded by this finding for the `rebuildCandidate` entry specifically; `getCachedState`,
+`explain`, and `history` are unaffected.
+
+## Implementation
+
+### `OwnershipEngine` changes (additive only — `attemptCompanyReservation()` and
+`claimForAgencySourcing()` keep their exact Phase 3 signatures and behavior, unchanged)
+
+- The private `evaluate()` method was split into a thin wrapper (`evaluate()`, unchanged
+  external behavior, calls `now()` exactly as before) and a new `evaluateAt(..., Carbon
+  $asOf)` that both `evaluate()` and the new `backfillCandidate()` call — the single source
+  of truth for the actual decision logic (ER2–ER6) is shared, not duplicated, between live
+  and backfilled processing. This is what guarantees backfilled data can never disagree with
+  what live processing would have produced for the same historical facts.
+- The idempotency check inside `evaluateAt()` was broadened from "does an event with this
+  exact `trigger_source` already exist for this row" to "does **any** event already exist for
+  this row" — safe because a row's `thirdparty_company_id` never changes after creation, so a
+  given row only ever qualifies for exactly one of the two trigger types in its whole
+  lifetime; this was already true for every live call site, so the broadened check changes no
+  observable Phase 3 behavior. It closes a narrow but real race: without it, a row processed
+  by backfill (`trigger_source = 'manual_rebuild'`) and, moments later, by a live queued job
+  for the same row (`trigger_source = 'candidate_creation'`) could each pass the old
+  narrower check and write two events for one row — a data-integrity smell even though both
+  would reach the same verdict. Broadening the check to "any event at all" closes this.
+- New: `backfillCandidate(int $rowId): array<OwnershipResult>`. For the given row's
+  identity+scope cluster: finds every member row (`findClusterMembers()` — same OR-based
+  email/phone match `lockOrCreateCluster()` already uses live), computes each member's
+  qualifying historical timestamp (`created_at` for company rows; `MIN(timeline.create_at)`
+  for the label at `master_status.id = 1`, batched across the cluster via
+  `batchFetchFirstSourcedTimestamps()` — the exact same batched-timeline-query shape the
+  original, pre-engine `resolveDuplicateOwnership()` always used), skips any member that
+  already has an event (live-idempotency and backfill-idempotency in one check), sorts the
+  remainder by `(timestamp, id)` — the same deterministic-tiebreak discipline §9.4/§22 called
+  for — and replays each through `evaluateAt()` in that order, `trigger_source =
+  'manual_rebuild'`.
+
+### Artisan command: `php artisan ownership-engine:backfill`
+
+`app/Console/Commands/BackfillOwnershipEngine.php` — the only new entry point; not reachable
+from any controller, route, UI, or API, satisfying "do not change any controllers, UI, APIs,
+or business workflows." Chunks `add_job_wise_condidates` rows that have no `ownership_events`
+row yet (`chunkById`, default 500/chunk — bounded memory per §21), calls `backfillCandidate()`
+once per still-uncovered row (a row already covered by an earlier row's cluster processing in
+the same run is a fast no-op, not reprocessed), and reports a summary. `--company=` scopes to
+one company (recommended for a first, careful staging run); `--dry-run` reports the row count
+that would be processed without writing anything.
+
+## Database impact
+
+- **Writes only to `ownership_events`, `ownership_clusters`, and the three cache columns on
+  `add_job_wise_condidates`** — the same three objects Phase 2/3 already write to live. No
+  new tables, no new columns, no schema change of any kind in Phase 4.
+- **No writes to any legacy table** — `job_applications.duplicate`,
+  `add_job_wise_condidates.duplicate`, `companies.app_duplicate`/`enable_cross_agency_duplicate`
+  are only ever read, never written, by any Phase 4 code.
+- Volume: bounded by however many `add_job_wise_condidates` rows currently exist with zero
+  events — at today's staging scale (`AUTO_INCREMENT=63804` per the schema dump the last time
+  it was captured) this is a one-time, bounded backfill, not an ongoing cost.
+
+## Performance considerations
+
+- Chunked (`chunkById`, default 500) — never loads the full historical table into memory at
+  once, per §21's streaming requirement.
+- `findClusterMembers()`/`batchFetchFirstSourcedTimestamps()` run once per **cluster**, not
+  once per row — a cluster with 5 historical members costs one identity-lookup query and one
+  batched `timeline` query, not five of each.
+- **Known, narrow limitation, disclosed rather than engineered around**: `backfillCandidate()`
+  computes a cluster's full membership and chronological order in one pass at the start of
+  processing that cluster. If a genuinely new, live candidate for the *exact same identity and
+  scope* as a not-yet-backfilled historical cluster is created *during* the backfill run, the
+  interleaving between the backfill's synthesized event and the live event is not perfectly
+  coordinated (the cluster-row lock still makes each individual write atomic and internally
+  consistent — this is not a correctness bug in the sense of producing a wrong or contradictory
+  state — but the specific ordering in a true race isn't guaranteed to match what continuous
+  live-only processing would have produced). This is an inherent property of backfilling
+  historical data while new data may still be arriving, not something worth adding
+  cross-process coordination for at this stage. **Mitigation recommended in the runbook below**:
+  run backfill during a low-traffic window, and/or scope the first run(s) with `--company=` to
+  keep the blast radius small and observable.
+- The recommended first run uses `--dry-run` to size the job before committing to a real run,
+  and `--company=` to validate against one company's data before running broadly.
+
+## Rollback strategy
+
+- **Nothing to roll back in the application sense** — Phase 4 adds no controller, route, UI,
+  or API surface; there is nothing to disable that a user could be exposed to. The command is
+  simply not run again if something looks wrong.
+- **Data-level rollback**, if a backfill run needs to be undone (e.g., a bug is found in the
+  synthesized data after the fact): every row written by backfill is identifiable by
+  `ownership_events.trigger_source = 'manual_rebuild'`. Delete is safe and complete via:
+  ```sql
+  -- Identify affected clusters first (for review before deleting):
+  SELECT DISTINCT cluster_id FROM ownership_events WHERE trigger_source = 'manual_rebuild';
+
+  -- Reset the cache columns on every row those clusters touched:
+  UPDATE add_job_wise_condidates
+  SET ownership_state = NULL, ownership_cluster_id = NULL, ownership_evaluated_at = NULL
+  WHERE ownership_cluster_id IN (SELECT DISTINCT cluster_id FROM ownership_events WHERE trigger_source = 'manual_rebuild');
+
+  -- Remove the synthesized events and the clusters they created:
+  DELETE FROM ownership_events WHERE trigger_source = 'manual_rebuild';
+  DELETE FROM ownership_clusters WHERE id NOT IN (SELECT DISTINCT cluster_id FROM ownership_events);
+  ```
+  This is safe specifically *because* `ownership_events` is immutable/append-only and every
+  backfill-written row is tagged with a distinct `trigger_source` — nothing about this rollback
+  touches any legacy table, any Phase 3 live-written row (`trigger_source` in
+  `'candidate_creation'`/`'stage_transition'`), or any cache column belonging to a row Phase 3
+  already processed live.
+- The command itself is safe to re-run after a rollback (or after a partial/interrupted run) —
+  idempotency is structural (§ above), not something the operator needs to track manually.
+
+## Design updates required before implementation continued (Rule #8) — Finding 4 above
+
+Already applied: `backfillCandidate()` built under its own name rather than reusing
+`rebuildCandidate()` from §9's original skeleton; §9 should be read as amended by this
+finding for that one entry. No other design changes were required — the schema
+(`trigger_source` already included `'manual_rebuild'` as an anticipated value from Phase 1),
+the rule classes (ER1–ER8, unchanged), and the concurrency model (single-cluster-lock
+transactions, unchanged) all needed zero changes to support backfill.

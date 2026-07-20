@@ -15,17 +15,19 @@ use App\Services\OwnershipEngine\Rules\ER6_AgencyRowsPrivacyShieldedUntilSourced
 use App\Services\OwnershipEngine\Rules\ER7_ScopeDeterminesComparisonUniverse;
 use App\Services\OwnershipEngine\Rules\ER8_MultiContenderGeneralization;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
  * The single, authoritative Ownership Engine. docs/OWNERSHIP_ENGINE_DESIGN.md.
  *
- * Phase 2 (current): core services, events, locking, transactions — this class and its
- * collaborators. NOT yet wired into any controller/Blade call site (Phase 3) and does not
- * yet replace the existing resolveDuplicateOwnership()/checkDuplicateCandidate() logic,
- * which keeps running unchanged as the production fallback until Phase 6 validation passes
- * (Implementation Rules #4/#5).
+ * Status: Phases 1-4 implemented, all in shadow mode. Phase 3 wired attemptCompanyReservation()/
+ * claimForAgencySourcing() into live trigger points (still additive-only, isolated by
+ * try/catch at every call site). Phase 4 added backfillCandidate() for historical data. This
+ * engine does not yet replace the existing resolveDuplicateOwnership()/checkDuplicateCandidate()
+ * logic, which keeps running unchanged as the production fallback until Phase 6 validation
+ * passes (Implementation Rules #4/#5).
  *
  * §5.2: this is the ONLY class permitted to write ownership_clusters/ownership_events or the
  * ownership_state/ownership_cluster_id/ownership_evaluated_at cache columns on
@@ -211,9 +213,98 @@ class OwnershipEngine
     }
 
     /**
+     * Phase 4 (docs/OWNERSHIP_ENGINE_DESIGN.md, "Historical Backfill", Finding 4) — NOT the
+     * same operation as the "rebuild" family described in §10 (which replays already-recorded
+     * events to fix a corrupted projection; not built). This synthesizes brand-new events for
+     * rows that have zero events yet, because they predate Phase 3's live wiring.
+     *
+     * For the given row's identity+scope cluster: finds every member row, computes each
+     * member's qualifying historical timestamp (company rows: created_at; agency rows: their
+     * own first-reached-Sourcing timestamp from `timeline`, if any — rows that never reached
+     * Sourcing stay undetermined, exactly as ER1 says live), skips any member that already has
+     * an event (idempotent — safe to re-run, safe against a live event racing in), sorts the
+     * remainder chronologically with a deterministic (timestamp, id) tiebreak, and replays
+     * each through evaluateAt() in that order. Returns the OwnershipResult for every row
+     * actually processed in this call (empty if the cluster was already fully covered, or if
+     * the scoping company has app_duplicate = 0).
+     *
+     * @return OwnershipResult[]
+     */
+    public function backfillCandidate(int $rowId): array
+    {
+        $row = $this->loadSubjectRow($rowId);
+
+        if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
+            return [];
+        }
+
+        $normalizedEmail = $row->email_normalized;
+        $normalizedPhone = $row->phone_normalized;
+        if ($normalizedEmail === null && $normalizedPhone === null) {
+            return [];
+        }
+
+        [$scopeMode, $scopeKey] = $this->scopeRule->resolve((int) $row->scoping_company_id, (int) $row->job_id);
+
+        $memberRows = $this->findClusterMembers((int) $row->scoping_company_id, $scopeMode, $scopeKey, $normalizedEmail, $normalizedPhone);
+        $sourcedTimestamps = $this->batchFetchFirstSourcedTimestamps($memberRows);
+
+        $eligible = [];
+        foreach ($memberRows as $member) {
+            // Already has an event — live processing or a prior backfill run already covered
+            // it. This is the idempotency guarantee that makes re-running this method safe.
+            if (OwnershipEvent::where('subject_row_id', $member->id)->exists()) {
+                continue;
+            }
+
+            $isCompanyRow = (int) $member->thirdparty_company_id === 0;
+            if ($isCompanyRow) {
+                $eligible[] = ['row' => $member, 'is_company_row' => true, 'at' => Carbon::parse($member->created_at)];
+                continue;
+            }
+
+            $sourcedAt = $sourcedTimestamps[$member->id] ?? null;
+            if ($sourcedAt !== null) {
+                $eligible[] = ['row' => $member, 'is_company_row' => false, 'at' => Carbon::parse($sourcedAt)];
+            }
+            // else: this agency row never reached Sourcing historically — stays undetermined,
+            // exactly as ER1 says live rows do; no event synthesized for it.
+        }
+
+        // Deterministic chronological order (§9.4/§22): explicit secondary sort key (row id)
+        // so a genuine historical timestamp tie — likely at this precision, since the source
+        // columns are second-precision `timestamp`, not the engine's own microsecond ones —
+        // has a reproducible winner, not accidental query-order.
+        usort($eligible, function ($a, $b) {
+            if ($a['at']->eq($b['at'])) {
+                return $a['row']->id <=> $b['row']->id;
+            }
+
+            return $a['at']->lt($b['at']) ? -1 : 1;
+        });
+
+        $results = [];
+        foreach ($eligible as $entry) {
+            $results[] = $this->evaluateAt(
+                row: $entry['row'],
+                isCompanyRow: $entry['is_company_row'],
+                hasReachedSourcing: true,
+                triggerSource: 'manual_rebuild',
+                establishRule: $entry['is_company_row'] ? 'ER2' : 'ER3',
+                duplicateRule: $entry['is_company_row'] ? 'ER5' : 'ER6',
+                eventUuid: null,
+                asOf: $entry['at'],
+            );
+        }
+
+        return $results;
+    }
+
+    /**
      * Shared write-path logic for both attemptCompanyReservation() and
      * claimForAgencySourcing() — the only place either method locks a row or writes an
      * event/cache update. Locks at most one ownership_clusters row per call (§8/§23).
+     * Thin wrapper over evaluateAt() using "now" — unchanged Phase 3 behavior/signature.
      */
     private function evaluate(
         object $row,
@@ -224,12 +315,37 @@ class OwnershipEngine
         string $duplicateRule,
         ?string $eventUuid,
     ): OwnershipResult {
-        // Idempotency (§25): a given row can only meaningfully fire one event per trigger
-        // type. Checked before acquiring any lock — a cheap, indexed short-circuit for
-        // queue-retry / duplicate-request replay.
-        $existing = OwnershipEvent::where('subject_row_id', $row->id)
-            ->where('trigger_source', $triggerSource)
-            ->first();
+        return $this->evaluateAt(
+            $row, $isCompanyRow, $hasReachedSourcing, $triggerSource,
+            $establishRule, $duplicateRule, $eventUuid, now(),
+        );
+    }
+
+    /**
+     * Phase 4 (docs/OWNERSHIP_ENGINE_DESIGN.md, Finding 4): the actual decision logic,
+     * parameterized by an explicit timestamp — shared, unmodified, by both live processing
+     * (via evaluate() above, always "now") and backfillCandidate() (a real historical
+     * timestamp). This is what guarantees backfilled data can never disagree with what live
+     * processing would have produced for the same historical facts — there is only one
+     * implementation of ER2–ER6, not two.
+     */
+    private function evaluateAt(
+        object $row,
+        bool $isCompanyRow,
+        bool $hasReachedSourcing,
+        string $triggerSource,
+        string $establishRule,
+        string $duplicateRule,
+        ?string $eventUuid,
+        Carbon $asOf,
+    ): OwnershipResult {
+        // Idempotency (§25, broadened per Phase 4 Finding 4): a row's thirdparty_company_id
+        // never changes after creation, so it only ever qualifies for exactly one of the two
+        // trigger types in its whole lifetime — checking for ANY existing event (not just one
+        // matching this exact trigger_source) is therefore safe for live callers (unchanged
+        // observable behavior) and is what makes backfill-vs-live races safe: a row already
+        // processed live is never re-processed by backfill, and vice versa.
+        $existing = OwnershipEvent::where('subject_row_id', $row->id)->first();
         if ($existing) {
             return $this->getCachedState($row->id) ?? new OwnershipResult($row->id, null, null);
         }
@@ -248,7 +364,7 @@ class OwnershipEngine
 
         return DB::transaction(function () use (
             $row, $isCompanyRow, $hasReachedSourcing, $triggerSource, $establishRule,
-            $duplicateRule, $eventUuid, $normalizedEmail, $normalizedPhone, $scopeMode, $scopeKey
+            $duplicateRule, $eventUuid, $normalizedEmail, $normalizedPhone, $scopeMode, $scopeKey, $asOf
         ) {
             $cluster = $this->lockOrCreateCluster(
                 (int) $row->scoping_company_id,
@@ -259,7 +375,7 @@ class OwnershipEngine
             );
 
             $uuidBytes = $eventUuid ?? Str::orderedUuid()->getBytes();
-            $now = now();
+            $now = $asOf;
 
             $establishes = $isCompanyRow
                 ? $this->er2->wouldEstablishOwnership($cluster->owner_row_id)
@@ -389,6 +505,93 @@ class OwnershipEngine
         }
 
         return $row;
+    }
+
+    /**
+     * Phase 4 — every add_job_wise_condidates row sharing this identity within this scope,
+     * mirroring exactly the OR-based email/phone match lockOrCreateCluster() uses live. Used
+     * only by backfillCandidate(); the live write path never needs "all members," only its
+     * own single cluster-row lock.
+     */
+    private function findClusterMembers(int $scopingCompanyId, int $scopeMode, int $scopeKey, ?string $email, ?string $phone): \Illuminate\Support\Collection
+    {
+        $query = DB::table('add_job_wise_condidates as ajwc')
+            ->join('job_applications as ja', 'ja.id', '=', 'ajwc.job_application_id')
+            ->select(
+                'ajwc.id',
+                'ajwc.job_id',
+                'ajwc.company_id as scoping_company_id',
+                'ajwc.thirdparty_company_id',
+                'ajwc.job_application_id',
+                'ajwc.created_at',
+                'ja.email_normalized',
+                'ja.phone_normalized',
+            );
+
+        if ($scopeMode === \App\Services\OwnershipEngine\Support\ScopeResolver::MODE_COMPANY_OVERALL) {
+            $query->where('ajwc.company_id', $scopingCompanyId);
+        } else {
+            $query->where('ajwc.job_id', $scopeKey);
+        }
+
+        $query->where(function ($q) use ($email, $phone) {
+            if ($email !== null) {
+                $q->orWhere('ja.email_normalized', $email);
+            }
+            if ($phone !== null) {
+                $q->orWhere('ja.phone_normalized', $phone);
+            }
+        });
+
+        return $query->get();
+    }
+
+    /**
+     * Phase 4 — batched "first ever reached Sourcing" lookup across every member of a
+     * cluster, from `timeline` (the same historical source and the same batched-query shape
+     * the original, pre-engine resolveDuplicateOwnership() always used — confirmed via
+     * docs/OWNERSHIP_ENGINE_DESIGN.md's Revision 1 §3 index note). Resolved dynamically via
+     * `master_status.id = 1`'s own name rather than assuming the literal string "Sourcing".
+     *
+     * @return array<int, string> add_job_wise_condidates.id => timestamp string
+     */
+    private function batchFetchFirstSourcedTimestamps(\Illuminate\Support\Collection $memberRows): array
+    {
+        if ($memberRows->isEmpty()) {
+            return [];
+        }
+
+        $sourcingLabel = DB::table('master_status')->where('id', 1)->value('name');
+        if (!$sourcingLabel) {
+            return [];
+        }
+
+        $pairs = $memberRows->map(fn ($r) => [$r->job_application_id, $r->job_id])
+            ->unique(fn ($p) => $p[0].':'.$p[1]);
+
+        $timelineRows = DB::table('timeline')
+            ->select('application_id', 'job_id', DB::raw('MIN(create_at) as first_sourced_at'))
+            ->where('master_process_name', $sourcingLabel)
+            ->where(function ($q) use ($pairs) {
+                foreach ($pairs as [$appId, $jobId]) {
+                    $q->orWhere(function ($qq) use ($appId, $jobId) {
+                        $qq->where('application_id', $appId)->where('job_id', $jobId);
+                    });
+                }
+            })
+            ->groupBy('application_id', 'job_id')
+            ->get()
+            ->keyBy(fn ($r) => $r->application_id.':'.$r->job_id);
+
+        $result = [];
+        foreach ($memberRows as $member) {
+            $key = $member->job_application_id.':'.$member->job_id;
+            if (isset($timelineRows[$key])) {
+                $result[$member->id] = $timelineRows[$key]->first_sourced_at;
+            }
+        }
+
+        return $result;
     }
 
     /**
