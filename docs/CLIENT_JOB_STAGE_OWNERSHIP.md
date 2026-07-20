@@ -281,7 +281,7 @@ partial decides which flow opens, independent of the drawer/partial itself:
   but this page is **job-scoped** (one specific client-owned job at a time) rather than
   global. This is the page where an agency actually manages its own submissions to one
   client job, so it's also where the InReview→Sourcing "becomes visible to the client"
-  moment structurally lives (§8.4).
+  moment structurally lives.
 - **Offer Tracker / Joining Tracker** — plain flow only; both pages hard-filter to
   `job_master_status_id` 5/6 (already past the sourcing handoff), so the client-gated
   branch is structurally unreachable there.
