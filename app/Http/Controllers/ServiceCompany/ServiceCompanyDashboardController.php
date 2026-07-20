@@ -42,6 +42,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
     public function index()
    	{	
 		
+
 				$chkAdminRole = $this->user->hasRole('admin');
 
 				// $add_job_wise_condidates =  DB::table('add_job_wise_condidates')
