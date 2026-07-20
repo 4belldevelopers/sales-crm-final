@@ -2652,7 +2652,26 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 					 	$result  = DB::table('add_job_wise_condidates')->insert($insertArr);
 						$lastWiseIs = DB::getPdo()->lastInsertId();
-						
+
+						// Ownership Engine (Phase 3, isolated/shadow mode — see
+						// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot
+						// request path, not called inline — runs alongside the duplicate
+						// check above without altering it or this response. Company row
+						// only (thirdparty_company_id = 0) — agency rows never reserve at
+						// creation. dispatch() itself is try-caught (not just the job's own
+						// handle()) since a queue-connection failure would otherwise throw
+						// synchronously in this request.
+						if ((int) @$thirdparty_company_id === 0) {
+							try {
+								\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastWiseIs);
+							} catch (\Throwable $e) {
+								\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+									'row_id' => $lastWiseIs,
+									'error' => $e->getMessage(),
+								]);
+							}
+						}
+
 						$cachekeys = [
 							'allcvtracker_version_user_'.$this->user->id,
 							'alljobslist_version_user_'.$this->user->id,

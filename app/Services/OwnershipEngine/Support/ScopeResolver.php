@@ -20,15 +20,28 @@ class ScopeResolver
     public const MODE_COMPANY_OVERALL = 2;
 
     /**
+     * Finding 3 (docs/OWNERSHIP_ENGINE_DESIGN.md): app_duplicate = 0 means this company has
+     * not opted into duplicate detection at all — the engine must not evaluate any of its
+     * rows. Checked once here (the single source of truth, principle #3), not replicated as
+     * a guard at every call site.
+     */
+    public function isEnabled(int $scopingCompanyId): bool
+    {
+        $mode = (int) (DB::table('companies')->where('id', $scopingCompanyId)->value('app_duplicate') ?? 0);
+
+        return in_array($mode, [self::MODE_JOB, self::MODE_COMPANY_OVERALL], true);
+    }
+
+    /**
      * @return array{0: int, 1: int} [$scopeMode, $scopeKey]
      */
     public function resolve(int $scopingCompanyId, int $jobId): array
     {
         $mode = (int) (DB::table('companies')->where('id', $scopingCompanyId)->value('app_duplicate') ?? 0);
 
-        // app_duplicate = 0 (disabled) has nothing to key scope off of. Callers (Phase 3's
-        // trigger integration) must gate on this before ever invoking the engine — this is
-        // a defensive fallback, not an expected live path.
+        // Callers must check isEnabled() first — by the time resolve() runs, mode should
+        // always be 1 or 2. This fallback exists only so resolve() never crashes if called
+        // out of order; it is not an expected live path.
         $scopeMode = in_array($mode, [self::MODE_JOB, self::MODE_COMPANY_OVERALL], true)
             ? $mode
             : self::MODE_JOB;

@@ -1083,3 +1083,111 @@ as specified.
 - **Not yet wired into any controller/Blade call site** — that's Phase 3. The existing
   `resolveDuplicateOwnership()`/`checkDuplicateCandidate()` logic is completely untouched and
   still the only thing production actually reads, per Implementation Rules #4/#5.
+
+## Finding 3 (surfaced during Phase 3 wiring): the engine must self-gate on `app_duplicate = 0`
+
+Wiring the seven candidate-creation call sites raised a question §7/ER7 didn't actually
+answer: should the engine evaluate at all for a company with `companies.app_duplicate = 0`
+(duplicate detection fully disabled)? `ScopeResolver::resolve()` as written defaults silently
+to Job-mode in that case — a defensive fallback meant to stop a mis-wired caller from
+crashing, not a considered answer to "should this company's rows even reach the ledger."
+
+Decision: **the engine self-gates.** `app_duplicate = 0` means "this company has not opted
+into duplicate detection at all" — under principle #3 (one source of truth, zero duplicated
+business logic outside the engine), that gate belongs inside `OwnershipEngine`/`ScopeResolver`
+once, not replicated as an `if` at every one of the seven call sites. Added
+`ScopeResolver::isEnabled(int $scopingCompanyId): bool` (true only for `app_duplicate` 1 or
+2); `OwnershipEngine::evaluate()` checks it first, before the idempotency check or any lock
+attempt, and returns an undetermined result (no event, no cluster, no cache write) when
+disabled. This also keeps the new engine's evaluation conditions comparable to the old
+`checkDuplicateCandidate()`/`resolveDuplicateOwnership()` logic (which already only ever runs
+under the same `app_duplicate` gate) — important for Phase 6, where the two systems' outputs
+need to be compared under matching conditions, not skewed by the new engine evaluating a
+superset of what the old one ever did. Covered by
+`tests/Feature/OwnershipEngine/EngineGatingTest.php` (written, not yet executed — same
+no-MySQL-here limitation as everything else in this environment).
+
+---
+---
+
+# Phase 3: trigger integration (shadow mode)
+
+Wired `OwnershipEngine`'s write methods into all eight confirmed trigger points (§6), as
+pure, additive, fault-isolated calls — no existing logic removed, modified, or reordered,
+per the explicit Phase 3 directive: dual-write in isolation, old logic stays authoritative
+until Phase 6 passes.
+
+**Every call site follows the same shape**: called immediately after the existing insert
+captures the new row's id, wrapped in `try/catch (\Throwable)`, any failure logged via
+`Log::warning(...)` and swallowed — never rethrown, never surfacing to the response, never
+able to mark a caller's own transaction for rollback. `client_stage_submit()`'s hook was
+confirmed to run with **no enclosing transaction** in the current code (grepped the whole
+controller for `DB::beginTransaction`/`DB::transaction` — the only occurrence is in an
+unrelated method), so the engine's own internal transaction there is genuinely standalone,
+not nested — no savepoint behavior to reason about.
+
+**Company Reservation call sites** (`attemptCompanyReservation()`, gated on
+`thirdparty_company_id === 0`):
+1. `ServiceCompanyJobApplicationController::store()` — the plain Upload form.
+2. `ServiceCompanyJobApplicationController::googleSheetCandidateData()`.
+3–6. `ServiceCompanyAppTrackerController::rec_candidate_assign()` — all 4 branches (Similar
+   Candidates, Internal Bench, Agency Bench, Career Page).
+7. `ServiceCompanyCvTrackerController::copy_current_selected_applicant()`.
+
+**Agency Sourcing call site** (`claimForAgencySourcing()`, gated on
+`thirdparty_company_id !== 0`, same `master_status == 1 && ...->master_status_id === 8`
+condition as the pre-existing `resolveDuplicateOwnership()` hook, as a deliberately separate
+block right after it, not merged in):
+8. `ServiceCompanyJobApplicationController::client_stage_submit()`.
+
+**One call site deliberately excluded, not overlooked**: `clientappstore()` (same
+controller, ~line 10105) also creates `add_job_wise_condidates` rows, but its `insertArr`
+sets `'thirdparty_company_id' => $this->user->company_id` unconditionally — the currently
+authenticated user's own company id, which is never `0`. Traced through: this confirms the
+endpoint only ever creates **agency**-submitted rows (an agency recruiter posting into a
+client's job), never company-owned ones. Per the event catalog (§6), agency row creation
+triggers nothing at all — `attemptCompanyReservation()` would throw if called here anyway
+(its own guard rejects `thirdparty_company_id !== 0`). Nothing to wire; this is the trigger
+catalog behaving correctly, not a gap.
+
+**Verification done**: `php -l` on all 3 edited controllers (clean); grep-counted exactly 8
+`OwnershipEngine::class` call sites distributed as listed above; confirmed each insertion
+sits strictly after the pre-existing coin-deduction/validation logic in every branch (no
+insertion was placed between a coin check and its deduction — the edits only ever added
+lines immediately after an already-existing `$lastWiseIs`/`$lastInsertedId` capture, never
+touched anything before it). **Not verified**: actual runtime behavior — no MySQL
+connection in this environment, so none of this has executed yet. Same as Phases 1–2, this
+needs to run in a real environment before Phase 3 can be called validated.
+
+## Two implementation gaps found and fixed while preparing for the user's Phase 3 validation checklist
+
+Re-checking the wiring against the checklist item "verify no performance regression on the
+wired endpoints" surfaced that the initial wiring didn't actually follow §13/§18.1's own
+queuing recommendation — caught before any real-environment testing, by re-reading the
+approved design against what was actually built rather than re-asserting it was fine.
+
+**Gap A — Company Reservation calls were synchronous, not queued.** All 7 creation-site
+calls to `attemptCompanyReservation()` were originally inline, on the hot request path —
+exactly the cost §13 said to avoid. Fixed: added `app/Jobs/AttemptOwnershipCompanyReservation.php`
+(`ShouldQueue`, `$tries = 1` — no automatic retries in shadow mode; a failed attempt is
+logged and left for Phase 4's backfill to reconcile, not retried blindly against a
+not-yet-understood failure), and all 7 call sites now `dispatch()` it instead of calling the
+engine directly. `claimForAgencySourcing()` (the one synchronous, user-facing call) is
+unaffected — it stays inline, per §13's explicit distinction between the two trigger types.
+
+**Gap B — the `dispatch()` call itself wasn't isolated.** Fixing Gap A introduced a new,
+narrower risk: `Job::dispatch()` pushes the payload to the queue connection (Redis)
+synchronously, as part of the request — if Redis is unreachable, `dispatch()` itself throws,
+*in the controller's own thread*, which would have violated "shadow mode never changes
+existing behavior" for a completely different reason than the one being fixed. Every
+`dispatch()` call is now wrapped in its own `try/catch (\Throwable)`, logged, swallowed —
+separate from the job's own internal try/catch around the actual engine call (§Phase 3
+above), which still exists for defense in depth once the job actually runs.
+
+Both gaps are covered by tests written this pass:
+`tests/Unit/OwnershipEngine/AttemptOwnershipCompanyReservationJobTest.php` (mocks
+`OwnershipEngine`, asserts the job calls it with the right row id and swallows any exception
+the engine throws — no database needed, since it's a pure mock test) — attempted to run it
+via `php artisan test`, but even this DB-free test did not return within 120s in this
+environment, which itself says something about how much of Laravel's boot path expects a
+reachable database here. `php -l` passes on every touched file.

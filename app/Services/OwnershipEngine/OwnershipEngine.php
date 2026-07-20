@@ -63,6 +63,10 @@ class OwnershipEngine
             );
         }
 
+        if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
+            return new OwnershipResult($row->id, null, null);
+        }
+
         return $this->evaluate(
             row: $row,
             isCompanyRow: true,
@@ -92,6 +96,10 @@ class OwnershipEngine
         }
 
         $this->er1->assertMayEvaluate(isCompanyRow: false, hasReachedSourcing: true, rowId: $rowId);
+
+        if (!$this->scopeRule->isEnabled((int) $row->scoping_company_id)) {
+            return new OwnershipResult($row->id, null, null);
+        }
 
         return $this->evaluate(
             row: $row,

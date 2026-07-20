@@ -71,7 +71,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-tile-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .isd-tile { flex: 1 1 100px; max-width: 138px; border: 1.5px solid #eef0f4; border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; background: #fff; position: relative; transition: .15s; }
     .isd-tile:hover { border-color: #cdd4e0; }
-    .isd-tile.is-selected { border-color: #3e97ff; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset; }
+    .isd-tile.is-selected { border-color: #3e97ff; border-width: 2px; background: #f5f9ff; box-shadow: 0 0 0 1px #3e97ff inset, 0 2px 8px rgba(62,151,255,.18); }
     .isd-tile .ic { width: 28px; height: 28px; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; background: #eef4ff; color: #3e97ff; }
     .isd-tile .nm { font-size: 10.5px; font-weight: 700; color: #181c32; }
     .isd-tile.is-disabled { cursor: not-allowed; opacity: .55; }
@@ -305,7 +305,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     </div>
                     <div class="isd-grid-details">
                         <div class="isd-field">
-                            <label><i class="ti ti-calendar"></i> Date &amp; Time <span class="req">*</span></label>
+                            <label><i class="ti ti-calendar-filled"></i> Date &amp; Time <span class="req">*</span></label>
                             <div class="isd-datetime-pill">
                                 <input name="interviewDate" id="interviewDate" type="date"
                                     min="{{ date('Y-m-d') }}"
@@ -340,7 +340,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                             </select>
                         </div>
                         <div class="isd-field">
-                            <label><i class="ti ti-clock"></i> Duration</label>
+                            <label><i class="ti ti-clock-filled"></i> Duration</label>
                             <select id="isdDuration">
                                 <option value="15">15 Minutes</option>
                                 <option value="30">30 Minutes</option>
@@ -374,10 +374,10 @@ $country_code =  GeneralMethod::countryCodeFun();
                             </select>
                         </div>
                         <div class="isd-field">
-                            <label><i class="ti ti-calendar"></i> Add to Calendar</label>
+                            <label><i class="ti ti-calendar-filled"></i> Add to Calendar</label>
                             <div class="isd-cal-row">
-                                <div class="isd-cal-btn" id="isdGoogleCalBtn"><i class="ti ti-brand-google"></i> Google Calendar</div>
-                                <div class="isd-cal-btn" id="isdOutlookCalBtn"><i class="ti ti-calendar"></i> Outlook Calendar</div>
+                                <div class="isd-cal-btn" id="isdGoogleCalBtn"><i class="ti ti-brand-google-filled"></i> Google Calendar</div>
+                                <div class="isd-cal-btn" id="isdOutlookCalBtn"><i class="ti ti-calendar-filled"></i> Outlook Calendar</div>
                             </div>
                         </div>
                     </div>
@@ -419,7 +419,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                         </div>
                     </div>
                     <div class="isd-field" id="isdMeetingLinkWrap" style="display:none;">
-                        <label>Meeting Link <span class="req">*</span></label>
+                        <label><span id="isdMeetingLinkLabel">Meeting Link</span> <span class="req">*</span></label>
                         <div class="isd-link-row">
                             <input type="text" id="isdMeetingLinkDisplay" readonly>
                             <div class="isd-link-actions">
@@ -441,7 +441,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     </div>
                     <input class="isd-hidden-native" name="panellist" id="panellist" value="">
                     <div class="isd-panel-list" id="isdPanelList"></div>
-                    <div class="isd-check-avail"><i class="ti ti-clock"></i> Panelist availability isn't tracked yet <span class="isd-soon">Coming soon</span></div>
+                    <div class="isd-check-avail"><i class="ti ti-clock-filled"></i> Panelist availability isn't tracked yet <span class="isd-soon">Coming soon</span></div>
                 </div>
 
                 <!-- Section 4: Notifications -->
@@ -451,10 +451,10 @@ $country_code =  GeneralMethod::countryCodeFun();
                         <div><div class="isd-sec-title">Notifications</div><div class="isd-sec-sub">Who should be notified</div></div>
                     </div>
                     <div class="isd-notify-grid">
-                        <label class="isd-notify"><i class="ti ti-mail"></i><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span><input type="checkbox" id="isdNotifyEmail" checked style="margin-left:auto;"></label>
+                        <label class="isd-notify"><i class="ti ti-mail-filled"></i><span><span class="t">Send Email Invite</span><br><span class="d">To candidate &amp; panelists</span></span><input type="checkbox" id="isdNotifyEmail" checked style="margin-left:auto;"></label>
                         <label class="isd-notify is-disabled"><i class="ti ti-brand-whatsapp"></i><span><span class="t">Send WhatsApp <span class="isd-soon">Soon</span></span><br><span class="d">To candidate</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
-                        <label class="isd-notify is-disabled"><i class="ti ti-apps"></i><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
-                        <label class="isd-notify is-disabled"><i class="ti ti-calendar"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="ti ti-apps-filled"></i><span><span class="t">Notify Candidate Portal <span class="isd-soon">Soon</span></span><br><span class="d">Update on candidate portal</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
+                        <label class="isd-notify is-disabled"><i class="ti ti-calendar-filled"></i><span><span class="t">Add to Panel Calendar <span class="isd-soon">Soon</span></span><br><span class="d">Block time for panelists</span></span><input type="checkbox" disabled style="margin-left:auto;"></label>
                     </div>
                     <div style="margin-top:12px;">
                         <a href="javascript:void(0);" id="send_email_invies" style="font-size: 11.5px;font-weight:600;color:#3e97ff;"><i class="ti ti-pencil"></i> Customize &amp; send invite email</a>
@@ -468,12 +468,12 @@ $country_code =  GeneralMethod::countryCodeFun();
             <div class="isd-sidebar">
                 <div class="isd-card">
                     <div class="isd-sidebar-card-title"><span class="dot"></span>Interview Summary</div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-calendar"></i></div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-calendar-filled"></i></div><div><div class="isd-sum-label">Date &amp; Time</div><div class="isd-sum-value muted" id="isdSumDate">Not set</div></div></div>
                     <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-world"></i></div><div><div class="isd-sum-label">Timezone</div><div class="isd-sum-value muted" id="isdSumTz">Not set</div></div></div>
                     <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-video"></i></div><div><div class="isd-sum-label">Mode</div><div class="isd-sum-value muted" id="isdSumMode">Not set</div></div></div>
                     <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-users"></i></div><div><div class="isd-sum-label">Panelists</div><div class="isd-sum-value" id="isdSumPanel">0 added</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-mail"></i></div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
-                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-circle-check"></i></div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-mail-filled"></i></div><div><div class="isd-sum-label">Email Invite</div><div class="isd-sum-value" id="isdSumEmail">Ready to send</div></div></div>
+                    <div class="isd-sum-row"><div class="isd-sum-ico"><i class="ti ti-circle-check-filled"></i></div><div><div class="isd-sum-label">Status</div><div><span class="isd-status-chip incomplete" id="isdSumStatus">Incomplete</span></div></div></div>
                 </div>
 
                 <div class="isd-card">
@@ -481,7 +481,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     @if(count($isdAvailabilitySlots))
                         @foreach($isdAvailabilitySlots as $isdSlot)
                             <div class="isd-avail-row">
-                                <i class="ti ti-circle-check"></i>
+                                <i class="ti ti-circle-check-filled"></i>
                                 <span>{{ \Carbon\Carbon::parse($isdSlot['date'])->format('D, d M · h:i A') }}
                                     @if(!empty($isdSlot['mode'])) &middot; {{ $isdSlot['mode'] }} @endif
                                 </span>
@@ -822,7 +822,11 @@ $country_code =  GeneralMethod::countryCodeFun();
         });
     });
 
-    function submitForm() {
+    // Called directly by this file's own Save button and, via a global
+    // reference, by the shared drawer shell's "Schedule Interview" button in
+    // service_company_layout.blade.php — assigning to window explicitly here
+    // removes any doubt about scope now that it's invoked cross-file.
+    window.submitForm = function submitForm() {
 
         var interviewDate = $('#interviewDate').val();
         var interview_mode = $('#interview_mode').val();
@@ -1056,9 +1060,15 @@ $country_code =  GeneralMethod::countryCodeFun();
             isdSyncMeetingLinkDisplay();
         } else if ((ParentId == 3) && (currentId >= 0)) {
             $('#url_div').show(); $('#url').show(); $('#lbl_call_mode').show();
-            $('#lbl_call_mode').html('Interview Address/Location');
             var location = $('#interview_mode_lavels :selected').text();
-            if (currentId > 0) { $('#url').val(location); }
+            if (currentId > 0) {
+                $('#lbl_call_mode').html('Interview Address');
+                $('#url').val(location);
+            } else {
+                // "Other address" — manual entry, not a saved client location.
+                $('#lbl_call_mode').html('Enter the Interview Address');
+                $('#url').val('');
+            }
             isdSyncMeetingLinkDisplay();
         }
         isdUpdateSummary();
@@ -1079,20 +1089,20 @@ $country_code =  GeneralMethod::countryCodeFun();
        or how — it only mirrors/sets the same real fields the legacy
        dropdowns always used.
        ===================================================================== */
-    var isdFamilyIcons = { 1: 'ti-phone', 2: 'ti-video', 3: 'ti-map-pin', 4: 'ti-dots' };
-    var isdLeafIcons = { 'google meet':'ti-brand-google', 'zoom':'ti-brand-zoom', 'microsoft teams':'ti-brand-windows', 'skype call':'ti-brand-skype', 'phone call':'ti-phone' };
+    var isdFamilyIcons = { 1: 'ti-phone-filled', 2: 'ti-video', 3: 'ti-map-pin-filled', 4: 'ti-dots' };
+    var isdLeafIcons = { 'google meet':'ti-brand-google-filled', 'zoom':'ti-brand-zoom', 'microsoft teams':'ti-brand-teams', 'skype call':'ti-brand-skype', 'phone call':'ti-phone-filled' };
     // Brand-ish colors per icon, matching the reference design (each mode gets
     // its own recognizable color instead of one flat blue box).
     var isdIconColors = {
-        'ti-brand-google': { bg: '#e6f4ea', fg: '#1a7f37' },
+        'ti-brand-google-filled': { bg: '#e6f4ea', fg: '#1a7f37' },
         'ti-brand-zoom':   { bg: '#e8f0fe', fg: '#2d8cff' },
-        'ti-brand-windows':{ bg: '#f1edfd', fg: '#5059c9' },
+        'ti-brand-teams':  { bg: '#f1edfd', fg: '#5059c9' },
         'ti-brand-skype':  { bg: '#e6f7ff', fg: '#00aff0' },
-        'ti-phone':        { bg: '#e6faf3', fg: '#03a678' },
+        'ti-phone-filled': { bg: '#e6faf3', fg: '#03a678' },
         'ti-video':        { bg: '#eef4ff', fg: '#3e97ff' },
-        'ti-map-pin':      { bg: '#f7edff', fg: '#a35ee8' },
+        'ti-map-pin-filled': { bg: '#f7edff', fg: '#a35ee8' },
         'ti-dots':         { bg: '#f1f1f4', fg: '#a1a5b7' },
-        'ti-apps':         { bg: '#f1f1f4', fg: '#a1a5b7' }
+        'ti-apps-filled':  { bg: '#f1f1f4', fg: '#a1a5b7' }
     };
     function isdColorIcon($icEl, iconClass){
         var c = isdIconColors[iconClass];
@@ -1101,7 +1111,7 @@ $country_code =  GeneralMethod::countryCodeFun();
 
     function isdLeafIcon(name){
         var key = (name||'').toLowerCase();
-        return isdLeafIcons[key] || 'ti-map-pin';
+        return isdLeafIcons[key] || 'ti-map-pin-filled';
     }
 
     function isdRenderFamilyTiles(){
@@ -1143,8 +1153,8 @@ $country_code =  GeneralMethod::countryCodeFun();
         // Video mode also gets a disabled "Client Portal" tile — not a real
         // interview_mode_lavel row, shown for parity with the target design.
         if ($('#interview_mode').val() == '2') {
-            var portalTile = $('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="ti ti-apps"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
-            isdColorIcon(portalTile.find('.ic'), 'ti-apps');
+            var portalTile = $('<div class="isd-tile is-disabled" title="Coming soon"><div class="ic"><i class="ti ti-apps-filled"></i></div><div class="nm">Client Portal <span class="isd-soon">Soon</span></div></div>');
+            isdColorIcon(portalTile.find('.ic'), 'ti-apps-filled');
             wrap.append(portalTile);
         }
     }
@@ -1174,6 +1184,8 @@ $country_code =  GeneralMethod::countryCodeFun();
         // this is only ever called from branches that DO have a link/address to
         // show, so just show the box unconditionally.
         $('#isdMeetingLinkWrap').show();
+        var labelText = $.trim($('#lbl_call_mode').text()) || 'Meeting Link';
+        $('#isdMeetingLinkLabel').text(labelText);
         $('#isdMeetingLinkDisplay').val($('#url').val());
         isdUpdateSummary();
     }
@@ -1208,6 +1220,23 @@ $country_code =  GeneralMethod::countryCodeFun();
         if (!name) return;
         isdPanelMeta[name.trim()] = { email: (email||'').trim(), designation: (designation||'').trim() };
     }
+    // Keeps the "Add Interview Panel" team-picker drawer in sync: deleting a
+    // panelist here must also drop them from #cc_email (the field that picker
+    // reads to decide Add-vs-Remove state) and flip any already-rendered
+    // picker button back to "Add", so the two lists never disagree.
+    function isdRemoveFromCcEmail(email){
+        var cc = ($('#cc_email').val() || '');
+        var arr = cc.split(',').map(function(s){ return s.trim(); })
+            .filter(function(s){ return s !== '' && s.toLowerCase() !== email.trim().toLowerCase(); });
+        $('#cc_email').val(arr.join(','));
+    }
+    function isdResetPanelPickerButton(name){
+        $('.cp_select_panel[data-title="'+name+'"]').each(function(){
+            if ($(this).attr('data-assign') == '1') {
+                $(this).removeClass('btn-light-danger').addClass('btn-light-primary').text('Add').attr('data-assign', '0');
+            }
+        });
+    }
     function isdPanelListArray(){
         var raw = ($('#panellist').val() || '').trim();
         if (!raw) return [];
@@ -1233,12 +1262,14 @@ $country_code =  GeneralMethod::countryCodeFun();
             cols.append(nameCol);
             var emailCol = $('<div class="isd-panel-emailcol"></div>');
             if (meta && meta.email) {
-                emailCol.append($('<span class="isd-panel-email"><i class="ti ti-mail"></i></span>').append(document.createTextNode(meta.email)));
+                emailCol.append($('<span class="isd-panel-email"><i class="ti ti-mail-filled"></i></span>').append(document.createTextNode(meta.email)));
             }
             cols.append(emailCol);
             row.append(cols);
-            var del = $('<button type="button" class="isd-panel-del"><i class="ti ti-trash"></i></button>');
+            var del = $('<button type="button" class="isd-panel-del"><i class="ti ti-trash-filled"></i></button>');
             del.on('click', function(){
+                if (meta && meta.email) { isdRemoveFromCcEmail(meta.email); }
+                isdResetPanelPickerButton(entry);
                 delete isdPanelMeta[entry];
                 list.splice(idx, 1);
                 $('#panellist').val(list.join(','));
@@ -1270,6 +1301,11 @@ $country_code =  GeneralMethod::countryCodeFun();
             .removeClass('incomplete ready').addClass(ready ? 'ready' : 'incomplete');
     }
     $(document).on('change', '#interviewDate, #interviewTime, #timezone, #isdNotifyEmail', isdUpdateSummary);
+    // Native date/time inputs otherwise only open their picker when the tiny
+    // built-in icon is clicked — showPicker() opens it from anywhere in the field.
+    $(document).on('click', '#interviewDate, #interviewTime', function(){
+        if (this.showPicker) { try { this.showPicker(); } catch (e) {} }
+    });
 
     // ---- Add to Calendar: fully client-side, built from the real form fields
     // (date/time/timezone/duration/meeting link) — no backend/API needed. ----

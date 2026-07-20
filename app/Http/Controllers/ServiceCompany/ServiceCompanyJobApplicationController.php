@@ -1973,7 +1973,23 @@ protected $elasticService;
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
 		$add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
-		
+
+		// Ownership Engine (Phase 3, isolated/shadow mode — see
+		// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path, not
+		// called inline — runs alongside the existing duplicate-detection logic above
+		// without altering it or this response. Company row (thirdparty_company_id
+		// defaults to 0 here — no third party on this Upload form). dispatch() itself is
+		// try-caught (not just the job's own handle()) since a queue-connection failure
+		// would otherwise throw synchronously in this request.
+		try {
+			\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastInsertedId);
+		} catch (\Throwable $e) {
+			\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+				'row_id' => $lastInsertedId,
+				'error' => $e->getMessage(),
+			]);
+		}
+
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
 					'alljobslist_version_user_'.$this->user->id
@@ -2460,8 +2476,23 @@ protected $elasticService;
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
 		$add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
-		
-		
+
+		// Ownership Engine (Phase 3, isolated/shadow mode — see
+		// docs/OWNERSHIP_ENGINE_DESIGN.md §13/§18.1). Queued off this hot request path, not
+		// called inline — runs alongside the existing duplicate-detection logic above
+		// without altering it or this response. Company row (thirdparty_company_id
+		// defaults to 0 here — no third party on this import path). dispatch() itself is
+		// try-caught (not just the job's own handle()) since a queue-connection failure
+		// would otherwise throw synchronously in this request.
+		try {
+			\App\Jobs\AttemptOwnershipCompanyReservation::dispatch((int) $lastInsertedId);
+		} catch (\Throwable $e) {
+			\Illuminate\Support\Facades\Log::warning('AttemptOwnershipCompanyReservation dispatch failed (Phase 3 shadow mode, non-blocking)', [
+				'row_id' => $lastInsertedId,
+				'error' => $e->getMessage(),
+			]);
+		}
+
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
 					'alljobslist_version_user_'.$this->user->id
@@ -11158,6 +11189,24 @@ protected $elasticService;
 					);
 					$isDuplicateLoser = in_array($addJobWiseCondidate_id, $ownership->duplicateRowIds);
 				}
+			}
+		}
+
+		// Ownership Engine (Phase 3, isolated/shadow mode — see
+		// docs/OWNERSHIP_ENGINE_DESIGN.md). Runs alongside the existing
+		// resolveDuplicateOwnership() call above without altering it, $isDuplicateLoser, or
+		// this method's response — a deliberately separate block, not merged into the one
+		// above. Any failure is caught and logged, never surfaced. Same trigger condition
+		// (InReview(8)->Sourcing(1)), but fires only for agency-submitted rows
+		// (thirdparty_company_id > 0); company rows only ever reserve at creation.
+		if ($master_status == 1 && (int) $addJobWiseCondidate->master_status_id === 8 && (int) $addJobWiseCondidate->thirdparty_company_id !== 0) {
+			try {
+				app(\App\Services\OwnershipEngine\OwnershipEngine::class)->claimForAgencySourcing((int) $addJobWiseCondidate_id);
+			} catch (\Throwable $e) {
+				\Illuminate\Support\Facades\Log::warning('OwnershipEngine::claimForAgencySourcing failed (Phase 3 shadow mode, non-blocking)', [
+					'row_id' => $addJobWiseCondidate_id,
+					'error' => $e->getMessage(),
+				]);
 			}
 		}
 
