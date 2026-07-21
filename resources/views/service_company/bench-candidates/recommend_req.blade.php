@@ -2,176 +2,311 @@
 @push('head-script')
 <style>
 /* ═══════════════════════════════════════════════
-   RECOMMENDED CLIENT JOBS — AppTracker-pattern redesign (rrj-)
+   RECOMMENDED CLIENT JOBS — reuses bench_explore's exact header/summary-card
+   markup (bxr-) verbatim, so switching tabs never feels like leaving the
+   module, plus a Similar-Candidates-style filter drawer (simf-, renamed rrj-
+   to avoid ID collisions with the actual similar_candidates.blade.php page).
 ═══════════════════════════════════════════════ */
 #kt_content{ margin-top:-70px !important; }
-.rrj-page{ font-family:'Poppins',sans-serif; background:#F2F4F8; min-height:100vh; padding:18px 0 40px; }
-.rrj-page *{ font-family:'Poppins',sans-serif; box-sizing:border-box; }
+.bxr-page{ font-family:'Poppins',sans-serif; background:#F2F4F8; min-height:100vh; padding:18px 0 40px; }
+.bxr-page *{ font-family:'Poppins',sans-serif; box-sizing:border-box; }
 
-/* ══ 1. PROFILE HERO ════════════════════════════ */
-.rrj-hero{ background:#fff; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #F0F2F5; margin-bottom:4px; }
-.rrj-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
-.rrj-avatar{ width:64px; height:64px; border-radius:16px; object-fit:cover; border:3px solid #E8EDF5; }
-.rrj-avatar-init{ width:64px; height:64px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; flex-shrink:0; }
-.rrj-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0 0 3px; }
-.rrj-role{ font-size:12px; font-weight:600; color:#374151; margin:0 0 6px; }
-.rrj-meta-line{ display:flex; flex-wrap:wrap; gap:16px; }
-.rrj-meta-item{ display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:#64748B; }
-.rrj-meta-item i{ font-size:13px; color:#94A3B8; }
+/* ══ 1. PROFILE HERO — identical to bench_explore.blade.php ══ */
+.bxr-hero{ background:#fff; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #F0F2F5; margin-bottom:4px; }
+.bxr-av-wrap{ position:relative; flex-shrink:0; }
+.bxr-avatar{ width:82px; height:82px; border-radius:16px; object-fit:cover; border:3px solid #E8EDF5; }
+.bxr-avatar-init{ width:82px; height:82px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; }
+.bxr-online-dot{ position:absolute; bottom:-3px; right:-3px; width:14px; height:14px; background:#22C55E; border:2.5px solid #fff; border-radius:50%; }
+.bxr-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
+.bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
+.bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
+.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#F0FDF4; color:#16A34A; border:1.5px solid #86EFAC; }
+.bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:#16A34A; flex-shrink:0; }
+.bxr-info-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
+.bxr-role{ font-size:13px; font-weight:600; color:#374151; margin:0; }
+.bxr-meta-line{ display:flex; flex-wrap:wrap; gap:18px; }
+.bxr-meta-item{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:500; color:#64748B; }
+.bxr-meta-item i{ font-size:13px; color:#94A3B8; }
+.bxr-bench-id-val{ font-weight:700; color:#1A56DB; letter-spacing:.3px; font-size:12px; }
+.bxr-kpi-row{ display:flex; align-items:center; gap:0; flex-shrink:0; flex-wrap:wrap; }
+.bxr-kpi{ display:flex; align-items:center; gap:12px; padding:12px 28px; position:relative; }
+.bxr-kpi+.bxr-kpi::before{ content:''; position:absolute; left:0; top:15%; height:70%; width:1px; background:#E5E9F0; }
+.bxr-kpi-icon{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.bxr-kpi-icon.vi{ background:#EFF6FF; color:#2563EB; }
+.bxr-kpi-icon.dl{ background:#F0FDF4; color:#16A34A; }
+.bxr-kpi-icon.aj{ background:#EFF6FF; color:#0EA5E9; }
+.bxr-kpi-icon.iv{ background:#F5F3FF; color:#7C3AED; }
+.bxr-kpi-num{ font-size:15px; font-weight:700; color:#1A1D23; line-height:1.1; }
+.bxr-kpi-lbl{ font-size:10px; font-weight:500; color:#94A3B8; white-space:nowrap; }
+.bxr-hero-menu{ align-self:flex-start; width:32px; height:32px; border-radius:8px; border:1px solid #E5E9F0; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; transition:all .18s; flex-shrink:0; }
+.bxr-hero-menu:hover{ background:#F8FAFC; }
 
-/* ══ 2. TABS (Pool Jobs / Recommend Client Jobs / Recommend Internal Jobs) ══ */
-.rrj-tabs{ display:flex; align-items:center; gap:0; flex-shrink:0; flex-wrap:wrap; }
-.rrj-tab{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 20px; text-decoration:none; position:relative; }
-.rrj-tab+.rrj-tab::before{ content:''; position:absolute; left:0; top:15%; height:70%; width:1px; background:#E5E9F0; }
-.rrj-tab-name{ font-size:12px; font-weight:600; color:#64748B; white-space:nowrap; }
-.rrj-tab-count{ font-size:17px; font-weight:800; color:#0F172A; line-height:1.1; }
-.rrj-tab.rrj-tab-active .rrj-tab-name{ color:#2563EB; }
-.rrj-tab.rrj-tab-active .rrj-tab-count{ color:#2563EB; }
-.rrj-tab.rrj-tab-active{ border-bottom:3px solid #2563EB; }
+/* ══ 2. SUMMARY CARDS (== tabs) — identical to bench_explore.blade.php ══ */
+.bxr-sum-row{ display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.bxr-sum-card{ flex:1; min-width:200px; display:flex; align-items:center; gap:14px; padding:14px 16px; background:#fff; border:1px solid #eef0f4; border-radius:14px; box-shadow:0 1px 2px rgba(16,24,40,.04); transition:box-shadow .18s; }
+.bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
+a.bxr-sum-link{ color:inherit; text-decoration:none; cursor:pointer; }
+a.bxr-sum-link:hover{ border-color:#c7d2fe; }
+.bxr-sum-card.bxr-sum-active{ border-color:#2563EB; background:#EFF6FF; box-shadow:0 0 0 1px #2563EB, 0 4px 10px rgba(37,99,235,.10); position:relative; }
+.bxr-sum-card.bxr-sum-active::before{ content:''; position:absolute; left:16px; right:16px; bottom:0; height:3px; background:#2563EB; border-radius:3px 3px 0 0; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-icon{ background:#2563EB !important; color:#fff !important; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-label{ color:#1D4ED8; font-weight:700; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-num{ color:#1D4ED8; }
+.bxr-sum-icon{ width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.bxr-sum-card.sc-p .bxr-sum-icon{ background:#F0EDFF; color:#6D28D9; }
+.bxr-sum-card.sc-b .bxr-sum-icon{ background:#EBF5FF; color:#1D4ED8; }
+.bxr-sum-card.sc-o .bxr-sum-icon{ background:#FFF3EA; color:#C2410C; }
+.bxr-sum-label{ font-size:11px; font-weight:500; color:#7E8299; margin-bottom:3px; line-height:1.2; }
+.bxr-sum-num{ font-size:16px; font-weight:700; color:#181C32; line-height:1.15; margin-bottom:4px; }
+.bxr-sum-growth{ font-size:10.5px; font-weight:600; color:#16A34A; display:flex; align-items:center; gap:3px; }
 
-/* ══ 3. TOOLBAR — search / sort / filter (AppTracker plf-/simf- pattern) ══ */
-.rrj-toolbar-card{ background:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #F0F2F5; margin-bottom:16px; flex-wrap:wrap; }
-.rrj-search-wrap{ flex:1; min-width:220px; position:relative; }
-.rrj-search-icon{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#CBD5E1; display:flex; }
-.rrj-search-input{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; padding:0 16px 0 42px; font-size:13px; font-weight:500; color:#334155; background:#F8FAFC; outline:none; font-family:'Poppins',sans-serif; transition:border-color .18s, box-shadow .18s; }
-.rrj-search-input:focus{ border-color:#2563EB; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.07); }
-.rrj-sort-wrap{ position:relative; width:200px; flex-shrink:0; }
-.rrj-sort-btn{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; background:#F8FAFC; padding:0 12px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:#334155; cursor:pointer; }
-.rrj-sort-btn svg{ flex-shrink:0; color:#94A3B8; }
-.rrj-sort-btn .arrow{ margin-left:auto; transition:transform .15s; color:#94A3B8; }
-.rrj-sort-btn.open .arrow{ transform:rotate(180deg); }
-.rrj-sort-panel{ position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50; background:#fff; border:1px solid #E5E9F0; border-radius:10px; box-shadow:0 8px 24px rgba(15,23,42,.09); padding:6px; max-height:260px; overflow-y:auto; }
-.rrj-sort-item{ padding:9px 12px; font-size:12.5px; font-weight:500; color:#374151; border-radius:7px; cursor:pointer; }
-.rrj-sort-item:hover{ background:#F5F8FF; }
-.rrj-sort-item.active{ background:#EFF6FF; color:#2563EB; font-weight:700; }
-.rrj-filter-btn{ height:44px; padding:0 16px; border:1.5px solid #E5E9F0; border-radius:10px; background:#fff; color:#374151; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; position:relative; flex-shrink:0; }
-.rrj-filter-btn:hover{ border-color:#2563EB; color:#2563EB; }
+/* ══ 3. TOOLBAR — identical search/sort/refresh to bench_explore.blade.php,
+   plus a Filter button (this page has real filters, bench_explore doesn't) ══ */
+.bxr-toolbar-card{ background:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #F0F2F5; margin-bottom:16px; flex-wrap:wrap; }
+.bxr-search-wrap2{ flex:1; min-width:220px; position:relative; }
+.bxr-search-icon2{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#CBD5E1; display:flex; }
+.bxr-search-input{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; padding:0 16px 0 42px; font-size:13px; font-weight:500; color:#334155; background:#F8FAFC; outline:none; font-family:'Poppins',sans-serif; transition:border-color .18s, box-shadow .18s; }
+.bxr-search-input:focus{ border-color:#2563EB; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.07); }
+.bxr-sort-wrap{ position:relative; width:190px; flex-shrink:0; }
+.bxr-sort-btn{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; background:#F8FAFC; padding:0 12px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:#334155; cursor:pointer; }
+.bxr-sort-btn svg{ flex-shrink:0; color:#94A3B8; }
+.bxr-sort-btn .arrow{ margin-left:auto; transition:transform .15s; color:#94A3B8; }
+.bxr-sort-btn.open .arrow{ transform:rotate(180deg); }
+.bxr-sort-panel{ position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50; background:#fff; border:1px solid #E5E9F0; border-radius:10px; box-shadow:0 8px 24px rgba(15,23,42,.09); padding:6px; max-height:260px; overflow-y:auto; }
+.bxr-sort-item{ padding:9px 12px; font-size:12.5px; font-weight:500; color:#374151; border-radius:7px; cursor:pointer; }
+.bxr-sort-item:hover{ background:#F5F8FF; }
+.bxr-sort-item.active{ background:#EFF6FF; color:#2563EB; font-weight:700; }
+.bxr-refresh{ width:44px; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; background:#F8FAFC; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px; color:#64748B; transition:all .2s; flex-shrink:0; }
+.bxr-refresh:hover{ background:#2563EB; color:#fff; border-color:#2563EB; transform:rotate(90deg); }
+.bxr-tbl-loading{ display:none; align-items:center; justify-content:center; width:44px; height:44px; flex-shrink:0; }
+
+/* Filter button — blue icon/text at rest per spec (not just on hover),
+   same 44px height as the sort control next to it. */
+.rrj-filter-btn{
+    height:44px; padding:0 18px; border-radius:10px !important;
+    font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:7px;
+    white-space:nowrap; flex-shrink:0; position:relative;
+    background:#EFF6FF !important; border:1.5px solid #BFDBFE !important; color:#1D4ED8 !important;
+}
+.rrj-filter-btn:hover{ background:#DBEAFE !important; border-color:#93C5FD !important; }
 .rrj-count-badge{ font-size:10px; }
 
-/* ══ 4. LOADING SPINNER — viewport-fixed, same as AppTracker's ══ */
+/* ══ 4. FILTER DRAWER — Similar-Candidates simf- design language, renamed
+   rrj- only to keep IDs unique on this page; every class/spacing value below
+   is copied 1:1 from apptracker/similar_candidates.blade.php. ══ */
+#rrj_filter_drawer.rrj-drawer{ position:fixed !important; top:0 !important; right:0 !important; bottom:0 !important; left:auto !important; height:100vh !important; max-height:100vh !important; overflow:hidden !important; z-index:1200; }
+#rrj_card.rrj-card{ display:flex !important; flex-direction:column !important; font-family:'Poppins',sans-serif; position:relative !important; height:100vh !important; max-height:100vh !important; overflow:hidden !important; }
+.rrj-header{ display:flex; align-items:flex-start; justify-content:space-between; padding:20px 20px 16px; border-bottom:1px solid #eef0f4; flex-shrink:0; }
+.rrj-header-icon{ width:40px; height:40px; border-radius:10px; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-title{ font-size:17px; font-weight:700; color:#181c32; margin:0; }
+.rrj-count-pill{ background:#2563eb; color:#fff; font-size:11px; font-weight:700; border-radius:50%; min-width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; padding:0 4px; }
+.rrj-subtitle{ font-size:12px; color:#7e8299; margin:2px 0 0; }
+.rrj-close{ width:30px; height:30px; border-radius:8px; border:none; background:transparent; color:#7e8299; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-close:hover{ background:#f1f5f9; color:#334155; }
+.rrj-activebar{ padding:12px 0; border-bottom:1px solid #eef0f4; }
+.rrj-activebar-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.rrj-activebar-label{ font-size:12px; font-weight:600; color:#181c32; }
+.rrj-clearall{ font-size:12px; font-weight:500; color:#dc2626; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
+.rrj-clearall:hover{ color:#b91c1c; }
+.rrj-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.rrj-chip{ display:inline-flex; align-items:center; gap:6px; background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff; border-radius:8px; padding:5px 7px 5px 10px; font-size:11.5px; font-weight:500; }
+.rrj-chip.mandatory{ background:#dbeafe; color:#1d4ed8; border-color:#bfdbfe; }
+.rrj-chip-remove{ width:15px; height:15px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:rgba(0,0,0,.06); cursor:pointer; flex-shrink:0; }
+.rrj-chip-remove:hover{ background:rgba(0,0,0,.14); }
+#rrj_card .rrj-body{ flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; overflow-x:hidden !important; padding:4px 20px 16px; }
+#rrj_card .rrj-header, #rrj_card .rrj-footer{ flex-shrink:0 !important; }
+.rrj-section{ padding:16px 0; border-bottom:1px solid #f1f2f6; }
+.rrj-section-last{ border-bottom:none; }
+.rrj-section-head{ display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+.rrj-icon{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-icon-blue{ background:#eef2ff; color:#4f46e5; }
+.rrj-icon-green{ background:#ecfdf5; color:#059669; }
+.rrj-icon-amber{ background:#fffbeb; color:#b45309; }
+.rrj-icon-rose{ background:#fff1f2; color:#be123c; }
+.rrj-icon-teal{ background:#ecfeff; color:#0e7490; }
+.rrj-icon-sky{ background:#f0f9ff; color:#0369a1; }
+.rrj-section-title{ font-size:13.5px; font-weight:600; color:#181c32; display:flex; align-items:center; gap:6px; }
+.rrj-section-desc{ font-size:11.5px; color:#99a1b7; margin-top:1px; }
+.rrj-badge-primary{ font-size:9.5px; font-weight:600; color:#2563eb; background:#dbeafe; border-radius:4px; padding:1px 6px; }
+.rrj-mini-label{ font-size:11px; font-weight:500; color:#7e8299; margin-bottom:4px; display:block; }
+.rrj-salary-row{ flex-wrap:nowrap; }
+.rrj-salary-row > [class^="col-"]{ padding-left:4px; padding-right:4px; min-width:0; }
+.rrj-salary-row .form-select, .rrj-salary-row .form-control{ font-size:11px; padding-left:8px; padding-right:8px; }
+.rrj-salary-row .form-select{ padding-right:20px; }
+/* Salary text-visibility fix: an inherited/global rule was making the typed
+   digits invisible (same symptom as a transparent -webkit-text-fill-color
+   from browser autofill styling) — force both explicitly on this page's own
+   number inputs so what you type is always visible, cursor included. */
+.rrj-section input[type=number]{ color:#1A1D23 !important; -webkit-text-fill-color:#1A1D23 !important; opacity:1 !important; caret-color:#1A1D23 !important; }
+.rrj-loc-inputwrap{ position:relative; }
+.rrj-loc-chevron{ position:absolute; top:50%; right:8px; transform:translateY(-50%); width:22px; height:22px; border:none; background:transparent; color:#99a1b7; display:flex; align-items:center; justify-content:center; z-index:2; transition:transform .15s; }
+.rrj-loc-chevron.open{ transform:translateY(-50%) rotate(180deg); }
+.rrj-loc-suggestions{ margin-top:10px; border:1px solid #eef0f4; border-radius:8px; padding:10px; background:#fafbfc; }
+.rrj-loc-label{ font-size:11px; font-weight:600; color:#99a1b7; margin-bottom:6px; }
+.rrj-loc-chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+.rrj-loc-chip{ display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid #e4e6ef; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:500; color:#3f4254; }
+.rrj-loc-chip:hover{ border-color:#93c5fd; background:#eff6ff; color:#1d4ed8; }
+.rrj-pill-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.rrj-pill-row .btn-check{ position:absolute; opacity:0; pointer-events:none; }
+.rrj-pill{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid #e4e6ef; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:500; color:#3f4254; cursor:pointer; transition:border-color .15s, background-color .15s, color .15s; }
+.rrj-pill-row .btn-check:checked + .rrj-pill{ border-color:#2563eb; background:#eff6ff; color:#1d4ed8; font-weight:600; }
+.rrj-footer{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 20px; border-top:1px solid #eef0f4; background:#f8f9fb; flex-shrink:0; flex-wrap:wrap; }
+.rrj-footer-count{ display:flex; align-items:center; gap:10px; min-width:0; }
+.rrj-footer-icon{ width:36px; height:36px; border-radius:8px; background:#dbeafe; color:#2563eb; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-footer-number{ font-size:15px; font-weight:700; color:#181c32; line-height:1.2; }
+.rrj-footer-label{ font-size:10.5px; color:#7e8299; }
+.rrj-footer-actions{ display:flex; gap:6px; }
+.rrj-footer-actions .btn{ font-size:11.5px; padding:6px 10px; display:inline-flex; align-items:center; gap:5px; }
+@media (max-width:576px){ .rrj-footer{ flex-direction:column; align-items:stretch; } .rrj-footer-actions{ justify-content:stretch; } .rrj-footer-actions .btn{ flex:1 1 auto; justify-content:center; } }
+
+/* Tagify chip interactive states — visual colors are inline (see JS
+   templates below) so they can't be overridden by plugins.bundle.css */
+.tagify__tag .star{ cursor:pointer; }
+.tagify__tag__removeBtn, .tagify__tag__removeBtn::before, .tagify__tag__removeBtn::after{ mask-image:none !important; -webkit-mask-image:none !important; content:none !important; }
+.tagify__tag__removeBtn:hover{ background:rgba(37,99,235,.28) !important; color:#1d4ed8 !important; }
+body > .tagify__dropdown{ z-index:1400 !important; }
+
+/* ══ 5. LOADING SPINNER — same viewport-fixed treatment as Similar Candidates ══ */
 .loadingMessagebenchCandidateRecommendedReqAjax{ display:none; position:fixed; inset:0; z-index:1050; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
 .loadingMessagebenchCandidateRecommendedReqAjax .spinner-border{ width:2.75rem; height:2.75rem; }
 
-/* ══ 5. FILTER DRAWER (rrj-) ══════════════════════════════════ */
-.rrj-drawer{ background:#fff; }
-.rrj-card{ display:flex; flex-direction:column; }
-.rrj-header{ display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid #F0F2F5; flex-shrink:0; }
-.rrj-header-icon{ width:40px; height:40px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.rrj-title{ font-size:16px; font-weight:700; color:#181c32; margin:0; }
-.rrj-subtitle{ font-size:12px; color:#94A3B8; margin:2px 0 0; }
-.rrj-close{ width:34px; height:34px; border-radius:9px; border:1px solid #E5E9F0; background:#fff; color:#64748B; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-.rrj-close:hover{ background:#F8FAFC; }
-.rrj-body{ padding:0 24px; overflow-y:auto; }
-.rrj-section{ padding:18px 0; border-bottom:1px solid #F5F7FA; }
-.rrj-section-last{ border-bottom:none; }
-.rrj-section-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.rrj-icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.rrj-icon-blue{ background:#EFF6FF; color:#2563EB; }
-.rrj-icon-green{ background:#ECFDF5; color:#059669; }
-.rrj-icon-amber{ background:#FFFBEB; color:#B45309; }
-.rrj-icon-purple{ background:#F5F3FF; color:#7C3AED; }
-.rrj-icon-rose{ background:#FDF2F8; color:#BE185D; }
-.rrj-section-title{ font-size:13.5px; font-weight:700; color:#181c32; }
-.rrj-section-desc{ font-size:11.5px; color:#94A3B8; margin-top:1px; }
-.rrj-mini-label{ font-size:11px; font-weight:600; color:#64748B; margin-bottom:4px; display:block; }
-.rrj-pill-row{ display:flex; flex-wrap:wrap; gap:8px; }
-.rrj-pill-row .btn-check{ position:absolute; opacity:0; pointer-events:none; }
-.rrj-pill-row label{ margin:0; cursor:pointer; min-width:88px; }
-.rrj-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; border-top:1px solid #F0F2F5; flex-shrink:0; background:#fff; }
-.rrj-footer-count{ display:flex; align-items:center; gap:10px; }
-.rrj-footer-icon{ width:38px; height:38px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.rrj-footer-number{ font-size:16px; font-weight:800; color:#181c32; line-height:1.1; }
-.rrj-footer-label{ font-size:11px; color:#94A3B8; }
-.rrj-footer-actions{ display:flex; gap:8px; }
-
-/* Skills Tagify — mandatory star (kept from the legacy modal, restyled) */
-.tagify__tag{ display:flex; align-items:center; }
-.tagify__tag .star{ margin-left:5px; cursor:pointer; font-size:16px; position:relative; top:-1px; color:#CBD5E1; }
-.tagify__tag .star.checked{ color:#EF1632; }
-
-/* ══ 6. RESULTS CARD LIST — agency-card container ══ */
+/* ══ 6. RESULTS + EMPTY STATE ══ */
 .rrj-results-wrap{ background:#fff; border-radius:14px; border:1px solid #EEF0F4; padding:16px; }
+.rrj-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:56px 24px; }
+.rrj-empty-icon{ width:64px; height:64px; border-radius:16px; background:#F1F5F9; color:#94A3B8; display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:28px; }
+.rrj-empty-title{ font-size:15px; font-weight:700; color:#181C32; margin-bottom:4px; }
+.rrj-empty-desc{ font-size:12.5px; color:#7E8299; max-width:360px; margin-bottom:16px; }
 
-@media(max-width:900px){
-    .rrj-hero{ flex-direction:column; }
-    .rrj-tabs{ width:100%; }
-}
+@media(max-width:900px){ .bxr-hero{ flex-direction:column; } .bxr-sum-row{ flex-direction:column; } }
 </style>
 @endpush
 
 @section('content')
 
-{{-- ── Hidden compat: keep #inputSearch / #status alive purely because
-     fetchBenchRecommendedReqCandidateList() still reads them (always empty/
-     'active' in practice — same as before this redesign) ── --}}
 <div aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;z-index:-9;">
     <input type="hidden" id="inputSearch" value="">
 </div>
 
 @php
-    $rrj_bench_explore_url = url('service_company/bench-candidates/bench_explore/') . '/' . @$bench_detail->id . '/all';
-    $rrj_recommend_req_url = url('service_company/bench-candidates/recommend_req/') . '/' . @$bench_detail->id;
-    $rrj_recommend_internal_url = url('service_company/bench-candidates/recommend_internal_req/') . '/' . @$bench_detail->id;
+    $bench_explore_url      = url('service_company/bench-candidates/bench_explore/')          . @$bench_detail->id . '/all';
+    $recommend_req_url      = url('service_company/bench-candidates/recommend_req/')          .'/'. @$bench_detail->id;
+    $recommend_internal_req = url('service_company/bench-candidates/recommend_internal_req/') .'/'. @$bench_detail->id;
 @endphp
 
 @if(in_array('view_jobs', $userPermissions))
 <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
  <div class="post d-flex flex-column-fluid" id="kt_post">
   <div id="kt_content_container" class="container-fluid px-0">
-  <div class="rrj-page">
+  <div class="bxr-page">
 
-  {{-- ══ SECTION 1 · PROFILE HERO + TABS ══════════════════════ --}}
-  <div class="rrj-hero">
-    <div class="rrj-hero-left">
+  {{-- ══ SECTION 1 · PROFILE HERO — identical to bench_explore.blade.php ══ --}}
+  <div class="bxr-hero">
+    <div class="bxr-hero-left">
       @php
-        $rrjCandName = ucwords(@$bench_detail->full_name ?? 'Candidate');
-        $rrjInitLtr  = strtoupper(substr($rrjCandName,0,1));
+        $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
+        $candName = @$bench_detail->full_name ?? @$bench_detail->name ?? 'Candidate';
+        $initLtr  = strtoupper(substr($candName,0,1));
+        $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
       @endphp
-      <div class="rrj-avatar-init">{{ $rrjInitLtr }}</div>
+      <div class="bxr-av-wrap">
+        @if($imgFile)
+          <img src="{{ asset('assets/images/candidates/'.$imgFile) }}" class="bxr-avatar" alt="{{ $candName }}">
+        @else
+          <div class="bxr-avatar-init">{{ $initLtr }}</div>
+        @endif
+        <div class="bxr-online-dot"></div>
+      </div>
       <div>
-        <div class="rrj-name">{{ $rrjCandName }}</div>
-        <div class="rrj-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</div>
-        <div class="rrj-meta-line">
-          @if(@$bench_detail->total_exp || @$bench_detail->rel_exp)
-          <span class="rrj-meta-item"><i class="ti ti-clock"></i>{{ @$bench_detail->total_exp }}-{{ @$bench_detail->rel_exp }} Yrs</span>
-          @endif
-          <span class="rrj-meta-item">
-            <span style="color:#94A3B8;">Bench ID:</span>&nbsp;<span style="font-weight:700;color:#1A56DB;">B-{{ @$bench_detail->id }}</span>
+        <div class="bxr-name-row">
+          <span class="bxr-name">{{ ucwords($candName) }}</span>
+          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>Bench</span>
+        </div>
+        <div class="bxr-info-row">
+          <span class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</span>
+          @if($bxrPrimarySkill !== '')
+          <span class="bxr-meta-item" style="background:#EFF6FF;color:#1D4ED8;padding:2px 9px;border-radius:20px;font-weight:600;">
+            <i class="ti ti-star" style="color:#1D4ED8;"></i>{{ ucfirst($bxrPrimarySkill) }}
           </span>
-          @if(@$bench_detail->city_name)
-          <span class="rrj-meta-item"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</span>
           @endif
+          @if(@$bench_detail->city_name)
+          <span class="bxr-meta-item"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</span>
+          @endif
+        </div>
+        <div class="bxr-meta-line">
+          @if(@$bench_detail->total_exp)
+          <span class="bxr-meta-item"><i class="ti ti-clock"></i>{{ @$bench_detail->total_exp }}-{{ @$bench_detail->rel_exp }} Years</span>
+          @endif
+          <span class="bxr-meta-item">
+            <span style="color:#94A3B8;font-size:12px;">Bench ID:</span>&nbsp;
+            <span class="bxr-bench-id-val">B-{{ @$bench_detail->id }}</span>
+          </span>
         </div>
       </div>
     </div>
 
-    <div class="rrj-tabs">
-      <a href="{{ $rrj_bench_explore_url }}" class="rrj-tab">
-        <span class="rrj-tab-name">Pool Jobs</span>
-        <span class="rrj-tab-count" id="bench_explore_pool_id">{{ $recomCount['bench_explore_counter'] ?? 0 }}</span>
-      </a>
-      <a href="{{ $rrj_recommend_req_url }}" class="rrj-tab rrj-tab-active">
-        <span class="rrj-tab-name">Recommend Client Jobs</span>
-        <span class="rrj-tab-count" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] ?? 0 }}</span>
-      </a>
-      <a href="{{ $rrj_recommend_internal_url }}" class="rrj-tab">
-        <span class="rrj-tab-name">Recommend Internal Jobs</span>
-        <span class="rrj-tab-count" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] ?? 0 }}</span>
-      </a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="bxr-kpi-row">
+        <div class="bxr-kpi">
+          <div class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></div>
+          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_views??0 }}</div><div class="bxr-kpi-lbl">Views</div></div>
+        </div>
+        <div class="bxr-kpi">
+          <div class="bxr-kpi-icon dl"><i class="ti ti-download"></i></div>
+          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_downloads??0 }}</div><div class="bxr-kpi-lbl">Downloads</div></div>
+        </div>
+        <div class="bxr-kpi">
+          <div class="bxr-kpi-icon aj"><i class="ti ti-send"></i></div>
+          <div><div class="bxr-kpi-num">{{ @$recomCount['recommend_req_counter']??0 }}</div><div class="bxr-kpi-lbl">Applied on Jobs</div></div>
+        </div>
+        <div class="bxr-kpi">
+          <div class="bxr-kpi-icon iv"><i class="ti ti-calendar-event"></i></div>
+          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_interviews??0 }}</div><div class="bxr-kpi-lbl">Interviews</div></div>
+        </div>
+      </div>
+      <button class="bxr-hero-menu"><i class="ti ti-dots-vertical"></i></button>
     </div>
   </div>
 
-  {{-- ══ SECTION 2 · SEARCH / SORT / FILTER TOOLBAR ═══ --}}
-  <div class="rrj-toolbar-card">
-    <div class="rrj-search-wrap">
-      <span class="rrj-search-icon">
+  {{-- ══ SECTION 2 · SUMMARY CARDS (== tabs) — Recommend Client Jobs active here ══ --}}
+  <div class="bxr-sum-row">
+    <a href="{{ $bench_explore_url }}" class="bxr-sum-card sc-p bxr-sum-link">
+      <div class="bxr-sum-icon"><i class="ti ti-users-group"></i></div>
+      <div>
+        <div class="bxr-sum-label">Total Companies Added</div>
+        <div class="bxr-sum-num">{{ $recomCount['bench_explore_counter'] }}</div>
+        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 1 new today</div>
+      </div>
+    </a>
+    <a href="{{ $recommend_req_url }}" class="bxr-sum-card sc-b bxr-sum-link bxr-sum-active">
+      <div class="bxr-sum-icon"><i class="ti ti-briefcase"></i></div>
+      <div>
+        <div class="bxr-sum-label">Recommended Client Jobs</div>
+        <div class="bxr-sum-num bxr-live" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] }}</div>
+        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 5 new today</div>
+      </div>
+    </a>
+    <a href="{{ $recommend_internal_req }}" class="bxr-sum-card sc-o bxr-sum-link">
+      <div class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></div>
+      <div>
+        <div class="bxr-sum-label">Recommended Internal Jobs</div>
+        <div class="bxr-sum-num" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] }}</div>
+        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 2 new today</div>
+      </div>
+    </a>
+  </div>
+  <span id="bench_explore_pool_id" style="display:none;">{{ $recomCount['bench_explore_counter'] ?? 0 }}</span>
+
+  {{-- ══ SECTION 3 · SEARCH / SORT / FILTER / REFRESH TOOLBAR ══ --}}
+  <div class="bxr-toolbar-card">
+    <div class="bxr-search-wrap2">
+      <span class="bxr-search-icon2">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       </span>
-      <input type="text" id="kt_tagify_2" class="rrj-search-input" placeholder="Search by job title, company or recruiter..." autocomplete="off">
+      <input type="text" id="kt_tagify_2" class="bxr-search-input" placeholder="Search by job title, company or recruiter..." autocomplete="off">
     </div>
 
-    <div class="rrj-sort-wrap" id="rrj_sort_wrap">
-      <button type="button" class="rrj-sort-btn" id="rrj_sort_btn">
+    <div class="bxr-sort-wrap" id="rrj_sort_wrap">
+      <button type="button" class="bxr-sort-btn" id="rrj_sort_btn">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
         <span id="rrj_sort_label">Best Match</span>
         <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -183,20 +318,40 @@
         <option value="3">Low to High (Salary)</option>
         <option value="4">High to Low (Salary)</option>
       </select>
-      <div class="rrj-sort-panel d-none" id="rrj_sort_panel"></div>
+      <div class="bxr-sort-panel d-none" id="rrj_sort_panel"></div>
     </div>
 
     <button type="button" id="rrj_filter_toggle" class="btn rrj-filter-btn position-relative">
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-      <span>Filter</span>
+      <span>Filter<span id="rrj_filter_count_text"></span></span>
       <span class="badge badge-circle badge-primary rrj-count-badge d-none" id="rrj_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
     </button>
+
+    <div class="bxr-tbl-loading loadingMessagebenchCandidateRecommendedReqAjax" style="position:static;background:none;" title="Processing...">
+      <span class="spinner-border spinner-border-sm text-primary" style="width:13px;height:13px;border-width:2px;"></span>
+    </div>
+
+    <button class="bxr-refresh" onclick="fetchBenchRecommendedReqCandidateList()" title="Refresh">
+      <i class="ti ti-refresh"></i>
+    </button>
+  </div>
+
+  {{-- ══ Applied Filters summary card — hidden until Apply Filters is clicked ══ --}}
+  <div class="rrj-activebar d-none" id="rrj_applied_card" style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+    <div class="rrj-activebar-head">
+      <span class="rrj-activebar-label">Active Filters <span id="rrj_applied_count">(0)</span></span>
+      <a href="javascript:void(0);" class="rrj-clearall" id="rrj_applied_clear_all">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+        Clear All
+      </a>
+    </div>
+    <div class="rrj-chips" id="rrj_applied_chips"></div>
   </div>
 
   {{-- ══ Filter Drawer ══════════════════════════════════════════ --}}
   <div id="rrj_filter_drawer" class="bg-body rrj-drawer" data-kt-drawer="true" data-kt-drawer-name="rrj-filter"
       data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-      data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'80%'}" data-kt-drawer-direction="end"
+      data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'420px'}" data-kt-drawer-direction="end"
       data-kt-drawer-toggle="#rrj_filter_toggle" data-kt-drawer-close="#rrj_filter_close">
     <div id="rrj_card" class="card shadow-none rounded-0 w-100 h-100 rrj-card">
       <div class="rrj-header">
@@ -205,7 +360,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
           </span>
           <div>
-            <h3 class="rrj-title">Filter Jobs</h3>
+            <div class="d-flex align-items-center gap-2">
+              <h3 class="rrj-title">Filter Jobs</h3>
+              <span class="rrj-count-pill" id="rrj_header_count">0</span>
+            </div>
             <p class="rrj-subtitle">Narrow down jobs matching this candidate</p>
           </div>
         </div>
@@ -217,18 +375,29 @@
       <div class="rrj-body">
         <form id="createSchedule" class="ajax-form" method="post" onsubmit="return false;">
 
-          {{-- Skills/Keywords --}}
+          <div class="rrj-activebar d-none" id="rrj_active_bar">
+            <div class="rrj-activebar-head">
+              <span class="rrj-activebar-label">Active Filters <span id="rrj_active_count">(0)</span></span>
+              <a href="javascript:void(0);" class="rrj-clearall" id="rrj_clear_all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                Clear All
+              </a>
+            </div>
+            <div class="rrj-chips" id="rrj_active_chips"></div>
+          </div>
+
+          {{-- Skills --}}
           <div class="rrj-section">
             <div class="rrj-section-head">
               <span class="rrj-icon rrj-icon-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
               </span>
               <div>
-                <div class="rrj-section-title">Skills / Keywords</div>
-                <div class="rrj-section-desc">Click the star on a skill to make it mandatory</div>
+                <div class="rrj-section-title">Skills <span class="rrj-badge-primary">Primary</span></div>
+                <div class="rrj-section-desc">Add skills required for the job — click ★ to make one mandatory</div>
               </div>
             </div>
-            <input class="form-control form-control-solid" name="kt_tagify_users" value="{{ @$default_skill }}" id="kt_tagify_users" placeholder="Add a skill or keyword" />
+            <input class="form-control form-control-solid d-flex align-items-center" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="" id="kt_tagify_users" />
           </div>
 
           {{-- Location --}}
@@ -239,28 +408,51 @@
               </span>
               <div>
                 <div class="rrj-section-title">Job Location</div>
-                <div class="rrj-section-desc">City, state or country</div>
+                <div class="rrj-section-desc">Preferred cities or work locations</div>
               </div>
             </div>
-            <input class="form-control form-control-solid" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Enter location..." />
+            <div class="rrj-loc-inputwrap" id="rrj_loc_inputwrap">
+              <input class="form-control form-control-solid" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+              <button type="button" class="rrj-loc-chevron" id="rrj_loc_chevron" title="Show suggestions">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+            </div>
+            <div class="rrj-loc-suggestions d-none" id="rrj_loc_panel">
+              <div class="rrj-loc-label">Popular Locations</div>
+              <div class="rrj-loc-chip-row">
+                <button type="button" class="rrj-loc-chip" data-city="Bangalore">Bangalore</button>
+                <button type="button" class="rrj-loc-chip" data-city="Hyderabad">Hyderabad</button>
+                <button type="button" class="rrj-loc-chip" data-city="Pune">Pune</button>
+                <button type="button" class="rrj-loc-chip" data-city="Mumbai">Mumbai</button>
+                <button type="button" class="rrj-loc-chip" data-city="Chennai">Chennai</button>
+                <button type="button" class="rrj-loc-chip" data-city="Remote">Remote</button>
+              </div>
+              <div class="rrj-loc-label mt-2">Other Suggestions</div>
+              <div class="rrj-loc-chip-row">
+                <button type="button" class="rrj-loc-chip" data-city="Noida">Noida</button>
+                <button type="button" class="rrj-loc-chip" data-city="Gurgaon">Gurgaon</button>
+                <button type="button" class="rrj-loc-chip" data-city="Kolkata">Kolkata</button>
+                <button type="button" class="rrj-loc-chip" data-city="Ahmedabad">Ahmedabad</button>
+              </div>
+            </div>
           </div>
 
           {{-- Experience --}}
           <div class="rrj-section">
             <div class="rrj-section-head">
-              <span class="rrj-icon rrj-icon-amber">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              <span class="rrj-icon rrj-icon-green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
               </span>
               <div>
-                <div class="rrj-section-title">Experience</div>
-                <div class="rrj-section-desc">Required experience range, in years</div>
+                <div class="rrj-section-title">Experience (Years)</div>
+                <div class="rrj-section-desc">Required experience range</div>
               </div>
             </div>
             <div class="row g-2">
               <div class="col-6">
-                <label class="rrj-mini-label">Minimum</label>
+                <label class="rrj-mini-label">Minimum Experience</label>
                 <select class="form-select form-select-solid" name="min_exp" id="min_exp">
-                  <option value="" @if(@$min_exp==='' || @$min_exp===null) selected @endif>Select Experience</option>
+                  <option value="" @if(@$min_exp==='' || @$min_exp===null) selected @endif>Min Experience</option>
                   <option value="0" @if(0==@$min_exp) selected @endif>Freshers</option>
                   @for($i=1; $i<=30; $i++)
                   <option value="{{ $i }}" @if($i==@$min_exp) selected @endif>{{ $i }} Year{{ ($i>=1) ? 's' : '' }}</option>
@@ -268,9 +460,9 @@
                 </select>
               </div>
               <div class="col-6">
-                <label class="rrj-mini-label">Maximum</label>
+                <label class="rrj-mini-label">Maximum Experience</label>
                 <select class="form-select form-select-solid" name="max_exp" id="max_exp">
-                  <option value="" @if(@$max_exp==='' || @$max_exp===null) selected @endif>Select Experience</option>
+                  <option value="" @if(@$max_exp==='' || @$max_exp===null) selected @endif>Max Experience</option>
                   <option value="0" @if(0==@$max_exp) selected @endif>Freshers</option>
                   @for($i=1; $i<=30; $i++)
                   <option value="{{ $i }}" @if($i==@$max_exp) selected @endif>{{ $i }} Year{{ ($i>=1) ? 's' : '' }}</option>
@@ -283,20 +475,20 @@
           {{-- Salary --}}
           <div class="rrj-section">
             <div class="rrj-section-head">
-              <span class="rrj-icon rrj-icon-purple">
+              <span class="rrj-icon rrj-icon-amber">
                 <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
               </span>
               <div>
-                <div class="rrj-section-title">Salary</div>
-                <div class="rrj-section-desc">Offered salary range for the job</div>
+                <div class="rrj-section-title">Salary (CTC)</div>
+                <div class="rrj-section-desc">Salary range with currency &amp; mode</div>
               </div>
             </div>
-            <div class="row g-2">
+            <div class="row g-2 rrj-salary-row">
               <div class="col-3">
                 <label class="rrj-mini-label">Currency</label>
                 <select class="form-select form-select-solid" name="min_salary_currency" id="min_salary_currency">
                   <option value="">Any</option>
-                  <option value="0" @if(0==@$min_salary_currency) selected @endif>INR</option>
+                  <option value="0" @if(0==@$min_salary_currency) selected @endif>INR (₹)</option>
                   <option value="1" @if(1==@$min_salary_currency) selected @endif>EUR</option>
                   <option value="2" @if(2==@$min_salary_currency) selected @endif>JPY</option>
                   <option value="3" @if(3==@$min_salary_currency) selected @endif>GBP</option>
@@ -314,12 +506,39 @@
                 </select>
               </div>
               <div class="col-3">
-                <label class="rrj-mini-label">Min</label>
+                <label class="rrj-mini-label">Min Salary</label>
                 <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ @$min_salary }}">
               </div>
               <div class="col-3">
-                <label class="rrj-mini-label">Max</label>
+                <label class="rrj-mini-label">Max Salary</label>
                 <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ @$max_salary }}">
+              </div>
+            </div>
+          </div>
+
+          {{-- Work Mode (NEW) --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-teal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+              </span>
+              <div>
+                <div class="rrj-section-title">Work Mode</div>
+                <div class="rrj-section-desc">Select one or more — leave blank for any</div>
+              </div>
+            </div>
+            <div class="rrj-pill-row" id="rrj_work_mode_row">
+              <div>
+                <input type="checkbox" class="btn-check rrj_work_mode" value="no" id="rrj_work_mode_onsite">
+                <label class="rrj-pill" for="rrj_work_mode_onsite">Onsite</label>
+              </div>
+              <div>
+                <input type="checkbox" class="btn-check rrj_work_mode" value="other" id="rrj_work_mode_hybrid">
+                <label class="rrj-pill" for="rrj_work_mode_hybrid">Hybrid</label>
+              </div>
+              <div>
+                <input type="checkbox" class="btn-check rrj_work_mode" value="yes" id="rrj_work_mode_remote">
+                <label class="rrj-pill" for="rrj_work_mode_remote">Remote</label>
               </div>
             </div>
           </div>
@@ -336,25 +555,16 @@
               </div>
             </div>
             <div class="rrj-pill-row">
-              <div>
-                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="" id="app_int_outsource1" checked>
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource1">All</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="0" id="app_int_outsource2">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource2">Fulltime</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="1" id="app_int_outsource3">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource3">Contract</label>
-              </div>
+              <div><input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="" id="app_int_outsource1" checked><label class="rrj-pill" for="app_int_outsource1">All</label></div>
+              <div><input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="0" id="app_int_outsource2"><label class="rrj-pill" for="app_int_outsource2">Fulltime</label></div>
+              <div><input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="1" id="app_int_outsource3"><label class="rrj-pill" for="app_int_outsource3">Contract</label></div>
             </div>
           </div>
 
           {{-- Activity --}}
           <div class="rrj-section rrj-section-last">
             <div class="rrj-section-head">
-              <span class="rrj-icon rrj-icon-blue">
+              <span class="rrj-icon rrj-icon-sky">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
               </span>
               <div>
@@ -363,30 +573,12 @@
               </div>
             </div>
             <div class="rrj-pill-row">
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked>
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity1">All</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity2">30 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity3">60 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity4">90 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity5">180 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity6">1 Year</label>
-              </div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked><label class="rrj-pill" for="app_int_activity1">All</label></div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2"><label class="rrj-pill" for="app_int_activity2">30 Days</label></div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3"><label class="rrj-pill" for="app_int_activity3">60 Days</label></div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4"><label class="rrj-pill" for="app_int_activity4">90 Days</label></div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5"><label class="rrj-pill" for="app_int_activity5">180 Days</label></div>
+              <div><input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6"><label class="rrj-pill" for="app_int_activity6">1 Year</label></div>
             </div>
           </div>
 
@@ -417,7 +609,7 @@
     </div>
   </div>
 
-  {{-- ══ SECTION 3 · RESULTS ═══════════════════════════════════ --}}
+  {{-- ══ SECTION 4 · RESULTS ══ --}}
   <div class="loadingMessage loadingMessagebenchCandidateRecommendedReqAjax">
     <div class="spinner-border text-primary" role="status"></div>
   </div>
@@ -427,7 +619,7 @@
     <div id="paginationbenchCandidateRecommendedReq"></div>
   </div>
 
-  </div>{{-- /rrj-page --}}
+  </div>{{-- /bxr-page --}}
   </div>
  </div>
 </div>
@@ -476,39 +668,59 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
-{{-- ── Skills Tagify (mandatory-star) + Location Tagify — same behavior as
-     the old filter modal, now scoped to the drawer only (no more bidirectional
-     sync/"autoclickstar" hack with the main search box — that coupling was a
-     bug, not a feature: it silently turned the plain search field into a
-     multi-tag skills filter). ── --}}
+{{-- ── Skills Tagify — exact template/behavior ported from
+     apptracker/similar_candidates.blade.php (star toggles mandatory,
+     click on the keyword text also toggles it, live /skill-suggestions
+     autocomplete). ── --}}
 <script>
-const rrjInputElm = document.querySelector('#kt_tagify_users');
-const rrjTagifySkills = new Tagify(rrjInputElm, {
+const rrjSkillInputElm = document.querySelector('#kt_tagify_users');
+const rrjTagifySkills = new Tagify(rrjSkillInputElm, {
     templates: {
         tag: function(tagData) {
             tagData = tagData || {};
             const value = tagData.value || '';
             const isChecked = tagData.checked ? 'checked' : '';
-            return `<tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                <div><span class="star ${isChecked}">★</span><span class="tagify__tag-text">${value}</span></div>
+            const mandatoryClass = tagData.checked ? 'rrj-mandatory-tag' : '';
+            const starGlyph = tagData.checked ? '★' : '☆';
+            const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
+            const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
+            const starColor = tagData.checked ? '#eab308' : '#94a3b8';
+            const textColor = tagData.checked ? '#1d4ed8' : '#3730a3';
+            return `<tag title="${value}" contenteditable='false' spellcheck="false"
+                class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
+                ${this.getAttributes(tagData)}
+                style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin:1px 3px 0px 3px;">${starGlyph}</span>
+                <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding:0px 0px 0px 6px;">${value}</span>
+                <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                    style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
             </tag>`;
         }
     },
     transformTag: function(tagData) { tagData.checked = tagData.checked || false; return tagData; }
 });
 document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('star')) {
-        const tagElm = e.target.closest('.tagify__tag');
-        const value = tagElm.querySelector('.tagify__tag-text').textContent;
-        e.target.classList.toggle('checked');
-        const tagData = rrjTagifySkills.value.find(tag => tag.value === value);
-        if (tagData) { tagData.checked = e.target.classList.contains('checked'); rrjTagifySkills.updateValueByDOMTags(); }
+    const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+    if (!toggleTarget || !rrjSkillInputElm.parentElement.contains(toggleTarget)) return;
+    const tagElm = toggleTarget.closest('.tagify__tag');
+    if (!tagElm) return;
+    const starEl = tagElm.querySelector('.star');
+    const textEl = tagElm.querySelector('.tagify__tag-text');
+    if (!starEl || !textEl) return;
+    const value = textEl.textContent;
+    starEl.classList.toggle('checked');
+    const nowChecked = starEl.classList.contains('checked');
+    starEl.textContent = nowChecked ? '★' : '☆';
+    starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
+    tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
+    tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
+    textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
+    const tagData = rrjTagifySkills.value.find(tag => tag.value === value);
+    if (tagData) {
+        setTimeout(() => { tagData.checked = nowChecked; rrjTagifySkills.updateValueByDOMTags(); rrjUpdateActiveFiltersUI(); }, 500);
     }
 });
-function rrjDebounce(func, delay) {
-    let t; return function(...args) { clearTimeout(t); t = setTimeout(() => func.apply(this, args), delay); };
-}
+function rrjDebounce(func, delay) { let t; return function(...args) { clearTimeout(t); t = setTimeout(() => func.apply(this, args), delay); }; }
 const rrjFetchSkillSuggestions = rrjDebounce(function(query) {
     $.ajax({
         url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
@@ -517,31 +729,64 @@ const rrjFetchSkillSuggestions = rrjDebounce(function(query) {
         error: function(err) { console.error("Error fetching Skill:", err); }
     });
 }, 200);
-rrjTagifySkills.on('input', function(e) {
-    var query = e.detail.value.trim();
-    if (query.length < 1) return;
-    rrjFetchSkillSuggestions(query);
-});
-
-var rrjInputLoc = document.querySelector("#kt_tagify_location");
-var rrjCities = @json($cities);
-var rrjTagifyLocation = new Tagify(rrjInputLoc, {
-    whitelist: rrjCities, maxTags: 10,
-    dropdown: { maxItems: 20, classname: "", enabled: 0, closeOnSelect: false }
-});
-rrjInputLoc.addEventListener('keydown', function(e) { if (e.key === "Enter") { e.preventDefault(); } });
-rrjTagifyLocation.on('input', function(e) { rrjTagifyLocation.dropdown.show(); });
-rrjTagifyLocation.on('dropdown:select', function(e) { rrjTagifyLocation.addTags([e.detail.data.value]); });
+rrjTagifySkills.on('input', function(e) { var q = e.detail.value.trim(); if (q.length < 1) return; rrjFetchSkillSuggestions(q); });
+rrjTagifySkills.on('add', function(){ rrjUpdateActiveFiltersUI(); });
+rrjTagifySkills.on('remove', function(){ rrjUpdateActiveFiltersUI(); });
 </script>
 
-{{-- ── Sort panel + filter drawer chrome ── --}}
+{{-- ── Location Tagify — same chip template + live /city-job-suggestions
+     autocomplete + "Popular Locations" quick-pick panel as Similar
+     Candidates' Preferred Location section. ── --}}
+<script>
+var rrjInputLoc = document.querySelector("#kt_tagify_location");
+var rrjTagifyLocation = new Tagify(rrjInputLoc, {
+    whitelist: [], maxTags: 10,
+    templates: {
+        tag: function(tagData) {
+            const value = tagData.value || '';
+            return `<tag title="${value}" contenteditable='false' spellcheck="false"
+                class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}
+                style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                    style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+            </tag>`;
+        }
+    },
+    dropdown: { maxItems: 20, classname: "", enabled: 0, closeOnSelect: true, appendTarget: document.body }
+});
+function rrjCloseLocPanel(){ $('#rrj_loc_panel').addClass('d-none'); $('#rrj_loc_chevron').removeClass('open'); }
+function rrjOpenLocPanel(){ $('#rrj_loc_panel').removeClass('d-none'); $('#rrj_loc_chevron').addClass('open'); }
+$(document).on('click', '#rrj_loc_chevron', function(e){ e.stopPropagation(); if ($('#rrj_loc_panel').hasClass('d-none')) rrjOpenLocPanel(); else rrjCloseLocPanel(); });
+$(document).on('click', '.rrj-loc-chip', function() {
+    rrjTagifyLocation.addTags([$(this).data('city').toString()]);
+    rrjCloseLocPanel();
+});
+rrjTagifyLocation.on('dropdown:select', function(e) { rrjTagifyLocation.addTags([e.detail.data.value]); rrjCloseLocPanel(); });
+rrjTagifyLocation.on('add', function(e) { rrjUpdateActiveFiltersUI(); rrjCloseLocPanel(); });
+rrjTagifyLocation.on('remove', function(e) { rrjUpdateActiveFiltersUI(); });
+const rrjFetchLocSuggestions = rrjDebounce(function(query) {
+    $.ajax({
+        url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
+        method: 'GET',
+        success: function(data) {
+            if (Array.isArray(data)) { rrjTagifyLocation.settings.whitelist = data; rrjCloseLocPanel(); rrjTagifyLocation.dropdown.show.call(rrjTagifyLocation, query); }
+        },
+        error: function(err) { console.error("Error fetching cities:", err); }
+    });
+}, 200);
+rrjTagifyLocation.on('input', function(e) { var q = e.detail.value.trim(); if (q.length < 2) return; rrjCloseLocPanel(); rrjFetchLocSuggestions(q); });
+</script>
+
+{{-- ── Sort panel + filter drawer chrome (open/close/reset/apply/active
+     filters chip bar) ── --}}
 <script>
 function rrjRenderSortPanel(){
     var $panel=$('#rrj_sort_panel').empty();
     var current=$('#hiringtype').val();
     $('#hiringtype option').each(function(){
         var $opt=$(this), val=$opt.attr('value'), label=$opt.text();
-        $('<div class="rrj-sort-item"></div>').text(label)
+        $('<div class="bxr-sort-item"></div>').text(label)
             .toggleClass('active', val===current)
             .on('click', function(){
                 $('#hiringtype').val(val);
@@ -553,59 +798,99 @@ function rrjRenderSortPanel(){
 }
 function rrjOpenSortPanel(){ rrjRenderSortPanel(); $('#rrj_sort_panel').removeClass('d-none'); $('#rrj_sort_btn').addClass('open'); }
 function rrjCloseSortPanel(){ $('#rrj_sort_panel').addClass('d-none'); $('#rrj_sort_btn').removeClass('open'); }
-$(document).on('click','#rrj_sort_btn',function(e){
-    e.stopPropagation();
-    if ($('#rrj_sort_panel').hasClass('d-none')) rrjOpenSortPanel(); else rrjCloseSortPanel();
-});
+$(document).on('click','#rrj_sort_btn',function(e){ e.stopPropagation(); if ($('#rrj_sort_panel').hasClass('d-none')) rrjOpenSortPanel(); else rrjCloseSortPanel(); });
 $(document).on('click',function(e){ if(!$(e.target).closest('#rrj_sort_wrap').length) rrjCloseSortPanel(); });
+$(document).on('keydown', '#kt_tagify_2', function(e){ if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); fetchBenchRecommendedReqCandidateList(); } });
 
-$(document).on('keydown', '#kt_tagify_2', function(e){
-    if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); fetchBenchRecommendedReqCandidateList(); }
-});
+function rrjPillLabel($checkedInput){ return $.trim($checkedInput.closest('div').find('label').text()); }
 
-$(document).on('click','#rrj_reset_btn',function(){
+function rrjBuildFilterItems(){
+    var items = [];
+    rrjTagifySkills.value.forEach(function(t){
+        items.push({cat: t.checked ? 'mandatory' : 'skill', label: t.value, mandatory: !!t.checked, clear: function(){ rrjTagifySkills.removeTags(t.value); }});
+    });
+    rrjTagifyLocation.value.forEach(function(t){
+        items.push({cat:'location', label:t.value, clear:function(){ rrjTagifyLocation.removeTags(t.value); }});
+    });
+    var minSal=$('#min_sal').val(), maxSal=$('#max_sal').val();
+    if (minSal || maxSal) items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#min_sal,#max_sal').val(''); }});
+    var minExp=$('#min_exp').val(), maxExp=$('#max_exp').val();
+    if (minExp !== '' || maxExp !== '') items.push({cat:'exp', label:(minExp||'0')+'-'+(maxExp||'Any')+' yrs', clear:function(){ $('#min_exp,#max_exp').val(''); }});
+    $('.rrj_work_mode:checked').each(function(){
+        var $lbl=$(this).next('label');
+        items.push({cat:'workmode', label:$lbl.text(), clear:function(){ $(this).prop('checked', false); }.bind(this)});
+    });
+    var statusEl=$('[name="app_int_outsource"]:checked');
+    if (statusEl.val() && statusEl.val()!=='') items.push({cat:'hiring', label:rrjPillLabel(statusEl), clear:function(){ $('#app_int_outsource1').prop('checked',true); }});
+    var activityEl=$('[name="app_int_activity"]:checked');
+    if (activityEl.val() && activityEl.val()!=='1') items.push({cat:'activity', label:rrjPillLabel(activityEl), clear:function(){ $('#app_int_activity1').prop('checked',true); }});
+    return items;
+}
+function rrjRenderChipsInto($container, items, onRemove){
+    $container.empty();
+    items.forEach(function(it){
+        var $chip=$('<span class="rrj-chip"></span>').toggleClass('mandatory', !!it.mandatory);
+        $chip.append($('<span></span>').text((it.mandatory?'★ ':'')+it.label));
+        $chip.append($('<span class="rrj-chip-remove">&times;</span>').on('click', function(){ it.clear(); onRemove(); }));
+        $container.append($chip);
+    });
+}
+function rrjUpdateActiveFiltersUI(){
+    var items = rrjBuildFilterItems();
+    rrjRenderChipsInto($('#rrj_active_chips'), items, rrjUpdateActiveFiltersUI);
+    var n = items.length;
+    $('#rrj_active_bar').toggleClass('d-none', n===0);
+    $('#rrj_active_count').text('('+n+')');
+    $('#rrj_header_count').text(n);
+    $('#rrj_count_badge').toggleClass('d-none', n===0).text(n);
+    $('#rrj_filter_count_text').text(n>0?' ('+n+')':'');
+}
+function rrjRenderAppliedFiltersCard(){
+    var items = rrjBuildFilterItems();
+    rrjRenderChipsInto($('#rrj_applied_chips'), items, function(){ fetchBenchRecommendedReqCandidateList(); rrjUpdateActiveFiltersUI(); rrjRenderAppliedFiltersCard(); });
+    $('#rrj_applied_card').toggleClass('d-none', items.length===0);
+    $('#rrj_applied_count').text('('+items.length+')');
+}
+$(document).on('click','#rrj_applied_clear_all',function(){ $('#rrj_clear_all').trigger('click'); fetchBenchRecommendedReqCandidateList(); rrjRenderAppliedFiltersCard(); });
+$(document).on('click','#rrj_clear_all, #rrj_reset_btn',function(){
     rrjTagifySkills.removeAllTags();
     rrjTagifyLocation.removeAllTags();
     $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#min_sal,#max_sal').val('');
+    $('.rrj_work_mode').prop('checked', false);
     $('#app_int_outsource1,#app_int_activity1').prop('checked', true);
+    rrjUpdateActiveFiltersUI();
 });
 $(document).on('click','#rrj_apply_btn',function(){
     fetchBenchRecommendedReqCandidateList();
+    rrjRenderAppliedFiltersCard();
     $('#rrj_filter_close').trigger('click');
 });
+$(document).on('change', '#min_sal, #max_sal, #min_exp, #max_exp, .rrj_work_mode, [name="app_int_outsource"], [name="app_int_activity"]', rrjUpdateActiveFiltersUI);
+$(document).ready(function(){ setTimeout(rrjUpdateActiveFiltersUI, 600); setTimeout(rrjRenderAppliedFiltersCard, 700); });
 </script>
 
 {{-- ── Preserved job/client/HM/team drawer handlers + bench-request send —
-     UNCHANGED from before this redesign ── --}}
+     UNCHANGED business logic from before this redesign ── --}}
 <script>
 $(document).ready(function() {
-
     $(document).on("click",".checkrequestsend", function(){
         swal("Recommendation Alert", 'Please move the candidate to Bench status before sending the request', "warning");
     });
-
     $(document).on("click",".request-send", function(){
         var ele = $(this);
         var jobId  = $(this).attr('data-jobId');
         var conId  = $(this).attr('data-conId');
         swal({
-            title: "Are you sure?",
-            text: " Do you want to Submit Candidate request on this Job?",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: '#DD6B55',
-            confirmButtonText: 'Yes, I am sure!',
-            cancelButtonText: "No, cancel it!",
-            closeOnConfirm: false,
-            closeOnCancel: false
+            title: "Are you sure?", text: " Do you want to Submit Candidate request on this Job?", type: "warning",
+            showCancelButton: true, confirmButtonColor: '#DD6B55', confirmButtonText: 'Yes, I am sure!',
+            cancelButtonText: "No, cancel it!", closeOnConfirm: false, closeOnCancel: false
         },
         function(isConfirm){
             if (isConfirm){
                 var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
                 url = url.replace(':id', jobId)+"?conId="+conId;
                 $.ajax({
-                    type: 'GET',
-                    url: url,
+                    type: 'GET', url: url,
                     success: function (response) {
                         if(response.status=='success'){
                             swal("Recommend!", "Candidates are successfully Recommend!", "success");
@@ -618,15 +903,11 @@ $(document).ready(function() {
                             $.ajax({ type: 'GET', url: url, success: function (response) {} });
                         }else{
                             fetchBenchRecommendedReqCandidateList();
-                            swal("Recommend Failed", response.message, "warning").then(function(){
-                                fetchBenchRecommendedReqCandidateList();
-                            });
+                            swal("Recommend Failed", response.message, "warning").then(function(){ fetchBenchRecommendedReqCandidateList(); });
                         }
                     }
                 });
-            } else {
-                swal("Cancelled", "", "error");
-            }
+            } else { swal("Cancelled", "", "error"); }
         });
     });
 });
@@ -637,62 +918,38 @@ function updateJobStatus(id, statusName)
     var url = "{{ route('service_company.jobs.updatestatus',':id') }}";
     url = url.replace(':id', id);
     var token = "{{ csrf_token() }}";
-    $.easyAjax({
-        type: 'POST',
-        url: url,
-        data: {'_token': token, '_method': 'POST', 'id':id, 'statusName':statusName},
-        success: function (response){ fetchBenchRecommendedReqCandidateList(); }
-    });
+    $.easyAjax({ type: 'POST', url: url, data: {'_token': token, '_method': 'POST', 'id':id, 'statusName':statusName}, success: function (response){ fetchBenchRecommendedReqCandidateList(); } });
 }
-
 $(document).on('click', '.show-detail', function () {
     $('#kt_activitiesJob_toggle').trigger('click');
     var id = $(this).data('row-id');
     var url = "{{ route('service_company.jobs.viewmore',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activitiesJob_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesJob_body').html(response.view); } });
 });
-
 $(document).on('click', '.status_stage', function () {
     $('#status_body_content').html('');
     var id = $(this).data('row-id');
     var url = "{{ route('service_company.jobs.editJobStatus',':id') }}";
     url = url.replace(':id', id);
-    $.ajax({
-        type: 'GET', url: url,
-        success: function (response) { if (response.status == "success") { $('#status_body_content').html(response.view); } }
-    });
+    $.ajax({ type: 'GET', url: url, success: function (response) { if (response.status == "success") { $('#status_body_content').html(response.view); } } });
 });
-
 $(document).on('click', '.client-show-detail', function () {
     $('#kt_activitiesClientjob_toggle').trigger('click');
     var id = $(this).data('row-id');
     var url = "{{ route('service_company.jobs.clientviewmore',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activitiesclientjob_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesclientjob_body').html(response.view); } });
 });
-
 $(document).on('click', '.spartner-listing', function () {
     $('#kt_activitiesStaffing_toggle').trigger('click');
     var id = $(this).data('row-id');
     var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activities_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activities_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activities_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activities_body').html(response.view); } });
 });
 </script>
 <script>
@@ -704,11 +961,7 @@ $(document).ready(function(){
         var url = "{{ route('service_company.jobs.hmlisting',':id') }}";
         url = url.replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-        $.ajax({
-            type: 'GET', url: url, data: {'_token': token, 'id' : id},
-            beforeSend: function() { $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-            success: function (response) { $('#kt_activitiesRecruiter_body').html(response.view); }
-        });
+        $.ajax({ type: 'GET', url: url, data: {'_token': token, 'id' : id}, beforeSend: function() { $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesRecruiter_body').html(response.view); } });
     });
 });
 </script>
@@ -719,24 +972,15 @@ $(document).on('click', '.client-hm-listing', function () {
     var url = "{{ route('service_company.jobs.clienthmlisting',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activitiesCHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activitiesCHM_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesCHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesCHM_body').html(response.view); } });
 });
-
 $(document).on('click', '.team-listing', function () {
     $('#kt_activitiesTEAM_toggle').trigger('click');
     var id = $(this).data('row-id');
     var url = "{{ route('service_company.jobs.currentteamlisting',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activitiesTEAM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activitiesTEAM_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesTEAM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesTEAM_body').html(response.view); } });
 });
 </script>
 <script>
@@ -746,28 +990,20 @@ $(document).on('click', '.hm-listing', function () {
     var url = "{{ route('service_company.jobs.hmlisting',':id') }}";
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-    $.ajax({
-        type: 'GET', url: url,
-        beforeSend: function() { $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
-        success: function (response) { $('#kt_activitiesHM_body').html(response.view); }
-    });
+    $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesHM_body').html(response.view); } });
 });
 </script>
 
 {{-- ── Core data fetch — SAME route/params/response-handling as before this
-     redesign, plus: error handling (spinner never got stuck before, now it
-     also can't get stuck on a failed request), and a one-time guard so the
-     very first automatic page-load doesn't silently apply the candidate's
-     full skills+designation string as a hard filter (that's what was
-     causing "No data available" on first paint — the filter drawer's Skills
-     field starts pre-filled for convenience, but now only takes effect once
-     the user actually opens the drawer/clicks Apply, matching how every
-     other filter field on this page already behaved). ── --}}
+     redesign (business logic untouched), plus: error handling, the
+     first-load skills-filter guard, and now also sends work_mode (additive
+     new param, empty by default = no filter change for existing users). ── --}}
 <script>
 var rrjInitialLoad = true;
 
 function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
     $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
+    var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
     $.ajax({
         url: `{!! route('service_company.recommend.all_data_ajax') !!}?page=${page}`,
         type: 'GET',
@@ -785,16 +1021,14 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
             max_sal: $('#max_sal').val(),
             min_salary_currency: $('#min_salary_currency').val(),
             sal_mode: $('#sal_mode').val(),
+            work_mode: workModeVal,
             app_int_activity: $('[name="app_int_activity"]:checked').val(),
             app_int_outsource: $('[name="app_int_outsource"]:checked').val()
         },
         success: function(response) {
             rrjInitialLoad = false;
             $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
-            if (!response || typeof response.html === 'undefined') {
-                console.error('all_data_ajax: unexpected response', response);
-                return;
-            }
+            if (!response || typeof response.html === 'undefined') { console.error('all_data_ajax: unexpected response', response); return; }
             $('#benchCandidateRecommendedReqAjax').html(response.html);
             $('#recommend_req_id').html(response.total);
             $('#rrj_footer_number').text(response.total);
@@ -807,9 +1041,7 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
         }
     });
 }
-
 function filtersdataget(){ fetchBenchRecommendedReqCandidateList(); }
-
 $(document).ready(function() {
     fetchBenchRecommendedReqCandidateList();
     $(document).on('click', '#paginationbenchCandidateRecommendedReq .page-link', function(e) {

@@ -4884,7 +4884,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->stage = $stage;
 		$this->bench_id = $id;
 		$this->recomCount = $this->benchjobAndRecomCount($id);
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -5693,7 +5693,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -5726,7 +5726,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -6046,7 +6046,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'requiredSkills' => $requiredSkills ?? [],			
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
-			'custom_hiringtype' => $custom_hiringtype
+			'custom_hiringtype' => $custom_hiringtype,
+			'work_mode' => request('work_mode'),
 		];
 
 
@@ -6130,6 +6131,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				$filter[] = ['term' => ['employment_type' => 0]];
 			} elseif ($custom_hiringtype == 1) {
 				$filter[] = ['term' => ['employment_type' => 1]];
+			}
+		}
+
+		// 2b. WORK MODE (new filter) — comma-separated work_type values from
+		// the Work Mode chips (no=Onsite, other=Hybrid, yes=Remote), same
+		// values already used to render each job's work mode in
+		// bench-recommend-req-ajax.blade.php. Multi-select, additive only —
+		// no filter is applied when nothing is selected.
+		$workMode = request('work_mode');
+		if (!empty($workMode)) {
+			$workModeArr = array_values(array_filter(array_map('trim', explode(',', $workMode))));
+			if (!empty($workModeArr)) {
+				$filter[] = ['terms' => ['work_type' => $workModeArr]];
 			}
 		}
 
@@ -6464,7 +6478,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'requiredSkills' => $requiredSkills ?? [],			
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
-			'custom_hiringtype' => $custom_hiringtype
+			'custom_hiringtype' => $custom_hiringtype,
+			'work_mode' => request('work_mode'),
 		];
 
 		$versionKey = 'allbenchrecommendinternalreq_version_user_'.$this->user->id;
