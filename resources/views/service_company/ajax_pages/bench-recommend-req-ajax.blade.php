@@ -170,17 +170,38 @@
                                                     $skilltag = '';
                                                     $skilltagclass = '';
                                                     $totalSkill = 0;
+                                                    $matchBadge = '';
                                                     if (empty($limit)) {
                                                         $skillArr = DB::table('job_metronics_skills')
                                                             ->select('*')
                                                             ->where('company_id','=',$row->comId)
                                                             ->where('job_id', $row->id)
                                                             ->get();
+
+                                                        /* ── Match % — same computation/threshold-colors as AppTracker's
+                                                           candidate Match badge and bench_explore's job Match badge,
+                                                           replicated here in the requisition-card direction. Reuses
+                                                           $skillArr (already fetched above) and $currentRowJob->skills
+                                                           (already loaded by the controller) — zero new queries. ── */
+                                                        $jobRequiredSkillNames = $skillArr->pluck('skill_name')->filter()->values()->all();
+                                                        $candidateSkillArr = array_values(array_filter(array_map('trim', explode(',', $currentRowJob->skills ?? ''))));
+                                                        $matchedSkillsArr = \App\Helper\GeneralMethod::matchedSkillsList($candidateSkillArr, $jobRequiredSkillNames);
+                                                        $totalRequired = count($jobRequiredSkillNames);
+                                                        $matchPct = $totalRequired > 0 ? round(min((count($matchedSkillsArr) / $totalRequired) * 100, 100), 1) : 0;
+                                                        if ($matchPct == 0) { $matchBg = '#f1f5f9'; $matchColor = '#64748b'; }
+                                                        elseif ($matchPct < 50) { $matchBg = '#fee2e2'; $matchColor = '#dc2626'; }
+                                                        elseif ($matchPct <= 90) { $matchBg = '#fef3c7'; $matchColor = '#d97706'; }
+                                                        else { $matchBg = '#dcfce7'; $matchColor = '#16a34a'; }
+                                                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$matchPct.'%</span>  ';
+
                                                         if (!empty($skillArr)) {
                                                             foreach ($skillArr as $key => $sval) {
+                                                                $isMatched = in_array($sval->skill_name, $matchedSkillsArr, true)
+                                                                    || collect($matchedSkillsArr)->contains(fn($m) => strcasecmp($m, $sval->skill_name) === 0);
                                                                 if($key<=3){
-                                                                    $skilltag .=
-                                                                    '<span class="tag-badge bg-gray-light color-black">' . ucfirst($sval->skill_name) . '</span>  ';
+                                                                    $skilltag .= $isMatched
+                                                                        ? '<span class="tag-badge" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;" title="Matches candidate skill">' . ucfirst($sval->skill_name) . '</span>  '
+                                                                        : '<span class="tag-badge bg-gray-light color-black">' . ucfirst($sval->skill_name) . '</span>  ';
                                                                 }
                                                                 $totalSkill++;
                                                             }
@@ -189,9 +210,9 @@
                                                         $skilltagclass = 'd-none';
                                                     }
                                  @endphp
-                                                    
+
                                 <div class="agency-tags" style="position: absolute;">
-                                   {!! $skilltag !!}
+                                   {!! $matchBadge !!}{!! $skilltag !!}
                                     @if($totalSkill >4)
                                         <span class="tag-badge bg-gray-light color-green client-show-detail"  data-row-id="{{ $row->id }}"><a href="javascript::void(0);">+{{ $totalSkill-4 }}</a></span>
                                     @endif
@@ -315,11 +336,8 @@
 
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="8" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div style="text-align:center;padding:48px 16px;color:#94A3B8;">
+        <i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+        No matching jobs found
+    </div>
 @endif
