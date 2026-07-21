@@ -23,6 +23,7 @@
                       <div class="symbol-label '.$bgTextDecore.' border-radius-5">'.ucwords($strVal).'</div>
                     </a>
                   </div>';
+					$pkrHeaderSub	=	\Illuminate\Support\Str::words('Choose panel members one at a time — everyone you select will receive an email invite for this interview.', 25, '...');
 @endphp
 
 <style>
@@ -52,34 +53,40 @@
     .pkr-empty { font-size: 11.5px; color: #a1a5b7; text-align: center; padding: 18px 4px; }
 
     .pkr-header { border-bottom: 1px solid #eef0f4; }
+    .pkr-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; }
+    .pkr-header-main { display: flex; align-items: center; min-width: 0; }
     .pkr-header-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; }
     .pkr-header-ico svg { width: 21px; height: 21px; }
+    .pkr-header-text { display: flex; flex-direction: column; min-width: 0; }
     .pkr-header-title { font-size: 14px; font-weight: 700; color: #181c32; line-height: 1.3; }
-    .pkr-header-sub { font-size: 11px; color: #7e8299; line-height: 1.4; max-width: 560px; }
+    .pkr-header-sub { font-size: 11px; color: #7e8299; line-height: 1.4; max-width: 620px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pkr-header-close { width: 34px; height: 34px; border-radius: 8px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; transition: background .15s, color .15s; padding: 0; }
+    .pkr-header-close i { font-size: 18px; line-height: 1; }
+    .pkr-header-close:hover { background: #f8f9fb; color: #f64e60; }
+    .pkr-header-close:focus-visible { outline: 2px solid #3e97ff; outline-offset: 2px; }
+
+    .pkr-table { table-layout: fixed; width: 100%; }
+    .pkr-th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pkr-ellipsis { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .pkr-mrow-name-wrap { min-width: 0; }
 </style>
 
             <div class="card card-custom mx-2">
                 <!--begin::Team header-->
-                <div class="card-header px-5 py-4 pkr-header" id="kt_in_tra_header">
-                    <div class="d-flex align-items-center py-1 w-100">
+                <div class="card-header px-6 py-5 pkr-header" id="kt_in_tra_header">
+                    <div class="pkr-header-row">
                         @if($panel)
-                            <div class="d-flex align-items-center flex-grow-1 min-w-0">
+                            <div class="pkr-header-main">
                                 <div class="pkr-header-ico">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="m17 11 2 2 4-4"/></svg>
                                 </div>
-                                <div class="d-flex flex-column min-w-0">
+                                <div class="pkr-header-text">
                                     <span class="pkr-header-title" id="light_recruiter_name">Select the Interviewer</span>
-                                    <span class="pkr-header-sub">Choose panel members one at a time — everyone you select will receive an email invite for this interview.</span>
+                                    <span class="pkr-header-sub" title="{{ $pkrHeaderSub }}">{{ $pkrHeaderSub }}</span>
                                 </div>
                             </div>
-                            <div class="d-flex flex-column flex-shrink-0" style="margin-left: 16px;">
-                                @if($self_company==0)
-                                 <a href="javascript:void(0);" class="btn btn-sm btn-primary align-self-center openModalTeam"  data-target="#add_team_member">Add Contact Person</a>
-                                @endif
-                            </div>
                         @else
-                            <div class=" d-flex align-items-center">
-
+                            <div class="d-flex align-items-center min-w-0">
                                  <div class=" d-flex align-items-center"> {!! @$icon !!}
                                   <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light_recruiter_name">Assign Members</a> </div>
                                 </div>
@@ -91,23 +98,9 @@
                                 </div>
                             </div>
                         @endif
-                        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                    </div>
-                    <div class="card-toolbar">
-                        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5"
-                            id="kt_activitiesIntTeamtra_close"> <span class="svg-icon svg-icon-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                    width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                    <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                        fill="#000000">
-                                        <rect fill="#000000" x="0" y="7" width="16" height="2"
-                                            rx="1" />
-                                        <rect fill="#000000" opacity="0.5"
-                                            transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                            x="0" y="7" width="16" height="2" rx="1" />
-                                    </g>
-                                </svg>
-                            </span> </button>
+                        <button type="button" class="pkr-header-close" id="kt_activitiesIntTeamtra_close" aria-label="Close" title="Close">
+                            <i class="ti ti-x"></i>
+                        </button>
                     </div>
                 </div>
                 <!--end::Team header-->
@@ -120,8 +113,8 @@
                             <input type="radio" name="pkrSource" value="internal" checked>
                             <span class="pkr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V7l6-4 6 4v14M10 21v-6h4v6"/></svg></span>
                             <div>
-                                <div class="pkr-source-title">Internal Company Approvers</div>
-                                <div class="pkr-source-sub">{{ count($picker_internal ?? []) }} available</div>
+                                <div class="pkr-source-title">{{ $panel ? 'Internal Company Interviewers' : 'Internal Company Approvers' }}</div>
+                                <div class="pkr-source-sub pkr-ellipsis">{{ count($picker_internal ?? []) }} available</div>
                             </div>
                         </label>
                         @if(!empty($picker_client))
@@ -129,8 +122,8 @@
                             <input type="radio" name="pkrSource" value="client">
                             <span class="pkr-source-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
                             <div>
-                                <div class="pkr-source-title">Client Company Approvers</div>
-                                <div class="pkr-source-sub">{{ count($picker_client) }} available</div>
+                                <div class="pkr-source-title">{{ $panel ? 'Client Company Interviewers' : 'Client Company Approvers' }}</div>
+                                <div class="pkr-source-sub pkr-ellipsis">{{ count($picker_client) }} available</div>
                             </div>
                         </label>
                         @endif
@@ -147,15 +140,15 @@
                     <!--end::Search-->
 
                     <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="Iteam_Table_in_tra">
+                    <table class="table align-middle table-row-dashed fs-6 gy-5 pkr-table" id="Iteam_Table_in_tra">
                         <!--begin::Table head-->
                         <thead>
                             <!--begin::Table row-->
                             <tr class="fw-bolder text-muted">
-                                <th class="min-w-200px">Approver</th>
-                                <th class="min-w-200px">Contact</th>
-                                <th class="min-w-150px">Company</th>
-                                <th class="min-w-90px">Action</th>
+                                <th class="pkr-th" style="width:34%;">{{ $panel ? 'Interviewer' : 'Approver' }}</th>
+                                <th class="pkr-th" style="width:28%;">Contact</th>
+                                <th class="pkr-th" style="width:22%;">Company</th>
+                                <th class="pkr-th" style="width:16%;">Action</th>
                             </tr>
                             <!--end::Table row-->
                         </thead>
@@ -190,15 +183,15 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="pkr-mrow-av {{ @$bgTextDecore }}">{{ strtoupper(@$strVal) }}</div>
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">{{ ucwords(substr(@$teamVal->name, 0, 22)) }}</span>
-                                                    <span class="text-muted fw-bold d-block pkr-mrow-role">{{ ucwords(substr(@$teamVal->display_name, 0, 25)) }}</span>
+                                                <div class="d-flex flex-column pkr-mrow-name-wrap">
+                                                    <span class="text-dark fw-bolder fs-6 pkr-ellipsis" title="{{ ucwords(@$teamVal->name) }}">{{ ucwords(@$teamVal->name) }}</span>
+                                                    <span class="text-muted fw-bold d-block pkr-mrow-role pkr-ellipsis" title="{{ ucwords(@$teamVal->display_name) }}">{{ ucwords(@$teamVal->display_name) }}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <!--end::Name-->
-                                        <td>{{ @$teamVal->email }}</td>
-                                        <td>{{ @$teamVal->company_name }}</td>
+                                        <td class="pkr-mrow-name-wrap"><span class="pkr-ellipsis" title="{{ @$teamVal->email }}">{{ @$teamVal->email }}</span></td>
+                                        <td class="pkr-mrow-name-wrap"><span class="pkr-ellipsis" title="{{ @$teamVal->company_name }}">{{ @$teamVal->company_name }}</span></td>
                                         <!--begin::Action-->
                                         @if($panel)
                                         <td>
