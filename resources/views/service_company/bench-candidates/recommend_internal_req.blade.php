@@ -44,24 +44,26 @@
 .bxr-hero-menu{ align-self:flex-start; width:32px; height:32px; border-radius:8px; border:1px solid #E5E9F0; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; transition:all .18s; flex-shrink:0; }
 .bxr-hero-menu:hover{ background:#F8FAFC; }
 
-/* ══ 2. SUMMARY CARDS (== tabs) — identical to bench_explore.blade.php ══ */
-.bxr-sum-row{ display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-.bxr-sum-card{ flex:1; min-width:200px; display:flex; align-items:center; gap:14px; padding:14px 16px; background:#fff; border:1px solid #eef0f4; border-radius:14px; box-shadow:0 1px 2px rgba(16,24,40,.04); transition:box-shadow .18s; }
-.bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
-a.bxr-sum-link{ color:inherit; text-decoration:none; cursor:pointer; }
-a.bxr-sum-link:hover{ border-color:#c7d2fe; }
-.bxr-sum-card.bxr-sum-active{ border-color:#2563EB; background:#EFF6FF; box-shadow:0 0 0 1px #2563EB, 0 4px 10px rgba(37,99,235,.10); position:relative; }
-.bxr-sum-card.bxr-sum-active::before{ content:''; position:absolute; left:16px; right:16px; bottom:0; height:3px; background:#2563EB; border-radius:3px 3px 0 0; }
-.bxr-sum-card.bxr-sum-active .bxr-sum-icon{ background:#2563EB !important; color:#fff !important; }
-.bxr-sum-card.bxr-sum-active .bxr-sum-label{ color:#1D4ED8; font-weight:700; }
-.bxr-sum-card.bxr-sum-active .bxr-sum-num{ color:#1D4ED8; }
-.bxr-sum-icon{ width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-.bxr-sum-card.sc-p .bxr-sum-icon{ background:#F0EDFF; color:#6D28D9; }
-.bxr-sum-card.sc-b .bxr-sum-icon{ background:#EBF5FF; color:#1D4ED8; }
-.bxr-sum-card.sc-o .bxr-sum-icon{ background:#FFF3EA; color:#C2410C; }
-.bxr-sum-label{ font-size:11px; font-weight:500; color:#7E8299; margin-bottom:3px; line-height:1.2; }
-.bxr-sum-num{ font-size:16px; font-weight:700; color:#181C32; line-height:1.15; margin-bottom:4px; }
-.bxr-sum-growth{ font-size:10.5px; font-weight:600; color:#16A34A; display:flex; align-items:center; gap:3px; }
+/* ══ 2. SUMMARY CARDS (== tabs) — EXACT port of sections/service_company/
+   apptrackerHeader.blade.php's .apth-card component, identical to
+   bench_explore.blade.php's own copy so all three pages share one look. ══ */
+.bxr-sum-row{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin-bottom:16px; width:100%; }
+.bxr-sum-card{ display:flex; flex-direction:column; min-width:0; overflow:hidden; background:#fff; border:1px solid #e4e6ef; border-radius:10px; padding:10px 12px; text-decoration:none; transition:border-color .15s, background-color .15s; }
+.bxr-sum-card:hover{ text-decoration:none; border-color:#b5b5c3; }
+a.bxr-sum-link{ color:inherit; cursor:pointer; }
+.bxr-sum-card.bxr-sum-active{ border-color:var(--bxr-accent); background:var(--bxr-tint); }
+.bxr-sum-card.sc-p{ --bxr-accent:#6D28D9; --bxr-tint:#F0EDFF; }
+.bxr-sum-card.sc-b{ --bxr-accent:#1D4ED8; --bxr-tint:#EBF5FF; }
+.bxr-sum-card.sc-o{ --bxr-accent:#C2410C; --bxr-tint:#FFF3EA; }
+.bxr-sum-label{ font-size:11px; font-weight:500; color:#7e8299; margin:0 0 5px; line-height:1.3; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; transition:color .15s, font-weight .15s; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-label{ font-weight:700; color:#181c32; }
+.bxr-sum-row2{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.bxr-sum-row2-left{ display:flex; align-items:center; gap:6px; min-width:0; }
+.bxr-sum-icon{ width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--bxr-tint); color:var(--bxr-accent); font-size:10px; }
+.bxr-sum-icon svg{ width:10px; height:10px; }
+.bxr-sum-num{ font-size:13px; font-weight:700; color:#181c32; line-height:1.2; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bxr-sum-growth{ font-size:9px; font-weight:500; color:var(--bs-primary,#3699ff); white-space:nowrap; display:inline-flex; align-items:center; gap:2px; flex-shrink:0; }
+@media(max-width:576px){ .bxr-sum-row{ grid-template-columns:1fr; } }
 
 /* ══ 3. TOOLBAR — identical search/sort/refresh to bench_explore.blade.php,
    plus a Filter button (this page has real filters, bench_explore doesn't) ══ */
@@ -231,9 +233,13 @@ body > .tagify__dropdown{ z-index:1400 !important; }
     <div class="bxr-hero-left">
       @php
         $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
-        $candName = @$bench_detail->full_name ?? @$bench_detail->name ?? 'Candidate';
+        /* $bench_detail->name is the candidate's CURRENT STAGE (Bench/Hold/
+           Placed/Pool/etc, via the bench_master_status join), not their
+           name — that's full_name. */
+        $candName = @$bench_detail->full_name ?? 'Candidate';
         $initLtr  = strtoupper(substr($candName,0,1));
         $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
+        $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
       @endphp
       <div class="bxr-av-wrap">
         @if($imgFile)
@@ -246,7 +252,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
       <div>
         <div class="bxr-name-row">
           <span class="bxr-name">{{ ucwords($candName) }}</span>
-          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>Bench</span>
+          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
         </div>
         <div class="bxr-info-row">
           <span class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</span>
@@ -297,27 +303,39 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   {{-- ══ SECTION 2 · SUMMARY CARDS (== tabs) — Recommend Internal Jobs active here ══ --}}
   <div class="bxr-sum-row">
     <a href="{{ $bench_explore_url }}" class="bxr-sum-card sc-p bxr-sum-link">
-      <div class="bxr-sum-icon"><i class="ti ti-users-group"></i></div>
-      <div>
-        <div class="bxr-sum-label">Total Companies Added</div>
-        <div class="bxr-sum-num">{{ $recomCount['bench_explore_counter'] }}</div>
-        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 1 new today</div>
+      <p class="bxr-sum-label">Total Companies Added</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-users-group"></i></span>
+          <span class="bxr-sum-num">{{ $recomCount['bench_explore_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
     <a href="{{ $recommend_req_url }}" class="bxr-sum-card sc-b bxr-sum-link">
-      <div class="bxr-sum-icon"><i class="ti ti-briefcase"></i></div>
-      <div>
-        <div class="bxr-sum-label">Recommended Client Jobs</div>
-        <div class="bxr-sum-num" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] }}</div>
-        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 5 new today</div>
+      <p class="bxr-sum-label">Recommended Client Jobs</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-briefcase"></i></span>
+          <span class="bxr-sum-num" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
     <a href="{{ $recommend_internal_req }}" class="bxr-sum-card sc-o bxr-sum-link bxr-sum-active">
-      <div class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></div>
-      <div>
-        <div class="bxr-sum-label">Recommended Internal Jobs</div>
-        <div class="bxr-sum-num bxr-live" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] }}</div>
-        <div class="bxr-sum-growth"><i class="ti ti-arrow-up" style="font-size:11px;"></i> 2 new today</div>
+      <p class="bxr-sum-label">Recommended Internal Jobs</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></span>
+          <span class="bxr-sum-num" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
   </div>
@@ -378,7 +396,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   {{-- ══ Filter Drawer ══════════════════════════════════════════ --}}
   <div id="rrj_filter_drawer" class="bg-body rrj-drawer" data-kt-drawer="true" data-kt-drawer-name="rrj-filter"
       data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-      data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'420px'}" data-kt-drawer-direction="end"
+      data-kt-drawer-width="{default:'100%', 'sm':'90%', 'lg':'80%'}" data-kt-drawer-direction="end"
       data-kt-drawer-toggle="#rrj_filter_toggle" data-kt-drawer-close="#rrj_filter_close">
     <div id="rrj_card" class="card shadow-none rounded-0 w-100 h-100 rrj-card">
       <div class="rrj-header">
@@ -424,7 +442,13 @@ body > .tagify__dropdown{ z-index:1400 !important; }
                 <div class="rrj-section-desc">Add skills required for the job — click ★ to make one mandatory</div>
               </div>
             </div>
-            <input class="form-control form-control-solid d-flex align-items-center" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="" id="kt_tagify_users" />
+            {{-- Pre-filled with the candidate's raw skills ONLY (not
+                 $default_skill, which also appends current_designation as a
+                 fake "skill") — this is the exact same field
+                 benchjobAndRecomCount() filters by for the summary-card
+                 count, so the initial list total matches the card instead of
+                 diverging from it. --}}
+            <input class="form-control form-control-solid d-flex align-items-center" name="kt_tagify_users" value="{{ @$bench_detail->skills }}" placeholder="" id="kt_tagify_users" />
           </div>
 
           {{-- Location --}}
@@ -534,7 +558,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Min Salary</label>
-                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ @$min_salary }}">
+                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ (@$min_salary !== '' && @$min_salary !== null) ? @$min_salary : 0 }}">
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Max Salary</label>
@@ -637,7 +661,11 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   </div>
 
   {{-- ══ SECTION 4 · RESULTS ══ --}}
-  <div class="loadingMessage loadingMessagebenchCandidateRecommendedReqAjax">
+  {{-- Deliberately NOT using the bare "loadingMessage" class here — the
+       shared layout defines a global .loadingMessage{ background:rgba(0,0,0,.8);
+       z-index:9999 } (a dark full-page flash), which is exactly the "black
+       loading screen" bug. This element only carries our own scoped class. --}}
+  <div class="loadingMessagebenchCandidateRecommendedReqAjax">
     <div class="spinner-border text-primary" role="status"></div>
   </div>
 
@@ -803,6 +831,65 @@ const rrjFetchLocSuggestions = rrjDebounce(function(query) {
     });
 }, 200);
 rrjTagifyLocation.on('input', function(e) { var q = e.detail.value.trim(); if (q.length < 2) return; rrjCloseLocPanel(); rrjFetchLocSuggestions(q); });
+</script>
+
+{{-- ── Drawer layout enforcement — fixes the footer "jumping" bug. Plain
+     flexbox (flex:1 1 auto + overflow-y:auto on .rrj-body) should be enough
+     for a sticky footer, but KTDrawer re-applies its own inline sizing on
+     certain events, and Tagify chips/native <select> focus can grow the
+     body's content height inside that same tick — the combination made the
+     footer visibly jump upward. Forcing an explicit, JS-computed height on
+     the body (window height minus the real header/footer height) and
+     position:absolute on the footer pins it in place regardless of what
+     KTDrawer or content growth does. Same technique already proven on
+     Similar Candidates' filter drawer. ── --}}
+<script>
+function rrjEnforceDrawerLayout(){
+    var drawerEl=document.getElementById('rrj_filter_drawer');
+    var cardEl=document.getElementById('rrj_card');
+    var bodyEl=cardEl?cardEl.querySelector('.rrj-body'):null;
+    var headerEl=cardEl?cardEl.querySelector('.rrj-header'):null;
+    var footerEl=cardEl?cardEl.querySelector('.rrj-footer'):null;
+    if(drawerEl){
+        drawerEl.style.setProperty('overflow','hidden','important');
+        drawerEl.style.setProperty('position','fixed','important');
+        drawerEl.style.setProperty('top','0','important');
+        drawerEl.style.setProperty('bottom','0','important');
+        drawerEl.style.setProperty('height','100vh','important');
+    }
+    if(cardEl){
+        cardEl.style.setProperty('display','block','important');
+        cardEl.style.setProperty('position','relative','important');
+        cardEl.style.setProperty('overflow','hidden','important');
+        cardEl.style.setProperty('height','100vh','important');
+        cardEl.style.setProperty('max-height','100vh','important');
+    }
+    if(bodyEl){
+        var headerH=headerEl?headerEl.offsetHeight:0, footerH=footerEl?footerEl.offsetHeight:0;
+        var available=Math.max(window.innerHeight-headerH-footerH,100);
+        bodyEl.style.setProperty('position','absolute','important');
+        bodyEl.style.setProperty('left','0','important');
+        bodyEl.style.setProperty('right','0','important');
+        bodyEl.style.setProperty('top',headerH+'px','important');
+        bodyEl.style.setProperty('height',available+'px','important');
+        bodyEl.style.setProperty('max-height',available+'px','important');
+        bodyEl.style.setProperty('overflow-y','auto','important');
+        bodyEl.style.setProperty('overflow-x','hidden','important');
+    }
+    if(footerEl){
+        footerEl.style.setProperty('position','absolute','important');
+        footerEl.style.setProperty('left','0','important');
+        footerEl.style.setProperty('right','0','important');
+        footerEl.style.setProperty('bottom','0','important');
+    }
+}
+$(document).ready(rrjEnforceDrawerLayout);
+$(window).on('resize', rrjEnforceDrawerLayout);
+$(document).on('click', '#rrj_filter_toggle, #rrj_filter_close', function(){ setTimeout(rrjEnforceDrawerLayout, 0); setTimeout(rrjEnforceDrawerLayout, 60); });
+/* Re-run whenever a field inside the drawer could have changed the body's
+   content height (Tagify add/remove, select change, focus on any input) —
+   this is the actual fix for "clicking a field moves the footer". */
+$(document).on('click change focus', '#rrj_card .rrj-body, #rrj_card .rrj-body *', function(){ setTimeout(rrjEnforceDrawerLayout, 0); });
 </script>
 
 {{-- ── Sort panel + filter drawer chrome (open/close/reset/apply/active
@@ -1022,12 +1109,15 @@ $(document).on('click', '.hm-listing', function () {
 </script>
 
 {{-- ── Core data fetch — SAME route/params/response-handling as before this
-     redesign (business logic untouched), plus: error handling, the
-     first-load skills-filter guard, and now also sends work_mode (additive
-     new param, empty by default = no filter change for existing users). ── --}}
+     redesign (business logic untouched), plus error handling and work_mode
+     (additive new param, empty by default = no filter change for existing
+     users). #kt_tagify_users is now pre-filled with the candidate's raw
+     skills only (see the input above), so every load — including the very
+     first one — already applies the same skills filter
+     benchjobAndRecomCount() uses for the card/tab counters. That keeps the
+     card number and the list's response.total in agreement instead of the
+     card being skill-filtered while the list's first paint wasn't. ── --}}
 <script>
-var rrjInitialLoad = true;
-
 function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
     $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
     var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
@@ -1040,7 +1130,7 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
             custom_search: $('#kt_tagify_2').val(),
             custom_status: 'active',
             custom_hiringtype: $('#hiringtype').val(),
-            cus_search: rrjInitialLoad ? '[]' : $('#kt_tagify_users').val(),
+            cus_search: $('#kt_tagify_users').val(),
             min_exp: $('#min_exp').val(),
             max_exp: $('#max_exp').val(),
             kt_tagify_location: $('#kt_tagify_location').val(),
@@ -1053,7 +1143,6 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
             app_int_outsource: $('[name="app_int_outsource"]:checked').val()
         },
         success: function(response) {
-            rrjInitialLoad = false;
             $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
             if (!response || typeof response.html === 'undefined') { console.error('all_internal_data_ajax: unexpected response', response); return; }
             $('#benchCandidateRecommendedReqAjax').html(response.html);
@@ -1062,7 +1151,6 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
             $('#paginationbenchCandidateRecommendedReq').html(response.pagination);
         },
         error: function(xhr) {
-            rrjInitialLoad = false;
             $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
             console.error('all_internal_data_ajax failed:', xhr.status, xhr.responseText);
         }

@@ -115,65 +115,55 @@
 }
 .bxr-hero-menu:hover{ background:#F8FAFC; }
 
-/* ══ 2. SUMMARY CARDS — compact bordered cards (AppTracker apth-/hp- style) ══ */
+/* ══ 2. SUMMARY CARDS (== tabs) — EXACT port of sections/service_company/
+   apptrackerHeader.blade.php's .apth-card component (the real "Application
+   Tracker KPI card"), just renamed bxr- and reduced to a 3-col grid since
+   this hero only has 3 cards. Every value below (padding, radius, font
+   sizes/weights, icon size, active border/bg/text colors) is copied 1:1. ══ */
 .bxr-sum-row{
-    display:flex; gap:12px;
-    margin-bottom:16px;
-    flex-wrap:wrap;
+    display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:10px; margin-bottom:16px; width:100%;
 }
 .bxr-sum-card{
-    flex:1; min-width:200px;
-    display:flex; align-items:center; gap:14px;
-    padding:14px 16px;
-    background:#fff;
-    border:1px solid #eef0f4;
-    border-radius:14px;
-    box-shadow:0 1px 2px rgba(16,24,40,.04);
-    transition:box-shadow .18s;
+    display:flex; flex-direction:column; min-width:0; overflow:hidden;
+    background:#fff; border:1px solid #e4e6ef; border-radius:10px;
+    padding:10px 12px; text-decoration:none;
+    transition:border-color .15s, background-color .15s;
 }
-.bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
-/* Clickable cards (all three double as tabs to Pool/Client Jobs/Internal Jobs) render as <a> — strip link styling */
-a.bxr-sum-link{ color:inherit; text-decoration:none; cursor:pointer; }
-a.bxr-sum-link:hover{ border-color:#c7d2fe; }
+.bxr-sum-card:hover{ text-decoration:none; border-color:#b5b5c3; }
+a.bxr-sum-link{ color:inherit; cursor:pointer; }
 
-/* Active tab state — same "you are here" treatment reused verbatim on the
-   Recommended Client Jobs / Recommended Internal Jobs pages so all three
-   stat cards read as one shared tab-bar component across all three pages. */
-.bxr-sum-card.bxr-sum-active{
-    border-color:#2563EB; background:#EFF6FF; box-shadow:0 0 0 1px #2563EB, 0 4px 10px rgba(37,99,235,.10);
-    position:relative;
-}
-.bxr-sum-card.bxr-sum-active::before{
-    content:''; position:absolute; left:16px; right:16px; bottom:0; height:3px;
-    background:#2563EB; border-radius:3px 3px 0 0;
-}
-.bxr-sum-card.bxr-sum-active .bxr-sum-icon{ background:#2563EB !important; color:#fff !important; }
-.bxr-sum-card.bxr-sum-active .bxr-sum-label{ color:#1D4ED8; font-weight:700; }
-.bxr-sum-card.bxr-sum-active .bxr-sum-num{ color:#1D4ED8; }
+/* Active tab state — identical to .apth-card.active, driven by CSS custom
+   properties so each card keeps its own accent color while active. */
+.bxr-sum-card.bxr-sum-active{ border-color:var(--bxr-accent); background:var(--bxr-tint); }
+.bxr-sum-card.sc-p{ --bxr-accent:#6D28D9; --bxr-tint:#F0EDFF; }
+.bxr-sum-card.sc-b{ --bxr-accent:#1D4ED8; --bxr-tint:#EBF5FF; }
+.bxr-sum-card.sc-o{ --bxr-accent:#C2410C; --bxr-tint:#FFF3EA; }
 
-/* Icon box — tinted, compact */
-.bxr-sum-icon{
-    width:40px; height:40px; border-radius:11px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:18px; flex-shrink:0;
-}
-.bxr-sum-card.sc-p .bxr-sum-icon{ background:#F0EDFF; color:#6D28D9; }
-.bxr-sum-card.sc-b .bxr-sum-icon{ background:#EBF5FF; color:#1D4ED8; }
-.bxr-sum-card.sc-o .bxr-sum-icon{ background:#FFF3EA; color:#C2410C; }
-
-/* Text */
 .bxr-sum-label{
-    font-size:11px; font-weight:500;
-    color:#7E8299; margin-bottom:3px; line-height:1.2;
+    font-size:11px; font-weight:500; color:#7e8299; margin:0 0 5px; line-height:1.3;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+    transition:color .15s, font-weight .15s;
 }
+.bxr-sum-card.bxr-sum-active .bxr-sum-label{ font-weight:700; color:#181c32; }
+
+.bxr-sum-row2{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.bxr-sum-row2-left{ display:flex; align-items:center; gap:6px; min-width:0; }
+.bxr-sum-icon{
+    width:19px; height:19px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:var(--bxr-tint); color:var(--bxr-accent); font-size:10px;
+}
+.bxr-sum-icon svg{ width:10px; height:10px; }
 .bxr-sum-num{
-    font-size:16px; font-weight:700;
-    color:#181C32; line-height:1.15; margin-bottom:4px;
+    font-size:13px; font-weight:700; color:#181c32; line-height:1.2;
+    min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .bxr-sum-growth{
-    font-size:10.5px; font-weight:600; color:#16A34A;
-    display:flex; align-items:center; gap:3px;
+    font-size:9px; font-weight:500; color:var(--bs-primary,#3699ff); white-space:nowrap;
+    display:inline-flex; align-items:center; gap:2px; flex-shrink:0;
 }
+@media(max-width:576px){ .bxr-sum-row{ grid-template-columns:1fr; } }
 
 /* ══ 3. SEARCH BAR ══════════════════════════════ */
 .bxr-search-wrap{
@@ -489,8 +479,13 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
     <div class="bxr-hero-left">
       @php
         $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
-        $candName = @$bench_detail->name ?? 'Candidate';
+        /* $bench_detail->name is the candidate's CURRENT STAGE (from the
+           bench_master_status join — Bench/Hold/Placed/Pool/etc.), not their
+           name. The candidate's actual name is full_name. Was previously
+           mixed up here, which is also why the badge below never varied. */
+        $candName = @$bench_detail->full_name ?? 'Candidate';
         $initLtr  = strtoupper(substr($candName,0,1));
+        $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
       @endphp
       <div class="bxr-av-wrap">
         @if($imgFile)
@@ -501,10 +496,10 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
         <div class="bxr-online-dot"></div>
       </div>
       <div class="bxr-info">
-        {{-- Row 1: Name + Bench badge --}}
+        {{-- Row 1: Name + dynamic stage badge (Bench/Hold/Placed/Pool/…) --}}
         <div class="bxr-name-row">
-          <span class="bxr-name">{{ $candName }}</span>
-          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>Bench</span>
+          <span class="bxr-name">{{ ucwords($candName) }}</span>
+          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
         </div>
 
         {{-- Row 2: Role  •  Primary Skill  •  Location --}}
@@ -590,35 +585,44 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
   <div class="bxr-sum-row">
     {{-- Card 1: purple — this page (Pool Jobs), always active here --}}
     <a href="{{ $bench_explore_url }}" class="bxr-sum-card sc-p bxr-sum-link bxr-sum-active">
-      <div class="bxr-sum-icon"><i class="ti ti-users-group"></i></div>
-      <div>
-        <div class="bxr-sum-label">Total Companies Added</div>
-        <div class="bxr-sum-num bxr-live">{{ $recomCount['bench_explore_counter'] }}</div>
-        <div class="bxr-sum-growth">
-          <i class="ti ti-arrow-up" style="font-size:11px;"></i> 1 new today
-        </div>
+      <p class="bxr-sum-label">Total Companies Added</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-users-group"></i></span>
+          <span class="bxr-sum-num bxr-live">{{ $recomCount['bench_explore_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">
+          View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
     {{-- Card 2: blue — links to the Recommended Client Jobs list page --}}
     <a href="{{ $recommend_req_url }}" class="bxr-sum-card sc-b bxr-sum-link">
-      <div class="bxr-sum-icon"><i class="ti ti-briefcase"></i></div>
-      <div>
-        <div class="bxr-sum-label">Recommended Client Jobs</div>
-        <div class="bxr-sum-num">{{ $recomCount['recommend_req_counter'] }}</div>
-        <div class="bxr-sum-growth">
-          <i class="ti ti-arrow-up" style="font-size:11px;"></i> 5 new today
-        </div>
+      <p class="bxr-sum-label">Recommended Client Jobs</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-briefcase"></i></span>
+          <span class="bxr-sum-num" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">
+          View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
     {{-- Card 3: orange — links to the Recommended Internal Jobs list page --}}
     <a href="{{ $recommend_internal_req }}" class="bxr-sum-card sc-o bxr-sum-link">
-      <div class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></div>
-      <div>
-        <div class="bxr-sum-label">Recommended Internal Jobs</div>
-        <div class="bxr-sum-num">{{ $recomCount['recommend_internal_req_counter'] }}</div>
-        <div class="bxr-sum-growth">
-          <i class="ti ti-arrow-up" style="font-size:11px;"></i> 2 new today
-        </div>
+      <p class="bxr-sum-label">Recommended Internal Jobs</p>
+      <div class="bxr-sum-row2">
+        <span class="bxr-sum-row2-left">
+          <span class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></span>
+          <span class="bxr-sum-num" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] }}</span>
+        </span>
+        <span class="bxr-sum-growth">
+          View List
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+        </span>
       </div>
     </a>
   </div>
