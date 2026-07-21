@@ -216,7 +216,9 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 </div>
 
 @php
-    $bench_explore_url      = url('service_company/bench-candidates/bench_explore/')          . @$bench_detail->id . '/all';
+    {{-- url('.../bench_explore/') drops the trailing slash, so concatenating
+         the id directly produced "bench_explore123" — a 404 on every click. --}}
+    $bench_explore_url      = url('service_company/bench-candidates/bench_explore') . '/' . @$bench_detail->id . '/all';
     $recommend_req_url      = url('service_company/bench-candidates/recommend_req/')          .'/'. @$bench_detail->id;
     $recommend_internal_req = url('service_company/bench-candidates/recommend_internal_req/') .'/'. @$bench_detail->id;
 @endphp
