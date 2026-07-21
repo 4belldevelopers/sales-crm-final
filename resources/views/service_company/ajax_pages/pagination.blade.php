@@ -98,10 +98,14 @@
             <i class="ti ti-chevron-right"></i>
         </button>
 
-        {{-- Page size is fixed at 10 (kept as plain text, not a selector) — smaller,
-             consistent payloads for every listing this component is used on. --}}
+        {{-- Rows per page selector — changing this triggers itCurrentSize update in JS --}}
         @if(isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
-        <span class="pagi-perpage">10 / page</span>
+        <select class="pagi-perpage" data-perpage="1" style="cursor:pointer;padding:0 28px 0 10px;appearance:auto;"
+                title="Rows per page">
+            @foreach([10, 20, 50, 100] as $opt)
+                <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }} / page</option>
+            @endforeach
+        </select>
         @endif
     </div>
 </div>
