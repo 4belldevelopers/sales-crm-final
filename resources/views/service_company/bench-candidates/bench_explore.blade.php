@@ -132,9 +132,24 @@
     transition:box-shadow .18s;
 }
 .bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
-/* Clickable cards (Recommended Jobs / Recommended Internal Jobs) render as <a> — strip link styling */
+/* Clickable cards (all three double as tabs to Pool/Client Jobs/Internal Jobs) render as <a> — strip link styling */
 a.bxr-sum-link{ color:inherit; text-decoration:none; cursor:pointer; }
 a.bxr-sum-link:hover{ border-color:#c7d2fe; }
+
+/* Active tab state — same "you are here" treatment reused verbatim on the
+   Recommended Client Jobs / Recommended Internal Jobs pages so all three
+   stat cards read as one shared tab-bar component across all three pages. */
+.bxr-sum-card.bxr-sum-active{
+    border-color:#2563EB; background:#EFF6FF; box-shadow:0 0 0 1px #2563EB, 0 4px 10px rgba(37,99,235,.10);
+    position:relative;
+}
+.bxr-sum-card.bxr-sum-active::before{
+    content:''; position:absolute; left:16px; right:16px; bottom:0; height:3px;
+    background:#2563EB; border-radius:3px 3px 0 0;
+}
+.bxr-sum-card.bxr-sum-active .bxr-sum-icon{ background:#2563EB !important; color:#fff !important; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-label{ color:#1D4ED8; font-weight:700; }
+.bxr-sum-card.bxr-sum-active .bxr-sum-num{ color:#1D4ED8; }
 
 /* Icon box — tinted, compact */
 .bxr-sum-icon{
@@ -492,9 +507,17 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
           <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>Bench</span>
         </div>
 
-        {{-- Row 2: Role  •  Location --}}
+        {{-- Row 2: Role  •  Primary Skill  •  Location --}}
+        @php
+          $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
+        @endphp
         <div class="bxr-info-row">
           <span class="bxr-role">{{ @$bench_detail->current_designation ?? '' }}</span>
+          @if($bxrPrimarySkill !== '')
+          <span class="bxr-meta-item" style="background:#EFF6FF;color:#1D4ED8;padding:2px 9px;border-radius:20px;font-weight:600;">
+            <i class="ti ti-star" style="color:#1D4ED8;"></i>{{ ucfirst($bxrPrimarySkill) }}
+          </span>
+          @endif
           @if(@$bench_detail->city_name||@$bench_detail->city||@$bench_detail->location)
           <span class="bxr-meta-item">
             <i class="ti ti-map-pin"></i>
@@ -561,10 +584,12 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
     </div>
   </div>
 
-  {{-- ══ SECTION 2 · SUMMARY CARDS ════════════════════ --}}
+  {{-- ══ SECTION 2 · SUMMARY CARDS — also function as tabs to the sibling
+       Recommended Client Jobs / Recommended Internal Jobs pages, so all
+       three cards read as one shared component across all three pages ══ --}}
   <div class="bxr-sum-row">
-    {{-- Card 1: purple --}}
-    <div class="bxr-sum-card sc-p">
+    {{-- Card 1: purple — this page (Pool Jobs), always active here --}}
+    <a href="{{ $bench_explore_url }}" class="bxr-sum-card sc-p bxr-sum-link bxr-sum-active">
       <div class="bxr-sum-icon"><i class="ti ti-users-group"></i></div>
       <div>
         <div class="bxr-sum-label">Total Companies Added</div>
@@ -573,12 +598,12 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
           <i class="ti ti-arrow-up" style="font-size:11px;"></i> 1 new today
         </div>
       </div>
-    </div>
-    {{-- Card 2: blue — links to the Recommended Jobs list page --}}
+    </a>
+    {{-- Card 2: blue — links to the Recommended Client Jobs list page --}}
     <a href="{{ $recommend_req_url }}" class="bxr-sum-card sc-b bxr-sum-link">
       <div class="bxr-sum-icon"><i class="ti ti-briefcase"></i></div>
       <div>
-        <div class="bxr-sum-label">Recommended Jobs</div>
+        <div class="bxr-sum-label">Recommended Client Jobs</div>
         <div class="bxr-sum-num">{{ $recomCount['recommend_req_counter'] }}</div>
         <div class="bxr-sum-growth">
           <i class="ti ti-arrow-up" style="font-size:11px;"></i> 5 new today
