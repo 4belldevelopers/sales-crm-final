@@ -421,7 +421,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
 
 <div id="kt_activitiesIntTeam_cc" class="co-appr-drawer">
   <div class="card-body position-relative px-0 py-0" id="kt__cc_body">
-  <div id="kt_cc_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__cc_body" data-kt-scroll-dependencies="#kt__cc_header, #kt__cc_footer" data-kt-scroll-offset="5px" style="">
+  <div id="kt_cc_scroll" class="position-relative bg-light pt-2 h-100" style="overflow-y:auto;">
     <!--begin::Team card-->
     <div class="card card-custom mx-2">
       <!--begin::Team header-->
@@ -527,7 +527,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
 
 <div id="kt_activitiesIntTeam_to" class="co-appr-drawer">
   <div class="card-body position-relative px-0 py-0" id="kt__to_body">
-  <div id="kt_to_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt__to_body" data-kt-scroll-dependencies="#kt__to_header, #kt__to_footer" data-kt-scroll-offset="5px" style="">
+  <div id="kt_to_scroll" class="position-relative bg-light pt-2 h-100" style="overflow-y:auto;">
     <!--begin::Team card-->
     <div class="card card-custom mx-2">
       <!--begin::Team header-->

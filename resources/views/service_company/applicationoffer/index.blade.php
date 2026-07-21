@@ -566,6 +566,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
     overflow: hidden !important;
     flex: 1 1 0 !important;
     min-height: 0 !important;
+    position: relative !important;
 }
 </style>
 
@@ -871,11 +872,20 @@ a:hover .ot-comp-change { text-decoration: underline; }
         $('#kt_fwd_offer_drawer').addClass('drawer-on');
         $('#kt_fwd_offer_overlay').addClass('active');
         $('body').css('overflow', 'hidden');
+        // KTScroll re-fires on DOM changes — strip its inline height so our flex CSS wins
+        setTimeout(function() {
+            var sc = document.getElementById('kt_activities_scroll');
+            if (sc) sc.style.removeProperty('height');
+        }, 50);
     }
     function closeApproverDrawer() {
         $('#kt_fwd_offer_drawer').removeClass('drawer-on');
         $('#kt_fwd_offer_overlay').removeClass('active');
         $('body').css('overflow', '');
+        setTimeout(function() {
+            var sc = document.getElementById('kt_activities_scroll');
+            if (sc) sc.style.removeProperty('height');
+        }, 50);
     }
     $(document).on('click', '#kt_fwd_offer_close, #kt_fwd_offer_overlay', closeApproverDrawer);
 

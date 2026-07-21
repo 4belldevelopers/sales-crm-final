@@ -3082,7 +3082,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if( $request->mtype==1){
 			$title = 'Candidate Email Send';
 		}else{
-			$title = 'Approval Email Send';
+			$title = 'Select Approval';
 		}
 		
 
