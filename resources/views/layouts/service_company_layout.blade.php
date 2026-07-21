@@ -1943,7 +1943,7 @@ $(document).ready(function(){
                   url += '?' + query.join('&');
               }
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              openInterviewScheduleDrawer();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
@@ -2627,7 +2627,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              openInterviewScheduleDrawer();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2651,7 +2651,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              openInterviewScheduleDrawer();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2749,7 +2749,7 @@ $( document ).ready(function() {
                           var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
                           url     		=	url.replace(':id', id);
                           var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-                          openInterviewScheduleDrawer();
+                          (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
               window.isdShellSetStep('main');
                           $.ajax({
                                   type  		:	'GET',
