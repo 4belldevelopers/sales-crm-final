@@ -547,13 +547,13 @@
       </div>
       <div class="isd-shell-topbar-right">
         <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
-        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel">Cancel</button>
+        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
         <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
           <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
           <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
         </button>
         <span class="isd-shell-divider"></span>
-        <span class="isd-shell-close" id="interview_schedule_drawer_close"><i class="ti ti-x"></i></span>
+        <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
       </div>
     </div>
     <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
