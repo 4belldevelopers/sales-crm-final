@@ -6030,6 +6030,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$custom_search = trim(request('custom_search'));
 
 		$cachePayload = [
+			// condidate_id was missing here — every request for THIS candidate's
+			// recommended jobs hashed to the same cache key as any OTHER
+			// candidate with the same filter state (very likely with empty/
+			// default filters, e.g. two candidates with no skills recorded),
+			// so one candidate's cached list/total could be served back for a
+			// completely different candidate. This is the root cause behind
+			// "count says N but the list shows 0" and results changing
+			// unexpectedly when switching between candidates.
+			'condidate_id' => $condidate_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
@@ -6043,7 +6052,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'max_exp' => $max_exp,
 			'max_salary' => $max_salary,
 			'min_salary' => $min_salary,
-			'requiredSkills' => $requiredSkills ?? [],			
+			'requiredSkills' => $requiredSkills ?? [],
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
 			'custom_hiringtype' => $custom_hiringtype,
@@ -6462,6 +6471,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 
 		$cachePayload = [
+			// condidate_id was missing here — every request for THIS candidate's
+			// recommended jobs hashed to the same cache key as any OTHER
+			// candidate with the same filter state (very likely with empty/
+			// default filters, e.g. two candidates with no skills recorded),
+			// so one candidate's cached list/total could be served back for a
+			// completely different candidate. This is the root cause behind
+			// "count says N but the list shows 0" and results changing
+			// unexpectedly when switching between candidates.
+			'condidate_id' => $condidate_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
@@ -6475,7 +6493,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'max_exp' => $max_exp,
 			'max_salary' => $max_salary,
 			'min_salary' => $min_salary,
-			'requiredSkills' => $requiredSkills ?? [],			
+			'requiredSkills' => $requiredSkills ?? [],
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
 			'custom_hiringtype' => $custom_hiringtype,
