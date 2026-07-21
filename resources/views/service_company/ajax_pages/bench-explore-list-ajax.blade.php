@@ -50,21 +50,39 @@
     elseif ($ord >= 117 && $ord <= 121) { $initBg = '#1E293B'; $initClr = '#94A3B8'; }
     else                                { $initBg = '#F1F5F9'; $initClr = '#475569'; }
 
-    /* ── Skills ──────────────────────────────────── */
+    /* ── Skills + Match % — same computation/highlighting as AppTracker's
+       candidate-row Match badge (resources/views/service_company/ajax_pages/all_apptracker.blade.php),
+       just replicated here in the job-perspective direction: this candidate's
+       skills matched against THIS job's required skills. No new queries —
+       job_metronics_skills is already eager-loaded on $jobDetails. ── */
     $skillArr = DB::table('job_application_skills')
         ->where('job_application_id', $bench_id)
         ->pluck('skills')->toArray();
     $skillArrc_skills = array_column($jobDetails->job_metronics_skills, 'skill_name');
     $percentage       = GeneralMethod::skill_percentage($jobDetails->id, $skillArr);
 
+    $matchNum = (float) rtrim($percentage ?: '0%', '%');
+    if ($matchNum == 0) { $matchBg = '#F1F5F9'; $matchColor = '#64748B'; }
+    elseif ($matchNum < 50) { $matchBg = '#FEE2E2'; $matchColor = '#DC2626'; }
+    elseif ($matchNum <= 90) { $matchBg = '#FEF3C7'; $matchColor = '#D97706'; }
+    else { $matchBg = '#DCFCE7'; $matchColor = '#16A34A'; }
+    $matchBadge = '<span class="bxr-match-badge" style="background:'.$matchBg.';color:'.$matchColor.';">Match '.$percentage.'</span>';
+
+    $matchedSkillsArr   = GeneralMethod::matchedSkillsList($skillArr, $skillArrc_skills);
+    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
+
     $skillHtml = '';
-    $maxShow   = 3;
-    $total_sk  = count($skillArrc_skills);
-    foreach (array_slice($skillArrc_skills, 0, $maxShow) as $sk) {
+    foreach ($matchedSkillsArr as $sk) {
+        $skillHtml .= '<span class="bxr-skill matched" title="Matches a required skill">' . ucfirst($sk) . '</span>';
+    }
+    $maxShow = 3;
+    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxShow);
+    foreach ($unmatchedShown as $sk) {
         $skillHtml .= '<span class="bxr-skill">' . ucfirst($sk) . '</span>';
     }
-    if ($total_sk > $maxShow) {
-        $skillHtml .= '<span class="bxr-skill more">+' . ($total_sk - $maxShow) . '</span>';
+    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+    if ($unmatchedRemaining > 0) {
+        $skillHtml .= '<span class="bxr-skill more">+' . $unmatchedRemaining . ' more</span>';
     }
 
     /* ── Experience ──────────────────────────────── */
@@ -199,9 +217,7 @@
                 </div>
                 <div class="bxr-job-co">{{ $company_display_name }}</div>
                 <div class="bxr-skills">
-                    @if($percentage)
-                        <span class="bxr-skill" style="background:#EFF6FF;color:#2563EB;">{{ $percentage }}</span>
-                    @endif
+                    {!! $matchBadge !!}
                     {!! $skillHtml !!}
                 </div>
             </div>
