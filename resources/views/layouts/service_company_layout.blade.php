@@ -577,6 +577,16 @@
       submitForm();
     }
   });
+
+  // Safe open helper — always uses the drawer element (not the toggle div),
+  // so it works whether the drawer was previously opened, closed, or never init'd.
+  window.openInterviewScheduleDrawer = function() {
+    var el = document.getElementById('interview_schedule_drawer');
+    if (!el) return;
+    var inst = KTDrawer.getInstance(el);
+    if (!inst) { KTDrawer.createInstances(); inst = KTDrawer.getInstance(el); }
+    if (inst && !inst.isShown()) inst.show();
+  };
 </script>
 <!--end::Interview Schedule drawer-->
 
@@ -1933,9 +1943,7 @@ $(document).ready(function(){
                   url += '?' + query.join('&');
               }
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              $('#interview_schedule_drawer_toggle').trigger('click');
-              KTDrawer.createInstances();
-              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              openInterviewScheduleDrawer();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
@@ -2619,9 +2627,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              $('#interview_schedule_drawer_toggle').trigger('click');
-              KTDrawer.createInstances();
-              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              openInterviewScheduleDrawer();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2645,9 +2651,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              $('#interview_schedule_drawer_toggle').trigger('click');
-              KTDrawer.createInstances();
-              KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+              openInterviewScheduleDrawer();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2745,9 +2749,7 @@ $( document ).ready(function() {
                           var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
                           url     		=	url.replace(':id', id);
                           var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-                          $('#interview_schedule_drawer_toggle').trigger('click');
-                          KTDrawer.createInstances();
-                          KTDrawer.getInstance(document.querySelector('#interview_schedule_drawer_toggle'))?.show();
+                          openInterviewScheduleDrawer();
               window.isdShellSetStep('main');
                           $.ajax({
                                   type  		:	'GET',
