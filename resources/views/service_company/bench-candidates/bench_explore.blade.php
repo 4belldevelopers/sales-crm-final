@@ -94,17 +94,17 @@
     width:1px; background:#E5E9F0;
 }
 .bxr-kpi-icon{
-    width:40px; height:40px; border-radius:10px;
+    width:34px; height:34px; border-radius:9px;
     display:flex; align-items:center; justify-content:center;
-    font-size:18px; flex-shrink:0;
+    font-size:15px; flex-shrink:0;
 }
 .bxr-kpi-icon.vi{ background:#EFF6FF; color:#2563EB; }
 .bxr-kpi-icon.dl{ background:#F0FDF4; color:#16A34A; }
 .bxr-kpi-icon.aj{ background:#EFF6FF; color:#0EA5E9; }
 .bxr-kpi-icon.iv{ background:#F5F3FF; color:#7C3AED; }
 .bxr-kpi-body{}
-.bxr-kpi-num{ font-size:22px; font-weight:800; color:#1A1D23; line-height:1.1; }
-.bxr-kpi-lbl{ font-size:11px; font-weight:500; color:#94A3B8; white-space:nowrap; }
+.bxr-kpi-num{ font-size:15px; font-weight:700; color:#1A1D23; line-height:1.1; }
+.bxr-kpi-lbl{ font-size:10px; font-weight:500; color:#94A3B8; white-space:nowrap; }
 .bxr-hero-menu{
     align-self:flex-start;
     width:32px; height:32px; border-radius:8px;
@@ -115,48 +115,45 @@
 }
 .bxr-hero-menu:hover{ background:#F8FAFC; }
 
-/* ══ 2. SUMMARY CARDS ═══════════════════════════ */
+/* ══ 2. SUMMARY CARDS — compact bordered cards (AppTracker apth-/hp- style) ══ */
 .bxr-sum-row{
     display:flex; gap:12px;
-    margin-bottom:4px;
+    margin-bottom:16px;
     flex-wrap:wrap;
-    padding:12px 16px;
-    background:#fff;
 }
-/* Each card fills 1/3 with a tinted background */
 .bxr-sum-card{
     flex:1; min-width:200px;
-    display:flex; align-items:center; gap:20px;
-    padding:22px 24px;
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px;
+    background:#fff;
+    border:1px solid #eef0f4;
     border-radius:14px;
-    transition:filter .18s;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+    transition:box-shadow .18s;
 }
-/* Per-card tinted background */
-.bxr-sum-card.sc-p{ background:#F0EDFF; }   /* purple  */
-.bxr-sum-card.sc-b{ background:#EBF5FF; }   /* blue    */
-.bxr-sum-card.sc-o{ background:#FFF3EA; }   /* orange  */
+.bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
 
-/* Icon box */
+/* Icon box — tinted, compact */
 .bxr-sum-icon{
-    width:60px; height:60px; border-radius:16px;
+    width:40px; height:40px; border-radius:11px;
     display:flex; align-items:center; justify-content:center;
-    font-size:28px; flex-shrink:0;
+    font-size:18px; flex-shrink:0;
 }
-.bxr-sum-card.sc-p .bxr-sum-icon{ background:#DDD6FE; color:#6D28D9; }
-.bxr-sum-card.sc-b .bxr-sum-icon{ background:#BFDBFE; color:#1D4ED8; }
-.bxr-sum-card.sc-o .bxr-sum-icon{ background:#FED7AA; color:#C2410C; }
+.bxr-sum-card.sc-p .bxr-sum-icon{ background:#F0EDFF; color:#6D28D9; }
+.bxr-sum-card.sc-b .bxr-sum-icon{ background:#EBF5FF; color:#1D4ED8; }
+.bxr-sum-card.sc-o .bxr-sum-icon{ background:#FFF3EA; color:#C2410C; }
 
 /* Text */
 .bxr-sum-label{
-    font-size:12px; font-weight:600;
-    color:#64748B; margin-bottom:4px; line-height:1.2;
+    font-size:11px; font-weight:500;
+    color:#7E8299; margin-bottom:3px; line-height:1.2;
 }
 .bxr-sum-num{
-    font-size:34px; font-weight:800;
-    color:#0F172A; line-height:1; margin-bottom:6px;
+    font-size:16px; font-weight:700;
+    color:#181C32; line-height:1.15; margin-bottom:4px;
 }
 .bxr-sum-growth{
-    font-size:12px; font-weight:600; color:#16A34A;
+    font-size:10.5px; font-weight:600; color:#16A34A;
     display:flex; align-items:center; gap:3px;
 }
 
@@ -220,93 +217,68 @@
 }
 .bxr-refresh:hover{ background:#2563EB; color:#fff; border-color:#2563EB; transform:rotate(90deg); }
 
-/* ══ 4. STAGE NAV ═══════════════════════════════ */
-.bxr-stages-wrap{
+/* ══ 4. STAGE PIPELINE FLOW — same connected circle+chevron pattern as
+   AppTracker's .hp-flow (resources/views/service_company/apptracker/index.blade.php),
+   bxr- prefixed to match this page's existing naming. ══ */
+.bxr-flow-card{
     background:#fff;
-    border-bottom:1.5px solid #E8ECF2;
+    border:1px solid #eef0f4;
+    border-radius:14px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+    padding:16px 20px;
     margin-bottom:16px;
-    overflow-x:auto;
 }
-.bxr-stages{
-    display:flex; align-items:center;
-    width:100%;
-    min-width:max-content;
-    padding:0;
-    height:72px;
+.bxr-flow{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px; width:100%; flex-wrap:nowrap;
+    overflow-x:auto; padding-bottom:2px;
 }
+.bxr-total-link{ text-decoration:none; flex-shrink:0; }
+.bxr-total{
+    width:72px; height:72px; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; transition:background-color .15s; cursor:pointer;
+}
+.bxr-total.bxr-total-active{ background:linear-gradient(135deg,#2563EB,#1D4ED8); }
+.bxr-total.bxr-total-gray{ background:#E4E6EF; }
+.bxr-total-icon{ color:#fff; display:flex; }
+.bxr-total.bxr-total-gray .bxr-total-icon{ color:#7E8299; }
+.bxr-total-icon i{ font-size:16px; }
+.bxr-total-count{ font-size:15px; font-weight:700; color:#fff; line-height:1.2; }
+.bxr-total.bxr-total-gray .bxr-total-count{ color:#3F4254; }
+.bxr-total-label{ font-size:9px; font-weight:500; color:#DBEAFE; text-align:center; line-height:1.2; padding:0 4px; }
+.bxr-total.bxr-total-gray .bxr-total-label{ color:#7E8299; }
 
-/* ── Each tab ─────────────────────────────────── */
-.bxr-stab{
-    display:flex; flex-direction:row;
-    align-items:center; justify-content:center;
-    flex:1;                        /* fill remaining width evenly */
-    min-width:110px;               /* don't shrink below this */
-    height:100%;
-    padding:0 12px;
-    cursor:pointer;
-    transition:background .13s;
-    position:relative;
-    user-select:none;
-    gap:10px;
-    border-bottom:3px solid transparent;
-    margin-bottom:-1.5px;
-}
-/* divider line between every tab */
-.bxr-stab + .bxr-stab::before{
-    content:''; position:absolute; left:0; top:18%; height:64%;
-    width:1px; background:#E8ECF2;
-}
-.bxr-stab:not(.bxr-active):hover{ background:#F5F8FF; }
+.bxr-eq{ font-size:18px; font-weight:600; color:#B5B5C3; flex-shrink:0; }
+.bxr-chevron{ display:flex; color:#C2C5CC; flex-shrink:0; }
+.bxr-chevron svg{ width:16px; height:16px; }
+.bxr-divider{ width:1px; height:44px; background:#E4E6EF; flex-shrink:0; margin:0 4px; }
 
-/* ── ACTIVE pill ──────────────────────────────── */
-.bxr-stab.bxr-active{ border-bottom:3px solid #2563EB; flex:0 0 auto; padding:0 20px; min-width:auto; }
-.bxr-stab.bxr-active .bxr-stab-pill{
-    display:inline-flex; align-items:center; gap:7px;
-    background:#2563EB; color:#fff;
-    padding:9px 20px; border-radius:10px;
-    font-size:14px; font-weight:700; line-height:1;
-    white-space:nowrap;
+.bxr-stage{ text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; cursor:pointer; }
+.bxr-circle{
+    width:60px; height:60px; border-radius:50%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1px; background:#F2F3F7; border:2px solid #E4E6EF;
+    transition:border-color .15s, background-color .15s;
 }
-.bxr-stab.bxr-active .bxr-stab-icon-box,
-.bxr-stab.bxr-active .bxr-stab-right{ display:none !important; }
-
-/* ── INACTIVE tab ─────────────────────────────── */
-.bxr-stab:not(.bxr-active) .bxr-stab-pill{ display:none !important; }
-
-/* Colored icon box */
-.bxr-stab-icon-box{
-    display:none;                   /* shown via :not(.bxr-active) below */
-    width:36px; height:36px;
-    border-radius:10px;
-    align-items:center; justify-content:center;
-    font-size:18px; flex-shrink:0;
+.bxr-circle .bxr-circle-icon{ display:flex; color:#99A1B7; transition:color .15s; font-size:14px; }
+.bxr-circle .bxr-circle-count{ font-size:13px; font-weight:700; color:#5E6278; line-height:1.2; transition:color .15s; }
+.bxr-circle.bxr-c-active{ border-color:var(--bxr-color); background:var(--bxr-bg); }
+.bxr-circle.bxr-c-active .bxr-circle-icon{ color:var(--bxr-color); }
+.bxr-circle.bxr-c-active .bxr-circle-count{ color:var(--bxr-color); }
+.bxr-stage-label{
+    font-size:11px; font-weight:500; color:#7E8299;
+    text-align:center; white-space:nowrap; transition:color .15s, font-weight .15s;
 }
-.bxr-stab:not(.bxr-active) .bxr-stab-icon-box{ display:flex; }
+.bxr-stage-label.bxr-l-active{ font-weight:700; color:#181C32; }
 
-/* Right column */
-.bxr-stab-right{
-    display:none;
-    flex-direction:column; align-items:flex-start; gap:2px;
+@media(max-width:1440px){
+    .bxr-total{ width:64px; height:64px; }
+    .bxr-circle{ width:52px; height:52px; }
 }
-.bxr-stab:not(.bxr-active) .bxr-stab-right{ display:flex; }
-
-.bxr-stab-name{
-    font-size:11px; font-weight:600; color:#64748B;
-    white-space:nowrap; line-height:1;
+@media(max-width:576px){
+    .bxr-flow{ justify-content:flex-start; }
 }
-.bxr-stab-cnt-plain{
-    font-size:17px; font-weight:800; color:#0F172A;
-    line-height:1.1;
-}
-
-/* ── Per-stage icon-box colours ───────────────── */
-.bxr-stab[rel="1"] .bxr-stab-icon-box{ background:#EEEBFF; color:#7C3AED; }  /* Sourcing    purple  */
-.bxr-stab[rel="2"] .bxr-stab-icon-box{ background:#E0F2FE; color:#0284C7; }  /* Screening   sky     */
-.bxr-stab[rel="3"] .bxr-stab-icon-box{ background:#E0F2FE; color:#0EA5E9; }  /* Evaluation  sky     */
-.bxr-stab[rel="4"] .bxr-stab-icon-box{ background:#FEF3C7; color:#D97706; }  /* Negotiation amber   */
-.bxr-stab[rel="5"] .bxr-stab-icon-box{ background:#D1FAE5; color:#059669; }  /* Offer       green   */
-.bxr-stab[rel="6"] .bxr-stab-icon-box{ background:#DCFCE7; color:#16A34A; }  /* Joined      green   */
-.bxr-stab[rel="7"] .bxr-stab-icon-box{ background:#FFE4E6; color:#E11D48; }  /* Rejected    rose    */
 
 /* ══ 5. TABLE AREA ══════════════════════════════ */
 .bxr-tbl-wrap{
@@ -1006,92 +978,58 @@
     </div>
   </div>
 
-  {{-- ══ SECTION 4 · STAGE NAVIGATION ═════════════════ --}}
-  <div class="bxr-stages-wrap">
-    <div class="bxr-stages" id="bxr-stages-row">
+  {{-- ══ SECTION 4 · STAGE PIPELINE FLOW — same connected-circle pattern as
+       AppTracker's Hiring Pipeline card ══ --}}
+  @php
+      $bxrStages = [
+          ['rel'=>'1','label'=>'Sourcing',   'icon'=>'ti-users-group',     'color'=>'#7C3AED','bg'=>'#EEEBFF'],
+          ['rel'=>'2','label'=>'Screening',  'icon'=>'ti-clipboard-list',  'color'=>'#0284C7','bg'=>'#E0F2FE'],
+          ['rel'=>'3','label'=>'Evaluation', 'icon'=>'ti-search',          'color'=>'#0EA5E9','bg'=>'#E0F2FE'],
+          ['rel'=>'4','label'=>'Negotiation','icon'=>'ti-3d-cube-sphere',  'color'=>'#D97706','bg'=>'#FEF3C7'],
+          ['rel'=>'5','label'=>'Offer',      'icon'=>'ti-briefcase',       'color'=>'#059669','bg'=>'#D1FAE5'],
+          ['rel'=>'6','label'=>'Joined',     'icon'=>'ti-circle-check',    'color'=>'#16A34A','bg'=>'#DCFCE7'],
+      ];
+      $bxrRejected = ['rel'=>'7','label'=>'Rejected','icon'=>'ti-circle-x','color'=>'#E11D48','bg'=>'#FFE4E6'];
+  @endphp
+  <div class="bxr-flow-card">
+    <div class="bxr-flow" id="bxr-stages-row">
 
-      {{-- ALL — active default --}}
-      <div class="bxr-stab application_sttus_nav bxr-active" rel="all">
-        <div class="bxr-stab-pill">All <span id="totalcnt">0</span></div>
-        <div class="bxr-stab-icon-box" style="background:#EFF6FF;color:#2563EB;"><i class="ti ti-layout-grid"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">All</div>
-          <div class="bxr-stab-cnt-plain" id="totalcnt_plain">0</div>
+      {{-- ALL / TOTAL — active by default --}}
+      <a class="application_sttus_nav bxr-total-link" href="javascript:void(0);" rel="all">
+        <div class="bxr-total bxr-total-active" data-bxr="all">
+          <span class="bxr-total-icon"><i class="ti ti-layout-grid"></i></span>
+          <span class="bxr-total-count" id="totalcnt">0</span>
+          <span class="bxr-total-label">All</span>
         </div>
-      </div>
+      </a>
+      <span class="bxr-eq">=</span>
 
-      {{-- SOURCING --}}
-      <div class="bxr-stab application_sttus_nav" rel="1">
-        <div class="bxr-stab-pill">Sourcing <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-users-group"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Sourcing</div>
-          <div class="bxr-stab-cnt-plain" id="bg_1">0</div>
+      @foreach($bxrStages as $i => $s)
+        <a class="application_sttus_nav bxr-stage" href="javascript:void(0);" rel="{{ $s['rel'] }}">
+          <div class="bxr-circle" data-bxr="{{ $s['rel'] }}" style="--bxr-color:{{ $s['color'] }};--bxr-bg:{{ $s['bg'] }};">
+            <span class="bxr-circle-icon"><i class="ti {{ $s['icon'] }}"></i></span>
+            <span class="bxr-circle-count" id="bg_{{ $s['rel'] }}">0</span>
+          </div>
+          <div class="bxr-stage-label" data-bxr-label="{{ $s['rel'] }}">{{ $s['label'] }}</div>
+        </a>
+        <span class="bxr-chevron">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+        </span>
+      @endforeach
+
+      <span class="bxr-divider"></span>
+      <a class="application_sttus_nav bxr-stage" href="javascript:void(0);" rel="{{ $bxrRejected['rel'] }}">
+        <div class="bxr-circle" data-bxr="{{ $bxrRejected['rel'] }}" style="--bxr-color:{{ $bxrRejected['color'] }};--bxr-bg:{{ $bxrRejected['bg'] }};">
+          <span class="bxr-circle-icon"><i class="ti {{ $bxrRejected['icon'] }}"></i></span>
+          <span class="bxr-circle-count" id="bg_{{ $bxrRejected['rel'] }}">0</span>
         </div>
-      </div>
+        <div class="bxr-stage-label" data-bxr-label="{{ $bxrRejected['rel'] }}">{{ $bxrRejected['label'] }}</div>
+      </a>
 
-      {{-- SCREENING --}}
-      <div class="bxr-stab application_sttus_nav" rel="2">
-        <div class="bxr-stab-pill">Screening <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-clipboard-list"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Screening</div>
-          <div class="bxr-stab-cnt-plain" id="bg_2">0</div>
-        </div>
-      </div>
-
-      {{-- EVALUATION --}}
-      <div class="bxr-stab application_sttus_nav" rel="3">
-        <div class="bxr-stab-pill">Evaluation <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-search"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Evaluation</div>
-          <div class="bxr-stab-cnt-plain" id="bg_3">0</div>
-        </div>
-      </div>
-
-      {{-- NEGOTIATION --}}
-      <div class="bxr-stab application_sttus_nav" rel="4">
-        <div class="bxr-stab-pill">Negotiation <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-3d-cube-sphere"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Negotiation</div>
-          <div class="bxr-stab-cnt-plain" id="bg_4">0</div>
-        </div>
-      </div>
-
-      {{-- OFFER --}}
-      <div class="bxr-stab application_sttus_nav" rel="5">
-        <div class="bxr-stab-pill">Offer <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-briefcase"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Offer</div>
-          <div class="bxr-stab-cnt-plain" id="bg_5">0</div>
-        </div>
-      </div>
-
-      {{-- JOINED --}}
-      <div class="bxr-stab application_sttus_nav" rel="6">
-        <div class="bxr-stab-pill">Joined <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-circle-check"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Joined</div>
-          <div class="bxr-stab-cnt-plain" id="bg_6">0</div>
-        </div>
-      </div>
-
-      {{-- REJECTED --}}
-      <div class="bxr-stab application_sttus_nav" rel="7">
-        <div class="bxr-stab-pill">Rejected <span>0</span></div>
-        <div class="bxr-stab-icon-box"><i class="ti ti-circle-x"></i></div>
-        <div class="bxr-stab-right">
-          <div class="bxr-stab-name">Rejected</div>
-          <div class="bxr-stab-cnt-plain" id="bg_7">0</div>
-        </div>
-      </div>
-
-    </div>{{-- /bxr-stages --}}
-  </div>{{-- /bxr-stages-wrap --}}
+    </div>{{-- /bxr-flow --}}
+  </div>{{-- /bxr-flow-card --}}
+  {{-- Kept alive only so tableLoad()'s totalcnt_plain write is a harmless no-op-safe target; not shown. --}}
+  <span id="totalcnt_plain" style="display:none;"></span>
 
   {{-- ══ SECTION 5 · TABLE ══════════════════════════════ --}}
   <div class="bxr-tbl-wrap">
@@ -1154,29 +1092,29 @@
 @push('footer-script')
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 
-{{-- ── Stage tab active-state visual (new design) ── --}}
+{{-- ── Pipeline flow active-state visual (AppTracker-style circles) ── --}}
 <script>
-/* Keep pill spans in sync with the plain-count spans updated by AJAX */
+/* totalcnt_plain has no visible target anymore, but tableLoad() still writes
+   to it — keeping this a harmless no-op instead of touching that function. */
 function syncPillCounts(){
-    /* "All" tab: totalcnt is already the #totalcnt span inside the pill */
-    var allVal=$('#totalcnt').text();
-    $('#totalcnt_plain').text(allVal);
-
-    /* Stage tabs 1–7 */
-    [1,2,3,4,5,6,7].forEach(function(n){
-        var val=$('#bg_'+n).text();
-        /* pill span is the last <span> child of .bxr-stab-pill in that tab */
-        $('.bxr-stab[rel="'+n+'"] .bxr-stab-pill span:last').text(val);
-    });
+    $('#totalcnt_plain').text($('#totalcnt').text());
+}
+function bxrSetActiveStage(page){
+    $('.bxr-total').removeClass('bxr-total-active').addClass('bxr-total-gray');
+    $('.bxr-circle').removeClass('bxr-c-active');
+    $('.bxr-stage-label').removeClass('bxr-l-active');
+    if(page==='all'){
+        $('.bxr-total').removeClass('bxr-total-gray').addClass('bxr-total-active');
+    } else {
+        $('.bxr-circle[data-bxr="'+page+'"]').addClass('bxr-c-active');
+        $('.bxr-stage-label[data-bxr-label="'+page+'"]').addClass('bxr-l-active');
+    }
 }
 $(document).ready(function(){
-    var init=$('#stage').val()||'all';
-    $('.bxr-stab').removeClass('bxr-active');
-    $('.bxr-stab[rel="'+init+'"]').addClass('bxr-active');
+    bxrSetActiveStage($('#stage').val()||'all');
 });
-$(document).on('click','.bxr-stab',function(){
-    $('.bxr-stab').removeClass('bxr-active');
-    $(this).addClass('bxr-active');
+$(document).on('click','.application_sttus_nav',function(){
+    bxrSetActiveStage($(this).attr('rel'));
 });
 </script>
 
