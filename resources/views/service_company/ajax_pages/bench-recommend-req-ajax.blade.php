@@ -336,8 +336,12 @@
 
     @endforeach
 @else
-    <div style="text-align:center;padding:48px 16px;color:#94A3B8;">
-        <i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
-        No matching jobs found
+    <div class="rrj-empty">
+        <div class="rrj-empty-icon"><i class="ti ti-briefcase-off"></i></div>
+        <div class="rrj-empty-title">No matching jobs found</div>
+        <div class="rrj-empty-desc">No active client jobs match this candidate's current search and filters. Try widening the skills, location or salary range.</div>
+        <button type="button" class="btn btn-sm btn-light-primary" onclick="if(typeof rrjTagifySkills!=='undefined'){$('#rrj_clear_all').trigger('click');fetchBenchRecommendedReqCandidateList();}">
+            <i class="ti ti-filter-off" style="margin-right:4px;"></i>Clear Filters
+        </button>
     </div>
 @endif

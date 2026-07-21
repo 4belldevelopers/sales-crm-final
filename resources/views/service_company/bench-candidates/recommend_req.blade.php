@@ -177,7 +177,31 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 .rrj-empty-title{ font-size:15px; font-weight:700; color:#181C32; margin-bottom:4px; }
 .rrj-empty-desc{ font-size:12.5px; color:#7E8299; max-width:360px; margin-bottom:16px; }
 
-@media(max-width:900px){ .bxr-hero{ flex-direction:column; } .bxr-sum-row{ flex-direction:column; } }
+/* Job cards rendered by bench-recommend-req-ajax.blade.php (.agency-card et
+   al were never actually styled anywhere in the codebase before this — this
+   is genuinely new, self-contained CSS, not a duplicate of an existing rule). */
+.agencies-list{ display:flex; flex-direction:column; gap:12px; }
+.agency-card{ position:relative; border:1px solid #EEF0F4; border-radius:14px; padding:16px 18px 14px; background:#fff; transition:box-shadow .18s, border-color .18s; overflow:hidden; }
+.agency-card:hover{ box-shadow:0 4px 14px rgba(16,24,40,.07); border-color:#DBEAFE; }
+.bench-badge{ position:absolute; top:0; right:16px; background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:700; padding:3px 10px; border-radius:0 0 8px 8px; }
+.card-content{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; padding-top:6px; }
+.card-left{ display:flex; gap:12px; flex:1 1 320px; min-width:260px; }
+.agency-logo{ width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; flex-shrink:0; }
+.agency-details{ min-width:0; }
+.agency-name.fs-5{ font-size:14px !important; margin-bottom:2px; }
+.agency-name a{ color:inherit; text-decoration:none; }
+.agency-location.fs-6{ font-size:11.5px !important; color:#7E8299 !important; margin-bottom:22px; }
+.agency-tags{ display:flex; flex-wrap:wrap; gap:5px; position:static !important; margin-top:4px; }
+.tag-badge{ font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; background:#F1F5F9; color:#475569; }
+.card-middle{ display:flex; gap:26px; flex-wrap:wrap; padding:2px 0; flex:0 0 auto; }
+.card-middle .metric{ min-width:88px; }
+.card-middle .fs-5{ font-size:12.5px !important; font-weight:700 !important; }
+.card-middle .fs-6{ font-size:10.5px !important; color:#94A3B8 !important; }
+.card-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:auto; flex:0 0 auto; }
+.favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; }
+.favorite-icon:hover{ color:#F43F5E; }
+
+@media(max-width:900px){ .bxr-hero{ flex-direction:column; } .bxr-sum-row{ flex-direction:column; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
 </style>
 @endpush
 
