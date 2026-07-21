@@ -47,27 +47,50 @@
 
     .pkr-mrow-av { width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
     .pkr-mrow-role { font-size: 10px !important; }
-    .pkr-mrow-add { padding: 5px 14px !important; font-size: 11.5px !important; font-weight: 600; }
+    .pkr-mrow-add { padding: 6px 0 !important; font-size: 11.5px !important; font-weight: 600; width: 96px !important; border-radius: 20px !important; display: inline-flex !important; align-items: center; justify-content: center; text-align: center; }
     .pkr-mrow-add.pkr-mrow--added { background: #e8fff3 !important; color: #0f9463 !important; }
     .pkr-empty { font-size: 11.5px; color: #a1a5b7; text-align: center; padding: 18px 4px; }
+
+    .pkr-header { border-bottom: 1px solid #eef0f4; }
+    .pkr-header-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef3ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px; }
+    .pkr-header-ico svg { width: 21px; height: 21px; }
+    .pkr-header-title { font-size: 14px; font-weight: 700; color: #181c32; line-height: 1.3; }
+    .pkr-header-sub { font-size: 11px; color: #7e8299; line-height: 1.4; max-width: 560px; }
 </style>
 
             <div class="card card-custom mx-2">
                 <!--begin::Team header-->
-                <div class="card-header px-5 py-0" id="kt_in_tra_header">
-                    <div class="d-flex align-items-center py-1">
-                        <div class=" d-flex align-items-center">
-
-                             <div class=" d-flex align-items-center"> {!! @$icon !!}
-                              <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light_recruiter_name">{{($panel) ? $client_name : 'Assign Members'}}</a> </div>
+                <div class="card-header px-5 py-4 pkr-header" id="kt_in_tra_header">
+                    <div class="d-flex align-items-center py-1 w-100">
+                        @if($panel)
+                            <div class="d-flex align-items-center flex-grow-1 min-w-0">
+                                <div class="pkr-header-ico">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="m17 11 2 2 4-4"/></svg>
+                                </div>
+                                <div class="d-flex flex-column min-w-0">
+                                    <span class="pkr-header-title" id="light_recruiter_name">Select the Interviewer</span>
+                                    <span class="pkr-header-sub">Choose panel members one at a time — everyone you select will receive an email invite for this interview.</span>
+                                </div>
                             </div>
-
-                            <div class="d-flex flex-column" style="margin-left: 27px;">
+                            <div class="d-flex flex-column flex-shrink-0" style="margin-left: 16px;">
                                 @if($self_company==0)
                                  <a href="javascript:void(0);" class="btn btn-sm btn-primary align-self-center openModalTeam"  data-target="#add_team_member">Add Contact Person</a>
                                 @endif
                             </div>
-                        </div>
+                        @else
+                            <div class=" d-flex align-items-center">
+
+                                 <div class=" d-flex align-items-center"> {!! @$icon !!}
+                                  <div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" id="light_recruiter_name">Assign Members</a> </div>
+                                </div>
+
+                                <div class="d-flex flex-column" style="margin-left: 27px;">
+                                    @if($self_company==0)
+                                     <a href="javascript:void(0);" class="btn btn-sm btn-primary align-self-center openModalTeam"  data-target="#add_team_member">Add Contact Person</a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                         <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
                     </div>
                     <div class="card-toolbar">

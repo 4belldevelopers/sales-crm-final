@@ -119,10 +119,10 @@
 
       @media  only screen and (min-width: 1024px) and (max-width: 1440px)
       {
-        #kt_activitiesIntTeamtra{width: 1025;}
+        #kt_activitiesIntTeamtra{width: 1180px;}
       }
-      @media  only screen and (min-width: 1440px) and (max-width: 2560px){	
-        #kt_activitiesIntTeamtra{width: 1200px;} 
+      @media  only screen and (min-width: 1440px) and (max-width: 2560px){
+        #kt_activitiesIntTeamtra{width: 1380px;}
       }
       #kt_activitiesIntTeamtra{z-index:9999;}
 
