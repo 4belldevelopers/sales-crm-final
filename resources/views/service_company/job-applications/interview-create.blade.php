@@ -25,18 +25,10 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-wrap { font-family: 'Poppins', sans-serif; color: #3f4254; }
     .isd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
 
-    .isd-info-strip { padding: 16px 20px; border-bottom: 1px solid #eef0f4; }
-    .isd-info-card { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; background: #fff; border: 1px solid #eef0f4; border-radius: 12px; padding: 16px 20px; }
-    .isd-info-div { width: 1px; align-self: stretch; min-height: 32px; background: #eef0f4; flex-shrink: 0; }
     .isd-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
-    .isd-info-cand { display: flex; align-items: center; gap: 12px; min-width: 210px; }
-    .isd-info-name { font-size: 14px; font-weight: 700; color: #181c32; }
-    .isd-info-role { font-size: 11.5px; color: #7e8299; margin-top: 2px; }
-    .isd-info-block { display: flex; flex-direction: column; gap: 5px; min-width: 120px; }
-    .isd-info-label { font-size: 10.5px; color: #7e8299; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
-    .isd-info-value { font-size: 13px; font-weight: 700; color: #181c32; }
 
     .isd-body { display: flex; align-items: flex-start; }
+    .isd-body--no-hero { padding-top: 8px; }
     .isd-main { flex: 1 1 66%; min-width: 0; padding: 16px 20px; }
     .isd-sidebar { flex: 0 0 34%; max-width: 320px; padding: 16px; border-left: 1px solid #eef0f4; background: #fbfbfd; }
 
@@ -133,6 +125,10 @@ $country_code =  GeneralMethod::countryCodeFun();
     .isd-quick-row .k { color: #7e8299; display: flex; align-items: center; gap: 6px; }
     .isd-quick-row .k i { color: #a1a5b7; font-size: 14px; width: 14px; }
     .isd-quick-row .v { color: #181c32; font-weight: 700; text-align: right; }
+    .isd-quick-row--stacked { align-items: flex-start; }
+    .isd-quick-v-stacked { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .isd-quick-v-line1 { font-weight: 700; color: #181c32; }
+    .isd-quick-v-line2 { font-weight: 500; color: #7e8299; font-size: 10px; }
 
     .isd-hidden-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
     /* #url_div is the legacy address/link row — the real #url field it wraps still
@@ -253,7 +249,6 @@ $country_code =  GeneralMethod::countryCodeFun();
 
     @php
         $isdFullName = trim(@$application->full_name);
-        $isdInitial = $isdFullName !== '' ? strtoupper($isdFullName[0]) : '?';
 
         // Candidate-proposed interview slots, captured during the candidate's own
         // application submission (job_applications.interviewDateOne..Six /
@@ -273,34 +268,7 @@ $country_code =  GeneralMethod::countryCodeFun();
     @endphp
 
     <div id="div_interview_schedule_first" class="isd-wrap">
-        <div class="isd-info-strip">
-            <div class="isd-info-card">
-                <div class="isd-info-cand">
-                    <div class="isd-avatar bg-light-primary text-primary">{{ $isdInitial }}</div>
-                    <div>
-                        <div class="isd-info-name">{{ ucwords($isdFullName) }}</div>
-                        <div class="isd-info-role">{{ ucwords(@$application->current_designation) }}</div>
-                    </div>
-                </div>
-                <span class="isd-info-div"></span>
-                <div class="isd-info-block">
-                    <span class="isd-info-label">Applied For</span>
-                    <span class="isd-info-value">{{ @$application->job_title }}</span>
-                </div>
-                <span class="isd-info-div"></span>
-                <div class="isd-info-block">
-                    <span class="isd-info-label">Job ID</span>
-                    <span class="isd-info-value">{{ @$application->jobId }}</span>
-                </div>
-                <span class="isd-info-div"></span>
-                <div class="isd-info-block">
-                    <span class="isd-info-label">Current Stage</span>
-                    <span class="badge fw-bolder {{ @$application->master_status_style }} px-2 py-1">{{ trim(@$application->master_status_name) }}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="isd-body">
+        <div class="isd-body isd-body--no-hero">
             <div class="isd-main">
 
                 <!-- Section 1: Interview Details -->
@@ -474,10 +442,17 @@ $country_code =  GeneralMethod::countryCodeFun();
             <div class="isd-sidebar">
                 <div class="isd-card">
                     <div class="isd-sidebar-card-title"><span class="dot" style="background:#ffa800;"></span>Quick Info</div>
+                    <div class="isd-quick-row"><span class="k"><i class="ti ti-id-badge-2"></i>Candidate</span><span class="v" id="isdQuickCandidateName">{{ ucwords($isdFullName) }}</span></div>
                     <div class="isd-quick-row"><span class="k"><i class="ti ti-briefcase"></i>Job ID</span><span class="v">{{ @$application->jobId }}</span></div>
                     <div class="isd-quick-row"><span class="k"><i class="ti ti-list-details"></i>Applied For</span><span class="v">{{ @$application->job_title }}</span></div>
                     <div class="isd-quick-row"><span class="k"><i class="ti ti-star"></i>Current Stage</span><span class="v">{{ trim(@$application->master_status_name) }}</span></div>
-                    <div class="isd-quick-row"><span class="k"><i class="ti ti-user"></i>Source</span><span class="v">{{ @$submitted_by_company }}</span></div>
+                    <div class="isd-quick-row isd-quick-row--stacked">
+                        <span class="k"><i class="ti ti-user"></i>Ownership</span>
+                        <span class="v isd-quick-v-stacked">
+                            <span class="isd-quick-v-line1">{{ @$application->submitted_by_name }}</span>
+                            <span class="isd-quick-v-line2">{{ @$submitted_by_company }}</span>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="isd-card">
@@ -1378,7 +1353,7 @@ $country_code =  GeneralMethod::countryCodeFun();
             return dt.getFullYear() + pad(dt.getMonth() + 1) + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + pad(dt.getMinutes()) + '00';
         }
 
-        var candidateName = $.trim($('.isd-info-name').first().clone().children().remove().end().text()) || 'Candidate';
+        var candidateName = $.trim($('#isdQuickCandidateName').first().text()) || 'Candidate';
         return {
             title: 'Interview: ' + candidateName,
             start: fmt(start),
