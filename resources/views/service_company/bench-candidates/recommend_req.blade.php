@@ -1,1168 +1,828 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-<link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
-
 <style>
-@media only screen and (min-width: 900px) and (max-width: 2560px){
-  .table td, .table th, .table tr
-  {width: max-content!important;}
-  .table > :not(caption) > * > *
-  { padding: 0rem; }
-  td:nth-child(n+2),
-  th:nth-child(n+2)
-  { width: revert!important;}
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesJob {width: 1025px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesJob {width: 1200px;}
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesClientjob_toggle {width: 1025px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesClientjob_toggle {width: 1200px;}
-}
-.table-custom-class tbody tr {
-    height: 82px;
-    position: relative;
-}
+/* ═══════════════════════════════════════════════
+   RECOMMENDED CLIENT JOBS — AppTracker-pattern redesign (rrj-)
+═══════════════════════════════════════════════ */
+#kt_content{ margin-top:-70px !important; }
+.rrj-page{ font-family:'Poppins',sans-serif; background:#F2F4F8; min-height:100vh; padding:18px 0 40px; }
+.rrj-page *{ font-family:'Poppins',sans-serif; box-sizing:border-box; }
 
-.selectednotice {
-            background-color: #007bff !important; /* Example color */
-            color: white !important;
-        }
-.tagify__tag {
-            display: flex;
-            align-items: center;
-        }
-        .tagify__tag .star {
-            margin-left: 5px;
-            cursor: pointer;
-            font-size: 21px;
-            position: relative;
-            top: -5px;
-        }
-        .tagify__tag .star.checked {
-            color: #ef1632;
-        }
+/* ══ 1. PROFILE HERO ════════════════════════════ */
+.rrj-hero{ background:#fff; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #F0F2F5; margin-bottom:4px; }
+.rrj-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
+.rrj-avatar{ width:64px; height:64px; border-radius:16px; object-fit:cover; border:3px solid #E8EDF5; }
+.rrj-avatar-init{ width:64px; height:64px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; flex-shrink:0; }
+.rrj-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0 0 3px; }
+.rrj-role{ font-size:12px; font-weight:600; color:#374151; margin:0 0 6px; }
+.rrj-meta-line{ display:flex; flex-wrap:wrap; gap:16px; }
+.rrj-meta-item{ display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:#64748B; }
+.rrj-meta-item i{ font-size:13px; color:#94A3B8; }
 
+/* ══ 2. TABS (Pool Jobs / Recommend Client Jobs / Recommend Internal Jobs) ══ */
+.rrj-tabs{ display:flex; align-items:center; gap:0; flex-shrink:0; flex-wrap:wrap; }
+.rrj-tab{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 20px; text-decoration:none; position:relative; }
+.rrj-tab+.rrj-tab::before{ content:''; position:absolute; left:0; top:15%; height:70%; width:1px; background:#E5E9F0; }
+.rrj-tab-name{ font-size:12px; font-weight:600; color:#64748B; white-space:nowrap; }
+.rrj-tab-count{ font-size:17px; font-weight:800; color:#0F172A; line-height:1.1; }
+.rrj-tab.rrj-tab-active .rrj-tab-name{ color:#2563EB; }
+.rrj-tab.rrj-tab-active .rrj-tab-count{ color:#2563EB; }
+.rrj-tab.rrj-tab-active{ border-bottom:3px solid #2563EB; }
+
+/* ══ 3. TOOLBAR — search / sort / filter (AppTracker plf-/simf- pattern) ══ */
+.rrj-toolbar-card{ background:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #F0F2F5; margin-bottom:16px; flex-wrap:wrap; }
+.rrj-search-wrap{ flex:1; min-width:220px; position:relative; }
+.rrj-search-icon{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#CBD5E1; display:flex; }
+.rrj-search-input{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; padding:0 16px 0 42px; font-size:13px; font-weight:500; color:#334155; background:#F8FAFC; outline:none; font-family:'Poppins',sans-serif; transition:border-color .18s, box-shadow .18s; }
+.rrj-search-input:focus{ border-color:#2563EB; background:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.07); }
+.rrj-sort-wrap{ position:relative; width:200px; flex-shrink:0; }
+.rrj-sort-btn{ width:100%; height:44px; border:1.5px solid #E5E9F0; border-radius:10px; background:#F8FAFC; padding:0 12px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:#334155; cursor:pointer; }
+.rrj-sort-btn svg{ flex-shrink:0; color:#94A3B8; }
+.rrj-sort-btn .arrow{ margin-left:auto; transition:transform .15s; color:#94A3B8; }
+.rrj-sort-btn.open .arrow{ transform:rotate(180deg); }
+.rrj-sort-panel{ position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50; background:#fff; border:1px solid #E5E9F0; border-radius:10px; box-shadow:0 8px 24px rgba(15,23,42,.09); padding:6px; max-height:260px; overflow-y:auto; }
+.rrj-sort-item{ padding:9px 12px; font-size:12.5px; font-weight:500; color:#374151; border-radius:7px; cursor:pointer; }
+.rrj-sort-item:hover{ background:#F5F8FF; }
+.rrj-sort-item.active{ background:#EFF6FF; color:#2563EB; font-weight:700; }
+.rrj-filter-btn{ height:44px; padding:0 16px; border:1.5px solid #E5E9F0; border-radius:10px; background:#fff; color:#374151; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; position:relative; flex-shrink:0; }
+.rrj-filter-btn:hover{ border-color:#2563EB; color:#2563EB; }
+.rrj-count-badge{ font-size:10px; }
+
+/* ══ 4. LOADING SPINNER — viewport-fixed, same as AppTracker's ══ */
+.loadingMessagebenchCandidateRecommendedReqAjax{ display:none; position:fixed; inset:0; z-index:1050; align-items:center; justify-content:center; background:rgba(255,255,255,.55); }
+.loadingMessagebenchCandidateRecommendedReqAjax .spinner-border{ width:2.75rem; height:2.75rem; }
+
+/* ══ 5. FILTER DRAWER (rrj-) ══════════════════════════════════ */
+.rrj-drawer{ background:#fff; }
+.rrj-card{ display:flex; flex-direction:column; }
+.rrj-header{ display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid #F0F2F5; flex-shrink:0; }
+.rrj-header-icon{ width:40px; height:40px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-title{ font-size:16px; font-weight:700; color:#181c32; margin:0; }
+.rrj-subtitle{ font-size:12px; color:#94A3B8; margin:2px 0 0; }
+.rrj-close{ width:34px; height:34px; border-radius:9px; border:1px solid #E5E9F0; background:#fff; color:#64748B; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.rrj-close:hover{ background:#F8FAFC; }
+.rrj-body{ padding:0 24px; overflow-y:auto; }
+.rrj-section{ padding:18px 0; border-bottom:1px solid #F5F7FA; }
+.rrj-section-last{ border-bottom:none; }
+.rrj-section-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.rrj-icon{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-icon-blue{ background:#EFF6FF; color:#2563EB; }
+.rrj-icon-green{ background:#ECFDF5; color:#059669; }
+.rrj-icon-amber{ background:#FFFBEB; color:#B45309; }
+.rrj-icon-purple{ background:#F5F3FF; color:#7C3AED; }
+.rrj-icon-rose{ background:#FDF2F8; color:#BE185D; }
+.rrj-section-title{ font-size:13.5px; font-weight:700; color:#181c32; }
+.rrj-section-desc{ font-size:11.5px; color:#94A3B8; margin-top:1px; }
+.rrj-mini-label{ font-size:11px; font-weight:600; color:#64748B; margin-bottom:4px; display:block; }
+.rrj-pill-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.rrj-pill-row .btn-check{ position:absolute; opacity:0; pointer-events:none; }
+.rrj-pill-row label{ margin:0; cursor:pointer; min-width:88px; }
+.rrj-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; border-top:1px solid #F0F2F5; flex-shrink:0; background:#fff; }
+.rrj-footer-count{ display:flex; align-items:center; gap:10px; }
+.rrj-footer-icon{ width:38px; height:38px; border-radius:10px; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rrj-footer-number{ font-size:16px; font-weight:800; color:#181c32; line-height:1.1; }
+.rrj-footer-label{ font-size:11px; color:#94A3B8; }
+.rrj-footer-actions{ display:flex; gap:8px; }
+
+/* Skills Tagify — mandatory star (kept from the legacy modal, restyled) */
+.tagify__tag{ display:flex; align-items:center; }
+.tagify__tag .star{ margin-left:5px; cursor:pointer; font-size:16px; position:relative; top:-1px; color:#CBD5E1; }
+.tagify__tag .star.checked{ color:#EF1632; }
+
+/* ══ 6. RESULTS CARD LIST — agency-card container ══ */
+.rrj-results-wrap{ background:#fff; border-radius:14px; border:1px solid #EEF0F4; padding:16px; }
+
+@media(max-width:900px){
+    .rrj-hero{ flex-direction:column; }
+    .rrj-tabs{ width:100%; }
+}
 </style>
-<link href="{{ asset('demo/css/styleNew.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 @endpush
 
 @section('content')
 
-<div class="toolbar" id="kt_toolbar">
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-   
-      @php 
-              
+{{-- ── Hidden compat: keep #inputSearch / #status alive purely because
+     fetchBenchRecommendedReqCandidateList() still reads them (always empty/
+     'active' in practice — same as before this redesign) ── --}}
+<div aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;z-index:-9;">
+    <input type="hidden" id="inputSearch" value="">
+</div>
 
-            $bench_explore_url = url('service_company/bench-candidates/bench_explore/') .'/'. @$bench_detail->id . '/all';
-            $recommend_req_url = url('service_company/bench-candidates/recommend_req/') .'/'. @$bench_detail->id;
-            $recommend_internal_req = url('service_company/bench-candidates/recommend_internal_req/') .'/'. @$bench_detail->id;
-            $tabactive = [
-            'bench_explore_pool_active'=>'',
-            'bench_explore_pool_url'=> $bench_explore_url,
-            'bench_explore_pool_id'=>'bench_explore_pool_id',
-            'bench_explore_counter' =>$recomCount['bench_explore_counter'],
-            'recommend_req_active'=>'tabactive',
-            'recommend_req_url'=>$recommend_req_url,
-            'recommend_req_id'=>'recommend_req_id',
-            'recommend_req_counter' =>$recomCount['recommend_req_counter'],
-            'recommend_req_internal_active'=>'',
-            'recommend_req_internal_url'=>$recommend_internal_req,
-            'recommend_req_internal_id'=>'recommend_req_internal_id',
-            'recommend_req_internal_counter' =>$recomCount['recommend_internal_req_counter'],
-            ];
-              
-      @endphp 
+@php
+    $rrj_bench_explore_url = url('service_company/bench-candidates/bench_explore/') . '/' . @$bench_detail->id . '/all';
+    $rrj_recommend_req_url = url('service_company/bench-candidates/recommend_req/') . '/' . @$bench_detail->id;
+    $rrj_recommend_internal_url = url('service_company/bench-candidates/recommend_internal_req/') . '/' . @$bench_detail->id;
+@endphp
 
-      @include('sections.service_company.bench-toolbar',['job' => @$job,'bench_detail'=>@$bench_detail])
+@if(in_array('view_jobs', $userPermissions))
+<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+ <div class="post d-flex flex-column-fluid" id="kt_post">
+  <div id="kt_content_container" class="container-fluid px-0">
+  <div class="rrj-page">
 
-    <form action="" id="filter-form" style="">
-      @csrf
-			<input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
-			<input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />			 
-      <div class="d-flex align-items-center py-1">        
-        <div class="d-flex align-items-center position-relative my-1 me-3">
-          <input type="hidden" id="inputSearch" class="form-control form-control-solid w-250px ps-14" style="padding: .6rem 1rem;" placeholder="Search..." />
-        </div>        
-        <div class="card-toolbar">
-            <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-              <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 d-none" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                <span class="svg-icon svg-icon-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black" />
-                  </svg>
-                </span>
-				Filter
-              </button>
-              <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 d-none" data-bs-toggle="modal" data-bs-target="#kt_modal_export_users">
-              <span class="svg-icon svg-icon-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect opacity="0.3" x="12.75" y="4.25" width="12" height="2" rx="1" transform="rotate(90 12.75 4.25)" fill="black" />
-                  <path d="M12.0573 6.11875L13.5203 7.87435C13.9121 8.34457 14.6232 8.37683 15.056 7.94401C15.4457 7.5543 15.4641 6.92836 15.0979 6.51643L12.4974 3.59084C12.0996 3.14332 11.4004 3.14332 11.0026 3.59084L8.40206 6.51643C8.0359 6.92836 8.0543 7.5543 8.44401 7.94401C8.87683 8.37683 9.58785 8.34458 9.9797 7.87435L11.4427 6.11875C11.6026 5.92684 11.8974 5.92684 12.0573 6.11875Z" fill="black" />
-                  <path d="M18.75 8.25H17.75C17.1977 8.25 16.75 8.69772 16.75 9.25C16.75 9.80228 17.1977 10.25 17.75 10.25C18.3023 10.25 18.75 10.6977 18.75 11.25V18.25C18.75 18.8023 18.3023 19.25 17.75 19.25H5.75C5.19772 19.25 4.75 18.8023 4.75 18.25V11.25C4.75 10.6977 5.19771 10.25 5.75 10.25C6.30229 10.25 6.75 9.80228 6.75 9.25C6.75 8.69772 6.30229 8.25 5.75 8.25H4.75C3.64543 8.25 2.75 9.14543 2.75 10.25V19.25C2.75 20.3546 3.64543 21.25 4.75 21.25H18.75C19.8546 21.25 20.75 20.3546 20.75 19.25V10.25C20.75 9.14543 19.8546 8.25 18.75 8.25Z" fill="#C4C4C4" />
-                </svg>
+  {{-- ══ SECTION 1 · PROFILE HERO + TABS ══════════════════════ --}}
+  <div class="rrj-hero">
+    <div class="rrj-hero-left">
+      @php
+        $rrjCandName = ucwords(@$bench_detail->full_name ?? 'Candidate');
+        $rrjInitLtr  = strtoupper(substr($rrjCandName,0,1));
+      @endphp
+      <div class="rrj-avatar-init">{{ $rrjInitLtr }}</div>
+      <div>
+        <div class="rrj-name">{{ $rrjCandName }}</div>
+        <div class="rrj-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</div>
+        <div class="rrj-meta-line">
+          @if(@$bench_detail->total_exp || @$bench_detail->rel_exp)
+          <span class="rrj-meta-item"><i class="ti ti-clock"></i>{{ @$bench_detail->total_exp }}-{{ @$bench_detail->rel_exp }} Yrs</span>
+          @endif
+          <span class="rrj-meta-item">
+            <span style="color:#94A3B8;">Bench ID:</span>&nbsp;<span style="font-weight:700;color:#1A56DB;">B-{{ @$bench_detail->id }}</span>
+          </span>
+          @if(@$bench_detail->city_name)
+          <span class="rrj-meta-item"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</span>
+          @endif
+        </div>
+      </div>
+    </div>
+
+    <div class="rrj-tabs">
+      <a href="{{ $rrj_bench_explore_url }}" class="rrj-tab">
+        <span class="rrj-tab-name">Pool Jobs</span>
+        <span class="rrj-tab-count" id="bench_explore_pool_id">{{ $recomCount['bench_explore_counter'] ?? 0 }}</span>
+      </a>
+      <a href="{{ $rrj_recommend_req_url }}" class="rrj-tab rrj-tab-active">
+        <span class="rrj-tab-name">Recommend Client Jobs</span>
+        <span class="rrj-tab-count" id="recommend_req_id">{{ $recomCount['recommend_req_counter'] ?? 0 }}</span>
+      </a>
+      <a href="{{ $rrj_recommend_internal_url }}" class="rrj-tab">
+        <span class="rrj-tab-name">Recommend Internal Jobs</span>
+        <span class="rrj-tab-count" id="recommend_req_internal_id">{{ $recomCount['recommend_internal_req_counter'] ?? 0 }}</span>
+      </a>
+    </div>
+  </div>
+
+  {{-- ══ SECTION 2 · SEARCH / SORT / FILTER TOOLBAR ═══ --}}
+  <div class="rrj-toolbar-card">
+    <div class="rrj-search-wrap">
+      <span class="rrj-search-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </span>
+      <input type="text" id="kt_tagify_2" class="rrj-search-input" placeholder="Search by job title, company or recruiter..." autocomplete="off">
+    </div>
+
+    <div class="rrj-sort-wrap" id="rrj_sort_wrap">
+      <button type="button" class="rrj-sort-btn" id="rrj_sort_btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+        <span id="rrj_sort_label">Best Match</span>
+        <svg class="arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <select id="hiringtype" style="display:none;">
+        <option value="10" selected>Best Match</option>
+        <option value="1">Newest to Oldest (Date)</option>
+        <option value="2">Oldest to Newest (Date)</option>
+        <option value="3">Low to High (Salary)</option>
+        <option value="4">High to Low (Salary)</option>
+      </select>
+      <div class="rrj-sort-panel d-none" id="rrj_sort_panel"></div>
+    </div>
+
+    <button type="button" id="rrj_filter_toggle" class="btn rrj-filter-btn position-relative">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+      <span>Filter</span>
+      <span class="badge badge-circle badge-primary rrj-count-badge d-none" id="rrj_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+    </button>
+  </div>
+
+  {{-- ══ Filter Drawer ══════════════════════════════════════════ --}}
+  <div id="rrj_filter_drawer" class="bg-body rrj-drawer" data-kt-drawer="true" data-kt-drawer-name="rrj-filter"
+      data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+      data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'80%'}" data-kt-drawer-direction="end"
+      data-kt-drawer-toggle="#rrj_filter_toggle" data-kt-drawer-close="#rrj_filter_close">
+    <div id="rrj_card" class="card shadow-none rounded-0 w-100 h-100 rrj-card">
+      <div class="rrj-header">
+        <div class="d-flex align-items-center gap-3">
+          <span class="rrj-header-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+          </span>
+          <div>
+            <h3 class="rrj-title">Filter Jobs</h3>
+            <p class="rrj-subtitle">Narrow down jobs matching this candidate</p>
+          </div>
+        </div>
+        <button type="button" class="rrj-close" id="rrj_filter_close" title="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="rrj-body">
+        <form id="createSchedule" class="ajax-form" method="post" onsubmit="return false;">
+
+          {{-- Skills/Keywords --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5H9ZM9 4.5H7.5A1.5 1.5 0 0 0 6 6v13.5A1.5 1.5 0 0 0 7.5 21h9a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H15M9 12l2 2 4-4"/></svg>
               </span>
-              Export</button>
+              <div>
+                <div class="rrj-section-title">Skills / Keywords</div>
+                <div class="rrj-section-desc">Click the star on a skill to make it mandatory</div>
+              </div>
+            </div>
+            <input class="form-control form-control-solid" name="kt_tagify_users" value="{{ @$default_skill }}" id="kt_tagify_users" placeholder="Add a skill or keyword" />
+          </div>
+
+          {{-- Location --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              <div>
+                <div class="rrj-section-title">Job Location</div>
+                <div class="rrj-section-desc">City, state or country</div>
+              </div>
+            </div>
+            <input class="form-control form-control-solid" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Enter location..." />
+          </div>
+
+          {{-- Experience --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-amber">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+              </span>
+              <div>
+                <div class="rrj-section-title">Experience</div>
+                <div class="rrj-section-desc">Required experience range, in years</div>
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="rrj-mini-label">Minimum</label>
+                <select class="form-select form-select-solid" name="min_exp" id="min_exp">
+                  <option value="" @if(@$min_exp==='' || @$min_exp===null) selected @endif>Select Experience</option>
+                  <option value="0" @if(0==@$min_exp) selected @endif>Freshers</option>
+                  @for($i=1; $i<=30; $i++)
+                  <option value="{{ $i }}" @if($i==@$min_exp) selected @endif>{{ $i }} Year{{ ($i>=1) ? 's' : '' }}</option>
+                  @endfor
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="rrj-mini-label">Maximum</label>
+                <select class="form-select form-select-solid" name="max_exp" id="max_exp">
+                  <option value="" @if(@$max_exp==='' || @$max_exp===null) selected @endif>Select Experience</option>
+                  <option value="0" @if(0==@$max_exp) selected @endif>Freshers</option>
+                  @for($i=1; $i<=30; $i++)
+                  <option value="{{ $i }}" @if($i==@$max_exp) selected @endif>{{ $i }} Year{{ ($i>=1) ? 's' : '' }}</option>
+                  @endfor
+                </select>
+              </div>
             </div>
           </div>
-      </div>
-	  </form>	  
-  </div>
-</div>
-<!--end::Toolbar-->
 
-<!--begin::Content-->
+          {{-- Salary --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-purple">
+                <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
+              </span>
+              <div>
+                <div class="rrj-section-title">Salary</div>
+                <div class="rrj-section-desc">Offered salary range for the job</div>
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-3">
+                <label class="rrj-mini-label">Currency</label>
+                <select class="form-select form-select-solid" name="min_salary_currency" id="min_salary_currency">
+                  <option value="">Any</option>
+                  <option value="0" @if(0==@$min_salary_currency) selected @endif>INR</option>
+                  <option value="1" @if(1==@$min_salary_currency) selected @endif>EUR</option>
+                  <option value="2" @if(2==@$min_salary_currency) selected @endif>JPY</option>
+                  <option value="3" @if(3==@$min_salary_currency) selected @endif>GBP</option>
+                  <option value="4" @if(4==@$min_salary_currency) selected @endif>USD</option>
+                  <option value="5" @if(5==@$min_salary_currency) selected @endif>AED</option>
+                </select>
+              </div>
+              <div class="col-3">
+                <label class="rrj-mini-label">Mode</label>
+                <select class="form-select form-select-solid" name="sal_mode" id="sal_mode">
+                  <option value="">Any</option>
+                  <option value="0" @if(0==@$min_sal_mode) selected @endif>Annual</option>
+                  <option value="1" @if(1==@$min_sal_mode) selected @endif>Monthly</option>
+                  <option value="2" @if(2==@$min_sal_mode) selected @endif>Hourly</option>
+                </select>
+              </div>
+              <div class="col-3">
+                <label class="rrj-mini-label">Min</label>
+                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ @$min_salary }}">
+              </div>
+              <div class="col-3">
+                <label class="rrj-mini-label">Max</label>
+                <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ @$max_salary }}">
+              </div>
+            </div>
+          </div>
+
+          {{-- Hiring Type --}}
+          <div class="rrj-section">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-rose">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6m-9 0h12A1.5 1.5 0 0 1 19.5 7.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V7.5A1.5 1.5 0 0 1 6 6Zm-1.5 5.25h15"/></svg>
+              </span>
+              <div>
+                <div class="rrj-section-title">Hiring Type</div>
+                <div class="rrj-section-desc">Full-time or contract roles</div>
+              </div>
+            </div>
+            <div class="rrj-pill-row">
+              <div>
+                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="" id="app_int_outsource1" checked>
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource1">All</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="0" id="app_int_outsource2">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource2">Fulltime</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="1" id="app_int_outsource3">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_outsource3">Contract</label>
+              </div>
+            </div>
+          </div>
+
+          {{-- Activity --}}
+          <div class="rrj-section rrj-section-last">
+            <div class="rrj-section-head">
+              <span class="rrj-icon rrj-icon-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
+              </span>
+              <div>
+                <div class="rrj-section-title">Activity</div>
+                <div class="rrj-section-desc">How recently the job was posted/updated</div>
+              </div>
+            </div>
+            <div class="rrj-pill-row">
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked>
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity1">All</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity2">30 Days</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity3">60 Days</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity4">90 Days</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity5">180 Days</label>
+              </div>
+              <div>
+                <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
+                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="app_int_activity6">1 Year</label>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <div class="rrj-footer">
+        <div class="rrj-footer-count">
+          <span class="rrj-footer-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9m0 10h9M4 7h1m0 0v10m0 0h1M4 12h6"/></svg>
+          </span>
+          <div>
+            <div class="rrj-footer-number" id="rrj_footer_number">0</div>
+            <div class="rrj-footer-label">Jobs Match</div>
+          </div>
+        </div>
+        <div class="rrj-footer-actions">
+          <button type="button" class="btn btn-sm btn-light" id="rrj_reset_btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="rrj_apply_btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ══ SECTION 3 · RESULTS ═══════════════════════════════════ --}}
+  <div class="loadingMessage loadingMessagebenchCandidateRecommendedReqAjax">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+
+  <div class="rrj-results-wrap">
+    <div class="agencies-list" id="benchCandidateRecommendedReqAjax"></div>
+    <div id="paginationbenchCandidateRecommendedReq"></div>
+  </div>
+
+  </div>{{-- /rrj-page --}}
+  </div>
+ </div>
+</div>
+@else
 <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <div id="kt_content_container" class="container-fluid px-3">
-
-      <div id="" class="container-fluid d-flex second_header">
-          @include('sections.service_company.benchExploreHeader',['tabactive'=>$tabactive])
-      </div>
-
-
-      <div class="card">
-      <div class="card-body pt-3 px-5"> 
-      
-        <div class="d-flex align-items-center flex-wrap">
-          <div class="col-lg-4 d-flex align-items-center px-2" style="width:65%;position: relative;">
-                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="{{ @$default_skill }}" placeholder="Search..." id="kt_tagify_2" />
-                <div data-toggle="modal" data-target="#apptrackerfilter" style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
-          </div>
-          <div class="col-lg-2 d-flex align-items-center px-2 d-none" style="width: 15%;">
-            <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="status"  data-dropdown-css-class="w-150px" data-placeholder="Select an option" data-kt-table-widget-3="filter_status" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-              <option value="active" selected="selected">Active</option>  
-            </select>
-          </div>
-          <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-            <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="hiringtype" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdata()">
-              <option value="">Sort</option>
-              <option value="1" selected="selected">Newest to Oldest (Date)</option>
-              <option value="2">Oldest to Newest (Date)</option>
-              <option value="3">Low to High (Salary)</option>
-              <option value="4">High to Low (Salary)</option>
-            </select>
-          </div>
-          <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-            <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end" data-toggle="modal" data-target="#apptrackerfilter">
-              <span class="svg-icon svg-icon-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"></path>
-                  </svg>
-              </span>
-              Filter
-            </button>
-          </div>
-        </div>
-
-
-             <!--Start Popup-->
-             <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-              <div class="modal-dialog modal-dialog-centered modal-lg">
-                 <div class="modal-content">
-                    <div class="modal-header flex-stack">
-                       <h2>Filter</h2>
-                       <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="apptrackerfilter_close">
-                          <span class="svg-icon svg-icon-1">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" ></rect>
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" ></rect>
-                             </svg>
-                          </span>
-                       </div>
-                    </div>
-                    <div class="apptrackerfilter_body_content" id="">
-                       <div class="modal-body" style="padding: 2em;">
-                          <form id="createSchedule" class="ajax-form" method="post">
-                              <div class="d-flex flex-column mb-8">
-                                    <label class="form-label required">Skills/Keywords</label>
-                                    <input class="form-control form-control-solid d-flex align-items-center" name="kt_tagify_users" value="{{ @$default_skill }}" placeholder="" id="kt_tagify_users" />
-                                    
-                                    
-                                <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-                                <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
-                                    <script>
-                                        const inputElm = document.querySelector('#kt_tagify_users');
-    
-                                            const tagify = new Tagify(inputElm, {
-                                                templates: {
-                                                    tag: function(tagData) {
-                                                        tagData = tagData || {};
-                                                        const value = tagData.value || '';
-                                                        const isChecked = tagData.checked ? 'checked' : '';
-                                                        return `
-                                                            <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                                                                <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                                <div>
-                                                                    <span class="star ${isChecked}">🟌</span>
-                                                                    <span class="tagify__tag-text">${value}</span>
-                                                                </div>
-                                                            </tag>
-                                                        `;
-                                                    }
-                                                },
-                                                transformTag: function(tagData) {
-                                                    tagData.checked = tagData.checked || false;
-                                                    return tagData;
-                                                }
-                                            });
-    
-                                          // Add event listener for star click
-                                          document.addEventListener('click', function(e) {
-                                              if (e.target.classList.contains('star')) {
-                                                  const tagElm = e.target.closest('.tagify__tag');
-                                                  const value = tagElm.querySelector('.tagify__tag-text').textContent;
-                                                  
-                                                  e.target.classList.toggle('checked');
-                                                  
-                                                  // Update the tag data
-                                                  const tagData = tagify.value.find(tag => tag.value === value);
-                                                  if (tagData) {
-                                                      tagData.checked = e.target.classList.contains('checked');
-                                                      tagify.updateValueByDOMTags();
-                                                  }
-                                              }
-                                          });
-    
-    
-    
-                                          // Initialize Tagify for kt_tagify_2
-                                          const inputJobSearch = document.querySelector('#kt_tagify_2');
-                                          // const tagify2 = new Tagify(inputJobSearch);
-                                          const tagify2 = new Tagify(inputJobSearch, {
-                                              maxTags: 6  // Limit the number of tags to 5
-                                          });
-    
-                                          // Function to update inputJobSearch based on tagify's value
-                                          function updateInputJobSearch() {
-                                              const tags = tagify.value.map(tag => tag.value).join(',');
-                                              inputJobSearch.value = tags;
-                                              autoclickstar();
-                                          }
-    
-                                          function updateTagifyUsers() {
-                                              const newTags = inputJobSearch.value.split(',').map(tag => ({ value: tag.trim() }));
-                                              tagify.removeAllTags();
-                                              tagify.addTags(newTags);
-                                          }
-    
-    
-                                          // Listen for tag removal
-                                          tagify.on('add', updateInputJobSearch);
-                                          tagify.on('remove', updateInputJobSearch);
-                                          inputJobSearch.addEventListener('change', updateTagifyUsers);
-    
-                                          // Initial sync
-                                          updateInputJobSearch();
-    
-                                          // Sync tagify_users with inputJobSearch
-                                          inputJobSearch.addEventListener('change', function() {
-                                              const newTags = inputJobSearch.value.split(',').map(tag => ({ value: tag.trim() }));
-                                              tagify.loadOriginalValues(newTags);
-                                          });
-
-                                          function autoclickstar(){
-                                        setTimeout(() => {
-                                          var starElement = document.querySelector('.star');
-                                          starElement.click();
-                                          setTimeout(() => {
-                                            starElement.click();
-                                          }, 200);
-                                        }, 500);
-                                      }
-
-                                                function debounceskill(func, delay) {
-                                                    let timeoutskill;
-                                                    return function(...args) {
-                                                        clearTimeout(timeoutskill);
-                                                        timeoutskill = setTimeout(() => func.apply(this, args), delay);
-                                                    };
-                                                }
-
-                                                 const fetchSuggestionsSkills = debounceskill(function(query) {
-                                                    $.ajax({
-                                                        url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-                                                        method: 'GET',
-                                                        success: function(data) {
-                                                            console.warn("Fetched Skill: ", data);
-
-                                                            if (Array.isArray(data)) {
-                                                                tagify.settings.whitelist = data; // Update whitelist
-                                                                // tagify.dropdown.show(query); // Show suggestions
-                                                                tagify.dropdown.show.call(tagify);
-                                                            } else {
-                                                                console.error("Invalid API response format: Expected array.");
-                                                            }
-                                                        },
-                                                        error: function(err) {
-                                                            console.error("Error fetching Skill:", err);
-                                                        }
-                                                    });
-                                                }, 200); 
-
-                                                // Listen for user input to trigger API call
-                                                tagify.on('input', function(e) {
-                                                    var query = e.detail.value.trim();
-                                                    if (query.length < 1) return;
-                                                    fetchSuggestionsSkills(query);
-                                                });
-    
-    
-    
-                                        // new Tagify(inputElm);   
-                                            
-                                    </script>
-                                    <!--<textarea class="form-control form-control-solid" rows="4" name="" placeholder="Enter your Skills/Keywords..."></textarea>-->
-                                </div>
-    
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                  <div class="d-flex flex-column mb-3 fv-row">
-                                        <label class="form-label">Current location of Candidate</label>
-                                        <input class="form-control form-control-solid" value="{{ $default_loc }}" id="kt_tagify_location" placeholder="Enter your Location..."/>
-                                      <!--<input class="form-control form-control-solid" value="" name="tags" placeholder="Enter your Location...">-->
-                                      <script>
-                                          // The DOM elements you wish to replace with Tagify
-                                          var inputloc = document.querySelector("#kt_tagify_location");
-                                          var cities = @json($cities);
-                                          
-                                          // Initialize Tagify script on the above inputs
-                                          var tagifylocation =  new Tagify(inputloc, {
-                                            whitelist: cities,
-                                              maxTags: 10,
-                                              dropdown: {
-                                                  maxItems: 20,           // <- mixumum allowed rendered suggestions
-                                                  classname: "", // tagify__inline__suggestions <- custom classname for this dropdown, so it could be targeted
-                                                  enabled: 0,             // <- show suggestions on focus
-                                                  closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
-                                              }
-                                          });
-
-                                          inputloc.addEventListener('keydown', function(e) {
-                                              if (e.key === "Enter") {
-                                                  e.preventDefault(); // Prevents the default behavior of adding a tag
-                                              }
-                                          });
-
-                                           // Prevent creating tags on blur or enter key
-                                           tagifylocation.on('input', function(e) {
-                                            tagifylocation.dropdown.show(); // show the dropdown immediately
-                                            });
-
-                                            // Create tags only on select
-                                            tagifylocation.on('dropdown:select', function(e) {
-                                              tagifylocation.addTags([e.detail.data.value]);
-                                            });
-                                      </script>
-                                  </div>
-                                  <div class="d-flex d-none">
-                                      <div class="fw-semibold me-5 d-flex">
-                                          <input class="form-check-input h-20px w-20px mr-2" type="checkbox" name="communication[]" value="email" checked="checked">
-                                          <div class="fs-7 text-muted">Include Candidate who prefer to relocate</div>
-                                      </div>
-                                  </div>
-                              </div>
-                                      
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                    <div class="col-lg-6">
-                                      <label class="form-label required">Minimum Experience in years:</label>
-                                      <select class="form-select form-select-solid" name="min_exp" id="min_exp">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0" {{ (0==$min_exp) ? 'selected' : '' }}>Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}" {{ ($i==$min_exp) ? 'selected' : '' }}>{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                    
-                                      </select>
-                                      <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                      <label class="form-label required">Maximum Experience in years:</label>
-                                      <select class="form-select form-select-solid" name="max_exp" id="max_exp">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0" {{ (0==$max_exp) ? 'selected' : '' }}>Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}" {{ ($i==$max_exp) ? 'selected' : '' }}>{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                                
-                                       </select>
-                                      <div class="fv-plugins-message-container" id="experience_error" style="color: red !important;text-align: center;"></div>
-                                    </div>
-                                </div>    
-                                    
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                    <div class="col-lg-12">
-                                        <div class="row">
-                                                    
-                                                    <div class="col-lg-4">
-                                                        <div class="row">
-                                                          <div class="col-lg-6">
-                                                              <label class="form-label required">Currency</label>
-                                                              <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
-                                                                <option value="">Select currency</option>
-                                                                <option value="0" {{ (0==$min_salary_currency) ? 'selected' : '' }}>INR</option>
-                                                                <option value="1" {{ (1==$min_salary_currency) ? 'selected' : '' }}>EUR</option>
-                                                                <option value="2" {{ (2==$min_salary_currency) ? 'selected' : '' }}>JPY</option>
-                                                                <option value="3" {{ (3==$min_salary_currency) ? 'selected' : '' }}>GBP</option>
-                                                                <option value="4" {{ (4==$min_salary_currency) ? 'selected' : '' }}>USD</option>
-                                                                <option value="5" {{ (5==$min_salary_currency) ? 'selected' : '' }}>AED</option>
-                                                              </select>
-                                                          </div>
-                                                          <div class="col-lg-6">
-                                                              <label class="form-label required">Mode</label>
-                                                              <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode" id="sal_mode">
-                                                                <option value="">Select Mode</option>
-                                                                <option value="0" {{ (0==$min_sal_mode) ? 'selected' : '' }}>Annual</option>
-                                                                <option value="1" {{ (1==$min_sal_mode) ? 'selected' : '' }}>Monthly</option>
-                                                                <option value="2" {{ (2==$min_sal_mode) ? 'selected' : '' }}>Hourly</option>
-                                                              </select>
-                                                          </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-lg-8">
-                                                        <div class="row"> 
-                                                          
-                                                            <div class="col-lg-6">
-                                                              <label class="form-label required">Minimum Salary:</label>
-                                                              <input type="number" class="form-control form-control-lg form-control-solid" name="min_sal" id="min_sal" placeholder="Enter min salary" value="{{ $min_salary }}">
-                                                              <div class="fv-plugins-message-container"></div>
-                                                              <span class="form-text text-muted minimum_salary_word"></span>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                              <label class="form-label required">Maximum Salary:</label>
-                                                              <input type="number" class="form-control form-control-lg form-control-solid" name="max_sal" id="max_sal" placeholder="Enter max salary" value="{{ $max_salary }}">
-                                                            <div class="fv-plugins-message-container"></div>
-                                                            <span class="form-text text-muted maximum_salary_word"></span>
-                                                            </div>
-
-                                                            <span class="form-text text-muted" id="salary_error" style="    color: red !important;text-align: center;"></span>                                                             
-                                                        </div>
-                                                    </div>
-    
-                                        </div>
-                                    </div>
-                                </div>
-                                
-    
-                                <div class="d-flex flex-column mb-8">
-                                  <label class="form-label required">Hiring type</label>
-                                  <div class="row py-5 mb-3">
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="" id="app_int_outsource1" checked="&quot;checked&quot;">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource1"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">All</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-5">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="0" id="app_int_outsource2">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource2"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">Fulltime </span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-5">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="1" id="app_int_outsource3">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource3"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">Contract</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                  </div>
-                              </div>
-    
-    
-                                <div class="d-flex flex-column mb-8">
-                                  <label class="form-label required">Activity</label>
-                                  <div class="row py-5 mb-3">
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked="&quot;checked&quot;">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity1"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">All</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity2"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">30 Days</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity3"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">60 Days</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity4"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">90 Days</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity5"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">180 Days</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                     <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity6"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">1 Year</span> 
-                                        </span> 
-                                        </label>
-                                     </div>
-                                  </div>
-                              </div>
-    
-    
-                          
-    
-    
-    
-    
-                          </form>
-                       </div>
-                       <div class="modal-footer flex-center">
-                          <div class="div1">
-                             <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
-                             <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate"> 
-                             <span class="indicator-label">Submit</span></button>
-                          </div>
-                       </div>
-                       <script src="https://servicetesting.4bell.com/assets/node_modules/moment/moment.js?ver=1553620716" type="text/javascript"></script>
-                       <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716"></script>
-                       <script src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716" type="text/javascript"></script>
-                    </div>
-                 </div>
-              </div>
-            </div>	
-            <!--End Popup-->
-
-
-    
-    
-          @if(in_array("view_jobs", $userPermissions))
-          <div class="loadingMessage loadingMessagebenchCandidateRecommendedReqAjax" style="display: none; position: absolute;">Processing...</div>
-            <main class="main-content">
-            
-               <!-- Agency Cards List -->
-              <div class="agencies-list" id="benchCandidateRecommendedReqAjax">
-              </div>
-              
-               <div id="paginationbenchCandidateRecommendedReq"></div>
-            </main>
-          <table id="myTable" class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class d-none">
-            <thead>
-              <tr class="fw-bolder text-muted">
-                <th class="w-10px pe-0"> <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                    <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_table_users .form-check-input" value="1" />
-                  </div></th>
-                <th class="">Jobs</th>
-                <th class="">Exp.</th>
-                <th class="">Salary</th>
-                <th class="">Location</th>
-                <th class="">Status</th>
-                <th class="">Date</th>
-                <th class="">Action</th>
-              </tr>
-            </thead>
-            <tbody id=""> </tbody>
-          </table>
-          <div id=""></div>
-          @else
-          <table id="no-access" class="table align-middle table-row-dashed fs-6 gy-5" >
-            <thead>
-              <tr class="fw-bolder text-muted">
-                <th class=""><div align="center">ACCESS DENIED CONTACT ADMINISTRATOR</div></th>
-              </tr>
-            </thead>
-          </table>
-          @endif
-      </div>
+      <table id="no-access" class="table align-middle table-row-dashed fs-6 gy-5">
+        <thead><tr class="fw-bolder text-muted"><th><div align="center">ACCESS DENIED CONTACT ADMINISTRATOR</div></th></tr></thead>
+      </table>
     </div>
   </div>
 </div>
-<!--end::Content-->
-
-<div class="modal fade bs-modal-sm in" id="scheduleDetailModalStatus" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-md" id="modal-data-application">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-        <span class="caption-subject font-red-sunglo bold uppercase" id="modelHeadingStatus"></span> </div>
-      <div class="modal-body"> Loading... </div>
-      <div class="modal-footer">
-        <button type="button" class="btn default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn blue">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="exampleModalSizeLg" tabindex="-1" role="dialog" aria-labelledby="exampleModalSizeLg" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document"> ... </div>
-</div>
-
-<div class="modal fade right" id="sidebar-right" tabindex="-1" role="dialog" aria-labelledby="exampleModalSizeLg">
-  <div class="modal-dialog modal-lg" role="document" >
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Right Sidebar</h4>
-      </div>
-      <div class="modal-body">
-        <ul class="nav nav-pills nav-stacked text-center lead">
-          <li role="presentation" class="active"> <a href="#home">Home</a> </li>
-          <li role="presentation" class="dropdown"> 
-		  	<a href="#" class="dropdown-toggle" id="myTabDrop1" data-toggle="dropdown" aria-controls="myTabDrop1-contents" aria-expanded="false">
-				Services <span class="fa fa-fw fa-chevron-down"></span> 
-			</a>
-            <ul class="dropdown-menu btn-block">
-              <li> <a href="#design" role="tab">Design</a> </li>
-              <li> <a href="#develop" role="tab">Develop</a> </li>
-              <li> <a href="#support" role="tab">Support</a> </li>
-            </ul>
-          </li>
-          <li role="presentation"> <a href="#about">About</a> </li>
-        </ul>
-        <hr>
-        <div class="form-group hide">
-          <div class="input-group">
-            <input class="form-control" placeholder="Search" name="customSearch" id="customSearch" class="customSearch">
-            <span class="input-group-btn">
-            <button class="btn btn-default" type="button"> <i class="fa fa-fw fa-search"></i> </button>
-            </span> </div>
-        </div>
-        <div class="form-group has-feedback">
-          <input type="text" class="form-control" id="search-right" name="search-right" class="search-right" placeholder="Search">
-          <span class="glyphicon glyphicon-search form-control-feedback" aria-hidden="true"></span> </div>
-        <hr>
-        <div class="btn-group-vertical center-block"> <a class="btn btn-instagram btn-lg" href="https://www.instagram.com/jorenerene/" target="_blank"> <i class="fa fa-fw fa-instagram"></i> </a> <a class="btn btn-twitter btn-lg" href="https://www.twitter.com/jorenerene/" target="_blank"> <i class="fa fa-fw fa-twitter"></i> </a> <a class="btn btn-github btn-lg" href="https://www.github.com/jorenerene/" target="_blank"> <i class="fa fa-fw fa-github"></i> </a> </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade bs-modal-lg in" id="JobDetailModalStatus" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" id="modal-data-application" style="margin:.5rem auto;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-        <span class="caption-subject font-red-sunglo bold uppercase" id="JobDetailModalStatusData"></span> </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade bs-modal-md in" id="scheduleDetailModal_vis" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-md" id="modal-data-application" style="margin:.5rem auto;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-        <span class="caption-subject font-red-sunglo bold uppercase" id="modelHeading_vis"></span> </div>
-    </div>
-  </div>
-</div>
+@endif
 
 <div id="kt_activitiesJob_toggle"></div>
-<div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
+<div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
+     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+     data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'80%'}"
+     data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
   <div class="card shadow-none rounded-0 w-100">
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
         <h3 class="card-title fw-bolder text-dark">Requisition</h3>
-        <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
       </div>
       <div class="card-toolbar">
         <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesJob_close">
-        <span class="svg-icon svg-icon-1">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-          </g>
-        </svg>
-        </span>
+          <span class="svg-icon svg-icon-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
+                <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
+                <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
+              </g>
+            </svg>
+          </span>
         </button>
       </div>
     </div>
     <div class="card-body position-relative px-0 py-0" id="kt_activitiesJob_body"></div>
   </div>
 </div>
- 
+
 @endsection
 @push('footer-script')
-<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
+<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>	
-<!--<script src="{{ asset('js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('js/dataTables.responsive.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('js/responsive.bootstrap.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('js/dataTables.colReorder.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('js/dataTables.buttons.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('js/buttons.colVis.min.js') }}<?php echo TM_VERSION; ?>"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
- <script>
-        var input2 = document.querySelector("#kt_tagify_2");
-        new Tagify(input2);
- </script>
-        
-
+{{-- ── Skills Tagify (mandatory-star) + Location Tagify — same behavior as
+     the old filter modal, now scoped to the drawer only (no more bidirectional
+     sync/"autoclickstar" hack with the main search box — that coupling was a
+     bug, not a feature: it silently turned the plain search field into a
+     multi-tag skills filter). ── --}}
 <script>
-   $(document).ready(function() {	
+const rrjInputElm = document.querySelector('#kt_tagify_users');
+const rrjTagifySkills = new Tagify(rrjInputElm, {
+    templates: {
+        tag: function(tagData) {
+            tagData = tagData || {};
+            const value = tagData.value || '';
+            const isChecked = tagData.checked ? 'checked' : '';
+            return `<tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
+                <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
+                <div><span class="star ${isChecked}">★</span><span class="tagify__tag-text">${value}</span></div>
+            </tag>`;
+        }
+    },
+    transformTag: function(tagData) { tagData.checked = tagData.checked || false; return tagData; }
+});
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('star')) {
+        const tagElm = e.target.closest('.tagify__tag');
+        const value = tagElm.querySelector('.tagify__tag-text').textContent;
+        e.target.classList.toggle('checked');
+        const tagData = rrjTagifySkills.value.find(tag => tag.value === value);
+        if (tagData) { tagData.checked = e.target.classList.contains('checked'); rrjTagifySkills.updateValueByDOMTags(); }
+    }
+});
+function rrjDebounce(func, delay) {
+    let t; return function(...args) { clearTimeout(t); t = setTimeout(() => func.apply(this, args), delay); };
+}
+const rrjFetchSkillSuggestions = rrjDebounce(function(query) {
+    $.ajax({
+        url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+        method: 'GET',
+        success: function(data) { if (Array.isArray(data)) { rrjTagifySkills.settings.whitelist = data; rrjTagifySkills.dropdown.show.call(rrjTagifySkills); } },
+        error: function(err) { console.error("Error fetching Skill:", err); }
+    });
+}, 200);
+rrjTagifySkills.on('input', function(e) {
+    var query = e.detail.value.trim();
+    if (query.length < 1) return;
+    rrjFetchSkillSuggestions(query);
+});
 
-	   $('#inputSearch').keyup(function() {
-			// table._fnDraw();
-      fetchBenchRecommendedReqCandidateList();
-	   });
+var rrjInputLoc = document.querySelector("#kt_tagify_location");
+var rrjCities = @json($cities);
+var rrjTagifyLocation = new Tagify(rrjInputLoc, {
+    whitelist: rrjCities, maxTags: 10,
+    dropdown: { maxItems: 20, classname: "", enabled: 0, closeOnSelect: false }
+});
+rrjInputLoc.addEventListener('keydown', function(e) { if (e.key === "Enter") { e.preventDefault(); } });
+rrjTagifyLocation.on('input', function(e) { rrjTagifyLocation.dropdown.show(); });
+rrjTagifyLocation.on('dropdown:select', function(e) { rrjTagifyLocation.addTags([e.detail.data.value]); });
+</script>
 
-     $(document).on("click",".checkrequestsend", function(){ 
-                swal("Recommendation Alert", 'Please move the candidate to Bench status before sending the request', "warning");
+{{-- ── Sort panel + filter drawer chrome ── --}}
+<script>
+function rrjRenderSortPanel(){
+    var $panel=$('#rrj_sort_panel').empty();
+    var current=$('#hiringtype').val();
+    $('#hiringtype option').each(function(){
+        var $opt=$(this), val=$opt.attr('value'), label=$opt.text();
+        $('<div class="rrj-sort-item"></div>').text(label)
+            .toggleClass('active', val===current)
+            .on('click', function(){
+                $('#hiringtype').val(val);
+                $('#rrj_sort_label').text(label);
+                rrjCloseSortPanel();
+                fetchBenchRecommendedReqCandidateList();
+            }).appendTo($panel);
+    });
+}
+function rrjOpenSortPanel(){ rrjRenderSortPanel(); $('#rrj_sort_panel').removeClass('d-none'); $('#rrj_sort_btn').addClass('open'); }
+function rrjCloseSortPanel(){ $('#rrj_sort_panel').addClass('d-none'); $('#rrj_sort_btn').removeClass('open'); }
+$(document).on('click','#rrj_sort_btn',function(e){
+    e.stopPropagation();
+    if ($('#rrj_sort_panel').hasClass('d-none')) rrjOpenSortPanel(); else rrjCloseSortPanel();
+});
+$(document).on('click',function(e){ if(!$(e.target).closest('#rrj_sort_wrap').length) rrjCloseSortPanel(); });
 
-      });
+$(document).on('keydown', '#kt_tagify_2', function(e){
+    if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); fetchBenchRecommendedReqCandidateList(); }
+});
 
-     $(document).on("click",".request-send", function(){
-      var ele = $(this);
-      var jobId  = $(this).attr('data-jobId');
-      var conId  = $(this).attr('data-conId');
-      // var url   		=	"{{ route('service_company.jobs.job_request',':id') }}";
-      //       url     		=	url.replace(':id', jobId);
-      // alert(url)
-      var elm = $(this);
-      swal({
-          title: "Are you sure?",
-          text: " Do you want to Submit Candidate request on this Job?",
-          type: "warning",
-          showCancelButton: true,
-          confirmButtonColor: '#DD6B55',
-          confirmButtonText: 'Yes, I am sure!',
-          cancelButtonText: "No, cancel it!",
-          closeOnConfirm: false,
-          closeOnCancel: false
-      },
-      function(isConfirm){
-        if (isConfirm){
-        // jobs/job_request
-            var url   		=	"{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
-            url     		=	url.replace(':id', jobId)+"?conId="+conId;
-            var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-   		      $.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-   						//  beforeSend	: function() {
-              //   elm.parent().html('<img src="'+baseurl+'" height="35px" width="100%">');
-              //   $('.confirm').html('<img src="'+baseurl+'" height="35px" width="100%">');
+$(document).on('click','#rrj_reset_btn',function(){
+    rrjTagifySkills.removeAllTags();
+    rrjTagifyLocation.removeAllTags();
+    $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#min_sal,#max_sal').val('');
+    $('#app_int_outsource1,#app_int_activity1').prop('checked', true);
+});
+$(document).on('click','#rrj_apply_btn',function(){
+    fetchBenchRecommendedReqCandidateList();
+    $('#rrj_filter_close').trigger('click');
+});
+</script>
 
-              //          	},
-   						success 	: function (response) {
-                console.log(response);
-                if(response.status=='success'){
-                  swal("Recommend!", "Candidates are successfully Recommend!", "success");
-                  var jobId  = ele.attr('data-jobId');
-                  var conId  = ele.attr('data-conId');
-                  var matlaccess = 1;
-                  var url   		=	"{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
-                  url     		=	url.replace(':id', jobId)+"?conId="+conId+"?matlaccess="+matlaccess;                  
-                  // tableLoad('load');
-                  fetchBenchRecommendedReqCandidateList()
-                  $.ajax({
-                      type  		: 'GET',
-                      url   		: url,
-                      success 	: function (response) {
-                    
-                      }
-                      
-                  });
+{{-- ── Preserved job/client/HM/team drawer handlers + bench-request send —
+     UNCHANGED from before this redesign ── --}}
+<script>
+$(document).ready(function() {
 
-
-
-
-
-                }else{
-                  // tableLoad('load');
-                  fetchBenchRecommendedReqCandidateList();
-                  swal("Recommend Failed", response.message, "warning").then(function(){
-                    // tableLoad('load');	
-                    fetchBenchRecommendedReqCandidateList();
-                  });
-                }
-                
-   						}
-              
-
-   	  			});
-
-           
-
-          } else {
-
-            swal("Cancelled", "", "error");
-
-          }
-      });
+    $(document).on("click",".checkrequestsend", function(){
+        swal("Recommendation Alert", 'Please move the candidate to Bench status before sending the request', "warning");
     });
 
-   });
-</script>
-<script>
-  var table;
-
-        setTimeout(() => {
-          // tableLoad('load');	
-        }, 500);
-
-// setTimeout(() => {
-	function tableLoad(type) {
-    table = $('#myTable').dataTable({
-   
-   			responsive  	: true,
-   			processing  	: true,
-   			serverSide  	: true,
-   			destroy   		: true,
-   			ordering		: false, //disable ordering	
-   			"bLengthChange" : false, //thought this line could hide the LengthMenu   			
-   			sDom			: 'lrtip',   			
-   			oLanguage 		: { sLengthMenu: "_MENU_", },
-			ajax			: {'url' : '{!! route('service_company.recommend.all_data') !!}', 
-      "data": function ( d ){
-        d.search = $('#inputSearch').val(),
-        d.condidate_id = '{{$segment}}',
-        d.custom_search = $('#kt_tagify_2').val(),
-        d.custom_status = 'active',
-        d.custom_hiringtype = $('#hiringtype').val(),
-        d.cus_search = $('#kt_tagify_users').val(),
-        d.min_exp = $('#min_exp').val(),
-        d.max_exp = $('#max_exp').val(),
-        d.kt_tagify_location = $('#kt_tagify_location').val(),
-        d.min_sal = $('#min_sal').val(),
-        d.max_sal = $('#max_sal').val(),
-        d.min_salary_currency =  $('#min_salary_currency').val(),
-        d.sal_mode = $('#sal_mode').val(),
-        d.app_int_activity = $('[name="app_int_activity"]:checked').val(),
-        d.app_int_outsource = $('[name="app_int_outsource"]:checked').val()
-      }},
-   		  "drawCallback"	: function( settings ) {
-									$('[data-toggle="tooltip1"]').tooltip();
-									$('[data-toggle="tooltip2"]').tooltip();
-									$('[data-toggle="tooltip3"]').tooltip();
-									$('[data-toggle="tooltip4"]').tooltip();		
-							},
-   		  "columnDefs"		:
-   						  		[ 
-   									{ "width": "50px", "targets": 0, "width": "4%", "class":""},
-   									{  "width": "200px", "targets": 1, "class":"d-flex align-items-center" },																				
-   									{  "width": "50px"  , "targets": 2},		
-   									{  "width": "100px", "targets": 3 },		
-   									{  "width": "200px", "targets": 4 }, 
-                    {  "width": "100px" ,"targets": 5 },
-   									{  "width": "150px" ,"targets": 6 },
-   									{  "width": "200px" , "targets": 7 } 	
-   							  ], 
-   				columns:
-   				[
-   				  { data: 'chkbox', name: 'chkbox',  orderable: false, searchable: false},  
-   					{ data: 'Requisition', name: 'Requisition' , orderable: false, searchable: false},
-   					{ data: 'Exp', name: 'Exp' , orderable: false, searchable: false},
-   					{ data: 'Salary', name: 'Salary' , orderable: false, searchable: false},
-   					{ data: 'Location', name: 'Location' , orderable: false, searchable: false},
-   					
-   					{ data: 'Status', name: 'Status' , orderable: false, searchable: false},
-   					{ data: 'Date', name: 'Date' , orderable: false, searchable: false},
-   					{ data: 'action', name: 'action' , orderable: false, searchable: false} 	   
-   				],				
-				//timeout: 500000,
-           		async: false
-   				
-   				}); 
-
-        // }, 500);
- 
-   	       new $.fn.dataTable.FixedHeader( table );
-        }
-
-   	$(document).on('change','#kt_tagify_2,#status,#hiringtype',function(){
-   	   table._fnDraw();
-   	});
-
-     $(document).on('click','.changetextupdate',function(){
-      $('.changetextupdate').text('Searching....!');
-   	  //  table._fnDraw();
-       fetchBenchRecommendedReqCandidateList();
-        var $this = $('#apptrackerfilter');
-                // $this.fadeOut(2000, function() {
-                  $this.modal('hide');
-                // });
-                setTimeout(() => {
-                   $('#apptrackerfilter_close').click();
-                   $('.changetextupdate').text('Submit')
-              }, 2000);
-   	});
-   
-     $(document).on('click', '.show-detail', function ()
-   	{
-   		$('#kt_activitiesJob_toggle').trigger('click');		
-   		var id    		=	$(this).data('row-id');
-   		var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}";
-   		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success 	: function (response) {
-									$('#kt_activitiesJob_body').html(response.view);	
-   						}
-   	  			});
-   	}); 
-   	
-		
-     $(document).on('click', '.status_stage', function () { 
-		$('#status_body_content').html('');
-		var id        	=	$(this).data('row-id');	
-		var url       	=	"{{ route('service_company.jobs.editJobStatus',':id') }}";
-		url           	=	url.replace(':id', id);
-		$.ajax({
-					type  	: 'GET',
-					url   	: url,
-					success : function (response) {
-						if (response.status == "success") {
-							$('#status_body_content').html(response.view);      
-						}
-					}
-		}); 			
-});
-	
-$(document).on('click', '.client-show-detail', function ()
-{
-	$('#kt_activitiesClientjob_toggle').trigger('click');	
-	var id    		=	$(this).data('row-id');
-	var url   		=	"{{ route('service_company.jobs.clientviewmore',':id') }}";
-	url     		=	url.replace(':id', id);
-	var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-	$.ajax({
-					type  		: 'GET',
-					url   		: url,
-					 beforeSend	: function() {
-								 $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');			
-					},
-					success 	: function (response) {
-							$('#kt_activitiesclientjob_body').html(response.view);		
-					}
-			});
-}); 
-	
-	
-$(document).on('click', '.spartner-listing', function ()
-{
-	$('#kt_activitiesStaffing_toggle').trigger('click');		
-	var id    		= $(this).data('row-id');
-	var url   		= "{{ route('service_company.jobs.spartnerlisting',':id') }}";
-	url     		= url.replace(':id', id);
-	 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-	$.ajax({
-					type  : 'GET',
-					url   : url,
-					 beforeSend: function() {
-								 $('#kt_activities_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-					},
-					success : function (response) {
-							$('#kt_activities_body').html(response.view);		
-					}
-			});
-}); 
-	
-   
-   function updateJobStatus(id, statusName)
-   {
-     var id        	= id;
-     var statusName  = statusName;
-     var url       	= "{{ route('service_company.jobs.updatestatus',':id') }}";
-     url         	= url.replace(':id', id);
-     var token       = "{{ csrf_token() }}";
-     $.easyAjax({
-					  type		: 'POST',
-					  url		: url,
-					  data		: {'_token': token, '_method': 'POST', 'id':id, 'statusName':statusName},
-					  success	: function (response){
-						  table._fnDraw();
-					 }
-				 });
-   }
-   
-    
-</script>
-<script>
-
-$(document).ready(function(){
-
-  $(document).on('click', '.hmlisting', function(){
-			
-														$('#kt_activitiesRecruiter_toggle').trigger('click');  
-														var id    		= $(this).data('row-id');
-														var token 		=	"{{ csrf_token() }}";
-										
-											
-														var url   		=	"{{ route('service_company.jobs.hmlisting',':id') }}"; 
-														url     		=	url.replace(':id', id);  		
-														var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";    		
-														$.ajax({
-																	type  		: 'GET',
-																	url   		: url,
-																	data		: {'_token': token, 'id' : id},
-																	 beforeSend	: function() {
-																				 $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-																	},
-																	success 	: function (response) {
-																				$('#kt_activitiesRecruiter_body').html(response.view);
-																	}
-															}); 
-												
-		
-		});
-		 
-
-});
-</script>
-<script>
-
-$(document).on('click', '.client-hm-listing', function ()
-   	{	
-   		$('#kt_activitiesCHM_toggle').trigger('click');		
-   		var id    		= $(this).data('row-id');
-   		var url   		= "{{ route('service_company.jobs.clienthmlisting',':id') }}";
-   		url     		= url.replace(':id', id);
-   		 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesCHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success : function (response) {
-								$('#kt_activitiesCHM_body').html(response.view);  								
-   						}
-   	  			});
-   	});
-	
-     $(document).on('click', '.team-listing', function ()
-   	{
-   	
-   		$('#kt_activitiesTEAM_toggle').trigger('click');		
-   		var id    		= $(this).data('row-id');
-   		var url   		= "{{ route('service_company.jobs.currentteamlisting',':id') }}";
-   		url     		= url.replace(':id', id);
-   		 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  : 'GET',
-   						url   : url,
-   						 beforeSend: function() {
-                                     $('#kt_activitiesTEAM_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success : function (response) {
-								$('#kt_activitiesTEAM_body').html(response.view);		
-   						}
-   	  			});
-   	});
-	
-</script>
-<script>
-
-$(document).on('click', '.hm-listing', function ()
-   	{
-			
-   		$('#kt_activitiesHM_toggle').trigger('click');		
-   		var id    		= $(this).data('row-id');
-   		var url   		= "{{ route('service_company.jobs.hmlisting',':id') }}";
-   		url     		= url.replace(':id', id);
-   		var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  : 'GET',
-   						url   : url,
-   						 beforeSend: function() {
-                                     $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success : function (response) {		
-								$('#kt_activitiesHM_body').html(response.view);		
-   						}
-   	  			});
-   	});
-
-
-     $(document).ready(function() {
-            fetchBenchRecommendedReqCandidateList();
-            $(document).on('click', '#paginationbenchCandidateRecommendedReq .page-link', function(e) {
-                e.preventDefault();
-
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchBenchRecommendedReqCandidateList(page, $('#search').val()).then(() => {
-                  // Re-enable the links after successful data fetch
-                  $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
-                }).catch(() => {
-                  // Re-enable the links even if there's an error
-                  $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
+    $(document).on("click",".request-send", function(){
+        var ele = $(this);
+        var jobId  = $(this).attr('data-jobId');
+        var conId  = $(this).attr('data-conId');
+        swal({
+            title: "Are you sure?",
+            text: " Do you want to Submit Candidate request on this Job?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, I am sure!',
+            cancelButtonText: "No, cancel it!",
+            closeOnConfirm: false,
+            closeOnCancel: false
+        },
+        function(isConfirm){
+            if (isConfirm){
+                var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
+                url = url.replace(':id', jobId)+"?conId="+conId;
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    success: function (response) {
+                        if(response.status=='success'){
+                            swal("Recommend!", "Candidates are successfully Recommend!", "success");
+                            var jobId  = ele.attr('data-jobId');
+                            var conId  = ele.attr('data-conId');
+                            var matlaccess = 1;
+                            var url = "{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
+                            url = url.replace(':id', jobId)+"?conId="+conId+"?matlaccess="+matlaccess;
+                            fetchBenchRecommendedReqCandidateList();
+                            $.ajax({ type: 'GET', url: url, success: function (response) {} });
+                        }else{
+                            fetchBenchRecommendedReqCandidateList();
+                            swal("Recommend Failed", response.message, "warning").then(function(){
+                                fetchBenchRecommendedReqCandidateList();
+                            });
+                        }
+                    }
                 });
-                
-            });
-        });   
-
-		function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
-        
-				$('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'block' });
-				$.ajax({
-					url: `{!! route('service_company.recommend.all_data_ajax') !!}?page=${page}`,
-					type: 'GET',
-					data: {
-						search:$('#inputSearch').val(),
-            condidate_id: "{{$segment}}",
-            custom_search:$('#kt_tagify_2').val(),
-            custom_status:'active',
-            custom_hiringtype:$('#hiringtype').val(),
-            cus_search:$('#kt_tagify_users').val(),
-            min_exp:$('#min_exp').val(),
-            max_exp:$('#max_exp').val(),
-            kt_tagify_location:$('#kt_tagify_location').val(),
-            min_sal:$('#min_sal').val(),
-            max_sal:$('#max_sal').val(),
-            min_salary_currency: $('#min_salary_currency').val(),
-            sal_mode:$('#sal_mode').val(),
-            app_int_activity:$('[name="app_int_activity"]:checked').val(),
-            app_int_outsource:$('[name="app_int_outsource"]:checked').val()
-					},
-					success: function(response) {
-						$('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
-						$('#benchCandidateRecommendedReqAjax').html(response.html);
-            $('#recommend_req_id').html(response.total);
-						$('#paginationbenchCandidateRecommendedReq').html(response.pagination);
-					}
-				});
-		}
-
-
-
+            } else {
+                swal("Cancelled", "", "error");
+            }
+        });
+    });
+});
 </script>
-@endpush 
+<script>
+function updateJobStatus(id, statusName)
+{
+    var url = "{{ route('service_company.jobs.updatestatus',':id') }}";
+    url = url.replace(':id', id);
+    var token = "{{ csrf_token() }}";
+    $.easyAjax({
+        type: 'POST',
+        url: url,
+        data: {'_token': token, '_method': 'POST', 'id':id, 'statusName':statusName},
+        success: function (response){ fetchBenchRecommendedReqCandidateList(); }
+    });
+}
+
+$(document).on('click', '.show-detail', function () {
+    $('#kt_activitiesJob_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.viewmore',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activitiesJob_body').html(response.view); }
+    });
+});
+
+$(document).on('click', '.status_stage', function () {
+    $('#status_body_content').html('');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.editJobStatus',':id') }}";
+    url = url.replace(':id', id);
+    $.ajax({
+        type: 'GET', url: url,
+        success: function (response) { if (response.status == "success") { $('#status_body_content').html(response.view); } }
+    });
+});
+
+$(document).on('click', '.client-show-detail', function () {
+    $('#kt_activitiesClientjob_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.clientviewmore',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activitiesclientjob_body').html(response.view); }
+    });
+});
+
+$(document).on('click', '.spartner-listing', function () {
+    $('#kt_activitiesStaffing_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activities_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activities_body').html(response.view); }
+    });
+});
+</script>
+<script>
+$(document).ready(function(){
+    $(document).on('click', '.hmlisting', function(){
+        $('#kt_activitiesRecruiter_toggle').trigger('click');
+        var id = $(this).data('row-id');
+        var token = "{{ csrf_token() }}";
+        var url = "{{ route('service_company.jobs.hmlisting',':id') }}";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET', url: url, data: {'_token': token, 'id' : id},
+            beforeSend: function() { $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+            success: function (response) { $('#kt_activitiesRecruiter_body').html(response.view); }
+        });
+    });
+});
+</script>
+<script>
+$(document).on('click', '.client-hm-listing', function () {
+    $('#kt_activitiesCHM_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.clienthmlisting',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activitiesCHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activitiesCHM_body').html(response.view); }
+    });
+});
+
+$(document).on('click', '.team-listing', function () {
+    $('#kt_activitiesTEAM_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.currentteamlisting',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activitiesTEAM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activitiesTEAM_body').html(response.view); }
+    });
+});
+</script>
+<script>
+$(document).on('click', '.hm-listing', function () {
+    $('#kt_activitiesHM_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.jobs.hmlisting',':id') }}";
+    url = url.replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET', url: url,
+        beforeSend: function() { $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); },
+        success: function (response) { $('#kt_activitiesHM_body').html(response.view); }
+    });
+});
+</script>
+
+{{-- ── Core data fetch — SAME route/params/response-handling as before this
+     redesign, plus: error handling (spinner never got stuck before, now it
+     also can't get stuck on a failed request), and a one-time guard so the
+     very first automatic page-load doesn't silently apply the candidate's
+     full skills+designation string as a hard filter (that's what was
+     causing "No data available" on first paint — the filter drawer's Skills
+     field starts pre-filled for convenience, but now only takes effect once
+     the user actually opens the drawer/clicks Apply, matching how every
+     other filter field on this page already behaved). ── --}}
+<script>
+var rrjInitialLoad = true;
+
+function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
+    $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
+    $.ajax({
+        url: `{!! route('service_company.recommend.all_data_ajax') !!}?page=${page}`,
+        type: 'GET',
+        data: {
+            search: $('#inputSearch').val(),
+            condidate_id: "{{$segment}}",
+            custom_search: $('#kt_tagify_2').val(),
+            custom_status: 'active',
+            custom_hiringtype: $('#hiringtype').val(),
+            cus_search: rrjInitialLoad ? '[]' : $('#kt_tagify_users').val(),
+            min_exp: $('#min_exp').val(),
+            max_exp: $('#max_exp').val(),
+            kt_tagify_location: $('#kt_tagify_location').val(),
+            min_sal: $('#min_sal').val(),
+            max_sal: $('#max_sal').val(),
+            min_salary_currency: $('#min_salary_currency').val(),
+            sal_mode: $('#sal_mode').val(),
+            app_int_activity: $('[name="app_int_activity"]:checked').val(),
+            app_int_outsource: $('[name="app_int_outsource"]:checked').val()
+        },
+        success: function(response) {
+            rrjInitialLoad = false;
+            $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
+            if (!response || typeof response.html === 'undefined') {
+                console.error('all_data_ajax: unexpected response', response);
+                return;
+            }
+            $('#benchCandidateRecommendedReqAjax').html(response.html);
+            $('#recommend_req_id').html(response.total);
+            $('#rrj_footer_number').text(response.total);
+            $('#paginationbenchCandidateRecommendedReq').html(response.pagination);
+        },
+        error: function(xhr) {
+            rrjInitialLoad = false;
+            $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
+            console.error('all_data_ajax failed:', xhr.status, xhr.responseText);
+        }
+    });
+}
+
+function filtersdataget(){ fetchBenchRecommendedReqCandidateList(); }
+
+$(document).ready(function() {
+    fetchBenchRecommendedReqCandidateList();
+    $(document).on('click', '#paginationbenchCandidateRecommendedReq .page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (!page || $(this).hasClass('disabled')) return;
+        $(this).addClass('disabled');
+        fetchBenchRecommendedReqCandidateList(page, $('#search').val()).then(() => {
+            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
+        }).catch(() => {
+            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
+        });
+    });
+});
+</script>
+@endpush

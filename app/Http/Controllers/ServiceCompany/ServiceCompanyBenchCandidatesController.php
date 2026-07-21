@@ -5701,26 +5701,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// dd($gdFilterData);
-		$this->default_loc = '';//gdFilterData->default_loc;
-		$this->qualification = '';//$gdFilterData->qualification;
-		$this->min_exp = '';//$gdFilterData->min_exp >=1) ? $gdFilterData->min_exp-1 : $gdFilterData->min_exp;
-		$this->max_exp = '';//$gdFilterData->max_exp+1;
-		$this->min_salary_currency = 0;//$gdFilterData->min_salary_currency;
-		$this->min_salary ='';// $gdFilterData->min_salary;
-		$this->max_salary = '';//$gdFilterData->max_salary;
-		$this->min_sal_mode = 0;//$gdFilterData->min_sal_mode;
+		// Filter drawer defaults — wired from canGgdFilterData() (already computed
+		// above, no extra query) instead of being discarded as ''/0. A small
+		// +/-1 year buffer around the candidate's own experience, matching the
+		// original (previously dead) intent of this code.
+		$this->default_loc = $gdFilterData->default_loc;
+		$this->qualification = $gdFilterData->qualification;
+		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
+		$this->max_exp = $gdFilterData->max_exp + 1;
+		$this->min_salary_currency = $gdFilterData->min_salary_currency;
+		$this->min_salary = $gdFilterData->min_salary;
+		$this->max_salary = $gdFilterData->max_salary;
+		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
-		// $this->max_exp = floor($this->max_exp / 10) * 10;
-		//  dd($this->max_salary,($this->max_exp));
 		$cities = DB::table('city_list')->pluck('city')->toArray();
-		
-		// [
-        //     "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", 
-        //     "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"
-        // ];
-
-        $this->cities =  $cities; 
+        $this->cities =  $cities;
 
 
 		$this->segment = ($request->segment(4)) ? $request->segment(4) : '';
@@ -5739,26 +5734,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// dd($gdFilterData);
-		$this->default_loc = '';//$gdFilterData->default_loc;
-		$this->qualification = '';//$gdFilterData->qualification;
-		$this->min_exp = '';//($gdFilterData->min_exp >=1) ? $gdFilterData->min_exp-1 : $gdFilterData->min_exp;
-		$this->max_exp = '';//$gdFilterData->max_exp+1;
-		$this->min_salary_currency = 0;//$gdFilterData->min_salary_currency;
-		$this->min_salary ='';// $gdFilterData->min_salary;
-		$this->max_salary = '';//$gdFilterData->max_salary;
-		$this->min_sal_mode = 0;//$gdFilterData->min_sal_mode;
+		// Filter drawer defaults — wired from canGgdFilterData() (already computed
+		// above, no extra query) instead of being discarded as ''/0. Same fix as
+		// recommend_req() above, kept identical since these two pages are twins.
+		$this->default_loc = $gdFilterData->default_loc;
+		$this->qualification = $gdFilterData->qualification;
+		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
+		$this->max_exp = $gdFilterData->max_exp + 1;
+		$this->min_salary_currency = $gdFilterData->min_salary_currency;
+		$this->min_salary = $gdFilterData->min_salary;
+		$this->max_salary = $gdFilterData->max_salary;
+		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
-		// $this->max_exp = floor($this->max_exp / 10) * 10;
-		//  dd($this->max_salary,($this->max_exp));
 		$cities = DB::table('city_list')->pluck('city')->toArray();
-		
-		// [
-        //     "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", 
-        //     "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"
-        // ];
-
-        $this->cities =  $cities; 
+        $this->cities =  $cities;
 
 
 		$this->segment = ($request->segment(4)) ? $request->segment(4) : '';
@@ -5992,18 +5981,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				array_push($set_skill, trim($val));
 			}
 		}
-		$skill = DB::table('job_metronics_skills')->whereIn('skill_name', $set_skill)->pluck('job_id')->toArray();
-
-		// dd($skill);
-
-		// ksort($skill);  // Sort by values
-
-		// foreach ($skill as $value => $count) {
-		// 	echo "<br>";
-		// 	echo "Value: $value, Count: $count" . PHP_EOL;
-		// }
-
-		// dd(explode(",",$JobApplication->skills),array_unique($skill),$set_skill);
+		// (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
+		// query here whose $skill result was never read anywhere below —
+		// removed as dead load. $set_skill — the candidate's own skills —
+		// is kept; it now also drives the "Best Match" sort, case 10 below.)
 		abort_if(Gate::denies('view_jobs'), 403);
 
 		$company_id = auth()->user()->company_id;
@@ -6076,7 +6057,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		⚡ Check DragonflyDB first
 		----------------------------- */
 		if (cache()->has($cacheKeySet)) {
-			// return response()->json(cache()->get($cacheKeySet));
+			return response()->json(cache()->get($cacheKeySet));
 		}
 
 		$statusArr = ['active', 'hold', 'inactive', '2'];
@@ -6104,6 +6085,39 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				break;
+			case 10:
+				// "Best Match" — rank jobs by how many of the candidate's own
+				// skills ($set_skill, already computed above) appear in each
+				// job's nested job_metronics_skills. Purely a ranking signal,
+				// not a filter — jobs with zero matches still appear (0%),
+				// they just sort last. Mirrors the candidate-vs-job scoring
+				// AppTracker's similar-candidates page already does, inverted
+				// to score jobs against a candidate instead.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								int matchCount = 0;
+								if (params._source.containsKey('job_metronics_skills')) {
+									for (skillDoc in params._source.job_metronics_skills) {
+										if (!skillDoc.containsKey('skill_name') || skillDoc.skill_name == null) { continue; }
+										String jobSkill = skillDoc.skill_name.toLowerCase();
+										for (candSkill in params.skills) {
+											if (jobSkill.contains(candSkill) || candSkill.contains(jobSkill)) { matchCount += 1; break; }
+										}
+									}
+								}
+								return matchCount;
+							",
+							'params' => ['skills' => array_values(array_filter(array_map('strtolower', $set_skill)))],
+						],
+						'order' => 'desc',
+					],
+				];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6380,18 +6394,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				array_push($set_skill, trim($val));
 			}
 		}
-		$skill = DB::table('job_metronics_skills')->whereIn('skill_name', $set_skill)->pluck('job_id')->toArray();
-
-		// dd($skill);
-
-		// ksort($skill);  // Sort by values
-
-		// foreach ($skill as $value => $count) {
-		// 	echo "<br>";
-		// 	echo "Value: $value, Count: $count" . PHP_EOL;
-		// }
-
-		// dd(explode(",",$JobApplication->skills),array_unique($skill),$set_skill);
+		// (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
+		// query here whose $skill result was never read anywhere below —
+		// removed as dead load. $set_skill — the candidate's own skills —
+		// is kept; it now also drives the "Best Match" sort, case 10 below.)
 		abort_if(Gate::denies('view_jobs'), 403);
 
 		$company_id = auth()->user()->company_id;
@@ -6499,6 +6505,39 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				break;
+			case 10:
+				// "Best Match" — rank jobs by how many of the candidate's own
+				// skills ($set_skill, already computed above) appear in each
+				// job's nested job_metronics_skills. Purely a ranking signal,
+				// not a filter — jobs with zero matches still appear (0%),
+				// they just sort last. Mirrors the candidate-vs-job scoring
+				// AppTracker's similar-candidates page already does, inverted
+				// to score jobs against a candidate instead.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								int matchCount = 0;
+								if (params._source.containsKey('job_metronics_skills')) {
+									for (skillDoc in params._source.job_metronics_skills) {
+										if (!skillDoc.containsKey('skill_name') || skillDoc.skill_name == null) { continue; }
+										String jobSkill = skillDoc.skill_name.toLowerCase();
+										for (candSkill in params.skills) {
+											if (jobSkill.contains(candSkill) || candSkill.contains(jobSkill)) { matchCount += 1; break; }
+										}
+									}
+								}
+								return matchCount;
+							",
+							'params' => ['skills' => array_values(array_filter(array_map('strtolower', $set_skill)))],
+						],
+						'order' => 'desc',
+					],
+				];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc']];

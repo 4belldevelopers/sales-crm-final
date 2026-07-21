@@ -124,7 +124,10 @@
       @media  only screen and (min-width: 1440px) and (max-width: 2560px){
         #kt_activitiesIntTeamtra{width: 1380px;}
       }
-      #kt_activitiesIntTeamtra{z-index:9999;}
+      /* Opened on top of #interview_schedule_drawer (z-index 99999999999 !important
+         below), so this needs to sit unambiguously higher — see the matching
+         overlay z-index bump in the .in_tr_email_panel click handler below. */
+      #kt_activitiesIntTeamtra{z-index:999999999999 !important;}
 
        @media only screen and (min-width: 1024px) and (max-width: 1440px){
         #kt_activitiesJob_show{width: 1025px;}
@@ -1963,6 +1966,13 @@ $(document).ready(function(){
                 drawerInstance.show();
             }
 
+            // #interview_schedule_drawer (behind this one) has its own overlay
+            // deliberately disabled and sits at z-index 99999999999 !important,
+            // so KTDrawer's own overlay for THIS drawer would otherwise render
+            // underneath it and never visibly dim it. Bump just the overlay
+            // this drawer created (the most recently appended one) above that,
+            // but below #kt_activitiesIntTeamtra itself (999999999999 !important).
+            setTimeout(function(){ $('.drawer-overlay').last().css('z-index', 999999999998); }, 0);
 
                 var client_id	=	$('#client_idMail').val();
          				var token 		=	"{{ csrf_token() }}";
