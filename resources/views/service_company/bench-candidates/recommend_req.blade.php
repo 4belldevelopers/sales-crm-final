@@ -20,8 +20,10 @@
 .bxr-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
 .bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
 .bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
-.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#F0FDF4; color:#16A34A; border:1.5px solid #86EFAC; }
-.bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:#16A34A; flex-shrink:0; }
+/* Stage badge colors set per-candidate via inline CSS custom properties —
+   Bench=blue, Placed=green, Hold=orange. */
+.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--bxr-stage-bg,#F0FDF4); color:var(--bxr-stage-color,#16A34A); border:1.5px solid var(--bxr-stage-border,#86EFAC); }
+.bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:var(--bxr-stage-color,#16A34A); flex-shrink:0; }
 .bxr-info-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
 .bxr-role{ font-size:13px; font-weight:600; color:#374151; margin:0; }
 .bxr-meta-line{ display:flex; flex-wrap:wrap; gap:18px; }
@@ -237,6 +239,11 @@ body > .tagify__dropdown{ z-index:1400 !important; }
         $initLtr  = strtoupper(substr($candName,0,1));
         $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
         $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
+        $bxrStageKey = strtolower($bxrStageLabel);
+        if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
+        elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
+        elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
+        else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; } // Pool / other stages
       @endphp
       <div class="bxr-av-wrap">
         @if($imgFile)
@@ -249,7 +256,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
       <div>
         <div class="bxr-name-row">
           <span class="bxr-name">{{ ucwords($candName) }}</span>
-          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
+          <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
         </div>
         <div class="bxr-info-row">
           <span class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</span>
@@ -555,7 +562,12 @@ body > .tagify__dropdown{ z-index:1400 !important; }
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Min Salary</label>
-                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ (@$min_salary !== '' && @$min_salary !== null) ? @$min_salary : 0 }}">
+                {{-- Always starts at 0 — deliberately not derived from
+                     $min_salary/canGgdFilterData(), which can equal
+                     max_salary for some candidates and made this look
+                     pre-filled with a real (wrong) number instead of a
+                     neutral default. --}}
+                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="0">
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Max Salary</label>

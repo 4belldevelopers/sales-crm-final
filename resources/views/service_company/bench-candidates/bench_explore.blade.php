@@ -54,16 +54,20 @@
 .bxr-info{}
 .bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
 .bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
+/* Stage badge colors are set per-candidate via inline CSS custom properties
+   (see $bxrStageBg/$bxrStageColor/$bxrStageBorder below) — Bench=blue,
+   Placed=green, Hold=orange. Defaults here only cover the (unreachable
+   without inline vars) fallback case. */
 .bxr-bench-tag{
     display:inline-flex; align-items:center; gap:5px;
     font-size:11px; font-weight:600;
     padding:3px 10px; border-radius:20px;
-    background:#F0FDF4; color:#16A34A;
-    border:1.5px solid #86EFAC;
+    background:var(--bxr-stage-bg,#F0FDF4); color:var(--bxr-stage-color,#16A34A);
+    border:1.5px solid var(--bxr-stage-border,#86EFAC);
 }
 .bxr-bench-dot{
     width:6px; height:6px; border-radius:50%;
-    background:#16A34A; flex-shrink:0;
+    background:var(--bxr-stage-color,#16A34A); flex-shrink:0;
 }
 .bxr-info-row{
     display:flex; align-items:center; gap:16px;
@@ -486,6 +490,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
         $candName = @$bench_detail->full_name ?? 'Candidate';
         $initLtr  = strtoupper(substr($candName,0,1));
         $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
+        $bxrStageKey = strtolower($bxrStageLabel);
+        if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
+        elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
+        elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
+        else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; } // Pool / other stages
       @endphp
       <div class="bxr-av-wrap">
         @if($imgFile)
@@ -499,7 +508,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
         {{-- Row 1: Name + dynamic stage badge (Bench/Hold/Placed/Pool/…) --}}
         <div class="bxr-name-row">
           <span class="bxr-name">{{ ucwords($candName) }}</span>
-          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
+          <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
         </div>
 
         {{-- Row 2: Role  •  Primary Skill  •  Location --}}
