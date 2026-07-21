@@ -857,7 +857,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
             </div>
             <div>
                 <div style="font-size:20px;font-weight:800;color:#fff;line-height:1.2;letter-spacing:-.3px;">
-                    Career Pagessss Settings  
+                    Career Page Settings  
                 </div>
                 <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;">
                     Customize your career page appearance, content and preferences
