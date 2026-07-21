@@ -178,14 +178,6 @@
 @endphp
 
 <tr>
-    {{-- Checkbox --}}
-    <td>
-        <div class="form-check form-check-sm form-check-custom form-check-solid ms-2">
-            <input class="form-check-input chk_list_item" name="chk_list_item[]"
-                   type="checkbox" value="{{ $jobDetails->id }}">
-        </div>
-    </td>
-
     {{-- ① JOB DETAILS --}}
     <td style="max-width:280px;">
         <div class="bxr-job-row">
@@ -296,7 +288,7 @@
 @endforeach
 @else
 <tr>
-    <td colspan="7" style="text-align:center;padding:40px 0;color:#94A3B8;">
+    <td colspan="6" style="text-align:center;padding:40px 0;color:#94A3B8;">
         <i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
         No companies processing this candidate yet
     </td>
