@@ -6458,7 +6458,12 @@ protected $elasticService;
         $assignDataFinal = collect(array_merge($assignDataclient, $mergedData))->unique('id')->values()->toArray();
 		// $assignDataFinal = array_merge($assignDataclient,$mergedData);
 		$this->cc_email_assignData = $assignDataFinal;
-		
+		// Same internal/client split already computed above ($mergedData / $assignDataclient),
+		// exposed separately so the picker can show them under distinct Internal/Client tabs
+		// (same source-split pattern as the offer-approval picker in create-offer.blade.php).
+		$this->picker_internal = $mergedData;
+		$this->picker_client = $assignDataclient;
+
 
 		$view = view('service_company.job-applications.contact-persion-with-team', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
