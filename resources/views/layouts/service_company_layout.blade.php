@@ -117,17 +117,23 @@
        #kt_activitiesIntTeam{width: 1200px;} }
       #kt_activitiesIntTeam{z-index:9999;}
 
-      @media  only screen and (min-width: 1024px) and (max-width: 1440px)
-      {
-        #kt_activitiesIntTeamtra{width: 1180px;}
+      /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
+         set via data-kt-drawer-width on the element itself (KTDrawer computes
+         the responsive width in JS) — capped here so it never exceeds
+         ~1080px on very large monitors, and never drops below a usable
+         minimum on the "lg" breakpoint. */
+      #kt_activitiesIntTeamtra{ max-width: 1080px !important; }
+      @media only screen and (min-width: 992px) {
+        #kt_activitiesIntTeamtra{ min-width: 640px !important; }
       }
-      @media  only screen and (min-width: 1440px) and (max-width: 2560px){
-        #kt_activitiesIntTeamtra{width: 1380px;}
-      }
-      /* Opened on top of #interview_schedule_drawer (z-index 99999999999 !important
-         below), so this needs to sit unambiguously higher — see the matching
-         overlay z-index bump in the .in_tr_email_panel click handler below. */
-      #kt_activitiesIntTeamtra{z-index:999999999999 !important;}
+      /* Opened on top of #interview_schedule_drawer (z-index fixed below to a
+         sane, non-clamped value — z-index: 99999999999 exceeds the 32-bit
+         range browsers actually honor and gets silently clamped, which was
+         tying stacking order with this drawer and letting the overlay paint
+         in the wrong layer). This must sit unambiguously higher — see the
+         matching overlay z-index bump in the .in_tr_email_panel click handler
+         below. */
+      #kt_activitiesIntTeamtra{ z-index: 100020 !important; }
 
        @media only screen and (min-width: 1024px) and (max-width: 1440px){
         #kt_activitiesJob_show{width: 1025px;}
@@ -596,7 +602,7 @@
 </div>
 
 <div id="kt_activitiesIntTeamtra_toggle"></div>
-<div id="kt_activitiesIntTeamtra" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeamtra_toggle" data-kt-drawer-close="#kt_activitiesIntTeamtra_close">
+<div id="kt_activitiesIntTeamtra" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default: '100%', 'md': '75%', 'lg': '60%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeamtra_toggle" data-kt-drawer-close="#kt_activitiesIntTeamtra_close">
   <div class="card shadow-none rounded-0 w-100" id="kt_activitiesIntTeamtra_body"></div>
 </div>
 
