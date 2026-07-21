@@ -1062,14 +1062,6 @@ $country_code =  GeneralMethod::countryCodeFun();
         }
         isdUpdateSummary();
     }
-    setTimeout(() => {
-        let mode = $('#interview_mode').val();
-        let job_id = @json($job_id);
-        if (mode) {
-            getInterviewModeChild(mode,job_id);
-        }
-    }, 1000);
-
     /* =====================================================================
        Presentation-only glue: renders the icon tile-grid on top of the real
        #interview_mode / #interview_mode_lavels selects (built above), keeps
