@@ -288,17 +288,9 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
     background:#fff;
     border-radius:0;
 }
-.bxr-tbl-header{
-    padding:16px 24px 14px;
-    display:flex; align-items:center; justify-content:space-between;
-    flex-wrap:wrap; gap:10px;
-    border-bottom:1px solid #F0F2F5;
-}
-.bxr-tbl-title{ font-size:14px; font-weight:700; color:#1A1D23; }
-.bxr-tbl-count{ font-size:14px; font-weight:400; color:#64748B; }
 .bxr-tbl-loading{
-    display:none; align-items:center; gap:8px;
-    font-size:12px; color:#94A3B8;
+    display:none; align-items:center; justify-content:center;
+    width:44px; height:44px; flex-shrink:0;
 }
 .bxr-tbl-scroll{ overflow-x:auto; }
 .bxr-tbl{
@@ -344,6 +336,11 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
     padding:2px 7px; border-radius:4px;
 }
 .bxr-skill.more{ background:#EFF6FF; color:#2563EB; }
+/* Matched keyword — candidate skill that satisfies one of the job's required
+   skills (same green treatment as AppTracker's matched-skill badge) */
+.bxr-skill.matched{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+/* Match % badge — AppTracker's exact score-color thresholds, replicated here */
+.bxr-match-badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; }
 
 /* Cell text */
 .bxr-c1{ font-size:12px; font-weight:600; color:#1A1D23; margin-bottom:2px; }
@@ -627,6 +624,10 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
       <div class="bxr-sort-panel d-none" id="bxr_sort_panel"></div>
     </div>
 
+    <div class="bxr-tbl-loading loadingMessagebenchCandidateExploreJobAjax" style="display:none;" title="Processing...">
+      <span class="spinner-border spinner-border-sm text-primary" style="width:13px;height:13px;border-width:2px;"></span>
+    </div>
+
     <button class="bxr-refresh" onclick="fetchBenchExploreJobCandidateList()" title="Refresh">
       <i class="ti ti-refresh"></i>
     </button>
@@ -687,17 +688,6 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
 
   {{-- ══ SECTION 5 · TABLE ══════════════════════════════ --}}
   <div class="bxr-tbl-wrap">
-    <div class="bxr-tbl-header">
-      <span class="bxr-tbl-title">
-        Companies Processing This Candidate
-        <span class="bxr-tbl-count bxr-live">({{ $recomCount['bench_explore_counter'] }})</span>
-      </span>
-      <div class="bxr-tbl-loading loadingMessagebenchCandidateExploreJobAjax" style="display:none;">
-        <span class="spinner-border spinner-border-sm text-primary" style="width:13px;height:13px;border-width:2px;"></span>
-        Processing...
-      </div>
-    </div>
-
     <div class="bxr-tbl-scroll">
       <table id="bench_explore_listing" class="bxr-tbl table-custom-class">
         <thead>
@@ -728,7 +718,8 @@ a.bxr-sum-link:hover{ border-color:#c7d2fe; }
 {{-- Drawer — unchanged ── --}}
 <div id="kt_activitiesJob_toggle"></div>
 <div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
-     data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width=""
+     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+     data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'80%'}"
      data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesJob_toggle"
      data-kt-drawer-close="#kt_activitiesJob_close">
   <div class="card shadow-none rounded-0 w-100">
