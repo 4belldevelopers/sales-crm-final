@@ -370,19 +370,24 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 			}, $response['hits']['hits']);
 		}
 		$pagination = [
-			'total' => $total,
+			'total'        => $total,
 			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
+			'per_page'     => $size,
+			'last_page'    => $total > 0 ? (int) ceil($total / $size) : 1,
+			'listType'     => 'allcandidate',
 		];
+		$fromEntry = $total > 0 ? ($page - 1) * $size + 1 : 0;
+		$toEntry   = $total > 0 ? min($page * $size, $total) : 0;
 
 		$userPermissions = $this->userPermissions;
 		$stats = $this->dashboardStats($company_id, $chkAdminRole, $page);
 		$responseData =  [
-			'html' => view('service_company.ajax_pages.interview-tracker-ajax', compact('data','userPermissions','feedback_status','available_status','company_id','chkAdminRole'))->render(),
-			'total' => $total,
+			'html'       => view('service_company.ajax_pages.interview-tracker-ajax', compact('data','userPermissions','feedback_status','available_status','company_id','chkAdminRole'))->render(),
+			'total'      => $total,
+			'from'       => $fromEntry,
+			'to'         => $toEntry,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-			'stats' => $stats,
+			'stats'      => $stats,
 		];
 
 
@@ -753,24 +758,31 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 		$interviewShedule->groupBy('interview_schedules.id');
 
 
-		$perPage = 10;
-		$page = $request->get('page', 1);
+		$perPage = (int) $request->get('size', 10);
+		if ($perPage < 1 || $perPage > 200) { $perPage = 10; }
+		$page = max((int) $request->get('page', 1), 1);
 		// dd($page);
 		$total = count($interviewShedule->get());
 		// dd($total);
 		$data = $interviewShedule->skip(($page - 1) * $perPage)->take($perPage)->get();
 
+		$fromEntry = $total > 0 ? ($page - 1) * $perPage + 1 : 0;
+		$toEntry   = $total > 0 ? min($page * $perPage, $total) : 0;
+
 		$pagination = [
-			'total' => $total,
+			'total'        => $total,
 			'current_page' => $page,
-			'last_page' => ceil($total / $perPage),
-			'listType' => 'allcandidate',
+			'per_page'     => $perPage,
+			'last_page'    => $total > 0 ? (int) ceil($total / $perPage) : 1,
+			'listType'     => 'allcandidate',
 		];
 		// dd($pagination);
 		$userPermissions = $this->userPermissions;
 		return response()->json([
-			'html' => view('service_company.ajax_pages.interview-tracker-ajax', compact('data','userPermissions','feedback_status','available_status','company_id'))->render(),
-			'total' => $total,
+			'html'       => view('service_company.ajax_pages.interview-tracker-ajax', compact('data','userPermissions','feedback_status','available_status','company_id'))->render(),
+			'total'      => $total,
+			'from'       => $fromEntry,
+			'to'         => $toEntry,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		]);
 	}
