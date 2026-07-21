@@ -132,6 +132,9 @@
     transition:box-shadow .18s;
 }
 .bxr-sum-card:hover{ box-shadow:0 4px 10px rgba(16,24,40,.06); }
+/* Clickable cards (Recommended Jobs / Recommended Internal Jobs) render as <a> — strip link styling */
+a.bxr-sum-link{ color:inherit; text-decoration:none; cursor:pointer; }
+a.bxr-sum-link:hover{ border-color:#c7d2fe; }
 
 /* Icon box — tinted, compact */
 .bxr-sum-icon{
@@ -370,7 +373,6 @@
     .bxr-kpi-row{ flex-wrap:wrap; width:100%; }
     .bxr-kpi+.bxr-kpi::before{ display:none; }
     .bxr-sum-row{ flex-direction:column; }
-    .bxr-sum-card{ border-right:none; }
 }
 
 /* ══ 6. FILTER TOOLBAR (search / sort / filter button) ══════ */
@@ -406,116 +408,6 @@
 .bxr-sort-item{ padding:9px 12px; font-size:12.5px; font-weight:500; color:#374151; border-radius:7px; cursor:pointer; }
 .bxr-sort-item:hover{ background:#F5F8FF; }
 .bxr-sort-item.active{ background:#EFF6FF; color:#2563EB; font-weight:700; }
-.bxr-filter-btn{
-    height:44px; padding:0 16px; border:1.5px solid #E5E9F0; border-radius:10px;
-    background:#fff; color:#374151; font-size:13px; font-weight:600;
-    display:flex; align-items:center; gap:8px; position:relative; flex-shrink:0;
-}
-.bxr-filter-btn:hover{ border-color:#2563EB; color:#2563EB; }
-.bxr-count-badge{ font-size:10px; }
-
-/* ══ 7. APPLIED FILTERS CARD ═════════════════════════════════ */
-.bxr-applied-card{
-    border:1px solid #eef0f4; border-radius:14px; background:#fff;
-    padding:16px 18px; margin:0 0 16px; font-family:'Poppins',sans-serif;
-}
-.bxr-applied-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
-.bxr-applied-title{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:#181c32; }
-.bxr-applied-count{
-    background:#2563eb; color:#fff; font-size:11px; font-weight:700; border-radius:50%;
-    min-width:19px; height:19px; display:inline-flex; align-items:center; justify-content:center; padding:0 4px;
-}
-.bxr-applied-clearall{ font-size:12px; font-weight:500; color:#dc2626; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
-.bxr-applied-clearall:hover{ color:#b91c1c; }
-.bxr-applied-chips{ display:flex; flex-wrap:wrap; gap:8px; }
-.bxr-applied-chip{
-    display:inline-flex; align-items:center; gap:6px; border-radius:8px; padding:6px 10px;
-    font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap;
-}
-.bxr-applied-chip .ic{ display:inline-flex; align-items:center; flex-shrink:0; }
-.bxr-applied-chip-remove{ cursor:pointer; opacity:.55; display:inline-flex; align-items:center; margin-left:2px; }
-.bxr-applied-chip-remove:hover{ opacity:1; }
-.bxr-applied-chip.cat-company{ background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
-.bxr-applied-chip.cat-location{ background:#ecfdf5; color:#059669; border-color:#d1fae5; }
-.bxr-applied-chip.cat-salary{ background:#fffbeb; color:#b45309; border-color:#fde68a; }
-.bxr-applied-chip.cat-status{ background:#f5f3ff; color:#7c3aed; border-color:#ede9fe; }
-.bxr-applied-chip.cat-activity{ background:#fdf2f8; color:#be185d; border-color:#fbcfe8; }
-.bxr-applied-more{ font-size:12px; font-weight:600; color:#2563eb; cursor:pointer; padding:6px 4px; }
-
-/* ══ 8. FILTER DRAWER (bxr-, adapted from dsf-/dib-) ═════════ */
-.bxr-drawer{ background:#fff; }
-.bxr-card{ display:flex; flex-direction:column; }
-.bxr-header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:20px 24px; border-bottom:1px solid #F0F2F5; flex-shrink:0;
-}
-.bxr-header-icon{
-    width:40px; height:40px; border-radius:10px; background:#EFF6FF; color:#2563EB;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-.bxr-title{ font-size:16px; font-weight:700; color:#181c32; margin:0; }
-.bxr-count-pill{
-    background:#2563eb; color:#fff; font-size:11px; font-weight:700; border-radius:20px;
-    padding:2px 9px; min-width:19px; text-align:center;
-}
-.bxr-subtitle{ font-size:12px; color:#94A3B8; margin:2px 0 0; }
-.bxr-close{
-    width:34px; height:34px; border-radius:9px; border:1px solid #E5E9F0; background:#fff;
-    color:#64748B; display:flex; align-items:center; justify-content:center; cursor:pointer;
-}
-.bxr-close:hover{ background:#F8FAFC; }
-.bxr-body{ padding:0 24px; }
-.bxr-section{ padding:18px 0; border-bottom:1px solid #F5F7FA; }
-.bxr-section-last{ border-bottom:none; }
-.bxr-section-head{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.bxr-icon{
-    width:32px; height:32px; border-radius:9px; display:flex; align-items:center;
-    justify-content:center; flex-shrink:0;
-}
-.bxr-icon-blue{ background:#EFF6FF; color:#2563EB; }
-.bxr-icon-green{ background:#ECFDF5; color:#059669; }
-.bxr-icon-amber{ background:#FFFBEB; color:#B45309; }
-.bxr-icon-purple{ background:#F5F3FF; color:#7C3AED; }
-.bxr-icon-rose{ background:#FDF2F8; color:#BE185D; }
-.bxr-section-title{ font-size:13.5px; font-weight:700; color:#181c32; }
-.bxr-section-desc{ font-size:11.5px; color:#94A3B8; margin-top:1px; }
-.bxr-mini-label{ font-size:11px; font-weight:600; color:#64748B; margin-bottom:4px; display:block; }
-.bxr-salary-row .form-select, .bxr-salary-row .form-control{ font-size:13px; }
-
-/* Active-filters chip bar inside the drawer body */
-.bxr-activebar{
-    background:#F8FAFC; border:1px solid #EEF0F4; border-radius:12px;
-    padding:12px 14px; margin:16px 0;
-}
-.bxr-activebar-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-.bxr-activebar-label{ font-size:12px; font-weight:700; color:#374151; }
-.bxr-clearall{ font-size:11.5px; font-weight:600; color:#dc2626; display:inline-flex; align-items:center; gap:4px; text-decoration:none; }
-.bxr-clearall:hover{ color:#b91c1c; }
-.bxr-chips{ display:flex; flex-wrap:wrap; gap:7px; }
-.bxr-chip{
-    display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid #E5E9F0;
-    border-radius:7px; padding:5px 9px; font-size:11.5px; font-weight:600; color:#374151;
-}
-.bxr-chip-remove{ cursor:pointer; opacity:.55; }
-.bxr-chip-remove:hover{ opacity:1; }
-
-/* Pill-style radio groups (Status / Activity) */
-.bxr-pill-row{ display:flex; flex-wrap:wrap; gap:8px; }
-.bxr-pill-row .btn-check{ position:absolute; opacity:0; pointer-events:none; }
-.bxr-pill-row label{ margin:0; cursor:pointer; min-width:88px; }
-
-.bxr-footer{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:16px 24px; border-top:1px solid #F0F2F5; flex-shrink:0; background:#fff;
-}
-.bxr-footer-count{ display:flex; align-items:center; gap:10px; }
-.bxr-footer-icon{
-    width:38px; height:38px; border-radius:10px; background:#EFF6FF; color:#2563EB;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-.bxr-footer-number{ font-size:16px; font-weight:800; color:#181c32; line-height:1.1; }
-.bxr-footer-label{ font-size:11px; color:#94A3B8; }
-.bxr-footer-actions{ display:flex; gap:8px; }
 </style>
 @endpush
 
@@ -685,8 +577,8 @@
         </div>
       </div>
     </div>
-    {{-- Card 2: blue --}}
-    <div class="bxr-sum-card sc-b">
+    {{-- Card 2: blue — links to the Recommended Jobs list page --}}
+    <a href="{{ $recommend_req_url }}" class="bxr-sum-card sc-b bxr-sum-link">
       <div class="bxr-sum-icon"><i class="ti ti-briefcase"></i></div>
       <div>
         <div class="bxr-sum-label">Recommended Jobs</div>
@@ -695,9 +587,9 @@
           <i class="ti ti-arrow-up" style="font-size:11px;"></i> 5 new today
         </div>
       </div>
-    </div>
-    {{-- Card 3: orange --}}
-    <div class="bxr-sum-card sc-o">
+    </a>
+    {{-- Card 3: orange — links to the Recommended Internal Jobs list page --}}
+    <a href="{{ $recommend_internal_req }}" class="bxr-sum-card sc-o bxr-sum-link">
       <div class="bxr-sum-icon"><i class="ti ti-building-skyscraper"></i></div>
       <div>
         <div class="bxr-sum-label">Recommended Internal Jobs</div>
@@ -706,7 +598,7 @@
           <i class="ti ti-arrow-up" style="font-size:11px;"></i> 2 new today
         </div>
       </div>
-    </div>
+    </a>
   </div>
 
   {{-- ══ SECTION 3 · SEARCH / SORT / FILTER TOOLBAR ═══ --}}
@@ -735,247 +627,9 @@
       <div class="bxr-sort-panel d-none" id="bxr_sort_panel"></div>
     </div>
 
-    <button type="button" id="kt_bxr_filter_toggle" class="btn bxr-filter-btn position-relative">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-      <span>Filter<span id="bxr_filter_count_text"></span></span>
-      <span class="badge badge-circle badge-primary bxr-count-badge d-none" id="bxr_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
-    </button>
-
     <button class="bxr-refresh" onclick="fetchBenchExploreJobCandidateList()" title="Refresh">
       <i class="ti ti-refresh"></i>
     </button>
-  </div>
-
-  {{-- ══ Applied Filters summary card — hidden until Apply is clicked ══ --}}
-  <div class="bxr-applied-card d-none" id="bxr_applied_card" style="margin:0 0 4px;">
-    <div class="bxr-applied-head">
-      <span class="bxr-applied-title">
-        Active Filters
-        <span class="bxr-applied-count" id="bxr_applied_count">0</span>
-      </span>
-      <a href="javascript:void(0);" class="bxr-applied-clearall" id="bxr_applied_clear_all">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
-        Clear All
-      </a>
-    </div>
-    <div class="bxr-applied-chips" id="bxr_applied_chips"></div>
-  </div>
-
-  {{-- ══ Filter Drawer ══════════════════════════════════════════ --}}
-  <div id="kt_bxr_filter_drawer" class="bg-body bxr-drawer" data-kt-drawer="true" data-kt-drawer-name="bxr-filter"
-      data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-      data-kt-drawer-width="{default:'92%', 'sm': '80%'}" data-kt-drawer-direction="end"
-      data-kt-drawer-toggle="#kt_bxr_filter_toggle" data-kt-drawer-close="#kt_bxr_filter_close">
-    <div id="bxr_card" class="card shadow-none rounded-0 w-100 h-100 bxr-card">
-      <div class="bxr-header">
-        <div class="d-flex align-items-center gap-3">
-          <span class="bxr-header-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-          </span>
-          <div>
-            <div class="d-flex align-items-center gap-2">
-              <h3 class="bxr-title">Filter Companies</h3>
-              <span class="bxr-count-pill" id="bxr_header_count">0</span>
-            </div>
-            <p class="bxr-subtitle">Narrow down the companies processing this candidate</p>
-          </div>
-        </div>
-        <button type="button" class="bxr-close" id="kt_bxr_filter_close" title="Close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-
-      <div class="bxr-body">
-        <form id="bxrFilterForm" class="ajax-form" method="post" onsubmit="return false;">
-
-          <div class="bxr-activebar d-none" id="bxr_active_bar">
-            <div class="bxr-activebar-head">
-              <span class="bxr-activebar-label">Active Filters <span id="bxr_active_count">(0)</span></span>
-              <a href="javascript:void(0);" class="bxr-clearall" id="bxr_clear_all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
-                Clear All
-              </a>
-            </div>
-            <div class="bxr-chips" id="bxr_active_chips"></div>
-          </div>
-
-          {{-- Company / Client Name --}}
-          <div class="bxr-section">
-            <div class="bxr-section-head">
-              <span class="bxr-icon bxr-icon-blue">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/></svg>
-              </span>
-              <div>
-                <div class="bxr-section-title">Company / Client Name</div>
-                <div class="bxr-section-desc">Which companies is this candidate submitted to</div>
-              </div>
-            </div>
-            <input class="form-control form-control-solid" id="kt_tagify_bxr_company"
-                placeholder="Search company or client name" />
-          </div>
-
-          {{-- Job Location --}}
-          <div class="bxr-section">
-            <div class="bxr-section-head">
-              <span class="bxr-icon bxr-icon-green">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              </span>
-              <div>
-                <div class="bxr-section-title">Job Location</div>
-                <div class="bxr-section-desc">City or work location of the job</div>
-              </div>
-            </div>
-            <input class="form-control form-control-solid" id="kt_tagify_bxr_location"
-                placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
-          </div>
-
-          {{-- Salary / Bill Rate --}}
-          <div class="bxr-section">
-            <div class="bxr-section-head">
-              <span class="bxr-icon bxr-icon-amber">
-                <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
-              </span>
-              <div>
-                <div class="bxr-section-title">Salary / Bill Rate</div>
-                <div class="bxr-section-desc">Offered salary range for the job</div>
-              </div>
-            </div>
-            <div class="row g-2 bxr-salary-row">
-              <div class="col-3">
-                <label class="bxr-mini-label">Currency</label>
-                <select class="form-select form-select-solid" id="bxr_min_salary_currency">
-                  <option value="">Any</option>
-                  <option value="0">INR</option>
-                  <option value="1">EUR</option>
-                  <option value="2">JPY</option>
-                  <option value="3">GBP</option>
-                  <option value="4">USD</option>
-                  <option value="5">AED</option>
-                </select>
-              </div>
-              <div class="col-3">
-                <label class="bxr-mini-label">Mode</label>
-                <select class="form-select form-select-solid" id="bxr_sal_mode">
-                  <option value="">Any</option>
-                  <option value="0">Annual</option>
-                  <option value="1">Monthly</option>
-                  <option value="2">Hourly</option>
-                </select>
-              </div>
-              <div class="col-3">
-                <label class="bxr-mini-label">Min</label>
-                <input type="number" class="form-control form-control-solid" id="bxr_min_sal" placeholder="Any">
-              </div>
-              <div class="col-3">
-                <label class="bxr-mini-label">Max</label>
-                <input type="number" class="form-control form-control-solid" id="bxr_max_sal" placeholder="Any">
-              </div>
-            </div>
-          </div>
-
-          {{-- Status --}}
-          <div class="bxr-section">
-            <div class="bxr-section-head">
-              <span class="bxr-icon bxr-icon-purple">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/></svg>
-              </span>
-              <div>
-                <div class="bxr-section-title">Status</div>
-                <div class="bxr-section-desc">Job's current status</div>
-              </div>
-            </div>
-            <div class="bxr-pill-row" data-radio-group="bxr_status">
-              <div>
-                <input type="radio" class="btn-check bxr_status" name="bxr_status" value="all" id="bxr_status_all">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_status_all">All</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_status" name="bxr_status" value="active" id="bxr_status_active" checked>
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_status_active">Active</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_status" name="bxr_status" value="hold" id="bxr_status_hold">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_status_hold">Hold</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_status" name="bxr_status" value="inactive" id="bxr_status_inactive">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_status_inactive">Closed</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_status" name="bxr_status" value="removed" id="bxr_status_removed">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_status_removed">Removed</label>
-              </div>
-            </div>
-          </div>
-
-          {{-- Activity --}}
-          <div class="bxr-section bxr-section-last">
-            <div class="bxr-section-head">
-              <span class="bxr-icon bxr-icon-rose">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
-              </span>
-              <div>
-                <div class="bxr-section-title">Activity</div>
-                <div class="bxr-section-desc">How recently the stage last changed</div>
-              </div>
-            </div>
-            <div class="bxr-pill-row" data-radio-group="bxr_activity">
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="1" id="bxr_activity1" checked>
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity1">All</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="2" id="bxr_activity2">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity2">30 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="3" id="bxr_activity3">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity3">60 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="4" id="bxr_activity4">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity4">90 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="5" id="bxr_activity5">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity5">180 Days</label>
-              </div>
-              <div>
-                <input type="radio" class="btn-check bxr_activity" name="bxr_activity" value="6" id="bxr_activity6">
-                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3" for="bxr_activity6">1 Year</label>
-              </div>
-            </div>
-          </div>
-
-        </form>
-      </div>
-
-      <div class="bxr-footer">
-        <div class="bxr-footer-count">
-          <span class="bxr-footer-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </span>
-          <div>
-            <div class="bxr-footer-number" id="bxr_footer_number">{{ $recomCount['bench_explore_counter'] }}</div>
-            <div class="bxr-footer-label">Companies Match</div>
-          </div>
-        </div>
-        <div class="bxr-footer-actions">
-          <button type="button" class="btn btn-sm btn-light" id="bxr_close_btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            Close
-          </button>
-          <button type="button" class="btn btn-sm btn-light" id="bxr_reset_btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-            Reset
-          </button>
-          <button type="button" class="btn btn-sm btn-primary" id="bxr_apply_btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-            Apply Filters
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 
   {{-- ══ SECTION 4 · STAGE PIPELINE FLOW — same connected-circle pattern as
@@ -999,7 +653,7 @@
         <div class="bxr-total bxr-total-active" data-bxr="all">
           <span class="bxr-total-icon"><i class="ti ti-layout-grid"></i></span>
           <span class="bxr-total-count" id="totalcnt">0</span>
-          <span class="bxr-total-label">All</span>
+          <span class="bxr-total-label">All Jobs</span>
         </div>
       </a>
       <span class="bxr-eq">=</span>
@@ -1048,11 +702,6 @@
       <table id="bench_explore_listing" class="bxr-tbl table-custom-class">
         <thead>
           <tr>
-            <th style="width:40px;">
-              <div class="form-check form-check-sm form-check-custom form-check-solid ms-2">
-                <input class="form-check-input" type="checkbox" value="1">
-              </div>
-            </th>
             <th style="min-width:220px;">JOB DETAILS</th>
             <th style="min-width:130px;">EXPERIENCE</th>
             <th style="min-width:130px;">HIRING &amp; LOCATION</th>
@@ -1273,251 +922,5 @@ $(document).on('click','#bxr_sort_btn',function(e){
 });
 $(document).on('click',function(e){ if(!$(e.target).closest('#bxr_sort_wrap').length) bxrCloseSortPanel(); });
 
-/* ── Drawer width + viewport-bound layout (same measurement approach as
-   Similar Candidates'/In-house Bench's filter drawer) ── */
-function bxrSetDrawerWidth(){
-    var wrapper=document.getElementById('kt_wrapper');
-    var contentWidth=wrapper?wrapper.getBoundingClientRect().width:window.innerWidth;
-    if(!contentWidth) contentWidth=window.innerWidth;
-    var drawerEl=document.getElementById('kt_bxr_filter_drawer');
-    if(drawerEl) drawerEl.style.width=Math.round(contentWidth*0.8)+'px';
-}
-$(document).ready(bxrSetDrawerWidth);
-$(window).on('resize', bxrSetDrawerWidth);
-$(document).on('click','#kt_bxr_filter_toggle', bxrSetDrawerWidth);
-
-function bxrEnforceDrawerLayout(){
-    var drawerEl=document.getElementById('kt_bxr_filter_drawer');
-    var cardEl=document.getElementById('bxr_card');
-    var bodyEl=cardEl?cardEl.querySelector('.bxr-body'):null;
-    var headerEl=cardEl?cardEl.querySelector('.bxr-header'):null;
-    var footerEl=cardEl?cardEl.querySelector('.bxr-footer'):null;
-    if(drawerEl){
-        drawerEl.style.setProperty('overflow','hidden','important');
-        drawerEl.style.setProperty('position','fixed','important');
-        drawerEl.style.setProperty('top','0','important');
-        drawerEl.style.setProperty('bottom','0','important');
-        drawerEl.style.setProperty('height','100vh','important');
-    }
-    if(cardEl){
-        cardEl.style.setProperty('display','block','important');
-        cardEl.style.setProperty('position','relative','important');
-        cardEl.style.setProperty('overflow','hidden','important');
-        cardEl.style.setProperty('height','100vh','important');
-        cardEl.style.setProperty('max-height','100vh','important');
-    }
-    if(bodyEl){
-        var headerH=headerEl?headerEl.offsetHeight:0, footerH=footerEl?footerEl.offsetHeight:0;
-        var available=Math.max(window.innerHeight-headerH-footerH,100);
-        bodyEl.style.setProperty('position','absolute','important');
-        bodyEl.style.setProperty('left','0','important');
-        bodyEl.style.setProperty('right','0','important');
-        bodyEl.style.setProperty('top',headerH+'px','important');
-        bodyEl.style.setProperty('height',available+'px','important');
-        bodyEl.style.setProperty('max-height',available+'px','important');
-        bodyEl.style.setProperty('overflow-y','auto','important');
-        bodyEl.style.setProperty('overflow-x','hidden','important');
-    }
-    if(footerEl){
-        footerEl.style.setProperty('position','absolute','important');
-        footerEl.style.setProperty('left','0','important');
-        footerEl.style.setProperty('right','0','important');
-        footerEl.style.setProperty('bottom','0','important');
-    }
-}
-$(document).ready(bxrEnforceDrawerLayout);
-$(window).on('resize', bxrEnforceDrawerLayout);
-$(document).on('click','#kt_bxr_filter_toggle, #kt_bxr_filter_close', bxrEnforceDrawerLayout);
-
-/* ── Tagify: Company/Client Name + Job Location (plain multi-tag, no
-   whitelist/suggestions — these match ES text fields directly) ── */
-var bxrTagifyCompany, bxrTagifyLocation;
-$(document).ready(function(){
-    var elCompany=document.querySelector('#kt_tagify_bxr_company');
-    if (elCompany && typeof Tagify!=='undefined'){
-        bxrTagifyCompany=new Tagify(elCompany,{maxTags:10,dropdown:{enabled:0}});
-        bxrTagifyCompany.on('add', bxrUpdateActiveFiltersUI);
-        bxrTagifyCompany.on('remove', bxrUpdateActiveFiltersUI);
-    }
-    var elLocation=document.querySelector('#kt_tagify_bxr_location');
-    if (elLocation && typeof Tagify!=='undefined'){
-        bxrTagifyLocation=new Tagify(elLocation,{maxTags:10,dropdown:{enabled:0}});
-        bxrTagifyLocation.on('add', bxrUpdateActiveFiltersUI);
-        bxrTagifyLocation.on('remove', bxrUpdateActiveFiltersUI);
-    }
-});
-
-function bxrPillLabel($checkedInput){
-    return $.trim($checkedInput.closest('div').next('label').text());
-}
-
-/* ── In-drawer Active Filters chip bar (draft, live on every field change) ── */
-function bxrUpdateActiveFiltersUI(){
-    var chips=[];
-    if (typeof bxrTagifyCompany!=='undefined') bxrTagifyCompany.value.forEach(function(t){
-        chips.push({label:t.value, clear:function(){ bxrTagifyCompany.removeTags(t.value); }});
-    });
-    if (typeof bxrTagifyLocation!=='undefined') bxrTagifyLocation.value.forEach(function(t){
-        chips.push({label:t.value, clear:function(){ bxrTagifyLocation.removeTags(t.value); }});
-    });
-    var minSal=$('#bxr_min_sal').val(), maxSal=$('#bxr_max_sal').val();
-    if (minSal || maxSal){
-        chips.push({label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#bxr_min_sal,#bxr_max_sal').val(''); }});
-    }
-    var statusEl=$('[name="bxr_status"]:checked');
-    if (statusEl.val() && statusEl.val()!=='active'){
-        chips.push({label:bxrPillLabel(statusEl), clear:function(){ $('#bxr_status_active').prop('checked',true); }});
-    }
-    var activityEl=$('[name="bxr_activity"]:checked');
-    if (activityEl.val() && activityEl.val()!=='1'){
-        chips.push({label:bxrPillLabel(activityEl), clear:function(){ $('#bxr_activity1').prop('checked',true); }});
-    }
-
-    var $chips=$('#bxr_active_chips').empty();
-    chips.forEach(function(c){
-        $chips.append(
-            $('<span class="bxr-chip"></span>').append($('<span></span>').text(c.label))
-                .append($('<span class="bxr-chip-remove">&times;</span>').on('click',function(){ c.clear(); bxrUpdateActiveFiltersUI(); }))
-        );
-    });
-    var n=chips.length;
-    $('#bxr_active_bar').toggleClass('d-none', n===0);
-    $('#bxr_active_count').text('('+n+')');
-    $('#bxr_header_count').text(n);
-    $('#bxr_count_badge').toggleClass('d-none', n===0).text(n);
-    $('#bxr_filter_count_text').text(n>0?' ('+n+')':'');
-}
-$(document).on('change keyup','#bxr_min_sal, #bxr_max_sal', bxrUpdateActiveFiltersUI);
-$(document).on('change','[name="bxr_status"], [name="bxr_activity"]',function(){
-    bxrUpdateActiveFiltersUI();
-    if (typeof bxrEnforceDrawerLayout==='function') bxrEnforceDrawerLayout();
-});
-
-/* ── Applied Filters summary card (main page, reflects last-APPLIED state) ── */
-function bxrCategoryIcon(cat){
-    var paths={
-        company:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"/>',
-        location:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
-        status:'<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/>',
-        activity:'<path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>'
-    };
-    if (cat==='salary') return '<span style="font-size:11px;font-weight:700;line-height:1;">₹</span>';
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+(paths[cat]||'')+'</svg>';
-}
-function bxrBuildAppliedItems(){
-    var items=[];
-    if (typeof bxrTagifyCompany!=='undefined') bxrTagifyCompany.value.forEach(function(t){
-        items.push({cat:'company', label:t.value, clear:function(){ bxrTagifyCompany.removeTags(t.value); }});
-    });
-    if (typeof bxrTagifyLocation!=='undefined') bxrTagifyLocation.value.forEach(function(t){
-        items.push({cat:'location', label:t.value, clear:function(){ bxrTagifyLocation.removeTags(t.value); }});
-    });
-    var minSal=$('#bxr_min_sal').val(), maxSal=$('#bxr_max_sal').val();
-    if (minSal || maxSal){
-        items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#bxr_min_sal,#bxr_max_sal').val(''); }});
-    }
-    var statusEl=$('[name="bxr_status"]:checked');
-    if (statusEl.val() && statusEl.val()!=='active'){
-        items.push({cat:'status', label:bxrPillLabel(statusEl), clear:function(){ $('#bxr_status_active').prop('checked',true); }});
-    }
-    var activityEl=$('[name="bxr_activity"]:checked');
-    if (activityEl.val() && activityEl.val()!=='1'){
-        items.push({cat:'activity', label:bxrPillLabel(activityEl), clear:function(){ $('#bxr_activity1').prop('checked',true); }});
-    }
-    return items;
-}
-function bxrAppliedChipRemoved(){
-    fetchBenchExploreJobCandidateList();
-    bxrUpdateActiveFiltersUI();
-    bxrCaptureSnapshot();
-    bxrRenderAppliedFiltersCard();
-}
-function bxrRenderAppliedFiltersCard(){
-    var items=bxrBuildAppliedItems();
-    var $chips=$('#bxr_applied_chips').empty();
-    items.forEach(function(it){
-        var $chip=$('<span class="bxr-applied-chip"></span>').addClass('cat-'+it.cat);
-        $chip.append('<span class="ic">'+bxrCategoryIcon(it.cat)+'</span>');
-        $chip.append($('<span></span>').text(it.label));
-        $chip.append($('<span class="bxr-applied-chip-remove">&times;</span>').on('click',function(){ it.clear(); bxrAppliedChipRemoved(); }));
-        $chips.append($chip);
-    });
-    $('#bxr_applied_card').toggleClass('d-none', items.length===0);
-    $('#bxr_applied_count').text(items.length);
-}
-$(document).on('click','#bxr_applied_clear_all',function(){
-    $('#bxr_clear_all').trigger('click');
-    fetchBenchExploreJobCandidateList();
-    bxrCaptureSnapshot();
-    bxrRenderAppliedFiltersCard();
-});
-$(document).on('click','#bxr_clear_all',function(){
-    if (typeof bxrTagifyCompany!=='undefined') bxrTagifyCompany.removeAllTags();
-    if (typeof bxrTagifyLocation!=='undefined') bxrTagifyLocation.removeAllTags();
-    $('#bxr_min_sal, #bxr_max_sal, #bxr_min_salary_currency, #bxr_sal_mode').val('');
-    $('#bxr_status_active, #bxr_activity1').prop('checked', true);
-    bxrUpdateActiveFiltersUI();
-});
-$(document).on('click','#bxr_reset_btn',function(){
-    $('#bxr_clear_all').trigger('click');
-    fetchBenchExploreJobCandidateList();
-    bxrCaptureSnapshot();
-    bxrRenderAppliedFiltersCard();
-});
-
-/* ── Draft-until-Apply: snapshot on open, restore on close-without-apply ── */
-var bxrSnapshot=null, bxrApplying=false;
-function bxrCaptureSnapshot(){
-    bxrSnapshot={
-        company:(typeof bxrTagifyCompany!=='undefined')?bxrTagifyCompany.value.map(function(t){return t.value;}):[],
-        location:(typeof bxrTagifyLocation!=='undefined')?bxrTagifyLocation.value.map(function(t){return t.value;}):[],
-        min_sal:$('#bxr_min_sal').val(), max_sal:$('#bxr_max_sal').val(),
-        min_salary_currency:$('#bxr_min_salary_currency').val(), sal_mode:$('#bxr_sal_mode').val(),
-        status:$('[name="bxr_status"]:checked').val(), activity:$('[name="bxr_activity"]:checked').val()
-    };
-}
-function bxrRestoreSnapshot(){
-    if (!bxrSnapshot) return;
-    if (typeof bxrTagifyCompany!=='undefined'){ bxrTagifyCompany.removeAllTags(); if(bxrSnapshot.company.length) bxrTagifyCompany.addTags(bxrSnapshot.company); }
-    if (typeof bxrTagifyLocation!=='undefined'){ bxrTagifyLocation.removeAllTags(); if(bxrSnapshot.location.length) bxrTagifyLocation.addTags(bxrSnapshot.location); }
-    $('#bxr_min_sal').val(bxrSnapshot.min_sal);
-    $('#bxr_max_sal').val(bxrSnapshot.max_sal);
-    $('#bxr_min_salary_currency').val(bxrSnapshot.min_salary_currency);
-    $('#bxr_sal_mode').val(bxrSnapshot.sal_mode);
-    if (bxrSnapshot.status) $('[name="bxr_status"][value="'+bxrSnapshot.status+'"]').prop('checked',true);
-    if (bxrSnapshot.activity) $('[name="bxr_activity"][value="'+bxrSnapshot.activity+'"]').prop('checked',true);
-    bxrUpdateActiveFiltersUI();
-}
-function bxrBindDrawerLifecycle(){
-    var el=document.getElementById('kt_bxr_filter_drawer');
-    if (!el || typeof KTDrawer==='undefined' || !KTDrawer.getInstance) return setTimeout(bxrBindDrawerLifecycle,300);
-    var inst=KTDrawer.getInstance(el);
-    if (!inst) return setTimeout(bxrBindDrawerLifecycle,300);
-    inst.on('kt.drawer.shown', function(){
-        bxrApplying=false;
-        bxrCaptureSnapshot();
-        bxrEnforceDrawerLayout();
-        setTimeout(bxrEnforceDrawerLayout,50);
-    });
-    inst.on('kt.drawer.after.hidden', function(){
-        if (!bxrApplying) bxrRestoreSnapshot();
-        bxrApplying=false;
-    });
-}
-$(document).ready(bxrBindDrawerLifecycle);
-
-$(document).on('click','#bxr_close_btn',function(){ $('#kt_bxr_filter_close').trigger('click'); });
-$(document).on('click','#bxr_apply_btn',function(){
-    bxrApplying=true;
-    fetchBenchExploreJobCandidateList();
-    bxrRenderAppliedFiltersCard();
-    $('#kt_bxr_filter_close').trigger('click');
-});
-
-$(document).ready(function(){
-    setTimeout(bxrUpdateActiveFiltersUI,600);
-    setTimeout(bxrCaptureSnapshot,800);
-    setTimeout(bxrRenderAppliedFiltersCard,700);
-});
 </script>
 @endpush
