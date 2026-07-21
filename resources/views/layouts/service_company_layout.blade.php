@@ -548,7 +548,7 @@
       <div class="isd-shell-topbar-right">
         <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
         <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel">Cancel</button>
-        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary">
+        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
           <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
           <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
         </button>
@@ -578,6 +578,12 @@
   $(document).on('click', '#interview_schedule_drawer_back', function(){
     $('.divback').trigger('click');
   });
+  // Clean up the inline transform we force-set when opening, so KTDrawer's
+  // CSS (.drawer.drawer-end { transform: translateX(100%) }) takes over once closed.
+  $(document).on('click', '#interview_schedule_drawer_close', function(){
+    var el = document.getElementById('interview_schedule_drawer');
+    if (el) { el.classList.remove('drawer-on'); el.style.removeProperty('transform'); }
+  });
   $(document).on('click', '#interview_schedule_drawer_primary', function(){
     if ($('#div_interview_schedule_second').is(':visible')) {
       $('#sendEmailBtn').trigger('click');
@@ -591,9 +597,9 @@
   window.openInterviewScheduleDrawer = function() {
     var el = document.getElementById('interview_schedule_drawer');
     if (!el) return;
-    var inst = KTDrawer.getInstance(el);
-    if (!inst) { KTDrawer.createInstances(); inst = KTDrawer.getInstance(el); }
-    if (inst && !inst.isShown()) inst.show();
+    if (!el.classList.contains('drawer')) el.classList.add('drawer', 'drawer-end');
+    el.classList.add('drawer-on');
+    el.style.transform = 'none';
   };
 </script>
 <!--end::Interview Schedule drawer-->
@@ -1951,7 +1957,7 @@ $(document).ready(function(){
                   url += '?' + query.join('&');
               }
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
@@ -2635,7 +2641,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2659,7 +2665,7 @@ $( document ).ready(function() {
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
          			url     		=	url.replace(':id', id);
          			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
               window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
@@ -2757,7 +2763,7 @@ $( document ).ready(function() {
                           var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
                           url     		=	url.replace(':id', id);
                           var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-                          (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el) return; var _i=KTDrawer.getInstance(_el); if(!_i){KTDrawer.createInstances();_i=KTDrawer.getInstance(_el);} if(_i&&!_i.isShown())_i.show(); })();
+                          (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
               window.isdShellSetStep('main');
                           $.ajax({
                                   type  		:	'GET',

@@ -410,8 +410,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     <div class="isd-sec-head">
                         <span class="isd-sec-num" style="background:#06c732;">3</span>
                         <div><div class="isd-sec-title">Interview Panel</div><div class="isd-sec-sub">Who will interview</div></div>
-                        <a href="javascript:;" class="isd-btn-add-panel in_tr_email_panel" data-bs-toggle="modal" data-panel="1"
-                            data-bs-target="#kt_modal_create_project"><i class="ti ti-plus"></i> Add Interview Panel</a>
+                        <a href="javascript:;" class="isd-btn-add-panel in_tr_email_panel" data-panel="1"><i class="ti ti-plus"></i> Add Interview Panel</a>
                     </div>
                     <input class="isd-hidden-native" name="panellist" id="panellist" value="">
                     <div class="isd-panel-list" id="isdPanelList"></div>
@@ -531,7 +530,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                     <input type="text" name="cc_email" id="cc_email" placeholder="Ex: example2@test.com" class="form-control form-control-solid" value="">
                     <span class="form-text text-muted">Please enter email</span>
                     <div class="" style="position: absolute; right: 13px; top: 4px;">
-                        <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel" data-bs-toggle="modal" data-panel="0" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
+                        <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel" data-panel="0">Add E-mail ID</a>
                     </div>
                 </div>
             </div>
