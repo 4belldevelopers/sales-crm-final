@@ -126,14 +126,11 @@
       @media only screen and (min-width: 992px) {
         #kt_activitiesIntTeamtra{ min-width: 640px !important; }
       }
-      /* Opened on top of #interview_schedule_drawer (z-index fixed below to a
-         sane, non-clamped value — z-index: 99999999999 exceeds the 32-bit
-         range browsers actually honor and gets silently clamped, which was
-         tying stacking order with this drawer and letting the overlay paint
-         in the wrong layer). This must sit unambiguously higher — see the
-         matching overlay z-index bump in the .in_tr_email_panel click handler
-         below. */
-      #kt_activitiesIntTeamtra{ z-index: 100020 !important; }
+      /* Opened on top of #interview_schedule_drawer (z-index: 1000000
+         !important, see its own definition further down). This must sit
+         unambiguously higher — see the matching overlay z-index bump in the
+         .in_tr_email_panel click handler below. */
+      #kt_activitiesIntTeamtra{ z-index: 1000020 !important; }
 
        @media only screen and (min-width: 1024px) and (max-width: 1440px){
         #kt_activitiesJob_show{width: 1025px;}
@@ -518,8 +515,13 @@
      Details drawer's overlay that's already dimming the page, which made both
      drawers fight over the same backdrop and close unexpectedly. The page is
      already dimmed by whichever drawer this one is nested inside; this one
-     just needs to render above it. */
-  #interview_schedule_drawer { z-index: 99999999999 !important; }
+     just needs to render above it.
+     Kept comfortably within the 32-bit z-index range browsers actually honor
+     (values like 99999999999 get silently clamped to the same internal max
+     as any other huge number, which ties stacking order instead of ordering
+     it — that clamping broke the Select-Interviewer picker drawer nested
+     inside this one, since both had "huge" but effectively-equal z-indices). */
+  #interview_schedule_drawer { z-index: 1000000 !important; }
   /* KTDrawer sets height via inline style at runtime (full viewport height,
      same as every other drawer in the app). That's fine when content is long,
      but this drawer's content is often shorter than the screen, leaving a
@@ -1981,12 +1983,12 @@ $(document).ready(function(){
             }
 
             // #interview_schedule_drawer (behind this one) has its own overlay
-            // deliberately disabled and sits at z-index 99999999999 !important,
-            // so KTDrawer's own overlay for THIS drawer would otherwise render
+            // deliberately disabled and sits at z-index 1000000 !important, so
+            // KTDrawer's own overlay for THIS drawer would otherwise render
             // underneath it and never visibly dim it. Bump just the overlay
             // this drawer created (the most recently appended one) above that,
-            // but below #kt_activitiesIntTeamtra itself (999999999999 !important).
-            setTimeout(function(){ $('.drawer-overlay').last().css('z-index', 999999999998); }, 0);
+            // but below #kt_activitiesIntTeamtra itself (1000020 !important).
+            setTimeout(function(){ $('.drawer-overlay').last().css('z-index', 1000010); }, 0);
 
                 var client_id	=	$('#client_idMail').val();
          				var token 		=	"{{ csrf_token() }}";
