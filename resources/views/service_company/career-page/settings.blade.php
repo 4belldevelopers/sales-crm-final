@@ -717,7 +717,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
 .td-design-section-sub   { font-size:11px; color:#94A3B8; margin:0 0 14px; }
 
 /* Color inputs */
-.td-color-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px; }
+.td-color-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
 .td-color-label { font-size:11px; font-weight:600; color:#374151; margin-bottom:5px; }
 .td-color-row   { display:flex; align-items:center; gap:7px; }
 .td-color-swatch { width:34px; height:34px; border-radius:7px; border:1.5px solid #E2E8F0; cursor:pointer; padding:2px; flex-shrink:0; }
@@ -3226,6 +3226,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                             $tdLY = $careerSettings->td_layout          ?? 'wide';
                             $tdTpl= $careerSettings->td_template        ?? 'modern';
                         @endphp
+                        {{-- 2×2 color grid: Primary / Secondary / Accent / Background --}}
                         <div class="td-color-grid">
                             <div>
                                 <div class="td-color-label">Primary Color</div>
@@ -3248,9 +3249,6 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                                     <input type="text" class="td-color-input" id="tdColorAccentText" name="td_color_accent" value="{{ $tdCA }}" maxlength="7" oninput="syncColorSwatch('tdColorAccent',this);tdUpdatePreview()">
                                 </div>
                             </div>
-                        </div>
-                        {{-- Background + Theme row --}}
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
                             <div>
                                 <div class="td-color-label">Background Color</div>
                                 <div class="td-color-row">
@@ -3258,15 +3256,10 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                                     <input type="text" class="td-color-input" id="tdColorBgText" name="td_color_bg" value="{{ $tdCB }}" maxlength="7" oninput="syncColorSwatch('tdColorBg',this);tdUpdatePreview()">
                                 </div>
                             </div>
-                            <div>
-                                <div class="td-color-label">Theme Mode</div>
-                                <div style="height:34px;border:1.5px solid #E2E8F0;border-radius:7px;padding:0 10px;display:flex;align-items:center;background:#F8FAFC;font-size:11px;color:#64748B;">
-                                    <i class="ti ti-sun" style="font-size:13px;margin-right:5px;"></i> Light Mode
-                                </div>
-                            </div>
                         </div>
-                        {{-- Theme mode radios --}}
-                        <div class="td-theme-opts">
+                        {{-- Theme mode --}}
+                        <div class="td-design-section-title" style="margin-top:4px;">Theme Mode</div>
+                        <div class="td-theme-opts" style="margin-bottom:16px;">
                             <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="light" {{ $tdTM==='light'?'checked':'' }}> Light Mode</label>
                             <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="dark" {{ $tdTM==='dark'?'checked':'' }}> Dark Mode</label>
                             <label class="td-theme-opt"><input type="radio" name="td_theme_mode" value="system" {{ $tdTM==='system'?'checked':'' }}> System Default</label>
