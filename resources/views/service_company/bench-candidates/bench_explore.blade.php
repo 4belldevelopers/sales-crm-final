@@ -514,12 +514,12 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Views</span>
         <span class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_views??@$bench_detail->views??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['views'] ?? 0 }}</span>
       </div>
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Downloads</span>
         <span class="bxr-kpi-icon dl"><i class="ti ti-download"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_downloads??@$bench_detail->downloads??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['downloads'] ?? 0 }}</span>
       </div>
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Applied</span>
@@ -529,7 +529,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Interviews</span>
         <span class="bxr-kpi-icon iv"><i class="ti ti-bell"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_interviews??@$bench_detail->interviews??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['interviews'] ?? 0 }}</span>
       </div>
     </div>
   </div>

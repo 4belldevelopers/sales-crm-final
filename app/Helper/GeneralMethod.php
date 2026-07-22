@@ -9083,8 +9083,92 @@ END:VCALENDAR";
 		]);
 
 		return (object)($response['hits']['hits'][0]['_source'] ?? []);
-		
+
 	}
+
+	/**
+	 * Bulk variant of getrRcommendationRelationData() for list rendering —
+	 * ONE Elasticsearch search for a whole page of jobs instead of one per
+	 * row. Returns [job_id => latest relation object], using the same
+	 * "newest created_at wins" selection as the single-row helper; jobs
+	 * with no relation are absent from the map (callers default to
+	 * (object)[], matching the single-row helper's empty-object return).
+	 * Tenancy: results are scoped by $company_id (to_company_id term).
+	 */
+	public static function getrRcommendationRelationDataBulk($company_id, array $jobIds)
+	{
+		if (empty($jobIds)) { return []; }
+		$elasticService = app(ElasticService::class);
+		$map = [];
+		try {
+			$response = $elasticService->getClient()->search([
+				'index' => ELASTIC_JOB_REQUEST,
+				'body' => [
+					// headroom for multiple relation rows per job — newest-first
+					// sort below means the first hit seen per job wins
+					'size' => count($jobIds) * 5,
+					'query' => [
+						'bool' => [
+							'must' => [
+								['term' => ['to_company_id' => (int) $company_id]],
+								['terms' => ['job_id' => array_map('intval', $jobIds)]],
+							],
+						],
+					],
+					'sort' => [['created_at' => ['order' => 'desc']]],
+				],
+			]);
+			foreach ($response['hits']['hits'] ?? [] as $hit) {
+				$src = $hit['_source'] ?? [];
+				$jid = $src['job_id'] ?? null;
+				if ($jid !== null && !isset($map[$jid])) {
+					$map[$jid] = (object) $src;
+				}
+			}
+		} catch (\Throwable $e) {
+			\Log::error('getrRcommendationRelationDataBulk failed: '.$e->getMessage());
+		}
+		return $map;
+	}
+
+	/**
+	 * Bulk variant of benchRequestCheck() — ONE Elasticsearch search for all
+	 * jobs on the page. Returns [job_id => request object]; an absent key
+	 * means no request exists (the single-row helper's null).
+	 */
+	public static function benchRequestCheckBulk($candidate_id, array $jobIds)
+	{
+		if (empty($jobIds)) { return []; }
+		$elasticService = app(ElasticService::class);
+		$map = [];
+		try {
+			$response = $elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES_REQUEST,
+				'body' => [
+					'size' => count($jobIds) * 2,
+					'query' => [
+						'bool' => [
+							'filter' => [
+								['term' => ['candidate_id' => $candidate_id]],
+								['terms' => ['job_id' => array_map('intval', $jobIds)]],
+							],
+						],
+					],
+				],
+			]);
+			foreach ($response['hits']['hits'] ?? [] as $hit) {
+				$src = $hit['_source'] ?? [];
+				$jid = $src['job_id'] ?? null;
+				if ($jid !== null && !isset($map[$jid])) {
+					$map[$jid] = (object) $src;
+				}
+			}
+		} catch (\Throwable $e) {
+			\Log::error('benchRequestCheckBulk failed: '.$e->getMessage());
+		}
+		return $map;
+	}
+
 	public static function getAgencyRelationData($from_company_id,$to_company_id)
 	{
 		$elasticService = app(ElasticService::class);
