@@ -55,14 +55,22 @@
                     }
 
                     $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
+                    $matchedArr = array_map('strtolower', array_filter(array_map('trim', explode(',', (string) ($row->matched_skills ?? '')))));
                     $skilltag = '';
+                    $matchedTags = '';
+                    $normalTags  = '';
                     foreach ($skillArr as $sval) {
                         if ($sval === '') { continue; }
-                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:300;">' . e(ucfirst($sval)) . '</span> ';
+                        if (in_array(strtolower($sval), $matchedArr)) {
+                            $matchedTags .= '<span class="badge my-0 skill" style="font-weight:500;font-size:9px;padding:2px 5px;background:#DCFCE7;color:#15803D;">' . e(ucfirst($sval)) . '</span> ';
+                        } else {
+                            $normalTags  .= '<span class="badge badge-light my-0 skill" style="font-weight:300;font-size:9px;padding:2px 5px;">' . e(ucfirst($sval)) . '</span> ';
+                        }
                     }
+                    $skilltag = $matchedTags . $normalTags;
 
                     $matchBadge = (!empty($row->skill_match_percent))
-                        ? '<span class="badge badge-light-info my-0">' . (int)$row->skill_match_percent . '%</span> '
+                        ? '<span class="badge my-0" style="background:#EFF6FF;color:#1D4ED8;font-weight:600;font-size:9px;padding:2px 5px;">Match ' . (int)$row->skill_match_percent . '%</span> '
                         : '';
 
                 @endphp
@@ -241,7 +249,7 @@
                         <span class="fw-bold text-muted d-block fs-7">' . $subS . '</span>';
 
                     if ($daysOnBench > 0) {
-                        echo '<span style="color:#DC2626;font-size:13px;font-weight:700;margin-top:2px;">'
+                        echo '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-top:2px;">'
                             . $daysOnBench . ' Days</span>';
                     }
 

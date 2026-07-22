@@ -2356,6 +2356,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				$matchedCount = count($matchedSkills);
 
 				$source['skill_match_score'] = $matchedCount;
+				$source['matched_skills'] = implode(',', $matchedSkills);
 
 				$source['skill_match_percent'] = round(
 					($matchedCount / count($skillArr)) * 100
