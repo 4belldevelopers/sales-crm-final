@@ -11,35 +11,36 @@
 .bxr-page{ font-family:'Poppins',sans-serif; background:#F2F4F8; min-height:100vh; padding:18px 0 40px; }
 .bxr-page *{ font-family:'Poppins',sans-serif; box-sizing:border-box; }
 
-/* ══ 1. PROFILE HERO — identical to bench_explore.blade.php ══ */
-.bxr-hero{ background:#fff; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #F0F2F5; margin-bottom:4px; }
+/* ══ 1. PROFILE HERO — segmented stat card, identical to bench_explore's:
+   identity | Experience/Bill Rate | Bench Status/On Bench | 4 icon KPIs. ══ */
+.bxr-hero{ background:#fff; border:1px solid #EEF0F4; border-radius:14px; padding:14px 20px; display:flex; align-items:center; flex-wrap:wrap; row-gap:14px; margin-bottom:16px; }
+.bxr-hero-id{ display:flex; align-items:center; gap:14px; min-width:220px; padding-right:8px; }
 .bxr-av-wrap{ position:relative; flex-shrink:0; }
-.bxr-avatar{ width:82px; height:82px; border-radius:16px; object-fit:cover; border:3px solid #E8EDF5; }
-.bxr-avatar-init{ width:82px; height:82px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; }
-.bxr-online-dot{ position:absolute; bottom:-3px; right:-3px; width:14px; height:14px; background:#22C55E; border:2.5px solid #fff; border-radius:50%; }
-.bxr-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
-.bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
-.bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
-.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:#F0FDF4; color:#16A34A; border:1.5px solid #86EFAC; }
-.bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:#16A34A; flex-shrink:0; }
-.bxr-info-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
-.bxr-role{ font-size:13px; font-weight:600; color:#374151; margin:0; }
-.bxr-meta-line{ display:flex; flex-wrap:wrap; gap:18px; }
-.bxr-meta-item{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:500; color:#64748B; }
-.bxr-meta-item i{ font-size:13px; color:#94A3B8; }
-.bxr-bench-id-val{ font-weight:700; color:#1A56DB; letter-spacing:.3px; font-size:12px; }
-.bxr-kpi-row{ display:flex; align-items:center; gap:0; flex-shrink:0; flex-wrap:wrap; }
-.bxr-kpi{ display:flex; align-items:center; gap:12px; padding:12px 28px; position:relative; }
-.bxr-kpi+.bxr-kpi::before{ content:''; position:absolute; left:0; top:15%; height:70%; width:1px; background:#E5E9F0; }
-.bxr-kpi-icon{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.bxr-avatar{ width:56px; height:56px; border-radius:50%; object-fit:cover; }
+.bxr-avatar-init{ width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#6D28D9,#4F46E5); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; }
+.bxr-online-dot{ position:absolute; bottom:2px; right:2px; width:12px; height:12px; background:#22C55E; border:2px solid #fff; border-radius:50%; }
+.bxr-name{ font-size:14px; font-weight:700; color:#181C32; line-height:1.25; }
+.bxr-role{ font-size:12px; font-weight:600; color:#4F46E5; margin:2px 0 4px; }
+.bxr-loc{ font-size:11px; font-weight:500; color:#7E8299; display:flex; align-items:center; gap:4px; }
+.bxr-loc i{ color:#4F46E5; font-size:12px; }
+.bxr-hero-sep{ width:1px; align-self:stretch; background:#EEF0F4; margin:0 18px; }
+.bxr-facts{ display:flex; flex-direction:column; gap:9px; justify-content:center; min-width:96px; }
+.bxr-fact-label{ font-size:11px; font-weight:600; color:#4F46E5; display:block; margin-bottom:2px; }
+.bxr-fact-value{ font-size:13px; font-weight:700; color:#181C32; line-height:1.2; }
+/* Stage badge colors set per-candidate via inline CSS custom properties —
+   Bench=blue, Placed=green, Hold=orange. */
+.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px; background:var(--bxr-stage-bg,#F0FDF4); color:var(--bxr-stage-color,#16A34A); border:1.5px solid var(--bxr-stage-border,#86EFAC); width:max-content; }
+.bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:var(--bxr-stage-color,#16A34A); flex-shrink:0; }
+.bxr-kpis{ display:flex; align-items:stretch; flex:1; justify-content:space-evenly; min-width:300px; }
+.bxr-kpi{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:0 16px; position:relative; justify-content:center; }
+.bxr-kpi+.bxr-kpi::before{ content:''; position:absolute; left:0; top:8%; height:84%; width:1px; background:#EEF0F4; }
+.bxr-kpi-lbl{ font-size:11px; font-weight:600; color:#4F46E5; white-space:nowrap; }
+.bxr-kpi-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
 .bxr-kpi-icon.vi{ background:#EFF6FF; color:#2563EB; }
 .bxr-kpi-icon.dl{ background:#F0FDF4; color:#16A34A; }
-.bxr-kpi-icon.aj{ background:#EFF6FF; color:#0EA5E9; }
-.bxr-kpi-icon.iv{ background:#F5F3FF; color:#7C3AED; }
-.bxr-kpi-num{ font-size:15px; font-weight:700; color:#1A1D23; line-height:1.1; }
-.bxr-kpi-lbl{ font-size:10px; font-weight:500; color:#94A3B8; white-space:nowrap; }
-.bxr-hero-menu{ align-self:flex-start; width:32px; height:32px; border-radius:8px; border:1px solid #E5E9F0; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; transition:all .18s; flex-shrink:0; }
-.bxr-hero-menu:hover{ background:#F8FAFC; }
+.bxr-kpi-icon.aj{ background:#FFF7ED; color:#EA580C; }
+.bxr-kpi-icon.iv{ background:#EEF2FF; color:#4F46E5; }
+.bxr-kpi-num{ font-size:15px; font-weight:700; color:#181C32; line-height:1.1; }
 
 /* ══ 2. SUMMARY CARDS (== tabs) — EXACT port of sections/service_company/
    apptrackerHeader.blade.php's .apth-card component, identical to
@@ -203,7 +204,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 .favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; }
 .favorite-icon:hover{ color:#F43F5E; }
 
-@media(max-width:900px){ .bxr-hero{ flex-direction:column; } .bxr-sum-row{ flex-direction:column; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
+@media(max-width:900px){ .bxr-hero{ flex-direction:column; align-items:flex-start; } .bxr-hero-sep{ display:none; } .bxr-kpis{ width:100%; min-width:0; flex-wrap:wrap; } .bxr-sum-row{ grid-template-columns:1fr; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
 </style>
 @endpush
 
@@ -227,19 +228,38 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   <div id="kt_content_container" class="container-fluid px-0">
   <div class="bxr-page">
 
-  {{-- ══ SECTION 1 · PROFILE HERO — identical to bench_explore.blade.php ══ --}}
+  {{-- ══ SECTION 1 · PROFILE HERO — segmented stat card:
+       identity | Experience + Bill Rate | Bench Status + On Bench | icon KPIs ══ --}}
+  @php
+    $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
+    /* $bench_detail->name is the candidate's CURRENT STAGE (Bench/Hold/
+       Placed/Pool/etc, via the bench_master_status join), not their
+       name — that's full_name. */
+    $candName = @$bench_detail->full_name ?? 'Candidate';
+    $initLtr  = strtoupper(substr($candName,0,1));
+    $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
+    $bxrStageKey = strtolower($bxrStageLabel);
+    if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
+    elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
+    elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
+    else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; }
+    /* Bill Rate — same fields the old bench-toolbar partial displayed. */
+    $bxrBillRate = '—';
+    if (@$bench_detail->bill_rate_amount) {
+        $bxrCurSymMap = \App\Helper\GeneralMethod::currencySymbole();
+        $bxrModeAbbr  = [0=>'yr',1=>'mo',2=>'hr'][(int)@$bench_detail->bill_rate_mode] ?? '';
+        $bxrBillRate  = ($bxrCurSymMap[@$bench_detail->bill_rate_currency] ?? '₹')
+                      . number_format((float)$bench_detail->bill_rate_amount)
+                      . ($bxrModeAbbr !== '' ? ' /'.$bxrModeAbbr : '');
+    }
+    /* On Bench — days since the candidate record was created. */
+    $bxrOnBenchDays = '—';
+    if (@$bench_detail->created_at) {
+        $bxrOnBenchDays = (int) abs(\Carbon\Carbon::parse($bench_detail->created_at)->diffInDays(now())) . ' Days';
+    }
+  @endphp
   <div class="bxr-hero">
-    <div class="bxr-hero-left">
-      @php
-        $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
-        /* $bench_detail->name is the candidate's CURRENT STAGE (Bench/Hold/
-           Placed/Pool/etc, via the bench_master_status join), not their
-           name — that's full_name. */
-        $candName = @$bench_detail->full_name ?? 'Candidate';
-        $initLtr  = strtoupper(substr($candName,0,1));
-        $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
-        $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
-      @endphp
+    <div class="bxr-hero-id">
       <div class="bxr-av-wrap">
         @if($imgFile)
           <img src="{{ asset('assets/images/candidates/'.$imgFile) }}" class="bxr-avatar" alt="{{ $candName }}">
@@ -249,53 +269,51 @@ body > .tagify__dropdown{ z-index:1400 !important; }
         <div class="bxr-online-dot"></div>
       </div>
       <div>
-        <div class="bxr-name-row">
-          <span class="bxr-name">{{ ucwords($candName) }}</span>
-          <span class="bxr-bench-tag"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
-        </div>
-        <div class="bxr-info-row">
-          <span class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</span>
-          @if($bxrPrimarySkill !== '')
-          <span class="bxr-meta-item" style="background:#EFF6FF;color:#1D4ED8;padding:2px 9px;border-radius:20px;font-weight:600;">
-            <i class="ti ti-star" style="color:#1D4ED8;"></i>{{ ucfirst($bxrPrimarySkill) }}
-          </span>
-          @endif
-          @if(@$bench_detail->city_name)
-          <span class="bxr-meta-item"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</span>
-          @endif
-        </div>
-        <div class="bxr-meta-line">
-          @if(@$bench_detail->total_exp)
-          <span class="bxr-meta-item"><i class="ti ti-clock"></i>{{ @$bench_detail->total_exp }}-{{ @$bench_detail->rel_exp }} Years</span>
-          @endif
-          <span class="bxr-meta-item">
-            <span style="color:#94A3B8;font-size:12px;">Bench ID:</span>&nbsp;
-            <span class="bxr-bench-id-val">B-{{ @$bench_detail->id }}</span>
-          </span>
-        </div>
+        <div class="bxr-name">{{ ucwords($candName) }}</div>
+        <div class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</div>
+        @if(@$bench_detail->city_name)
+        <div class="bxr-loc"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</div>
+        @endif
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div class="bxr-kpi-row">
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_views??0 }}</div><div class="bxr-kpi-lbl">Views</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon dl"><i class="ti ti-download"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_downloads??0 }}</div><div class="bxr-kpi-lbl">Downloads</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon aj"><i class="ti ti-send"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$recomCount['recommend_req_counter']??0 }}</div><div class="bxr-kpi-lbl">Applied on Jobs</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon iv"><i class="ti ti-calendar-event"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_interviews??0 }}</div><div class="bxr-kpi-lbl">Interviews</div></div>
-        </div>
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-facts">
+      <div><span class="bxr-fact-label">Experience</span><span class="bxr-fact-value">{{ @$bench_detail->total_exp ?? 0 }} Years</span></div>
+      <div><span class="bxr-fact-label">Bill Rate</span><span class="bxr-fact-value">{!! $bxrBillRate !!}</span></div>
+    </div>
+
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-facts">
+      <div>
+        <span class="bxr-fact-label">Bench Status</span>
+        <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
       </div>
-      <button class="bxr-hero-menu"><i class="ti ti-dots-vertical"></i></button>
+      <div><span class="bxr-fact-label">On Bench</span><span class="bxr-fact-value">{{ $bxrOnBenchDays }}</span></div>
+    </div>
+
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-kpis">
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Views</span>
+        <span class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></span>
+        <span class="bxr-kpi-num">{{ @$bench_detail->total_views??0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Downloads</span>
+        <span class="bxr-kpi-icon dl"><i class="ti ti-download"></i></span>
+        <span class="bxr-kpi-num">{{ @$bench_detail->total_downloads??0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Applied</span>
+        <span class="bxr-kpi-icon aj"><i class="ti ti-send"></i></span>
+        <span class="bxr-kpi-num">{{ @$recomCount['recommend_req_counter']??0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Interviews</span>
+        <span class="bxr-kpi-icon iv"><i class="ti ti-bell"></i></span>
+        <span class="bxr-kpi-num">{{ @$bench_detail->total_interviews??0 }}</span>
+      </div>
     </div>
   </div>
 

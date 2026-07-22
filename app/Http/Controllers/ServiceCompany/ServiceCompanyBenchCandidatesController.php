@@ -4884,7 +4884,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->stage = $stage;
 		$this->bench_id = $id;
 		$this->recomCount = $this->benchjobAndRecomCount($id);
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -5693,7 +5693,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -5729,7 +5729,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
