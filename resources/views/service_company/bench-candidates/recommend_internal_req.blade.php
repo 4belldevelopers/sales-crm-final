@@ -929,7 +929,9 @@ function rrjBuildFilterItems(){
         items.push({cat:'location', label:t.value, clear:function(){ rrjTagifyLocation.removeTags(t.value); }});
     });
     var minSal=$('#min_sal').val(), maxSal=$('#max_sal').val();
-    if (minSal || maxSal) items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#min_sal,#max_sal').val(''); }});
+    /* min salary 0 is the neutral default ("no lower bound") — it must not
+       render as an active-filter chip or count toward the filter badge. */
+    if ((parseFloat(minSal)||0) > 0 || maxSal) items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#min_sal').val(0); $('#max_sal').val(''); }});
     var minExp=$('#min_exp').val(), maxExp=$('#max_exp').val();
     if (minExp !== '' || maxExp !== '') items.push({cat:'exp', label:(minExp||'0')+'-'+(maxExp||'Any')+' yrs', clear:function(){ $('#min_exp,#max_exp').val(''); }});
     $('.rrj_work_mode:checked').each(function(){
@@ -971,7 +973,8 @@ $(document).on('click','#rrj_applied_clear_all',function(){ $('#rrj_clear_all').
 $(document).on('click','#rrj_clear_all, #rrj_reset_btn',function(){
     rrjTagifySkills.removeAllTags();
     rrjTagifyLocation.removeAllTags();
-    $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#min_sal,#max_sal').val('');
+    $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#max_sal').val('');
+    $('#min_sal').val(0); /* min salary resets to 0, never blank */
     $('.rrj_work_mode').prop('checked', false);
     $('#app_int_outsource1,#app_int_activity1').prop('checked', true);
     rrjUpdateActiveFiltersUI();
