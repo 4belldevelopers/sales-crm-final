@@ -123,22 +123,25 @@
         $workMode = 'Hybrid';
     }
 
-    /* ── Job type — same 3-way derivation as the jobs page (all_jobs_ajax):
-       received via a direct-client recommendation → "Direct Client" (green
-       handshake); own in-house job (self_company) → "Internal" (blue
-       building); own job for an internal client → "Internal Client". ── */
+    /* ── Client Type Badge — derived from the same branch that the jobs
+       page uses to colour its $internalBadge. Pure data-derivation, no
+       new queries. Routed recommendations (recommendation_id > 0 with
+       to_company_id == viewer's company_id) → Direct Client (green);
+       in-house (self_company == 1) or any non-routed route → Internal
+       Client (blue). The numeric "· jobId" suffix matches the legacy
+       "Internal Client · 1410" / "Direct Client · 1390" form so a
+       reader familiar with the page sees the ID jump out at the same
+       spot it always did. The badge occupies the third vertical slot
+       in the EXPERIENCE column (under exp + salary) for visual
+       hierarchy: profile-anchored text first, classification last. ── */
     if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
-        $typeLabel = 'Direct ' . __('messages.clinet_tag');
-        $typeClass = 'bxr-type-client';
-        $typeIcon  = '<i class="fas fa-handshake" style="color:#09b760;"></i>';
-    } elseif ((int)(@$jobDetails->self_company ?? 0) === 1) {
-        $typeLabel = __('messages.internal_tag');
-        $typeClass = 'bxr-type-internal';
-        $typeIcon  = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
+        $clientBadgeKey   = 'direct';
+        $clientBadgeLabel = 'Direct Client';
+        $clientBadgeIcon  = 'ri-customer-service-2-line';
     } else {
-        $typeLabel = __('messages.internal_tag') . ' ' . __('messages.clinet_tag');
-        $typeClass = 'bxr-type-internal';
-        $typeIcon  = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
+        $clientBadgeKey   = 'internal';
+        $clientBadgeLabel = 'Internal Client';
+        $clientBadgeIcon  = 'ri-government-line';
     }
 
     /* Category/department line (e.g. "IT (Information Technology)") — one
@@ -174,12 +177,17 @@
         }
     }
 
+    /* HM avatar — initials if a name is available, em-dash placeholder
+       for the empty case. Empty state uses a dashed grey fill so the
+       column reads cleanly even when the data isn't populating. */
+    $hmHasName  = ($hiringManager !== '—' && trim($hiringManager) !== '');
+    $hmInitials = $hmHasName ? strtoupper(mb_substr($hiringManager, 0, 1)) : '–';
+    $skipDesigList = ['role','designation','n/a','na','--','-','none',''];
+    $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesigList);
+
     /* ── Internal / Client tag ───────────────────── */
     $recommendation_text = ($jobDetails->comId == $company_id)
         ? __('messages.internal_tag') : __('messages.clinet_tag');
-    $internalBadge = ($jobDetails->comId == $company_id)
-        ? '<span class="bxr-b bl">Internal</span>'
-        : '<span class="bxr-b pu">Client</span>';
     $jobIdText = $jobDetails->id . '-' . $recommendation_text;
 
     /* ── Job stage ───────────────────────────────── */
@@ -215,7 +223,7 @@
 
 <tr>
     {{-- ① JOB DETAILS --}}
-    <td style="max-width:280px;">
+    <td>
         <div class="bxr-job-row">
             {{-- Logo / initial --}}
             @if(!empty($logo_path))
@@ -242,51 +250,62 @@
         </div>
     </td>
 
-    {{-- ② EXPERIENCE --}}
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
-            <i class="ti ti-clock" style="font-size:12px;color:#94A3B8;"></i>
-            <span style="font-size:12px;font-weight:600;color:#374151;">{{ $expRange }}</span>
-        </div>
-        @if($salaryDisplay)
-        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">
-            <i class="ti ti-currency-rupee" style="font-size:12px;color:#94A3B8;"></i>
-            <span style="font-size:12px;font-weight:600;color:#374151;">{{ $salaryDisplay }}</span>
-        </div>
-        @endif
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-            {!! $internalBadge !!}
-            <span style="color:#CBD5E1;">•</span>
-            <span style="font-size:11px;color:#64748B;font-weight:600;">{{ $jobDetails->id }}</span>
+    {{-- ② EXPERIENCE (vertical: clock ▸ exp · ₹ ▸ salary · Client Type Badge) --}}
+    <td>
+        <div class="bxr-col-exp-stack">
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box"><i class="ti ti-clock"></i></span>
+                <span>{{ $expRange }}</span>
+            </div>
+            @if($salaryDisplay)
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box">{{ $salCurrencySym }}</span>
+                <span>{{ $salaryDisplay }}{!! $salSuffix !== '' ? ' <span class="bxr-col-exp-mode">'.$salSuffix.'</span>' : '' !!}</span>
+            </div>
+            @endif
+            <div>
+                <span class="client-badge client-badge--{{ $clientBadgeKey }}">
+                    <span class="client-badge-stripe"></span>
+                    <i class="{{ $clientBadgeIcon }}"></i>
+                    <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
+                    <span class="client-badge-id">· {{ $jobDetails->id }}</span>
+                </span>
+            </div>
         </div>
     </td>
 
     {{-- ③ HIRING & LOCATION --}}
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="margin-bottom:5px;">
-            <span class="{{ $statusClass }}">
-                <i class="ti ti-circle-filled" style="font-size:7px;"></i> {{ $statusLabel }}
-            </span>
-        </div>
-        @if($cityDisplay && $cityDisplay !== '—')
-        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:2px;">{{ $cityDisplay }}</div>
-        @endif
-        <div style="font-size:11px;color:#94A3B8;display:flex;align-items:center;gap:3px;">
-            <i class="ti ti-map-pin" style="font-size:11px;"></i> {{ $workMode }}
+    <td>
+        <div class="bxr-col-loc-stack">
+            <div>
+                <span class="{{ $statusClass }}">
+                    <i class="ti ti-circle-filled" style="font-size:7px;"></i> {{ $statusLabel }}
+                </span>
+            </div>
+            @if($cityDisplay && $cityDisplay !== '—')
+            <div class="bxr-col-loc-row">
+                <i class="ti ti-map-pin" style="width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;color:#2563EB;font-size:12px;flex-shrink:0;line-height:1;"></i>
+                <span>{{ $cityDisplay }}</span>
+            </div>
+            <div class="bxr-col-loc-mode">{{ $workMode }}</div>
+            @endif
         </div>
     </td>
 
     {{-- ④ HIRING MANAGER --}}
-    @php
-        $skipDesig = ['role','designation','n/a','na','--','-','none',''];
-        $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesig);
-    @endphp
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="font-size:13px;font-weight:700;color:#1A1D23;margin-bottom:2px;">{{ $hiringManager }}</div>
-        @if($showDesig)
-        <div style="font-size:11px;color:#64748B;margin-bottom:3px;">{{ $hiringDesig }}</div>
-        @endif
-        <span class="bxr-b gy" style="font-size:10px;">{{ $employment_type }}</span>
+    <td>
+        <div class="bxr-col-hm-row">
+            <span class="bxr-col-hm-av {{ $hmHasName ? 'bxr-col-hm-av--filled' : 'bxr-col-hm-av--empty' }}">{{ $hmInitials }}</span>
+            <div class="bxr-col-hm-info">
+                <span class="bxr-col-hm-name">{{ $hiringManager }}</span>
+                @if($showDesig)
+                    <span class="bxr-col-hm-role">{{ $hiringDesig }}</span>
+                @else
+                    <span class="bxr-col-hm-role">Hiring Manager</span>
+                @endif
+                <span class="bxr-b gy" style="font-size:10px;margin-top:2px;align-self:flex-start;">{{ $employment_type }}</span>
+            </div>
+        </div>
     </td>
 
     {{-- ⑤ JOB STAGE --}}

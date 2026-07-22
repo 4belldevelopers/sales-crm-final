@@ -376,6 +376,82 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-sort-item{ padding:9px 12px; font-size:12.5px; font-weight:500; color:#374151; border-radius:7px; cursor:pointer; }
 .bxr-sort-item:hover{ background:#F5F8FF; }
 .bxr-sort-item.active{ background:#EFF6FF; color:#2563EB; font-weight:700; }
+
+/* ══ 7. REUSABLE CLIENT TYPE BADGE ═══════════════════
+   Single component used across the platform to distinguish
+   Internal Client (blue) from Direct Client (green). The
+   thin left stripe + soft pill body + colored icon
+   reads instantly; works inside any cell without restyling.
+   ═══════════════════════════════════════════════════════ */
+.client-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  position:relative; padding:2px 10px;
+  border-radius:6px;
+  font-size:10.5px; font-weight:600; line-height:1.2;
+  border:1px solid transparent; font-family:'Poppins',sans-serif;
+  width:max-content; max-width:100%;
+}
+.client-badge-stripe{
+  position:absolute; left:-1px; top:2px; bottom:2px; width:3px;
+  border-radius:2px; background:currentColor;
+}
+.client-badge i{ font-size:11.5px; line-height:1; flex-shrink:0; }
+.client-badge-label{ white-space:nowrap; }
+.client-badge-id{ opacity:0.7; font-weight:500; padding-left:2px; }
+
+.client-badge--internal{ background:#EBF5FF; color:#1D4ED8; border-color:#BFDBFE; }
+.client-badge--internal .client-badge-stripe{ background:#1D4ED8; }
+
+.client-badge--direct{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
+.client-badge--direct .client-badge-stripe{ background:#059669; }
+
+/* ══ 8. REDESIGNED CELL HELPERS — Job Details / Experience /
+   Hiring & Loc / Hiring Manager columns of the bench_explore
+   table. Poppins ≤14px, semantic tokens, vertical centering. ══ */
+.bxr-tbl tbody td{ vertical-align:middle !important; }
+
+.bxr-col-exp-stack{ display:flex; flex-direction:column; gap:6px; min-width:130px; }
+.bxr-col-exp-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.bxr-col-exp-row .bxr-icon-box{
+  width:13px; height:13px; display:inline-flex; align-items:center;
+  justify-content:center; color:#94A3B8; flex-shrink:0; font-size:11px;
+  line-height:1; font-weight:700;
+}
+.bxr-col-exp-mode{
+  font-size:9.5px; color:#94A3B8; font-weight:600; padding-left:2px;
+  text-transform:uppercase; letter-spacing:0.3px;
+}
+.bxr-col-loc-stack{ display:flex; flex-direction:column; gap:4px; min-width:130px; }
+.bxr-col-loc-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.bxr-col-loc-row .bxr-icon-box{
+  width:13px; height:13px; display:inline-flex; align-items:center;
+  justify-content:center; color:#2563EB; flex-shrink:0; font-size:12px;
+}
+.bxr-col-loc-mode{ font-size:10.5px; color:#7E8299; }
+.bxr-col-hm-row{ display:flex; align-items:center; gap:8px; min-width:0; }
+.bxr-col-hm-av{
+  width:30px; height:30px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:11.5px;
+  letter-spacing:0.2px;
+}
+.bxr-col-hm-av--filled{ background:#EEF2FF; color:#4F46E5; }
+.bxr-col-hm-av--empty{ background:#F1F5F9; color:#94A3B8; border:1px dashed #E4E6EF; }
+.bxr-col-hm-info{ min-width:0; display:flex; flex-direction:column; gap:1px; }
+.bxr-col-hm-name{
+  font-size:12px; font-weight:700; color:#1A1D23; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:140px;
+}
+.bxr-col-hm-name.hmlisting{ cursor:pointer; }
+.bxr-col-hm-name.hmlisting:hover{ color:#2563EB; }
+.bxr-col-hm-role{ font-size:10.5px; color:#94A3B8; font-weight:500; }
 </style>
 @endpush
 
