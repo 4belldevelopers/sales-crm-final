@@ -1513,6 +1513,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 				`td_layout` varchar(20) DEFAULT 'wide',
 				`td_logo_path` varchar(500) DEFAULT NULL,
 				`td_favicon_path` varchar(500) DEFAULT NULL,
+				`td_hero_img1_path` varchar(500) DEFAULT NULL,
+				`td_hero_img2_path` varchar(500) DEFAULT NULL,
 				`td_opt_life` tinyint(1) DEFAULT 1,
 				`td_opt_testi` tinyint(1) DEFAULT 1,
 				`td_opt_animation` tinyint(1) DEFAULT 1,
@@ -1537,6 +1539,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 				'td_layout'         => "ALTER TABLE `company_career_settings` ADD COLUMN `td_layout` varchar(20) DEFAULT 'wide'",
 				'td_logo_path'      => "ALTER TABLE `company_career_settings` ADD COLUMN `td_logo_path` varchar(500) DEFAULT NULL",
 				'td_favicon_path'   => "ALTER TABLE `company_career_settings` ADD COLUMN `td_favicon_path` varchar(500) DEFAULT NULL",
+				'td_hero_img1_path' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img1_path` varchar(500) DEFAULT NULL",
+				'td_hero_img2_path' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img2_path` varchar(500) DEFAULT NULL",
 				'td_opt_life'       => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_life` tinyint(1) DEFAULT 1",
 				'td_opt_testi'      => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_testi` tinyint(1) DEFAULT 1",
 				'td_opt_animation'  => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_animation` tinyint(1) DEFAULT 1",
@@ -1601,6 +1605,24 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 				$favName = 'career_favicon_' . $company_id . '_' . time() . '.' . $fav->getClientOriginalExtension();
 				$fav->move(public_path('uploads/career'), $favName);
 				$data['td_favicon_path'] = 'uploads/career/' . $favName;
+			}
+
+			/* Handle hero image 1 upload */
+			if ($request->hasFile('td_hero_img1') && $request->file('td_hero_img1')->isValid()) {
+				$img1 = $request->file('td_hero_img1');
+				$img1Name = 'hero1_' . $company_id . '_' . time() . '.' . $img1->getClientOriginalExtension();
+				if (!is_dir(base_path('img/images'))) { mkdir(base_path('img/images'), 0755, true); }
+				$img1->move(base_path('img/images'), $img1Name);
+				$data['td_hero_img1_path'] = 'img/images/' . $img1Name;
+			}
+
+			/* Handle hero image 2 upload */
+			if ($request->hasFile('td_hero_img2') && $request->file('td_hero_img2')->isValid()) {
+				$img2 = $request->file('td_hero_img2');
+				$img2Name = 'hero2_' . $company_id . '_' . time() . '.' . $img2->getClientOriginalExtension();
+				if (!is_dir(base_path('img/images'))) { mkdir(base_path('img/images'), 0755, true); }
+				$img2->move(base_path('img/images'), $img2Name);
+				$data['td_hero_img2_path'] = 'img/images/' . $img2Name;
 			}
 
 			DB::table('company_career_settings')->updateOrInsert(

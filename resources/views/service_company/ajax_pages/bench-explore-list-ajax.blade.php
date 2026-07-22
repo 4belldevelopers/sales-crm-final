@@ -90,49 +90,75 @@
     $expMin = @$jobDetails->min_exp ?? '—';
     $expRange = ($expMin && $expMax) ? "{$expMin} - {$expMax} Years" : "{$expMax}+ Years";
 
-    /* ── Salary in Lakh format ───────────────────── */
+    /* ── Salary — same display format as the jobs page (all_jobs_ajax):
+       "₹ 1500K - 2500K /Annum" via thousandsCurrencyFormat + mode suffix ── */
     $min_salary_raw = (float)($jobDetails->min_salary ?? 0);
     $max_salary_raw = (float)($jobDetails->max_salary ?? 0);
-    $toLakh = fn($v) => $v >= 100000
-        ? round($v / 100000, 1) . ' L'
-        : ($v >= 1000 ? round($v / 1000, 1) . ' K' : (string)$v);
-
-    $maxSalMode = strtolower($salaryMode[$jobDetails->max_sal_mode] ?? '');
-    $salSuffix  = (str_contains($maxSalMode, 'annual') || $maxSalMode === 'a') ? 'LPA' : 'L/M';
-
+    /* GeneralMethod::currencySymbole() returns raw <i class="fa fa-…"> markup
+       that depends on FontAwesome being loaded — on this AJAX response path
+       the font isn't always present, so the literal tag leaks through as text.
+       Map currency_id → unicode glyph instead. */
+    $currencyGlyphs = [0=>'₹', 1=>'€', 2=>'¥', 3=>'£', 4=>'$', 5=>'د.إ'];
+    $salCurrencySym = $currencyGlyphs[(int)@$jobDetails->min_salary_currency] ?? '₹';
+    $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
     $salaryDisplay = '';
-    if ($min_salary_raw > 0 && $max_salary_raw > 0) {
-        $salaryDisplay = $toLakh($min_salary_raw) . ' - ' . $toLakh($max_salary_raw) . ' ' . $salSuffix;
-    } elseif ($max_salary_raw > 0) {
-        $salaryDisplay = $toLakh($max_salary_raw) . ' ' . $salSuffix;
-    } elseif ($min_salary_raw > 0) {
-        $salaryDisplay = $toLakh($min_salary_raw) . ' ' . $salSuffix;
+    if ($min_salary_raw > 0 || $max_salary_raw > 0) {
+        $salaryDisplay = GeneralMethod::thousandsCurrencyFormat($min_salary_raw)
+            . ' - ' . GeneralMethod::thousandsCurrencyFormat($max_salary_raw);
     }
 
     $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
 
-    /* ── Location ────────────────────────────────── */
+    /* ── Location — city list comes straight off the ES job document
+       (client_city_jobs is already in $jobDetails), replacing the two
+       per-row MySQL lookups that used to run here. Labels match the jobs
+       page: Office / Remote / Hybrid ('any' and 'other' both mean hybrid
+       in the data). ── */
     $jobid         = $jobDetails->id;
-    $jobCityCount  = DB::table('client_city_jobs')->where('job_id', $jobid)->count();
-    $workMode      = 'On-site';
-    $cityDisplay   = '—';
+    $cityArr       = is_array(@$jobDetails->client_city_jobs) ? $jobDetails->client_city_jobs : [];
+    $jobCityCount  = count($cityArr);
+    $firstCityName = $cityArr[0]['city_name'] ?? '';
+    $workMode      = 'Office';
+    $cityDisplay   = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr($firstCityName, 0, 15));
 
     if ($jobDetails->work_type == 'yes') {
         $workMode    = 'Remote';
         $cityDisplay = 'Remote';
-    } elseif ($jobDetails->work_type == 'any') {
+    } elseif (in_array($jobDetails->work_type, ['any', 'other'], true)) {
         $workMode = 'Hybrid';
-        $cl = DB::table('client_city_jobs')
-            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
-            ->select('city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)->first();
-        $cityDisplay = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr(@$cl->city_name, 0, 15));
+    }
+
+    /* ── Client Type Badge — derived from the same branch that the jobs
+       page uses to colour its $internalBadge. Pure data-derivation, no
+       new queries. Routed recommendations (recommendation_id > 0 with
+       to_company_id == viewer's company_id) → Direct Client (green);
+       in-house (self_company == 1) or any non-routed route → Internal
+       Client (blue). The numeric "· jobId" suffix matches the legacy
+       "Internal Client · 1410" / "Direct Client · 1390" form so a
+       reader familiar with the page sees the ID jump out at the same
+       spot it always did. The badge occupies the third vertical slot
+       in the EXPERIENCE column (under exp + salary) for visual
+       hierarchy: profile-anchored text first, classification last. ── */
+    if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+        $clientBadgeKey   = 'direct';
+        $clientBadgeLabel = 'Direct Client';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
     } else {
-        $cl = DB::table('client_city_jobs')
-            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
-            ->select('city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)->first();
-        $cityDisplay = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr(@$cl->city_name, 0, 15));
+        $clientBadgeKey   = 'internal';
+        $clientBadgeLabel = 'Internal Client';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-7h6v7"/></svg>';
+    }
+
+    /* Category/department line (e.g. "IT (Information Technology)") — one
+       lookup per DISTINCT category on the page, memoized across rows. */
+    static $bxrDeptCache = [];
+    $deptName = '';
+    $catId = @$jobDetails->category_id;
+    if ($catId) {
+        if (!array_key_exists($catId, $bxrDeptCache)) {
+            $bxrDeptCache[$catId] = DB::table('job_categories')->where('id', $catId)->value('name') ?? '';
+        }
+        $deptName = $bxrDeptCache[$catId];
     }
 
     /* ── Job status ──────────────────────────────── */
@@ -156,12 +182,17 @@
         }
     }
 
+    /* HM avatar — initials if a name is available, em-dash placeholder
+       for the empty case. Empty state uses a dashed grey fill so the
+       column reads cleanly even when the data isn't populating. */
+    $hmHasName  = ($hiringManager !== '—' && trim($hiringManager) !== '');
+    $hmInitials = $hmHasName ? strtoupper(mb_substr($hiringManager, 0, 1)) : '–';
+    $skipDesigList = ['role','designation','n/a','na','--','-','none',''];
+    $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesigList);
+
     /* ── Internal / Client tag ───────────────────── */
     $recommendation_text = ($jobDetails->comId == $company_id)
         ? __('messages.internal_tag') : __('messages.clinet_tag');
-    $internalBadge = ($jobDetails->comId == $company_id)
-        ? '<span class="bxr-b bl">Internal</span>'
-        : '<span class="bxr-b pu">Client</span>';
     $jobIdText = $jobDetails->id . '-' . $recommendation_text;
 
     /* ── Job stage ───────────────────────────────── */
@@ -197,7 +228,7 @@
 
 <tr>
     {{-- ① JOB DETAILS --}}
-    <td style="max-width:280px;">
+    <td>
         <div class="bxr-job-row">
             {{-- Logo / initial --}}
             @if(!empty($logo_path))
@@ -224,51 +255,62 @@
         </div>
     </td>
 
-    {{-- ② EXPERIENCE --}}
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
-            <i class="ti ti-clock" style="font-size:12px;color:#94A3B8;"></i>
-            <span style="font-size:12px;font-weight:600;color:#374151;">{{ $expRange }}</span>
-        </div>
-        @if($salaryDisplay)
-        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;">
-            <i class="ti ti-currency-rupee" style="font-size:12px;color:#94A3B8;"></i>
-            <span style="font-size:12px;font-weight:600;color:#374151;">{{ $salaryDisplay }}</span>
-        </div>
-        @endif
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-            {!! $internalBadge !!}
-            <span style="color:#CBD5E1;">•</span>
-            <span style="font-size:11px;color:#64748B;font-weight:600;">{{ $jobDetails->id }}</span>
+    {{-- ② EXPERIENCE (vertical: clock ▸ exp · ₹ ▸ salary · Client Type Badge) --}}
+    <td>
+        <div class="bxr-col-exp-stack">
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <span>{{ $expRange }}</span>
+            </div>
+            @if($salaryDisplay)
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box">{{ $salCurrencySym }}</span>
+                <span>{{ $salaryDisplay }}{!! $salSuffix !== '' ? ' <span class="bxr-col-exp-mode">'.$salSuffix.'</span>' : '' !!}</span>
+            </div>
+            @endif
+            <div>
+                <span class="client-badge client-badge--{{ $clientBadgeKey }}">
+                    <span class="client-badge-stripe"></span>
+                    {!! $clientBadgeSvg !!}
+                    <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
+                    <span class="client-badge-id">· {{ $jobDetails->id }}</span>
+                </span>
+            </div>
         </div>
     </td>
 
     {{-- ③ HIRING & LOCATION --}}
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="margin-bottom:5px;">
-            <span class="{{ $statusClass }}">
-                <i class="ti ti-circle-filled" style="font-size:7px;"></i> {{ $statusLabel }}
-            </span>
-        </div>
-        @if($cityDisplay && $cityDisplay !== '—')
-        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:2px;">{{ $cityDisplay }}</div>
-        @endif
-        <div style="font-size:11px;color:#94A3B8;display:flex;align-items:center;gap:3px;">
-            <i class="ti ti-map-pin" style="font-size:11px;"></i> {{ $workMode }}
+    <td>
+        <div class="bxr-col-loc-stack">
+            <div>
+                <span class="{{ $statusClass }}">
+                    <svg viewBox="0 0 24 24" width="7" height="7" fill="currentColor" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/></svg> {{ $statusLabel }}
+                </span>
+            </div>
+            @if($cityDisplay && $cityDisplay !== '—')
+            <div class="bxr-col-loc-row">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;display:inline-block;vertical-align:middle;"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                <span>{{ $cityDisplay }}</span>
+            </div>
+            <div class="bxr-col-loc-mode">{{ $workMode }}</div>
+            @endif
         </div>
     </td>
 
     {{-- ④ HIRING MANAGER --}}
-    @php
-        $skipDesig = ['role','designation','n/a','na','--','-','none',''];
-        $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesig);
-    @endphp
-    <td style="white-space:nowrap;vertical-align:middle;">
-        <div style="font-size:13px;font-weight:700;color:#1A1D23;margin-bottom:2px;">{{ $hiringManager }}</div>
-        @if($showDesig)
-        <div style="font-size:11px;color:#64748B;margin-bottom:3px;">{{ $hiringDesig }}</div>
-        @endif
-        <span class="bxr-b gy" style="font-size:10px;">{{ $employment_type }}</span>
+    <td>
+        <div class="bxr-col-hm-row">
+            <span class="bxr-col-hm-av {{ $hmHasName ? 'bxr-col-hm-av--filled' : 'bxr-col-hm-av--empty' }}">{{ $hmInitials }}</span>
+            <div class="bxr-col-hm-info">
+                <span class="bxr-col-hm-name">{{ $hiringManager }}</span>
+                @if($showDesig)
+                    <span class="bxr-col-hm-role">{{ $hiringDesig }}</span>
+                @else
+                    <span class="bxr-col-hm-role">Hiring Manager</span>
+                @endif
+                <span class="bxr-b gy" style="font-size:10px;margin-top:2px;align-self:flex-start;">{{ $employment_type }}</span>
+            </div>
+        </div>
     </td>
 
     {{-- ⑤ JOB STAGE --}}
@@ -305,7 +347,7 @@
 @else
 <tr>
     <td colspan="6" style="text-align:center;padding:40px 0;color:#94A3B8;">
-        <i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto 8px;"><path d="M3 13l3-8h12l3 8M3 13v7h18v-7M3 13h5l2 3h4l2-3h5"/></svg>
         No companies processing this candidate yet
     </td>
 </tr>

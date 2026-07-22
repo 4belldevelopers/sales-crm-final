@@ -76,12 +76,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:auto;}
 body{font-family:'Poppins',sans-serif;font-size:13px;color:var(--t);background:var(--bg);overflow-x:hidden;}
-/* template: {{ $cpTemplate }} | layout: {{ $cpLayout }} | theme: {{ $cpTheme }} */
-@if($cpLayout === 'boxed')
-.hero,.stats-bar,.trusted,.main-grid,.benefits{max-width:1200px;margin-left:auto;margin-right:auto;}
-@elseif($cpLayout === 'fullwidth')
-.hero,.stats-bar,.trusted,.main-grid,.benefits{width:100%;}
-@endif
+.container{width:100%;max-width:1280px;margin:0 auto;padding:0 24px;}
 @if($cpTheme === 'dark')
 :root{--t:#F1F5F9;--m:#94A3B8;--b:#334155;--l:#1E293B;--bg:#0F172A;}
 body{background:#0F172A;}
@@ -128,10 +123,10 @@ a{text-decoration:none;}
 .btn-pri:hover{background:#1D4ED8;color:#fff;}
 
 /* ── HERO ── */
-.hero{
+.hero{ background:#fff; padding:56px 0 48px; }
+.hero .container{
     display:grid;grid-template-columns:56% 44%;
-    padding:56px 40px 48px;gap:40px 40px;align-items:start;
-    background:#fff;
+    gap:40px 40px;align-items:start;
 }
 .hero-search-wrap{
     grid-column:1/-1;
@@ -179,7 +174,7 @@ a{text-decoration:none;}
     border-radius:16px;overflow:hidden;height:220px;
     background:#E2E8F0;
 }
-.hero-img:first-child{margin-top:28px;}
+.hero-img:first-child{margin-top:0;}
 .hero-img img{width:100%;height:100%;object-fit:cover;}
 .hero-float{
     position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);
@@ -199,7 +194,7 @@ a{text-decoration:none;}
 
 /* ── TRUSTED ── */
 .trusted{
-    padding:22px 40px 20px;
+    padding:22px 0 20px;
     border-top:1px solid var(--b);border-bottom:1px solid var(--b);
     background:#fff;
 }
@@ -219,7 +214,8 @@ a{text-decoration:none;}
 }
 
 /* ── STATS ── */
-.stats{display:flex;background:var(--l);border-bottom:1px solid var(--b);}
+.stats{background:var(--l);border-bottom:1px solid var(--b);}
+.stats .container{display:flex;}
 .stat{
     flex:1;display:flex;align-items:center;gap:13px;
     padding:18px 26px;border-right:1px solid var(--b);
@@ -234,12 +230,13 @@ a{text-decoration:none;}
 .stat-lbl{font-size:10px;color:var(--m);margin-top:1px;}
 
 /* ── MAIN GRID ── */
-.main-grid{display:grid;grid-template-columns:218px 1fr;margin:0 16px;}
+.main-grid{ background:var(--l); }
+.main-grid .container{display:grid;grid-template-columns:218px 1fr;}
 
 /* ── FILTERS ── */
 .filters{
     border-right:1px solid var(--b);padding:20px 16px 30px;
-    background:#fff;position:sticky;top:62px;align-self:start;max-height:calc(100vh - 62px);
+    background:#fff;position:sticky;top:0;align-self:start;max-height:100vh;
     overflow-y:auto;
 }
 .filters::-webkit-scrollbar{width:0;}
@@ -271,7 +268,7 @@ a{text-decoration:none;}
 .f-tag:hover,.f-tag.on{background:#EFF6FF;border-color:var(--p);color:var(--p);}
 
 /* ── JOBS AREA ── */
-.jobs-area{padding:20px 28px;background:var(--l);}
+.jobs-area{padding:20px 0 20px 28px;background:var(--l);}
 .jobs-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .jobs-count{font-size:15px;font-weight:800;color:var(--t);}
 .jobs-sort{display:flex;align-items:center;gap:8px;}
@@ -300,14 +297,14 @@ a{text-decoration:none;}
 }
 .jc-drag span{display:block;width:4px;height:4px;background:#94A3B8;border-radius:50%;}
 
-/* SQUARE rounded avatar */
+/* circular avatar */
 .jc-av{
-    width:54px;height:54px;border-radius:10px;flex-shrink:0;
+    width:54px;height:54px;border-radius:50%;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
-    font-size:18px;font-weight:900;color:#fff;overflow:hidden;
+    font-size:20px;font-weight:900;color:#fff;overflow:hidden;
     border:1.5px solid rgba(0,0,0,.06);
 }
-.jc-av img{width:100%;height:100%;object-fit:cover;border-radius:8px;}
+.jc-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 
 /* title / category / company */
 .jc-info{flex:0 0 180px;min-width:0;}
@@ -388,7 +385,8 @@ a{text-decoration:none;}
 .pag-dots{min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--m);}
 
 /* ── BENEFITS ── */
-.benefits{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--b);background:#fff;}
+.benefits{border-top:1px solid var(--b);background:#fff;}
+.benefits .container{display:grid;grid-template-columns:repeat(4,1fr);}
 .benefit{display:flex;align-items:center;gap:14px;padding:22px 24px;border-right:1px solid var(--b);}
 .benefit:last-child{border-right:none;}
 .benefit-icon{width:40px;height:40px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -401,24 +399,25 @@ a{text-decoration:none;}
     display:flex;align-items:center;justify-content:space-between;
     padding:16px 40px;border-top:1px solid var(--b);background:#fff;
 }
+.footer-left{display:flex;flex-direction:column;gap:4px;}
 .footer-logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:var(--s);}
 .footer-logo-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--s),var(--p));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;}
 .footer-links{display:flex;align-items:center;gap:20px;}
 .footer-link{font-size:11px;color:var(--m);}
 .footer-link:hover{color:var(--p);}
-.footer-copy{font-size:10px;color:var(--m);margin-top:2px;}
+.footer-copy{font-size:10px;color:var(--m);}
 .footer-socials{display:flex;align-items:center;gap:7px;}
 .footer-social{
-    width:30px;height:30px;border:1.5px solid var(--b);border-radius:8px;
+    width:32px;height:32px;border:1.5px solid var(--b);border-radius:8px;
     display:flex;align-items:center;justify-content:center;
-    font-size:13px;color:var(--m);transition:all .15s;
+    font-size:13px;color:var(--m);transition:all .15s;text-decoration:none;
 }
 .footer-social:hover{border-color:var(--p);color:var(--p);}
 
 @media(max-width:1100px){
-    .hero{grid-template-columns:1fr;}.hero-imgs{display:none;}
-    .main-grid{grid-template-columns:1fr;}.filters{display:none;}
-    .benefits{grid-template-columns:1fr 1fr;}
+    .hero .container{grid-template-columns:1fr;}.hero-imgs{display:none;}
+    .main-grid .container{grid-template-columns:1fr;}.filters{display:none;}
+    .benefits .container{grid-template-columns:1fr 1fr;}
 }
 </style>
 @if(!empty($cpCustomCss))
@@ -429,12 +428,8 @@ a{text-decoration:none;}
 
 {{-- ════ HERO ════ --}}
 <section class="hero">
+<div class="container">
     <div>
-        @if(!empty($cpLogoPath))
-        <div style="margin-bottom:14px;">
-            <img src="{{ asset($cpLogoPath) }}" alt="{{ $companyBrand }}" style="max-height:40px;max-width:180px;object-fit:contain;">
-        </div>
-        @endif
         <div class="hero-eyebrow"><i class="fa-solid fa-star"></i> Top Employer {{ date('Y') }}</div>
         <h1 class="hero-h1">Build the Future with<br><span>{{ $companyBrand }}</span></h1>
         <p class="hero-sub">Join our team of innovators and problem solvers who are building products used by thousands of recruiters worldwide.</p>
@@ -446,14 +441,8 @@ a{text-decoration:none;}
         </div>
     </div>
     <div class="hero-imgs">
-        <div class="hero-img"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop&auto=format" alt="Team collaboration"></div>
-        <div class="hero-img"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=220&fit=crop&auto=format" alt="Modern office"></div>
-        <div class="hero-float">
-            <div class="hero-float-avs">
-                @for($i=0;$i<4;$i++)<span>{{ chr(65+$i) }}</span>@endfor
-            </div>
-            <div class="hero-float-txt">Join {{ $statEmployees }} team members</div>
-        </div>
+        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img1_path) ? asset($cS->td_hero_img1_path) : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop&auto=format' }}" alt="Team collaboration"></div>
+        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img2_path) ? asset($cS->td_hero_img2_path) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=220&fit=crop&auto=format' }}" alt="Modern office"></div>
     </div>
     <div class="hero-search-wrap">
         <form method="GET" action="" class="hero-search">
@@ -464,10 +453,12 @@ a{text-decoration:none;}
             </button>
         </form>
     </div>
+</div>
 </section>
 
 {{-- ════ TRUSTED ════ --}}
 <section class="trusted">
+<div class="container">
     <div class="trusted-lbl">Trusted by leading companies</div>
     <div class="trusted-row">
         {{-- Amazon --}}
@@ -498,19 +489,23 @@ a{text-decoration:none;}
         {{-- 150+ --}}
         <div class="trusted-more">150+ other clients</div>
     </div>
+</div>
 </section>
 
 {{-- ════ STATS ════ --}}
 <section class="stats">
+<div class="container">
     <div class="stat"><div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div><div><div class="stat-val">{{ $total }}</div><div class="stat-lbl">Open Positions</div></div></div>
     <div class="stat"><div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div><div><div class="stat-val">{{ $statDepts }}</div><div class="stat-lbl">Departments</div></div></div>
     <div class="stat"><div class="stat-icon"><i class="fa-solid fa-globe"></i></div><div><div class="stat-val">{{ $statCountries }}</div><div class="stat-lbl">Countries</div></div></div>
     <div class="stat"><div class="stat-icon"><i class="fa-solid fa-user-group"></i></div><div><div class="stat-val">{{ $statEmployees }}</div><div class="stat-lbl">Employees</div></div></div>
     <div class="stat"><div class="stat-icon"><i class="fa-solid fa-heart"></i></div><div><div class="stat-val">{{ $statRetention }}</div><div class="stat-lbl">Employee Retention</div></div></div>
+</div>
 </section>
 
 {{-- ════ MAIN ════ --}}
 <div class="main-grid">
+<div class="container">
 
     {{-- ── FILTER SIDEBAR ── --}}
     <aside class="filters">
@@ -598,12 +593,23 @@ a{text-decoration:none;}
                     Skills <i class="fa-solid fa-chevron-down"></i>
                 </div>
                 <div class="filter-sec-body">
-                    <div class="f-tags">
-                        @foreach(['JavaScript','React','Node.js','Python','AWS','UI/UX','Java','PHP','Angular','Vue'] as $sk)
+                    <div class="f-search" style="margin-bottom:8px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Search skills" oninput="filterSkillSearch(this)">
+                    </div>
+                    <div class="f-tags" id="skillTagsWrap">
+                        @php $allSkills = ['JavaScript','React','Node.js','Python','AWS','UI/UX','Java','PHP','Angular','Vue']; $visibleSkills = array_slice($allSkills,0,6); $hiddenSkills = array_slice($allSkills,6); @endphp
+                        @foreach($visibleSkills as $sk)
                         <button type="button" name="filter_skills[]" value="{{ $sk }}"
-                            class="f-tag {{ in_array($sk,(array)request('filter_skills',[])) ? 'on' : '' }}"
+                            class="f-tag skill-tag {{ in_array($sk,(array)request('filter_skills',[])) ? 'on' : '' }}"
                             onclick="toggleSkillTag(this)">{{ $sk }}</button>
                         @endforeach
+                        @foreach($hiddenSkills as $sk)
+                        <button type="button" name="filter_skills[]" value="{{ $sk }}"
+                            class="f-tag skill-tag skill-tag-extra {{ in_array($sk,(array)request('filter_skills',[])) ? 'on' : '' }}"
+                            onclick="toggleSkillTag(this)" style="display:none;">{{ $sk }}</button>
+                        @endforeach
+                        <button type="button" class="f-tag" id="skillMoreBtn" onclick="showMoreSkills(this)" style="color:var(--p);border-color:var(--p);background:#EFF6FF;">+ More</button>
                     </div>
                 </div>
             </div>
@@ -821,10 +827,12 @@ a{text-decoration:none;}
         @endif
     </div>{{-- /jobs-area --}}
 
+</div>{{-- /container --}}
 </div>{{-- /main-grid --}}
 
 {{-- ════ BENEFITS ════ --}}
 <section class="benefits">
+<div class="container">
     @php $bens=[
         ['fa-house','#EFF6FF','#2563EB','Flexible Work Culture','Work from anywhere, anytime'],
         ['fa-heart-pulse','#FFF1F2','#E11D48','Health & Wellness','Health insurance & wellness programs'],
@@ -837,7 +845,9 @@ a{text-decoration:none;}
         <div><div class="benefit-title">{{ $title }}</div><div class="benefit-desc">{{ $desc }}</div></div>
     </div>
     @endforeach
+</div>
 </section>
+
 
 
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
@@ -889,6 +899,21 @@ document.querySelectorAll('.jc-bm').forEach(function(bm){
         this.classList.toggle('on');
     });
 });
+
+/* skill search filter */
+function filterSkillSearch(inp){
+    var q = inp.value.toLowerCase();
+    document.querySelectorAll('.skill-tag').forEach(function(btn){
+        btn.style.display = q && !btn.value.toLowerCase().includes(q) ? 'none' : '';
+    });
+    var moreBtn = document.getElementById('skillMoreBtn');
+    if(moreBtn) moreBtn.style.display = q ? 'none' : '';
+}
+/* show all hidden skill tags */
+function showMoreSkills(btn){
+    document.querySelectorAll('.skill-tag-extra').forEach(function(el){ el.style.display = ''; });
+    btn.style.display = 'none';
+}
 
 /* iframe height reporting */
 function sendHeight(){ window.parent.postMessage({frameHeight:document.body.scrollHeight},'*'); }

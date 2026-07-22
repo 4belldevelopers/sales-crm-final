@@ -11,37 +11,36 @@
 .bxr-page{ font-family:'Poppins',sans-serif; background:#F2F4F8; min-height:100vh; padding:18px 0 40px; }
 .bxr-page *{ font-family:'Poppins',sans-serif; box-sizing:border-box; }
 
-/* ══ 1. PROFILE HERO — identical to bench_explore.blade.php ══ */
-.bxr-hero{ background:#fff; padding:22px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; border-bottom:1px solid #F0F2F5; margin-bottom:4px; }
+/* ══ 1. PROFILE HERO — segmented stat card, identical to bench_explore's:
+   identity | Experience/Bill Rate | Bench Status/On Bench | 4 icon KPIs. ══ */
+.bxr-hero{ background:#fff; border:1px solid #EEF0F4; border-radius:14px; padding:14px 20px; display:flex; align-items:center; flex-wrap:wrap; row-gap:14px; margin-bottom:16px; }
+.bxr-hero-id{ display:flex; align-items:center; gap:14px; min-width:220px; padding-right:8px; }
 .bxr-av-wrap{ position:relative; flex-shrink:0; }
-.bxr-avatar{ width:82px; height:82px; border-radius:16px; object-fit:cover; border:3px solid #E8EDF5; }
-.bxr-avatar-init{ width:82px; height:82px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; }
-.bxr-online-dot{ position:absolute; bottom:-3px; right:-3px; width:14px; height:14px; background:#22C55E; border:2.5px solid #fff; border-radius:50%; }
-.bxr-hero-left{ display:flex; align-items:center; gap:18px; flex:1; min-width:260px; }
-.bxr-name-row{ display:flex; align-items:center; gap:10px; margin-bottom:3px; flex-wrap:wrap; }
-.bxr-name{ font-size:16px; font-weight:700; color:#1A1D23; margin:0; }
+.bxr-avatar{ width:56px; height:56px; border-radius:50%; object-fit:cover; }
+.bxr-avatar-init{ width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#6D28D9,#4F46E5); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; color:#fff; }
+.bxr-online-dot{ position:absolute; bottom:2px; right:2px; width:12px; height:12px; background:#22C55E; border:2px solid #fff; border-radius:50%; }
+.bxr-name{ font-size:14px; font-weight:700; color:#181C32; line-height:1.25; }
+.bxr-role{ font-size:12px; font-weight:600; color:#4F46E5; margin:2px 0 4px; }
+.bxr-loc{ font-size:11px; font-weight:500; color:#7E8299; display:flex; align-items:center; gap:4px; }
+.bxr-loc i{ color:#4F46E5; font-size:12px; }
+.bxr-hero-sep{ width:1px; align-self:stretch; background:#EEF0F4; margin:0 18px; }
+.bxr-facts{ display:flex; flex-direction:column; gap:9px; justify-content:center; min-width:96px; }
+.bxr-fact-label{ font-size:11px; font-weight:600; color:#4F46E5; display:block; margin-bottom:2px; }
+.bxr-fact-value{ font-size:13px; font-weight:700; color:#181C32; line-height:1.2; }
 /* Stage badge colors set per-candidate via inline CSS custom properties —
    Bench=blue, Placed=green, Hold=orange. */
-.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--bxr-stage-bg,#F0FDF4); color:var(--bxr-stage-color,#16A34A); border:1.5px solid var(--bxr-stage-border,#86EFAC); }
+.bxr-bench-tag{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px; background:var(--bxr-stage-bg,#F0FDF4); color:var(--bxr-stage-color,#16A34A); border:1.5px solid var(--bxr-stage-border,#86EFAC); width:max-content; }
 .bxr-bench-dot{ width:6px; height:6px; border-radius:50%; background:var(--bxr-stage-color,#16A34A); flex-shrink:0; }
-.bxr-info-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
-.bxr-role{ font-size:13px; font-weight:600; color:#374151; margin:0; }
-.bxr-meta-line{ display:flex; flex-wrap:wrap; gap:18px; }
-.bxr-meta-item{ display:flex; align-items:center; gap:5px; font-size:12px; font-weight:500; color:#64748B; }
-.bxr-meta-item i{ font-size:13px; color:#94A3B8; }
-.bxr-bench-id-val{ font-weight:700; color:#1A56DB; letter-spacing:.3px; font-size:12px; }
-.bxr-kpi-row{ display:flex; align-items:center; gap:0; flex-shrink:0; flex-wrap:wrap; }
-.bxr-kpi{ display:flex; align-items:center; gap:12px; padding:12px 28px; position:relative; }
-.bxr-kpi+.bxr-kpi::before{ content:''; position:absolute; left:0; top:15%; height:70%; width:1px; background:#E5E9F0; }
-.bxr-kpi-icon{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.bxr-kpis{ display:flex; align-items:stretch; flex:1; justify-content:space-evenly; min-width:300px; }
+.bxr-kpi{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:0 16px; position:relative; justify-content:center; }
+.bxr-kpi+.bxr-kpi::before{ content:''; position:absolute; left:0; top:8%; height:84%; width:1px; background:#EEF0F4; }
+.bxr-kpi-lbl{ font-size:11px; font-weight:600; color:#4F46E5; white-space:nowrap; }
+.bxr-kpi-icon{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
 .bxr-kpi-icon.vi{ background:#EFF6FF; color:#2563EB; }
 .bxr-kpi-icon.dl{ background:#F0FDF4; color:#16A34A; }
-.bxr-kpi-icon.aj{ background:#EFF6FF; color:#0EA5E9; }
-.bxr-kpi-icon.iv{ background:#F5F3FF; color:#7C3AED; }
-.bxr-kpi-num{ font-size:15px; font-weight:700; color:#1A1D23; line-height:1.1; }
-.bxr-kpi-lbl{ font-size:10px; font-weight:500; color:#94A3B8; white-space:nowrap; }
-.bxr-hero-menu{ align-self:flex-start; width:32px; height:32px; border-radius:8px; border:1px solid #E5E9F0; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#94A3B8; font-size:16px; transition:all .18s; flex-shrink:0; }
-.bxr-hero-menu:hover{ background:#F8FAFC; }
+.bxr-kpi-icon.aj{ background:#FFF7ED; color:#EA580C; }
+.bxr-kpi-icon.iv{ background:#EEF2FF; color:#4F46E5; }
+.bxr-kpi-num{ font-size:15px; font-weight:700; color:#181C32; line-height:1.1; }
 
 /* ══ 2. SUMMARY CARDS (== tabs) — EXACT port of sections/service_company/
    apptrackerHeader.blade.php's .apth-card component, identical to
@@ -181,31 +180,214 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 .rrj-empty-title{ font-size:15px; font-weight:700; color:#181C32; margin-bottom:4px; }
 .rrj-empty-desc{ font-size:12.5px; color:#7E8299; max-width:360px; margin-bottom:16px; }
 
-/* Job cards rendered by bench-recommend-req-ajax.blade.php (.agency-card et
-   al were never actually styled anywhere in the codebase before this — this
-   is genuinely new, self-contained CSS, not a duplicate of an existing rule). */
-.agencies-list{ display:flex; flex-direction:column; gap:12px; }
-.agency-card{ position:relative; border:1px solid #EEF0F4; border-radius:14px; padding:16px 18px 14px; background:#fff; transition:box-shadow .18s, border-color .18s; overflow:hidden; }
-.agency-card:hover{ box-shadow:0 4px 14px rgba(16,24,40,.07); border-color:#DBEAFE; }
-.bench-badge{ position:absolute; top:0; right:16px; background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:700; padding:3px 10px; border-radius:0 0 8px 8px; }
-.card-content{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; padding-top:6px; }
-.card-left{ display:flex; gap:12px; flex:1 1 320px; min-width:260px; }
-.agency-logo{ width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; flex-shrink:0; }
-.agency-details{ min-width:0; }
-.agency-name.fs-5{ font-size:14px !important; margin-bottom:2px; }
-.agency-name a{ color:inherit; text-decoration:none; }
-.agency-location.fs-6{ font-size:11.5px !important; color:#7E8299 !important; margin-bottom:22px; }
-.agency-tags{ display:flex; flex-wrap:wrap; gap:5px; position:static !important; margin-top:4px; }
-.tag-badge{ font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; background:#F1F5F9; color:#475569; }
-.card-middle{ display:flex; gap:26px; flex-wrap:wrap; padding:2px 0; flex:0 0 auto; }
-.card-middle .metric{ min-width:88px; }
-.card-middle .fs-5{ font-size:12.5px !important; font-weight:700 !important; }
-.card-middle .fs-6{ font-size:10.5px !important; color:#94A3B8 !important; }
-.card-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:auto; flex:0 0 auto; }
-.favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; }
-.favorite-icon:hover{ color:#F43F5E; }
+/* ═══════════════════════════════════════════════
+   REDESIGNED JOB LISTING GRID (table-style rows).
+   Modeled on demo/css/joblist.css (service_company/jobs) so the
+   Recommended-Jobs view feels like an extension of the Jobs module,
+   while staying consistent with the Application Tracker design language.
+   Columns: Job Details | Experience | Hiring & Loc | Hiring Mgr | Status | Actions,
+   with a compact skills sub-row below the grid (preserves skill/match
+   logic from before the redesign).
+   ═══════════════════════════════════════════════ */
+.agencies-list{ display:flex; flex-direction:column; gap:0; }
+.jc-table-header{
+  display:grid;
+  grid-template-columns: 2.6fr 1.4fr 1.4fr 1.2fr 0.95fr 1.4fr;
+  align-items:center; gap:0; padding:9px 16px;
+  background:#F7F8FC;
+  border:1px solid #EEF0F4;
+  border-radius:10px 10px 0 0;
+  margin-bottom:-1px;
+  font-family:'Poppins',sans-serif;
+}
+.jc-th{
+  font-size:10.5px; font-weight:600; color:#7E8299;
+  text-transform:uppercase; letter-spacing:0.4px;
+  display:flex; align-items:center; gap:4px;
+  padding-right:12px; white-space:nowrap;
+}
+.jc-row-wrap{
+  position:relative;
+  border:1px solid #EEF0F4;
+  background:#fff;
+  transition:box-shadow .18s, border-color .18s;
+  border-radius:0; padding:0; overflow:hidden;
+}
+.jc-row-wrap + .jc-row-wrap{ border-top:none; }
+.jc-row-wrap:last-of-type{ border-radius:0 0 10px 10px; }
+.jc-row-wrap:hover{ background:#FAFBFF; border-color:#DBEAFE; }
+.jc-row{
+  display:grid;
+  grid-template-columns: 2.6fr 1.4fr 1.4fr 1.2fr 0.95fr 1.4fr;
+  align-items:start; padding:12px 16px; gap:0;
+  font-family:'Poppins',sans-serif;
+}
+.jc-col{ min-width:0; padding-right:12px; }
+.bench-badge{ position:absolute; top:0; right:16px; background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:700; padding:3px 10px; border-radius:0 0 8px 8px; z-index:2; }
 
-@media(max-width:900px){ .bxr-hero{ flex-direction:column; } .bxr-sum-row{ flex-direction:column; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
+/* COL 1 — Job Details */
+.jc-col-job{ display:flex; gap:10px; padding-right:12px; }
+.job-logo{
+  width:48px; height:48px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:800; color:#fff;
+  overflow:hidden; align-self:flex-start; letter-spacing:0.5px;
+}
+.job-info{ flex:1; min-width:0; }
+.job-title{
+  font-size:12.5px; font-weight:700; color:#181C32;
+  margin-bottom:2px; line-height:1.3;
+  display:flex; align-items:center; gap:5px;
+}
+.job-title a{ color:inherit; text-decoration:none; }
+.job-title a:hover{ color:#2563EB; }
+.job-client{
+  font-size:11px; color:#7E8299; font-weight:500;
+  margin-bottom:6px; display:flex; align-items:center; gap:5px;
+}
+.job-client i{ color:#94A3B8; font-size:12px; }
+.job-meta-line{
+  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+  font-size:10.5px; color:#94A3B8; margin-bottom:0;
+}
+.job-date-inline{ display:flex; align-items:center; gap:3px; white-space:nowrap; }
+.job-date-inline i{ color:#94A3B8; font-size:11px; }
+.meta-sep{ color:#E4E6EF; font-size:12px; line-height:1; }
+.badge-inline{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:1px 7px; border-radius:20px;
+  font-size:10px; font-weight:600; white-space:nowrap; line-height:1.4;
+}
+.badge-fulltime{ background:#EEF6FF; color:#3B82F6; }
+.badge-contract{ background:#FFF4EE; color:#F4682A; }
+.badge-worktype i{ font-size:11px; }
+.badge-remote{ background:#F0FDF4; color:#16A34A; }
+.badge-hybrid{ background:#EEF2FF; color:#4F46E5; }
+.badge-onsite{ background:#F8FAFC; color:#64748B; }
+.badge-any{ background:#F5F3FF; color:#7C3AED; }
+
+/* COL 2 — Experience (vertical: exp / salary / client-type badge) */
+.jc-col-exp{ display:flex; flex-direction:column; gap:6px; }
+.exp-row, .sal-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.exp-row svg{ width:13px; height:13px; color:#94A3B8; flex-shrink:0; }
+.sal-row{ width:max-content; }
+.sal-currency{
+  display:inline-flex; width:13px; height:13px;
+  align-items:center; justify-content:center; color:#94A3B8;
+  font-size:11px; font-weight:700; flex-shrink:0;
+}
+.sal-mode{ font-size:9.5px; color:#94A3B8; font-weight:600; padding-left:2px; }
+
+/* Reusable Client Type Badge — Internal (blue) / Direct (green).
+   Single component reused everywhere on the platform; the tilted left
+   stripe + soft pill body + colored icon reads instantly at any size. */
+.client-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  position:relative; padding:2px 10px 2px 10px;
+  border-radius:6px;
+  font-size:10.5px; font-weight:600; line-height:1.2;
+  max-width:100%; font-family:'Poppins',sans-serif;
+  border:1px solid transparent;
+}
+.client-badge-stripe{
+  position:absolute; left:-1px; top:2px; bottom:2px; width:3px;
+  border-radius:2px; background:currentColor;
+}
+.client-badge i{ font-size:11.5px; line-height:1; flex-shrink:0; }
+.client-badge-label{ white-space:nowrap; }
+.client-badge-id{ color:currentColor; opacity:0.7; font-weight:500; padding-left:2px; }
+.client-badge--internal{
+  background:#EBF5FF; color:#1D4ED8; border-color:#BFDBFE;
+}
+.client-badge--internal .client-badge-stripe{ background:#1D4ED8; }
+.client-badge--direct{
+  background:#ECFDF5; color:#047857; border-color:#A7F3D0;
+}
+.client-badge--direct .client-badge-stripe{ background:#059669; }
+
+/* COL 3 — Hiring & Location */
+.jc-col-loc{ display:flex; flex-direction:column; gap:3px; }
+.loc-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.loc-row i{ color:#2563EB; font-size:12px; flex-shrink:0; }
+.loc-mode{ font-size:10.5px; color:#7E8299; padding-left:18px; }
+
+/* COL 4 — Hiring Manager */
+.jc-col-hm{ display:flex; flex-direction:column; min-width:0; }
+.hm-row{ display:flex; align-items:center; gap:8px; min-width:0; }
+.hm-avatar{
+  width:32px; height:32px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px;
+}
+.hm-avatar--filled{ background:#EEF2FF; color:#4F46E5; }
+.hm-avatar--empty{ background:#F1F5F9; color:#94A3B8; border:1px dashed #E4E6EF; }
+.hm-info{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.hm-name{ font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
+.hm-name.hmlisting{ cursor:pointer; }
+.hm-name.hmlisting:hover{ color:#2563EB; }
+.hm-role{ font-size:10px; color:#94A3B8; font-weight:500; }
+
+/* COL 5 — Status */
+.jc-col-status{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.status-pill{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:999px;
+  font-size:10.5px; font-weight:700;
+  align-self:flex-start; max-width:100%;
+}
+.status-pill a{ color:inherit; text-decoration:none; }
+.status-pill--hiring{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.status-pill--closed, .status-pill--removed, .status-pill--inactive{ background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; }
+.status-pill--hold, .status-pill--onhold{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
+.status-rec{ font-size:10px; color:#94A3B8; font-weight:500; padding-left:2px; }
+
+/* COL 6 — Actions */
+.jc-col-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; align-self:flex-end; }
+.favorite-icon:hover{ color:#F43F5E; }
+.action-stack{ display:flex; flex-direction:column; gap:5px; width:100%; }
+.btn-xsm{ font-size:10.5px !important; padding:4px 10px !important; border-radius:6px !important; font-weight:600 !important; line-height:1.2 !important; gap:4px; display:inline-flex; align-items:center; justify-content:center; width:100%; }
+.jc-tc-btn{ color:#4F46E5 !important; border-color:#E0E7FF !important; }
+.jc-tc-btn:hover{ background:#EEF2FF !important; border-color:#C7D2FE !important; color:#4338CA !important; }
+.action-status{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 8px; border-radius:6px;
+  font-size:10.5px; font-weight:600; justify-content:center; width:100%;
+}
+.action-status--added{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.action-status--sent{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
+
+/* Skills sub-row — preserved match logic, just visually tightened to fit
+   beneath the grid without bloating row height. */
+.jc-skills-row{ display:flex; flex-wrap:wrap; gap:4px; padding:0 16px 12px; align-items:center; }
+.jc-skill-matched{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.jc-skill-neutral{ background:#F1F5F9; color:#475569; }
+.jc-skill-overflow{ background:#EEF2FF; color:#3730A3; border:1px solid #E0E7FF; }
+.jc-skill-overflow a{ color:inherit; text-decoration:none; }
+.tag-badge{ font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; }
+
+/* Responsive — keep the design legible as the viewport narrows. */
+@media (max-width:1180px){
+  .jc-table-header, .jc-row{ grid-template-columns: 2.4fr 1.3fr 1.3fr 1.1fr 0.9fr 1.3fr; }
+  .job-logo{ width:42px; height:42px; font-size:16px; }
+}
+@media (max-width:980px){
+  .jc-table-header{ display:none; }
+  .jc-row{ grid-template-columns: 1fr; gap:8px; padding:14px 16px; }
+  .jc-col{ padding-right:0; border-bottom:1px dashed #EEF0F4; padding-bottom:8px; }
+  .jc-col:last-of-type{ border-bottom:none; padding-bottom:0; }
+  .jc-col-actions{ align-items:flex-start; }
+  .action-stack{ flex-direction:row; flex-wrap:wrap; }
+  .action-stack .btn-xsm, .action-stack .action-status{ width:auto; }
+}
+
+@media(max-width:900px){ .bxr-hero{ flex-direction:column; align-items:flex-start; } .bxr-hero-sep{ display:none; } .bxr-kpis{ width:100%; min-width:0; flex-wrap:wrap; } .bxr-sum-row{ grid-template-columns:1fr; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
 </style>
 @endpush
 
@@ -216,8 +398,8 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 </div>
 
 @php
-    {{-- url('.../bench_explore/') drops the trailing slash, so concatenating
-         the id directly produced "bench_explore123" — a 404 on every click. --}}
+    /* url('.../bench_explore/') drops the trailing slash, so concatenating
+       the id directly produced "bench_explore123" — a 404 on every click. */
     $bench_explore_url      = url('service_company/bench-candidates/bench_explore') . '/' . @$bench_detail->id . '/all';
     $recommend_req_url      = url('service_company/bench-candidates/recommend_req/')          .'/'. @$bench_detail->id;
     $recommend_internal_req = url('service_company/bench-candidates/recommend_internal_req/') .'/'. @$bench_detail->id;
@@ -229,24 +411,38 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   <div id="kt_content_container" class="container-fluid px-0">
   <div class="bxr-page">
 
-  {{-- ══ SECTION 1 · PROFILE HERO — identical to bench_explore.blade.php ══ --}}
+  {{-- ══ SECTION 1 · PROFILE HERO — segmented stat card:
+       identity | Experience + Bill Rate | Bench Status + On Bench | icon KPIs ══ --}}
+  @php
+    $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
+    /* $bench_detail->name is the candidate's CURRENT STAGE (Bench/Hold/
+       Placed/Pool/etc, via the bench_master_status join), not their
+       name — that's full_name. */
+    $candName = @$bench_detail->full_name ?? 'Candidate';
+    $initLtr  = strtoupper(substr($candName,0,1));
+    $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
+    $bxrStageKey = strtolower($bxrStageLabel);
+    if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
+    elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
+    elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
+    else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; }
+    /* Bill Rate — same fields the old bench-toolbar partial displayed. */
+    $bxrBillRate = '—';
+    if (@$bench_detail->bill_rate_amount) {
+        $bxrCurSymMap = \App\Helper\GeneralMethod::currencySymbole();
+        $bxrModeAbbr  = [0=>'yr',1=>'mo',2=>'hr'][(int)@$bench_detail->bill_rate_mode] ?? '';
+        $bxrBillRate  = ($bxrCurSymMap[@$bench_detail->bill_rate_currency] ?? '₹')
+                      . number_format((float)$bench_detail->bill_rate_amount)
+                      . ($bxrModeAbbr !== '' ? ' /'.$bxrModeAbbr : '');
+    }
+    /* On Bench — days since the candidate record was created. */
+    $bxrOnBenchDays = '—';
+    if (@$bench_detail->created_at) {
+        $bxrOnBenchDays = (int) abs(\Carbon\Carbon::parse($bench_detail->created_at)->diffInDays(now())) . ' Days';
+    }
+  @endphp
   <div class="bxr-hero">
-    <div class="bxr-hero-left">
-      @php
-        $imgFile  = @$bench_detail->profile_image ?? @$bench_detail->image ?? @$bench_detail->photo ?? null;
-        /* $bench_detail->name is the candidate's CURRENT STAGE (Bench/Hold/
-           Placed/Pool/etc, via the bench_master_status join), not their
-           name — that's full_name. */
-        $candName = @$bench_detail->full_name ?? 'Candidate';
-        $initLtr  = strtoupper(substr($candName,0,1));
-        $bxrPrimarySkill = trim(explode(',', @$bench_detail->skills ?? '')[0] ?? '');
-        $bxrStageLabel = ucwords(@$bench_detail->name ?? 'Bench');
-        $bxrStageKey = strtolower($bxrStageLabel);
-        if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
-        elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
-        elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
-        else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; } // Pool / other stages
-      @endphp
+    <div class="bxr-hero-id">
       <div class="bxr-av-wrap">
         @if($imgFile)
           <img src="{{ asset('assets/images/candidates/'.$imgFile) }}" class="bxr-avatar" alt="{{ $candName }}">
@@ -256,53 +452,51 @@ body > .tagify__dropdown{ z-index:1400 !important; }
         <div class="bxr-online-dot"></div>
       </div>
       <div>
-        <div class="bxr-name-row">
-          <span class="bxr-name">{{ ucwords($candName) }}</span>
-          <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
-        </div>
-        <div class="bxr-info-row">
-          <span class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</span>
-          @if($bxrPrimarySkill !== '')
-          <span class="bxr-meta-item" style="background:#EFF6FF;color:#1D4ED8;padding:2px 9px;border-radius:20px;font-weight:600;">
-            <i class="ti ti-star" style="color:#1D4ED8;"></i>{{ ucfirst($bxrPrimarySkill) }}
-          </span>
-          @endif
-          @if(@$bench_detail->city_name)
-          <span class="bxr-meta-item"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</span>
-          @endif
-        </div>
-        <div class="bxr-meta-line">
-          @if(@$bench_detail->total_exp)
-          <span class="bxr-meta-item"><i class="ti ti-clock"></i>{{ @$bench_detail->total_exp }}-{{ @$bench_detail->rel_exp }} Years</span>
-          @endif
-          <span class="bxr-meta-item">
-            <span style="color:#94A3B8;font-size:12px;">Bench ID:</span>&nbsp;
-            <span class="bxr-bench-id-val">B-{{ @$bench_detail->id }}</span>
-          </span>
-        </div>
+        <div class="bxr-name">{{ ucwords($candName) }}</div>
+        <div class="bxr-role">{{ ucwords(@$bench_detail->current_designation ?? '') }}</div>
+        @if(@$bench_detail->city_name)
+        <div class="bxr-loc"><i class="ti ti-map-pin"></i>{{ @$bench_detail->city_name }}@if(@$bench_detail->state_name), {{ @$bench_detail->state_name }}@endif</div>
+        @endif
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;gap:12px;">
-      <div class="bxr-kpi-row">
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_views??0 }}</div><div class="bxr-kpi-lbl">Views</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon dl"><i class="ti ti-download"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_downloads??0 }}</div><div class="bxr-kpi-lbl">Downloads</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon aj"><i class="ti ti-send"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$recomCount['recommend_req_counter']??0 }}</div><div class="bxr-kpi-lbl">Applied on Jobs</div></div>
-        </div>
-        <div class="bxr-kpi">
-          <div class="bxr-kpi-icon iv"><i class="ti ti-calendar-event"></i></div>
-          <div><div class="bxr-kpi-num">{{ @$bench_detail->total_interviews??0 }}</div><div class="bxr-kpi-lbl">Interviews</div></div>
-        </div>
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-facts">
+      <div><span class="bxr-fact-label">Experience</span><span class="bxr-fact-value">{{ @$bench_detail->total_exp ?? 0 }} Years</span></div>
+      <div><span class="bxr-fact-label">Bill Rate</span><span class="bxr-fact-value">{!! $bxrBillRate !!}</span></div>
+    </div>
+
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-facts">
+      <div>
+        <span class="bxr-fact-label">Bench Status</span>
+        <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
       </div>
-      <button class="bxr-hero-menu"><i class="ti ti-dots-vertical"></i></button>
+      <div><span class="bxr-fact-label">On Bench</span><span class="bxr-fact-value">{{ $bxrOnBenchDays }}</span></div>
+    </div>
+
+    <div class="bxr-hero-sep"></div>
+    <div class="bxr-kpis">
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Views</span>
+        <span class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['views'] ?? 0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Downloads</span>
+        <span class="bxr-kpi-icon dl"><i class="ti ti-download"></i></span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['downloads'] ?? 0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Applied</span>
+        <span class="bxr-kpi-icon aj"><i class="ti ti-send"></i></span>
+        <span class="bxr-kpi-num">{{ @$recomCount['recommend_req_counter']??0 }}</span>
+      </div>
+      <div class="bxr-kpi">
+        <span class="bxr-kpi-lbl">Interviews</span>
+        <span class="bxr-kpi-icon iv"><i class="ti ti-bell"></i></span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['interviews'] ?? 0 }}</span>
+      </div>
     </div>
   </div>
 
@@ -564,12 +758,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Min Salary</label>
-                {{-- Always starts at 0 — deliberately not derived from
-                     $min_salary/canGgdFilterData(), which can equal
-                     max_salary for some candidates and made this look
-                     pre-filled with a real (wrong) number instead of a
-                     neutral default. --}}
-                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="0">
+                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ (@$min_salary !== '' && @$min_salary !== null) ? @$min_salary : 0 }}">
               </div>
               <div class="col-3">
                 <label class="rrj-mini-label">Max Salary</label>
@@ -595,7 +784,10 @@ body > .tagify__dropdown{ z-index:1400 !important; }
                 <label class="rrj-pill" for="rrj_work_mode_onsite">Onsite</label>
               </div>
               <div>
-                <input type="checkbox" class="btn-check rrj_work_mode" value="other" id="rrj_work_mode_hybrid">
+                {{-- job documents store hybrid as BOTH 'other' and 'any'
+                     (see work_type handling in bench-recommend-req-ajax) —
+                     the comma-separated value covers both spellings --}}
+                <input type="checkbox" class="btn-check rrj_work_mode" value="other,any" id="rrj_work_mode_hybrid">
                 <label class="rrj-pill" for="rrj_work_mode_hybrid">Hybrid</label>
               </div>
               <div>
@@ -681,6 +873,14 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   </div>
 
   <div class="rrj-results-wrap">
+    <div class="jc-table-header">
+      <div class="jc-th">Job Details</div>
+      <div class="jc-th">Experience</div>
+      <div class="jc-th">Hiring &amp; Location</div>
+      <div class="jc-th">Hiring Manager</div>
+      <div class="jc-th">Status</div>
+      <div class="jc-th">Actions</div>
+    </div>
     <div class="agencies-list" id="benchCandidateRecommendedReqAjax"></div>
     <div id="paginationbenchCandidateRecommendedReq"></div>
   </div>
@@ -938,7 +1138,9 @@ function rrjBuildFilterItems(){
         items.push({cat:'location', label:t.value, clear:function(){ rrjTagifyLocation.removeTags(t.value); }});
     });
     var minSal=$('#min_sal').val(), maxSal=$('#max_sal').val();
-    if (minSal || maxSal) items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#min_sal,#max_sal').val(''); }});
+    /* min salary 0 is the neutral default ("no lower bound") — it must not
+       render as an active-filter chip or count toward the filter badge. */
+    if ((parseFloat(minSal)||0) > 0 || maxSal) items.push({cat:'salary', label:(minSal||'0')+'-'+(maxSal||'Any'), clear:function(){ $('#min_sal').val(0); $('#max_sal').val(''); }});
     var minExp=$('#min_exp').val(), maxExp=$('#max_exp').val();
     if (minExp !== '' || maxExp !== '') items.push({cat:'exp', label:(minExp||'0')+'-'+(maxExp||'Any')+' yrs', clear:function(){ $('#min_exp,#max_exp').val(''); }});
     $('.rrj_work_mode:checked').each(function(){
@@ -980,7 +1182,8 @@ $(document).on('click','#rrj_applied_clear_all',function(){ $('#rrj_clear_all').
 $(document).on('click','#rrj_clear_all, #rrj_reset_btn',function(){
     rrjTagifySkills.removeAllTags();
     rrjTagifyLocation.removeAllTags();
-    $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#min_sal,#max_sal').val('');
+    $('#min_exp,#max_exp,#min_salary_currency,#sal_mode,#max_sal').val('');
+    $('#min_sal').val(0); /* min salary resets to 0, never blank */
     $('.rrj_work_mode').prop('checked', false);
     $('#app_int_outsource1,#app_int_activity1').prop('checked', true);
     rrjUpdateActiveFiltersUI();
@@ -1132,7 +1335,9 @@ $(document).on('click', '.hm-listing', function () {
 function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
     $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
     var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
-    $.ajax({
+    /* return the jqXHR so pagination's .then()/.catch() work — without it
+       they were called on undefined and threw a TypeError on every click */
+    return $.ajax({
         url: `{!! route('service_company.recommend.all_data_ajax') !!}?page=${page}`,
         type: 'GET',
         data: {
@@ -1170,16 +1375,21 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
 function filtersdataget(){ fetchBenchRecommendedReqCandidateList(); }
 $(document).ready(function() {
     fetchBenchRecommendedReqCandidateList();
-    $(document).on('click', '#paginationbenchCandidateRecommendedReq .page-link', function(e) {
+    /* The shared pagination partial renders .pagi-page/.pagi-arrow buttons —
+       the old handler listened for Bootstrap's .page-link, which the partial
+       never outputs, so pagination clicks did nothing at all. A boolean
+       guard prevents overlapping requests from rapid clicks. */
+    var rrjPaginationLoading = false;
+    $(document).on('click', '#paginationbenchCandidateRecommendedReq .pagi-page, #paginationbenchCandidateRecommendedReq .pagi-arrow', function(e) {
         e.preventDefault();
-        const page = $(this).data('page');
-        if (!page || $(this).hasClass('disabled')) return;
-        $(this).addClass('disabled');
-        fetchBenchRecommendedReqCandidateList(page, $('#search').val()).then(() => {
-            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
-        }).catch(() => {
-            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
-        });
+        var $btn = $(this);
+        if (rrjPaginationLoading || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled')) return;
+        var page = $btn.data('page');
+        if (!page) return;
+        rrjPaginationLoading = true;
+        fetchBenchRecommendedReqCandidateList(page)
+            .then(function(){ rrjPaginationLoading = false; })
+            .catch(function(){ rrjPaginationLoading = false; });
     });
 });
 </script>
