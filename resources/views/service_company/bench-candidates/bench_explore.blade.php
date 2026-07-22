@@ -419,11 +419,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 <div aria-hidden="true"
      style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0;z-index:-9;">
     @php
-        {{-- url('.../bench_explore/') silently drops the trailing slash
-             (Laravel's UrlGenerator normalizes it away), so concatenating the
-             id directly onto it produced "bench_explore123" instead of
-             "bench_explore/123" — a URL that can never match the
-             bench_explore/{id?}/{stage?} route and 404s on every click. --}}
+        /* url('.../bench_explore/') silently drops the trailing slash
+           (Laravel's UrlGenerator normalizes it away), so concatenating the
+           id directly onto it produced "bench_explore123" instead of
+           "bench_explore/123" — a URL that can never match the
+           bench_explore/{id?}/{stage?} route and 404s on every click. */
         $bench_explore_url      = url('service_company/bench-candidates/bench_explore') . '/' . @$bench_detail->id . '/all';
         $recommend_req_url      = url('service_company/bench-candidates/recommend_req/')          .'/'. @$bench_detail->id;
         $recommend_internal_req = url('service_company/bench-candidates/recommend_internal_req/') .'/'. @$bench_detail->id;
