@@ -90,49 +90,67 @@
     $expMin = @$jobDetails->min_exp ?? '—';
     $expRange = ($expMin && $expMax) ? "{$expMin} - {$expMax} Years" : "{$expMax}+ Years";
 
-    /* ── Salary in Lakh format ───────────────────── */
+    /* ── Salary — same display format as the jobs page (all_jobs_ajax):
+       "₹ 1500K - 2500K /Annum" via thousandsCurrencyFormat + mode suffix ── */
     $min_salary_raw = (float)($jobDetails->min_salary ?? 0);
     $max_salary_raw = (float)($jobDetails->max_salary ?? 0);
-    $toLakh = fn($v) => $v >= 100000
-        ? round($v / 100000, 1) . ' L'
-        : ($v >= 1000 ? round($v / 1000, 1) . ' K' : (string)$v);
-
-    $maxSalMode = strtolower($salaryMode[$jobDetails->max_sal_mode] ?? '');
-    $salSuffix  = (str_contains($maxSalMode, 'annual') || $maxSalMode === 'a') ? 'LPA' : 'L/M';
-
+    $salCurrencySym = $currencySymbole[@$jobDetails->min_salary_currency] ?? '₹';
+    $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
     $salaryDisplay = '';
-    if ($min_salary_raw > 0 && $max_salary_raw > 0) {
-        $salaryDisplay = $toLakh($min_salary_raw) . ' - ' . $toLakh($max_salary_raw) . ' ' . $salSuffix;
-    } elseif ($max_salary_raw > 0) {
-        $salaryDisplay = $toLakh($max_salary_raw) . ' ' . $salSuffix;
-    } elseif ($min_salary_raw > 0) {
-        $salaryDisplay = $toLakh($min_salary_raw) . ' ' . $salSuffix;
+    if ($min_salary_raw > 0 || $max_salary_raw > 0) {
+        $salaryDisplay = GeneralMethod::thousandsCurrencyFormat($min_salary_raw)
+            . ' - ' . GeneralMethod::thousandsCurrencyFormat($max_salary_raw);
     }
 
     $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
 
-    /* ── Location ────────────────────────────────── */
+    /* ── Location — city list comes straight off the ES job document
+       (client_city_jobs is already in $jobDetails), replacing the two
+       per-row MySQL lookups that used to run here. Labels match the jobs
+       page: Office / Remote / Hybrid ('any' and 'other' both mean hybrid
+       in the data). ── */
     $jobid         = $jobDetails->id;
-    $jobCityCount  = DB::table('client_city_jobs')->where('job_id', $jobid)->count();
-    $workMode      = 'On-site';
-    $cityDisplay   = '—';
+    $cityArr       = is_array(@$jobDetails->client_city_jobs) ? $jobDetails->client_city_jobs : [];
+    $jobCityCount  = count($cityArr);
+    $firstCityName = $cityArr[0]['city_name'] ?? '';
+    $workMode      = 'Office';
+    $cityDisplay   = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr($firstCityName, 0, 15));
 
     if ($jobDetails->work_type == 'yes') {
         $workMode    = 'Remote';
         $cityDisplay = 'Remote';
-    } elseif ($jobDetails->work_type == 'any') {
+    } elseif (in_array($jobDetails->work_type, ['any', 'other'], true)) {
         $workMode = 'Hybrid';
-        $cl = DB::table('client_city_jobs')
-            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
-            ->select('city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)->first();
-        $cityDisplay = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr(@$cl->city_name, 0, 15));
+    }
+
+    /* ── Job type — same 3-way derivation as the jobs page (all_jobs_ajax):
+       received via a direct-client recommendation → "Direct Client" (green
+       handshake); own in-house job (self_company) → "Internal" (blue
+       building); own job for an internal client → "Internal Client". ── */
+    if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+        $typeLabel = 'Direct ' . __('messages.clinet_tag');
+        $typeClass = 'bxr-type-client';
+        $typeIcon  = '<i class="fas fa-handshake" style="color:#09b760;"></i>';
+    } elseif ((int)(@$jobDetails->self_company ?? 0) === 1) {
+        $typeLabel = __('messages.internal_tag');
+        $typeClass = 'bxr-type-internal';
+        $typeIcon  = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
     } else {
-        $cl = DB::table('client_city_jobs')
-            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
-            ->select('city_list.city as city_name')
-            ->where('client_city_jobs.job_id', $jobid)->first();
-        $cityDisplay = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr(@$cl->city_name, 0, 15));
+        $typeLabel = __('messages.internal_tag') . ' ' . __('messages.clinet_tag');
+        $typeClass = 'bxr-type-internal';
+        $typeIcon  = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
+    }
+
+    /* Category/department line (e.g. "IT (Information Technology)") — one
+       lookup per DISTINCT category on the page, memoized across rows. */
+    static $bxrDeptCache = [];
+    $deptName = '';
+    $catId = @$jobDetails->category_id;
+    if ($catId) {
+        if (!array_key_exists($catId, $bxrDeptCache)) {
+            $bxrDeptCache[$catId] = DB::table('job_categories')->where('id', $catId)->value('name') ?? '';
+        }
+        $deptName = $bxrDeptCache[$catId];
     }
 
     /* ── Job status ──────────────────────────────── */

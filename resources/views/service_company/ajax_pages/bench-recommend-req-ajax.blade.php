@@ -11,13 +11,26 @@
 
 @endphp
 @if (count($data) > 0)
+    @php
+        /* Page-level batch lookups — one query each for the whole page
+           instead of one per row (was 2 Elasticsearch searches + 2 MySQL
+           queries per job card, ~40 round-trips a page).
+           Tenancy: the relation map is scoped to the viewer's company inside
+           the bulk helper; skills are filtered per-row by each job's own
+           comId below, exactly as the old per-row query did. */
+        $pageJobIds  = array_values(array_filter(array_map(fn ($r) => $r['id'] ?? null, $data)));
+        $pageViewerCompanyId = auth()->user()->company_id;
+        $relationMap = GeneralMethod::getrRcommendationRelationDataBulk($pageViewerCompanyId, $pageJobIds);
+        $benchReqMap = GeneralMethod::benchRequestCheckBulk($condidate_id, $pageJobIds);
+        $skillsByJob = DB::table('job_metronics_skills')->whereIn('job_id', $pageJobIds)->get()->groupBy('job_id');
+    @endphp
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
     $targetJobId = $row->id;
     $company_id = auth()->user()->company_id;
 
-    $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
+    $relationget = $relationMap[$targetJobId] ?? (object) [];
     $from_company_id = $relationget->from_company_id ?? null;
     $to_company_id = $relationget->to_company_id ?? null;
     $recommendation_id = $relationget->id ?? null;
@@ -172,11 +185,11 @@
                                                     $totalSkill = 0;
                                                     $matchBadge = '';
                                                     if (empty($limit)) {
-                                                        $skillArr = DB::table('job_metronics_skills')
-                                                            ->select('*')
-                                                            ->where('company_id','=',$row->comId)
-                                                            ->where('job_id', $row->id)
-                                                            ->get();
+                                                        // from the page-level batch fetch above — same
+                                                        // job_id + comId filter the per-row query applied
+                                                        $skillArr = ($skillsByJob[$row->id] ?? collect())
+                                                            ->where('company_id', $row->comId)
+                                                            ->values();
 
                                                         /* ── Match % — same computation/threshold-colors as AppTracker's
                                                            candidate Match badge and bench_explore's job Match badge,
@@ -293,11 +306,10 @@
                         <div class="card-right">
                             <div class="favorite-icon"><i class="ri-heart-line"></i></div>
                             @php
-                            $resultCount = DB::table('market_job_added_count')->where('job_id','=',$row->id)->where('status','=',0)->count();
-                            $exceeded = 20;
+                            /* (removed a dead per-row market_job_added_count
+                               query here — its $resultCount was never read) */
+                             $benchRequestCheck = $benchReqMap[$row->id] ?? null;
 
-                             $benchRequestCheck = GeneralMethod::benchRequestCheck($condidate_id,$row->id); 
-                             
                              $requestsend = "checkrequestsend";
                              if($currentRowJob->status==2){
                                  $requestsend = "request-send";

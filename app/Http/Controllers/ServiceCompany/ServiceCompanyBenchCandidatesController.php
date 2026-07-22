@@ -4884,6 +4884,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->stage = $stage;
 		$this->bench_id = $id;
 		$this->recomCount = $this->benchjobAndRecomCount($id);
+		$this->heroKpis = $this->benchHeroKpis($this->bench_id);
 		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
@@ -5700,6 +5701,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
 		// Filter drawer defaults — deliberately NEUTRAL for experience,
 		// location and salary. The summary-card counts (benchjobAndRecomCount)
@@ -5736,6 +5738,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
 		// Filter drawer defaults — deliberately NEUTRAL (see the identical
 		// comment in recommend_req() above): only skills are prefilled so
@@ -6080,6 +6083,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$sort = [];
 
 		$valCheck = request('custom_hiringtype');
+		// Optional scoring clauses (filled only by Best Match, case 10) —
+		// added to the bool query's "should" so they rank without filtering.
+		$scoreShould = [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6087,49 +6093,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			case 2:
 				$sort[] = ['id' => ['order' => 'asc']];
 				break;
+			// Cases 3-6 get an id tiebreaker: without one, documents with equal
+			// salary / client_name have no stable order between requests, so
+			// paging could show the same job on two pages and skip another.
 			case 3:
 				$sort[] = ['max_salary' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 4:
 				$sort[] = ['max_salary' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 5:
 				$sort[] = ['client_name' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 10:
 				// "Best Match" — rank jobs by how many of the candidate's own
-				// skills ($set_skill, already computed above) appear in each
-				// job's nested job_metronics_skills. Purely a ranking signal,
-				// not a filter — jobs with zero matches still appear (0%),
-				// they just sort last. Mirrors the candidate-vs-job scoring
-				// AppTracker's similar-candidates page already does, inverted
-				// to score jobs against a candidate instead.
-				$sort[] = [
-					'_script' => [
-						'type' => 'number',
-						'script' => [
-							'lang' => 'painless',
-							'source' => "
-								int matchCount = 0;
-								if (params._source.containsKey('job_metronics_skills')) {
-									for (skillDoc in params._source.job_metronics_skills) {
-										if (!skillDoc.containsKey('skill_name') || skillDoc.skill_name == null) { continue; }
-										String jobSkill = skillDoc.skill_name.toLowerCase();
-										for (candSkill in params.skills) {
-											if (jobSkill.contains(candSkill) || candSkill.contains(jobSkill)) { matchCount += 1; break; }
-										}
-									}
-								}
-								return matchCount;
-							",
-							'params' => ['skills' => array_values(array_filter(array_map('strtolower', $set_skill)))],
+				// skills each job's nested job_metronics_skills matches, using
+				// ES native scoring: each skill is an optional constant_score(1)
+				// nested clause, so _score == number of matched skills. Jobs
+				// matching nothing still appear (score 0), newest first.
+				// (The previous implementation was a painless _script sort that
+				// read params._source — _source is not accessible in the sort
+				// context and job_metronics_skills is nested, so ES rejected
+				// the entire search request; since Best Match is the default
+				// sort, every first page load failed.)
+				foreach (array_values(array_filter(array_map('trim', $set_skill))) as $bmSkill) {
+					if ($bmSkill === '') { continue; }
+					$scoreShould[] = [
+						'nested' => [
+							'path' => 'job_metronics_skills',
+							'score_mode' => 'max',
+							'query' => [
+								'constant_score' => [
+									'filter' => [
+										'match' => [
+											'job_metronics_skills.skill_name' => [
+												'query' => strtolower($bmSkill),
+												'operator' => 'and',
+											],
+										],
+									],
+									'boost' => 1,
+								],
+							],
 						],
-						'order' => 'desc',
-					],
-				];
+					];
+				}
+				$sort[] = ['_score' => ['order' => 'desc']];
 				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
@@ -6277,7 +6293,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			];
 		}
 
-		// FINAL ELASTIC PARAMS
+		// FREE-TEXT TOOLBAR SEARCH — $custom_search was read (and hashed into
+		// the cache key) but never applied to the query, so the search box on
+		// this page did nothing at all. Matches the fields the job card shows:
+		// title, client name, company name. Analyzed fields make it
+		// case-insensitive; phrase_prefix covers partial keywords; fuzziness
+		// covers typos; AND operator handles multi-keyword input.
+		if ($custom_search !== '') {
+			$searchFields = ['title^3', 'client_name^2', 'company_name'];
+			$must[] = [
+				'bool' => [
+					'should' => [
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'operator' => 'and', 'fuzziness' => 'AUTO']],
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'type' => 'phrase_prefix']],
+					],
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// FINAL ELASTIC PARAMS — "should" carries Best Match's optional scoring
+		// clauses when active (they rank, never filter).
+		$boolQuery = ['must' => $must, 'filter' => $filter];
+		if (!empty($scoreShould)) { $boolQuery['should'] = $scoreShould; }
 		$params = [
 			'index' => ELASTIC_JOBS,
 			'request_cache' => true,
@@ -6285,26 +6323,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				'from' => $from,
 				'size' => $size,
 				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => $filter,
-					],
-				],
+				'query' => ['bool' => $boolQuery],
 			],
 		];
-
-		// dd($location);
 
 		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
 			$total = 0;
 			$data = [];
 		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+			// Graceful degradation: an ES failure renders the empty state
+			// instead of a 500; the error is logged, and the (empty) response
+			// is NOT cached so recovery is immediate.
+			try {
+				$response = $this->elasticService->getClient()->search($params);
+				$total = $response['hits']['total']['value'] ?? 0;
+				$data = array_map(function ($hit) {
+					return $hit['_source'];
+				}, $response['hits']['hits']);
+			} catch (\Throwable $esException) {
+				\Log::error('all_data_ajax ES search failed: '.$esException->getMessage());
+				$total = 0;
+				$data = [];
+				$esSearchFailed = true;
+			}
 		}
 
 		$pagination = [
@@ -6321,7 +6362,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		if (empty($esSearchFailed)) { cache()->put($cacheKeySet, $responseData, now()->addMinutes(3)); } // never cache an errored (empty) response
 
 	     return response()->json($responseData);
 
@@ -6523,6 +6564,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$sort = [];
 
 		$valCheck = request('custom_hiringtype');
+		// Optional scoring clauses (filled only by Best Match, case 10) —
+		// added to the bool query's "should" so they rank without filtering.
+		$scoreShould = [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6530,49 +6574,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			case 2:
 				$sort[] = ['id' => ['order' => 'asc']];
 				break;
+			// Cases 3-6 get an id tiebreaker: without one, documents with equal
+			// salary / client_name have no stable order between requests, so
+			// paging could show the same job on two pages and skip another.
 			case 3:
 				$sort[] = ['max_salary' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 4:
 				$sort[] = ['max_salary' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 5:
 				$sort[] = ['client_name' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 10:
 				// "Best Match" — rank jobs by how many of the candidate's own
-				// skills ($set_skill, already computed above) appear in each
-				// job's nested job_metronics_skills. Purely a ranking signal,
-				// not a filter — jobs with zero matches still appear (0%),
-				// they just sort last. Mirrors the candidate-vs-job scoring
-				// AppTracker's similar-candidates page already does, inverted
-				// to score jobs against a candidate instead.
-				$sort[] = [
-					'_script' => [
-						'type' => 'number',
-						'script' => [
-							'lang' => 'painless',
-							'source' => "
-								int matchCount = 0;
-								if (params._source.containsKey('job_metronics_skills')) {
-									for (skillDoc in params._source.job_metronics_skills) {
-										if (!skillDoc.containsKey('skill_name') || skillDoc.skill_name == null) { continue; }
-										String jobSkill = skillDoc.skill_name.toLowerCase();
-										for (candSkill in params.skills) {
-											if (jobSkill.contains(candSkill) || candSkill.contains(jobSkill)) { matchCount += 1; break; }
-										}
-									}
-								}
-								return matchCount;
-							",
-							'params' => ['skills' => array_values(array_filter(array_map('strtolower', $set_skill)))],
+				// skills each job's nested job_metronics_skills matches, using
+				// ES native scoring: each skill is an optional constant_score(1)
+				// nested clause, so _score == number of matched skills. Jobs
+				// matching nothing still appear (score 0), newest first.
+				// (The previous implementation was a painless _script sort that
+				// read params._source — _source is not accessible in the sort
+				// context and job_metronics_skills is nested, so ES rejected
+				// the entire search request; since Best Match is the default
+				// sort, every first page load failed.)
+				foreach (array_values(array_filter(array_map('trim', $set_skill))) as $bmSkill) {
+					if ($bmSkill === '') { continue; }
+					$scoreShould[] = [
+						'nested' => [
+							'path' => 'job_metronics_skills',
+							'score_mode' => 'max',
+							'query' => [
+								'constant_score' => [
+									'filter' => [
+										'match' => [
+											'job_metronics_skills.skill_name' => [
+												'query' => strtolower($bmSkill),
+												'operator' => 'and',
+											],
+										],
+									],
+									'boost' => 1,
+								],
+							],
 						],
-						'order' => 'desc',
-					],
-				];
+					];
+				}
+				$sort[] = ['_score' => ['order' => 'desc']];
 				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
@@ -6707,34 +6761,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			}
 			
 
-				// FINAL ELASTIC PARAMS
-			$params = [
-				'index' => ELASTIC_JOBS,
-				'request_cache' => true,
-				'body' => [
-					'from' => $from,
-					'size' => $size,
-					'sort' => $sort,
-					'query' => [
-						'bool' => [
-							'must' => $must,
-							'filter' => $filter,
-						],
+		// FREE-TEXT TOOLBAR SEARCH — $custom_search was read (and hashed into
+		// the cache key) but never applied to the query, so the search box on
+		// this page did nothing at all. Matches the fields the job card shows:
+		// title, client name, company name. Analyzed fields make it
+		// case-insensitive; phrase_prefix covers partial keywords; fuzziness
+		// covers typos; AND operator handles multi-keyword input.
+		if ($custom_search !== '') {
+			$searchFields = ['title^3', 'client_name^2', 'company_name'];
+			$must[] = [
+				'bool' => [
+					'should' => [
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'operator' => 'and', 'fuzziness' => 'AUTO']],
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'type' => 'phrase_prefix']],
 					],
+					'minimum_should_match' => 1,
 				],
 			];
+		}
 
-		// dd($location);
+		// FINAL ELASTIC PARAMS — "should" carries Best Match's optional scoring
+		// clauses when active (they rank, never filter).
+		$boolQuery = ['must' => $must, 'filter' => $filter];
+		if (!empty($scoreShould)) { $boolQuery['should'] = $scoreShould; }
+		$params = [
+			'index' => ELASTIC_JOBS,
+			'request_cache' => true,
+			'body' => [
+				'from' => $from,
+				'size' => $size,
+				'sort' => $sort,
+				'query' => ['bool' => $boolQuery],
+			],
+		];
 
 		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
 			$total = 0;
 			$data = [];
 		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+			// Graceful degradation: an ES failure renders the empty state
+			// instead of a 500; the error is logged, and the (empty) response
+			// is NOT cached so recovery is immediate.
+			try {
+				$response = $this->elasticService->getClient()->search($params);
+				$total = $response['hits']['total']['value'] ?? 0;
+				$data = array_map(function ($hit) {
+					return $hit['_source'];
+				}, $response['hits']['hits']);
+			} catch (\Throwable $esException) {
+				\Log::error('all_internal_data_ajax ES search failed: '.$esException->getMessage());
+				$total = 0;
+				$data = [];
+				$esSearchFailed = true;
+			}
 		}
 
 		$pagination = [
@@ -6752,7 +6831,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		];
 
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		if (empty($esSearchFailed)) { cache()->put($cacheKeySet, $responseData, now()->addMinutes(3)); } // never cache an errored (empty) response
 
 	     return response()->json($responseData);
 
@@ -7081,6 +7160,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         } 
         return Reply::dataOnly(['status' => 'faild','pack_status'=>$pack_status]);
     }
+	/**
+	 * Hero KPI counters (Views / Downloads / Interviews) for the bench
+	 * candidate detail pages — previously these rendered a hardcoded 0
+	 * because job_applications has no such columns. Uses the same counting
+	 * semantics the bench listing already uses elsewhere in this controller
+	 * (bench_count_view_download: type 1=view / 2=download, status 0) plus
+	 * this candidate's scheduled interviews. Three indexed single-column
+	 * counts, once per page load. Tenancy: rows are keyed to the candidate
+	 * id, which each caller has already findOrFail'd.
+	 */
+	private function benchHeroKpis($id)
+	{
+		return [
+			'views'      => DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count(),
+			'downloads'  => DB::table('bench_count_view_download')->where('type', 2)->where('status', 0)->where('candidate_id', $id)->count(),
+			'interviews' => DB::table('interview_schedules')->where('job_application_id', $id)->count(),
+		];
+	}
+
 	private function benchjobAndRecomCount($id)
     {
         //   dd($id);
@@ -7220,10 +7318,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         	'id'    => $id,
         ];
 
-        $response = $this->elasticService->getClient()->get($params);
-		$data = (object) $response['_source'];
-		$yourArray = $data->jobs;
-		$jobIds = array_column($yourArray, 'job_id');
+		// get() throws Missing404Exception when the candidate has no bench
+		// document yet (new/never-indexed candidates) — that used to 500 the
+		// entire page. A missing doc just means zero pool jobs.
+		$jobIds = [];
+		try {
+			$response = $this->elasticService->getClient()->get($params);
+			$jobIds = array_column(((object) $response['_source'])->jobs ?? [], 'job_id');
+		} catch (\Throwable $benchDocMissing) {
+			\Log::warning('benchjobAndRecomCount: bench doc missing for candidate '.$id);
+		}
 
 		// dd(count($jobIds));
 

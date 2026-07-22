@@ -297,12 +297,12 @@ body > .tagify__dropdown{ z-index:1400 !important; }
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Views</span>
         <span class="bxr-kpi-icon vi"><i class="ti ti-eye"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_views??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['views'] ?? 0 }}</span>
       </div>
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Downloads</span>
         <span class="bxr-kpi-icon dl"><i class="ti ti-download"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_downloads??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['downloads'] ?? 0 }}</span>
       </div>
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Applied</span>
@@ -312,7 +312,7 @@ body > .tagify__dropdown{ z-index:1400 !important; }
       <div class="bxr-kpi">
         <span class="bxr-kpi-lbl">Interviews</span>
         <span class="bxr-kpi-icon iv"><i class="ti ti-bell"></i></span>
-        <span class="bxr-kpi-num">{{ @$bench_detail->total_interviews??0 }}</span>
+        <span class="bxr-kpi-num">{{ @$heroKpis['interviews'] ?? 0 }}</span>
       </div>
     </div>
   </div>
@@ -601,7 +601,10 @@ body > .tagify__dropdown{ z-index:1400 !important; }
                 <label class="rrj-pill" for="rrj_work_mode_onsite">Onsite</label>
               </div>
               <div>
-                <input type="checkbox" class="btn-check rrj_work_mode" value="other" id="rrj_work_mode_hybrid">
+                {{-- job documents store hybrid as BOTH 'other' and 'any'
+                     (see work_type handling in bench-recommend-req-ajax) —
+                     the comma-separated value covers both spellings --}}
+                <input type="checkbox" class="btn-check rrj_work_mode" value="other,any" id="rrj_work_mode_hybrid">
                 <label class="rrj-pill" for="rrj_work_mode_hybrid">Hybrid</label>
               </div>
               <div>
@@ -1141,7 +1144,9 @@ $(document).on('click', '.hm-listing', function () {
 function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
     $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
     var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
-    $.ajax({
+    /* return the jqXHR so pagination's .then()/.catch() work — without it
+       they were called on undefined and threw a TypeError on every click */
+    return $.ajax({
         url: `{!! route('service_company.recommend.all_data_ajax') !!}?page=${page}`,
         type: 'GET',
         data: {
@@ -1179,16 +1184,21 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
 function filtersdataget(){ fetchBenchRecommendedReqCandidateList(); }
 $(document).ready(function() {
     fetchBenchRecommendedReqCandidateList();
-    $(document).on('click', '#paginationbenchCandidateRecommendedReq .page-link', function(e) {
+    /* The shared pagination partial renders .pagi-page/.pagi-arrow buttons —
+       the old handler listened for Bootstrap's .page-link, which the partial
+       never outputs, so pagination clicks did nothing at all. A boolean
+       guard prevents overlapping requests from rapid clicks. */
+    var rrjPaginationLoading = false;
+    $(document).on('click', '#paginationbenchCandidateRecommendedReq .pagi-page, #paginationbenchCandidateRecommendedReq .pagi-arrow', function(e) {
         e.preventDefault();
-        const page = $(this).data('page');
-        if (!page || $(this).hasClass('disabled')) return;
-        $(this).addClass('disabled');
-        fetchBenchRecommendedReqCandidateList(page, $('#search').val()).then(() => {
-            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
-        }).catch(() => {
-            $('#paginationbenchCandidateRecommendedReq .page-link').removeClass('disabled');
-        });
+        var $btn = $(this);
+        if (rrjPaginationLoading || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled')) return;
+        var page = $btn.data('page');
+        if (!page) return;
+        rrjPaginationLoading = true;
+        fetchBenchRecommendedReqCandidateList(page)
+            .then(function(){ rrjPaginationLoading = false; })
+            .catch(function(){ rrjPaginationLoading = false; });
     });
 });
 </script>
