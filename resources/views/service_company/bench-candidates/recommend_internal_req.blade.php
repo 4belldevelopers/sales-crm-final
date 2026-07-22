@@ -180,29 +180,212 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 .rrj-empty-title{ font-size:15px; font-weight:700; color:#181C32; margin-bottom:4px; }
 .rrj-empty-desc{ font-size:12.5px; color:#7E8299; max-width:360px; margin-bottom:16px; }
 
-/* Job cards rendered by bench-recommend-req-ajax.blade.php (.agency-card et
-   al were never actually styled anywhere in the codebase before this — this
-   is genuinely new, self-contained CSS, not a duplicate of an existing rule). */
-.agencies-list{ display:flex; flex-direction:column; gap:12px; }
-.agency-card{ position:relative; border:1px solid #EEF0F4; border-radius:14px; padding:16px 18px 14px; background:#fff; transition:box-shadow .18s, border-color .18s; overflow:hidden; }
-.agency-card:hover{ box-shadow:0 4px 14px rgba(16,24,40,.07); border-color:#DBEAFE; }
-.bench-badge{ position:absolute; top:0; right:16px; background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:700; padding:3px 10px; border-radius:0 0 8px 8px; }
-.card-content{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; padding-top:6px; }
-.card-left{ display:flex; gap:12px; flex:1 1 320px; min-width:260px; }
-.agency-logo{ width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; flex-shrink:0; }
-.agency-details{ min-width:0; }
-.agency-name.fs-5{ font-size:14px !important; margin-bottom:2px; }
-.agency-name a{ color:inherit; text-decoration:none; }
-.agency-location.fs-6{ font-size:11.5px !important; color:#7E8299 !important; margin-bottom:22px; }
-.agency-tags{ display:flex; flex-wrap:wrap; gap:5px; position:static !important; margin-top:4px; }
-.tag-badge{ font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; background:#F1F5F9; color:#475569; }
-.card-middle{ display:flex; gap:26px; flex-wrap:wrap; padding:2px 0; flex:0 0 auto; }
-.card-middle .metric{ min-width:88px; }
-.card-middle .fs-5{ font-size:12.5px !important; font-weight:700 !important; }
-.card-middle .fs-6{ font-size:10.5px !important; color:#94A3B8 !important; }
-.card-right{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:auto; flex:0 0 auto; }
-.favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; }
+/* ═══════════════════════════════════════════════
+   REDESIGNED JOB LISTING GRID (table-style rows).
+   Modeled on demo/css/joblist.css (service_company/jobs) so the
+   Recommended-Jobs view feels like an extension of the Jobs module,
+   while staying consistent with the Application Tracker design language.
+   Columns: Job Details | Experience | Hiring & Loc | Hiring Mgr | Status | Actions,
+   with a compact skills sub-row below the grid (preserves skill/match
+   logic from before the redesign).
+   ═══════════════════════════════════════════════ */
+.agencies-list{ display:flex; flex-direction:column; gap:0; }
+.jc-table-header{
+  display:grid;
+  grid-template-columns: 2.6fr 1.4fr 1.4fr 1.2fr 0.95fr 1.4fr;
+  align-items:center; gap:0; padding:9px 16px;
+  background:#F7F8FC;
+  border:1px solid #EEF0F4;
+  border-radius:10px 10px 0 0;
+  margin-bottom:-1px;
+  font-family:'Poppins',sans-serif;
+}
+.jc-th{
+  font-size:10.5px; font-weight:600; color:#7E8299;
+  text-transform:uppercase; letter-spacing:0.4px;
+  display:flex; align-items:center; gap:4px;
+  padding-right:12px; white-space:nowrap;
+}
+.jc-row-wrap{
+  position:relative;
+  border:1px solid #EEF0F4;
+  background:#fff;
+  transition:box-shadow .18s, border-color .18s;
+  border-radius:0; padding:0; overflow:hidden;
+}
+.jc-row-wrap + .jc-row-wrap{ border-top:none; }
+.jc-row-wrap:last-of-type{ border-radius:0 0 10px 10px; }
+.jc-row-wrap:hover{ background:#FAFBFF; border-color:#DBEAFE; }
+.jc-row{
+  display:grid;
+  grid-template-columns: 2.6fr 1.4fr 1.4fr 1.2fr 0.95fr 1.4fr;
+  align-items:start; padding:12px 16px; gap:0;
+  font-family:'Poppins',sans-serif;
+}
+.jc-col{ min-width:0; padding-right:12px; }
+.bench-badge{ position:absolute; top:0; right:16px; background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:700; padding:3px 10px; border-radius:0 0 8px 8px; z-index:2; }
+
+/* COL 1 — Job Details */
+.jc-col-job{ display:flex; gap:10px; padding-right:12px; }
+.job-logo{
+  width:48px; height:48px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:800; color:#fff;
+  overflow:hidden; align-self:flex-start; letter-spacing:0.5px;
+}
+.job-info{ flex:1; min-width:0; }
+.job-title{
+  font-size:12.5px; font-weight:700; color:#181C32;
+  margin-bottom:2px; line-height:1.3;
+  display:flex; align-items:center; gap:5px;
+}
+.job-title a{ color:inherit; text-decoration:none; }
+.job-title a:hover{ color:#2563EB; }
+.job-client{
+  font-size:11px; color:#7E8299; font-weight:500;
+  margin-bottom:6px; display:flex; align-items:center; gap:5px;
+}
+.job-client i{ color:#94A3B8; font-size:12px; }
+.job-meta-line{
+  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+  font-size:10.5px; color:#94A3B8; margin-bottom:0;
+}
+.job-date-inline{ display:flex; align-items:center; gap:3px; white-space:nowrap; }
+.job-date-inline i{ color:#94A3B8; font-size:11px; }
+.meta-sep{ color:#E4E6EF; font-size:12px; line-height:1; }
+.badge-inline{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:1px 7px; border-radius:20px;
+  font-size:10px; font-weight:600; white-space:nowrap; line-height:1.4;
+}
+.badge-fulltime{ background:#EEF6FF; color:#3B82F6; }
+.badge-contract{ background:#FFF4EE; color:#F4682A; }
+.badge-worktype i{ font-size:11px; }
+.badge-remote{ background:#F0FDF4; color:#16A34A; }
+.badge-hybrid{ background:#EEF2FF; color:#4F46E5; }
+.badge-onsite{ background:#F8FAFC; color:#64748B; }
+.badge-any{ background:#F5F3FF; color:#7C3AED; }
+
+/* COL 2 — Experience (vertical: exp / salary / client-type badge) */
+.jc-col-exp{ display:flex; flex-direction:column; gap:6px; }
+.exp-row, .sal-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.exp-row svg{ width:13px; height:13px; color:#94A3B8; flex-shrink:0; }
+.sal-row{ width:max-content; }
+.sal-currency{
+  display:inline-flex; width:13px; height:13px;
+  align-items:center; justify-content:center; color:#94A3B8;
+  font-size:11px; font-weight:700; flex-shrink:0;
+}
+.sal-mode{ font-size:9.5px; color:#94A3B8; font-weight:600; padding-left:2px; }
+
+/* Reusable Client Type Badge — Internal (blue) / Direct (green).
+   Single component reused everywhere on the platform; the tilted left
+   stripe + soft pill body + colored icon reads instantly at any size. */
+.client-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  position:relative; padding:2px 10px 2px 10px;
+  border-radius:6px;
+  font-size:10.5px; font-weight:600; line-height:1.2;
+  max-width:100%; font-family:'Poppins',sans-serif;
+  border:1px solid transparent;
+}
+.client-badge-stripe{
+  position:absolute; left:-1px; top:2px; bottom:2px; width:3px;
+  border-radius:2px; background:currentColor;
+}
+.client-badge i{ font-size:11.5px; line-height:1; flex-shrink:0; }
+.client-badge-label{ white-space:nowrap; }
+.client-badge-id{ color:currentColor; opacity:0.7; font-weight:500; padding-left:2px; }
+.client-badge--internal{
+  background:#EBF5FF; color:#1D4ED8; border-color:#BFDBFE;
+}
+.client-badge--internal .client-badge-stripe{ background:#1D4ED8; }
+.client-badge--direct{
+  background:#ECFDF5; color:#047857; border-color:#A7F3D0;
+}
+.client-badge--direct .client-badge-stripe{ background:#059669; }
+
+/* COL 3 — Hiring & Location */
+.jc-col-loc{ display:flex; flex-direction:column; gap:3px; }
+.loc-row{
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+}
+.loc-row i{ color:#2563EB; font-size:12px; flex-shrink:0; }
+.loc-mode{ font-size:10.5px; color:#7E8299; padding-left:18px; }
+
+/* COL 4 — Hiring Manager */
+.jc-col-hm{ display:flex; flex-direction:column; min-width:0; }
+.hm-row{ display:flex; align-items:center; gap:8px; min-width:0; }
+.hm-avatar{
+  width:32px; height:32px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px;
+}
+.hm-avatar--filled{ background:#EEF2FF; color:#4F46E5; }
+.hm-avatar--empty{ background:#F1F5F9; color:#94A3B8; border:1px dashed #E4E6EF; }
+.hm-info{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.hm-name{ font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
+.hm-name.hmlisting{ cursor:pointer; }
+.hm-name.hmlisting:hover{ color:#2563EB; }
+.hm-role{ font-size:10px; color:#94A3B8; font-weight:500; }
+
+/* COL 5 — Status */
+.jc-col-status{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.status-pill{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 8px; border-radius:999px;
+  font-size:10.5px; font-weight:700;
+  align-self:flex-start; max-width:100%;
+}
+.status-pill a{ color:inherit; text-decoration:none; }
+.status-pill--hiring{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.status-pill--closed, .status-pill--removed, .status-pill--inactive{ background:#FEE2E2; color:#B91C1C; border:1px solid #FECACA; }
+.status-pill--hold, .status-pill--onhold{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
+.status-rec{ font-size:10px; color:#94A3B8; font-weight:500; padding-left:2px; }
+
+/* COL 6 — Actions */
+.jc-col-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; align-self:flex-end; }
 .favorite-icon:hover{ color:#F43F5E; }
+.action-stack{ display:flex; flex-direction:column; gap:5px; width:100%; }
+.btn-xsm{ font-size:10.5px !important; padding:4px 10px !important; border-radius:6px !important; font-weight:600 !important; line-height:1.2 !important; gap:4px; display:inline-flex; align-items:center; justify-content:center; width:100%; }
+.jc-tc-btn{ color:#4F46E5 !important; border-color:#E0E7FF !important; }
+.jc-tc-btn:hover{ background:#EEF2FF !important; border-color:#C7D2FE !important; color:#4338CA !important; }
+.action-status{
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 8px; border-radius:6px;
+  font-size:10.5px; font-weight:600; justify-content:center; width:100%;
+}
+.action-status--added{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.action-status--sent{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
+
+/* Skills sub-row — preserved match logic, just visually tightened to fit
+   beneath the grid without bloating row height. */
+.jc-skills-row{ display:flex; flex-wrap:wrap; gap:4px; padding:0 16px 12px; align-items:center; }
+.jc-skill-matched{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
+.jc-skill-neutral{ background:#F1F5F9; color:#475569; }
+.jc-skill-overflow{ background:#EEF2FF; color:#3730A3; border:1px solid #E0E7FF; }
+.jc-skill-overflow a{ color:inherit; text-decoration:none; }
+.tag-badge{ font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; display:inline-block; }
+
+/* Responsive — keep the design legible as the viewport narrows. */
+@media (max-width:1180px){
+  .jc-table-header, .jc-row{ grid-template-columns: 2.4fr 1.3fr 1.3fr 1.1fr 0.9fr 1.3fr; }
+  .job-logo{ width:42px; height:42px; font-size:16px; }
+}
+@media (max-width:980px){
+  .jc-table-header{ display:none; }
+  .jc-row{ grid-template-columns: 1fr; gap:8px; padding:14px 16px; }
+  .jc-col{ padding-right:0; border-bottom:1px dashed #EEF0F4; padding-bottom:8px; }
+  .jc-col:last-of-type{ border-bottom:none; padding-bottom:0; }
+  .jc-col-actions{ align-items:flex-start; }
+  .action-stack{ flex-direction:row; flex-wrap:wrap; }
+  .action-stack .btn-xsm, .action-stack .action-status{ width:auto; }
+}
 
 @media(max-width:900px){ .bxr-hero{ flex-direction:column; align-items:flex-start; } .bxr-hero-sep{ display:none; } .bxr-kpis{ width:100%; min-width:0; flex-wrap:wrap; } .bxr-sum-row{ grid-template-columns:1fr; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
 </style>
@@ -690,6 +873,14 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   </div>
 
   <div class="rrj-results-wrap">
+    <div class="jc-table-header">
+      <div class="jc-th">Job Details</div>
+      <div class="jc-th">Experience</div>
+      <div class="jc-th">Hiring &amp; Location</div>
+      <div class="jc-th">Hiring Manager</div>
+      <div class="jc-th">Status</div>
+      <div class="jc-th">Actions</div>
+    </div>
     <div class="agencies-list" id="benchCandidateRecommendedReqAjax"></div>
     <div id="paginationbenchCandidateRecommendedReq"></div>
   </div>
