@@ -614,6 +614,41 @@ END:VCALENDAR";
 			
 			return $application_cnt;						
 	}
+	public static function checkDuplicateCandidateClient($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days,$phone)
+	{
+			$application_cnt	=	0;
+			if($app_duplicate == 1)
+			{
+				$application_cnt		= DB::table('job_applications')->select('*')
+												->where(function($query) use ($company_id) {
+													$query->where('thirdparty_company_id',$company_id);
+												})
+												->where('job_id', $job_id)
+												->where(function($query) use ($email, $phone) {
+													$query->where('email', $email)
+													->orWhere('phone', $phone);
+												})
+												->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
+												->count();			
+			}
+			else if($app_duplicate == 2)
+			{				
+				$application_cnt		= DB::table('job_applications')->select('*')
+												->where(function($query) use ($company_id) {
+													$query->where('thirdparty_company_id', $company_id);
+												})
+												->where(function($query) use ($email, $phone) {
+													$query->where('email', $email)
+													->orWhere('phone', $phone);
+												})
+												->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
+												->count();									
+				//echo $application_cnt."- query execute";										
+			}
+			
+			
+			return $application_cnt;						
+	}
 	public static function getUserContribution($user_id)
 	{
 			$contributionArr 	= DB::table('clients')
@@ -4434,7 +4469,7 @@ END:VCALENDAR";
 				];
 			}
 			if($data_candidate->condidate_type=='other'){
-				if (empty($data_candidate->ctc) || is_null($data_candidate->ctc)) {
+				if (empty($data_candidate->ectc) || is_null($data_candidate->ectc)) {
 					$data = [
 						'status'=>true,
 						'message'=>'Current CTC is required please recheck candidate form'

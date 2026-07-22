@@ -3997,7 +3997,7 @@ protected $elasticService;
 					->on('ja.company_id', '=', 'ajwc.company_id');
 			})
 			->where('ajwc.id', $id)
-			->where('ajwc.company_id', $company_id)
+			// ->where('ajwc.company_id', $company_id)
 			->where(function ($query) use ($authUserId) {
 				$query->where('ja.spok_user_id', $authUserId)
 					->orWhere('ajwc.submitted_by', $authUserId);
@@ -5406,7 +5406,7 @@ protected $elasticService;
 					->on('ja.company_id', '=', 'ajwc.company_id');
 			})
 			->where('ajwc.job_application_id', $id)
-			->where('ajwc.company_id', $authCompanyId)
+			// ->where('ajwc.company_id', $authCompanyId)
 			->where(function ($query) use ($authUserId) {
 				$query->where('ja.spok_user_id', $authUserId)
 					->orWhere('ajwc.submitted_by', $authUserId);
@@ -10043,7 +10043,7 @@ protected $elasticService;
 		$applicationEmail = $request->email;
 		$applicationPhone =$request->phone;
 		if (($this->user->company->app_duplicate == 1) || ($this->user->company->app_duplicate == 2)) {
-			$returnCount = GeneralMethod::checkDuplicateCandidate($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days,$applicationPhone);
+			$returnCount = GeneralMethod::checkDuplicateCandidateClient($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days,$applicationPhone);
 			if ($returnCount > 0 && $app_duplicate == 1) {
 				$message = 'Duplicate :: application already in this job';
 				$job_application_arr['duplicate'] = 1;
@@ -11087,6 +11087,274 @@ protected $elasticService;
 		$master_status = @$request->master_status;
 		$sub_stages = @$request->sub_stages;
 		$comment = @$request->comment;
+
+
+		
+		$exists = $this->elasticService->getClient()->exists([
+				'index' => ELASTIC_CANDIDATES,
+				'id' => $addJobWiseCondidate_id
+			]);	
+		if ($exists) {
+				$params = [
+						'index' => ELASTIC_CANDIDATES,
+						'id'    =>$addJobWiseCondidate_id,
+				];
+				
+				$response = $this->elasticService->getClient()->get($params);
+				$data = (object) $response['_source'];
+				$clientConId = $data->company_id;
+				$companiesData  = DB::table('companies')->select('app_duplicate','app_duplicate_days')->where('id', $clientConId)->first();
+				$app_duplicate = $companiesData->app_duplicate;
+				$app_duplicate_days = $companiesData->app_duplicate_days;
+				
+				$applicationEmail = $data->email;
+				$applicationPhone =$data->phone;
+				$jobId =$data->jobId;
+
+				$duplicate = 0; // 0 = New
+
+				if($master_status==1){
+
+					/*
+					|--------------------------------------------------------------------------
+					| Common Query
+					|--------------------------------------------------------------------------
+					*/
+
+					$must = [];
+
+					// Email / Phone Match
+					$must[] = [
+						'bool' => [
+							'should' => [
+								[
+									'term' => [
+										'email' => $applicationEmail
+									]
+								],
+								[
+									'term' => [
+										'phone' => $applicationPhone
+									]
+								]
+							],
+							'minimum_should_match' => 1
+						]
+					];
+
+					// Current Job
+					if ($app_duplicate == 1) {
+
+						$must[] = [
+							'term' => [
+								'jobId' => $jobId
+							]
+						];
+					}
+
+					// Duplicate Days
+					
+					if (!empty($app_duplicate_days)) {
+
+						$must[] = [
+							'range' => [
+								'created_at' => [
+									'gte' => now()
+										->subDays($app_duplicate_days)
+										->toIso8601String()
+								]
+							]
+						];
+					}
+
+					/*
+					|--------------------------------------------------------------------------
+					| Company Duplicate
+					|--------------------------------------------------------------------------
+					*/
+
+					$companyParams = [
+						'index' => ELASTIC_CANDIDATES,
+						'body' => [
+							'size' => 1,
+							'query' => [
+								'bool' => [
+									'must' => array_merge($must, [
+
+										[
+											'term' => [
+												'company_id' => $clientConId
+											]
+										],
+
+										[
+											'bool' => [
+												'should' => [
+
+													// ClientComID = 0
+													[
+														'term' => [
+															'ClientComID' => 0
+														]
+													],
+
+													// ClientComID = Current Company
+													[
+														'term' => [
+															'ClientComID' => $clientConId
+														]
+													],
+
+													// ClientComID field does not exist
+													[
+														'bool' => [
+															'must_not' => [
+																[
+																	'exists' => [
+																		'field' => 'ClientComID'
+																	]
+																]
+															]
+														]
+													]
+
+												],
+												'minimum_should_match' => 1
+											]
+										]
+
+									])
+								]
+							]
+						]
+					];
+
+
+					$companyResult = $this->elasticService->getClient()->search($companyParams);
+
+					if (($companyResult['hits']['total']['value'] ?? 0) > 0) {
+
+						$duplicateType = 'COMPANY_DUPLICATE';
+
+					} else {
+
+						/*
+						|--------------------------------------------------------------------------
+						| Agency Duplicate
+						|--------------------------------------------------------------------------
+						*/
+
+						$agencyParams = [
+							'index' => ELASTIC_CANDIDATES,
+							'body' => [
+								'size' => 1,
+								'query' => [
+									'bool' => [
+										'must' => array_merge($must, [
+
+											[
+												'term' => [
+													'company_id' => $clientConId
+												]
+											],
+
+											[
+												'bool' => [
+													'should' => [
+
+														// Case 1: ClientComID > 0 AND Status must be 1-7
+														[
+															'bool' => [
+																'must' => [
+																	[
+																		'range' => [
+																			'ClientComID' => [
+																				'gt' => 0
+																			]
+																		]
+																	],
+																	[
+																		'terms' => [
+																			'job_master_status_id' => [1,2,3,4,5,6,7]
+																		]
+																	]
+																]
+															]
+														],
+
+														// Case 2: ClientComID is 0 or missing
+														[
+															'bool' => [
+																'must_not' => [
+																	[
+																		'range' => [
+																			'ClientComID' => [
+																				'gt' => 0
+																			]
+																		]
+																	]
+																]
+															]
+														]
+
+													],
+													'minimum_should_match' => 1
+												]
+											]
+
+										])
+									]
+								]
+							]
+						];
+
+						$agencyResult = $this->elasticService->getClient()->search($agencyParams);
+
+						if (($agencyResult['hits']['total']['value'] ?? 0) > 0) {
+
+							$duplicateType = 'AGENCY_DUPLICATE';
+
+						} else {
+
+							$duplicateType = 'NEW';
+						}
+					}
+
+					/*
+					|--------------------------------------------------------------------------
+					| Duplicate Flag
+					|--------------------------------------------------------------------------
+					*/
+
+					$duplicate = ($duplicateType == 'NEW') ? 0 : 1;
+
+					/*
+					|--------------------------------------------------------------------------
+					| Update Current Candidate
+					|--------------------------------------------------------------------------
+					*/
+					
+                     $updateTime = now()->toIso8601String();
+					$updateParams = [
+						'index' => ELASTIC_CANDIDATES,
+						'id'    => $addJobWiseCondidate_id,
+						'body'  => [
+							'doc' => [
+								'duplicate'       => $duplicate,
+								'updated_at'      => $updateTime
+
+							],
+							'doc_as_upsert' => false
+						],
+						'refresh' => true
+					];
+
+					$this->elasticService->getClient()->update($updateParams);
+
+
+				}
+		}
+		
 
 		$userId = auth()->id(); 
 		$isValid = DB::table('add_job_wise_condidates as ajwc')
