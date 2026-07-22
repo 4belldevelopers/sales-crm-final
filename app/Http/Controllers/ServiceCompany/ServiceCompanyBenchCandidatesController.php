@@ -5701,17 +5701,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// Filter drawer defaults — wired from canGgdFilterData() (already computed
-		// above, no extra query) instead of being discarded as ''/0. A small
-		// +/-1 year buffer around the candidate's own experience, matching the
-		// original (previously dead) intent of this code.
-		$this->default_loc = $gdFilterData->default_loc;
+		// Filter drawer defaults — deliberately NEUTRAL for experience,
+		// location and salary. The summary-card counts (benchjobAndRecomCount)
+		// filter by the candidate's skills only, so any extra prefilled
+		// filter here made the list's first load narrower than the card
+		// number ("card says 12, list shows 5"). Skills stay prefilled (the
+		// drawer input reads $bench_detail->skills directly); everything
+		// else starts as "Any" so card count == list total on load.
+		$this->default_loc = '';
 		$this->qualification = $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
+		$this->min_exp = '';
+		$this->max_exp = '';
 		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
+		$this->min_salary = 0;
+		$this->max_salary = '';
 		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
 		$cities = DB::table('city_list')->pluck('city')->toArray();
@@ -5734,16 +5737,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// Filter drawer defaults — wired from canGgdFilterData() (already computed
-		// above, no extra query) instead of being discarded as ''/0. Same fix as
-		// recommend_req() above, kept identical since these two pages are twins.
-		$this->default_loc = $gdFilterData->default_loc;
+		// Filter drawer defaults — deliberately NEUTRAL (see the identical
+		// comment in recommend_req() above): only skills are prefilled so
+		// the first-load list query matches the summary-card count query.
+		$this->default_loc = '';
 		$this->qualification = $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
+		$this->min_exp = '';
+		$this->max_exp = '';
 		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
+		$this->min_salary = 0;
+		$this->max_salary = '';
 		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
 		$cities = DB::table('city_list')->pluck('city')->toArray();
@@ -7175,6 +7178,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$size = 10000; // Default 20 results per page
 		$from = ($page - 1) * $size;
 
+		// Mirror the two range clauses all_data_ajax()/all_internal_data_ajax()
+		// ALWAYS apply, even in the filter drawer's neutral default state
+		// (min_exp is forced to 0 server-side there → max_exp >= 0; the drawer
+		// always posts a salary mode with min salary 0 → {mode field} >= 0).
+		// Without these, this card count can include job documents the list
+		// query can never return (docs missing max_exp / salary fields), which
+		// showed up as "card says 12, list shows 10". Single source of truth:
+		// this count must be the list's default query, exactly.
+		$salaryFieldByMode = [0 => 'max_yearly', 1 => 'max_monthly', 2 => 'max_hourly'];
+		$countSalaryField  = $salaryFieldByMode[(int) $sal_mode] ?? 'max_yearly';
+		$must[] = ['range' => ['max_exp' => ['gte' => 0]]];
+		$must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
+
 		$params = [
 			'index' => ELASTIC_JOBS,
 			'body' => [
@@ -7271,6 +7287,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$page = 1;
 		$size = 10000; // Default 20 results per page
 		$from = ($page - 1) * $size;
+
+		// Same default-query mirror as the client-jobs count above —
+		// $countSalaryField was computed there from the candidate's salary mode.
+		$must[] = ['range' => ['max_exp' => ['gte' => 0]]];
+		$must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
 
 		$paramsInternal = [
 			'index' => ELASTIC_JOBS,
