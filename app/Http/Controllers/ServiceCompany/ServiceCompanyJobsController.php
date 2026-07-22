@@ -4740,6 +4740,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -4891,6 +4892,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -13350,6 +13352,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -13502,6 +13505,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
