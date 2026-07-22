@@ -137,11 +137,11 @@
     if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
         $clientBadgeKey   = 'direct';
         $clientBadgeLabel = 'Direct Client';
-        $clientBadgeIcon  = 'ri-customer-service-2-line';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
     } else {
         $clientBadgeKey   = 'internal';
         $clientBadgeLabel = 'Internal Client';
-        $clientBadgeIcon  = 'ri-government-line';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-7h6v7"/></svg>';
     }
 
     /* Category/department line (e.g. "IT (Information Technology)") — one
@@ -254,7 +254,7 @@
     <td>
         <div class="bxr-col-exp-stack">
             <div class="bxr-col-exp-row">
-                <span class="bxr-icon-box"><i class="ti ti-clock"></i></span>
+                <span class="bxr-icon-box"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
                 <span>{{ $expRange }}</span>
             </div>
             @if($salaryDisplay)
@@ -266,7 +266,7 @@
             <div>
                 <span class="client-badge client-badge--{{ $clientBadgeKey }}">
                     <span class="client-badge-stripe"></span>
-                    <i class="{{ $clientBadgeIcon }}"></i>
+                    {!! $clientBadgeSvg !!}
                     <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
                     <span class="client-badge-id">· {{ $jobDetails->id }}</span>
                 </span>
@@ -279,12 +279,12 @@
         <div class="bxr-col-loc-stack">
             <div>
                 <span class="{{ $statusClass }}">
-                    <i class="ti ti-circle-filled" style="font-size:7px;"></i> {{ $statusLabel }}
+                    <svg viewBox="0 0 24 24" width="7" height="7" fill="currentColor" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/></svg> {{ $statusLabel }}
                 </span>
             </div>
             @if($cityDisplay && $cityDisplay !== '—')
             <div class="bxr-col-loc-row">
-                <i class="ti ti-map-pin" style="width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;color:#2563EB;font-size:12px;flex-shrink:0;line-height:1;"></i>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;display:inline-block;vertical-align:middle;"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
                 <span>{{ $cityDisplay }}</span>
             </div>
             <div class="bxr-col-loc-mode">{{ $workMode }}</div>
@@ -342,7 +342,7 @@
 @else
 <tr>
     <td colspan="6" style="text-align:center;padding:40px 0;color:#94A3B8;">
-        <i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto 8px;"><path d="M3 13l3-8h12l3 8M3 13v7h18v-7M3 13h5l2 3h4l2-3h5"/></svg>
         No companies processing this candidate yet
     </td>
 </tr>
