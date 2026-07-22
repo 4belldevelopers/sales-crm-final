@@ -777,7 +777,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
 .td-prev-hero-search { display:flex; gap:0; background:#fff; border-radius:6px; overflow:hidden; }
 .td-prev-hero-search input { flex:1; border:none; outline:none; padding:6px 10px; font-size:8px; font-family:'Poppins',sans-serif; color:#64748B; }
 .td-prev-hero-search-btn { padding:6px 12px; background:#2563EB; color:#fff; font-size:8px; font-weight:700; border:none; cursor:pointer; font-family:'Poppins',sans-serif; white-space:nowrap; }
-.td-prev-hero-img { background:rgba(255,255,255,.1); border-radius:8px; height:100px; display:flex; align-items:center; justify-content:center; }
+.td-prev-hero-img { border-radius:8px; overflow:hidden; align-self:center; }
 /* Why section */
 .td-prev-why { background:#fff; padding:16px 14px; text-align:center; }
 .td-prev-why-title { font-size:13px; font-weight:800; color:#0F172A; margin-bottom:3px; }
@@ -3341,41 +3341,41 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
             <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:2px;">Custom Assets</div>
             <div style="font-size:11px;color:#94A3B8;margin-bottom:14px;">Upload your brand assets for a consistent look.</div>
             <div style="border:1.5px solid #E2E8F0;border-radius:10px;overflow:hidden;">
-                {{-- Company Logo --}}
+                {{-- Hero Image 1 --}}
                 <div class="td-asset-row" style="padding:14px 16px;">
-                    <div class="td-asset-thumb" id="tdLogoThumb">
-                        @if(!empty($careerSettings->td_logo_path))
-                            <img src="{{ asset($careerSettings->td_logo_path) }}" style="max-width:60px;max-height:36px;object-fit:contain;">
+                    <div class="td-asset-thumb" id="tdHeroImg1Thumb">
+                        @if(!empty($careerSettings->td_hero_img1_path))
+                            <img src="{{ asset($careerSettings->td_hero_img1_path) }}" style="max-width:60px;max-height:36px;object-fit:cover;border-radius:4px;">
                         @else
                             <i class="ti ti-photo" style="font-size:18px;color:#CBD5E1;"></i>
                         @endif
                     </div>
                     <div class="td-asset-info">
-                        <div class="td-asset-name">Company Logo</div>
-                        <div class="td-asset-size">{{ !empty($careerSettings->td_logo_path) ? 'Logo uploaded' : 'Recommended size: 200 × 60px' }}</div>
+                        <div class="td-asset-name">Hero Image 1</div>
+                        <div class="td-asset-size">{{ !empty($careerSettings->td_hero_img1_path) ? 'Image uploaded' : 'Recommended size: 400 × 220px' }}</div>
                     </div>
-                    <div class="td-asset-edit" onclick="document.getElementById('tdLogoUpload').click()" title="Upload logo">
+                    <div class="td-asset-edit" onclick="document.getElementById('tdHeroImg1Upload').click()" title="Upload hero image 1">
                         <i class="ti ti-pencil" style="font-size:14px;"></i>
                     </div>
-                    <input type="file" id="tdLogoUpload" name="td_logo" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdLogoThumb')">
+                    <input type="file" id="tdHeroImg1Upload" name="td_hero_img1" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdHeroImg1Thumb')">
                 </div>
-                {{-- Favicon --}}
+                {{-- Hero Image 2 --}}
                 <div class="td-asset-row" style="padding:14px 16px;border-top:1px solid #F1F5F9;">
-                    <div class="td-asset-thumb" id="tdFaviconThumb">
-                        @if(!empty($careerSettings->td_favicon_path))
-                            <img src="{{ asset($careerSettings->td_favicon_path) }}" style="width:32px;height:32px;object-fit:contain;">
+                    <div class="td-asset-thumb" id="tdHeroImg2Thumb">
+                        @if(!empty($careerSettings->td_hero_img2_path))
+                            <img src="{{ asset($careerSettings->td_hero_img2_path) }}" style="max-width:60px;max-height:36px;object-fit:cover;border-radius:4px;">
                         @else
-                            <i class="ti ti-brand-chrome" style="font-size:16px;color:#CBD5E1;"></i>
+                            <i class="ti ti-photo" style="font-size:18px;color:#CBD5E1;"></i>
                         @endif
                     </div>
                     <div class="td-asset-info">
-                        <div class="td-asset-name">Favicon</div>
-                        <div class="td-asset-size">{{ !empty($careerSettings->td_favicon_path) ? 'Favicon uploaded' : 'Recommended size: 32 × 32px' }}</div>
+                        <div class="td-asset-name">Hero Image 2</div>
+                        <div class="td-asset-size">{{ !empty($careerSettings->td_hero_img2_path) ? 'Image uploaded' : 'Recommended size: 400 × 220px' }}</div>
                     </div>
-                    <div class="td-asset-edit" onclick="document.getElementById('tdFaviconUpload').click()" title="Upload favicon">
+                    <div class="td-asset-edit" onclick="document.getElementById('tdHeroImg2Upload').click()" title="Upload hero image 2">
                         <i class="ti ti-pencil" style="font-size:14px;"></i>
                     </div>
-                    <input type="file" id="tdFaviconUpload" name="td_favicon" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdFaviconThumb')">
+                    <input type="file" id="tdHeroImg2Upload" name="td_hero_img2" accept="image/*" style="display:none;" onchange="tdPreviewAsset(this,'tdHeroImg2Thumb')">
                 </div>
             </div>
         </div>
@@ -3434,8 +3434,7 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
             {{-- Navbar --}}
             <div class="td-prev-nav">
                 <div class="td-prev-nav-logo">
-                    <div style="width:22px;height:22px;background:linear-gradient(135deg,#1E3A8A,#3B82F6);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:900;">4B</div>
-                    <span>4Bell Technology</span>
+                    <span>{{ $companyName }}</span>
                 </div>
                 <div class="td-prev-nav-links">
                     <span class="td-prev-nav-link">Jobs</span>
@@ -3456,15 +3455,9 @@ input:checked + .cps-slider:before { transform:translateX(21px); }
                         <button class="td-prev-hero-search-btn">Search Jobs</button>
                     </div>
                 </div>
-                <div class="td-prev-hero-img">
-                    <div style="text-align:center;">
-                        <div style="display:flex;gap:4px;justify-content:center;margin-bottom:4px;">
-                            @for($f=0;$f<4;$f++)
-                            <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,{{ 0.5+$f*0.1 }});border:1.5px solid rgba(255,255,255,.4);"></div>
-                            @endfor
-                        </div>
-                        <div style="font-size:7px;color:rgba(255,255,255,.7);">Join 2,400+ team members</div>
-                    </div>
+                <div class="td-prev-hero-img" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0;background:transparent;height:auto;">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&h=100&fit=crop&auto=format" style="width:100%;height:100px;object-fit:cover;border-radius:6px;" alt="">
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=100&fit=crop&auto=format" style="width:100%;height:100px;object-fit:cover;border-radius:6px;" alt="">
                 </div>
             </div>
 
@@ -3779,10 +3772,37 @@ function bnAddBenefit(){
 }
 
 /* ── Template Design tab helpers ── */
+/* Per-template color + bg presets */
+var tdTemplatePresets = {
+    modern:    { primary:'#2563EB', secondary:'#1F2937', accent:'#10B981', bg:'#FFFFFF' },
+    corporate: { primary:'#1F2937', secondary:'#374151', accent:'#3B82F6', bg:'#FFFFFF' },
+    creative:  { primary:'#7C3AED', secondary:'#EC4899', accent:'#F59E0B', bg:'#FFFFFF' },
+    minimal:   { primary:'#64748B', secondary:'#94A3B8', accent:'#2563EB', bg:'#F8FAFC' },
+    tech:      { primary:'#38BDF8', secondary:'#1E293B', accent:'#818CF8', bg:'#0F172A' },
+};
+
 function tdSelectTemplate(key, el){
     document.querySelectorAll('.td-tpl-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById('tdTemplateInput').value = key;
+
+    /* Apply preset colors to the Customize Design inputs */
+    var preset = tdTemplatePresets[key];
+    if(!preset) return;
+    var fields = {
+        tdColorPrimary:   preset.primary,
+        tdColorSecondary: preset.secondary,
+        tdColorAccent:    preset.accent,
+        tdColorBg:        preset.bg,
+    };
+    Object.keys(fields).forEach(function(id){
+        var swatch = document.getElementById(id);
+        var text   = document.getElementById(id + 'Text');
+        if(swatch) swatch.value = fields[id];
+        if(text)   text.value   = fields[id];
+    });
+    /* Reflect in live preview immediately */
+    tdUpdatePreview();
 }
 
 function tdSwitchDesignTab(key, el){
