@@ -20,92 +20,251 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-         html {
-                scroll-behavior: auto !important; /* disable smooth hash scrolling */
-            }
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesCopy {
-                width: 1025px;
-            }
+        html { scroll-behavior: auto !important; }
+        :root {
+            --primary-blue:#2563EB; --blue-hover:#1D4ED8;
+            --green:#22C55E; --green-light:#DCFCE7; --green-text:#166534;
+            --orange:#F97316; --orange-light:#FFEDD5; --orange-text:#9A3412;
+            --red:#EF4444; --red-light:#FEE2E2; --red-text:#991B1B;
+            --purple:#8B5CF6; --purple-light:#EDE9FE;
+            --blue-light:#DBEAFE; --blue-text:#1E40AF;
+            --text-primary:#0F172A; --text-secondary:#64748B; --text-muted:#94A3B8;
+            --border:#E2E8F0; --bg:#F8FAFC; --white:#FFFFFF;
+            --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+            --shadow-md:0 4px 12px rgba(0,0,0,.1);
+            --r-sm:6px; --r-md:10px; --r-lg:14px;
         }
 
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesCopy {
-                width: 1200px;
-            }
+        /* ── PAGE WRAPPER ── */
+        .bc-page { max-width:1280px; margin:0 auto; padding:24px 20px; font-family:'Poppins',sans-serif; }
+
+        /* ── HERO CARD ── */
+        .bc-hero {
+            display:grid; grid-template-columns:1fr 1fr; gap:24px;
+            background:var(--white); border:1px solid var(--border);
+            border-radius:var(--r-lg); padding:28px; margin-bottom:24px;
+            box-shadow:var(--shadow-sm);
         }
-        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesBenchApplication {
-                width: 1025px;
-            }
+        @media(max-width:900px){ .bc-hero{grid-template-columns:1fr;} }
+
+        /* LEFT */
+        .bc-hero-left { display:flex; flex-direction:column; gap:16px; }
+        .bc-hero-top  { display:flex; align-items:flex-start; gap:18px; }
+        .bc-logo {
+            width:88px; height:88px; border-radius:var(--r-md);
+            border:1px solid var(--border); display:flex; align-items:center;
+            justify-content:center; background:var(--bg); flex-shrink:0; overflow:hidden;
+        }
+        .bc-logo img { width:100%; height:100%; object-fit:contain; }
+        .bc-logo-init {
+            font-size:32px; font-weight:700; color:var(--primary-blue); text-transform:uppercase;
+        }
+        .bc-verified-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            background:var(--green-light); color:var(--green-text);
+            font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; margin-bottom:4px;
+        }
+        .bc-company-name {
+            font-size:20px; font-weight:700; color:var(--text-primary);
+            display:flex; align-items:center; gap:6px; margin:0;
+        }
+        .bc-company-name svg { width:18px; height:18px; color:var(--primary-blue); }
+        .bc-rating { display:flex; align-items:center; gap:6px; margin:4px 0; font-size:13px; }
+        .bc-stars { color:#F59E0B; font-size:14px; }
+        .bc-rating-val { font-weight:700; color:var(--text-primary); }
+        .bc-rating-count { color:var(--text-secondary); }
+        .bc-top-badge {
+            display:inline-flex; align-items:center; gap:4px;
+            background:var(--blue-light); color:var(--blue-text);
+            font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px;
+        }
+        .bc-tagline { font-size:14px; font-weight:600; color:var(--text-primary); margin:0; }
+        .bc-desc { font-size:12px; color:var(--text-secondary); margin:0; line-height:1.6; }
+        .bc-meta { display:flex; flex-wrap:wrap; gap:12px 20px; }
+        .bc-meta-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-secondary); }
+        .bc-meta-item svg { width:13px; height:13px; color:var(--text-muted); }
+        .bc-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+        .bc-btn-primary {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--primary-blue); color:#fff; font-size:13px; font-weight:600;
+            padding:9px 18px; border-radius:var(--r-sm); border:none; cursor:pointer; transition:background .2s;
+        }
+        .bc-btn-primary:hover { background:var(--blue-hover); }
+        .bc-btn-outline {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--white); color:var(--text-secondary); font-size:12px; font-weight:500;
+            padding:8px 14px; border-radius:var(--r-sm); border:1px solid var(--border); cursor:pointer; transition:all .2s;
+        }
+        .bc-btn-outline:hover { border-color:var(--primary-blue); color:var(--primary-blue); }
+        .bc-btn-outline svg { width:14px; height:14px; }
+
+        /* RIGHT */
+        .bc-hero-right { display:flex; flex-direction:column; gap:14px; border-left:1px solid var(--border); padding-left:24px; }
+        @media(max-width:900px){ .bc-hero-right{border-left:none;padding-left:0;border-top:1px solid var(--border);padding-top:18px;} }
+
+        /* Stats row — no card borders, icon + number + label inline */
+        .bc-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+        .bc-stat { display:flex; align-items:center; gap:10px; padding:0 8px 0 0; }
+        .bc-stat + .bc-stat { border-left:1px solid var(--border); padding-left:12px; }
+        .bc-stat-icon-wrap {
+            width:34px; height:34px; border-radius:8px;
+            display:flex; align-items:center; justify-content:center; flex-shrink:0;
+        }
+        .bc-stat-icon-wrap svg { width:18px; height:18px; }
+        .bc-stat-icon-wrap.purple { background:#EDE9FE; color:#7C3AED; }
+        .bc-stat-icon-wrap.teal   { background:#CCFBF1; color:#0D9488; }
+        .bc-stat-icon-wrap.green  { background:#DCFCE7; color:#16A34A; }
+        .bc-stat-icon-wrap.orange { background:#FEF3C7; color:#D97706; }
+        .bc-stat-body { display:flex; flex-direction:column; }
+        .bc-stat-num { font-size:17px; font-weight:700; color:var(--text-primary); line-height:1.1; }
+        .bc-stat-label { font-size:10px; color:var(--text-secondary); margin-top:2px; line-height:1.2; }
+
+        /* Pricing divider */
+        .bc-pricing-divider { border:none; border-top:1px solid var(--border); margin:2px 0; }
+
+        .bc-pricing-label {
+            font-size:10px; font-weight:700; text-transform:uppercase;
+            letter-spacing:.8px; color:var(--text-muted); margin-bottom:8px; text-align:center;
+        }
+        .bc-hiring-label {
+            font-size:10px; font-weight:700; text-transform:uppercase;
+            letter-spacing:.8px; color:var(--text-muted); margin-bottom:8px; text-align:left;
+        }
+        .bc-pricing-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .bc-price-card {
+            border:1.5px solid var(--border); border-radius:var(--r-md); padding:14px 16px;
+            display:flex; flex-direction:column; gap:2px;
+        }
+        .bc-price-card.green { border-color:#BBF7D0; background:#F0FDF4; }
+        .bc-price-card.blue  { border-color:#BFDBFE; background:#EFF6FF; }
+        .bc-price-icon-wrap {
+            width:30px; height:30px; border-radius:7px;
+            display:flex; align-items:center; justify-content:center; margin-bottom:6px;
+        }
+        .bc-price-card.green .bc-price-icon-wrap { background:#BBF7D0; color:#15803D; }
+        .bc-price-card.blue  .bc-price-icon-wrap { background:#BFDBFE; color:#1D4ED8; }
+        .bc-price-icon-wrap svg { width:16px; height:16px; }
+        .bc-price-type { font-size:11px; color:var(--text-secondary); font-weight:500; }
+        .bc-price-amount { font-size:22px; font-weight:700; line-height:1.2; margin:2px 0; }
+        .bc-price-card.green .bc-price-amount { color:#16A34A; }
+        .bc-price-card.blue  .bc-price-amount { color:#1E3A5F; }
+        .bc-price-basis { font-size:10px; color:var(--text-secondary); }
+
+        .bc-hiring-tags { display:flex; flex-wrap:wrap; gap:6px; }
+        .bc-hiring-tag {
+            padding:5px 14px; border:1px solid var(--border); border-radius:20px;
+            font-size:11px; font-weight:500; color:var(--text-secondary); background:var(--white);
         }
 
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesBenchApplication {
-                width: 1200px;
-            }
+        /* ── CANDIDATE LIST ── */
+        .bc-list-wrap { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow-sm); }
+        .bc-list-header {
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+            gap:10px; padding:16px 20px; border-bottom:1px solid var(--border);
+        }
+        .bc-list-title { font-size:14px; font-weight:700; color:var(--text-primary); }
+        .bc-list-count { font-size:12px; color:var(--text-secondary); margin-left:6px; }
+        .bc-search-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .bc-search-input {
+            padding:8px 14px; border:1px solid var(--border); border-radius:var(--r-sm);
+            font-size:13px; color:var(--text-primary); font-family:'Poppins',sans-serif;
+            outline:none; width:220px;
+        }
+        .bc-search-input:focus { border-color:var(--primary-blue); }
+        .bc-sort-select {
+            padding:8px 28px 8px 10px; border:1px solid var(--border); border-radius:var(--r-sm);
+            font-size:12px; color:var(--text-secondary); background:var(--white);
+            outline:none; cursor:pointer; font-family:'Poppins',sans-serif;
+        }
+        .bc-search-btn {
+            padding:8px 16px; background:var(--primary-blue); color:#fff;
+            border:none; border-radius:var(--r-sm); font-size:13px; font-weight:600;
+            cursor:pointer; font-family:'Poppins',sans-serif;
         }
 
-
-        .custom-pagination {
-            display: flex;
-            gap: 5px;
-            justify-content: flex-end; /* Align pagination to the left */
-            margin-top: 15px;
+        /* TABLE */
+        .bc-table-scroll { overflow-x:auto; }
+        .bc-table { width:100%; border-collapse:collapse; min-width:900px; }
+        .bc-table thead th {
+            padding:11px 16px; font-size:11px; font-weight:600; text-transform:uppercase;
+            letter-spacing:.5px; color:var(--text-secondary); background:var(--white);
+            border-bottom:1px solid var(--border); white-space:nowrap; text-align:left;
         }
+        .bc-table tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+        .bc-table tbody tr:last-child { border-bottom:none; }
+        .bc-table tbody tr:hover { background:#FAFAFA; }
+        .bc-table tbody td { padding:14px 16px; vertical-align:top; }
 
-    .custom-pagination .page-link {
-        padding: 0.375rem 0.75rem;
-        /* border: 1px solid #ddd; */
-        cursor: pointer;
-        /* background-color: #f8f9fa; */
-        color: #333;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.475rem;
-        height: 2.5rem;
-        min-width: 2.5rem;
-        font-weight: 500;
-        font-size: 1.075rem;
-        /* border-radius: 5px; */
-    }
+        /* Candidate cell */
+        .bc-cand-cell { display:flex; align-items:flex-start; gap:10px; }
+        .bc-avatar {
+            width:38px; height:38px; border-radius:50%; display:flex; align-items:center;
+            justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0;
+        }
+        .bc-cand-name { font-size:13px; font-weight:600; color:var(--text-primary); }
+        .bc-cand-role { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+        .bc-skill-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+        .bc-skill-tag {
+            display:inline-block; padding:1px 7px; background:var(--blue-light);
+            color:var(--blue-text); border-radius:20px; font-size:10px; font-weight:500;
+        }
+        /* experience */
+        .bc-exp-main { font-size:13px; font-weight:700; color:var(--text-primary); }
+        .bc-exp-sub  { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+        /* availability */
+        .bc-avail-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600;
+        }
+        .bc-avail-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+        .avail-green  { background:var(--green-light);  color:var(--green-text); }
+        .avail-orange { background:var(--orange-light); color:var(--orange-text); }
+        .avail-red    { background:var(--red-light);    color:var(--red-text); }
+        .bc-avail-date{ font-size:11px; color:var(--text-secondary); margin-top:3px; }
+        /* location */
+        .bc-loc-city  { font-size:13px; font-weight:500; color:var(--text-primary); }
+        .bc-loc-sub   { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+        /* salary */
+        .bc-sal-main  { font-size:13px; font-weight:700; color:var(--text-primary); }
+        .bc-sal-sub   { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+        /* status */
+        .bc-status-main { font-size:12px; font-weight:600; }
+        .bc-status-sub  { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+        /* action btn */
+        .bc-add-btn {
+            display:inline-flex; align-items:center; gap:5px;
+            background:var(--primary-blue); color:#fff; font-size:12px; font-weight:600;
+            padding:7px 14px; border-radius:var(--r-sm); border:none; cursor:pointer;
+            white-space:nowrap; font-family:'Poppins',sans-serif; transition:background .2s;
+        }
+        .bc-add-btn:hover { background:var(--blue-hover); }
 
-    .custom-pagination .page-link.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
+        /* PAGINATION */
+        .bc-pagination { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-top:1px solid var(--border); flex-wrap:wrap; gap:8px; }
+        .bc-page-info { font-size:12px; color:var(--text-secondary); }
+        .bc-page-controls { display:flex; gap:4px; }
+        .bc-page-btn {
+            min-width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+            border:1px solid var(--border); background:var(--white); border-radius:var(--r-sm);
+            font-size:12px; color:var(--text-secondary); cursor:pointer; padding:0 8px; transition:all .15s;
+            text-decoration:none;
+        }
+        .bc-page-btn:hover:not(.bc-page-btn-disabled) { border-color:var(--text-muted); color:var(--text-primary); }
+        .bc-page-btn.active { background:var(--primary-blue); border-color:var(--primary-blue); color:#fff; font-weight:600; }
+        .bc-page-btn-disabled { opacity:.45; cursor:not-allowed; pointer-events:none; }
 
-    .pagination-info {
-        text-align: left; /* Align info to the left */
-        margin-bottom: 10px;
-        font-weight: bold;
-    }
+        /* media: KT drawers */
+        @media only screen and (min-width:1024px) and (max-width:1440px) { #kt_activitiesCopy{width:1025px;} }
+        @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesCopy{width:1200px;} }
+        @media only screen and (min-width:1024px) and (max-width:1440px) { #kt_activitiesBenchApplication{width:1025px;} }
+        @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesBenchApplication{width:1200px;} }
 
-    .pagination-wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end; /* Align entire pagination block to the left */
-        width: 100%;
-    }
-    .previous_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-    .next_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-    .active_disabled{
-        pointer-events: none; /* Disable clicking */
-        opacity: 0.5; /* Make it visually look disabled */
-        cursor: not-allowed; /* Change the cursor to indicate it's disabled */
-    }
-
-        
+        /* Star-rated skills (find-talent design) */
+        .skill-item { display:flex;align-items:center;gap:6px;margin-bottom:3px; }
+        .skill-name { font-size:12px;color:#181c32;width:72px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .stars { display:flex;gap:1px; }
+        .star_skill { width:13px;height:13px;color:#fbbf24;flex-shrink:0; }
+        .star_skill.empty { color:#e2e8f0; }
     </style>
 </head>
 
@@ -124,600 +283,532 @@
 
 
 <body>
-    {{-- <header>
-        <div class="logo">
-            <a href="#">Your Logo</a>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="#">Find Talent</a></li>
-                <li><a href="#">Find Agency</a></li>
-                <li><a href="#">Find Client</a></li>
-                <li><a href="#">ATS</a></li>
-                <li><a href="#">Pricing</a></li>
-            </ul>
-        </nav>
-    </header> --}}
+@php
+    $logo_path = '';
+    if(!empty(@$account->logo) && strlen(@$account->logo)>10){ $logo_path = @$account->logo; }
+    $initLetter = strtoupper(substr(trim(@$account->company_name),0,1));
 
-    <main>
-        <div class="profile-card">
-            <div class="profile-left">
-                <div class="profile-header">
+    $recommendateRow = DB::table('recommendation_relation')
+        ->select('id','from_company_id','from_status','to_status','final_status')
+        ->where(function($q) use($company_id,$to_company_id){
+            $q->where(function($q2) use($company_id,$to_company_id){
+                $q2->where('from_company_id',$company_id)->where('to_company_id',$to_company_id);
+            })->orWhere(function($q2) use($company_id,$to_company_id){
+                $q2->where('from_company_id',$to_company_id)->where('to_company_id',$company_id);
+            });
+        })->first();
 
-                    @php $logo_path				= ''; @endphp
-                    @if(!empty(@$account->logo) && strlen(@$account->logo)>10)
-                            @php //$logo_path		=  url('public/user-uploads/company-logo/'.@$account->logo); @endphp
-                                @php $logo_path		=  @$account->logo; 
-                        
-                                @endphp 
-                    @endif
-                    @php
-                        $bgTextDecore = $strVal = '';
-                        $str = trim($account->company_name);
-                        $str = $strVal = strtolower($str[0]);
-                        // dd( $salary_mode[$contractStatus->sal_mode],$currencySymbole[$contractStatus->salary_currency]);
+    /* Avatar colour by first letter */
+    $avatarColors = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
+    $avatarColor  = $avatarColors[ord(strtolower($initLetter)) % count($avatarColors)];
+@endphp
 
-                    @endphp
-                    {{-- <span class="verified-badge">✔</span> --}}
-                    @if (!empty($logo_path)) 
-                    <img src="{{ @$logo_path }}" alt="image" class="profile-pic">
+<main>
+<div class="bc-page">
+
+    {{-- ═══════════════════ HERO ═══════════════════ --}}
+    <div class="bc-hero">
+
+        {{-- LEFT ─ company identity --}}
+        <div class="bc-hero-left">
+            <div class="bc-hero-top">
+                {{-- Logo --}}
+                <div class="bc-logo">
+                    @if(!empty($logo_path))
+                        <img src="{{ $logo_path }}" alt="{{ @$account->company_name }}">
                     @else
-                    <div class="symbol-label fs-3 {{ @$bgTextDecore}} border-radius-5"><span>{{ ucwords(@$strVal)}}</span></div>
+                        <span class="bc-logo-init" style="color:{{ $avatarColor }};">{{ $initLetter }}</span>
                     @endif
-                    <div class="profile-info">
-                        <h2 class="profile-name">{{ ucwords(@$account->company_name)}}</h2>
-                        <p class="profile-rate">{{@$industries_name}} </p>
+                </div>
+
+                {{-- Info --}}
+                <div>
+                    <div class="bc-verified-badge">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Verified Staffing Partner
+                    </div>
+                    <h2 class="bc-company-name">
+                        {{ ucwords(@$account->company_name) }}
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </h2>
+                    <div class="bc-rating">
+                        <span class="bc-stars">★★★★★</span>
+                        <span class="bc-rating-val">4.8</span>
+                        <span class="bc-rating-count">(124 Reviews)</span>
+                        <span class="bc-top-badge">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            Top Performer
+                        </span>
+                    </div>
+                    <p class="bc-tagline">{{ @$industries_name ?: 'Enterprise Recruitment Partner' }}</p>
+                    <p class="bc-desc">{!! strip_tags(@$account->description) ? mb_substr(strip_tags(@$account->description),0,120).'…' : 'Delivering pre-vetted, high-performing talent across India and globally. AI-powered sourcing. Faster hiring. Better outcomes.' !!}</p>
+                </div>
+            </div>
+
+            {{-- Meta row --}}
+            <div class="bc-meta">
+                <span class="bc-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ ucwords($company_city_name) }}, {{ ucwords($company_country_name) }}
+                </span>
+                @if(@$account->founded)
+                <span class="bc-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    {{ @$account->founded }}+ Years in Business
+                </span>
+                @endif
+                @if(@$account->website)
+                <span class="bc-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    {{ @$account->website }}
+                </span>
+                @endif
+            </div>
+
+            {{-- Action buttons --}}
+            <div class="bc-actions">
+                @if($recommendateRow)
+                    @if($recommendateRow->final_status == 0 || $recommendateRow->final_status == '')
+                        <button class="bc-btn-primary send_job_recommanded_request" data-row-event="-1" id="sp_list_" data-row-id="{{ $to_company_id }}">
+                            Cancel Request
+                        </button>
+                    @else
+                        <button class="bc-btn-primary" style="background:#16A34A;" id="sp_list_0" data-row-fromcompany="{{ $company_id }}" data-row-tocompany="{{ $to_company_id }}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Connected
+                        </button>
+                    @endif
+                @else
+                    <button class="bc-btn-primary send_job_recommanded_request" data-row-jobid="" data-row-event="1" id="sp_list_{{ $to_company_id }}" data-boosterCom="0" data-boost-ids="" data-row-id="{{ $to_company_id }}">
+                        View Bench Talent
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                @endif
+                <button class="bc-btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Contact Us
+                </button>
+                <button class="bc-btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    Share Profile
+                </button>
+                <button class="bc-btn-outline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    Follow
+                </button>
+            </div>
+        </div>
+
+        {{-- RIGHT ─ stats + pricing + hiring types --}}
+        <div class="bc-hero-right">
+            {{-- Stats --}}
+            <div class="bc-stats-grid">
+                <div class="bc-stat">
+                    <div class="bc-stat-icon-wrap purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="bc-stat-body">
+                        <div class="bc-stat-num">{{ $total }}</div>
+                        <div class="bc-stat-label">Active Candidates</div>
                     </div>
                 </div>
-                {{-- <div class="profile-stats">
-                    <div class="stat">
-                        <span class="star-icon">★</span> 5.0 (3 reviews)
+                <div class="bc-stat">
+                    <div class="bc-stat-icon-wrap teal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                     </div>
-                    <div class="stat">
-                        <span class="eye-icon">👁</span> 4,715 views
+                    <div class="bc-stat-body">
+                        <div class="bc-stat-num">6.8 <span style="font-size:11px;font-weight:500;">Yrs</span></div>
+                        <div class="bc-stat-label">Average Experience</div>
                     </div>
-                </div> --}}
-                <div class="profile-details-list">
-                    <div class="detail-item">
-                        <span class="detail-icon">📍</span>
-                        <span class="detail-label">Location</span>
-                        <span class="detail-value">{{ ucwords($company_city_name) }} {{ ' , ' }} {{ ucwords($company_country_name) }}</span>
+                </div>
+                <div class="bc-stat">
+                    <div class="bc-stat-icon-wrap green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-icon">👤</span>
-                        <span class="detail-label">Founded</span>
-                        <span class="detail-value">{{ @$account->founded }}</span>
+                    <div class="bc-stat-body">
+                        <div class="bc-stat-num">{{ $techCount ?? 48 }}</div>
+                        <div class="bc-stat-label">Technologies</div>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-icon">🌐</span>
-                        <span class="detail-label">Website</span>
-                        <span class="detail-value">{{ @$account->website }}</span>
+                </div>
+                <div class="bc-stat">
+                    <div class="bc-stat-icon-wrap orange">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
+                    <div class="bc-stat-body">
+                        <div class="bc-stat-num">30 <span style="font-size:11px;font-weight:500;">mins</span></div>
+                        <div class="bc-stat-label">Avg. Response Time</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Pricing --}}
+            <div>
+                <hr class="bc-pricing-divider">
+                <div class="bc-pricing-label">Pricing at a Glance</div>
+                <div class="bc-pricing-grid">
                     @if(@$fullTimeStatus->status==1)
-                        <div class="detail-item">
-                            <span class="detail-icon">✍</span>
-                            <span class="detail-label">FullTime Rate</span>
-                            <span class="detail-value">{{@$fullTimeStatusRate}}% / Hire</span>
+                    <div class="bc-price-card green">
+                        <div class="bc-price-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                         </div>
-                    @endif
-                     @if(@$contractStatus->status==1)
-                    <div class="detail-item">
-                        <span class="detail-icon">✍</span>
-                        <span class="detail-label">Contract Rate</span>
-                        <span class="detail-value">{!!$currencySymbole[(@$contractStatus->salary_currency) ? $contractStatus->salary_currency : 0]!!} {{@$contractStatusRate}} /{{$salary_mode[(@$contractStatus->sal_mode) ? @$contractStatus->sal_mode : 0]}}</span>
+                        <div class="bc-price-type">Full Time Rate</div>
+                        <div class="bc-price-amount">{{ @$fullTimeStatusRate }}% / Hire</div>
+                        <div class="bc-price-basis">On Annual CTC Basis</div>
+                    </div>
+                    @else
+                    <div class="bc-price-card green">
+                        <div class="bc-price-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                        </div>
+                        <div class="bc-price-type">Full Time Rate</div>
+                        <div class="bc-price-amount">—</div>
+                        <div class="bc-price-basis">Not Listed</div>
                     </div>
                     @endif
 
-                </div>
-                 @php
-                          $recommendateRow = DB::table('recommendation_relation')
-                            ->select(
-                                'recommendation_relation.id',
-                                'recommendation_relation.from_company_id',
-                                'recommendation_relation.from_status',
-                                'recommendation_relation.to_status',
-                                'recommendation_relation.final_status',
-                            )->where(function ($query) use ($company_id, $to_company_id) {
-                                $query->where(function ($q) use ($company_id, $to_company_id) {
-                                    $q->where('recommendation_relation.from_company_id', $company_id)
-                                    ->where('recommendation_relation.to_company_id', $to_company_id);
-                                })
-                                ->orWhere(function ($q) use ($company_id, $to_company_id) {
-                                    $q->where('recommendation_relation.from_company_id', $to_company_id)
-                                    ->where('recommendation_relation.to_company_id', $company_id);
-                                });
-                            })
-                            ->first();
-                 @endphp
-           
-                <div class="profile-actions">
-                    @if($recommendateRow)
-                     @if($recommendateRow->final_status == 0 || $recommendateRow->final_status == '')
-                               <button class="book-meeting-btn send_job_recommanded_request text-primary" data-row-event="-1" id="sp_list_" data-row-id="{{ $to_company_id}}" style="width:280px">Cancel Request</button>
+                    @if(@$contractStatus->status==1)
+                    <div class="bc-price-card blue">
+                        <div class="bc-price-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                        <div class="bc-price-type">Contract Rate</div>
+                        <div class="bc-price-amount">{!!$currencySymbole[(@$contractStatus->salary_currency)?$contractStatus->salary_currency:0]!!}{{ @$contractStatusRate }}/{{ mb_substr($salary_mode[(@$contractStatus->sal_mode)?@$contractStatus->sal_mode:0],0,2) }}</div>
+                        <div class="bc-price-basis">On Contract Basis</div>
+                    </div>
                     @else
-                         <button class="book-meeting-btn btn-secondary" id="sp_list_0" data-row-fromcompany="{{$company_id}}" data-row-tocompany="{{$to_company_id}}" style="width:280px">Connected</button>                               
-                        
-                    @endif
-                    @else
-                      @if($to_company_id != $company_id)
-                        <button class="book-meeting-btn send_job_recommanded_request"  data-row-jobid="" data-row-event="1" id="sp_list_{{$to_company_id}}" data-boosterCom="0" data-boost-ids="" data-row-id="{{$to_company_id}}" style="width:280px">Send Request</button>
-                      @endif
+                    <div class="bc-price-card blue">
+                        <div class="bc-price-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                        <div class="bc-price-type">Contract Rate</div>
+                        <div class="bc-price-amount">—</div>
+                        <div class="bc-price-basis">Not Listed</div>
+                    </div>
                     @endif
                 </div>
-          
-
             </div>
-            <div class="profile-right">
-                <div class="profile-about">
-                    <h3>About</h3>
-                    {!! @$account->description !!}
-                </div>
-                <div class="profile-skills">
-                    <h3>Skills</h3>
-                    <div class="skills-list">
-                         @if(!empty($client->tags))
-                            @php $tags	=	explode(',', $client->tags); @endphp 
-                            @foreach($tags as $key=>$val) 
-                                {!! '<span class="skill-tag">'.ucwords(@$val).'</span>' !!}
-                            @endforeach
-                        @endif	
-                    </div>
+
+            {{-- Hiring types --}}
+            <div>
+                <div class="bc-hiring-label">Hiring Types We Support</div>
+                <div class="bc-hiring-tags">
+                    <span class="bc-hiring-tag">Permanent</span>
+                    <span class="bc-hiring-tag">Contract</span>
+                    <span class="bc-hiring-tag">C2H</span>
+                    <span class="bc-hiring-tag">Freelance</span>
                 </div>
             </div>
         </div>
-       
-        <div class="candidate-section" id="candidate-section">
-            <div class="candidate-list">
-                 <form method="GET" action="">
-                <div class="search-and-filter">
-                  
-                    <input type="text" name="cus_search" value="{{$searchTerms}}" class="search-input" placeholder="Search by keyword..." 
-                        value="{{ request('keyword') }}">
-                    
-                    <select class="filter-select" name="sortingfilter" id="sortingfilter" onchange="this.form.submit()">
-                        <option value="Show All" {{ $valCheck == 'Show All' ? 'selected' : '' }}>Sort</option>
-                        <option value="1" {{ $valCheck == '1' ? 'selected' : '' }}>Newest to Oldest (Upload Date)</option>
-                        <option value="2" {{ $valCheck == '2' ? 'selected' : '' }}>Oldest to Newest (Upload Date)</option>
-                        <option value="9" {{ $valCheck == '9' ? 'selected' : '' }}>Notice Period (Immediate)</option>
-                        <option value="5" {{ $valCheck == '5' ? 'selected' : '' }}>Low to High (Notice Period)</option>
-                        <option value="6" {{ $valCheck == '6' ? 'selected' : '' }}>High to Low (Notice Period)</option>
-                        <option value="7" {{ $valCheck == '7' ? 'selected' : '' }}>High to Low (Experience)</option>
-                        <option value="8" {{ $valCheck == '8' ? 'selected' : '' }}>Low to High (Experience)</option>
+    </div>
+
+    {{-- ═══════════════════ CANDIDATE LIST ═══════════════════ --}}
+    <div class="bc-list-wrap" id="candidate-section">
+        <div class="bc-list-header">
+            <div>
+                <span class="bc-list-title">Bench Candidate List</span>
+                <span class="bc-list-count">({{ $total }} candidates)</span>
+            </div>
+            <form method="GET" action="" style="display:contents;">
+                <div class="bc-search-bar">
+                    <input type="text" name="cus_search" value="{{ $searchTerms }}" class="bc-search-input" placeholder="Search by keyword...">
+                    <select class="bc-sort-select" name="sortingfilter" id="sortingfilter" onchange="this.form.submit()">
+                        <option value="Show All" {{ $valCheck=='Show All'?'selected':'' }}>Sort</option>
+                        <option value="1"  {{ $valCheck=='1' ?'selected':'' }}>Newest to Oldest</option>
+                        <option value="2"  {{ $valCheck=='2' ?'selected':'' }}>Oldest to Newest</option>
+                        <option value="9"  {{ $valCheck=='9' ?'selected':'' }}>Notice Period (Immediate)</option>
+                        <option value="5"  {{ $valCheck=='5' ?'selected':'' }}>Low to High (Notice)</option>
+                        <option value="6"  {{ $valCheck=='6' ?'selected':'' }}>High to Low (Notice)</option>
+                        <option value="7"  {{ $valCheck=='7' ?'selected':'' }}>High to Low (Experience)</option>
+                        <option value="8"  {{ $valCheck=='8' ?'selected':'' }}>Low to High (Experience)</option>
                     </select>
-
-                    <button type="submit" class="search-button">Search</button>
-                
+                    <button type="submit" class="bc-search-btn">Search</button>
                 </div>
-                </form>
-                <h2>Bench Candidate List ({{$total}})</h2>
-            
-                <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
-                    <thead>
-                        <tr class="fw-bolder text-muted">
-                            <th>Name</th>
-                            <th>Exp</th>
-                            <th>Billing(INR)</th>
-                            <th>Billing(USD)</th>
-                            <th>Education</th>
-                            <th>Availability</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (count($data) > 0)
-                            @foreach ($data as $rowArr)
-                                    @php
-                                    $row = (object) $rowArr;
-                                    //dd($row);
-                                    $jobs = @$row->jobs;
-                                    $masterStatusIds = array_column($jobs, 'master_status_id');
+            </form>
+        </div>
 
-                                    // Count how many times each value appears
-                                    $counts = array_count_values($masterStatusIds);
-                                    $countForZero = $counts[0] ?? 0;
-                                    $row->Sourcing = $counts[1] ?? 0;
-                                    $row->Screening = $counts[2] ?? 0;
-                                    $row->Interview = $counts[3] ?? 0;
-                                    $row->Negotiation = $counts[4] ?? 0;
-                                    $row->Offered = $counts[5] ?? 0;
-                                    $row->Joined = $counts[6] ?? 0;
-                                    $row->Rejected = $counts[7] ?? 0;
-                                    $row->InReview = $counts[8] ?? 0;
-                                
+        <div class="bc-table-scroll">
+            <table class="bc-table">
+                <thead>
+                    <tr>
+                        <th style="width:22%;">Talent</th>
+                        <th style="width:10%;">Experience</th>
+                        <th style="width:15%;">Skills</th>
+                        <th style="width:13%;">Availability</th>
+                        <th style="width:13%;">Location</th>
+                        <th style="width:15%;">Expected Salary</th>
+                        <th style="width:12%;text-align:center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @php
+                    $sal_mode_bc         = 0;
+                    $min_salary_currency_bc = 0;
+                    $symbolsValue_bc     = \App\Helper\GeneralMethod::currencyConverter()['getKey'] ?? [0=>'INR',1=>'EUR',2=>'JPY',3=>'GBP',4=>'USD',5=>'AED'];
+                @endphp
+                @if(count($data) > 0)
+                    @foreach($data as $rowArr)
+                    @php
+                        $row = (object)$rowArr;
 
-                                    @endphp
+                        /* Avatar colour */
+                        $bgTextDecore = $strVal = '';
+                        $str = trim(@$row->full_name);
+                        $str = $strVal = strtolower($str[0] ?? 'a');
+                        $str = ord($str);
+                        if      ($str >= 97  && $str <= 101) { $bgTextDecore = 'fs-3 bg-light-danger text-danger'; }
+                        elseif  ($str >= 102 && $str <= 106) { $bgTextDecore = 'fs-3 bg-light-warning text-warning'; }
+                        elseif  ($str >= 107 && $str <= 111) { $bgTextDecore = 'fs-3 bg-light-primary text-primary'; }
+                        elseif  ($str >= 112 && $str <= 116) { $bgTextDecore = 'fs-3 bg-light-success text-success'; }
+                        elseif  ($str >= 117 && $str <= 121) { $bgTextDecore = 'fs-3 bg-dark text-secondary'; }
+                        else                                 { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
+                        $profile_sidebar_css = 'pbench_show_application_detail';
 
-                                <tr style="height: 102px; position: relative;">              
-                                    <td>
-                                        @php
-                                            $bgTextDecore = $strVal = '';
-                                            $str = trim(@$row->full_name);
-                                            $str = $strVal = strtolower($str[0]);
-                                            $str = ord($str);
-                                            if ($str >= 97 && $str <= 101) {
-                                                $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                                            } elseif ($str >= 102 && $str <= 106) {
-                                                $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                                            } elseif ($str >= 107 && $str <= 111) {
-                                                $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                                            } elseif ($str >= 112 && $str <= 116) {
-                                                $bgTextDecore = 'fs-3 bg-light-success text-success';
-                                            } elseif ($str >= 117 && $str <= 121) {
-                                                $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                                            } else {
-                                                $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                                            }
-                                            $profile_sidebar_css = 'bench_show_application_detail';
+                        /* Skills badges (bottom of talent cell) */
+                        $skillExperiences = DB::table('bench_candidate_skill_experience')
+                            ->where('candidate_id', $row->id)->get();
+                        $skillArr = explode(',', @$row->skills);
+                        $skilltag = '';
+                        $viewMore = 0;
+                        if ($skillExperiences->isNotEmpty()) {
+                            foreach ($skillExperiences as $key => $exp) {
+                                if ($key < 5) {
+                                    $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' . ucfirst($exp->skill_key) . '</span> ';
+                                } else { $viewMore++; }
+                            }
+                        } else {
+                            foreach (array_slice($skillArr, 0, 5) as $sval) {
+                                $sval = trim($sval);
+                                if ($sval) $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' . ucfirst($sval) . '</span> ';
+                            }
+                        }
+                        if ($viewMore > 0) {
+                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;">+' . $viewMore . ' more</span>';
+                        }
 
-                                            $skilltag = '';
-                                            $skilltagclass = '';
-                                            $skillArr = explode(',', $row->skills);
-                                            if (empty($limit)) {
-                                                if (count($skillArr) > 0) {
-                                                    foreach ($skillArr as $sval) {
-                                                        $skilltag .= '<span class="badge badge-light my-1">' . ucfirst($sval) . '</span>  ';
-                                                    }
-                                                }
-                                            } else {
-                                                $skilltagclass = 'd-none';
-                                            }
-                                            $viewCount = DB::table('bench_count_view_download')
-                                                ->where('type', '=', 1)
-                                                ->where('status', '=', 0)
-                                                ->where('candidate_id', '=', $row->id)
-                                                ->count();
-                                            $downloadCount = DB::table('bench_count_view_download')
-                                                ->where('type', '=', 2)
-                                                ->where('status', '=', 0)
-                                                ->where('candidate_id', '=', $row->id)
-                                                ->count();
-                                                $logo_path = url('public/award.png');
-                                                $skillArr = DB::table('benchboostkeywordcandidates')->where('benchboostkeywordcandidates.candidate_id', @$row->id)->pluck('skill_name')->toArray();
-                                                $award = '';
-                                                if(@$row->ads_switch=='Yes'){
-                                                    $award = '<sup><img src="' .
-                                                    str_replace('index.php', '', @$logo_path) .
-                                                    '" alt="Company Logo" class="border-radius-5"></sup>';
-                                                }
+                        /* Experience */
+                        $experience = trim((string) @$row->total_exp);
+                        if (strpos($experience, '.') !== false) {
+                            $parts = explode('.', $experience);
+                            $formattedExperience = (isset($parts[1]) && $parts[1] === '00') ? $parts[0] : $experience;
+                        } else { $formattedExperience = $experience; }
+                        $workMode = trim((string) @$row->wm);
 
-                                            echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-                                            <a href="javascript:void(0);"   data-row-id="' .
-                                                @$row->id .
-                                                '" class="' .
-                                                $profile_sidebar_css .
-                                                '">
-                                                <div class="symbol-label ' .
-                                                @$bgTextDecore .
-                                                ' border-radius-5">' .
-                                                strtoupper(@$strVal) .
-                                                '</div>
-                                            </a>
-                                        </div>                  
-                                        <div class="d-flex flex-column">
-                                        <a href="javascript:void(0);"  data-row-id="' .
-                                                @$row->id .
-                                                '"  class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                                                $profile_sidebar_css .
-                                                ' " data-toggle="tooltip" title="' .
-                                                ucwords(@$row->full_name) .
-                                                '">' .
-                                                ucwords(mb_substr(@$row->full_name, 0, 22)) .
-                                                ''.$award.'</a>
-                                        <a href="javascript:void(0);"  data-row-id="' .
-                                                @$row->id .
-                                                '"  class="text-muted fw-bold d-block fs-7 text-hover-primary ' .
-                                                $profile_sidebar_css .
-                                                ' " data-toggle="tooltip" title="' .
-                                                ucwords(@$row->current_designation) .
-                                                '">' .
-                                                ucwords(mb_substr(@$row->current_designation, 0, 22)) .
-                                                '</a>
+                        /* Availability */
+                        $npArr  = ['Notice period', 'Available from', 'Immediate'];
+                        $npDate = $row->np_id;
+                        $modeNp = (int)($row->serving_notice_period_mode ?? 0);
+                        if ($modeNp == 0) {
+                            $npDate = $row->np_id . ($row->np_id == 1 ? ' Day' : ' Days');
+                        } elseif ($modeNp == 1) {
+                            $formatted = date('d-M-y', strtotime($row->np_id));
+                            if (date('Y-m-d', strtotime($row->np_id)) < date('Y-m-d')) { $npDate = 'Immediate'; $modeNp = 2; }
+                            else { $npDate = 'SNP LWD ' . $formatted; }
+                        } else { $npDate = ''; }
+                        if ($npDate === 'Immediate' || $modeNp == 2) { $npColorStyle = 'color:#16a34a !important;'; }
+                        elseif ($modeNp == 0)                        { $npColorStyle = 'color:#d97706 !important;'; }
+                        elseif ($modeNp == 1)                        { $npColorStyle = 'color:#7c3aed !important;'; }
+                        else                                         { $npColorStyle = 'color:#181c32 !important;'; }
+                        $npLabel       = $npArr[$modeNp] ?? 'Notice period';
+                        $outsourcingLabel = ($row->outsourcing_type ?? 0) == 1 ? 'Full-time' : 'Contract';
+
+                        /* Bench status badge */
+                        $benchStatusMap = [
+                            1 => ['label'=>'Pool',   'bg'=>'#dbeafe','color'=>'#1d4ed8'],
+                            2 => ['label'=>'Active', 'bg'=>'#dcfce7','color'=>'#15803d'],
+                            3 => ['label'=>'Placed', 'bg'=>'#f3e8ff','color'=>'#7c3aed'],
+                            4 => ['label'=>'Hold',   'bg'=>'#fef3c7','color'=>'#d97706'],
+                        ];
+                        $benchStatus = $benchStatusMap[(int)($row->status ?? 2)] ?? $benchStatusMap[2];
+
+                        /* Location */
+                        $row_city_name    = @$row->city_name;
+                        $row_country_name = @$row->country_name;
+
+                        /* Expected Salary (bill rate) */
+                        $currency_code_bc        = $symbolsValue_bc[$min_salary_currency_bc] ?? 'INR';
+                        $billFormatViewSalary = GeneralMethod::formatViewSalary($row->bill_rate_amount, $currency_code_bc, $sal_mode_bc);
+                        $bill_rate_currency   = $currencySymbole[$billFormatViewSalary->currency] ?? '';
+                        $bill_rate_mode       = $salaryMode[$sal_mode_bc] ?? '';
+                        $bill_rate_amount     = GeneralMethod::formatK($billFormatViewSalary->amount);
+                        $comission_label      = ($row->comission_type ?? 0) == 1 ? 'Free' : 'Paid';
+                        $comission_color      = '#16a34a';
+                    @endphp
+                    <tr style="height:102px;position:relative;">
+
+                        {{-- Talent --}}
+                        <td>
+                            @php
+                                echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
+                                    <a href="javascript:void(0);" data-row-id="' . @$row->id . '" class="' . $profile_sidebar_css . '">
+                                        <div class="symbol-label ' . @$bgTextDecore . ' border-radius-5">' . strtoupper(@$strVal) . '</div>
+                                    </a>
+                                </div>
+                                <div class="d-flex flex-column" style="overflow:hidden;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <a href="javascript:void(0);" data-row-id="' . @$row->id . '"
+                                           class="text-dark fw-bolder text-hover-primary fs-6 ' . $profile_sidebar_css . '"
+                                           data-toggle="tooltip" title="' . ucwords(@$row->full_name) . '">'
+                                           . ucwords(mb_substr(@$row->full_name, 0, 18)) . '
+                                        </a>
+                                        <span style="background:' . $benchStatus['bg'] . ';color:' . $benchStatus['color'] . ';font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;">' . $benchStatus['label'] . '</span>
+                                    </div>
+                                    <a href="javascript:void(0);" data-row-id="' . @$row->id . '"
+                                       class="text-muted fw-bold d-block fs-7 text-hover-primary ' . $profile_sidebar_css . '"
+                                       data-toggle="tooltip" title="' . ucwords(@$row->current_designation) . '">'
+                                       . ucwords(mb_substr(@$row->current_designation, 0, 22)) . '
+                                    </a>
+                                </div>
+                                <div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;">
+                                    <span style="font-size:10px;font-weight:600;color:#7e8299;margin-right:4px;">Skills</span>'
+                                    . $skilltag .
+                                '</div>';
+                            @endphp
+                        </td>
+
+                        {{-- Experience --}}
+                        <td>
+                            @php
+                                echo '<div class="d-flex flex-column">
+                                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' . $formattedExperience . ' Y</a>'
+                                    . ($workMode ? '<span class="fw-bold d-block" style="font-size:10px;color:#7c3aed;">' . $workMode . '</span>' : '<span class="text-muted fw-bold d-block fs-7">—</span>') .
+                                '</div>';
+                            @endphp
+                        </td>
+
+                        {{-- Skills (star-rated) --}}
+                        <td>
+                            @php
+                                $skillHtml = '';
+                                foreach ($skillExperiences as $key => $exp) {
+                                    if ($key >= 3) break;
+                                    $skillHtml .= '<div class="skill-item">
+                                        <span class="skill-name">' . ucfirst($exp->skill_key) . '</span>
+                                        <div class="stars">
+                                            <svg class="star_skill ' . (@$exp->rating >= 1 ? '' : 'empty') . '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            <svg class="star_skill ' . (@$exp->rating >= 2 ? '' : 'empty') . '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            <svg class="star_skill ' . (@$exp->rating >= 3 ? '' : 'empty') . '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            <svg class="star_skill ' . (@$exp->rating >= 4 ? '' : 'empty') . '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                            <svg class="star_skill ' . (@$exp->rating >= 5 ? '' : 'empty') . '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                                         </div>
-                                        <div class="' .
-                                                $skilltagclass .
-                                                '" style="position: absolute; bottom: 0;">
-                                                            <span class="badge badge-light-success my-1">Skills:</span>
-                                                        
-                                                        ' .
-                                                $skilltag .
-                                                '
-                                                        
-                                                            </div>
+                                    </div>';
+                                }
+                                echo $skillHtml ?: '<span class="text-muted fs-7">—</span>';
+                            @endphp
+                        </td>
 
-                                        ';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        @php
-                                            $total_exp = $row->total_exp;
-                                            if($total_exp == '0.'){
-                                            $total_exp = str_replace('.','',$total_exp);
-                                            }
-                                            $rel_exp = $row->rel_exp;
-                                            if($total_exp == '0.'){
-                                            $rel_exp = str_replace('.','',$rel_exp);
-                                            }
-                                            if($total_exp==0 && $rel_exp==0){
-                                                $rel_exp = ''; 
-                                            }
-                                            $experience = floatval(@$row->total_exp); // Ensure it's a valid float
-                                            // If experience is a whole number, convert it to an integer; otherwise, keep the decimal
-                                            $formattedExperience = ($experience == intval($experience)) ? intval($experience) : $experience;
+                        {{-- Availability --}}
+                        <td>
+                            @php
+                                echo '<div class="d-flex flex-column">
+                                    <a href="javascript:void(0);" class="fw-bolder fs-6" style="' . $npColorStyle . '">' . $npLabel . '</a>
+                                    <span class="text-muted fw-bold d-block fs-7">' . $outsourcingLabel . '</span>
+                                </div>';
+                            @endphp
+                        </td>
 
-                                            $rel_experience = floatval(@$row->rel_exp); // Ensure it's a valid float
-                                            // If experience is a whole number, convert it to an integer; otherwise, keep the decimal
-                                            $rel_formattedExperience = ($rel_experience == intval($rel_experience)) ? intval($rel_experience) : $rel_experience;
+                        {{-- Location --}}
+                        <td>
+                            @php
+                                echo '<div class="d-flex flex-column">
+                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6"
+                                       data-toggle="tooltip" title="' . ucwords($row_city_name) . ', ' . ucwords($row_country_name) . '">'
+                                       . ucwords(mb_substr($row_city_name, 0, 12)) . ', ' . ucwords(mb_substr($row_country_name, 0, 10)) . '
+                                    </a>
+                                    <span class="text-muted fw-bold d-block fs-7"
+                                          data-toggle="tooltip" title="' . @$row->qualification_name . '">'
+                                          . strtoupper(mb_substr(@$row->qualification_name, 0, 14)) . '
+                                    </span>
+                                </div>';
+                            @endphp
+                        </td>
 
-                                            // echo $formattedExperience . ' Y';
+                        {{-- Expected Salary --}}
+                        <td>
+                            @php
+                                echo '<div class="d-flex flex-column">
+                                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">'
+                                        . @$bill_rate_currency . $bill_rate_amount
+                                        . '<span style="font-size:.7em;font-weight:500;color:inherit;white-space:nowrap;">/' . $bill_rate_mode . '</span>
+                                    </a>
+                                    <span class="fw-bold d-block fs-7" style="color:' . $comission_color . ';">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
+                                        ' . $comission_label . '
+                                    </span>
+                                    <span class="fw-bold d-block fs-7" style="color:#6d7991;">Service</span>
+                                </div>';
+                            @endphp
+                        </td>
 
-                                                echo '<div class="d-flex flex-column">
-                                            <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .$formattedExperience . ' Y' . 
-                                                '</a>
-                                                <span class="text-muted fw-bold d-block fs-7">' . $rel_formattedExperience . ' Y'. 
-                                                '</span>
-                                            </div>';
-                                        @endphp
-
-                                    </td>
-                                    <td>
-                                        @php
-                                            $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode =
-                                                '';
-                                            $pay_rate_currency = $currencySymbole[@$row->pay_rate_currency];
-                                            $bill_rate_currency = $currencySymbole[@$row->bill_rate_currency];
-                                            $pay_rate_mode = $salaryMode[@$row->pay_rate_mode];
-                                            $bill_rate_mode = $salaryMode[@$row->bill_rate_mode];
-                                            
-                                            $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->pay_rate_amount);
-                                            $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
-
-                                            $billFormatViewMonth = GeneralMethod::formatViewSalary($row->ectc_yearly,"INR",1);
-                                            $bill_rate_modeMo = $salaryMode[$billFormatViewMonth->mode];
-
-                                            echo '<div class="d-flex flex-column">
-                                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                                                $bill_rate_currency .
-                                                @$bill_rate_amount .
-                                                '/' .
-                                                $bill_rate_mode .
-                                                '</a>
-                                                <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" >' .
-                                                $bill_rate_currency .
-                                                @$billFormatViewMonth->amount  .
-                                                '/' .
-                                                mb_substr($bill_rate_modeMo,0,1) .
-                                                '</span>
-                                            
+                        {{-- Action --}}
+                        <td style="text-align:center;">
+                            @php
+                                $html = '';
+                                if ($row->status == 2) {
+                                    if (($row->countforadd ?? 0) >= 3) {
+                                        $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
+                                    } else {
+                                        $html = '<div class="d-flex flex-column" style="margin-bottom:6px;">
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar"
+                                               data-row-source_from_type="2"
+                                               data-row-id="' . @$row->id . '"
+                                               data-row-jobid="">Add to Job</a>
                                         </div>';
-                                        @endphp
-                                    </td>
-                                    
-                                    <td>
-                                        @php
-                                            $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode =
-                                                '';
-                                            $pay_rate_currency = $currencySymbole[@$row->pay_rate_currency];
-                                            $bill_rate_currency = $currencySymbole[@$row->bill_rate_currency];
-                                            $pay_rate_mode = $salaryMode[@$row->pay_rate_mode];
-                                            $bill_rate_mode = $salaryMode[@$row->bill_rate_mode];
-                                            $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->pay_rate_amount);
-                                            $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
-                                            
-                                            $currencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
+                                    }
+                                } else {
+                                    $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
+                                }
+                                echo $html;
+                            @endphp
+                            <a href="javascript:;" class="fw-bold fs-7 text-hover-primary {{ $profile_sidebar_css }}" data-row-id="{{ $row->id }}">View Profile</a>
+                        </td>
 
-                                            $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,'USD',$currencyBenchshowMode->show_mode);
-                                            $billFormatViewMonth = GeneralMethod::formatViewSalary($row->ectc_yearly,'USD',1);
-                                            $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency];
-                                            $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode];
-                                            $bill_rate_modeMo = $salaryMode[$billFormatViewMonth->mode];
+                    </tr>
+                    @endforeach
+                @else
+                    <tr style="height:102px;position:relative;background:#fffcfc7a;">
+                        <td colspan="7" style="text-align:center;color:black;">
+                            No candidates available
+                        </td>
+                    </tr>
+                @endif
+                </tbody>
+            </table>
+        </div>
 
-                                            echo '<div class="d-flex flex-column">
-                                        <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                                                $bill_rate_currency .
-                                                @$billFormatViewSalary->amount  .
-                                                '/' .
-                                                mb_substr($bill_rate_mode,0,1) .
-                                                '</a>
-                                                <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" >' .
-                                                $bill_rate_currency .
-                                                @$billFormatViewMonth->amount  .
-                                                '/' .
-                                                mb_substr($bill_rate_modeMo,0,1) .
-                                                '</span> 
-                                            
-                                        </div>';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        @php
-                                        $created_at = '';
-                                        $created_at = GeneralMethod::ymdTodmyNotTime($row->created_at);
-                                            echo ' <div class="d-flex flex-column">
-                                                <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                                                @$row->qualification_name .
-                                                '" style="text-transform: uppercase;!important">' .
-                                                @$row->qualification_name .
-                                                '</a>
-                                                <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                                                 $created_at .
-                                                '">' .
-                                                $created_at.
-                                                '</span> 
-                                                </div>';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        @php
-                                            $npArr = ['Notice period', 'Available from', 'Immediate'];
-                                            $npDate = $row->np_id;
-                                            if ($row->serving_notice_period_mode == 0) {
-                                                $npDate = $row->np_id == 1 ? $row->np_id . ' Day' : $row->np_id . ' Days';
-                                            } elseif ($row->serving_notice_period_mode == 1) {
-                                                $originalDate = $row->np_id;
-                                                $npDate = date('d-M-y', strtotime($originalDate));
-                                                $today = date('Y-m-d'); 
-                                                //if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                                               //     $npDate = "Immediate";
-                                               // }
-                                            } elseif ($row->serving_notice_period_mode == 2) {
-                                                $originalDate = $row->np_id;
-                                                $npDate = date('d-M-y', strtotime($originalDate));
-                                                $today = date('Y-m-d'); 
-                                                if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                                                    $npDate = "";
-                                                }
-                                            } else {
-                                                $npDate = '';
-                                            }
-                                            echo '<div class="d-flex flex-column">
-                                            <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                                                $npArr[$row->serving_notice_period_mode] .
-                                                '</a> 
-                                            <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                                                $row->np_id .
-                                                '">' .
-                                                $npDate .
-                                                '</span>
-                                            </div>';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        @php
-
-                                            $country = $state = $row_state_name = $row_country_name = $city = $row_city_name = '';
-                                            if (empty($row->country)) {
-                                                $row_country_name = '----';
-                                            } else {
-                                                if (!empty(@$row->country)) {
-                                                    if (is_numeric(@$row->country)) {
-                                                        $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                                        foreach ($country_name_Arr as $cval) {
-                                                            $row_country_name = ucwords($cval['name']);
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            if (empty($row->state)) {
-                                                $row_state_name = '----';
-                                            } else {
-                                                $row_state = DB::table('state_list')
-                                                    ->select('*')
-                                                    ->where('id', @$row->state)
-                                                    ->first();
-                                                $row_state_name = @$row_state->state;
-                                            }
-
-                                            $row_city = DB::table('city_list')
-                                                ->select('*')
-                                                ->where('city_id', @$row->city_id)
-                                                ->first();
-                                            $row_city_name = @$row_city->city;
-                                            $row_city_name = @$row->city_name;
-                                            $row_state_name = @$row->state_name;
-                                            $row_country_name = @$row->country_name;
-
-                                            echo '<div class="d-flex flex-column">
-                                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                                                ucwords($row_city_name) .
-                                                '">' .
-                                                ucwords(mb_substr($row_city_name, 0, 20)) .
-                                                '</a>
-                                                <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                                                ucwords($row_state_name) .
-                                                ' | ' .
-                                                strtoupper($row_country_name) .
-                                                '">' .
-                                                ucfirst(mb_substr($row_state_name, 0, 5)) .
-                                                ' | ' .
-                                                strtoupper(mb_substr($row_country_name, 0, 2)) .
-                                                '</span>
-                                            </div>';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        @php
-
-                                            $subS = '';
-                                            if ($row->master_status_name == 'Bench') {
-                                                $subS = 'Live';
-                                                if ($row->superadminstatus == 0) {
-                                                    $subS = 'Pending';
-                                                }
-                                            }
-                                             $result = GeneralMethod::bench_status_subline($row->status);
-					                         $subS = ($result->name) ?? '';
-                                            echo '<div class="d-flex flex-column">
-                                            <a href="javascript:void(0);" data-row-id="' .
-                                                $row->id .
-                                                '" class="fw-bold fs-6  stage_sub_stage ' .
-                                                $row->css_style .
-                                                '" data-toggle="modal" data-target="#stage_sub_stage" >
-                                                ' .
-                                                $row->master_status_name .
-                                                '</a>
-                                            <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-original-title="10 Days to Expire">' .
-                                                $subS .
-                                                '</span>
-                                            </div>';
-                                        @endphp
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-column"> 
-                                            <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar" data-row-source_from_type="2" data-row-id="{{$row->id}}" data-row-jobid="">Add to job</a> 
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                        <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-                            <td colspan="8" style="text-align: center; color: black;">
-                                No data available in table
-                            </td>
-
-                        </tr>
-                    @endif
-
-                    </tbody>
-                </table>
-                <?php
-                    $totalPages =$last_page;
-                    $currentPage =$current_page;
-                ?>
-
-                <div class="pagination-wrapper">
-                    <div class="custom-pagination">
-                    <!-- Previous Button -->
-                    <?php if ($currentPage > 1): ?>
-                        <a href="?page=<?= $currentPage - 1 ?>" class="page-link">Previous</a>
-                    <?php else: ?>
-                        <span class="page-link disabled">Previous</span>
-                    <?php endif; ?>
-
-                    <!-- Page Numbers -->
-                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <?php if ($i == $currentPage): ?>
-                            <a href="?page=<?= $i ?>" class="page-link active"><?= $i ?></a>
-                        <?php else: ?>
-                            <a href="?page=<?= $i ?>" class="page-link"><?= $i ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <!-- Next Button -->
-                    <?php if ($currentPage < $totalPages): ?>
-                        <a href="?page=<?= $currentPage + 1 ?>" class="page-link">Next</a>
-                    <?php else: ?>
-                        <span class="page-link disabled">Next</span>
-                    <?php endif; ?>
-                </div>
+        {{-- Pagination --}}
+        @php $totalPages=$last_page; $currentPage=$current_page; @endphp
+        <div class="bc-pagination">
+            <div class="bc-page-info">
+                Showing page {{ $currentPage }} of {{ $totalPages }} &nbsp;·&nbsp; {{ $total }} candidates
             </div>
+            <div class="bc-page-controls">
+                @if($currentPage>1)
+                    <a href="?page={{ $currentPage-1 }}&cus_search={{ $searchTerms }}&sortingfilter={{ $valCheck }}" class="bc-page-btn">‹ Prev</a>
+                @else
+                    <span class="bc-page-btn bc-page-btn-disabled">‹ Prev</span>
+                @endif
 
+                @for($i=1;$i<=$totalPages;$i++)
+                    @if($i==$currentPage)
+                        <span class="bc-page-btn active">{{ $i }}</span>
+                    @elseif(abs($i-$currentPage)<=2 || $i==1 || $i==$totalPages)
+                        <a href="?page={{ $i }}&cus_search={{ $searchTerms }}&sortingfilter={{ $valCheck }}" class="bc-page-btn">{{ $i }}</a>
+                    @elseif(abs($i-$currentPage)==3)
+                        <span class="bc-page-btn bc-page-btn-disabled" style="border:none;">…</span>
+                    @endif
+                @endfor
+
+                @if($currentPage<$totalPages)
+                    <a href="?page={{ $currentPage+1 }}&cus_search={{ $searchTerms }}&sortingfilter={{ $valCheck }}" class="bc-page-btn">Next ›</a>
+                @else
+                    <span class="bc-page-btn bc-page-btn-disabled">Next ›</span>
+                @endif
             </div>
         </div>
-    </main>
+    </div>
+
+</div>
+</main>
 
     
     <div id="kt_activitiesCopy_toggle"></div>

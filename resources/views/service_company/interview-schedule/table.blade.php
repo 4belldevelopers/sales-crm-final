@@ -256,6 +256,10 @@
 /* Old table compatibility */
 #Interview-trackers { display: contents; }
 
+/* Hide the duplicate "Showing X to Y of Z" text that comes from the
+   pagination partial — the #showingText div already provides this. */
+#pagination .pagi-info { display: none !important; }
+
 /* Follow Up Dropdown */
 .it-followup-dropdown { position: relative; display: inline-block; margin-top: 2px; }
 .it-followup-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: var(--it-radius); font-size: 10px; font-weight: 500; font-family: 'Poppins', sans-serif; border: 1px solid var(--it-border); background: white; color: var(--it-text-muted); cursor: pointer; transition: var(--it-transition); }

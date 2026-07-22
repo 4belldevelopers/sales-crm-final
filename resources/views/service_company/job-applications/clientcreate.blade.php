@@ -2907,19 +2907,28 @@ $.ajax({
         },
         success: function (response) {
 
-            console.log(response);
-
-            if(response.status){
+            if(response.success){
 
                 $('#resume_path').val(response.file_path);
 
                 toastr.success('Resume uploaded successfully');
+
+            } else {
+
+                toastr.error(response.message || 'CV upload failed. Please try again.');
+
             }
 
         },
         error: function (xhr) {
 
-            toastr.error('Upload failed');
+            var msg = 'CV upload failed. Please try again.';
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if(res.message) msg = res.message;
+                else if(res.errors && res.errors.file) msg = res.errors.file[0];
+            } catch(e){}
+            toastr.error(msg);
 
         },
         complete: function () {
