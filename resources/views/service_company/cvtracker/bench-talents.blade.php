@@ -8,20 +8,20 @@
 .table > :not(caption) > * > *{padding: 0rem 0.4rem;}
 
 /* ── Bench Talents drawer — matches Inhouse Talents design language ── */
-.bench-bt, .bench-bt * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
+.bench-bt, .bench-bt * { font-family: 'Poppins', sans-serif !important; font-size: 11px; }
 .bench-bt .table thead tr th {
-    font-size: 11px !important; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.4px; color: #a1a5b7; padding: 8px 6px !important;
+    font-size: 10px !important; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #a1a5b7; padding: 6px 5px !important;
     border-bottom: 2px solid #f1f3f8; white-space: nowrap;
 }
 .bench-bt .table tbody tr { border-bottom: 1px solid #f1f3f8; }
 .bench-bt .table tbody tr:hover { background: #fafbff; }
-.bench-bt .table tbody td { padding: 8px 6px !important; vertical-align: top; }
-.bench-bt .table .fs-6 { font-size: 13px !important; }
-.bench-bt .table .fs-7 { font-size: 11px !important; }
+.bench-bt .table tbody td { padding: 6px 5px !important; vertical-align: top; }
+.bench-bt .table .fs-6 { font-size: 11px !important; }
+.bench-bt .table .fs-7 { font-size: 10px !important; }
 
 /* Skill chips in the footer strip */
-.bench-bt .skill { font-size: 10px !important; font-weight: 300 !important; }
+.bench-bt .skill { font-size: 9px !important; font-weight: 300 !important; }
 </style>
 <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
   <input type="hidden" name="hid_job_id" id="hid_job_id" value="" />
