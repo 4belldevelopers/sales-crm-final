@@ -87,6 +87,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs_side_bar_job_ajax/data', [ServiceCompanyJobsController::class,'client_job_data_ajax'])->name('jobs.data_client_ajax');
 						Route::get('jobs/viewmore/{id?}', [ServiceCompanyJobsController::class,'viewMore'])->name('jobs.viewmore'); 
 						Route::get('jobs/clientviewmore/{id?}', [ServiceCompanyJobsController::class,'clientviewmore'])->name('jobs.clientviewmore');
+						Route::get('jobs/market-job-detail/{id}', [ServiceCompanyJobsController::class,'marketJobDetail'])->name('jobs.market_job_detail');
 						Route::get('jobs/spartnerlisting/{id?}', [ServiceCompanyJobsController::class,'spartnerlisting'])->name('jobs.spartnerlisting');
 						Route::get('jobs/spartnerlistingview/{id?}', [ServiceCompanyJobsController::class,'boostkeywordsAndrecommendedData'])->name('jobs.spartnerlistingview');
 						Route::get('jobs/requestapproval', [ServiceCompanyJobsController::class,'requestapproval'])->name('jobs.requestapproval'); 
@@ -98,7 +99,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/client_requisition/{id?}', [ServiceCompanyJobsController::class,'client_requisition'])->name('jobs.client_requisition'); 	
 						Route::get('jobs/custom_requisition/{id?}', [ServiceCompanyJobsController::class,'custom_requisition'])->name('jobs.custom_requisition');  
 						Route::get('jobs/market-jobs/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobs');
-						Route::get('market-jobs-list', [ServiceCompanyJobsController::class,'marketJobList'])->name('jobs.marketJobList');
+						Route::get('market-jobs-list/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobList');
 						Route::get('market-jobs-list-ajax', [ServiceCompanyJobsController::class,'marketJobList_ajax'])->name('jobs.marketJobList_ajax'); 
 						Route::get('market/requestaadded', [ServiceCompanyJobsController::class,'marketrequestaadded'])->name('jobs.marketrequestaadded'); 
 						Route::get('auction/send_job_request/{id?}', [ServiceCompanyJobsController::class,'auction_send_job_request'])->name('jobs.auction_send_job_request');

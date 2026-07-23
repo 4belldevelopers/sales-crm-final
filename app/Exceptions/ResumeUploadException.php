@@ -47,4 +47,10 @@ class ResumeUploadException extends RuntimeException
     {
         return new self($tempPath, 'post_copy_missing', "Resume final path missing or empty after copy: {$finalPath}");
     }
+
+    /** Resume URL the form submitted cannot be verified on R2 at submit time. */
+    public static function submitMissing(string $url): self
+    {
+        return new self($url, 'submit_missing', "Resume URL submitted by the form is missing or unreadable on storage: {$url}");
+    }
 }
