@@ -215,16 +215,16 @@
       @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
 
       @else
-            <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-primary sendmaimodal btn-active-primary fw-bolder me-3" data-toggle="modal" data-target="#send_mail"> <span class="svg-icon svg-icon-primary svg-icon-1x">
+            <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-primary sendmaimodal btn-active-primary fw-bolder me-3"> <span class="svg-icon svg-icon-primary svg-icon-1x">
               <i class="fa fa-envelope" style=" font-size: 19px;"></i>
-                    </span> Email 
-              </a> 
+                    </span> Email
+              </a>
               
             @if(@$application->condidate_type=='other' && $notVisiableBench)  
             {{-- https://api.whatsapp.com/send?phone=91{{@$application->phone}} --}}
-              <a href="javascript:void(0);" data-toggle="modal" data-target="#send_whatsapp" type="button" class="btn btn-sm btn-flex btn-success btn-active-primary sendwhatsappmodal fw-bolder me-3"> <span class="svg-icon svg-icon-success svg-icon-1x">
+              <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-success btn-active-primary sendwhatsappmodal fw-bolder me-3"> <span class="svg-icon svg-icon-success svg-icon-1x">
                   <i class="fa fa-whatsapp" style=" font-size: 22px;"></i>
-                </span> Whatsapp 
+                </span> Whatsapp
               </a>
           @endif
       @endif
@@ -4320,7 +4320,13 @@ setTimeout(() => {
 
   });
    $('.sendwhatsappmodal').click(function(){
-          $('#application_send_whatsapp_body_content').html('');
+          // Trigger hidden toggle — KTDrawer binds to this on createInstances()
+          $('#kt_send_whatsapp_sd_toggle').trigger('click');
+
+          $('#application_send_whatsapp_body_content').html(
+              '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+              '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading...</div>'
+          );
           var id        	=	{{ @$jobId }};
           var sid        	=	{{ @$application->id }};
           var arr 		=	[sid];
@@ -4353,9 +4359,14 @@ setTimeout(() => {
    });
   
   $('.sendmaimodal').click(function(){
-  
-		
-        $('#application_send_mail_body_content').html('');
+
+        // Trigger hidden toggle — KTDrawer binds to this on createInstances()
+        $('#kt_send_mail_sd_toggle').trigger('click');
+
+        $('#application_send_mail_body_content').html(
+            '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+            '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+        );
         $('#application_mass_mail_body_content').html('');
         $('#application_fwd_resume_body_content').html('');
         var id        	=	{{ @$jobId }};
@@ -4591,3 +4602,108 @@ setTimeout(() => {
 
     
 </script> 
+<!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
+<div id="kt_send_mail_sd_toggle" style="display:none;"></div>
+<div id="kt_send_mail_showdetail_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="send-mail-showdetail"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_send_mail_sd_toggle" data-kt-drawer-close="#kt_send_mail_showdetail_close">
+    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+        <div class="card-header px-5 py-0 flex-shrink-0">
+            <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
+            <div class="card-toolbar">
+                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_send_mail_showdetail_close">
+                    <span class="svg-icon svg-icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
+                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </div>
+        <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_send_mail_body_content"></div>
+    </div>
+</div>
+<!--end::Send Mail - Drawer-->
+<script>
+(function() {
+    if (typeof KTDrawer !== 'undefined') {
+        KTDrawer.createInstances();
+    }
+
+    // Manual overlay for the send-mail drawer (avoids conflicts with parent drawer overlay)
+    var $overlay = null;
+
+    function showSendMailOverlay() {
+        if ($overlay) return;
+        $overlay = $('<div class="sd-mail-overlay"></div>').css({
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+            zIndex: 109, cursor: 'pointer'
+        }).appendTo('body');
+        $overlay.on('click', hideSendMailDrawer);
+    }
+
+    function hideSendMailDrawer() {
+        if ($overlay) { $overlay.remove(); $overlay = null; }
+        var drawerEl = document.getElementById('kt_send_mail_showdetail_drawer');
+        if (drawerEl && typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (drawer) { drawer.hide(); }
+        }
+    }
+
+    $(document).on('click', '.sendmaimodal', function() {
+        showSendMailOverlay();
+    });
+
+    $(document).on('click', '#kt_send_mail_showdetail_close', function() {
+        hideSendMailDrawer();
+    });
+})();
+</script>
+
+<!--begin::Send Whatsapp - Drawer (hidden toggle pattern) -->
+<div id="kt_send_whatsapp_sd_toggle" style="display:none;"></div>
+<div id="kt_send_whatsapp_showdetail_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="send-whatsapp-showdetail"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_send_whatsapp_sd_toggle" data-kt-drawer-close="#kt_send_whatsapp_showdetail_close">
+    <div class="shadow-none rounded-0 w-100 h-100" style="display:flex;flex-direction:column;overflow:hidden;">
+        <div style="flex:1;overflow:hidden;" id="application_send_whatsapp_body_content"></div>
+    </div>
+</div>
+<!--end::Send Whatsapp - Drawer -->
+
+<script>
+(function() {
+    if (typeof KTDrawer !== 'undefined') { KTDrawer.createInstances(); }
+    var $waOverlay = null;
+
+    function showWhatsappOverlay() {
+        if ($waOverlay) return;
+        $waOverlay = $('<div class="sd-whatsapp-overlay"></div>').css({
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+            zIndex: 109, cursor: 'pointer'
+        }).appendTo('body');
+        $waOverlay.on('click', hideWhatsappDrawer);
+    }
+
+    function hideWhatsappDrawer() {
+        if ($waOverlay) { $waOverlay.remove(); $waOverlay = null; }
+        var drawerEl = document.getElementById('kt_send_whatsapp_showdetail_drawer');
+        if (drawerEl && typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (drawer) { drawer.hide(); }
+        }
+    }
+
+    $(document).on('click', '.sendwhatsappmodal', function() {
+        showWhatsappOverlay();
+    });
+
+    $(document).on('click', '#kt_send_whatsapp_showdetail_close', function() {
+        hideWhatsappDrawer();
+    });
+})();
+</script>
