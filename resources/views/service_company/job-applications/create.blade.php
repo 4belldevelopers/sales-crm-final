@@ -204,6 +204,7 @@
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_url" id="resume_url" value="">
             <input type="hidden" name="resume_temp_path" id="resume_temp_path" value="">
+            <input type="hidden" name="upload_session_uuid" id="upload_session_uuid" value="{{ $upload_session_uuid ?? '' }}">
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
