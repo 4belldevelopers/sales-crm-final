@@ -137,6 +137,11 @@
          'clientRequisition' =>@$dataCnt['clientRequisition'],
          'jobRequest' =>@$dataCnt['jobRequest'],
          'productAllowCompany' =>@$productAllowCompany,
+         'userPermissions' =>$userPermissions,
+         'hiringCount'    =>@$dataCnt['hiringCount'],
+         'holdCount'      =>@$dataCnt['holdCount'],
+         'closedCount'    =>@$dataCnt['closedCount'],
+         'allTabCount'    =>@$dataCnt['allTabCount'],
         ];
         $searchbar = [
          'userPermissions'=>$userPermissions
@@ -594,6 +599,15 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
       fetchCandidates();
    	  //  table._fnDraw();
    	});
+
+    // Called from the tab row in jobHeader — filters table and marks tab active
+    function filterJobsByStatus(status) {
+        $('#status').val(status);
+        $('.jh-tab').removeClass('jh-tab-active');
+        $('.jh-tab[data-status="' + status + '"]').addClass('jh-tab-active');
+        localStorage.setItem('currentPageJobs', 1);
+        fetchCandidates(1);
+    }
     
    
    
@@ -848,7 +862,6 @@ $(document).on('click', '.client-hm-listing', function ()
 
         });
 
-
           var page_no = localStorage.getItem('currentPageJobs');
                 if (!page_no) {
                     page_no = 1;
@@ -862,6 +875,7 @@ $(document).on('click', '.client-hm-listing', function ()
             if($('.inputJobSearch').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
+                $('.page-loader').css('display', 'flex');
             }else{
                 $('.page-loader').css('display', 'flex');
             }
