@@ -34,7 +34,11 @@ class StoreJobApplication extends CoreRequest
             'full_name' => 'required',
             'email' => 'email|required',
             'phone' => 'required',
-            'job_id' => 'required|exists:jobs,id'
+            'job_id' => 'required|exists:jobs,id',
+            'resume_temp_path' => 'nullable|string|max:512',
+            // When the sectionVisibility gate does not add 'resume' for this job,
+            // we still bound the multipart fallback file so it never exceeds 5 MB.
+            'resume' => 'nullable|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf|max:5120',
         ];
 
         if ($requiredColumns['gender']) {
@@ -56,7 +60,7 @@ class StoreJobApplication extends CoreRequest
                         $rules = Arr::add($rules, 'photo', 'required|mimes:jpeg,jpg,png');
                     }
                     if ($key === 'resume') {
-                        $rules = Arr::add($rules, 'resume', 'required|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf');
+                        $rules = Arr::add($rules, 'resume', 'required|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf|max:5120');
                     }
                 }
             }
