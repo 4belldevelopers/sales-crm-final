@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -1820,17 +1820,15 @@
                 </div>
                 <!--End Filter Drawer-->
 
+                <!-- Loader outside card so it shows even before card is revealed -->
+                <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                    <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                </div>
+
                 <!--begin::Card-->
-                <div class="card">
+                <div class="card" id="sc_table_card" style="display:none;">
                     <!--begin::Card body-->
                     <div class="card-body pt-3 px-5" style="position: relative;">
-                      <!-- Circle loader only (Bootstrap/Metronic's own spinner-border) —
-                           position:fixed + viewport-centered so it stays centered on
-                           screen regardless of scroll position or row count, same
-                           pattern as Similar Candidates' filter drawer. -->
-                      <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
-                          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
-                      </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
                             <!--begin::Table head-->
                             <thead>
@@ -2242,7 +2240,8 @@
             var kt_tagify_company = $('#kt_tagify_company').val();
 
 
-            $('.loadingMessage').css({ display: 'flex' });
+            $('.loadingMessage').css({ display: 'none' });
+            $('.page-loader').css('display', 'flex');
             return $.ajax({
                 url: `{!! route('service_company.apptracker.dinternal_bench_data_ajax') !!}?page=${page}`,
                 type: 'GET',
@@ -2268,6 +2267,8 @@
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     if (!response || typeof response.html === 'undefined') {
                         console.error('dinternal_bench_data_ajax: unexpected response', response);
                         return;
@@ -2279,6 +2280,8 @@
                 },
                 error: function(xhr) {
                     $('.loadingMessage').css({ display: 'none' });
+                     $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     console.error('dinternal_bench_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });

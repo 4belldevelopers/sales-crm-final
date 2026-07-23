@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -1401,13 +1401,15 @@
                 </div>
                 <!--End Filter Drawer-->
 
+                <!-- Loader outside card so it shows even before card is revealed -->
+                <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                    <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                </div>
+
                 <!--begin::Card-->
-                <div class="card">
+                <div class="card" id="sc_table_card" style="display:none;">
                     <!--begin::Card body-->
                     <div class="card-body pt-3 px-5">
-                        <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
-                            <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
-                        </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
                             id="candidates_request">
                             <thead>
@@ -2084,7 +2086,8 @@
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
             var app_int_outsource = $('[name="app_int_outsource"]:checked').val();
 
-            $('.loadingMessage').css({ display: 'flex' });
+            $('.loadingMessage').css({ display: 'none' });
+            $('.page-loader').css('display', 'flex');
             return $.ajax({
                 url: `{!! route('service_company.apptracker.candidates_request_data_ajax') !!}?page=${page}`,
                 type: 'GET',
@@ -2107,6 +2110,8 @@
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     $('#candidatetList').html(response.html);
                     $('.benchTalentReq_counter').html(response.total);
                     $('#brf_footer_number').text(response.total);
@@ -2114,6 +2119,8 @@
                 },
                 error: function(xhr) {
                     $('.loadingMessage').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     console.error('candidates_request_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });

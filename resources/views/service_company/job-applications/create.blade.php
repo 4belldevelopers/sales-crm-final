@@ -202,6 +202,7 @@
             <input type="hidden" name="currentPage" value="{{ @$currentPage }}" id="currentPage" />
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
+            <input type="hidden" name="resume_url" id="resume_url" value="">
             <input type="hidden" name="resume_temp_path" id="resume_temp_path" value="">
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
           <div class="fc">
@@ -2140,7 +2141,7 @@ var cities = @json($cities);
                         // formData.append('_method', 'PUT');					
 												$.ajax({
                           url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
-                            beforeSend: function () { setResumeProgress('saving'); setResumeProgress('creating'); },								   
+
 														   type 			: 'POST',
 														   data 			: formData,
 														   processData		: false,  	// tell jQuery not to process the data
@@ -2164,36 +2165,29 @@ var cities = @json($cities);
                                 }
 
 
-                                submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire({
                                 // Hardened success gate (mirror of ADD branch): require candidate_id + url.
                                 if (!response || response.status !== 'success' || !response.candidate_id || !response.url) {
                                     submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
                                     var msgEditHardened = (response && response.message) ? response.message : 'Update could not be verified. Please retry.';
                                     Swal.fire({ text: msgEditHardened, icon: 'error', buttonsStyling: false, confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-primary' } });
-                                    setResumeProgress('failed');
                                     return;
                                 }
                                 submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire({
-                                text				: "You have successfully updated",
-                                icon				: "success",
-                                buttonsStyling		: false,
-                                confirmButtonText	: "Ok, got it!",
-                                customClass			: {
-                                              confirmButton: "btn btn-primary"
-                                            }
-                                    }).then(function (result) {
-                                        if (result.isConfirmed) {
-                                            form.querySelector('[name="email1"]').value 		 = "";
-                                            form.querySelector('[name="password1"]').value 	 = "";
-                                        }
-                                    });
-
-																				window.location = response.url;
+                                submitButton.disabled = false;
+                                Swal.fire({
+                                    text: 'You have successfully updated',
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: { confirmButton: 'btn btn-primary' }
+                                }).then(function (result) {
+                                    if (result.isConfirmed) {
+                                        form.querySelector('[name="email1"]').value = '';
+                                        form.querySelector('[name="password1"]').value = '';
+                                    }
+                                    window.location = response.url;
+                                });
 																			},
 															error			: function (response) {
 																									//handleFails(response);
@@ -2964,12 +2958,10 @@ var KTAddCandidate = function () {
                   );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
-                    // Drive the progress widget through validating -> saving -> creating.
-                    setResumeProgress('validating');
-                    // Guard against tab-close / navigation mid-submit so a half-uploaded resume
-                    // never leaves the user thinking they succeeded.
-                    window.onbeforeunload = function () { return 'Your submission is in progress…'; };
-                    setTimeout(function () {					
+                    // One-stage upload: resume is already durable on R2 by the
+                    // time the user submitted. Submit is one HEAD + one DB tx.
+                    // No 5-step widget or beforeunload guard needed.
+                    setTimeout(function () {
 					
 												var formData = new FormData($('#createForm')[0]);						
 												$.ajax({
@@ -2979,7 +2971,6 @@ var KTAddCandidate = function () {
 														   processData		: false,  	// tell jQuery not to process the data
 														   contentType		: false,  	// tell jQuery not to set contentType
 														   redirect			: true,
-														   beforeSend		: function () { setResumeProgress('saving'); setResumeProgress('creating'); },
 														   success			: function (response) {
                                 $("#save-form").prop("disabled", false);
                                 if(response.status == 'coinCheck'){
@@ -3004,12 +2995,10 @@ var KTAddCandidate = function () {
                                       submitButton.disabled = false;
                                       var msgHardened = (response && response.message) ? response.message : 'Submission could not be verified. Please retry.';
                                       Swal.fire({ text: msgHardened, icon: 'error', buttonsStyling: false, confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-primary' } });
-                                      setResumeProgress('failed');
                                       return;
                                   }
                                   submitButton.removeAttribute('data-kt-indicator');
                                   submitButton.disabled = true;
-                                  setResumeProgress('completed');
                                   Swal.fire({
                                   text				: "You have successfully Submitted",
                                   icon				: "success",
@@ -3268,8 +3257,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if(response.success){
 
-                // Mirror server-side temp path into the hidden form field so the
-                // synchronous ResumeUploadService in the controller can finalize it.
+                // One-stage upload: server returns the FINAL URL because the file
+                // already lives in Companies/{co}/Resumes/{y}/{m}/JERO_xxx.pdf.
+                // Submit handler just HEAD-checks this URL inside its DB tx.
+                $('#resume_url').val(response.url || response.file_path);
                 $('#resume_temp_path').val(response.file_path);
                 $('#resumeCheck').val('1');
 
@@ -3277,6 +3268,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } else {
 
+                $('#resume_url').val('');
                 $('#resume_temp_path').val('');
                 $('#resumeCheck').val('');
                 toastr.error(response.message || 'CV upload failed. Please try again.');
