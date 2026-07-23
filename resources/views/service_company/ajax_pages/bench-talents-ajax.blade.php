@@ -92,7 +92,7 @@
                 </div>
 
                 @if($matchBadge || $skilltag)
-                <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
+                <div style="position: absolute;bottom: 8px;left: 0;white-space: nowrap;width: 80%;overflow: hidden;">
                     {!! $matchBadge !!}{!! $skilltag !!}
                 </div>
                 @endif
@@ -268,30 +268,18 @@
                         ->count();
                     $hmData = DB::table('bench_assign')
                         ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.name', 'users.image')
+                        ->select('users.name')
                         ->where('bench_assign.bench_applications_id', $row->id)
                         ->where('bench_assign.company_id', $company_id)
                         ->where('users.company_id', $company_id)
                         ->orderBy('users.name', 'ASC')->take(1)->first();
                     $managerFullName  = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
                     $managerFirstName = ucfirst(explode(' ', trim($managerFullName))[0]);
-                    $managerImg       = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
                     $extra            = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                 @endphp
-                <div class="d-flex align-items-center gap-2">
-                    @if($managerImg)
-                        <img src="{{ $managerImg }}" alt="{{ $managerFullName }}"
-                             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-                    @else
-                        <div style="width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7e8299;flex-shrink:0;">
-                            {{ strtoupper(substr($managerFirstName, 0, 1)) }}
-                        </div>
-                    @endif
-                    <div class="d-flex flex-column" style="min-width:0;">
-                        <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:80px;"
-                              data-toggle="tooltip" title="{{ $managerFullName }}{{ $extra }}">{{ $managerFirstName }}{{ $extra }}</span>
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing" style="font-size:11px;">Change</a>
-                    </div>
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:110px;"
+                          data-toggle="tooltip" title="{{ $managerFullName }}{{ $extra }}">{{ $managerFirstName }}{{ $extra }}</span>
                 </div>
             </td>
 
@@ -325,14 +313,6 @@
                     <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="{{ $btnStyle }}">Removed</a>
                 @endif
 
-                <div style="display:flex;align-items:center;gap:14px;margin-top:8px;">
-                    <span style="display:flex;align-items:center;gap:4px;color:#a1a5b7;font-size:11px;font-weight:500;">
-                        <i class="fa fa-eye" style="font-size:12px;"></i> {{ $viewCount }}
-                    </span>
-                    <span style="display:flex;align-items:center;gap:4px;color:#a1a5b7;font-size:11px;font-weight:500;">
-                        <i class="fa fa-download" style="font-size:12px;"></i> {{ $downloadCount }}
-                    </span>
-                </div>
             </td>
 
         </tr>

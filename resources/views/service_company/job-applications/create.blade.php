@@ -156,15 +156,25 @@
             <!--begin::Buttons-->
                 <div class="form-row row fv-row">
                   <div class="col-12 text-center py-10">
-                  @php 
-                      if($page_event == 'EDIT'){ 
+                  @php
+                      if($page_event == 'EDIT'){
                         echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary">Update Candidate</button>';
                       }else{
-                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary">Submit Candidate</button>';	
+                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary">Submit Candidate</button>';
                       }
                   @endphp
                     {{-- <a href="javascript:void(0);" class="btn btn-secondary">Cancel</a>  --}}
-                  
+
+                  <div id="resumeProgress" class="mt-4 mx-auto" style="max-width: 360px; display:none;">
+                    <div class="small text-muted mb-2 text-start">Resume upload progress</div>
+                    <ol class="list-unstyled mb-0 text-start" id="resumeProgressSteps" style="font-size: 12px;">
+                      <li data-step="uploading">Uploading…</li>
+                      <li data-step="validating">Validating…</li>
+                      <li data-step="saving">Saving Resume…</li>
+                      <li data-step="creating">Creating Candidate…</li>
+                      <li data-step="completed">Completed</li>
+                    </ol>
+                  </div>
                   </div>
                 </div>
           </div>
@@ -192,6 +202,7 @@
             <input type="hidden" name="currentPage" value="{{ @$currentPage }}" id="currentPage" />
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
+            <input type="hidden" name="resume_temp_path" id="resume_temp_path" value="">
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
@@ -1204,6 +1215,39 @@ $(document).ready(function () {
     const resumeInput = document.getElementById('resume');
 
     // ==========================
+    // Resume progress UI helper
+    // ==========================
+    // Drives the 5-step progress element under the submit button. Stages are
+    // 'uploading','validating','saving','creating','completed' and 'failed' (clears).
+    function setResumeProgress(stage) {
+        const box = document.getElementById('resumeProgress');
+        if (!box) return;
+        if (stage === 'idle' || stage === 'failed') {
+            box.style.display = 'none';
+            $('#resumeProgressSteps li').removeClass('text-success text-danger').css('opacity', '0.5');
+            return;
+        }
+        box.style.display = 'block';
+        const order = ['uploading','validating','saving','creating','completed'];
+        const idx = order.indexOf(stage);
+        $('#resumeProgressSteps li').each(function () {
+            const step = $(this).data('step');
+            const stepIdx = order.indexOf(step);
+            $(this).removeClass('text-success text-danger').css('opacity', '0.5');
+            if (stepIdx <= idx && stepIdx !== -1) {
+                $(this).css('opacity', '1');
+                if (stepIdx < idx) {
+                    $(this).addClass('text-success');
+                } else if (step === 'completed') {
+                    $(this).addClass('text-success');
+                }
+            }
+        });
+    }
+    // Expose helper to global so the submit-handler `success`/`error` branches can call it.
+    window.setResumeProgress = setResumeProgress;
+
+    // ==========================
     // Common file handler
     // ==========================
     function processFile(file, event = null) {
@@ -2095,7 +2139,8 @@ var cities = @json($cities);
 												var formData = new FormData($('#createForm')[0]);		
                         // formData.append('_method', 'PUT');					
 												$.ajax({
-                          url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',								   
+                          url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
+                            beforeSend: function () { setResumeProgress('saving'); setResumeProgress('creating'); },								   
 														   type 			: 'POST',
 														   data 			: formData,
 														   processData		: false,  	// tell jQuery not to process the data
@@ -2122,6 +2167,18 @@ var cities = @json($cities);
                                 submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
                                     Swal.fire({
+                                // Hardened success gate (mirror of ADD branch): require candidate_id + url.
+                                if (!response || response.status !== 'success' || !response.candidate_id || !response.url) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    var msgEditHardened = (response && response.message) ? response.message : 'Update could not be verified. Please retry.';
+                                    Swal.fire({ text: msgEditHardened, icon: 'error', buttonsStyling: false, confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-primary' } });
+                                    setResumeProgress('failed');
+                                    return;
+                                }
+                                submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    Swal.fire({
                                 text				: "You have successfully updated",
                                 icon				: "success",
                                 buttonsStyling		: false,
@@ -2131,8 +2188,8 @@ var cities = @json($cities);
                                             }
                                     }).then(function (result) {
                                         if (result.isConfirmed) {
-                                            form.querySelector('[name="email1"]').value 		= "";
-                                            form.querySelector('[name="password1"]').value 		= "";
+                                            form.querySelector('[name="email1"]').value 		 = "";
+                                            form.querySelector('[name="password1"]').value 	 = "";
                                         }
                                     });
 
@@ -2907,6 +2964,11 @@ var KTAddCandidate = function () {
                   );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
+                    // Drive the progress widget through validating -> saving -> creating.
+                    setResumeProgress('validating');
+                    // Guard against tab-close / navigation mid-submit so a half-uploaded resume
+                    // never leaves the user thinking they succeeded.
+                    window.onbeforeunload = function () { return 'Your submission is in progress…'; };
                     setTimeout(function () {					
 					
 												var formData = new FormData($('#createForm')[0]);						
@@ -2917,6 +2979,7 @@ var KTAddCandidate = function () {
 														   processData		: false,  	// tell jQuery not to process the data
 														   contentType		: false,  	// tell jQuery not to set contentType
 														   redirect			: true,
+														   beforeSend		: function () { setResumeProgress('saving'); setResumeProgress('creating'); },
 														   success			: function (response) {
                                 $("#save-form").prop("disabled", false);
                                 if(response.status == 'coinCheck'){
@@ -2932,8 +2995,21 @@ var KTAddCandidate = function () {
                                    return false;
                                 }
 
+                                  // Hardened success gate: only fire toast and redirect when the
+                                  // server reports a persisted candidate_id and a real URL — the
+                                  // controller now writes candidate_id into Reply::redirect()'s
+                                  // payload so a resume-only failure cannot flash the green Swal.
+                                  if (!response || response.status !== 'success' || !response.candidate_id || !response.url) {
+                                      submitButton.removeAttribute('data-kt-indicator');
+                                      submitButton.disabled = false;
+                                      var msgHardened = (response && response.message) ? response.message : 'Submission could not be verified. Please retry.';
+                                      Swal.fire({ text: msgHardened, icon: 'error', buttonsStyling: false, confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-primary' } });
+                                      setResumeProgress('failed');
+                                      return;
+                                  }
                                   submitButton.removeAttribute('data-kt-indicator');
                                   submitButton.disabled = true;
+                                  setResumeProgress('completed');
                                   Swal.fire({
                                   text				: "You have successfully Submitted",
                                   icon				: "success",
@@ -2948,7 +3024,7 @@ var KTAddCandidate = function () {
                                           form.querySelector('[name="password1"]').value 		= "";
                                       }
                                   });
-                                  
+
                                    window.location = response.url;
 
 																			},
@@ -3154,9 +3230,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     function handleFileInputChange(event) {
-      const file = event.target.files[0];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
+      // Accept either a raw File or a DOM event whose target.files[0] is the file.
+      // The drop / paste branches in processFile pass a File directly so the
+      // pre-upload AJAX always fires regardless of input source.
+      let file = null;
+      if (event && event.target && event.target.files && event.target.files.length) {
+          file = event.target.files[0];
+      } else if (event && event.name) {
+          file = event;
+      }
       if (!file) {
+          return;
+      }
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      // Reject early to avoid hitting the server with invalid files.
+      if (['pdf','doc','docx'].indexOf(fileExtension) === -1) {
+          toastr.error('Only PDF, DOC, DOCX files are allowed.');
           return;
       }
 
@@ -3179,12 +3268,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if(response.success){
 
-                $('#resume_path').val(response.file_path);
+                // Mirror server-side temp path into the hidden form field so the
+                // synchronous ResumeUploadService in the controller can finalize it.
+                $('#resume_temp_path').val(response.file_path);
+                $('#resumeCheck').val('1');
 
                 toastr.success('Resume uploaded successfully');
 
             } else {
 
+                $('#resume_temp_path').val('');
+                $('#resumeCheck').val('');
                 toastr.error(response.message || 'CV upload failed. Please try again.');
 
             }

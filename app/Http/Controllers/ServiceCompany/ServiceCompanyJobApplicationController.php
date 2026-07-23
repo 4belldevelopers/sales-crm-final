@@ -79,6 +79,8 @@ use Validator;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
+use App\Services\ResumeUploadService;
+use App\Exceptions\ResumeUploadException;
 use App\Services\GoogleSheetServiceCandidate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie;
@@ -1593,7 +1595,6 @@ protected $elasticService;
 	}
 	public function store(Request $request)
 	{
-
 		abort_if(Gate::denies('add_job_applications'), 403);
 
 		// $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
@@ -1875,7 +1876,48 @@ protected $elasticService;
 		$jobApplication->interview_mode_five = $request->interview_mode_five;
 		$jobApplication->interview_mode_six = $request->interview_mode_six;
 
-		$jobApplication->save();
+		// ----- Resume finalization (must succeed before the candidate row is saved) -----
+		// Resolves the resume source from either the AJAX pre-upload hidden field
+		// (set by /service_company/uploadresume) or the multipart <input type="file" name="resume">
+		// fallback. Synchronously copies into R2 and verifies the destination exists with non-zero
+		// size. On failure throws ResumeUploadException so this candidate is never created without
+		// a verified resume behind it.
+		$resumeService = app(ResumeUploadService::class);
+		$resumeTempPath = null;
+		$resumeOriginalName = null;
+		$resumeTempFallback = null;
+
+		$resumeTempPath = (string) $request->input('resume_temp_path', '');
+		if ($resumeTempPath !== '') {
+			$resumeOriginalName = (string) (session('resume_original_name') ?? basename($resumeTempPath));
+		} elseif ($request->hasFile('resume')) {
+			$incoming = $request->file('resume');
+			$resumeTempFallback = 'temp/' . uniqid('JERO_', true) . '.' . $incoming->getClientOriginalExtension();
+			Storage::disk('r2')->put($resumeTempFallback, file_get_contents($incoming->getRealPath()));
+			$resumeTempPath = $resumeTempFallback;
+			$resumeOriginalName = uniqid('JERO_') . '.' . $incoming->getClientOriginalExtension();
+		}
+
+		$resumeUrl = null;
+		if ($resumeTempPath !== '') {
+			$resumeUrl = $resumeService->finalizeFromTemp(
+				$resumeTempPath,
+				$resumeOriginalName,
+				(string) ($this->user->company->company_name ?? 'unknown'),
+				(string) ($this->user->company_id ?? 'unknown'),
+				now()
+			);
+			$jobApplication->resume = $resumeUrl;
+		}
+		// ----- End resume block -----
+
+		// Wrap the candidate row write in its own transaction so a DB failure
+		// here rolls back without persisting an empty-parts JobApplication. The
+		// resume-finalization above has already set $jobApplication->resume,
+		// so a successful commit implies the column is durably authored.
+		DB::transaction(function () use ($jobApplication) {
+			$jobApplication->save();
+		});
 
 		
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
@@ -2149,39 +2191,10 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		if ($request->hasFile('resume')) {
-
-			$companyNameR2 = DB::table('companies')
-			->where('id',auth()->user()->company_id)
-			->value('company_name');   // change column if needed
-			$companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
-			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
-			$year  = date('Y');
-            $month = date('m');
-
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-			
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-			
-			DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-							
-
-		}
-
-		if(empty($request->resumeCheck)){
-			DB::table('job_applications')
-				->where('id', $jobApplication->id)
-				->update(['resume' =>'']);
-		}
+		// Resume persistence is finalized synchronously ABOVE $jobApplication->save() and the
+		// content of the resume column is verified before the row is written, so the legacy
+		// optimistic-write block + the resumeCheck blank-out block have been removed entirely.
+		// The temp file is cleaned up after the redirect is fully prepared, just before return.
 
 		if (isset($request->jobskill) && !empty($request->jobskill)) {
 			DB::table('candidate_skills_value')->where('job_id', $request->job_id)->where('candidate_id', $jobApplication->id)->delete();
@@ -2300,13 +2313,34 @@ protected $elasticService;
 		}
 		$this->currencyConverter = GeneralMethod::currencyConverter();
 
-		// ElasticCandidateIndex::dispatch($lastInsertedId)->onConnection('emails');
-		if (!empty($request->job_id)) {
-			return Reply::redirect(url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
-		} else {
-			return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications') . ' ' . __($message));
+		// Queue ES re-index now that the candidate row is committed and its resume URL
+		// is guaranteed durable (handled synchronously above). Side-effects stay async.
+		ElasticCandidateIndex::dispatch($jobApplication->id)->onConnection('emails');
+
+		// Best-effort cleanup of the temp upload. Never throws — a leftover temp file
+		// is harmless and will be overwritten on next upload.
+		if ($resumeTempPath !== '' && $resumeTempPath !== null) {
+			$resumeService->cleanTemp($resumeTempPath);
 		}
-		
+		session()->forget(['resume_temp_path', 'resume_original_name']);
+
+		if (!empty($request->job_id)) {
+			$redirectUrl = url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all');
+		} else {
+			$redirectUrl = route('service_company.job-applications.table');
+		}
+
+		// Enrich the redirect payload with the persisted candidate id so the JS side
+		// can verify success and gate on a unique, observable artifact of the row.
+		return Reply::successWithData(
+			__('menu.jobApplications') . ' ' . __($message),
+			[
+				'action' => 'redirect',
+				'url' => $redirectUrl,
+				'candidate_id' => (int) $jobApplication->id,
+				'resume' => (string) ($jobApplication->resume ?? ''),
+			]
+		);
 	}
 	public function googleSheetCandidateData(Request $request)
 	{
