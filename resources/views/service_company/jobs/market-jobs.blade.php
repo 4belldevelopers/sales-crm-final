@@ -44,6 +44,49 @@
         outline-offset: 2px;
     }
 
+    /* ── Filter Drawer ── */
+    #fd-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        z-index: 1045;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+    }
+    #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
+
+    #apptrackerfilter {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 80% !important;
+        height: 100vh !important;
+        z-index: 1050 !important;
+        background: #fff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
+        transform: translateX(100%);
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    #apptrackerfilter.fd-open { transform: translateX(0); }
+
+    #apptrackerfilter .modal-header.flex-stack {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f3f8;
+        flex-shrink: 0;
+    }
+    #apptrackerfilter .apptrackerfilter_body_content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #apptrackerfilter .modal-body { flex: 1; overflow-y: auto; padding: 20px !important; }
+    #apptrackerfilter .modal-footer { flex-shrink: 0; padding: 14px 20px; border-top: 1px solid #f1f3f8; }
+
+    @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
+    @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
+
 </style>
 
 <link href="{{ asset('demo/css/find-market-jobs.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -243,7 +286,7 @@
                                 <option value="2">Hourly</option>
                             </select>
                         </div>
-                        <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
+                        <div class="more-filters-btn" onclick="fdOpen()" style="cursor:pointer;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
                             </svg>
@@ -263,13 +306,12 @@
             <div id="pagination"></div>
         </main>
 
-        <!--Start Popup-->
-        <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
+        <!--Start Filter Drawer-->
+        <div id="fd-overlay" onclick="fdClose()"></div>
+        <div id="apptrackerfilter" tabindex="-1">
                 <div class="modal-header flex-stack">
                     <h2>Filter</h2>
-                    <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal" id="apptrackerfilter_close">
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" onclick="fdClose()" id="apptrackerfilter_close">
                         <span class="svg-icon svg-icon-1">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
@@ -492,8 +534,8 @@
                     </div>
                     <div class="modal-footer flex-center">
                         <div class="div1">
-                            <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
-                            <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate"> 
+                            <button type="button" id="" class="btn btn-secondary me-3" onclick="fdClose()">Close</button>
+                            <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate">
                             <span class="indicator-label">Submit</span></button>
                         </div>
                     </div>
@@ -501,10 +543,8 @@
                     <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716"></script>
                     <script src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716" type="text/javascript"></script>
                 </div>
-                </div>
-            </div>
-        </div>	
-        <!--End Popup--> 
+        </div>
+        <!--End Filter Drawer-->
 
     </div>
     <!--end::Container-->
@@ -992,18 +1032,10 @@ var table;
      
 
 $(document).on('click', '#changetextupdate', function (){
-  //  tableLoad('load');
   fetchCandidates();
   $('.changetextupdate').text('Searching....!');
-  var $this = $('#apptrackerfilter');
-  $this.modal('hide');
-  setTimeout(() => {
-    $('#apptrackerfilter_close').click();
-    $('.changetextupdate').text('Submit')
-  
-  }, 500);
-
-  
+  fdClose();
+  setTimeout(() => { $('.changetextupdate').text('Submit'); }, 500);
 });
 
 
@@ -1341,6 +1373,19 @@ $(document).on('click', '.client-show-detail', function (){
                 }
             });
         });
+
+    /* ── Filter Drawer open/close ── */
+    function fdOpen() {
+        document.getElementById('apptrackerfilter').classList.add('fd-open');
+        document.getElementById('fd-overlay').classList.add('fd-open');
+        document.body.style.overflowY = 'hidden';
+    }
+    function fdClose() {
+        document.getElementById('apptrackerfilter').classList.remove('fd-open');
+        document.getElementById('fd-overlay').classList.remove('fd-open');
+        document.body.style.overflowY = '';
+    }
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
 </script>
 @endpush
 

@@ -15,6 +15,8 @@ use App\Http\Middleware\SuperAdmin;
 use App\Http\Middleware\Package;
 use App\Http\Middleware\EnsureOneDeviceLogin;
 use App\Http\Middleware\CustomPackage;
+use App\Exceptions\ResumeUploadException;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,5 +45,14 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (ResumeUploadException $e, Request $request) {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => $e->reason,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+            return back()->withErrors(['resume' => $e->getMessage()])->withInput();
+        });
     })->create();
