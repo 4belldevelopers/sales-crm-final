@@ -1094,12 +1094,12 @@ $(document).on('click', '#changetextupdate', function (){
 // 	   } 
 
 $(document).on('click', '.client-show-detail', function (){
-			$('#kt_activitiesClientjob_toggle').trigger('click');	
+			$('#kt_activitiesClientjob_toggle').trigger('click');
 			var id    		=	$(this).data('row-id');
       // var url   		=	"{{ route('service_company.jobs.clientviewmore',':id') }}";
 			var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1";
 			url     		=	url.replace(':id', id);
-			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
 			$.ajax({
 							type  		: 'GET',
 							url   		: url,
@@ -1107,10 +1107,29 @@ $(document).on('click', '.client-show-detail', function (){
 										 $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
 							},
 							success 	: function (response) {
-									$('#kt_activitiesclientjob_body').html(response.view);									
+									$('#kt_activitiesclientjob_body').html(response.view);
 							}
 					});
    		});
+
+	// Market-jobs "View Requirement" — same drawer but hides hiring-manager, action-buttons and pipeline sections
+	$(document).on('click', '.market-show-detail', function (){
+			$('#kt_activitiesClientjob_toggle').trigger('click');
+			var id      = $(this).data('row-id');
+			var url     = "{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1&hideMarketSections=1";
+			url         = url.replace(':id', id);
+			var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+			$.ajax({
+				type     : 'GET',
+				url      : url,
+				beforeSend: function() {
+					$('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+				},
+				success  : function (response) {
+					$('#kt_activitiesclientjob_body').html(response.view);
+				}
+			});
+	});
 
        $(document).on('click', '.client-hm-listing', function (){
    		$('#kt_activitiesHM_toggle').trigger('click');		

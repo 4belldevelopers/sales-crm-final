@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -196,6 +196,13 @@
             max-height: 100vh !important;
             overflow: hidden !important;
             z-index: 1200;
+            transform: translateX(110%);
+            transition: transform .3s ease;
+        }
+        /* Metronic adds .drawer-on when the filter is open — override the
+           initial off-screen transform so the drawer slides fully into view. */
+        #kt_similar_filter_drawer.simf-drawer.drawer-on {
+            transform: translateX(0) !important;
         }
         #simf_card.simf-card {
             display: flex !important;
@@ -1909,21 +1916,15 @@
                     </button>
                 </div>
 
+                <!-- Loader outside card so it shows even before card is revealed -->
+                <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                    <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                </div>
+
                 <!--begin::Card-->
-                <div class="card">
+                <div class="card" id="sc_table_card" style="display:none;">
                     <!--begin::Card body-->
                     <div class="card-body pt-3 px-5" style="position: relative;">
-                      <!-- Circle loader only (Bootstrap/Metronic's own spinner-border,
-                           same pattern used elsewhere in this app) — no text label.
-                           position:fixed + viewport-centered (not absolute/inset:0
-                           relative to .card-body): the card body's height grows with
-                           the candidate list, so centering "within the card" could
-                           place the spinner well below the visible viewport on a long
-                           list or when scrolled — this keeps it in the center of the
-                           actual screen regardless of scroll position or row count. -->
-                      <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
-                          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
-                      </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
                             <!--begin::Table head-->
                             <thead>
@@ -1967,7 +1968,7 @@
     <!--end::Content-->
 
     <div id="kt_activitiesBA_toggle"></div>
-    <div id="kt_activitiesBA" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
+    <div id="kt_activitiesBA" class="bg-body" style="display:none;" data-kt-drawer="true" data-kt-drawer-name="activities"
         data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
         data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_activitiesBA_toggle" data-kt-drawer-close="#kt_activitiesBA_close">
@@ -2602,7 +2603,8 @@
             var app_int_activity = $('[name="app_int_activity"]:checked').val();
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
 
-            $('.loadingMessage').css({ display: 'flex' });
+            $('.loadingMessage').css({ display: 'none' });
+            $('.page-loader').css('display', 'flex');
             // Return the jqXHR so callers that chain .then()/.catch() (e.g. the
             // pagination handler) don't crash on an undefined return value.
             return $.ajax({
@@ -2628,6 +2630,8 @@
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     // Guard every field: if the backend ever returns an error
                     // shape or a non-JSON page for a particular filter combo,
                     // keep the existing list instead of blanking it with
@@ -2653,6 +2657,8 @@
                     // Never leave the loading overlay stuck or the list blank on
                     // a failed request — surface what went wrong instead.
                     $('.loadingMessage').css({ display: 'none' });
+                     $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     console.error('similar_existing_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });

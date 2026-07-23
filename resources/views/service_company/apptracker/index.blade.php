@@ -926,10 +926,12 @@
                     </button>
                 </div>
 
-                <div class="card">
+                <div class="card" id="sc_table_card" style="display:none;">
                     <div class="card-body pt-3 px-5">
                         @if (in_array('view_job_applications', $userPermissions))
-                           <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                           <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                               <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                           </div>
                             <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
                                 <thead>
                                     <tr class="fw-bolder text-muted">
@@ -1971,8 +1973,8 @@
            
 
             var clientid = '1';
+            $('.loadingMessage').css({ display: 'flex' });
             if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
@@ -1989,10 +1991,11 @@
                   cus_search : $('#kt_tagify_2').val()
                 },
                 success: function(response) {
-                     countder();
-                     $('.loadingMessage').css({ display: 'none' });
+                    countder();
+                    $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     $('#candidatetList').html(response.html);
                     $('#pool_counter').html(response.total);
                      localStorage.setItem('currentPage', 1);
@@ -2055,8 +2058,13 @@
                     $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
                 }
 
-
-
+                },
+                error: function(xhr) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
+                    console.error('allDataAjax failed:', xhr.status, xhr.responseText);
                 }
             });
         }
