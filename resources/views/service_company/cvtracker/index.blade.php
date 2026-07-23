@@ -1414,12 +1414,12 @@
                     </div>
                     <span class="cvh-selection-count"><span id="cvh_selected_count">0</span> candidates selected</span>
                     <div class="cvh-selection-actions">
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" id="kt_mass_mail_drawer_toggle">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
                             </span> Send Email
                         </a>
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" id="kt_fwd_resume_drawer_toggle">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
                             </span> Forward Resume
@@ -1587,53 +1587,72 @@
     </div>
 
 
-    <!--begin::Fwd Resume - Modal-->
-    <div class="modal fade" id="fwd_resume" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Forward Resume</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
+    <!--begin::Fwd Resume - Drawer-->
+    <div id="kt_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="fwd-resume"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_fwd_resume_drawer_close">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+            <div class="card-header px-5 py-0 flex-shrink-0">
+                <div class="d-flex align-items-center py-1">
+                    <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
+                        id="kt_fwd_resume_drawer_close">
                         <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="currentColor">
+                                    <rect x="0" y="7" width="16" height="2" rx="1"/>
+                                    <rect opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1"/>
+                                </g>
                             </svg>
                         </span>
-                    </div>
+                    </button>
                 </div>
-                <div class="card-body position-relative px-0 py-0" id="application_fwd_resume_body_content"></div>
             </div>
+            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_fwd_resume_body_content"></div>
         </div>
     </div>
-    <!--end::Fwd Resume - Modal-->
+    <!--end::Fwd Resume - Drawer-->
 
-    <!--begin::Mass Mail - Modal-->
-    <div class="modal fade" id="mass_mail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Send Email</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
+    <!--begin::Mass Mail - Drawer-->
+    <div id="kt_mass_mail_drawer_toggle_hidden" style="display:none;"></div>
+    <div id="kt_mass_mail_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="mass-mail"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_mass_mail_drawer_toggle" data-kt-drawer-close="#kt_mass_mail_drawer_close">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+            <div class="card-header px-5 py-0 flex-shrink-0" id="kt_mass_mail_drawer_header">
+                <div class="d-flex align-items-center py-1">
+                    <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
+                </div>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
+                        id="kt_mass_mail_drawer_close">
                         <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
+                                    fill="currentColor">
+                                    <rect x="0" y="7" width="16" height="2" rx="1"/>
+                                    <rect opacity="0.5"
+                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
+                                        x="0" y="7" width="16" height="2" rx="1"/>
+                                </g>
                             </svg>
                         </span>
-                    </div>
+                    </button>
                 </div>
-                <div class="card-body position-relative px-0 py-0" id="application_mass_mail_body_content"></div>
             </div>
+            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_mass_mail_body_content"></div>
         </div>
     </div>
-    <!--end::Mass Mail - Modal-->
+    <!--end::Mass Mail - Drawer-->
 
 
 
@@ -1767,9 +1786,19 @@
             $(document).on('click', '.fwd_resume', function(e) {
 
                 e.preventDefault();
-                // localStorage.setItem('toggleOpen', 'true');
+
+                // Open the Forward Resume drawer
+                var drawerEl = document.getElementById('kt_fwd_resume_drawer');
+                if (drawerEl && typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) { drawer.show(); }
+                }
+
                 $('#application_mass_mail_body_content').html('');
-                $('#application_fwd_resume_body_content').html('');
+                $('#application_fwd_resume_body_content').html(
+                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                    '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+                );
                 var arr = [];
                 var jobIdArr = [];
                 $('.chk_list_item:checked').each(function() {
@@ -1778,8 +1807,6 @@
                     arr.push($(this).val());
                     jobIdArr.push(jobId);
                 });
-
-                console.log(jobIdArr);
 
                 var id = jobIdArr[0];
                 var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
@@ -1811,25 +1838,33 @@
             $(document).on('click', '.mass_mail', function(e) {
 
                 e.preventDefault();
-                $('#application_mass_mail_body_content').html('');
+
+                // Open the Send Email drawer
+                var drawerEl = document.getElementById('kt_mass_mail_drawer');
+                if (drawerEl && typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) { drawer.show(); }
+                }
+
+                // Show loading state inside drawer
+                $('#application_mass_mail_body_content').html(
+                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                    '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+                );
                 $('#application_fwd_resume_body_content').html('');
+
                 var arr = [];
                 var jobIdArr = [];
                 $('.chk_list_item:checked').each(function() {
-
                     var jobId = $(this).attr('data-jobId');
                     arr.push($(this).val());
                     jobIdArr.push(jobId);
                 });
 
-                console.log(jobIdArr);
-
                 var id = jobIdArr[0];
                 var url = "{{ route('service_company.cvtracker.mass_mail', ':id') }}";
                 url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                 var token = "{{ csrf_token() }}";
-
 
                 $.ajax({
                     type: 'POST',

@@ -49,172 +49,185 @@ initSample();
 
 </script>
 
-<div class="main_container" id="main_container" >
-@php  
-$template_body 	=	'';
-
-
-
-
-$to_email	=	'';
+<div class="main_container" id="main_container">
+@php
+$template_body = '';
+$to_email = '';
 if($to_email_from_count > 0){
-		$to_email = implode(', ', $to_email_from_data);		
+    $to_email = implode(', ', $to_email_from_data);
 }
-
-
-$cc_email	=	'';
+$cc_email = '';
 if($cc_email_count > 0){
-		$cc_email = implode(', ', $cc_email_data);		
+    $cc_email = implode(', ', $cc_email_data);
 }
-
-
-@endphp 
+@endphp
 
 <style>
-
-
-@media  only screen and (min-width: 900px) and (max-width: 2560px){
+@media only screen and (min-width: 900px) and (max-width: 2560px){
   .table td, .table th, .table tr{width: max-content!important;}
   .table > :not(caption) > * > *{padding: 0rem;}
-  td:nth-child(n+2),
-  th:nth-child(n+2){width: revert!important;}
+  td:nth-child(n+2), th:nth-child(n+2){width: revert!important;}
 }
+@media only screen and (min-width: 1024px) and (max-width: 1440px){#kt_activitiesIntTeamsss{width: 750px;}}
+@media only screen and (min-width: 1440px) and (max-width: 2560px){#kt_activitiesIntTeamsss{width: 750;}}
 
-
-
-
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesIntTeamsss{width: 750px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesIntTeamsss{width: 750;}
-}
-</style> 
+/* mm-* form design — matches mass_mail style */
+.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; }
+.mm-form-body { flex: 1; overflow-y: auto; }
+.mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
+.mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
+.mm-label-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mm-label-icon svg { width: 14px; height: 14px; }
+.mm-ic-blue   { background: #EFF6FF; color: #2563EB; }
+.mm-ic-green  { background: #DCFCE7; color: #16A34A; }
+.mm-ic-purple { background: #F5F3FF; color: #7C3AED; }
+.mm-ic-teal   { background: #F0FDF4; color: #0D9488; }
+.mm-ic-orange { background: #FFF7ED; color: #EA580C; }
+.mm-req { color: #EF4444; margin-left: 1px; }
+.mm-field-col { flex: 1; min-width: 0; position: relative; }
+.mm-input { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB; outline: none; transition: border-color 0.15s; }
+.mm-input:focus { border-color: #93C5FD; background: #fff; }
+.mm-input[readonly] { color: #6B7280; cursor: default; background: #F3F4F6; }
+.mm-hint { font-size: 11.5px; color: #9CA3AF; margin-top: 5px; line-height: 1.4; }
+.mm-field-col .tagify { border: 1px solid #E5E7EB !important; border-radius: 8px !important; background: #F9FAFB !important; padding: 4px 10px !important; font-family: 'Poppins', sans-serif !important; min-height: 40px !important; }
+.mm-field-col .tagify:focus-within { border-color: #93C5FD !important; background: #fff !important; }
+.mm-field-col .tagify--readonly { background: #F3F4F6 !important; }
+.mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+.mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+.mm-editor-wrap { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+.mm-row-body { align-items: flex-start; }
+.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
+.mm-add-email-btn:hover { color: #1d4ed8; }
+.mm-input-with-btn { padding-right: 110px; }
+.mm-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; gap: 10px; flex-wrap: wrap; }
+.mm-footer-left { display: flex; align-items: center; gap: 8px; }
+.mm-footer-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.mm-btn-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; color: #374151; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
+.mm-btn-cancel:hover { background: #F3F4F6; }
+.mm-btn-send { padding: 8px 20px; border-radius: 8px; border: none; background: #2563EB; color: #fff; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
+.mm-btn-send:hover { background: #1d4ed8; }
+</style>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
-
+<div class="mm-wrap">
 <form id="form1">
-  <!--begin::Modal body-->
-  <div class="modal-body scroll-y py-0 px-lg-7">
-    <div data-kt-element="options">
-      <div class="py-5">
+  <div class="mm-form-body">
 
-        <!--begin::Template-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
-          <div class="col-lg-10 col-xl-10">
-            <select name="template" id="template" class="form-select form-select-solid" aria-label="Select template">
-              <option value="">Select Email Template...</option>
-               
-					@if(!empty($templateData)){ 
-						@foreach($templateData as $tdata )
-							<option value="{{ $tdata->id }}">{{ $tdata->display_name }}</option>
-						@endforeach
-					@endif				
-			  
-            </select>
-            <span class="form-text text-muted">Please select email template</span> </div>
-        </div>
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">From</label>
-          <div class="col-lg-10 col-xl-10">
-            <input class="form-control form-control-solid" name="from_email" id="from_email"  value="{{ $userdata->email }}" readonly="" data-role="from_email" >
-            <span class="form-text text-muted">Please enter email</span> </div>
-        </div>
-        <!--end::From email-->
-        <!--begin::To email-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">To</label>
-          <div class="col-lg-10 col-xl-10" style="position: relative;">
-            <input class="form-control form-control-solid" name="to_email" id="to_email"  value="" >
-            <span class="form-text text-muted">Please enter email</span> 
-             <div class="" style="position: absolute; right: 13px; top: 4px;">
-                <a href="javascript:;" class="btn btn-primary btn-sm to_email_panel" data-bs-toggle="modal" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
-             </div>
-            </div>
-           
-        </div>
-        <!--end::To email-->
-        <!--begin::CC email-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">CC</label>
-          <div class="col-lg-10 col-xl-10" style="position: relative;">
-
-			  <!--<select class="form-control select2" id="kt_select2_2" data-placeholder="Select a client..." name="cc_email[]" multiple="multiple">-->
-					<!--<optgroup label="select a client">-->
-					
-					<!--	@if(!empty($cc_email_assignData)){ -->
-					<!--		@foreach($cc_email_assignData as $tdata )-->
-					<!--			<option value="{{ $tdata->email }}">{{ $tdata->name }} - ({{ $tdata->email }})</option>-->
-					<!--		@endforeach-->
-					<!--	@endif				-->
-					<!--</optgroup>-->
-			  <!--</select>-->
-
-            <input class="form-control form-control-solid" name="cc_email_panel" id="cc_email_panel"  value="">
-            <span class="form-text text-muted">Please enter email</span>
-            
-            <div class="" style="position: absolute; right: 13px; top: 4px;">
-            <a href="javascript:;" class="btn btn-primary btn-sm cc_email_panel" data-bs-toggle="modal" data-bs-target="#kt_modal_create_project">Add E-mail ID</a>
-           </div>
-           
-            </div>
-            
-        </div>
-        <!--end::CC email-->
-        <!--begin::Subject-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
-          <div class="col-lg-10 col-xl-10">
-            <input class="form-control form-control-solid" name="subject" id="subject" placeholder="Enter subject" value="" >
-            <span class="form-text text-muted">Please enter subject</span> </div>
-        </div>
-        <!--end::Subject-->
-        <!--begin::Body-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
-          <div class="col-lg-10 col-xl-10">
-            <textarea  id="editor1" name="editor1" row="10" >
-				{{ @$template_body }}
-			</textarea>
-            <span class="form-text text-muted"> Please enter email template body content </span> </div>
-        </div>
-        <!--begin::Files-->
-        <div class="form-group row mb-4">
-          <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5"></label>
-          <div class="col-xl-10 col-lg-10 col-form-label text-dark fw-bolder fs-5">
-            <!--begin::Dropzone-->
-            <div class="dropzone dropzone-queue mb-2" id="kt_dropzonejs_example_2">
-              <!--begin::Controls-->
-              <div class="dropzone-panel mb-lg-0 mb-2">
-                <input class="" name="attached_cv" id="attached_cv" type="hidden" value="1" />
-              </div>
-              <!--end::Controls-->
-            </div>
-            <!--end::Dropzone-->
-          </div>
-        </div>
-        <!--end::Files-->
+    {{-- From --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        </span>
+        From Email ID
+      </div>
+      <div class="mm-field-col">
+        <input class="mm-input" name="from_email" id="from_email" value="{{ $userdata->email }}" readonly data-role="from_email">
+        <div class="mm-hint">This will be the email sender address</div>
       </div>
     </div>
-  </div>
-  <!--begin::Modal body-->
-  <!--begin::Modal footer-->
-  <div class="modal-footer flex-center">
-    <div class="div1">
-      <!--begin::Cancel-->
-      <button type="close" id="" class="btn btn-light-dark me-3" data-dismiss="modal">Cancel</button>
-      <!--begin::Send-->
-      <button type="button" class="btn btn-light-primary" name="btnSubmit" id="btnSubmit" value="btnSubmit"> <span class="indicator-label">Send</span> <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span> </span> </button>
-      <!--end::Send-->
+
+    {{-- To --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        To Email ID <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div style="position:relative;">
+          <input class="mm-input mm-input-with-btn" name="to_email" id="to_email" value="" placeholder="Enter recipient email">
+          <a href="javascript:;" class="mm-add-email-btn to_email_panel">+ Add Email</a>
+        </div>
+        <div class="mm-hint">Please enter recipient email</div>
+      </div>
     </div>
-    <!--<span style="position: absolute;right: 2%;"></span>-->
-    <div class="div2 position-absolute end-0 me-5 d-none"> </div>
+
+    {{-- CC --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        CC Email ID
+      </div>
+      <div class="mm-field-col">
+        <div style="position:relative;">
+          <input class="mm-input mm-input-with-btn" name="cc_email_panel" id="cc_email_panel" value="" placeholder="Enter CC email">
+          <a href="javascript:;" class="mm-add-email-btn cc_email_panel">+ Add Email</a>
+        </div>
+        <div class="mm-hint">Add email addresses separated by commas</div>
+      </div>
+    </div>
+
+    {{-- Template --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+        Template
+      </div>
+      <div class="mm-field-col">
+        <select name="template" id="template" class="mm-select">
+          <option value="">Select Email Template...</option>
+          @if(!empty($templateData))
+            @foreach($templateData as $tdata)
+              <option value="{{ $tdata->id }}">{{ $tdata->display_name }}</option>
+            @endforeach
+          @endif
+        </select>
+        <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
+      </div>
+    </div>
+
+    {{-- Subject --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </span>
+        Subject <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <input class="mm-input" name="subject" id="subject" placeholder="Enter email subject" value="">
+      </div>
+    </div>
+
+    {{-- Body --}}
+    <div class="mm-row mm-row-body">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        Email Body
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-editor-wrap">
+          <textarea id="editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    {{-- Hidden --}}
+    <input name="attached_cv" id="attached_cv" type="hidden" value="1" />
+
   </div>
-  <!--end::Modal footer-->
-  <!--</form>-->
+
+  <div class="mm-footer">
+    <div class="mm-footer-left">
+      <button type="button" class="mm-btn-cancel" onclick="(function(){var d=document.getElementById('kt_fwd_resume_drawer')||document.getElementById('kt_fwd_resume_drawer_aptk');if(d&&typeof KTDrawer!=='undefined'){var dr=KTDrawer.getInstance(d);if(dr)dr.hide();}})()">Cancel</button>
+    </div>
+    <div class="mm-footer-right">
+      <button type="button" class="mm-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit">
+        <span class="indicator-label">Send</span>
+        <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+      </button>
+    </div>
   </div>
 </form>
+</div>
 
 
 

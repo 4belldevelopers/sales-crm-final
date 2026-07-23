@@ -286,24 +286,32 @@ class HomeController extends Controller
     {
         $userid = (int) $request->userid;
         $instance = $this->getInstance($userid);
-        // dd($instance);
+
+        if (!$instance) {
+            return response()->json(['qr' => null, 'error' => 'Instance not found'], 200);
+        }
 
         $response = Http::withHeaders([
             'apikey'=>config('services.evolution.global_key')
         ])->get(
             $this->baseUrl()."/instance/connect/".$instance->instance_name
         );
-        // dd($response->json());
-        return response()->json([
-            'qr' => $response->json()['base64']
-        ]);
 
+        $data = $response->json();
+
+        return response()->json([
+            'qr' => $data['base64'] ?? null
+        ]);
     }
     // 3️⃣ Check Status
     public function status(Request $request)
     {
-         $userid = (int) $request->userid;
+        $userid = (int) $request->userid;
         $instance = $this->getInstance($userid);
+
+        if (!$instance) {
+            return response()->json(['instance' => null, 'error' => 'Instance not found'], 200);
+        }
 
         $response = Http::withHeaders([
             'apikey'=>config('services.evolution.global_key')

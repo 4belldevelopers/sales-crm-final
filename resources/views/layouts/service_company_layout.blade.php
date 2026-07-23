@@ -1450,7 +1450,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
 
 
-        $.post('/whatsapp/create',
+        $.post('{{ url('/whatsapp/create') }}',
         {_token:'{{ csrf_token() }}',
         userid: userid
         },function(){
@@ -1487,7 +1487,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
     function loadQR(userid){
       
-        $.get('/whatsapp/qr',{ userid: userid }, function(res){
+        $.get('{{ url('/whatsapp/qr') }}',{ userid: userid }, function(res){
             if(res.qr){
                audioUnlocked
                 $('#qrBox').html(
@@ -1502,7 +1502,7 @@ $(document).on('click', '.deleteBtn', function (e){
     // checkStatus();
     function checkStatus(userid){
         setInterval(function(){
-            $.get('/whatsapp/status',{ userid: userid },function(res){
+            $.get('{{ url('/whatsapp/status') }}',{ userid: userid },function(res){
                 if(res.instance && res.instance.state){
                     $('#statusBox').html(res.instance.state);
                     if(res.instance.state === "open"){
