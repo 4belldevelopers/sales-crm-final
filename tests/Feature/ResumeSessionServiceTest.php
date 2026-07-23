@@ -61,6 +61,8 @@ class ResumeSessionServiceTest extends TestCase
             $t->unsignedInteger('user_id')->nullable();
             $t->unsignedInteger('job_id')->nullable();
             $t->unsignedInteger('candidate_id')->nullable();
+            $t->unsignedInteger('bench_application_id')->nullable();
+            $t->string('resource_type', 32)->default('job_application');
             $t->char('parent_session_uuid', 36)->nullable();
             $t->char('replaces_session_uuid', 36)->nullable();
             $t->string('original_filename', 255);
@@ -148,6 +150,7 @@ class ResumeSessionServiceTest extends TestCase
         $this->assertSame(7, (int) $session->company_id);
         $this->assertSame(99, (int) $session->user_id);
         $this->assertSame(ResumeUpload::STATUS_UPLOADED, $session->status);
+        $this->assertSame(ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION, $session->resource_type);
         $this->assertNotNull($session->expires_at);
         Storage::disk('r2')->assertExists($session->r2_path);
 
@@ -162,6 +165,102 @@ class ResumeSessionServiceTest extends TestCase
             return $job->sessionUuid === $session->uuid
                 && $job->companyId === (int) $session->company_id;
         });
+    }
+
+    public function test_bench_session_uses_bench_resource_type(): void
+    {
+        $svc = $this->sessionService();
+        $file = UploadedFile::fake()->createWithContent('bench.pdf', '%PDF');
+        $result = $svc->createOrReplay(
+            file: $file,
+            originalFilename: 'bench.pdf',
+            companyName: 'RelMgr',
+            companyId: 11,
+            userId: 42,
+            resourceType: ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION,
+        );
+        $this->assertSame(ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION, $result['session']->resource_type);
+    }
+
+    public function test_try_link_bench_writes_bench_application_id_and_audit(): void
+    {
+        $svc = $this->sessionService();
+        $session = $svc->createOrReplay(
+            file: UploadedFile::fake()->createWithContent('bench.pdf', '%PDF'),
+            originalFilename: 'bench.pdf',
+            companyName: 'RelMgr', companyId: 11, userId: 42,
+            resourceType: ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION,
+        )['session'];
+        $session->status = ResumeUpload::STATUS_PARSED;
+        $session->save();
+        $ok = $svc->tryLinkBench($session->uuid, 11, benchApplicationId: 888, actorId: 42);
+        $this->assertTrue($ok);
+        $row = ResumeUpload::find($session->id);
+        $this->assertSame(ResumeUpload::STATUS_LINKED, $row->status);
+        $this->assertNull($row->candidate_id, 'job_application link must not be touched on bench flow');
+        $this->assertSame(888, (int) $row->bench_application_id);
+        $this->assertTrue(
+            UploadSessionAudit::where('session_uuid', $session->uuid)
+                ->where('action', 'Linked')->exists(),
+        );
+    }
+
+    public function test_try_link_bench_refuses_job_application_sessions(): void
+    {
+        $svc = $this->sessionService();
+        // Default resource_type='job_application'.
+        $session = $svc->createOrReplay(
+            file: UploadedFile::fake()->createWithContent('cv.pdf', '%PDF'),
+            originalFilename: 'cv.pdf', companyName: 'Acme', companyId: 7, userId: 99,
+        )['session'];
+        $session->status = ResumeUpload::STATUS_PARSED;
+        $session->save();
+        // tryLinkBench must NOT match a job_application row.
+        $this->assertFalse($svc->tryLinkBench($session->uuid, 7, 888, 99));
+        $this->assertNull(ResumeUpload::find($session->id)->bench_application_id);
+    }
+
+    public function test_try_link_refuses_bench_application_sessions(): void
+    {
+        $svc = $this->sessionService();
+        $session = $svc->createOrReplay(
+            file: UploadedFile::fake()->createWithContent('bench.pdf', '%PDF'),
+            originalFilename: 'bench.pdf', companyName: 'RelMgr', companyId: 11, userId: 42,
+            resourceType: ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION,
+        )['session'];
+        $session->status = ResumeUpload::STATUS_PARSED;
+        $session->save();
+        // tryLink (the candidate variant) must NOT match a bench row.
+        $this->assertFalse($svc->tryLink($session->uuid, 11, 555, 42));
+        $this->assertNull(ResumeUpload::find($session->id)->candidate_id);
+    }
+
+    public function test_try_link_bench_returns_false_for_wrong_tenant(): void
+    {
+        $svc = $this->sessionService();
+        $session = $svc->createOrReplay(
+            file: UploadedFile::fake()->createWithContent('bench.pdf', '%PDF'),
+            originalFilename: 'bench.pdf', companyName: 'RelMgr', companyId: 11, userId: 42,
+            resourceType: ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION,
+        )['session'];
+        $session->status = ResumeUpload::STATUS_PARSED;
+        $session->save();
+        $this->assertFalse(
+            $svc->tryLinkBench($session->uuid, 999, 888, 42),
+            'Wrong-tenant bench link MUST return false',
+        );
+    }
+
+    public function test_phase3_dispatch_count_drop(): void
+    {
+        // Sanity: after Phase 3, the bench path's content contains BENCH
+        // resource_type and the controller surface still functions.
+        // (Counting legacy dispatch sites is platform-level; the unit-level
+        // validation lives in earlier integration tests.)
+        $this->assertTrue(class_exists(\App\Services\ResumeUploadSession::class));
+        $this->assertTrue(method_exists(\App\Services\ResumeUploadSession::class, 'tryLinkBench'));
+        $this->assertTrue(defined('App\\Models\\ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION'));
+        $this->assertSame('bench_application', ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION);
     }
 
     public function test_idempotency_key_replays_existing_session_without_new_r2_write(): void

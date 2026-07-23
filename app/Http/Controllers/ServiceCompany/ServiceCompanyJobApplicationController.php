@@ -10436,7 +10436,23 @@ protected $elasticService;
 			$tempPath = session('resume_temp_path');
 			$full_name = session('resume_original_name');
 			
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+			$postedSessionUuid = (string) (session('resume_session_uuid') ?? request()->input('upload_session_uuid', ''));
+			if ($postedSessionUuid !== '' && \App\Models\ResumeUpload::query()->where('uuid', $postedSessionUuid)->where('company_id', $company_id)->exists()) {
+				/** @var \App\Services\ResumeUploadSession $sessionService */
+				$sessionService = app(\App\Services\ResumeUploadSession::class);
+				$sessionService->tryLink(
+					uuid: $postedSessionUuid,
+					companyId: (int) $company_id,
+					candidateId: (int) $jobApplicationGet->id,
+					actorId: (int) (auth()->id() ?? 0),
+					requestId: request()->header('X-Request-Id'),
+				);
+				DB::table('job_applications')
+					->where('id', $jobApplicationGet->id)
+					->update(['current_resume_session_uuid' => $postedSessionUuid]);
+				session()->forget('resume_session_uuid');
+			} else {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 			DB::table('job_applications')
 							->where('id', $jobApplicationGet->id)
@@ -10444,7 +10460,8 @@ protected $elasticService;
 							session()->forget([
 								'resume_temp_path',
 								'resume_original_name'
-							]);	
+							]);
+			}
 
 		}
 

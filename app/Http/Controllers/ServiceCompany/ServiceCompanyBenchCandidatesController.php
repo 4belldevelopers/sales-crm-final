@@ -1256,13 +1256,43 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 			        $tempPath = session('resume_temp_path');
 					$full_name = session('resume_original_name');
-					
-					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-					DB::table('job_applications')
-							->where('id', $benchApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
+
+					// Phase 3: bench manager flow uses resource_type="bench_application".
+					// The session is created earlier (controllers/.uploadresume-style path)
+					// and the bench_application_id is set here via tryLinkBench when the
+					// session uuid is present in the session. Falls back to the legacy
+					// UploadResumeToTestRTwo dispatch for clients that haven't migrated
+					// their frontend yet.
+					$postedSessionUuid = (string) (session('resume_session_uuid') ?? '');
+					if ($postedSessionUuid !== '') {
+						/** @var \App\Services\ResumeUploadSession $sessionService */
+						$sessionService = app(\App\Services\ResumeUploadSession::class);
+						$linked = $sessionService->tryLinkBench(
+							uuid: $postedSessionUuid,
+							companyId: (int) auth()->user()->company_id,
+							benchApplicationId: (int) $benchApplication->id,
+							actorId: (int) (auth()->id() ?? 0),
+							requestId: request()->header('X-Request-Id'),
+						);
+						if ($linked) {
+							// Bench row gets the canonical URL via the session's r2_url.
+							$r2Url = DB::table('resume_uploads')->where('uuid', $postedSessionUuid)->value('r2_url');
+							DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update([
+									'current_resume_session_uuid' => $postedSessionUuid,
+									'resume' => $r2Url,
+								]);
+						}
+						session()->forget('resume_session_uuid');
+					} else {
+						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+						DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update(['resume' =>$fileUrl]);
+					}
+						session()->forget([
 								'resume_temp_path',
 								'resume_original_name'
 							]);
@@ -1282,12 +1312,38 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 					$tempPath = session('resume_temp_path');
 					$full_name = session('resume_original_name');
-					
-					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-					DB::table('job_applications')
-							->where('id', $benchApplication->id)
-							->update(['resume' =>$fileUrl]);
+
+					// Same Phase 3 pattern as the EDIT branch above: prefer
+					// tryLinkBench if a session uuid is present in the session,
+					// otherwise fall back to legacy UploadResumeToTestRTwo dispatch.
+					$postedSessionUuid = (string) (session('resume_session_uuid') ?? '');
+					if ($postedSessionUuid !== '') {
+						/** @var \App\Services\ResumeUploadSession $sessionService */
+						$sessionService = app(\App\Services\ResumeUploadSession::class);
+						$linked = $sessionService->tryLinkBench(
+							uuid: $postedSessionUuid,
+							companyId: (int) auth()->user()->company_id,
+							benchApplicationId: (int) $benchApplication->id,
+							actorId: (int) (auth()->id() ?? 0),
+							requestId: request()->header('X-Request-Id'),
+						);
+						if ($linked) {
+							$r2Url = DB::table('resume_uploads')->where('uuid', $postedSessionUuid)->value('r2_url');
+							DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update([
+									'current_resume_session_uuid' => $postedSessionUuid,
+									'resume' => $r2Url,
+								]);
+						}
+						session()->forget('resume_session_uuid');
+					} else {
+						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+						DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update(['resume' =>$fileUrl]);
+					}
 							session()->forget([
 								'resume_temp_path',
 								'resume_original_name'

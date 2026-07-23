@@ -2160,8 +2160,10 @@ class HomeController extends Controller
                         DB::table('job_assign')->insert($values);
                     }
                     
-                    if ($request->hasFile('resume')) {
+                    if ($request->hasFile('resume') || session('resume_url')) {
 
+                    // Phase 3: tryLink the active session to this candidate
+                    // row, replacing the legacy UploadResumeToTestRTwo dispatch.
                     $companyNameR2 = DB::table('companies')
                         ->where('id',$company_id)
                         ->value('company_name');   // change column if needed
@@ -2174,17 +2176,39 @@ class HomeController extends Controller
 
                         $tempPath = session('resume_temp_path');
                         $full_name = session('resume_original_name');
-                        // dd($tempPath, $full_name,$jobApplication->id);
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-                        $fileUrl = "https://file.jero.works/".$full_name;
-                        DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);	
-                            
+                        $postedSessionUuid = (string) (session('resume_session_uuid') ?? '');
+                        if ($postedSessionUuid !== '') {
+                            /** @var \App\Services\ResumeUploadSession $sessionService */
+                            $sessionService = app(\App\Services\ResumeUploadSession::class);
+                            $linked = $sessionService->tryLink(
+                                uuid: $postedSessionUuid,
+                                companyId: (int) $company_id,
+                                candidateId: (int) $jobApplication->id,
+                                actorId: (int) (auth()->id() ?? 0),
+                                requestId: $request->header('X-Request-Id'),
+                            );
+                            if ($linked) {
+                                DB::table('job_applications')
+                                    ->where('id', $jobApplication->id)
+                                    ->update(['current_resume_session_uuid' => $postedSessionUuid]);
+                            }
+                            session()->forget('resume_session_uuid');
+                        } elseif ($tempPath !== null && $tempPath !== '') {
+                            // Legacy fallback: file in temp/ from the old
+                            // HomeController::uploadresume() path. Phase 3 keeps
+                            // the dispatch path alive for clients that didn't
+                            // route through the new session API yet.
+                            UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+                            $fileUrl = "https://file.jero.works/".$full_name;
+                            DB::table('job_applications')
+                                ->where('id', $jobApplication->id)
+                                ->update(['resume' =>$fileUrl]);
+                        }
+                        session()->forget([
+                            'resume_temp_path',
+                            'resume_original_name'
+                        ]);
+
                     }
 
                     if(empty($request->resumeCheck)){
@@ -2285,35 +2309,76 @@ class HomeController extends Controller
             'file' => 'required|file|max:6048', // Max size 1MB
         ]);
 
-		
-
-        // Store the file
+        // Phase 3: route through ResumeUploadSession so a ResumeUpload row
+        // is created in lock-step with the R2 file. The Idempotency-Key
+        // header from the request is honored; without it the request creates
+        // a fresh session.
+        //
+        // This endpoint is hit by ALL personas from the public job board to
+        // recruiter / bench — that's why the home controller owns this URL.
+        // Sessions created here are resource_type=job_application (the public
+        // apply path); the SC bench flow sets resource_type on its own
+        // service-privately created sessions.
         if ($request->hasFile('file')) {
-
             $file = $request->file('file');
+            $idempotencyKey = $request->header('Idempotency-Key');
+            try {
+                /** @var \App\Services\ResumeUploadSession $sessionService */
+                $sessionService = app(\App\Services\ResumeUploadSession::class);
+                $companyId = (int) (auth()->user()->company_id ?? 0);
+                if ($companyId === 0) {
+                    // Public applicant without a company context — synthesize a
+                    // public job-board tenant id so the audit graph isn't
+                    // orphan, anchored under company_id=0 with metadata
+                    // explaining the public-applicant origin.
+                    $companyId = 0;
+                }
+                $companyName = (string) (auth()->user()->company->company_name ?? 'public');
+                $userId = (int) (auth()->id() ?? 0);
+                $resultBag = $sessionService->createOrReplay(
+                    file: $file,
+                    originalFilename: $file->getClientOriginalName(),
+                    companyName: $companyName,
+                    companyId: $companyId,
+                    userId: $userId,
+                    idempotencyKey: $idempotencyKey,
+                    jobId: $request->input('job_id'),
+                    actorIp: $request->ip(),
+                    userAgent: $request->userAgent(),
+                    requestId: $request->header('X-Request-Id'),
+                    resourceType: \App\Models\ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION,
+                );
+                $session = $resultBag['session'];
+            } catch (\App\Exceptions\ResumeUploadException $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => $e->reason,
+                ], 422);
+            } catch (\RuntimeException $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
 
-            $filename = uniqid('JERO_').'.'.$file->getClientOriginalExtension();
-
-            $tempPath = $file->storeAs('temp', $filename,'r2'); // STORAGE/app/temp
-            // ⭐ GET PUBLIC URL FROM R2
-            $tempUrl = Storage::disk('r2')->url($tempPath);
-            
-            $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
-            $full_name = uniqid('JERO_');
-            $uniqueName = GeneralMethod::getUniqueCvName($full_name,$extension);
-            // ✅ STORE IN SESSION
-            // dd($uniqueName);
             session([
-                'resume_temp_path' => $tempPath,
-                'resume_original_name' => $filename,
+                'resume_url' => $session->r2_url,
+                'resume_original_name' => $file->getClientOriginalName(),
+                'resume_session_uuid' => $session->uuid,
             ]);
 
-            // Return a response
+            // Returns the legacy shape so existing JS forms still work.
+            // Adds session_uuid + replayed as Phase 3 opt-in fields.
             return response()->json([
                 'success' => true,
                 'message' => 'File uploaded successfully',
-                'file_path' => $tempPath,
+                'file_path' => $session->r2_path,
+                'url' => $session->r2_url,
                 'original_name' => $file->getClientOriginalName(),
+                'session_uuid' => $session->uuid,
+                'session_status' => $session->status,
+                'replayed' => (bool) $resultBag['replayed'],
             ]);
         }
 
@@ -2322,8 +2387,6 @@ class HomeController extends Controller
             'success' => false,
             'message' => 'File upload failed',
         ], 400);
-    
-		
 
 	}
 
