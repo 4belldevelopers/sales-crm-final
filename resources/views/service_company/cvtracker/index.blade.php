@@ -1440,7 +1440,7 @@
                     </button>
                 </div>
 
-                <div class="card">
+                <div class="card" id="cvh_table_card" style="display:none;">
                     <div class="card-body pt-3 px-5" style="position: relative">
                         @if (in_array('view_job_applications', $userPermissions))
                            {{-- Circle loader only (Bootstrap/Metronic's own spinner-border) — no text
@@ -2394,6 +2394,7 @@
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    $('#cvh_table_card').show();
                     $('#total_record').html(response.total);
                     $('#candidatetList').html(response.html);
                     localStorage.setItem('currentPage', 1);
@@ -2406,6 +2407,7 @@
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    $('#cvh_table_card').show();
                     console.error('allcandidates failed:', xhr.status, xhr.responseText);
                 }
             });
