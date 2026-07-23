@@ -155,6 +155,16 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
 						Route::post('job-applications/update/{id}', [ServiceCompanyJobApplicationController::class,'update'])->name('job-applications.update');
 						Route::post('uploadresume', [ServiceCompanyJobApplicationController::class,'uploadresume'])->name('job-applications.uploadresume');
+						// Phase 2: Resume Upload Session JSON API.
+						// Tenant isolation enforced per-request via auth()->user()->company_id
+						// in the controller; routes are scoped here so the auth middleware
+						// is shared with the rest of the service_company resource.
+						Route::prefix('api/resume-sessions')->name('resume-sessions.')->group(function () {
+							Route::post('/', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'store'])->name('store');
+							Route::get('active', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'active'])->name('active');
+							Route::get('{uuid}', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'show'])->name('show');
+							Route::post('{uuid}/cancel', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'cancel'])->name('cancel');
+						});
 						Route::post('unset-file', [ServiceCompanyJobApplicationController::class,'unsetFile'])->name('file.unset');
 						Route::post('skill-experience', [ServiceCompanyJobApplicationController::class,'skillExperienceUpdate'])->name('job-applications.skillExperienceUpdate');
 						Route::post('job-question-update', [ServiceCompanyJobApplicationController::class,'JobQuestionUpdate'])->name('job-applications.JobQuestionUpdate');
