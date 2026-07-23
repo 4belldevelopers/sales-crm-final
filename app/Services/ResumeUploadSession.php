@@ -60,6 +60,7 @@ class ResumeUploadSession
         ?string $userAgent = null,
         ?string $requestId = null,
         int $expiryHours = self::DEFAULT_EXPIRY_HOURS,
+        string $resourceType = ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION,
     ): array {
         if ($idempotencyKey !== null && $idempotencyKey !== '') {
             $existing = ResumeUpload::query()
@@ -103,7 +104,7 @@ class ResumeUploadSession
 
         $session = DB::transaction(function () use (
             $uuid, $companyId, $userId, $jobId, $idempotencyKey,
-            $uploadResult, $originalFilename, $file, $now, $expiryHours,
+            $uploadResult, $originalFilename, $file, $now, $expiryHours, $resourceType,
         ) {
             $storedFilename = basename($uploadResult['path']);
             $row = ResumeUpload::create([
@@ -111,6 +112,7 @@ class ResumeUploadSession
                 'company_id' => $companyId,
                 'user_id' => $userId,
                 'job_id' => $jobId,
+                'resource_type' => $resourceType,
                 'original_filename' => $originalFilename,
                 'stored_filename' => $storedFilename,
                 'r2_path' => $uploadResult['path'],
@@ -131,7 +133,7 @@ class ResumeUploadSession
                 companyId: (int) $row->company_id,
                 action: 'Created',
                 actorId: $userId,
-                metadata: ['r2_path' => $row->r2_path],
+                metadata: ['r2_path' => $row->r2_path, 'resource_type' => $resourceType],
             );
             UploadSessionAudit::record(
                 sessionUuid: $row->uuid,
@@ -185,6 +187,7 @@ class ResumeUploadSession
         $updated = DB::table('resume_uploads')
             ->where('uuid', $uuid)
             ->where('company_id', $companyId)
+            ->where('resource_type', ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION)
             ->whereIn('status', [
                 ResumeUpload::STATUS_PARSED,
                 ResumeUpload::STATUS_MANUAL_REVIEW_REQUIRED,
@@ -208,7 +211,62 @@ class ResumeUploadSession
             action: 'Linked',
             actorId: $actorId,
             requestId: $requestId,
-            metadata: ['candidate_id' => $candidateId],
+            metadata: ['candidate_id' => $candidateId, 'resource_type' => 'job_application'],
+        );
+
+        return true;
+    }
+
+    /**
+     * Same Link semantics as tryLink() but the session was created with
+     * resource_type='bench_application', so we write into bench_application_id
+     * instead of candidate_id. Used by the bench manager flow.
+     */
+    public function tryLinkBench(
+        string $uuid,
+        int $companyId,
+        int $benchApplicationId,
+        ?int $actorId = null,
+        ?string $requestId = null,
+    ): bool {
+        $row = ResumeUpload::query()
+            ->where('uuid', $uuid)
+            ->where('company_id', $companyId)
+            ->first();
+        if ($row === null) {
+            return false;
+        }
+
+        $now = Carbon::now();
+
+        $updated = DB::table('resume_uploads')
+            ->where('uuid', $uuid)
+            ->where('company_id', $companyId)
+            ->where('resource_type', ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION)
+            ->whereIn('status', [
+                ResumeUpload::STATUS_PARSED,
+                ResumeUpload::STATUS_MANUAL_REVIEW_REQUIRED,
+                ResumeUpload::STATUS_ABORTED_BY_SUBMIT,
+            ])
+            ->whereNull('bench_application_id')
+            ->update([
+                'status' => ResumeUpload::STATUS_LINKED,
+                'bench_application_id' => $benchApplicationId,
+                'linked_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+        if ($updated === 0) {
+            return false;
+        }
+
+        UploadSessionAudit::record(
+            sessionUuid: $uuid,
+            companyId: $companyId,
+            action: 'Linked',
+            actorId: $actorId,
+            requestId: $requestId,
+            metadata: ['bench_application_id' => $benchApplicationId, 'resource_type' => 'bench_application'],
         );
 
         return true;

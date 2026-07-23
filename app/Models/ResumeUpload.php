@@ -67,6 +67,9 @@ class ResumeUpload extends Model
     public const STATUS_EXPIRED = 'Expired';
     public const STATUS_REDACTED_FOR_GDPR = 'RedactedForGDPR';
 
+    public const RESOURCE_TYPE_JOB_APPLICATION = 'job_application';
+    public const RESOURCE_TYPE_BENCH_APPLICATION = 'bench_application';
+
     /**
      * Allowed transitions. Keys are current state, values are arrays of legal
      * next states. Anything outside this map is rejected by transitionTo() so
