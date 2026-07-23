@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -37,6 +37,40 @@
             height: 82px;
             position: relative;
         }
+
+        /* â”€â”€ Right-side filter drawer â”€â”€ */
+        #fd-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            z-index: 1045;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
+
+        #apptrackerfilter {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 80% !important;
+            height: 100vh !important;
+            z-index: 1050 !important;
+            background: #fff !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        #apptrackerfilter.fd-open { transform: translateX(0); }
+        #apptrackerfilter .modal-header.flex-stack { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #f1f3f8; flex-shrink:0; }
+        #apptrackerfilter .apptrackerfilter_body_content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        #apptrackerfilter .modal-body { flex:1; overflow-y:auto; padding:20px !important; }
+        #apptrackerfilter .modal-footer { flex-shrink:0; padding:14px 20px; border-top:1px solid #f1f3f8; }
+        @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
+        @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
     </style>
     <link href="{{ asset('demo/css/find-agency.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -99,16 +133,15 @@
             <!--begin::Container-->
             <div id="kt_content_container" class="container-fluid px-3">
                 
-                <!--Start Popup-->
-                <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
+                <!--Start Filter Drawer-->
+                <div id="fd-overlay" onclick="fdClose()"></div>
+                <div id="apptrackerfilter" tabindex="-1">
                             <div class="modal-header flex-stack">
                                 <div>
                                     <h1>Find Trusted Hiring Agencies</h1>
                                     <p>Discover verified recruitment partners based on your hiring requirements.</p>
                                 </div>
-                                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="apptrackerfilter_close">
+                                <div class="btn btn-sm btn-icon btn-active-light-danger close" onclick="fdClose()" id="apptrackerfilter_close">
                                     <span class="svg-icon svg-icon-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                             <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"></rect>
@@ -145,7 +178,7 @@
                                                     id="kt_tagify_users" />
                                         </div>
 
-                                        <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;·&nbsp; Press <span>Backspace</span> to remove last</p>
+                                        <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;Â·&nbsp; Press <span>Backspace</span> to remove last</p>
 
                                         <div class="tags-row" id="popularTagsRow">
                                             <span class="label">Popular searches:</span>
@@ -199,9 +232,9 @@
                                         </select>
                                         <select aria-label="Experience" id="experience">
                                         <option value="">Experience</option>
-                                        <option>0–2 years</option>
-                                        <option>3–5 years</option>
-                                        <option>5–10 years</option>
+                                        <option>0â€“2 years</option>
+                                        <option>3â€“5 years</option>
+                                        <option>5â€“10 years</option>
                                         <option>10+ years</option>
                                         </select>
                                         <select aria-label="Location" id="country">
@@ -238,15 +271,13 @@
                                     </div>
                                     <div class="modal-footer flex-center">
                                     <div class="div1">
-                                        <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
+                                        <button type="button" id="" class="btn btn-secondary me-3" onclick="fdClose()">Close</button>
                                          <button class="btn btn-primary changetextupdate" id="changetextupdate" onclick="filtersdataget()"><i class="ti ti-search" aria-hidden="true"></i>Find Agencies</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
                 </div>
-                <!--End Popup-->
+                <!--End Filter Drawer-->
 
                 <!-- PAGE CONTENT -->
                 <main class="page-content">
@@ -295,7 +326,7 @@
                                     </div>
                                     <div class="stat-info">
                                     <div class="stat-num">92</div>
-                                    <div class="stat-label">Highly Rated (4★+)</div>
+                                    <div class="stat-label">Highly Rated (4â˜…+)</div>
                                     </div>
                                 </div>
                                 <div class="stat-card with-badge">
@@ -322,7 +353,7 @@
                             <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
                             <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
                             <!-- Stars -->
-                            <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
+                            <text x="64" y="76" font-size="8" fill="#F59E0B">â˜…â˜…â˜…â˜…â˜…</text>
 
                             <!-- Female figure -->
                             <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
@@ -378,7 +409,7 @@
                             <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
                             <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
                             <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                            <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
+                            <text x="171" y="34" font-size="9" fill="#F59E0B">â˜…â˜…â˜…â˜…â˜…</text>
                             <!-- shield check floating -->
                             <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
                             <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -406,7 +437,7 @@
                                 <option value="1">Hiring Type : Contract Hiring</option>
                             </select>
                         </div>
-                        <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
+                        <div class="more-filters-btn" onclick="fdOpen()" style="cursor:pointer;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
                             </svg>
@@ -539,7 +570,7 @@
                     return `
                 <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
                     <div>
-                        <span class="star ${isChecked}">🟌</span>
+                        <span class="star ${isChecked}">ðŸŸŒ</span>
                         <span class="tagify__tag-text">${value}</span>
                         <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
                     </div>
@@ -737,7 +768,7 @@
 
         });
 
-        /* ── Add from popular row ── */
+        /* â”€â”€ Add from popular row â”€â”€ */
     function addFromPopular(el) {
             let value = el.getAttribute('data-value');
             /*
@@ -1111,7 +1142,7 @@ function removeFilter(el, type, value = '') {
 
     });
 
-    /* ── Hiring type toggle ── */
+    /* â”€â”€ Hiring type toggle â”€â”€ */
     function selectHiringType(type) {
         var cardFull     = document.getElementById('card-full');
         var cardContract = document.getElementById('card-contract');
@@ -1147,7 +1178,7 @@ function removeFilter(el, type, value = '') {
         });
     });
 
-    /* ── Find button ── */
+    /* â”€â”€ Find button â”€â”€ */
     function handleFind() {
         if (!tags.length) {
         box.style.borderColor = '#E53E3E';
@@ -1163,7 +1194,7 @@ function removeFilter(el, type, value = '') {
         alert('Searching for: ' + tags.join(', '));
     }
 
-    /* ── Helpers ── */
+    /* â”€â”€ Helpers â”€â”€ */
     function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escJs(s)   { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
     function escRe(s)   { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
@@ -1196,21 +1227,11 @@ function removeFilter(el, type, value = '') {
 
 function filtersdataget() {
             $('.changetextupdate').text('Searching....!');
+            fdClose();
             setTimeout(() => {
-                // tableLoad('load');
                 fetchClientConpanyAgency();
-            }, 1000);
-            var $this = $('#apptrackerfilter');
-            // $this.fadeOut(2000, function() {
-            $this.modal('hide');
-            // });
-            setTimeout(() => {
-                $('#apptrackerfilter_close').click();
-                $('.changetextupdate').text('Submit')
-            }, 2000);
-
-
-
+                $('.changetextupdate').text('Find Agencies');
+            }, 500);
 
 
         }
@@ -1349,5 +1370,18 @@ function filtersdataget() {
         }
         
 
+    </script>
+    <script>
+        function fdOpen() {
+            document.getElementById('apptrackerfilter').classList.add('fd-open');
+            document.getElementById('fd-overlay').classList.add('fd-open');
+            document.body.style.overflowY = 'hidden';
+        }
+        function fdClose() {
+            document.getElementById('apptrackerfilter').classList.remove('fd-open');
+            document.getElementById('fd-overlay').classList.remove('fd-open');
+            document.body.style.overflowY = '';
+        }
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
     </script>
 @endpush
