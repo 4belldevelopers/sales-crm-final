@@ -1,0 +1,57 @@
+name: check-prod-creds
+
+# Runs on every push and pull_request. Rejects the run if any tracked file
+# (or the diff vs the base branch) contains a production credential
+# pattern. Replaces the local pre-push hook which GitHub Desktop and
+# VS Code's embedded libgit2 do not fire.
+#
+# Pattern catalog mirrors scripts/check-prod-creds.sh. Add more in both
+# places if you onboard a new secret.
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan tracked files for prod-credential patterns
+        env:
+          BASE_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          fail=0
+
+          echo "==> Scanning tracked files for production credential patterns..."
+
+          # Patterns — keep in sync with scripts/check-prod-creds.sh
+          PATTERNS=(
+            '72\.62\.229\.143'        # production RDS host
+            'Hanuman@123'             # production DB password
+            'hire\.jero\.works/.env'  # production .env reference
+            'PROD_DB_PASSWORD'
+          )
+
+          for pattern in "${PATTERNS[@]}"; do
+            # grep -nE across the entire tracked tree.
+            if matches=$(git grep -nE "${pattern}" -- ':!docs/SECURITY.md' ':!scripts/check-prod-creds.sh' || true); then
+              if [ -n "${matches}" ]; then
+                echo "❌ BLOCKED: pattern '${pattern}' found:"
+                echo "${matches}"
+                fail=1
+              fi
+            fi
+          done
+
+          if [ "${fail}" -ne 0 ]; then
+            echo "::error::Production credential pattern detected. See docs/SECURITY.md."
+            exit 1
+          fi
+          echo "✅ No production credentials detected."
