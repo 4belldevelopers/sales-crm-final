@@ -2141,7 +2141,7 @@ var cities = @json($cities);
                         // formData.append('_method', 'PUT');					
 												$.ajax({
                           url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
-                            beforeSend: function () { setResumeProgress('saving'); setResumeProgress('creating'); },								   
+
 														   type 			: 'POST',
 														   data 			: formData,
 														   processData		: false,  	// tell jQuery not to process the data
@@ -2165,9 +2165,6 @@ var cities = @json($cities);
                                 }
 
 
-                                submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire({
                                 // Hardened success gate (mirror of ADD branch): require candidate_id + url.
                                 if (!response || response.status !== 'success' || !response.candidate_id || !response.url) {
                                     submitButton.removeAttribute('data-kt-indicator');
@@ -2177,23 +2174,20 @@ var cities = @json($cities);
                                     return;
                                 }
                                 submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire({
-                                text				: "You have successfully updated",
-                                icon				: "success",
-                                buttonsStyling		: false,
-                                confirmButtonText	: "Ok, got it!",
-                                customClass			: {
-                                              confirmButton: "btn btn-primary"
-                                            }
-                                    }).then(function (result) {
-                                        if (result.isConfirmed) {
-                                            form.querySelector('[name="email1"]').value 		 = "";
-                                            form.querySelector('[name="password1"]').value 	 = "";
-                                        }
-                                    });
-
-																				window.location = response.url;
+                                submitButton.disabled = false;
+                                Swal.fire({
+                                    text: 'You have successfully updated',
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, got it!',
+                                    customClass: { confirmButton: 'btn btn-primary' }
+                                }).then(function (result) {
+                                    if (result.isConfirmed) {
+                                        form.querySelector('[name="email1"]').value = '';
+                                        form.querySelector('[name="password1"]').value = '';
+                                    }
+                                    window.location = response.url;
+                                });
 																			},
 															error			: function (response) {
 																									//handleFails(response);
