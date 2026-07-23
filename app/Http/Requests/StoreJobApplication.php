@@ -35,7 +35,11 @@ class StoreJobApplication extends CoreRequest
             'email' => 'email|required',
             'phone' => 'required',
             'job_id' => 'required|exists:jobs,id',
-            'resume_temp_path' => 'nullable|string|max:512',
+            // The new one-stage upload sends a final URL, not a temp path.
+            'resume_url' => 'nullable|string|max:1024',
+            // Tolerate legacy clients still emitting the temp-path field.
+            // The controller falls back to headCheck() if only this is present.
+            'resume_temp_path' => 'nullable|string|max:1024',
             // When the sectionVisibility gate does not add 'resume' for this job,
             // we still bound the multipart fallback file so it never exceeds 5 MB.
             'resume' => 'nullable|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf|max:5120',

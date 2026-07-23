@@ -116,47 +116,40 @@ protected $elasticService;
 	public function uploadresume(Request $request){
 
         $request->validate([
-            'file' => 'required|file|max:6048', // Max size 1MB
+            'file' => 'required|file|max:6048', // Max size 6MB
         ]);
-       
+
 		$file = $request->file('file');
+		$resumeService = app(ResumeUploadService::class);
 
-		$filename = uniqid('JERO_').'.'.$file->getClientOriginalExtension();
+		// One-step upload: write directly to the FINAL R2 path
+		// (Companies/{co_slug}_{co_id}/Resumes/{Y}/{m}/JERO_xxx.pdf).
+		// The submit handler just verifies the file still exists and
+		// commits the row — no copy step on submit.
+		$companyName = (string) ($this->user->company->company_name ?? 'unknown');
+		$companyId = (string) ($this->user->company_id ?? 'unknown');
 
-		$tempPath = $file->storeAs('temp', $filename,'r2'); // STORAGE/app/temp
-		// ⭐ GET PUBLIC URL FROM R2
-		$tempUrl = Storage::disk('r2')->url($tempPath);
-		
-		$extension = pathinfo($tempPath, PATHINFO_EXTENSION);
-		$full_name = uniqid('JERO_');
-		$uniqueName = GeneralMethod::getUniqueCvName($full_name,$extension);
-		// ✅ STORE IN SESSION
-		// dd($uniqueName);
+		$result = $resumeService->uploadDirect(
+			$file,
+			$file->getClientOriginalName(),
+			$companyName,
+			$companyId,
+			now()
+		);
+
 		session([
-			'resume_temp_path' => $tempPath,
-			'resume_original_name' => $filename,
+			'resume_url' => $result['url'],
+			'resume_original_name' => $file->getClientOriginalName(),
 		]);
 
-        // Store the file
-        if ($request->hasFile('file')) {
-            
-            // $filePath = $file->store('uploads', 'public'); // Save to 'storage/app/public/uploads'
-
-            // Return a response
-            return response()->json([
-                'success' => true,
-                'message' => 'File uploaded successfully',
-                'file_path' => $tempPath,
-                'original_name' => $file->getClientOriginalName(),
-            ]);
-        }
-        // Handle failure
         return response()->json([
-            'success' => false,
-            'message' => 'File upload failed',
-        ], 400);
-    
-	}
+            'success' => true,
+            'message' => 'File uploaded successfully',
+            'file_path' => $result['path'],
+            'url' => $result['url'],
+            'original_name' => $file->getClientOriginalName(),
+        ]);
+    }
 	public function unsetFile(Request $request)
     {
         $filePath = $request->input('file_path');
@@ -1877,37 +1870,50 @@ protected $elasticService;
 		$jobApplication->interview_mode_six = $request->interview_mode_six;
 
 		// ----- Resume finalization (must succeed before the candidate row is saved) -----
-		// Resolves the resume source from either the AJAX pre-upload hidden field
-		// (set by /service_company/uploadresume) or the multipart <input type="file" name="resume">
-		// fallback. Synchronously copies into R2 and verifies the destination exists with non-zero
-		// size. On failure throws ResumeUploadException so this candidate is never created without
-		// a verified resume behind it.
+		// Resolves the resume source: prefer the URL the AJAX pre-upload
+		// already durably stored (Companies/{co}/Resumes/{y}/{m}/JERO_xxx.pdf).
+		// If neither URL nor multipart file was supplied, $jobApplication->resume
+		// stays null and the section-level gate in StoreJobApplication decides
+		// whether that's an error.
+		//
+		// No COPY step on submit: just one headCheck (~50-100 ms) on R2.
+		// Multipart fallback STILL writes via the service synchronously —
+		// ~600 ms — because the user skipped the AJAX pre-upload on this path.
 		$resumeService = app(ResumeUploadService::class);
-		$resumeTempPath = null;
-		$resumeOriginalName = null;
-		$resumeTempFallback = null;
 
-		$resumeTempPath = (string) $request->input('resume_temp_path', '');
-		if ($resumeTempPath !== '') {
-			$resumeOriginalName = (string) (session('resume_original_name') ?? basename($resumeTempPath));
-		} elseif ($request->hasFile('resume')) {
-			$incoming = $request->file('resume');
-			$resumeTempFallback = 'temp/' . uniqid('JERO_', true) . '.' . $incoming->getClientOriginalExtension();
-			Storage::disk('r2')->put($resumeTempFallback, file_get_contents($incoming->getRealPath()));
-			$resumeTempPath = $resumeTempFallback;
-			$resumeOriginalName = uniqid('JERO_') . '.' . $incoming->getClientOriginalExtension();
+		$resumeUrl = (string) $request->input('resume_url', '');
+		if ($resumeUrl === '' && (string) $request->input('resume_temp_path', '') !== '') {
+			// Legacy clients / older flows still emit resume_temp_path; treat
+			// its value as a candidate URL for headCheck (faster than asking
+			// the user to redo). Prefer resume_url when both are present.
+			$resumeUrl = (string) $request->input('resume_temp_path');
 		}
 
-		$resumeUrl = null;
-		if ($resumeTempPath !== '') {
-			$resumeUrl = $resumeService->finalizeFromTemp(
-				$resumeTempPath,
-				$resumeOriginalName,
-				(string) ($this->user->company->company_name ?? 'unknown'),
-				(string) ($this->user->company_id ?? 'unknown'),
+		if ($resumeUrl !== '') {
+			// Derive the R2 object key from the public URL. Storage::exists()
+			// takes the path, not the absolute URL.
+			$r2Path = $resumeUrl;
+			if (str_starts_with($r2Path, 'https://file.jero.works/')) {
+				$r2Path = substr($r2Path, strlen('https://file.jero.works/'));
+			}
+			if (! $resumeService->headCheck($r2Path)) {
+				throw ResumeUploadException::submitMissing($resumeUrl);
+			}
+			$jobApplication->resume = $resumeUrl;
+		} elseif ($request->hasFile('resume')) {
+			// Multipart fallback: synchronous write to final R2 path. Same
+			// service method as the AJAX pre-upload.
+			$incoming = $request->file('resume');
+			$companyName = (string) ($this->user->company->company_name ?? 'unknown');
+			$companyId = (string) ($this->user->company_id ?? 'unknown');
+			$result = $resumeService->uploadDirect(
+				$incoming,
+				$incoming->getClientOriginalName(),
+				$companyName,
+				$companyId,
 				now()
 			);
-			$jobApplication->resume = $resumeUrl;
+			$jobApplication->resume = $result['url'];
 		}
 		// ----- End resume block -----
 
@@ -2317,12 +2323,9 @@ protected $elasticService;
 		// is guaranteed durable (handled synchronously above). Side-effects stay async.
 		ElasticCandidateIndex::dispatch($jobApplication->id)->onConnection('emails');
 
-		// Best-effort cleanup of the temp upload. Never throws — a leftover temp file
-		// is harmless and will be overwritten on next upload.
-		if ($resumeTempPath !== '' && $resumeTempPath !== null) {
-			$resumeService->cleanTemp($resumeTempPath);
-		}
-		session()->forget(['resume_temp_path', 'resume_original_name']);
+		// Clear the session-stashed resume_url now that the row is persisted.
+		// No temp files were created in the one-stage flow, so no cleanup needed.
+		session()->forget(['resume_url', 'resume_original_name', 'resume_temp_path']);
 
 		if (!empty($request->job_id)) {
 			$redirectUrl = url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all');
