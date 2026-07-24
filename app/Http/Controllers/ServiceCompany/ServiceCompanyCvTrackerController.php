@@ -1791,6 +1791,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'q' => $searchQuery,
 			'user_id' => $this->user->id,
 			'custom_search' => $custom_search,
+			'candidateSkills' => $request->candidateSkills ?? '',
 		];
 
 		$versionKey = 'allcopyjobslist_version_user_'.$this->user->id;
@@ -2030,8 +2031,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 
 		$userPermissions = $this->userPermissions;
+		$candidateSkills = array_filter(array_map('strtolower', array_map('trim', explode(',', $request->candidateSkills ?? ''))));
 		$responseData = [
-			'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data','userPermissions','company_id'))->render(),
+			'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data','userPermissions','company_id','candidateSkills'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];

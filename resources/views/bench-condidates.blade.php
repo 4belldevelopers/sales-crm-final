@@ -742,6 +742,11 @@
                         <td style="text-align:center;">
                             @php
                                 $html = '';
+                                $candSkillList = [];
+                                foreach ($skillExperiences as $se) { $candSkillList[] = strtolower(trim($se->skill_key)); }
+                                if (empty($candSkillList)) { foreach ($skillArr as $sv) { $sv = strtolower(trim($sv)); if ($sv) $candSkillList[] = $sv; } }
+                                $candSkillStr = implode(',', $candSkillList);
+
                                 if ($row->status == 2) {
                                     if (($row->countforadd ?? 0) >= 3) {
                                         $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
@@ -750,7 +755,8 @@
                                             <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar"
                                                data-row-source_from_type="2"
                                                data-row-id="' . @$row->id . '"
-                                               data-row-jobid="">Add to Job</a>
+                                               data-row-jobid=""
+                                               data-skills="' . htmlspecialchars($candSkillStr) . '">Add to Job</a>
                                         </div>';
                                     }
                                 } else {
@@ -908,7 +914,9 @@
 }
 
 
+        window._candidateSkills = '';
         $(document).on('click', '.openSideBar', function() {
+            window._candidateSkills = $(this).data('skills') || '';
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.talent-add', ':id') }}";
@@ -917,7 +925,6 @@
             var token = "{{ csrf_token() }}";
             var idid = $(this).data('row-id');
             var currentUrl = window.location.href;
-            // alert(idid);
             var arr = [idid];
            
             $.ajax({
