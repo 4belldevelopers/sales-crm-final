@@ -16,34 +16,25 @@
         @include('sections.service_company.clientHero', ['activeTab' => 'direct'])
 
         <!-- FILTER BAR -->
-        <div class="filter-bar">
-            <div class="search-input-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" class="search-input" name="inputJobSearch" value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
-                <div id="loader_search" class="loader_search hidden_search" style="position:absolute; right:12px; top:50%; transform:translateY(-50%);"></div>
+        <div class="cl-filter">
+            <div class="cl-search-wrap" style="flex:1;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="cl-search-input" name="inputJobSearch" value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);"></div>
             </div>
-
-            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdataget()">
-                    <option value="Show All" selected="">Sort</option>
-                    <option value="1">Newest to Oldest (Upload Date)</option>
-                    <option value="2">Oldest to Newest (Upload Date)</option>
-                </select>
-            </div>
-
-            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="country" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdataget()">
-                    <option value="" selected="selected">Location</option>
-                    @if (!empty($countries))
-                        @foreach ($countries as $country)
-                            <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                        @endforeach
-                    @endif
-                </select>
-            </div>
-
+            <select class="cl-select" id="sortingfilter" onchange="filtersdataget()" style="min-width:160px;">
+                <option value="Show All" selected>Sort</option>
+                <option value="1">Newest to Oldest (Upload Date)</option>
+                <option value="2">Oldest to Newest (Upload Date)</option>
+            </select>
+            <select class="cl-select" id="country" onchange="filtersdataget()" style="min-width:160px;">
+                <option value="" selected>Location</option>
+                @if (!empty($countries))
+                    @foreach ($countries as $country)
+                        <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                    @endforeach
+                @endif
+            </select>
         </div>
 
         <!-- Table -->

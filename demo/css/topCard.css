@@ -279,7 +279,7 @@
     display: flex;
     align-items: stretch;
     background: #fff;
-    border: 1.5px solid #E879F9;
+    border: 1.5px solid #E5E7EB;
     border-radius: 12px;
     padding: 6px 8px;
     margin-bottom: 14px;
@@ -303,18 +303,17 @@
 }
 .jh-tab:hover { color: #111827; text-decoration: none; }
 .jh-tab-active {
-    color: #2563EB;
+    background: #F1F5F9;
+    color: #1e40af;
     font-weight: 600;
+    border-radius: 8px;
 }
 .jh-tab-active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 12px;
-    right: 12px;
-    height: 2px;
-    background: #2563EB;
-    border-radius: 2px;
+    display: none;
+}
+.jh-tab:hover:not(.jh-tab-active) {
+    background: #F8FAFC;
+    color: #374151;
 }
 
 /* Tab icons */
