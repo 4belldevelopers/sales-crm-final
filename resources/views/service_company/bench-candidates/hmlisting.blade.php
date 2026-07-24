@@ -1,113 +1,307 @@
 <style>
-.form-check.form-check-custom .form-check-label{ margin-left: 2.55rem; }
+/* ── RM Drawer — scoped styles ── */
+#kt_activities_body, #kt_activities_scroll,
+#kt_activities_body * { font-family: 'Poppins', sans-serif !important; }
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* Scroll area: white */
+#kt_activities_scroll { background: #fff !important; }
 
-#kt_activities_body, #kt_activities_scroll, .card-custom, .table, .btn,
-.form-control, .form-select, .badge, .symbol-label, .card-title, .card-label,
-.assigned-card, .alert, .input-group-text, .empty-state-text, .section-title {
-    font-family: 'Poppins', sans-serif;
+/* ── Section wrapper ── */
+.rm-section {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin: 0 16px 14px 16px;
+    overflow: hidden;
+}
+.rm-section-head {
+    padding: 18px 20px 10px 20px;
+}
+.rm-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #181c32;
+    margin: 0 0 3px 0;
+}
+.rm-section-sub {
+    font-size: 11.5px;
+    color: #9ca3af;
+}
+.rm-section-body {
+    padding: 4px 16px 16px 16px;
 }
 
-.card-custom { border: 0; box-shadow: 0 0 20px rgba(76,87,125,0.02); border-radius: 12px; }
+/* ── Selected cards grid ── */
+.rm-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+.rm-card {
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    background: #fff;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: box-shadow 0.15s;
+}
+.rm-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
 
-/* Selected (assigned) member cards */
-.assigned-card { border: 1px solid #eff2f5; border-radius: 12px; background: #fff; transition: all .2s ease; padding: 18px 20px; }
-.assigned-card:hover { box-shadow: 0 0 15px rgba(76,87,125,0.04); border-color: #e4e6ef; }
-.assigned-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-.assigned-card.h-100 { display: flex; flex-direction: column; }
-.assigned-card.h-100 .ac-actions { margin-top: auto; padding-top: 6px; }
-.ac-actions { gap: 10px !important; }
+/* Avatar */
+.rm-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
 
-.hm-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
-
-/* Contact icon */
-.btn-icon-circle { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; padding: 0; border: 1px solid #eaecf0; background: #f8fafc; color: #667085; font-size: 12px; }
-.btn-icon-circle:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-
-/* Search */
-.search-container .input-group-text { background-color: #f5f8fa; border: 1px solid #f5f8fa; color: #a1a5b7; border-right: 0; font-size: 13px; }
-.search-container .form-control { background-color: #f5f8fa; border: 1px solid #f5f8fa; font-size: 13px; padding: 0.55rem 1rem; }
-.search-container .form-control:focus { background-color: #eef3f7; border-color: #eef3f7; }
-
-/* Status dot */
-.status-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
-.status-dot::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
-.status-dot.active::before { background-color: #50cd89; }
-.status-dot.active { color: #50cd89; }
-.status-dot.inactive::before { background-color: #f1416c; }
-.status-dot.inactive { color: #f1416c; }
-
-.section-title { font-weight: 600; color: #181c32; margin-bottom: 2px; font-size: 15px; }
-.section-subtitle { color: #a1a5b7; display: block; font-size: 12px; }
-
-.empty-state-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.4rem 1.25rem; text-align: center; }
-.empty-state-icon { width: 50px; height: 50px; border-radius: 50%; background-color: #f3f6f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: .65rem; color: #a1a5b7; font-size: 20px; }
-.empty-state-text .empty-title { font-size: 14px; font-weight: 600; color: #181c32; margin-bottom: .15rem; }
-.empty-state-text .empty-subtitle { color: #a1a5b7; margin-bottom: .85rem; font-size: 12px; }
-
-.info-banner { background-color: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px 16px; font-size: 12px; display: flex; align-items: center; gap: 10px; }
-.info-banner i { font-size: 16px; flex-shrink: 0; color: #2563eb; }
-
-.card-header-compact { padding: 1.25rem 1.5rem .5rem 1.5rem; border-bottom: 0; background: transparent; }
-.card-body-compact { padding: 0 1.5rem 1.5rem 1.5rem; }
-
-#Iteam_Table_rm { margin-bottom: 0; }
-#Iteam_Table_rm thead th { background-color: #f3f6f9; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; padding: 10px 12px; border-bottom: 1px solid #e4e6ef; color: #a1a5b7; font-size: 11px; white-space: nowrap; }
-#Iteam_Table_rm tbody tr { border-bottom: 1px dashed #e4e6ef; }
-#Iteam_Table_rm tbody tr:last-child { border-bottom: 0; }
-#Iteam_Table_rm tbody td { padding: 12px; font-size: 13px; vertical-align: middle; }
-.highlight { background-color: #fff8dd !important; transition: background-color .15s ease; }
-.w-100px { width: 100px !important; text-align: center; justify-content: center; }
-
-/* Pills */
-.pill { display: inline-flex; align-items: center; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 20px; white-space: nowrap; line-height: 1; }
-.pill-assigned { background: #e8fff3; color: #17b26a; }
-.pill-assigned .la { color: #17b26a; }
+/* Assigned badge */
+.rm-badge-assigned {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    white-space: nowrap;
+}
 
 /* Kebab */
-.ac-kebab-wrap { position: relative; }
-.ac-kebab-btn { width: 26px; height: 26px; border-radius: 6px; border: 0; background: transparent; color: #98a2b3; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; transition: all .15s ease; }
-.ac-kebab-btn:hover { background: #f2f4f7; color: #475569; }
-.ac-kebab-menu { position: absolute; right: 0; top: 30px; z-index: 30; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; box-shadow: 0 8px 24px rgba(16,24,40,.12); padding: 6px; min-width: 152px; display: none; }
-.ac-kebab-menu.show { display: block; }
-.ac-kebab-menu a { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 12px; color: #475569 !important; text-decoration: none; }
-.ac-kebab-menu a:hover { background: #f8fafc; color: #2563eb !important; }
-.ac-kebab-menu a .la { font-size: 14px; width: 16px; text-align: center; }
+.rm-kebab-btn {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    background: transparent;
+    border-radius: 6px;
+    color: #9ca3af;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all .15s;
+}
+.rm-kebab-btn:hover { background: #f3f4f6; color: #374151; }
+.rm-kebab-wrap { position: relative; }
+.rm-kebab-menu {
+    position: absolute;
+    right: 0;
+    top: 30px;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(16,24,40,.12);
+    padding: 6px;
+    min-width: 140px;
+    display: none;
+}
+.rm-kebab-menu.show { display: block; }
+.rm-kebab-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #374151 !important;
+    text-decoration: none;
+}
+.rm-kebab-menu a:hover { background: #f8fafc; color: #2563eb !important; }
 
-.ac-actions .btn { flex: 1 1 0; padding: 7px 10px !important; font-size: 11px !important; }
+/* Workload mini stats */
+.rm-wl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rm-wl-item {}
+.rm-wl-top { display: flex; align-items: center; gap: 5px; }
+.rm-wl-num { font-size: 13px; font-weight: 700; color: #181c32; }
+.rm-wl-lbl { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+.ic-blue { color: #3b82f6; font-size: 13px; }
+.ic-purple { color: #7c3aed; font-size: 13px; }
+.ic-green { color: #10b981; font-size: 13px; }
 
-/* Workload mini-stats (Active Jobs / Captain Jobs / TRM Talents) */
-.wl-grid { display: grid; grid-template-columns: repeat(3, auto); gap: 14px; }
-.wl-item { min-width: 0; }
-.wl-top { display: flex; align-items: center; gap: 5px; }
-.wl-ic { font-size: 13px; flex-shrink: 0; }
-.wl-ic-blue { color: #3e97ff; }
-.wl-ic-purple { color: #7239ea; }
-.wl-ic-green { color: #17c653; }
-.wl-num { font-weight: 700; color: #181c32; font-size: 13px; line-height: 1; }
-.wl-lbl { color: #a1a5b7; font-size: 10px; margin-top: 3px; white-space: nowrap; }
-.wl-grid.wl-grid-card { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+/* Remove button in card */
+.rm-btn-remove {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #fca5a5;
+    color: #ef4444;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.rm-btn-remove:hover { background: #fef2f2; border-color: #ef4444; }
 
-/* Royal-blue palette scoped to this drawer */
-#kt_activities_body .btn-light.btn-active-light-primary, #kt_activities_body .btn-light-primary { border: 1px solid #d6e4ff !important; color: #2563eb !important; background-color: #fff !important; font-weight: 500; }
-#kt_activities_body .btn-light.btn-active-light-primary:hover, #kt_activities_body .btn-light-primary:hover { background-color: #eef4ff !important; border-color: #2563eb !important; color: #1d4ed8 !important; }
-#kt_activities_body .btn-light-danger { border: 1px solid #fbd5de !important; color: #ef4444 !important; background-color: #fff !important; font-weight: 500; }
-#kt_activities_body .btn-light-danger:hover { background-color: #fff1f4 !important; border-color: #ef4444 !important; }
+/* ── Info banner ── */
+.rm-info-banner {
+    margin: 0 16px 14px 16px;
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: #1e40af;
+}
+.rm-info-banner i { font-size: 16px; color: #3b82f6; flex-shrink: 0; }
 
-@media (max-width: 575.98px){ .assigned-grid { grid-template-columns: 1fr; } .ac-actions { flex-wrap: wrap; } }
+/* ── Search ── */
+.rm-search-wrap {
+    position: relative;
+    margin-bottom: 14px;
+}
+.rm-search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 15px;
+    pointer-events: none;
+}
+.rm-search-input {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 9px 12px 9px 34px;
+    font-size: 12.5px;
+    color: #374151;
+    background: #f9fafb;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color .15s, background .15s;
+}
+.rm-search-input:focus { border-color: #93c5fd; background: #fff; }
+.rm-search-input::placeholder { color: #9ca3af; }
+
+/* ── Table ── */
+#Iteam_Table_rm { width: 100%; border-collapse: collapse; }
+#Iteam_Table_rm thead th {
+    background: #f8fafc;
+    color: #9ca3af;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e9ecef;
+    white-space: nowrap;
+}
+#Iteam_Table_rm tbody tr { border-bottom: 1px dashed #e9ecef; }
+#Iteam_Table_rm tbody tr:last-child { border-bottom: 0; }
+#Iteam_Table_rm tbody td { padding: 12px; font-size: 12.5px; vertical-align: middle; }
+
+/* Status dot */
+.rm-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
+.rm-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rm-status.active { color: #059669; }
+.rm-status.active .rm-status-dot { background: #34d399; }
+.rm-status.inactive { color: #ef4444; }
+.rm-status.inactive .rm-status-dot { background: #f87171; }
+
+/* Table action buttons */
+.rm-tbl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    border-radius: 7px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid;
+    transition: background .15s;
+}
+.rm-tbl-btn.add {
+    background: #fff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+.rm-tbl-btn.add:hover { background: #eff6ff; border-color: #93c5fd; }
+.rm-tbl-btn.remove {
+    background: #fff;
+    border-color: #fca5a5;
+    color: #ef4444;
+}
+.rm-tbl-btn.remove:hover { background: #fef2f2; border-color: #ef4444; }
+
+/* Contact icon */
+.rm-contact-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+}
+.rm-contact-btn:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+
+/* Empty state */
+.rm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    text-align: center;
+}
+.rm-empty-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #9ca3af;
+    margin-bottom: 10px;
+}
+.rm-empty-title { font-size: 13px; font-weight: 600; color: #181c32; margin-bottom: 4px; }
+.rm-empty-sub { font-size: 11.5px; color: #9ca3af; margin-bottom: 12px; }
+.rm-btn-scroll {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+}
+.rm-btn-scroll:hover { background: #f3f4f6; }
+
+@media (max-width: 575px) { .rm-cards-grid { grid-template-columns: 1fr; } }
 </style>
 
 @php
-    // Build a view-model per team member. Active Jobs / Captain Jobs / TRM Talents are read from
-    // Elasticsearch (the designated read-store) via ONE batch terms-aggregation per metric for the
-    // whole team, instead of N MySQL queries per member — this is the low-load path the user asked for.
-    // job_assign is embedded per-job in ELASTIC_JOBS (synced by app/Jobs/ElasticJobsIndex.php); TRM
-    // (submitted_by) is top-level on ELASTIC_CANDIDATES + ELASTIC_CANDIDATES_BENCH (synced by
-    // app/Jobs/ElasticCandidateIndex.php / ElasticBenchCandidateIndex.php), so both indices are summed.
-    // Talents/assigned-status (bench_assign) stays on MySQL: hmlistingupdate() below only writes to
-    // MySQL, never to ELASTIC_BENCH_ASSIGN (which also has its own user_id/users_id field mismatch) —
-    // reading that from ES would show stale Add/Remove state right after this drawer's own action.
     $rmCompanyId = auth()->user()->company_id;
     $rmElastic = app(\App\Services\ElasticService::class)->getClient();
 
@@ -124,9 +318,7 @@
         foreach (($resp['aggregations']['by_user']['buckets'] ?? []) as $b) {
             $activeJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
         }
-    } catch (\Throwable $e) {
-        $activeJobsByUser = [];
-    }
+    } catch (\Throwable $e) { $activeJobsByUser = []; }
 
     $captainJobsByUser = [];
     try {
@@ -141,252 +333,235 @@
         foreach (($resp['aggregations']['by_captain']['buckets'] ?? []) as $b) {
             $captainJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
         }
-    } catch (\Throwable $e) {
-        $captainJobsByUser = [];
-    }
+    } catch (\Throwable $e) { $captainJobsByUser = []; }
 
-    $trmTalentsByUser = [];
-    foreach ([ELASTIC_CANDIDATES, ELASTIC_CANDIDATES_BENCH] as $rmTrmIndex) {
-        try {
-            $resp = $rmElastic->search([
-                'index' => $rmTrmIndex,
-                'body' => [
-                    'size' => 0,
-                    'query' => ['term' => ['company_id' => $rmCompanyId]],
-                    'aggs' => ['by_submitter' => ['terms' => ['field' => 'submitted_by', 'size' => 2000]]],
-                ],
-            ]);
-            foreach (($resp['aggregations']['by_submitter']['buckets'] ?? []) as $b) {
-                $uid = (int) $b['key'];
-                $trmTalentsByUser[$uid] = ($trmTalentsByUser[$uid] ?? 0) + (int) $b['doc_count'];
-            }
-        } catch (\Throwable $e) {
-            // Missing/unreachable index shouldn't break the drawer — counts just fall back to 0.
-        }
-    }
+    // TRM Talents = bench_assign rows per user (MySQL is authoritative)
+    $trmTalentsByUser = DB::table('bench_assign')
+        ->select('user_id', DB::raw('COUNT(*) as cnt'))
+        ->groupBy('user_id')
+        ->pluck('cnt', 'user_id')
+        ->toArray();
 
     $rmRows = [];
     foreach ($team as $teamVal) {
-        $activeJobs = $activeJobsByUser[$teamVal->id] ?? 0;
-        $candidateCount = DB::table('bench_assign')->where('bench_assign.user_id', $teamVal->id)->count();
-        $captainJobs = $captainJobsByUser[$teamVal->id] ?? 0;
-        $trmTalents = $trmTalentsByUser[$teamVal->id] ?? 0;
-
         $name = trim(@$teamVal->name) ?: '?';
         $firstChar = strtolower($name[0]);
         $ord = ord($firstChar);
-        if ($ord >= 97 && $ord <= 101) {
-            $avatarClass = 'bg-light-danger text-danger';
-        } elseif ($ord >= 102 && $ord <= 106) {
-            $avatarClass = 'bg-light-warning text-warning';
-        } elseif ($ord >= 107 && $ord <= 111) {
-            $avatarClass = 'bg-light-primary text-primary';
-        } elseif ($ord >= 112 && $ord <= 116) {
-            $avatarClass = 'bg-light-success text-success';
-        } elseif ($ord >= 117 && $ord <= 121) {
-            $avatarClass = 'bg-dark text-secondary';
-        } else {
-            $avatarClass = 'bg-light-secondary text-dark';
-        }
+        if ($ord >= 97 && $ord <= 101)        { $avatarClass = 'bg-light-danger text-danger'; }
+        elseif ($ord >= 102 && $ord <= 106)   { $avatarClass = 'bg-light-warning text-warning'; }
+        elseif ($ord >= 107 && $ord <= 111)   { $avatarClass = 'bg-light-primary text-primary'; }
+        elseif ($ord >= 112 && $ord <= 116)   { $avatarClass = 'bg-light-success text-success'; }
+        elseif ($ord >= 117 && $ord <= 121)   { $avatarClass = 'bg-dark text-secondary'; }
+        else                                   { $avatarClass = 'bg-light-secondary text-dark'; }
 
         $isAssigned = (@$teamVal->bench_assign_id > 0) && ($currentBenchId == $teamVal->bench_applications_id);
 
         $rmRows[] = [
-            'id' => $teamVal->id,
-            'name' => ucwords(substr($name, 0, 15)),
-            'fullName' => ucwords($name),
-            'role' => ucwords(substr(trim(@$teamVal->display_name) ?: 'Team Member', 0, 18)),
-            'email' => (string) @$teamVal->email,
-            'initial' => strtoupper($firstChar),
-            'avatarClass' => $avatarClass,
-            'activeJobs' => $activeJobs,
-            'candidateCount' => $candidateCount,
-            'captainJobs' => $captainJobs,
-            'trmTalents' => $trmTalents,
-            'assigned' => $isAssigned,
-            'workingActive' => (@$teamVal->working_status == 1),
+            'id'           => $teamVal->id,
+            'name'         => ucwords(substr($name, 0, 15)),
+            'fullName'     => ucwords($name),
+            'role'         => ucwords(substr(trim(@$teamVal->display_name) ?: 'Team Member', 0, 18)),
+            'email'        => (string) @$teamVal->email,
+            'initial'      => strtoupper($firstChar),
+            'avatarClass'  => $avatarClass,
+            'activeJobs'   => $activeJobsByUser[$teamVal->id] ?? 0,
+            'captainJobs'  => $captainJobsByUser[$teamVal->id] ?? 0,
+            'trmTalents'   => $trmTalentsByUser[$teamVal->id] ?? 0,
+            'assigned'     => $isAssigned,
+            'workingActive'=> (@$teamVal->working_status == 1),
         ];
     }
     $selectedRm = array_values(array_filter($rmRows, fn ($r) => $r['assigned']));
 
-    $rmTeamJs = array_map(function ($r) {
-        return [
-            'id' => $r['id'],
-            'name' => $r['fullName'],
-            'role' => $r['role'],
-            'email' => $r['email'],
-            'initial' => $r['initial'],
-            'avatarClass' => $r['avatarClass'],
-            'jobs' => $r['activeJobs'],
-            'talents' => $r['candidateCount'],
-            'captainJobs' => $r['captainJobs'],
-            'trmTalents' => $r['trmTalents'],
-        ];
-    }, $rmRows);
+    $rmTeamJs = array_map(fn ($r) => [
+        'id'          => $r['id'],
+        'name'        => $r['fullName'],
+        'role'        => $r['role'],
+        'email'       => $r['email'],
+        'initial'     => $r['initial'],
+        'avatarClass' => $r['avatarClass'],
+        'jobs'        => $r['activeJobs'],
+        'captainJobs' => $r['captainJobs'],
+        'trmTalents'  => $r['trmTalents'],
+    ], $rmRows);
 @endphp
 
 <form>
   <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
-    <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2 h-100" data-kt-scroll="true" data-kt-scroll-height="auto" data-kt-scroll-wrappers="#kt_activities_body" data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer" data-kt-scroll-offset="5px">
+    <div id="kt_activities_scroll" class="position-relative scroll-y pt-3 h-100"
+         data-kt-scroll="true" data-kt-scroll-height="auto"
+         data-kt-scroll-wrappers="#kt_activities_body"
+         data-kt-scroll-dependencies="#kt_activities_header, #kt_activities_footer"
+         data-kt-scroll-offset="5px">
 
-      <!--begin::Selected Relationship Managers-->
-      <div class="card card-custom mx-2 mb-3" id="selectedRMSection">
-        <div class="card-header card-header-compact">
-          <div class="card-title flex-column align-items-start m-0 mt-5">
-            <h3 class="section-title mb-0">1. Selected Relationship Managers <span class="text-muted" id="selectedRMCount" style="font-weight:400;">({{ count($selectedRm) }})</span></h3>
-            <span class="section-subtitle mt-1">These team members are the relationship managers for this candidate</span>
+      {{-- ── 1. Selected Relationship Managers ── --}}
+      <div class="rm-section" id="selectedRMSection">
+        <div class="rm-section-head">
+          <div class="rm-section-title">
+            1. Selected Relationship Managers
+            <span id="selectedRMCount" style="color:#9ca3af; font-weight:400;">({{ count($selectedRm) }})</span>
           </div>
+          <div class="rm-section-sub">These team members are the relationship managers for this candidate</div>
         </div>
-        <div class="card-body card-body-compact">
-          <div class="assigned-grid" id="selectedRMGrid" style="{{ count($selectedRm) ? '' : 'display:none;' }}">
+        <div class="rm-section-body">
+          <div class="rm-cards-grid" id="selectedRMGrid" style="{{ count($selectedRm) ? '' : 'display:none;' }}">
             @foreach ($selectedRm as $r)
-              <div class="assigned-card h-100">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                  <div class="d-flex align-items-center" style="min-width:0;">
-                    <div class="hm-avatar me-3 {{ $r['avatarClass'] }}">{{ $r['initial'] }}</div>
-                    <div style="min-width:0;">
-                      <div class="fw-bolder text-dark text-truncate" style="font-size:13px;">{{ $r['fullName'] }}</div>
-                      <div class="text-muted text-truncate" style="font-size:11px;">{{ $r['role'] }}</div>
+            <div class="rm-card">
+              {{-- Top row: avatar + name + badge + kebab --}}
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-2" style="min-width:0;">
+                  <div class="rm-avatar {{ $r['avatarClass'] }}">{{ $r['initial'] }}</div>
+                  <div style="min-width:0;">
+                    <div style="font-size:13px; font-weight:600; color:#181c32; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $r['fullName'] }}</div>
+                    <div style="font-size:11px; color:#9ca3af;">{{ $r['role'] }}</div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <span class="rm-badge-assigned">
+                    <i class="la la-check-circle" style="font-size:12px;"></i> Assigned
+                  </span>
+                  @if ($r['email'])
+                  <div class="rm-kebab-wrap">
+                    <button type="button" class="rm-kebab-btn" title="More"><i class="la la-ellipsis-v"></i></button>
+                    <div class="rm-kebab-menu">
+                      <a href="javascript:void(0);" class="contact-action-rm" data-type="email"
+                         data-name="{{ $r['fullName'] }}" data-email="{{ $r['email'] }}">
+                        <i class="la la-envelope"></i> Email
+                      </a>
                     </div>
                   </div>
-                  <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                    <span class="pill pill-assigned"><i class="la la-check-circle me-1"></i>Assigned</span>
-                    @if ($r['email'])
-                      <div class="ac-kebab-wrap">
-                        <button type="button" class="ac-kebab-btn" title="More"><i class="la la-ellipsis-v"></i></button>
-                        <div class="ac-kebab-menu">
-                          <a href="javascript:void(0);" class="contact-action-rm" data-type="email" data-name="{{ $r['fullName'] }}" data-email="{{ $r['email'] }}"><i class="la la-envelope"></i> Email</a>
-                        </div>
-                      </div>
-                    @endif
-                  </div>
-                </div>
-                <div class="wl-grid wl-grid-card mb-3">
-                  <div class="wl-item">
-                    <div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">{{ $r['activeJobs'] }}</span></div>
-                    <div class="wl-lbl">Active Jobs</div>
-                  </div>
-                  <div class="wl-item">
-                    <div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">{{ $r['captainJobs'] }}</span></div>
-                    <div class="wl-lbl">Captain Jobs</div>
-                  </div>
-                  <div class="wl-item">
-                    <div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">{{ $r['trmTalents'] }}</span></div>
-                    <div class="wl-lbl">TRM Talents</div>
-                  </div>
-                </div>
-                <div class="d-flex gap-2 ac-actions">
-                  <button type="button" class="btn btn-sm btn-light-danger rm-remove" data-rmid="{{ $r['id'] }}">Remove</button>
+                  @endif
                 </div>
               </div>
+              {{-- Workload stats --}}
+              <div class="rm-wl">
+                <div class="rm-wl-item">
+                  <div class="rm-wl-top"><i class="la la-briefcase ic-blue"></i><span class="rm-wl-num">{{ $r['activeJobs'] }}</span></div>
+                  <div class="rm-wl-lbl">Active Jobs</div>
+                </div>
+                <div class="rm-wl-item">
+                  <div class="rm-wl-top"><i class="la la-crown ic-purple"></i><span class="rm-wl-num">{{ $r['captainJobs'] }}</span></div>
+                  <div class="rm-wl-lbl">Captain Jobs</div>
+                </div>
+                <div class="rm-wl-item">
+                  <div class="rm-wl-top"><i class="la la-user-friends ic-green"></i><span class="rm-wl-num">{{ $r['trmTalents'] }}</span></div>
+                  <div class="rm-wl-lbl">TRM Talents</div>
+                </div>
+              </div>
+              {{-- Remove button --}}
+              <button type="button" class="rm-btn-remove rm-remove" data-rmid="{{ $r['id'] }}">Remove</button>
+            </div>
             @endforeach
           </div>
+
+          {{-- Empty state --}}
           <div id="rmEmptyState" style="{{ count($selectedRm) ? 'display:none;' : '' }}">
-            <div class="empty-state-container">
-              <div class="empty-state-icon"><i class="la la-user-check"></i></div>
-              <div class="empty-state-text">
-                <div class="empty-title">No relationship manager selected</div>
-                <div class="empty-subtitle">Select a team member below to assign as the relationship manager for this candidate.</div>
-              </div>
-              <button type="button" class="btn btn-sm btn-light btn-active-light-primary" id="scrollToRmTableBtn"><i class="la la-plus me-1"></i>Select Team Member</button>
+            <div class="rm-empty">
+              <div class="rm-empty-icon"><i class="la la-user-check"></i></div>
+              <div class="rm-empty-title">No relationship manager selected</div>
+              <div class="rm-empty-sub">Select a team member below to assign as relationship manager.</div>
+              <button type="button" class="rm-btn-scroll" id="scrollToRmTableBtn">
+                <i class="la la-plus" style="font-size:13px;"></i> Select Team Member
+              </button>
             </div>
           </div>
         </div>
       </div>
-      <!--end::Selected Relationship Managers-->
 
-      <!--begin::Info Alert-->
-      <div class="mx-2 mb-3">
-        <div class="info-banner">
-          <i class="la la-info-circle"></i>
-          <span>Relationship managers coordinate this candidate's bench engagement and client communication.</span>
-        </div>
+      {{-- ── Info banner ── --}}
+      <div class="rm-info-banner">
+        <i class="la la-info-circle"></i>
+        <span>Relationship managers coordinate this candidate's bench engagement and client communication.</span>
       </div>
-      <!--end::Info Alert-->
 
-      <!--begin::Add Relationship Managers-->
-      <div class="card card-custom mx-2 mb-3" id="addMoreRMSection">
-        <div class="card-header card-header-compact">
-          <div class="card-title flex-column align-items-start m-0">
-            <h3 class="section-title mb-0">2. Add Relationship Managers</h3>
-            <span class="section-subtitle mt-1">Search and select team members from your company</span>
-          </div>
+      {{-- ── 2. Add Relationship Managers ── --}}
+      <div class="rm-section" id="addMoreRMSection">
+        <div class="rm-section-head">
+          <div class="rm-section-title">2. Add Relationship Managers</div>
+          <div class="rm-section-sub">Search and select team members from your company</div>
         </div>
-        <div class="card-body card-body-compact">
+        <div class="rm-section-body">
 
-          <!--begin::Filter-->
-          <div class="d-flex flex-wrap gap-3 mb-4 align-items-center filter-bar">
-            <div class="search-container input-group input-group-lg input-group-solid w-100">
-              <div class="input-group-prepend"><span class="input-group-text"><i class="la la-search"></i></span></div>
-              <input class="form-control form-control-lg form-control-solid" type="text" id="searchInputRM" placeholder="Search for relationship manager....">
-            </div>
+          {{-- Search --}}
+          <div class="rm-search-wrap">
+            <i class="la la-search rm-search-icon"></i>
+            <input type="text" id="searchInputRM" class="rm-search-input" placeholder="Search for relationship manager....">
           </div>
-          <!--end::Filter-->
 
-          <!--begin::Table-->
+          {{-- Table --}}
           <div class="table-responsive">
-            <table class="table align-middle table-row-dashed fs-6 gy-5 mb-0" id="Iteam_Table_rm">
+            <table id="Iteam_Table_rm">
               <thead>
-                <tr class="fw-bolder text-muted bg-light">
-                  <th class="min-w-200px">Name</th>
-                  <th class="min-w-100px">Contact</th>
-                  <th class="min-w-220px">Workload</th>
-                  <th class="min-w-100px">Status</th>
-                  <th class="min-w-120px text-end">Action</th>
+                <tr>
+                  <th style="min-width:180px;">Name</th>
+                  <th style="min-width:80px;">Contact</th>
+                  <th style="min-width:200px;">Workload</th>
+                  <th style="min-width:90px;">Status</th>
+                  <th style="min-width:100px; text-align:right;">Action</th>
                 </tr>
               </thead>
-              <tbody class="text-gray-600 fw-bold">
+              <tbody>
                 @foreach ($rmRows as $r)
-                  <tr>
-                    <td>
-                      <div class="d-flex align-items-center">
-                        <div class="symbol symbol-circle symbol-40px overflow-hidden me-3 border-radius-5">
-                          <div class="symbol-label fs-3 {{ $r['avatarClass'] }} border-radius-5">{{ $r['initial'] }}</div>
-                        </div>
-                        <div class="d-flex flex-column">
-                          <span class="text-dark fw-bolder fs-6">{{ $r['name'] }}</span>
-                          <span class="text-muted fw-bold d-block fs-7">{{ $r['role'] }}</span>
-                        </div>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="rm-avatar {{ $r['avatarClass'] }}" style="width:34px;height:34px;font-size:12px;flex-shrink:0;">{{ $r['initial'] }}</div>
+                      <div>
+                        <div style="font-size:12.5px; font-weight:600; color:#181c32;">{{ $r['name'] }}</div>
+                        <div style="font-size:11px; color:#9ca3af;">{{ $r['role'] }}</div>
                       </div>
-                    </td>
-                    <td>
-                      @if ($r['email'])
-                        <button type="button" class="btn-icon-circle contact-action-rm" data-type="email" data-name="{{ $r['fullName'] }}" data-email="{{ $r['email'] }}" title="Email"><i class="la la-envelope"></i></button>
-                      @else
-                        <span class="text-muted fs-7">&mdash;</span>
-                      @endif
-                    </td>
-                    <td>
-                      <div class="wl-grid">
-                        <div class="wl-item">
-                          <div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">{{ $r['activeJobs'] }}</span></div>
-                          <div class="wl-lbl">Active Jobs</div>
-                        </div>
-                        <div class="wl-item">
-                          <div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">{{ $r['captainJobs'] }}</span></div>
-                          <div class="wl-lbl">Captain Jobs</div>
-                        </div>
-                        <div class="wl-item">
-                          <div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">{{ $r['trmTalents'] }}</span></div>
-                          <div class="wl-lbl">TRM Talents</div>
-                        </div>
+                    </div>
+                  </td>
+                  <td>
+                    @if ($r['email'])
+                      <a href="javascript:void(0);" class="rm-contact-btn contact-action-rm"
+                         data-type="email" data-name="{{ $r['fullName'] }}" data-email="{{ $r['email'] }}" title="Email">
+                        <i class="la la-envelope"></i>
+                      </a>
+                    @else
+                      <span style="color:#d1d5db;">—</span>
+                    @endif
+                  </td>
+                  <td>
+                    <div class="rm-wl">
+                      <div class="rm-wl-item">
+                        <div class="rm-wl-top"><i class="la la-briefcase ic-blue"></i><span class="rm-wl-num">{{ $r['activeJobs'] }}</span></div>
+                        <div class="rm-wl-lbl">Active Jobs</div>
                       </div>
-                    </td>
-                    <td><span class="status-dot {{ $r['workingActive'] ? 'active' : 'inactive' }}">{{ $r['workingActive'] ? 'Active' : 'Inactive' }}</span></td>
-                    <td class="text-end">
-                      <a id="btn_{{ $r['id'] }}" href="javascript:void(0);" class="team_event cp_select btn btn-sm {{ $r['assigned'] ? 'btn-light-danger' : 'btn-light-primary' }} w-100px"
-                         rel="{{ $currentBenchId }}" data-assign="{{ $r['assigned'] ? 1 : 0 }}" data-userid="{{ $r['id'] }}">{{ $r['assigned'] ? 'Remove' : 'Add' }}</a>
-                    </td>
-                  </tr>
+                      <div class="rm-wl-item">
+                        <div class="rm-wl-top"><i class="la la-crown ic-purple"></i><span class="rm-wl-num">{{ $r['captainJobs'] }}</span></div>
+                        <div class="rm-wl-lbl">Captain Jobs</div>
+                      </div>
+                      <div class="rm-wl-item">
+                        <div class="rm-wl-top"><i class="la la-user-friends ic-green"></i><span class="rm-wl-num">{{ $r['trmTalents'] }}</span></div>
+                        <div class="rm-wl-lbl">TRM Talents</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="rm-status {{ $r['workingActive'] ? 'active' : 'inactive' }}">
+                      <span class="rm-status-dot"></span>
+                      {{ $r['workingActive'] ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td style="text-align:right;">
+                    <button type="button"
+                            id="btn_{{ $r['id'] }}"
+                            class="rm-tbl-btn team_event {{ $r['assigned'] ? 'remove' : 'add' }}"
+                            rel="{{ $currentBenchId }}"
+                            data-assign="{{ $r['assigned'] ? 1 : 0 }}"
+                            data-userid="{{ $r['id'] }}">
+                      {{ $r['assigned'] ? 'Remove' : 'Add' }}
+                    </button>
+                  </td>
+                </tr>
                 @endforeach
               </tbody>
             </table>
           </div>
-          <!--end::Table-->
 
         </div>
       </div>
-      <!--end::Add Relationship Managers-->
 
     </div>
   </div>
@@ -395,48 +570,58 @@
 <script>
 var __rmTeam = @json($rmTeamJs);
 
-function rmFind(id) { for (var i = 0; i < __rmTeam.length; i++) { if (String(__rmTeam[i].id) === String(id)) return __rmTeam[i]; } return null; }
-function rmEsc(s) { return (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function rmFind(id) {
+    for (var i = 0; i < __rmTeam.length; i++) {
+        if (String(__rmTeam[i].id) === String(id)) return __rmTeam[i];
+    }
+    return null;
+}
+function rmEsc(s) {
+    return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 function rmCardHtml(u) {
-    return '<div class="assigned-card h-100">'
-        + '<div class="d-flex align-items-start justify-content-between mb-3">'
-        +   '<div class="d-flex align-items-center" style="min-width:0;">'
-        +     '<div class="hm-avatar me-3 ' + u.avatarClass + '">' + rmEsc(u.initial) + '</div>'
+    var kebab = u.email
+        ? '<div class="rm-kebab-wrap">'
+          + '<button type="button" class="rm-kebab-btn" title="More"><i class="la la-ellipsis-v"></i></button>'
+          + '<div class="rm-kebab-menu">'
+          + '<a href="javascript:void(0);" class="contact-action-rm" data-type="email" data-name="' + rmEsc(u.name) + '" data-email="' + rmEsc(u.email) + '"><i class="la la-envelope"></i> Email</a>'
+          + '</div></div>'
+        : '';
+    return '<div class="rm-card">'
+        + '<div class="d-flex align-items-start justify-content-between gap-2">'
+        +   '<div class="d-flex align-items-center gap-2" style="min-width:0;">'
+        +     '<div class="rm-avatar ' + u.avatarClass + '">' + rmEsc(u.initial) + '</div>'
         +     '<div style="min-width:0;">'
-        +       '<div class="fw-bolder text-dark text-truncate" style="font-size:13px;">' + rmEsc(u.name) + '</div>'
-        +       '<div class="text-muted text-truncate" style="font-size:11px;">' + rmEsc(u.role) + '</div>'
+        +       '<div style="font-size:13px;font-weight:600;color:#181c32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + rmEsc(u.name) + '</div>'
+        +       '<div style="font-size:11px;color:#9ca3af;">' + rmEsc(u.role) + '</div>'
         +     '</div>'
         +   '</div>'
-        +   '<div class="d-flex align-items-center gap-2 flex-shrink-0">'
-        +     '<span class="pill pill-assigned"><i class="la la-check-circle me-1"></i>Assigned</span>'
-        +     (u.email ? '<div class="ac-kebab-wrap"><button type="button" class="ac-kebab-btn" title="More"><i class="la la-ellipsis-v"></i></button>'
-        +       '<div class="ac-kebab-menu">'
-        +         '<a href="javascript:void(0);" class="contact-action-rm" data-type="email" data-name="' + rmEsc(u.name) + '" data-email="' + rmEsc(u.email) + '"><i class="la la-envelope"></i> Email</a>'
-        +       '</div></div>' : '')
+        +   '<div class="d-flex align-items-center gap-1 flex-shrink-0">'
+        +     '<span class="rm-badge-assigned"><i class="la la-check-circle" style="font-size:12px;"></i> Assigned</span>'
+        +     kebab
         +   '</div>'
         + '</div>'
-        + '<div class="wl-grid wl-grid-card mb-3">'
-        +   '<div class="wl-item"><div class="wl-top"><i class="la la-briefcase wl-ic wl-ic-blue"></i><span class="wl-num">' + u.jobs + '</span></div><div class="wl-lbl">Active Jobs</div></div>'
-        +   '<div class="wl-item"><div class="wl-top"><i class="la la-crown wl-ic wl-ic-purple"></i><span class="wl-num">' + u.captainJobs + '</span></div><div class="wl-lbl">Captain Jobs</div></div>'
-        +   '<div class="wl-item"><div class="wl-top"><i class="la la-user-friends wl-ic wl-ic-green"></i><span class="wl-num">' + u.trmTalents + '</span></div><div class="wl-lbl">TRM Talents</div></div>'
+        + '<div class="rm-wl">'
+        +   '<div class="rm-wl-item"><div class="rm-wl-top"><i class="la la-briefcase ic-blue"></i><span class="rm-wl-num">' + u.jobs + '</span></div><div class="rm-wl-lbl">Active Jobs</div></div>'
+        +   '<div class="rm-wl-item"><div class="rm-wl-top"><i class="la la-crown ic-purple"></i><span class="rm-wl-num">' + u.captainJobs + '</span></div><div class="rm-wl-lbl">Captain Jobs</div></div>'
+        +   '<div class="rm-wl-item"><div class="rm-wl-top"><i class="la la-user-friends ic-green"></i><span class="rm-wl-num">' + u.trmTalents + '</span></div><div class="rm-wl-lbl">TRM Talents</div></div>'
         + '</div>'
-        + '<div class="d-flex gap-2 ac-actions">'
-        +   '<button type="button" class="btn btn-sm btn-light-danger rm-remove" data-rmid="' + u.id + '">Remove</button>'
-        + '</div>'
+        + '<button type="button" class="rm-btn-remove rm-remove" data-rmid="' + u.id + '">Remove</button>'
         + '</div>';
 }
 
 function renderSelectedRM() {
     var ids = [];
-    $('.team_event').each(function () { if (String($(this).data('assign')) === '1') { ids.push($(this).data('userid')); } });
-
+    $('.team_event').each(function () {
+        if (String($(this).data('assign')) === '1') ids.push($(this).data('userid'));
+    });
     if (ids.length === 0) {
         $('#selectedRMGrid').hide().empty();
         $('#rmEmptyState').show();
     } else {
         var html = '';
-        ids.forEach(function (id) { var u = rmFind(id); if (u) { html += rmCardHtml(u); } });
+        ids.forEach(function (id) { var u = rmFind(id); if (u) html += rmCardHtml(u); });
         $('#selectedRMGrid').html(html).show();
         $('#rmEmptyState').hide();
     }
@@ -452,92 +637,71 @@ $(document).ready(function () {
         setTimeout(function () { $('#searchInputRM').focus(); }, 450);
     });
 
-    // Card Remove -> run the real table toggle (fires .team_event -> ajax add/remove)
     $(document).on('click', '.rm-remove', function (e) {
         e.preventDefault();
-        var id = $(this).data('rmid');
-        $('#btn_' + id).trigger('click');
+        $('#btn_' + $(this).data('rmid')).trigger('click');
     });
 
-    // Kebab dropdown
-    $(document).on('click', '.ac-kebab-btn', function (e) { e.preventDefault(); e.stopPropagation(); var $m = $(this).siblings('.ac-kebab-menu'); $('.ac-kebab-menu').not($m).removeClass('show'); $m.toggleClass('show'); });
-    $(document).on('click', '.ac-kebab-menu', function (e) { e.stopPropagation(); });
-    $(document).on('click', function () { $('.ac-kebab-menu').removeClass('show'); });
+    // Kebab
+    $(document).on('click', '.rm-kebab-btn', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var $m = $(this).siblings('.rm-kebab-menu');
+        $('.rm-kebab-menu').not($m).removeClass('show');
+        $m.toggleClass('show');
+    });
+    $(document).on('click', '.rm-kebab-menu', function (e) { e.stopPropagation(); });
+    $(document).on('click', function () { $('.rm-kebab-menu').removeClass('show'); });
 
-    // Email quick-action
+    // Email
     $(document).on('click', '.contact-action-rm', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $('.ac-kebab-menu').removeClass('show');
+        e.preventDefault(); e.stopPropagation();
+        $('.rm-kebab-menu').removeClass('show');
         var email = $(this).data('email');
-        if (email) { window.location.href = 'mailto:' + email; }
+        if (email) window.location.href = 'mailto:' + email;
     });
 
     // Search
-    var $rmRowsEl = $('#Iteam_Table_rm').find('tbody tr');
+    var $rows = $('#Iteam_Table_rm tbody tr');
     $('#searchInputRM').on('keyup', function () {
-        var value = $(this).val().toLowerCase();
-        $rmRowsEl.find('td').removeClass('highlight');
-        $rmRowsEl.each(function () {
-            var $row = $(this);
-            var rowText = $row.text().toLowerCase();
-            $row.toggle(rowText.indexOf(value) > -1);
+        var val = $(this).val().toLowerCase();
+        $rows.each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
         });
     });
 });
 </script>
 
 <script>
+$(document).ready(function () {
+    $('body').on('click', '.team_event', function () {
+        var currentBenchId = $(this).attr('rel');
+        var currentUserId  = $(this).data('userid');
+        var assignStatus   = $(this).data('assign');
 
-$(document).ready(function(){
+        if (assignStatus == 0) {
+            $('#btn_' + currentUserId).removeClass('add').addClass('remove').text('Remove').data('assign', 1);
+        } else {
+            $('#btn_' + currentUserId).removeClass('remove').addClass('add').text('Add').data('assign', 0);
+        }
+        renderSelectedRM();
 
-						$('body').on('click', '.team_event', function(){
-
-														var currentBenchId    		=	$(this).attr('rel');
-														var currentUserId    		=	$(this).data('userid');
-														var assignStatus    		=	$(this).data('assign');
-
-														var id    					=	currentUserId;
-														if(assignStatus == 0){
-																$('#btn_'+currentUserId).addClass("btn-light-danger");
-																$('#btn_'+currentUserId).removeClass("btn-light-primary");
-																$('#btn_'+currentUserId).text('Remove');
-																$(this).data('assign',1);
-														}else if(assignStatus == 1){
-																$('#btn_'+currentUserId).addClass("btn-light-primary");
-																$('#btn_'+currentUserId).removeClass("btn-light-danger");
-																$('#btn_'+currentUserId).text('Add');
-																$(this).data('assign',0);
-														}
-														renderSelectedRM();
-														var token 					=	"{{ csrf_token() }}";
-
-														var url   					=	"{{ route('service_company.bench-candidates.hmlistingupdate',':id') }}";
-														url     					=	url.replace(':id', id);
-														var baseurl    				=	"{{ asset('assets/images/Loading2.gif') }}";
-														$.ajax({
-																	type  		:	'GET',
-																	url   		:	url,
-																	data		:	{'_token': token, 'currentBenchId' : currentBenchId, 'currentUserId' : currentUserId, 'assignStatus' : assignStatus },
-																	success 	:	function (response)
-																	{
-																						if(response.status=='success'){
-
-																							if(assignStatus == 0){
-																									$('#btn_'+currentUserId).addClass("btn-light-danger");
-																									$('#btn_'+currentUserId).removeClass("btn-light-primary");
-																							}else if(assignStatus == 1){
-																									$('#btn_'+currentUserId).addClass("btn-light-primary");
-																									$('#btn_'+currentUserId).removeClass("btn-light-danger");
-																							}
-																						}
-																						renderSelectedRM();
-																						fetchBenchBenchCandidatesCandidateList();
-																	}
-															});
-
-					});
-
+        var url = "{{ route('service_company.bench-candidates.hmlistingupdate',':id') }}".replace(':id', currentUserId);
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: { '_token': "{{ csrf_token() }}", currentBenchId, currentUserId, assignStatus },
+            success: function (response) {
+                if (response.status === 'success') {
+                    if (assignStatus == 0) {
+                        $('#btn_' + currentUserId).removeClass('add').addClass('remove');
+                    } else {
+                        $('#btn_' + currentUserId).removeClass('remove').addClass('add');
+                    }
+                }
+                renderSelectedRM();
+                fetchBenchBenchCandidatesCandidateList();
+            }
+        });
+    });
 });
-
 </script>
