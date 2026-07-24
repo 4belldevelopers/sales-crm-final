@@ -13,8 +13,8 @@
         <div class="jh-select-wrap">
             <div class="jh-select-label">Status</div>
             <select class="jh-select" id="status" onchange="filtersdata()">
-                <option value="all">All Status</option>
-                <option value="active" selected>Hiring</option>
+                <option value="all" selected>All Status</option>
+                <option value="active">Hiring</option>
                 <option value="hold">Hold</option>
                 <option value="inactive">Closed</option>
                 <option value="removed">Removed</option>

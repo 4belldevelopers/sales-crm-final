@@ -2760,6 +2760,20 @@ protected $elasticService;
 				$sort[] = ['id' => ['order' => 'desc']];
 		}
 
+		// Always show active jobs first, then hold, then inactive/closed
+		if ($custom_status === '' || $custom_status === 'all') {
+			array_unshift($sort, [
+				'_script' => [
+					'type'   => 'number',
+					'order'  => 'asc',
+					'script' => [
+						'lang'   => 'painless',
+						'source' => "def s = doc['status'].size() > 0 ? doc['status'].value : ''; if (s == 'active') return 0; if (s == 'hold') return 1; return 2;",
+					],
+				],
+			]);
+		}
+
 
 		// 1. STATUS FILTERING
 		// if (!session()->has('UrlMailJobId')) {
