@@ -1641,39 +1641,11 @@ table{
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesCopy_toggle"
         data-kt-drawer-close=".kt_activitiesCopy_close" style="z-index: 9999 !important;">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">Select the job checkbox, then click "Save" to add the candidate</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-
-                  
-                    <div class="">
-                        <button type="button" id="submit-frm-btn" class="btn btn-primary copy_current_selected_applicant d-none"> 
-                            <span class="indicator-label">Save to Jobs</span> 
-                            <span class="indicator-progress">
-                                Please wait...
-                            </span> 
-                        </button>
-                    </div>
-
-
-                    <button type="button"
-                        class="btn btn-sm btn-icon btn-active-light-primary me-n5 kt_activitiesCopy_close"
-                        id="kt_activitiesCopy_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="#000000">
-                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect fill="#000000" opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
-                            </svg>
-                        </span> </button>
-                </div>
+            <div class="card-toolbar px-4 py-2 d-flex justify-content-end" id="kt_activities_header">
+                <button type="button" id="submit-frm-btn" class="btn btn-primary btn-sm copy_current_selected_applicant d-none me-2">
+                    <span class="indicator-label">Save to Jobs</span>
+                    <span class="indicator-progress">Please wait...</span>
+                </button>
             </div>
             <div class="card-body position-relative px-0 py-0" id="application_copy_body_content"></div>
         </div>
@@ -2335,8 +2307,18 @@ table{
 
 
         window._candidateSkills = '';
+        window._candidateInfo   = {};
         $(document).on('click', '.openSideBar', function() {
             window._candidateSkills = $(this).data('skills') || '';
+            window._candidateInfo   = {
+                name  : $(this).data('cname')  || '',
+                desig : $(this).data('cdesig') || '',
+                exp   : $(this).data('cexp')   || '',
+                ctc   : $(this).data('cctc')   || '',
+                np    : $(this).data('cnp')    || '',
+                loc   : $(this).data('cloc')   || '',
+                type  : $(this).data('ctype')  || ''
+            };
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.talent-add', ':id') }}";
@@ -2369,11 +2351,12 @@ table{
 
                     if (response.status == "success") {
                         $('#application_copy_body_content').html(response.view);
+                        setTimeout(function(){ if(typeof updateBenchHero==='function') updateBenchHero(); }, 80);
                     }
                 }
             });
         });
-   
+
 
 
 
