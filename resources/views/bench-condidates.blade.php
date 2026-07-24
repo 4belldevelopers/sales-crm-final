@@ -659,7 +659,7 @@
                                     </a>
                                 </div>
                                 <div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;">
-                                    <span style="font-size:10px;font-weight:600;color:#7e8299;margin-right:4px;">Skills</span>'
+                                    <span style="font-size:10px;font-weight:600;color:#15803d;background:#dcfce7;padding:2px 9px;border-radius:20px;display:inline-block;margin:1px 2px;">Skills</span>'
                                     . $skilltag .
                                 '</div>';
                             @endphp
@@ -732,9 +732,8 @@
                                     </a>
                                     <span class="fw-bold d-block fs-7" style="color:' . $comission_color . ';">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
-                                        ' . $comission_label . '
+                                        ' . $comission_label . ' Service
                                     </span>
-                                    <span class="fw-bold d-block fs-7" style="color:#6d7991;">Service</span>
                                 </div>';
                             @endphp
                         </td>
@@ -968,7 +967,7 @@
             });
         });
 
-        $(document).on('click','.bench_show_application_detail',function(){
+        $(document).on('click','.pbench_show_application_detail',function(){
 			//  table.on('click', '.bench_show_application_detail', function (){
                         var company_id = "{{ $company_id }}";
 						$('#kt_activitiesBenchApplication_toggle').trigger('click');
