@@ -13,7 +13,7 @@
 .cj-table-header,
 .cj-job-row {
     display: grid;
-    grid-template-columns: 40px 2.6fr 1fr 1.05fr 1.1fr 0.9fr 100px;
+    grid-template-columns: 2.6fr 1fr 1.05fr 1.1fr 0.9fr 100px;
     column-gap: 10px;
     align-items: start;
 }
@@ -137,7 +137,7 @@
 @media (max-width: 1366px) {
     .cj-table-header,
     .cj-job-row {
-        grid-template-columns: 36px 2.3fr 0.95fr 0.95fr 1fr 0.85fr 90px;
+        grid-template-columns: 2.3fr 0.95fr 0.95fr 1fr 0.85fr 90px;
         column-gap: 8px;
     }
 }
@@ -164,11 +164,6 @@
         <div class="cj-table-card">
           <!-- Header -->
           <div class="cj-table-header">
-            <div class="cj-col-chk">
-              <div class="form-check form-check-sm form-check-custom form-check-solid">
-                <input class="form-check-input chk_copy_list" type="checkbox" value="1" />
-              </div>
-            </div>
             <div class="cj-th">Job Details</div>
             <div class="cj-th">Experience</div>
             <div class="cj-th">Hiring &amp; Location</div>
@@ -226,7 +221,8 @@
                 type: 'GET',
                 data: {
                   search : $('#inputCopySearch').val(),
-				  findTalentAdd : '{{ @$findTalentAdd }}'
+				  findTalentAdd : '{{ @$findTalentAdd }}',
+                  candidateSkills: (typeof window._candidateSkills !== 'undefined' ? window._candidateSkills : '')
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
@@ -303,11 +299,11 @@
                 } else if (response.status == 'coinCheck') {
                     Swal.fire('Failed', response.message, 'warning');
                 }
-                $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add');
+                $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add to Job');
             },
             error: function() {
                 showToastr('error', 'Something went wrong.', 'Error');
-                $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add');
+                $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add to Job');
             }
         });
    });
