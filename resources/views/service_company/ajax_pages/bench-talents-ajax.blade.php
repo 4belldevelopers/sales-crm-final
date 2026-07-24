@@ -31,7 +31,9 @@
     $row->InReview = $applicationCounter->Interview ?? 0;
     @endphp
 
-        <tr style="height: 82px; position: relative;">
+        <tr style="height: 82px; position: relative;"
+            data-match-pct="{{ (int)($row->skill_match_percent ?? 0) }}"
+            data-np-mode="{{ (int)($row->serving_notice_period_mode ?? 0) }}">
 
             {{-- ① TALENT --}}
             <td>
