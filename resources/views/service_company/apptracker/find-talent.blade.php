@@ -2334,7 +2334,9 @@ table{
 
 
 
+        window._candidateSkills = '';
         $(document).on('click', '.openSideBar', function() {
+            window._candidateSkills = $(this).data('skills') || '';
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.talent-add', ':id') }}";

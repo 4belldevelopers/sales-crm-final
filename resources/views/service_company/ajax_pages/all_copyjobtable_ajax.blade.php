@@ -178,7 +178,7 @@
         if ($partnersCount > 1) { $displayCount = '+' . ($partnersCount - 1); } else { $displayCount = $partnersCount; }
     @endphp
 
-    <div class="cj-job-row">
+    <div class="cj-job-row" data-match-pct="{{ $matchPct ?? 0 }}">
 
         {{-- Checkbox hidden --}}
 
@@ -266,7 +266,7 @@
                 <svg width="11" height="11" fill="none" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
-                Add to Job
+                Submit Candidate
             </button>
         </div>
 
