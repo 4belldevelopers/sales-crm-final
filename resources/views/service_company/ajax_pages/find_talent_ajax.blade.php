@@ -249,6 +249,13 @@
                                    data-row-source_from_type="2"
                                    data-row-id="' . @$row->id . '"
                                    data-row-jobid="' . @$jobid . '"
+                                   data-cname="' . htmlspecialchars(ucwords((string)@$row->full_name)) . '"
+                                   data-cdesig="' . htmlspecialchars(ucwords((string)@$row->current_designation)) . '"
+                                   data-cexp="' . htmlspecialchars($formattedExperience) . '"
+                                   data-cctc="' . htmlspecialchars(trim(strip_tags($currencySymbole[$billFormatViewSalary->currency] ?? '') . ' ' . GeneralMethod::formatK($billFormatViewSalary->amount))) . '"
+                                   data-cnp="' . htmlspecialchars($modeNp == 2 ? 'Immediate' : $npDate) . '"
+                                   data-cloc="' . htmlspecialchars(trim((string)@$row_city_name)) . '"
+                                   data-ctype="' . htmlspecialchars($outsourcingLabel) . '"
                                    data-skills="' . $ftSkillStr . '">Add to Job</a>
                             </div>';
                         }

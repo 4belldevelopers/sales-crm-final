@@ -266,7 +266,7 @@
                 <svg width="11" height="11" fill="none" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
-                Submit Candidate
+                {{ empty($findTalentAdd ?? null) ? 'Copy Candidate' : 'Submit Candidate' }}
             </button>
         </div>
 
