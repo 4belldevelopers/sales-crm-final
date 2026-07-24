@@ -235,11 +235,21 @@
                         if ($row->countforadd >= 3) {
                             $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
                         } else {
+                            /* Build candidate skill string for match % feature */
+                            $ftCandSkills = [];
+                            if ($skillExperiences->isNotEmpty()) {
+                                foreach ($skillExperiences as $se) { $ftCandSkills[] = strtolower(trim($se->skill_key)); }
+                            } else {
+                                foreach ($skillArr as $sv) { $sv = strtolower(trim($sv)); if ($sv) $ftCandSkills[] = $sv; }
+                            }
+                            $ftSkillStr = htmlspecialchars(implode(',', $ftCandSkills));
+
                             $html = '<div class="d-flex flex-column" style="margin-bottom:6px;">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar"
                                    data-row-source_from_type="2"
                                    data-row-id="' . @$row->id . '"
-                                   data-row-jobid="' . @$jobid . '">Add to Job</a>
+                                   data-row-jobid="' . @$jobid . '"
+                                   data-skills="' . $ftSkillStr . '">Add to Job</a>
                             </div>';
                         }
                     } else {
