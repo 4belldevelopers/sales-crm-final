@@ -127,36 +127,28 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
-    ],
+        /*
+        | Laravel 11.48's HandleExceptions calls Log::channel('deprecations')
+        | LITERALLY when it logs a PHP deprecation warning, and LogManager::resolve()
+        | looks up config('logging.channels.deprecations'). Without this channel
+        | entry, it throws InvalidArgumentException("Log [deprecations] is not
+        | defined.") and propagates up the Froiden\Envato MigrateCheckCommand →
+        | checkMigrateStatus → Controller construct chain, 500ing every controller
+        | boot on the recruiter app (see laravel.EMERGENCY lines in
+        | storage/logs/laravel.log). The top-level 'deprecations' key in this file
+        | already points at the backing channel by name (for Symfony's
+        | resolveChannel()); LogManager::resolve() additionally needs the named
+        | entry inside channels[] to satisfy its own lookup. The two together is
+        | the Laravel 11+ idiom for "deprecations" support.
+        |
+        | Routes to NullHandler by default so production stays quiet. Set
+        | LOG_DEPRECATIONS_CHANNEL=single in .env to log per-request deprecations
+        | to storage/logs/deprecations.log while debugging.
+        */
+        'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null') === 'null'
+            ? ['driver' => 'monolog', 'handler' => NullHandler::class]
+            : ['driver' => 'single', 'path' => storage_path('logs/deprecations.log'), 'level' => 'debug'],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Real 'deprecations' channel entry — Laravel 11.48's HandleExceptions
-    | calls Log::channel('deprecations') LITERALLY when it logs a PHP
-    | deprecation, and LogManager::resolve() looks in
-    | config('logging.channels.deprecations'). If absent it throws
-    | "Log [deprecations] is not defined." The top-level 'deprecations' key
-    | above (with its 'channel' subkey) covers the legacy Symfony-style lookup
-    | path, but does NOT satisfy LogManager::resolve. The two together is the
-    | correct Laravel 11+ idiom: top-level key for Symfony Console, real
-    | channel entry for LogManager.
-    |
-    | Without this entry, every controller construct that hits
-    | checkMigrateStatus() (e.g. on first request after Octane boot, or any
-    | time a PHP deprecation fires inside an Froiden\Envato command) throws
-    | InvalidArgumentException all the way back up the dispatch chain and
-    | 500's the request. See laravel.EMERGENCY lines in storage/logs/laravel.log.
-    |
-    | Mirrors the backing channel from the top-level 'deprecations' key
-    | (LOG_DEPRECATIONS_CHANNEL → null by default; flip to 'single' to log
-    | to storage/logs/deprecations.log in dev). Same channel = same Monolog
-    | instance = no duplication.
-    */
-    'channels_deprecations_proxy' => [
-        'driver' => env('LOG_DEPRECATIONS_CHANNEL', 'null') === 'null' ? 'monolog' : 'single',
-        'path' => storage_path('logs/deprecations.log'),
-        'level' => 'debug',
-        'handler' => NullHandler::class,
     ],
 
 ];
