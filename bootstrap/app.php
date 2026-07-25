@@ -15,10 +15,6 @@ use App\Http\Middleware\SuperAdmin;
 use App\Http\Middleware\Package;
 use App\Http\Middleware\EnsureOneDeviceLogin;
 use App\Http\Middleware\CustomPackage;
-use App\Http\Middleware\InternalTokenMiddleware;
-use App\Http\Middleware\RequestContextMiddleware;
-use App\Exceptions\ResumeUploadException;
-use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,24 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
                 'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
                 'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-                // Phase 6 — bearer-token gate for internal-only probes.
-                'internal_token'   => InternalTokenMiddleware::class,
             ]);
-            // Phase 6 — request-scoped log context runs at the very
-            // front of the global stack so EVERY line downstream
-            // (controllers, jobs dispatched from request handlers)
-            // carries the request_id and trace_id by default.
-            $middleware->append(RequestContextMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (ResumeUploadException $e, Request $request) {
-            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => $e->reason,
-                    'message' => $e->getMessage(),
-                ], 422);
-            }
-            return back()->withErrors(['resume' => $e->getMessage()])->withInput();
-        });
+        //
     })->create();
