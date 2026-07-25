@@ -1124,6 +1124,26 @@
     border-radius:4px;
     cursor:pointer;
 }
+/* Resume upload — XHR progress bar, pill, banner (career-apply.blade.php) */
+.up-wrap    { margin-top:14px; padding:0; }
+.up-row     { display:flex; align-items:center; gap:10px; }
+.up-track   { flex:1; height:8px; background:#eef0f7; border-radius:6px; overflow:hidden; }
+.up-bar     { height:100%; background:linear-gradient(90deg,#3D5AFE,#2962FF);
+              border-radius:6px; transition:width .15s ease; }
+.up-pill    { display:inline-flex; align-items:center; gap:4px;
+              background:#10B981; color:#fff; font-size:1rem; font-weight:600;
+              padding:4px 10px; border-radius:12px; white-space:nowrap; }
+.up-pill-icon { width:12px; height:12px; }
+.up-stats   { margin-top:6px; font-size:1rem; color:#64748b; font-weight:500; }
+.up-banner  { margin-top:10px; padding:10px 14px; border-radius:6px;
+              font-size:1.05rem; font-weight:500; display:flex;
+              align-items:center; gap:8px; }
+.up-banner-icon { width:16px; height:16px; flex:0 0 auto; }
+.up-banner.ok  { background:#ECFDF5; border:1px solid #10B981; color:#065F46; }
+.up-banner.ok .up-banner-icon { color:#10B981; }
+.up-banner.err { background:#FEF2F2; border:1px solid #EF4444; color:#991B1B; }
+.up-banner.err .up-banner-icon { color:#EF4444; }
+
 input[type="radio"]:checked {
     border-color: transparent !important;
     background-color: rgb(30 62 239) !important;
