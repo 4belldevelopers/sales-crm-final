@@ -33,6 +33,8 @@ use Throwable;
  */
 class ResumeUploadService
 {
+    public const PRESIGN_TTL_SECONDS = 900; // 15 min
+
     private string $disk;
     private \Illuminate\Contracts\Filesystem\Filesystem $storage;
 
@@ -233,5 +235,96 @@ class ResumeUploadService
         $url = "https://file.jero.works/{$path}";
 
         return ['path' => $path, 'url' => $url];
+    }
+
+    /**
+     * Phase 4 — Issue a presigned PUT URL so the browser can upload directly
+     * to R2, bypassing the Laravel app server for byte transfer.
+     *
+     * Why: at scale (50MB portfolios, 1000 uploads/day per company) routing
+     * every byte through PHP is wasteful. Cloudflare R2 supports S3-compatible
+     * presigned PUTs via the v4 signature.
+     *
+     * @param string $r2Path The final R2 key (Companies/.../JERO_xxx.pdf)
+     * @param string|null $mimeType Optional Content-Type pinning
+     * @param int|null $maxBytes Optional Content-Length cap (browser honors)
+     * @param int $ttlSeconds TTL for the signature (default 15 min)
+     * @return array{url: string, r2_path: string, ttl_seconds: int, expires_at: string, headers: array<string,string>, method: string, bucket: string}
+     */
+    public function presignPut(
+        string $r2Path,
+        ?string $mimeType = null,
+        ?int $maxBytes = null,
+        int $ttlSeconds = self::PRESIGN_TTL_SECONDS,
+    ): array {
+        $adapter = $this->storage;
+        $rawAdapter = method_exists($adapter, 'getAdapter') ? $adapter->getAdapter() : null;
+        if ($rawAdapter === null || ! method_exists($rawAdapter, 'getClient')) {
+            throw new \RuntimeException(
+                'Presigned PUT requires S3/R2 adapter (Flysystem AwsS3V3). ' .
+                'Got: ' . get_class($adapter)
+            );
+        }
+        /** @var \Aws\S3\S3Client $s3Client */
+        $s3Client = $rawAdapter->getClient();
+
+        $bucket = (string) config("filesystems.disks.{$this->disk}.bucket");
+        $params = [
+            'Bucket' => $bucket,
+            'Key' => $r2Path,
+        ];
+        if ($mimeType !== null) {
+            $params['ContentType'] = $mimeType;
+        }
+        if ($maxBytes !== null) {
+            $params['ContentLength'] = $maxBytes;
+        }
+
+        $cmd = $s3Client->getCommand('PutObject', $params);
+        $request = $s3Client->createPresignedRequest($cmd, '+' . $ttlSeconds . ' seconds');
+        $url = (string) $request->getUri();
+
+        $headers = [];
+        foreach ($request->getHeaders() as $name => $values) {
+            $headers[$name] = is_array($values) ? ($values[0] ?? '') : (string) $values;
+        }
+
+        return [
+            'url' => $url,
+            'r2_path' => $r2Path,
+            'ttl_seconds' => $ttlSeconds,
+            'expires_at' => Carbon::now()->copy()->addSeconds($ttlSeconds)->toIso8601String(),
+            'headers' => $headers,
+            'method' => 'PUT',
+            'bucket' => $bucket,
+        ];
+    }
+
+    /**
+     * Phase 4 — verify a presigned upload landed on R2.
+     * Same alphabet as headCheck() but returns a typed result so the
+     * controller can decide between 200/422 responses on finalize.
+     *
+     * @return array{ok: bool, r2_path?: string, size?: int, reason?: string, r2_bytes?: int, client_bytes?: int}
+     */
+    public function verifyObjectForPresign(string $r2Path, ?int $clientBytes = null): array
+    {
+        if (! $this->storage->exists($r2Path)) {
+            return ['ok' => false, 'reason' => 'missing', 'r2_path' => $r2Path];
+        }
+        $size = (int) $this->storage->size($r2Path);
+        if ($size <= 0) {
+            return ['ok' => false, 'reason' => 'empty', 'r2_path' => $r2Path, 'size' => $size];
+        }
+        if ($clientBytes !== null && $clientBytes > 0 && $size !== $clientBytes) {
+            return [
+                'ok' => false,
+                'reason' => 'size_mismatch',
+                'r2_path' => $r2Path,
+                'r2_bytes' => $size,
+                'client_bytes' => $clientBytes,
+            ];
+        }
+        return ['ok' => true, 'r2_path' => $r2Path, 'size' => $size];
     }
 }

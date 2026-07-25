@@ -27,6 +27,7 @@ use App\Http\Controllers\StaffingCompany\StaffingCompanyJobApplicationController
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobApplicationController;
 use App\Http\Controllers\ProductCompany\ProductCompanyJobApplicationController;
 use App\Http\Controllers\Admin\CompanyDashboardController;
+use App\Http\Controllers\Api\ResumeParserController;
 use Illuminate\Support\Facades\Mail;
 use App\Events\MessageSent;
 
@@ -167,6 +168,19 @@ Route::get('/whatsapp-terms-and-conditions', [HomeController::class, 'whatsappTe
 Route::get('/job-details/{jobId}/{companyId}', [HomeController::class, 'jobDetails'])->name('get.jobDetails');
 Route::post('/uploadresume', [HomeController::class, 'uploadresume'])->name('get.uploadresume');
 Route::post('/extract-resume-applications', action: [HomeController::class, 'resumExtract'])->name('get.extract-resume-job-applications');
+
+// Phase 9 — Instant field-extraction parser endpoint. Mounted BEFORE
+// the service_company group so it inherits only 'web' middleware and
+// recruiter auth (any logged-in user can call). This is a sibling
+// to the existing presign-R2-PUT finalization pipeline — it does
+// NOT touch resume_uploads, audit, or any session row. Returns a
+// structured JSON hint bag for the JS module to populate empty
+// fields in parallel with the upload. See
+// app/Http/Controllers/Api/ResumeParserController.php for the
+// strict no-write contract.
+Route::middleware('auth')->prefix('api/resume-parser')->group(function () {
+    Route::post('parse', [ResumeParserController::class, 'parse'])->name('api.resume-parser.parse');
+});
 Route::post('/careerStore', [HomeController::class, 'careerStore'])->name('get.careerStore');
 Route::get('benchCandidateDetails/public_show/{id?}', [HomeController::class,'benchCandidateDetails'])->name('get.benchCandidateDetails'); 
  //** Cron start here */

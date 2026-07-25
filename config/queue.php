@@ -78,6 +78,22 @@ return [
             'after_commit' => false,
         ],
 
+        // Phase 8 — Dedicated queue for resume parsing. Same Redis
+        // DB as `redis` (default), but a separate queue name so Horizon
+        // can scale and time-out this workload independently from the
+        // `emails` queue that runs mail/elastic/notification work.
+        // The dispatcher is `ParseResumeJob::dispatch(...)->onConnection('redis_parse_resumes')->onQueue('parse_resumes')`.
+        // A worker that ONLY watches this queue lives in horizon.php
+        // under supervisor name `parse-supervisor-1`.
+        'redis_parse_resumes' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('RESUMES_PARSER_QUEUE', 'parse_resumes'),
+            'retry_after' => (int) env('RESUMES_PARSER_RETRY_AFTER', 90),
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
     ],
 
     /*
