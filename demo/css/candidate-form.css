@@ -1233,36 +1233,6 @@
 .up-actions .up-remove:hover { background: #FEF2F2; }
 .up-actions svg { width: 14px; height: 14px; }
 
-.up-details-h {
-    font-size: 1.1rem; font-weight: 700; color: #0F172A;
-    margin: 0 0 10px 0;
-}
-
-.up-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 16px;
-}
-.up-detail {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 8px 0;
-}
-.up-detail-icon {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: #EEF2FF; color: #2563EB;
-    display: inline-flex; align-items: center; justify-content: center;
-    flex: 0 0 auto;
-}
-.up-detail-icon svg { width: 14px; height: 14px; }
-.up-detail-icon.ok { background: #ECFDF5; color: #10B981; }
-.up-detail-lbl { font-size: 0.95rem; color: #64748B; line-height: 1.2; }
-.up-detail-val { font-size: 1.05rem; font-weight: 600; color: #0F172A; margin-top: 2px; }
-
-@media (max-width: 900px) {
-    .up-details-grid { grid-template-columns: 1fr; }
-}
-
 
     border-color: transparent !important;
     background-color: rgb(30 62 239) !important;
