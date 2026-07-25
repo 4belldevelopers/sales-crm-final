@@ -1308,7 +1308,7 @@ $(document).ready(function () {
         fd.append('_token', '{{ csrf_token() }}');
 
         upXhr = new XMLHttpRequest();
-        upXhr.open('POST', '{{ route("job-applications.uploadresume") }}', true);
+        upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
 
         upXhr.upload.onprogress = function (e) {
             if (!e.lengthComputable) return;
