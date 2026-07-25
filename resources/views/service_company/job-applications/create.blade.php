@@ -1480,11 +1480,15 @@ $(document).ready(function () {
     // Replace / Remove buttons inside the post-upload Resume Information card.
     // Replace = reset state and reopen the OS file picker.
     // Remove  = reset state and stay on the empty dropzone.
+    // NOTE: `resumeInput.click()` MUST run synchronously inside this
+    // user-gesture handler. Wrapping it in setTimeout() / Promise
+    // .then() breaks the user-gesture chain and modern Chrome silently
+    // refuses to open the file picker for a programmatic .click().
     $(document).on('click', '#upReplaceBtn', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         backToDropzone();
-        // Defer trigger so the reset CSS settles without flicker.
-        setTimeout(function () { resumeInput.click(); }, 60);
+        resumeInput.click();
     });
 
     $(document).on('click', '#upRemoveBtn', function (e) {
