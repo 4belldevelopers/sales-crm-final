@@ -34,15 +34,7 @@ class StoreJobApplication extends CoreRequest
             'full_name' => 'required',
             'email' => 'email|required',
             'phone' => 'required',
-            'job_id' => 'required|exists:jobs,id',
-            // The new one-stage upload sends a final URL, not a temp path.
-            'resume_url' => 'nullable|string|max:1024',
-            // Tolerate legacy clients still emitting the temp-path field.
-            // The controller falls back to headCheck() if only this is present.
-            'resume_temp_path' => 'nullable|string|max:1024',
-            // When the sectionVisibility gate does not add 'resume' for this job,
-            // we still bound the multipart fallback file so it never exceeds 5 MB.
-            'resume' => 'nullable|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf|max:5120',
+            'job_id' => 'required|exists:jobs,id'
         ];
 
         if ($requiredColumns['gender']) {
@@ -64,7 +56,7 @@ class StoreJobApplication extends CoreRequest
                         $rules = Arr::add($rules, 'photo', 'required|mimes:jpeg,jpg,png');
                     }
                     if ($key === 'resume') {
-                        $rules = Arr::add($rules, 'resume', 'required|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf|max:5120');
+                        $rules = Arr::add($rules, 'resume', 'required|mimes:jpeg,jpg,png,doc,docx,rtf,xls,xlsx,pdf');
                     }
                 }
             }

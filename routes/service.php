@@ -35,15 +35,6 @@ use App\Http\Controllers\ServiceCompany\ServiceCompanyTodoItemController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyReportController;
 
 
-// Phase 6 — Internal subsystem probes (ResumeHealthController).
-// Lives OUTSIDE the auth group because the probe must respond when
-// auth/Redis are degraded; bearer-token (RESUMES_HEALTH_TOKEN) gates
-// access. Route is named so monitoring can pin it without grepping.
-Route::middleware('internal_token')->prefix('api/internal')->name('internal.')->group(function () {
-    Route::get('health/resume', [\App\Http\Controllers\Api\ResumeHealthController::class, 'show'])
-        ->name('health.resume');
-});
-
 Route::group(['middleware' => 'auth'], function () {
 
 	//########################################################################### SERVICE COMPANY ######################################################################
@@ -164,25 +155,6 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
 						Route::post('job-applications/update/{id}', [ServiceCompanyJobApplicationController::class,'update'])->name('job-applications.update');
 						Route::post('uploadresume', [ServiceCompanyJobApplicationController::class,'uploadresume'])->name('job-applications.uploadresume');
-						// Phase 2: Resume Upload Session JSON API.
-						// Tenant isolation enforced per-request via auth()->user()->company_id
-						// in the controller; routes are scoped here so the auth middleware
-						// is shared with the rest of the service_company resource.
-						Route::prefix('api/resume-sessions')->name('resume-sessions.')->group(function () {
-							Route::post('/', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'store'])->name('store');
-							Route::post('presign', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'presign'])->name('presign');
-							Route::post('{uuid}/finalize', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'finalize'])->name('finalize');
-							Route::get('active', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'active'])->name('active');
-							Route::get('{uuid}', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'show'])->name('show');
-							Route::post('{uuid}/cancel', [\App\Http\Controllers\Api\ResumeUploadSessionController::class, 'cancel'])->name('cancel');
-						});
-						// Phase 9.2 — submit-side preflight. The submit handler pings
-						// this with an 800ms AbortController so a sick app server
-						// never becomes a 30s dead-spinner. NOT inside resume-sessions
-						// prefix so its auth/rate-limit posture is independently tunable.
-						Route::get('api/resume-preflight', [\App\Http\Controllers\Api\ResumePreflightController::class, 'preflight'])
-							->middleware('throttle:30,1')
-							->name('resume.preflight');
 						Route::post('unset-file', [ServiceCompanyJobApplicationController::class,'unsetFile'])->name('file.unset');
 						Route::post('skill-experience', [ServiceCompanyJobApplicationController::class,'skillExperienceUpdate'])->name('job-applications.skillExperienceUpdate');
 						Route::post('job-question-update', [ServiceCompanyJobApplicationController::class,'JobQuestionUpdate'])->name('job-applications.JobQuestionUpdate');

@@ -98,7 +98,6 @@ return [
 
     'waits' => [
         'redis:default' => 60,
-        'redis_parse_resumes:parse_resumes' => 45,    // Phase 8 — parse SLA
     ],
 
     /*
@@ -211,28 +210,6 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
-
-        // Phase 8 — dedicated parse-supervisor-1. Watch only the
-        // `parse_resumes` queue on the `redis_parse_resumes`
-        // connection. minProcesses=1 guarantees one warm worker so
-        // latency on the next parse is bounded even when the queue
-        // is idle. maxProcesses defaults to 5 — parse is CPU-bound
-        // (vendor call) and the worker is narrow. Override via
-        // RESUMES_HORIZON_PARSE_MAX in environments/production.
-        'parse-supervisor-1' => [
-            'connection' => 'redis_parse_resumes',
-            'queue' => ['parse_resumes'],
-            'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
-            'minProcesses' => 1,
-            'maxProcesses' => (int) env('RESUMES_HORIZON_PARSE_MAX', 5),
-            'maxTime' => 0,
-            'maxJobs' => 0,
-            'memory' => 256,
-            'tries' => 3,
-            'timeout' => 90,
-            'nice' => 5,
-        ],
     ],
 
     'environments' => [
@@ -242,17 +219,11 @@ return [
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
-            'parse-supervisor-1' => [
-                'maxProcesses' => (int) env('RESUMES_HORIZON_PARSE_MAX', 10),
-            ],
         ],
 
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => 3,
-            ],
-            'parse-supervisor-1' => [
-                'maxProcesses' => (int) env('RESUMES_HORIZON_PARSE_MAX', 3),
             ],
         ],
     ],
