@@ -2874,6 +2874,9 @@ function re_test(text){
                       $('#dob').val(response.dob);
                       $('#current_company').val(response.currentjob);
                       $('#qualification').val(response.qualification).change();
+                      if (response.careerSummary) {
+                          $('#careersummary').val(response.careerSummary);
+                      }
 
                       tagifyskill.removeAllTags(); // Clear existing tags first
                       tagifyskill.addTags(response.skills); // Add new tags
