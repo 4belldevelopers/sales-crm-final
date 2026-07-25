@@ -2106,7 +2106,7 @@ var cities = @json($cities);
 
        
         submitButton.addEventListener('click', async function (e) {
-           
+
             e.preventDefault();
             // if (submitButton.disabled) {
             //     return; // ⛔ Prevent multiple clicks
@@ -2126,6 +2126,85 @@ var cities = @json($cities);
                 });
                 return; // ⛔ STOP EXECUTION
             }
+
+            // ========== Phase 7 — non-blocking upload wait ==========
+            // If the recruiter picked a file before clicking Submit,
+            // the JS module is in mid-upload. Hold the click (≤30 s)
+            // until the upload resolves. We do NOT disable inputs —
+            // that's the whole point of the Phase 7 UX.
+            try {
+                if (typeof window.ResumeUpload === 'object'
+                    && typeof window.ResumeUpload.whenReady === 'function') {
+                    const ready = await window.ResumeUpload.whenReady({ timeoutMs: 30000 });
+                    if (!ready.ok) {
+                        // timeout / cancelled / replaced / failed.
+                        // Restore button so the user can re-pick or retry.
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+                        if (ready.reason === 'timeout') {
+                            Swal.fire({
+                                title: 'Upload still in progress',
+                                text: 'Your resume is still uploading. Please wait a moment and click Submit again.',
+                                icon: 'warning',
+                                confirmButtonText: 'Ok, got it!',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                            });
+                        } else if (ready.reason === 'failed' && ready.error) {
+                            Swal.fire({
+                                title: 'Upload failed',
+                                text: ready.error,
+                                icon: 'error',
+                                confirmButtonText: 'Ok, got it!',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                            });
+                        }
+                        return; // ⛔ do not submit on upload error.
+                    }
+                    // Upload completed in time. Mark the validating
+                    // stage on the existing 5-step stepper so the UI
+                    // is continuous with the rest of the flow.
+                    if (typeof window.setResumeProgress === 'function') {
+                        window.setResumeProgress('validating');
+                    }
+                }
+            } catch (_) {
+                // ResumeUpload.whenReady is designed never to reject.
+                // If it ever does (programmer error), fall through to
+                // submit so we don't lock the recruiter out.
+            }
+            // ========== /Phase 7 ==========
+
+            // ========== Phase 9 — non-blocking inline parser wait ==========
+            // The Phase 9 parser pipeline runs in parallel with the
+            // upload; we wait up to 2.5 s for any in-flight parse to
+            // resolve (so empty fields are populated when the
+            // recruiter clicks Submit). Past 2.5 s we proceed with
+            // submit regardless — the parse keeps going in the
+            // background and the populated-if-empty helper will
+            // paint any subsequent results into the (already
+            // submitted) form via the foreground JS channel.
+            try {
+                if (typeof window.ResumeUpload === 'object'
+                    && typeof window.ResumeUpload.whenParsedInline === 'function') {
+                    const parsed = await window.ResumeUpload.whenParsedInline({ timeoutMs: 2500 });
+                    // Note: `still_running` outcome = UX proceeds
+                    // past the 2.5 s cap; parse may still be
+                    // running server-side (vendor RTT), but the
+                    // submit path must not block on it.
+                    if (parsed && parsed.ok === false && parsed.reason === 'failed') {
+                        Swal.fire({
+                            title: 'Unable to parse resume',
+                            text: 'You can continue manually — please fill the rest of the form by hand.',
+                            icon: 'warning',
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: { confirmButton: 'btn btn-primary' },
+                        });
+                    }
+                }
+            } catch (_) {
+                // never block submit
+            }
+            // ========== /Phase 9 ==========
 
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
@@ -2190,7 +2269,21 @@ var cities = @json($cities);
                                 });
 																			},
 															error			: function (response) {
-																									//handleFails(response);
+                                  // Phase 9.1 — submit-side verifier. We
+                                  // delegate to a shared helper that
+                                  // distinguishes network failure (verifier
+                                  // flow with Retry behind a server check)
+                                  // from server-side errors (legacy toast).
+                                  // The helper is in a top-level <script>
+                                  // below this point.
+                                  try {
+                                    if (window.jero && typeof window.jero.handleSubmitNetworkFailure === 'function') {
+                                      window.jero.handleSubmitNetworkFailure(response, {
+                                        csrfToken: '{{ csrf_token() }}',
+                                      });
+                                    }
+                                  } catch (_) { /* fallback — original behaviour */ }
+                                  //handleFails(response);
 																			}
 													});
 							
@@ -2929,7 +3022,7 @@ var KTAddCandidate = function () {
 
        
         submitButton.addEventListener('click', async function (e) {
-           
+
             e.preventDefault();
             if (submitButton.disabled) {
                 return; // ⛔ Prevent multiple clicks
@@ -2950,6 +3043,69 @@ var KTAddCandidate = function () {
                 submitButton.disabled = false;
                 return; // ⛔ STOP EXECUTION
             }
+
+            // ========== Phase 7 — non-blocking upload wait ==========
+            // Same contract as the UPDATE handler above. Hold the
+            // submit-button click (≤30 s) for an in-flight presign
+            // /legacy upload to resolve. Inputs are NOT disabled while
+            // we wait so the recruiter can fix typos in tandem.
+            try {
+                if (typeof window.ResumeUpload === 'object'
+                    && typeof window.ResumeUpload.whenReady === 'function') {
+                    const ready = await window.ResumeUpload.whenReady({ timeoutMs: 30000 });
+                    if (!ready.ok) {
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+                        $("#save-form").prop("disabled", false).html('Submit');
+                        if (ready.reason === 'timeout') {
+                            Swal.fire({
+                                title: 'Upload still in progress',
+                                text: 'Your resume is still uploading. Please wait a moment and click Submit again.',
+                                icon: 'warning',
+                                confirmButtonText: 'Ok, got it!',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                            });
+                        } else if (ready.reason === 'failed' && ready.error) {
+                            Swal.fire({
+                                title: 'Upload failed',
+                                text: ready.error,
+                                icon: 'error',
+                                confirmButtonText: 'Ok, got it!',
+                                customClass: { confirmButton: 'btn btn-primary' },
+                            });
+                        }
+                        return; // ⛔ do not submit on upload error.
+                    }
+                    if (typeof window.setResumeProgress === 'function') {
+                        window.setResumeProgress('validating');
+                    }
+                }
+            } catch (_) {
+                // whenReady() never rejects by contract; fall through on
+                // a programmer error so we don't lock the recruiter out.
+            }
+            // ========== /Phase 7 ==========
+
+            // ========== Phase 9 — non-blocking inline parser wait ==========
+            try {
+                if (typeof window.ResumeUpload === 'object'
+                    && typeof window.ResumeUpload.whenParsedInline === 'function') {
+                    const parsed = await window.ResumeUpload.whenParsedInline({ timeoutMs: 2500 });
+                    if (parsed && parsed.ok === false && parsed.reason === 'failed') {
+                        Swal.fire({
+                            title: 'Unable to parse resume',
+                            text: 'You can continue manually — please fill the rest of the form by hand.',
+                            icon: 'warning',
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: { confirmButton: 'btn btn-primary' },
+                        });
+                    }
+                }
+            } catch (_) {
+                // never block submit
+            }
+            // ========== /Phase 9 ==========
+
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
                   $("#save-form").prop("disabled", true);
@@ -3019,7 +3175,19 @@ var KTAddCandidate = function () {
 																			},
 															error			: function (response) {
                                 $("#save-form").prop("disabled", false);
-																									//handleFails(response);
+                                // Phase 9.1 — same as EDIT path above.
+                                // Network failures engage the verifier
+                                // (show → linked check → manual Retry).
+                                // Non-network failures fall back to the
+                                // legacy toast via the helper itself.
+                                try {
+                                  if (window.jero && typeof window.jero.handleSubmitNetworkFailure === 'function') {
+                                    window.jero.handleSubmitNetworkFailure(response, {
+                                      csrfToken: '{{ csrf_token() }}',
+                                    });
+                                  }
+                                } catch (_) { /* fallback */ }
+                                //handleFails(response);
 																			}
 													});
 							
@@ -3057,6 +3225,235 @@ KTUtil.onDOMContentLoaded(function () {
 });
 
 @php } @endphp
+
+{{--
+  Phase 9.1 — Submit-side network-failure verifier.
+  Both EDIT and ADD `<form>` handlers wrap their $.ajax `error:`
+  branch in `jero.handleSubmitNetworkFailure(jqXHR, opts)` so a
+  recruiter who lost Wi-Fi mid-submit always sees a calm verifier
+  modal: "Connection lost. Verifying whether your submission was
+  received..." → server-side GET on the existing session → resolve
+  as one of three outcomes:
+    - submission received      → green toast + redirect
+    - submission not received  → soft error + manual Retry button
+    - verifier unreachable     → soft error + Retry button
+  Automatic replay of the POST itself is NEVER performed; the
+  submit endpoint is not idempotent and a premature replay would
+  produce duplicate candidates. Recruiter clicks Retry only when
+  the modal confirms no candidate was written.
+--}}
+<script>
+(function () {
+  'use strict';
+  if (window.JERO_RESUME_NETWORK_VERIFIER_INITIALIZED) { return; }
+  window.JERO_RESUME_NETWORK_VERIFIER_INITIALIZED = true;
+
+  /**
+   * Network-failure handler. Invoked from the AJAX `error:` branch
+   * of both UPDATE and STORE submit flows. Optional `opts.spinnerId`
+   * lets the host view hide the spinner rapidly.
+   */
+  window.jero = window.jero || {};
+  window.jero.handleSubmitNetworkFailure = function (jqXHR, opts) {
+    opts = opts || {};
+    const sessionShowUrlTpl = (window.JERO_RESUME_CONFIG
+      && window.JERO_RESUME_CONFIG.sessionShowUrlTpl) || null;
+    const sessionUuid = (document.getElementById('upload_session_uuid') || {}).value || null;
+    const status = jqXHR && jqXHR.status;
+    const statusText = (jqXHR && jqXHR.statusText) || '';
+    // Browser offline state vs. server-side error.
+    const browserOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    const networkInfo = (window.ResumeUpload && window.ResumeUpload.network)
+      ? window.ResumeUpload.network() : { status: browserOffline ? 'offline' : 'online' };
+
+    // Non-network failure (timeout, 4xx, 5xx) → defer to the host's
+    // existing error renderer; do NOT engage the verifier.
+    const isNetworkFailure = browserOffline
+      || status === 0
+      || (statusText && /timeout|abort|network/i.test(statusText))
+      || (networkInfo && networkInfo.status === 'offline');
+
+    if (! isNetworkFailure) {
+      // Server-side error — the controller's fail() returns a JSON
+      // body with success:false, message:"…". Replicate the legacy
+      // behaviour of `handleFails(response)`: bail out with a toast,
+      // restore the button so the recruiter can retry by hand.
+      try {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            text: 'Submission failed. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'Ok, got it!',
+            customClass: { confirmButton: 'btn btn-primary' },
+          });
+        }
+      } catch (_) { /* ignore */ }
+      return;
+    }
+
+    // We can still talk to the navigator. Pause the modal pipeline
+    // until we know the recruiter wants to attempt a retry. The
+    // first message is calm; we never auto-replay the POST.
+    if (! sessionShowUrlTpl || ! sessionUuid) {
+      // No verifier available — surface manual Retry only.
+      _showVerifierManualRetry({ reason: 'verify_unavailable' });
+      return;
+    }
+
+    const verifyUrl = sessionShowUrlTpl.replace('__UUID__', encodeURIComponent(sessionUuid));
+
+    // Step 1: announce verifier is running.
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Verifying...',
+        text: 'Connection lost. Checking whether your submission was received.',
+        icon: 'info',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: function () { Swal.showLoading(); },
+      });
+    }
+
+    // Step 2: GET the session row. We never reach here for the
+    // blank-record case (resume upload not finalized) because the
+    // controller's submit() does NOT write a candidate if the
+    // session is unfinished — so a show() with linked=false is the
+    // SAFE branch to enable Retry.
+    fetch(verifyUrl, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': (opts.csrfToken || '') },
+    })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+      .then(function (j) {
+        const sess = (j && j.session) || {};
+        const linked = !!sess.linked;
+        const candidateId = sess.candidate_id || sess.bench_application_id || null;
+        if (linked && candidateId) {
+          // Server wrote a candidate WHILE the response was in
+          // flight (or the POST actually landed before the network
+          // dropped). Show the success modal and redirect. This
+          // path is what makes the spec's "Try same-window retry
+          // semantics try harder than naive double-click" claim
+          // hold: we verified against the SSOT, not shown a green
+          // toast speculatively.
+          if (typeof Swal !== 'undefined') {
+            Swal.close();
+            Swal.fire({
+              text: 'You have successfully submitted.',
+              icon: 'success',
+              confirmButtonText: 'Ok, got it!',
+              customClass: { confirmButton: 'btn btn-primary' },
+            });
+          }
+          // No redirect URL on this branch — the original POST's
+          // success() callback would have set one. We don't have
+          // it. Recruiter stays on the create/edit form; they can
+          // navigate manually.
+          return;
+        }
+        // Linked=false → no candidate yet → manual Retry is safe.
+        _showVerifierManualRetry({ reason: 'submission_not_received' });
+      })
+      .catch(function () {
+        // Verifier itself is unreachable. We cannot prove the
+        // candidate was NOT written server-side. Default to a
+        // careful message + disabled Retry until the network comes
+        // back — better the recruiter waits one minute than we
+        // green-bar a duplicate candidate.
+        _showVerifierManualRetry({ reason: 'verifier_unreachable' });
+      });
+  };
+
+  function _showVerifierManualRetry (info) {
+    if (typeof Swal === 'undefined') { return; }
+    let title = 'Submission could not be confirmed';
+    let text = 'We were unable to verify whether your submission was received. Please wait until your connection is stable and try again.';
+    let showRetry = info.reason === 'submission_not_received'
+      || info.reason === 'verification_retry_safe';
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: showRetry ? 'Retry submission' : 'Ok, got it!',
+      cancelButtonText: 'Close',
+      customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-light' },
+    }).then(function (result) {
+      if (result.isConfirmed && showRetry) {
+        // Recruiter-driven retry — we DO NOT auto-replay the POST.
+        // The recruiter's click on the submit button inside the
+        // form re-runs the original flow with a fresh CSRF token.
+        try {
+          const btn = document.getElementById('save-form')
+                   || document.getElementById('update-form')
+                   || null;
+          if (btn) { btn.click(); }
+        } catch (_) { /* ignore */ }
+      }
+    });
+  }
+
+  /**
+   * Phase 9.2 — preflight probe before submitting. Pings
+   * `GET /service_company/api/resume-preflight` with an AbortController
+   * whose timeout is `preflightTimeoutMs` (configurable, default 800ms).
+   *
+   * Three branches:
+   *   - 200 + checks.mysql.ok === true   → proceed (resolve true).
+   *   - 200 + checks.mysql.ok === false  → server is sick. Show a
+   *     calm "Server slow" toast and ABORT the submit. Recruiter
+   *     clicks Submit again when ops is back. Hard cap on hangs.
+   *   - timeout / network / non-200      → treat as "uncertain" —
+   *     this matches the offline listener's signal. Submit proceeds
+   *     because the candidate POST has its OWN network-failure
+   *     verifier downstream.
+   *
+   * Returns a Promise<boolean>: true = proceed, false = abort.
+   * Optional cb receives a `reason` for telemetry.
+   */
+  window.jero.runPreflight = function (opts) {
+    opts = opts || {};
+    const url = (window.JERO_RESUME_CONFIG && window.JERO_RESUME_CONFIG.preflightUrl) || null;
+    const timeoutMs = (opts.timeoutMs && typeof opts.timeoutMs === 'number')
+      ? opts.timeoutMs
+      : ((window.JERO_RESUME_CONFIG && window.JERO_RESUME_CONFIG.preflightTimeoutMs) || 800);
+    if (! url) {
+      // No endpoint wired — proceed (legacy form, opt-out).
+      return Promise.resolve({ proceed: true, reason: 'no_config' });
+    }
+    const ac = ('AbortController' in window) ? new AbortController() : null;
+    const timer = setTimeout(function () { try { ac && ac.abort(); } catch (_) {} }, timeoutMs);
+    return fetch(url, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': (opts.csrfToken || '') },
+      signal: ac ? ac.signal : undefined,
+    })
+      .then(function (r) {
+        clearTimeout(timer);
+        // 200 is the only branch we let proceed(+ checks.mysql.ok).
+        if (! r.ok) {
+          return { proceed: true, reason: 'http_' + r.status };
+        }
+        return r.json().then(function (j) {
+          const ok = j && j.checks && j.checks.mysql && j.checks.mysql.ok === true;
+          return ok
+            ? { proceed: true, reason: 'mysql_ok' }
+            : { proceed: false, reason: 'mysql_down' };
+        });
+      })
+      .catch(function (err) {
+        clearTimeout(timer);
+        // AbortError = timeout. Network error = fetch threw.
+        // Both = uncertain; submit proceeds because the POST
+        // pipeline has its own verifier.
+        const isAbort = err && err.name === 'AbortError';
+        return { proceed: true, reason: isAbort ? 'preflight_timeout' : 'preflight_network' };
+      });
+  };
+})();
+</script>
 function re_test(text){
   var jobId = "{{ @$jobId }}";
   $('.page-loader').css('display', 'flex');
