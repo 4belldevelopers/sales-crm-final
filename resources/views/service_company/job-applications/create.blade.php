@@ -325,82 +325,6 @@
                                     Remove
                                 </button>
                             </div>
-
-                            <h4 class="up-details-h">Resume Details</h4>
-                            <div class="up-details-grid">
-                                <div class="up-detail">
-                                    <span class="up-detail-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="12" cy="7" r="4"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">Uploaded On</div>
-                                        <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
-                                    </div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon ok">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">Parser Status</div>
-                                        <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
-                                    </div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                            <polyline points="14 2 14 8 20 8"/>
-                                            <line x1="8" y1="13" x2="16" y2="13"/>
-                                            <line x1="8" y1="17" x2="16" y2="17"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">File Type</div>
-                                        <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
-                                    </div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                            <polyline points="14 2 14 8 20 8"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">Pages</div>
-                                        <div class="up-detail-val" id="upDetailPages">&mdash;</div>
-                                    </div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">File Size</div>
-                                        <div class="up-detail-val" id="upDetailFileSize">&nbsp;</div>
-                                    </div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                                            <path d="M6 12v5c0 1.66 4.03 3 6 3s6-1.34 6-3v-5"/>
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <div class="up-detail-lbl">Skills Detected</div>
-                                        <div class="up-detail-val" id="upDetailSkills">&mdash;</div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                     </div>
@@ -1444,8 +1368,10 @@ $(document).ready(function () {
     }
 
     // Populate the post-upload Resume Information card from the picked
-    // file (always) and an optional parser response object (when re_test
-    // returns). Idempotent — safe to call once or twice.
+    // file. Idempotent — safe to call once or twice. The parser response
+    // argument is accepted for forward-compat but currently unused
+    // (the File Type / File Size come from the File object itself; parser
+    // content still flows into the form fields below as before).
     function showUploadedCard(file, parserResponse) {
         var ext = extLabel(file);
         var $info = $('#upInfo');
@@ -1453,30 +1379,9 @@ $(document).ready(function () {
         $('#upFileName').text(file.name);
         $('#upFileSub').text(fmtSize(file.size) + ' · ' + ext);
 
-        var now = new Date();
-        var day = String(now.getDate()).padStart(2, '0');
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        var month = months[now.getMonth()];
-        var year = now.getFullYear();
-        var hh = String(now.getHours()).padStart(2, '0');
-        var mm = String(now.getMinutes()).padStart(2, '0');
-        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm);
-
-        // Default to "Pending" until the parser response lands.
-        $('#upDetailParserStatus').text('Pending');
-        $('#upDetailFileType').text(ext);
-        $('#upDetailPages').text('—');
-        $('#upDetailFileSize').text(fmtSize(file.size));
-        $('#upDetailSkills').text('—');
-
         if (parserResponse) {
-            if (parserResponse.skills && parserResponse.skills.length) {
-                $('#upDetailSkills').text(parserResponse.skills.length);
-            }
-            $('#upDetailParserStatus').text('Completed');
-            if (typeof parserResponse.pages === 'number' && parserResponse.pages > 0) {
-                $('#upDetailPages').text(parserResponse.pages);
-            }
+            // Reserved for any future per-file metadata the parser
+            // exposes — currently nothing to render in the card.
         }
 
         // Hide the dropzone + file-info strip and show the new card.
@@ -1512,8 +1417,6 @@ $(document).ready(function () {
                 pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
             );
         };
-
-        upXhr.onload = function () {
             let r = null;
             try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
             if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
@@ -1539,8 +1442,6 @@ $(document).ready(function () {
                 $('#uploaded_file_path').val(r.file_path || '');
 
                 // Swap to the Resume Information card immediately.
-                // Parser details (skills count, page count, status:
-                // Completed) get patched in once re_test responds.
                 showUploadedCard(file, null);
             } else {
                 const msg = (r && r.message) ? r.message : upXhr.statusText;
