@@ -164,8 +164,6 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
 						Route::post('job-applications/update/{id}', [ServiceCompanyJobApplicationController::class,'update'])->name('job-applications.update');
 						Route::post('uploadresume', [ServiceCompanyJobApplicationController::class,'uploadresume'])->name('job-applications.uploadresume');
-<<<<<<< Updated upstream
-=======
 						// Phase 2: Resume Upload Session JSON API.
 						// Tenant isolation enforced per-request via auth()->user()->company_id
 						// in the controller; routes are scoped here so the auth middleware
@@ -185,7 +183,6 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('api/resume-preflight', [\App\Http\Controllers\Api\ResumePreflightController::class, 'preflight'])
 							->middleware('throttle:30,1')
 							->name('resume.preflight');
->>>>>>> Stashed changes
 						Route::post('unset-file', [ServiceCompanyJobApplicationController::class,'unsetFile'])->name('file.unset');
 						Route::post('skill-experience', [ServiceCompanyJobApplicationController::class,'skillExperienceUpdate'])->name('job-applications.skillExperienceUpdate');
 						Route::post('job-question-update', [ServiceCompanyJobApplicationController::class,'JobQuestionUpdate'])->name('job-applications.JobQuestionUpdate');
