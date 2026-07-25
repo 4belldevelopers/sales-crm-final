@@ -226,7 +226,25 @@
                             <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" style="display:none;">
 
                             <div class="uf">
-                                Supports PDF, DOC, DOCX (Max 10MB)
+                                Supports PDF, DOC, DOCX (Max 6 MB)
+                            </div>
+
+                            <!-- Progress bar / pill / success banner -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
                             </div>
 
                             <!-- Selected File -->
@@ -1219,8 +1237,9 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        // Server is `max:6048` KB = 6 MB. Keep the JS check in sync.
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
@@ -1237,9 +1256,125 @@ $(document).ready(function () {
 
         $('.download-file').addClass('d-none');
 
+        // Drive the real-time XHR progress bar first; the legacy pipeline
+        // (hFIC) uploads the same blob in parallel. Setting this flag tells
+        // hFIC to skip its jQuery POST — keeping same-origin POSTs to one
+        // for the file, so the parser POST `/extract-resume-applications`
+        // is never queued behind an upload on the HTTP/1.1 6-conn cap.
+        window.__upXhrChannelClaimed = true;
+        if (typeof uploadWithProgress === 'function') {
+            uploadWithProgress(file);
+        }
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
         }
+        // Reset so the legacy channel is open for the *next* pick.
+        window.__upXhrChannelClaimed = false;
+    }
+
+    // ==========================
+    // XHR progress helpers
+    // ==========================
+    let upXhr = null;
+
+    function fmtKB(b) {
+        return (b / 1024).toFixed(1) + ' KB';
+    }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
+        $('#upWrap').hide();
+        $('#upBar').css('width', '0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        const $b = $('#upBanner');
+        $b.hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
+    }
+
+    function uploadWithProgress(file) {
+        window.__upXhrChannelClaimed = true;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+
+        $('#upWrap').show();
+        $('#upStats').text(
+            '0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size)
+        );
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('_token', '{{ csrf_token() }}');
+
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("job-applications.uploadresume") }}', true);
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            const pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(
+                pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
+            );
+        };
+
+        upXhr.onload = function () {
+            let r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
+            if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text(
+                    '100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size)
+                );
+                $('#upPill').css('display', 'inline-flex');
+                const $b = $('#upBanner');
+                $b.removeClass('err').addClass('ok')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<polyline points="9 12 11 14 16 9"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload complete!</strong> '
+                        + 'Your resume has been uploaded successfully.</span>'
+                    ).show();
+                // Set the hidden input the controller's `clientappstore`
+                // reads from session path. We do NOT clear #resume —
+                // `hasFile('resume')` is the trigger that fires the
+                // session-based UploadResumeToTestRTwo dispatch.
+                $('#uploaded_file_path').val(r.file_path || '');
+            } else {
+                const msg = (r && r.message) ? r.message : upXhr.statusText;
+                $('#upBanner')
+                    .removeClass('ok').addClass('err')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                        + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload failed:</strong> ' + msg + '</span>'
+                    ).show();
+            }
+            upXhr = null;
+        };
+
+        upXhr.onerror = function () {
+            $('#upBanner')
+                .removeClass('ok').addClass('err')
+                .html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/>'
+                    + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                    + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                    + '</svg>'
+                    + '<span><strong>Network error</strong> during upload. '
+                    + 'Click Remove and try again.</span>'
+                ).show();
+            upXhr = null;
+        };
+
+        upXhr.send(fd);
     }
 
     // ==========================
@@ -1318,6 +1453,10 @@ $(document).ready(function () {
 
         e.preventDefault();
         e.stopPropagation();
+
+        if (typeof resetProgress === 'function') {
+            resetProgress();
+        }
 
         $('#resume').val('');
         $('#resumeCheck').val('');
@@ -3160,6 +3299,13 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
       }
 
+      // uploadWithProgress() already POSTed this blob to /uploadresume
+      // with real progress feedback. Skip the redundant jQuery POST.
+      // The PDFjs / mammoth parse path below still runs so Career
+      // Summary fills in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
        let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -3207,6 +3353,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
     });
+      } // end if (!__skipUpload)
 
 
 

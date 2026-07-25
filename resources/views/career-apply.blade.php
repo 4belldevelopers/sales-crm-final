@@ -1401,6 +1401,11 @@ $(document).ready(function () {
     // Progress bar / XHR helpers
     // ==========================
     let upXhr = null;
+    // Set by `uploadWithProgress` so the legacy `handleFileInputChange`
+    // (still bound to #resume.change on the DOM listener at line 3124,
+    // below) can skip its redundant jQuery upload to /uploadresume.
+    // Reset by `resetProgress()` on each new pick.
+    window.__upXhrChannelClaimed = false;
 
     function fmtKB(b) {
         return (b / 1024).toFixed(1) + ' KB';
@@ -1408,6 +1413,7 @@ $(document).ready(function () {
 
     function resetProgress() {
         if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
         $('#upWrap').hide();
         $('#upBar').css('width', '0%');
         $('#upStats').text('0% &middot; 0 KB / 0 KB');
@@ -1419,7 +1425,14 @@ $(document).ready(function () {
     }
 
     function uploadWithProgress(file) {
+        // Claim the upload channel BEFORE any legacy path can fire so
+        // the same blob is never POSTed twice to the same origin (XHR +
+        // legacy jQuery POST would otherwise queue parser POSTs behind
+        // uploads on the HTTP/1.1 6-conn cap, which is what broke
+        // Career Summary fill-in).
+        window.__upXhrChannelClaimed = true;
         resetProgress();
+        window.__upXhrChannelClaimed = true;
         $('#upWrap').show();
         $('#upStats').text(
             '0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size)
@@ -1516,8 +1529,8 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
@@ -2998,6 +3011,13 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
       }
 
+      // The modern XHR layer (`uploadWithProgress`) already POSTed this
+      // exact blob to /uploadresume with real progress feedback.
+      // Skip the redundant jQuery POST — but STILL run the parse path
+      // below so Career Summary can fill in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
        let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -3036,6 +3056,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
     });
+      } // end if (!__skipUpload)
 
       if (file.type === 'application/pdf' || fileExtension === 'pdf') {
       if (file) {
