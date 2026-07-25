@@ -1144,7 +1144,126 @@
 .up-banner.err { background:#FEF2F2; border:1px solid #EF4444; color:#991B1B; }
 .up-banner.err .up-banner-icon { color:#EF4444; }
 
-input[type="radio"]:checked {
+/* ==========================================================
+   Equal-height columns for the two-card .g2 row
+   (Upload Resume | Career Summary). Each .fs flex-stretches
+   to row height, and .fsc inside each card fills remaining
+   vertical space.
+   ========================================================== */
+.g2 { align-items: stretch; }
+.g2 > .fs { display: flex; flex-direction: column; }
+.g2 > .fs > .fsc { flex: 1; display: flex; flex-direction: column; }
+
+/* Career Summary: textarea grows to fill its card */
+.fs .fsc textarea#careersummary {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+}
+
+/* ==========================================================
+   After-upload Resume Information card (state 2 from screenshot)
+   Shown after uploadWithProgress + re_test complete; dropzone
+   and progress bar are hidden in this state.
+   ========================================================== */
+.up-info            { display: none; }
+.up-info.show       { display: block; }
+
+.up-info-banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: #ECFDF5;
+    border: 1px solid #10B981;
+    border-radius: 6px;
+    color: #065F46;
+    font-size: 1.05rem; font-weight: 500;
+    margin-bottom: 14px;
+}
+.up-info-banner-icon { width: 16px; height: 16px; flex: 0 0 auto; color: #10B981; }
+
+.up-file-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+.up-file-icon {
+    width: 32px; height: 32px; flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #EF4444; color: #fff;
+    border-radius: 4px;
+    font-size: 0.78rem; font-weight: 800;
+    letter-spacing: 0.02em;
+}
+.up-file-meta { flex: 1; min-width: 0; }
+.up-file-name {
+    font-weight: 700; color: #0F172A;
+    font-size: 1.05rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.up-file-sub  { font-size: 0.95rem; color: #64748B; margin-top: 2px; }
+.up-file-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #10B981; color: #fff;
+    font-size: 0.95rem; font-weight: 600;
+    padding: 4px 10px; border-radius: 12px;
+    white-space: nowrap;
+}
+.up-file-pill-icon { width: 12px; height: 12px; }
+
+.up-actions {
+    display: flex; gap: 8px;
+    margin-bottom: 16px;
+}
+.up-actions button {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    color: #0F172A;
+    font-size: 1rem; font-weight: 600;
+    padding: 7px 14px; border-radius: 6px;
+    cursor: pointer; transition: background .15s ease;
+    font-family: 'Poppins', sans-serif;
+}
+.up-actions button:hover { background: #F1F5F9; }
+.up-actions .up-remove { color: #DC2626; }
+.up-actions .up-remove:hover { background: #FEF2F2; }
+.up-actions svg { width: 14px; height: 14px; }
+
+.up-details-h {
+    font-size: 1.1rem; font-weight: 700; color: #0F172A;
+    margin: 0 0 10px 0;
+}
+
+.up-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+.up-detail {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 0;
+}
+.up-detail-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: #EEF2FF; color: #2563EB;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+}
+.up-detail-icon svg { width: 14px; height: 14px; }
+.up-detail-icon.ok { background: #ECFDF5; color: #10B981; }
+.up-detail-lbl { font-size: 0.95rem; color: #64748B; line-height: 1.2; }
+.up-detail-val { font-size: 1.05rem; font-weight: 600; color: #0F172A; margin-top: 2px; }
+
+@media (max-width: 900px) {
+    .up-details-grid { grid-template-columns: 1fr; }
+}
+
+
     border-color: transparent !important;
     background-color: rgb(30 62 239) !important;
 }
