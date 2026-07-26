@@ -895,11 +895,17 @@ references them yet.
 
 ## Phase B — Upload Pipeline (Steps 4-6)
 
+> **Important:** v2 uses **2 RTT** — presign → direct R2 PUT →
+> submit-with-session. There is NO standalone `finalize` endpoint in
+> production. The finalize logic is embedded inside the submit handler
+> (Step 6). The service class below has a `finalize()` method for
+> internal use, but it is NOT exposed as a public route.
+
 ### Step 4 — `ResumeUploadSession` service (core logic)
 
 **Intent:** Build the single service class that encapsulates all upload
 session business logic. This is the hardest class in the v2 system.
-Every endpoint in Steps 4-7 delegates to this service.
+Every endpoint in Steps 4-6 delegates to this service.
 
 **Pre-requisites:**
 - Step 2 complete (columns exist in DB)
@@ -1409,9 +1415,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-// Intent: v2 resume upload session endpoints — presign, finalize, show, cancel.
-// Every method delegates to ResumeUploadSession service.
+// Intent: v2 resume upload session endpoints — presign, show, cancel.
 // No file bytes are handled here — only metadata.
+// NOTE: There is NO public finalize endpoint. The 2-RTT flow embeds
+// finalize logic inside the submit handler (Step 6).
 
 class ResumeUploadSessionController extends \App\Http\Controllers\Controller
 {
@@ -1458,29 +1465,10 @@ class ResumeUploadSessionController extends \App\Http\Controllers\Controller
     }
 
     /**
-     * POST /service_company/api/resume-sessions/{uuid}/finalize
-     *
-     * After the browser completes the R2 PUT, call this to mark
-     * the session as Uploaded. Candidate creation happens at submit.
+     * NOTE: There is NO public finalize() method. The 2-RTT flow embeds
+     * finalize logic inside the submit handler. The service's internal
+     * finalize() method is called by the submit handler, not by routes.
      */
-    public function finalize(Request $request, string $uuid): JsonResponse
-    {
-        if (!config('resumes.features.finalize_endpoint', false)) {
-            return response()->json(['error' => 'feature_disabled'], 404);
-        }
-
-        $companyId = auth()->user()->company_id;
-
-        try {
-            $result = $this->sessionService->finalize($uuid, $companyId);
-            return response()->json($result);
-        } catch (\RuntimeException $e) {
-            return response()->json([
-                'error'   => $e->getCode() === 404 ? 'not_found' : 'session_error',
-                'message' => $e->getMessage(),
-            ], $e->getCode() ?: 422);
-        }
-    }
 
     /**
      * GET /service_company/api/resume-sessions/{uuid}
@@ -1732,12 +1720,16 @@ Before writing JS, confirm R2 bucket CORS allows browser PUT:
 
 ```javascript
 /**
- * Intent: Presigned R2 upload module for v2 resume upload.
+ * Intent: Presigned R2 upload module for v2 resume upload (2-RTT flow).
  * 
  * Replaces the PHP multipart POST with a direct-to-R2 PUT flow:
  *   1. POST /resume-sessions → get presigned URL
  *   2. PUT file directly to R2 (zero PHP bytes)
- *   3. POST finalize → mark session as Uploaded
+ *   3. Wait for user to click Submit (Submit handler sends session_uuid)
+ * 
+ * NOTE: There is NO separate finalize call. The submit handler (Step 7)
+ * atomically finalizes the upload AND creates the candidate in one
+ * server transaction.
  * 
  * The client-side parse (pdf.js → re_test()) runs unchanged — it parses
  * from the File object in browser memory, not from the server.
@@ -1785,8 +1777,9 @@ window.ResumePresign = (function () {
             // Step 2: PUT file directly to R2
             await uploadToR2(file, currentSession.upload_url);
 
-            // Step 3: Finalize on server
-            await finalizeSession(currentSession.uuid);
+            // Step 3: File is in R2. No finalize needed — the submit
+            // handler (Step 7) atomically finalizes + creates candidate
+            // in one server transaction. This is the 2-RTT enterprise flow.
 
             currentState = STATE.UPLOADED;
             emitStateChange(STATE.UPLOADED, 100);
@@ -1888,22 +1881,6 @@ window.ResumePresign = (function () {
         });
     }
 
-    async function finalizeSession(uuid) {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
-        const resp = await fetch(`/service_company/api/resume-sessions/${uuid}/finalize`, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-        });
-
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err.message || `Finalize failed: ${resp.status}`);
-        }
-
-        return resp.json();
-    }
-
     // ─── Event system ────────────────────────────────
 
     const listeners = [];
@@ -1990,10 +1967,9 @@ const RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_up
 
 **Test on staging:**
 ```bash
-# 1. Enable the feature flag
+# 1. Enable the feature flags
 export RESUMES_FEATURE_BROWSER_UPLOAD=true
 export RESUMES_FEATURE_PRESIGN=true
-export RESUMES_FEATURE_FINALIZE=true
 php artisan config:clear
 
 # 2. JavaScript syntax check
@@ -2035,7 +2011,6 @@ curl -sI https://testing.jero.works/login | head -1
 
 # 7. Disable flags after testing
 unset RESUMES_FEATURE_BROWSER_UPLOAD
-unset RESUMES_FEATURE_FINALIZE
 php artisan config:cache
 ```
 
@@ -2047,14 +2022,19 @@ Delete `public/js/resume-presign.js` permanently if not needed.
 
 ## Phase C — Submit + UX (Steps 7-11)
 
-### Step 7 — Submit with session_uuid
+### Step 7 — Submit with session_uuid (2-RTT merged flow)
 
-**Intent:** When recruiter clicks Submit, the candidate is created and
-the upload session is linked in a single transaction. This eliminates
-the separate finalize call (4 RTT → 2 RTT for v2.5).
+**Intent:** When recruiter clicks Submit, the server atomically:
+1. Verifies the session is Uploaded (file is in R2)
+2. HEAD-checks the R2 object exists
+3. Creates the candidate + links the session
+
+All in one DB transaction. This is the **2-RTT enterprise flow**:
+there is no separate finalize step. Presign → R2 PUT → Submit.
+No orphan state, no wasted round-trips.
 
 **Pre-requisites:**
-- Steps 4-6 complete (presign + upload + finalize flow works)
+- Steps 4-6 complete (presign endpoint + browser R2 PUT working)
 - `ServiceCompanyJobApplicationController::store()` identified
 
 **Feature flag:** `resumes.features.submit_with_session = false`
@@ -2125,38 +2105,44 @@ if (isset($session) && $session) {
 
 ---
 
-**Data flow for Step 7:**
+**Data flow for Step 7 (2-RTT enterprise flow):**
 
 ```
-v2.5 flow (after Step 7):
-  Recruiter                    Browser                    PHP/Octane              R2
-    │                            │                            │                    │
-    │  Select file               │                            │                    │
-    │ ────────────────────────►  │                            │                    │
-    │                            │  POST /resume-sessions     │                    │
-    │                            │ ──────────────────────────►│                    │
-    │                            │ ◄── presigned URL ──────── │                    │
-    │                            │                            │                    │
-    │                            │  PUT file to R2            │                    │
-    │                            │ ───────────────────────────────────────────────►│
-    │                            │ ◄── 200 ───────────────────────────────────────│
-    │                            │                            │                    │
-    │  Click Submit              │                            │                    │
-    │ ────────────────────────►  │  POST /job-applications    │                    │
-    │                            │  {session_uuid, ...fields} │                    │
-    │                            │ ──────────────────────────►│                    │
-    │                            │                            │  1. Verify session │
-    │                            │                            │  2. HEAD-check R2  │
-    │                            │                            │  3. INSERT candidate│
-    │                            │                            │  4. UPDATE session  │
-    │                            │                            │     (Completed)     │
-    │                            │ ◄── 201 candidate ──────── │                    │
+Recruiter                    Browser                    PHP/Octane              R2
+  │                            │                            │                    │
+  │  RTT 1: Select file        │                            │                    │
+  │ ────────────────────────►  │                            │                    │
+  │                            │  POST /resume-sessions     │                    │
+  │                            │ ──────────────────────────►│                    │
+  │                            │ ◄── presigned URL ──────── │                    │
+  │                            │                            │                    │
+  │                            │  PUT file to R2 (direct)   │                    │
+  │                            │ ───────────────────────────────────────────────►│
+  │                            │ ◄── 200 ───────────────────────────────────────│
+  │                            │                            │                    │
+  │  [fills form fields]       │  "Uploaded ✓" badge        │                    │
+  │                            │                            │                    │
+  │  RTT 2: Click Submit       │                            │                    │
+  │ ────────────────────────►  │  POST /job-applications    │                    │
+  │                            │  {session_uuid, ...fields} │                    │
+  │                            │ ──────────────────────────►│                    │
+  │                            │                            │  ATOMIC TRANSACTION│
+  │                            │                            │  1. Verify Uploaded│
+  │                            │                            │  2. HEAD-check R2  │
+  │                            │                            │  3. INSERT cand.   │
+  │                            │                            │  4. UPDATE session │
+  │                            │                            │     (Completed)    │
+  │                            │ ◄── 201 candidate ──────── │                    │
 ```
+
+NOTE: There is NO separate finalize endpoint. The file sits in R2
+until the recruiter clicks Submit. If they never click Submit, the
+cron job (Step 12) expires the session.
 
 ---
 
 **What success looks like:**
-- Full flow: presign → R2 PUT → Submit creates candidate in 2 server hits
+- Full 2-RTT flow: presign → R2 PUT → Submit creates candidate
 - Idempotent re-submit returns existing candidate_id
 - Submit without upload → 422 `upload_incomplete`
 
@@ -2165,11 +2151,10 @@ v2.5 flow (after Step 7):
 # 1. Enable feature flags
 export RESUMES_FEATURE_PRESIGN=true
 export RESUMES_FEATURE_BROWSER_UPLOAD=true
-export RESUMES_FEATURE_FINALIZE=true
 export RESUMES_FEATURE_SUBMIT_SESSION=true
 php artisan config:clear
 
-# 2. Full browser flow test
+# 2. Full browser 2-RTT flow test
 # Open create.blade.php
 # Fill minimum required fields
 # Upload PDF → wait for "Uploaded ✓" badge
@@ -2195,7 +2180,6 @@ curl -sI https://testing.jero.works/login | head -1
 
 # 7. Disable flags
 unset RESUMES_FEATURE_SUBMIT_SESSION
-unset RESUMES_FEATURE_FINALIZE
 php artisan config:cache
 ```
 
@@ -3596,10 +3580,9 @@ test('presign endpoint handles 100 concurrent requests', function () {
 
 **Test on staging:**
 ```bash
-# 1. Enable all flags
+# 1. Enable all flags (no finalize — 2-RTT flow)
 export RESUMES_FEATURE_PRESIGN=true
 export RESUMES_FEATURE_BROWSER_UPLOAD=true
-export RESUMES_FEATURE_FINALIZE=true
 export RESUMES_FEATURE_SUBMIT_SESSION=true
 php artisan config:clear
 
@@ -3759,8 +3742,7 @@ Re-run `php artisan config:cache`. The v1 path resumes serving.
 |------|-----------|---------|---------|------|-----------------|
 | Presign endpoint | `features.presign_endpoint` | `RESUMES_FEATURE_PRESIGN` | `false` | 5 | `POST /resume-sessions` returns presigned R2 URL |
 | Browser upload | `features.browser_upload` | `RESUMES_FEATURE_BROWSER_UPLOAD` | `false` | 6 | Browser PUTs directly to R2 instead of PHP multipart |
-| Finalize | `features.finalize_endpoint` | `RESUMES_FEATURE_FINALIZE` | `false` | 6 | `POST /resume-sessions/{uuid}/finalize` marks session Uploaded |
-| Submit with session | `features.submit_with_session` | `RESUMES_FEATURE_SUBMIT_SESSION` | `false` | 7 | Submit links session_uuid to candidate |
+| Submit with session | `features.submit_with_session` | `RESUMES_FEATURE_SUBMIT_SESSION` | `false` | 7 | Submit atomically finalizes upload + creates candidate (2-RTT) |
 | Cancel | `features.cancel` | `RESUMES_FEATURE_CANCEL` | `false` | 8 | `DELETE /resume-sessions/{uuid}` cancels upload |
 | Refresh recovery | `features.refresh_recovery` | `RESUMES_FEATURE_REFRESH_RECOVERY` | `false` | 9 | GET endpoint + localStorage recovery |
 | Multipart upload | `features.multipart_upload` | `RESUMES_FEATURE_MULTIPART` | `false` | 10 | Files ≥5 MB upload in chunks |
