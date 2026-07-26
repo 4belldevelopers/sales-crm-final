@@ -51,6 +51,7 @@
 | File storage | Local disk or server-managed S3 | R2 temp bucket with 30-day lifecycle |
 | Idempotency | None — re-upload creates duplicate rows | SHA256-based idempotency key → same UUID reused |
 | Upload progress | Basic jQuery AJAX call | Real progress bar with ETA, speed via XHR |
+| Server round-trips | 4 per upload (uploadresume + finalize + candidate + documents) | **2 per upload** (presign + submit-with-session) |
 
 ### What stays EXACTLY the same (untouched)
 | Area | Why untouched |
@@ -66,19 +67,34 @@
 ### Why this architecture is better for 10K concurrent
 
 ```
-v1 (current):
+v1 (current — 4 server hits):
   Recruiter ──POST file────▶ PHP/Octane ──store──▶ Disk/DB
-                             ▲                     ▲
-                             │                     │
-                           Full file bytes       RAM spike
-                          in memory (6 MB ×     per upload
-                          10K = 60 GB RAM)
-                          
-v2 (target):
-  Recruiter ──GET presign──▶ PHP/Octane ──insert──▶ MySQL (metadata only, ~200 bytes)
-              ──PUT file────▶ Cloudflare R2         │
-                            (zero PHP bytes)        │
-              ──POST submit──▶ PHP/Octane ──link────▶
+              [uploadresume]   ▲                     ▲
+                               │                     │
+                             Full file bytes       RAM spike
+                            in memory (6 MB ×     per upload
+                            10K = 60 GB RAM)
+
+v2 (target — 2 RTT, zero PHP bytes):
+  Recruiter
+    │  RTT 1: POST /resume-sessions
+    │         (metadata only, ~200 bytes)
+    ▼
+  PHP/Octane ──INSERT──▶ MySQL (status=Pending, 200 bytes)
+    │
+    │  Returns presigned URL
+    ▼
+  Browser ──PUT file────▶ Cloudflare R2 (zero PHP bytes)
+    │         [recruiter fills form fields]
+    │
+    │  RTT 2: POST /job-applications {session_uuid, ...fields}
+    │         (no file bytes, only metadata)
+    ▼
+  PHP/Octane ──atomic transaction──▶ MySQL
+    1. Verify session.status === 'Uploaded'
+    2. HEAD-check R2 object exists
+    3. INSERT candidate + documents
+    4. UPDATE session (Completed, link candidate)
 ```
 
 ---
