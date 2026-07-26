@@ -2479,8 +2479,25 @@ submitButton.removeAttribute('data-kt-indicator');
 
 																				window.location = response.url;
 																			},
-															error			: function (response) {
-																									//handleFails(response);
+															error			: function (xhr, textStatus, errorThrown) {
+                                                                            $("#update-form").prop("disabled", false);
+                                                                            $("#update-form").html(`Update`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                            console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                                                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                            // Safety net: if the success handler didn't fire (e.g. session timeout, 5xx, or an exception
+                                                                            // thrown mid-redirect), make sure the button doesn't stay stuck on the spinner.
+                                                                            // We re-enable the button only if the page is still here (success handler that
+                                                                            // triggered window.location would have started navigation by now).
+                                                                            if ($("#update-form").length) {
+                                                                                $("#update-form").prop("disabled", false);
+                                                                                $("#update-form").html(`Update`);
+                                                                                submitButton.removeAttribute('data-kt-indicator');
+                                                                                submitButton.disabled = false;
+                                                                            }
 																			}
 													});
 							
@@ -3293,9 +3310,23 @@ var KTAddCandidate = function () {
                                    window.location = response.url;
 
 																			},
-															error			: function (response) {
+															error			: function (xhr, textStatus, errorThrown) {
                                 $("#save-form").prop("disabled", false);
-																									//handleFails(response);
+                                $("#save-form").html(`Submit`);
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                Swal.fire("Error", "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                        // Safety net: if the success handler didn't fire, make sure
+                                                                        // the button doesn't stay stuck on the spinner.
+                                                                        if ($("#save-form").length) {
+                                                                            $("#save-form").prop("disabled", false);
+                                                                            $("#save-form").html(`Submit`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                        }
 																			}
 													});
 							
