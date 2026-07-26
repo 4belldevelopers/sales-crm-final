@@ -2485,7 +2485,20 @@ submitButton.removeAttribute('data-kt-indicator');
                                                                             submitButton.removeAttribute('data-kt-indicator');
                                                                             submitButton.disabled = false;
                                                                             console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
-                                                                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                                                            // Try to extract a useful server-side message; fall back to the bare status.
+                                                                            var serverMsg = '';
+                                                                            try {
+                                                                                var body = xhr.responseText || '';
+                                                                                var jsonStart = body.indexOf('{');
+                                                                                if (jsonStart >= 0) {
+                                                                                    var parsed = JSON.parse(body.substring(jsonStart));
+                                                                                    serverMsg = parsed.message || parsed.error || '';
+                                                                                }
+                                                                            } catch (e) {}
+                                                                            var display = serverMsg
+                                                                                ? serverMsg
+                                                                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                                                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
 																			},
                                                             complete       : function () {
                                                                             // Safety net: if the success handler didn't fire (e.g. session timeout, 5xx, or an exception
@@ -3316,7 +3329,19 @@ var KTAddCandidate = function () {
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;
                                 console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
-                                Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                var serverMsg = '';
+                                try {
+                                    var body = xhr.responseText || '';
+                                    var jsonStart = body.indexOf('{');
+                                    if (jsonStart >= 0) {
+                                        var parsed = JSON.parse(body.substring(jsonStart));
+                                        serverMsg = parsed.message || parsed.error || '';
+                                    }
+                                } catch (e) {}
+                                var display = serverMsg
+                                    ? serverMsg
+                                    : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
 																			},
                                                             complete       : function () {
                                                                         // Safety net: if the success handler didn't fire, make sure
