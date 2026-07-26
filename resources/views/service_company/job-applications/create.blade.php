@@ -1319,6 +1319,7 @@ $(document).ready(function () {
                 pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
             );
         };
+        upXhr.onload = function () {
             let r = null;
             try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
             if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
