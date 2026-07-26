@@ -20,6 +20,7 @@
 - [Phase C — Submit + UX (Steps 7-11)](#phase-c--submit--ux-steps-7-11)
 - [Phase D — Hardening (Steps 12-15)](#phase-d--hardening-steps-12-15)
 - [Phase E — Ship (Steps 16-18)](#phase-e--ship-steps-16-18)
+- [Phase F — Edit page (Step 19)](#phase-f--edit-page-step-19)
 - [Feature flag reference](#feature-flag-reference)
 - [Cross-references](#cross-references)
 
@@ -3736,6 +3737,365 @@ Re-run `php artisan config:cache`. The v1 path resumes serving.
 
 ---
 
+## Phase F — Edit page (Step 19)
+
+### Step 19 — Edit page vertical slice (replace / remove resume on edit)
+
+**Intent:** Bring the EDIT page (`add_job_wise_condidates.id` keyed form,
+`ServiceCompanyJobApplicationController::edit()` at line 3981 + `update()`
+at line 5389) onto the same 2-RTT R2-direct flow used by create. The
+existing resume on the row may be (a) **kept as-is**, (b) **replaced**
+with a new presigned upload, or (c) **removed**. All three branches
+must behave atomically and respect the same Captain-or-submitter
+auth-guard from v1.
+
+**Why this is its own step:** Steps 1-18 only cover the CREATE flow.
+The existing `update()` at line 5389 has a 3-branch resume handler
+(lines 5808-5840) that routes through PHP multipart upload and writes
+to S3 — it bypasses R2 entirely and breaks idempotency. We cannot
+just delete it; recruiters have real EDIT flows in production.
+
+**Pre-requisites:**
+- Steps 4-7 (presign + 2-RTT submit) are on and stable
+- `ResumeUploadSession` is the canonical store for the resume's R2 key
+
+**Feature flag:** `features.edit_page_v2` → `RESUMES_FEATURE_EDIT_PAGE_V2`
+(default `false`). Same rollout pattern as the create flag — staging
+first, then production.
+
+---
+
+#### Current vs v2 scenarios (locked design)
+
+| User action on edit | v1 behaviour (today, lines 5808-5840) | v2 behaviour (Step 19) |
+|---|---|---|
+| Open edit, change nothing, hit Update | Full row UPDATE; old resume preserved | Same UPDATE; **no presign, no R2 round-trip** — fast path |
+| Open edit, change scalar fields, keep same resume | UPDATE; resume preserved | Same UPDATE; **`session_uuid` ignored**, `documents` row untouched |
+| Open edit, **replace** resume | Multipart re-upload through PHP (`hasFile('resume')`); old `documents` row never tombstoned | Presign + direct R2 PUT + `PATCH /job-applications/{id}` carries `session_uuid`; old `documents` row **tombstoned**, new row appended |
+| Open edit, **remove** resume | `resumeCheck=0` → `update(['resume' => ''])`; `documents` row left dangling | `remove_existing_resume=1` → `update(['resume' => ''])` + tombstone `documents` rows |
+| Open edit, pick new file then close tab | Temp row stranded at `r2/temp/<uniqid>` | `uploads:cleanup-orphans` already reaps `ResumeUploadSession` rows after TTL — same behaviour |
+
+---
+
+#### Architecture (3 changes → 7 files)
+
+##### Change 1 — Controller: `update()` with branched resume handling
+
+**Edit `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php`**
+(only the `update()` method at line 5389 — do NOT touch `edit()`):
+
+Add a guard block right after the existing Captain-or-submitter check
+(currently lines 5401-5422), before the `JobApplication::findOrFail($id)`:
+
+```php
+// v2 edit-page resume handling — guarded by feature flag
+$hasResumeReplacement = $request->filled('session_uuid');
+$hasResumeRemoval     = $request->boolean('remove_existing_resume');
+
+if (($hasResumeReplacement || $hasResumeRemoval)
+    && ! config('features.edit_page_v2')) {
+    return Reply::dataOnly([
+        'status'  => 'flag_off',
+        'msgType' => 'error',
+        'message' => 'Edit-page v2 not enabled',
+    ]);
+}
+```
+
+Then wrap the resume branch block (currently lines 5808-5840) so the
+**two resume branches** call into the same `DB::transaction(...)` block
+used by the scalar UPDATE:
+
+```php
+DB::transaction(function () use ($request, $id, $hasResumeReplacement, $hasResumeRemoval) {
+
+    // Existing scalar UPDATEs (lines 5478-5890 minus the resume branch) stay here.
+    // ... [unchanged] ...
+
+    // Branch A — replace resume (v2 path)
+    if ($hasResumeReplacement) {
+        $sessionUuid = $request->input('session_uuid');
+
+        // 1. Verify session belongs to this tenant + status is Uploaded
+        $session = ResumeUploadSession::where('uuid', $sessionUuid)
+            ->where('company_id', auth()->user()->company_id)
+            ->lockForUpdate()
+            ->firstOrFail();
+
+        abort_unless(
+            in_array($session->status, ['Uploaded', 'Pending'], true),
+            422,
+            'RESUME_SESSION_NOT_UPLOADED'
+        );
+
+        // 2. HEAD-check R2 (object exists)
+        abort_unless(
+            Storage::disk('r2')->exists($session->object_key),
+            422,
+            'RESUME_NOT_IN_R2'
+        );
+
+        // 3. Conditional UPDATE session → Linked (race-safe across N pods)
+        $linked = $session->newQuery()
+            ->where('id', $session->id)
+            ->whereIn('status', ['Uploaded', 'Pending'])
+            ->update([
+                'status' => 'Linked',
+                'linked_application_id' => $id,
+                'linked_at' => now(),
+            ]);
+
+        abort_unless($linked, 422, 'RESUME_SESSION_ALREADY_LINKED');
+
+        // 4. UPDATE-in-place the existing Resume documents row.
+        //    `documents` has UNIQUE KEY (company_id, documentable_id,
+        //    documentable_type, name) — only ONE Resume row per
+        //    JobApplication is allowed. We UPDATE the existing row's
+        //    hashname rather than INSERT+DELETE (verified against
+        //    database/schema/mysql-schema.sql line 1341).
+        $newHashname = $session->canonical_url ?? $session->presigned_url_path;
+        $jobApp = JobApplication::findOrFail($id);
+
+        $docUpdated = DB::table('documents')
+            ->where('documentable_id', $id)
+            ->where('documentable_type', JobApplication::class)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('name', 'Resume')
+            ->update([
+                'hashname'   => $newHashname,
+                'updated_at' => now(),
+            ]);
+
+        // 5. If no Resume row existed yet, INSERT one (covers edge case
+        //    where the application was created without a resume).
+        if (! $docUpdated) {
+            DB::table('documents')->insert([
+                'company_id'        => auth()->user()->company_id,
+                'documentable_id'   => $id,
+                'documentable_type' => JobApplication::class,
+                'name'              => 'Resume',
+                'hashname'          => $newHashname,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+        }
+
+        // 6. Rewrite the canonical resume column to the new R2 URL
+        $jobApp->resume = $newHashname;
+        $jobApp->save();
+    }
+
+    // Branch B — remove resume
+    elseif ($hasResumeRemoval) {
+        JobApplication::where('id', $id)->update(['resume' => '']);
+        // No `deleted_at` on documents table — keep the row but the
+        // canonical resume column is now ''. A future Step 19.1 may
+        // add soft-delete column; for now the `documents` row stays
+        // as an audit trail (R2 object may be reaped by the existing
+        // uploads:reconcile job if Linked session has no other referrer).
+    }
+
+    // Branch C — no resume change: existing resume preserved (default)
+});
+```
+
+##### Change 2 — Blade: edit page UX for "Replace / Remove"
+
+**Edit `resources/views/service_company/job-applications/create.blade.php`**
+(only the `EDIT` branch — guarded by `@if($page_event === 'EDIT')`):
+
+1. **Existing resume preview** — render the current `documents.hashname`
+   as a clickable "View resume" link with a small "Replace" toggle
+   button beside it (current edit already loads this at line 4089 —
+   surface it above the file input).
+2. **`session_uuid` hidden input** — same name as the create flow
+   (`#session_uuid`); stays empty until the user picks a new file.
+3. **`remove_existing_resume` checkbox** — initially unchecked; the
+   existing `resumeCheck` checkbox at line ~2438 is **removed** in v2
+   (replaced by this).
+
+```blade
+@if($page_event === 'EDIT')
+  {{-- Existing resume preview --}}
+  @if(!empty($documents) && $documents->hashname)
+    <div class="existing-resume" data-kt-resume="existing">
+      <a href="{{ $documents->hashname }}" target="_blank">View current resume</a>
+      <button type="button" class="btn btn-sm btn-light-primary"
+              data-kt-resume-action="replace">Replace resume</button>
+      <label class="form-check form-check-sm">
+        <input type="checkbox" name="remove_existing_resume" value="1"
+               data-kt-resume-action="remove">
+        Remove existing resume
+      </label>
+    </div>
+  @endif
+@endif
+```
+
+##### Change 3 — JS: conditional presign on edit
+
+**Edit `resources/views/service_company/job-applications/create.blade.php`**
+inline JS — branch the file-input handler by `$page_event`:
+
+```js
+const isEditPage = @json($page_event === 'EDIT');
+
+fileInput.addEventListener('change', async (e) => {
+    if (isEditPage && e.target.files.length === 0) {
+        // User cleared the input — preserve existing resume.
+        document.querySelector('[name="session_uuid"]').value = '';
+        return;
+    }
+    // … existing presign + direct-PUT flow (Step 6) runs for both
+    // CREATE and EDIT — only the submit URL differs.
+});
+```
+
+The submit handler already branches by URL (create → `store`, edit →
+`update`); only the **resume presign** path needs the `isEditPage`
+guard. The parser fan-out (Step 9) re-runs on every file pick — that
+is desired behaviour on EDIT too: replacing a resume should re-extract
+name/email/phone for the manual-edit-always-wins UX.
+
+---
+
+#### Atomic transaction guarantees
+
+The new `update()` body wraps:
+
+1. Resume session `lockForUpdate` + conditional UPDATE → Linked
+2. `documents` row INSERT (new resume)
+3. `documents` rows UPDATE `deleted_at` (tombstone previous Resume)
+4. `job_applications.resume` UPDATE (canonical URL)
+5. Scalar UPDATEs (existing logic, lines 5478-5890 minus resume branch)
+
+…all in one `DB::transaction()`. Failure at any step rolls back all
+of them. ES re-index fires via Observer after commit, exactly as today.
+
+---
+
+#### Tenancy + auth invariants (do not weaken)
+
+- The existing Captain-or-submitter guard (lines 5401-5422) is **not
+  bypassed** — it runs before the transaction opens.
+- `ResumeUploadSession::where('company_id', auth()->user()->company_id)`
+  — a `session_uuid` from another tenant **404s**, never links.
+- `lockForUpdate()` on the session row + conditional UPDATE on
+  `Linked` — race-safe across N pods (same pattern from Step 7).
+- The `documents` tombstone UPDATE filters on `documentable_id = $id`
+  AND `documentable_type = JobApplication::class` — a malicious user
+  cannot tombstone another tenant's documents by guessing ids.
+
+---
+
+#### Race conditions covered (each is a test)
+
+| Race | Detection |
+|------|-----------|
+| Captain submits Edit A while submitter submits Edit B, both replace resume | First conditional UPDATE on `Linked` wins; second returns 422. Test: assert `ResumeUploadSession` row linked only once, `documents.hashname` matches winner's R2 URL. |
+| Replace attempt arrives while previous session still `Pending` | Conditional UPDATE on `Linked` returns 0 rows → 422. Test: pre-insert session with status=`Pending`, PATCH, assert 422. |
+| Object reaped by `uploads:cleanup-orphans` between PUT and submit | `Storage::disk('r2')->exists()` returns false → 422 `RESUME_NOT_IN_R2`. Test: mock `Storage::exists` to false. |
+| Cross-tenant `session_uuid` | `where('company_id', …)` returns null → 404. Test: actAs company A, attempt PATCH with company B's session_uuid. |
+| Double-submit (user double-clicks Update) | Idempotency: conditional UPDATE on `Linked` returns 0 rows on the second call → 422. Test: PATCH twice, assert second is 422. |
+
+---
+
+#### File inventory
+
+### NEW (1 file)
+1. `tests/Feature/JobApplicationEditResumeTest.php` — covers all 6
+   scenarios from the table above + the 5 race tests.
+
+### MODIFIED (4 files)
+1. `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php`
+   — wrap resume branches in transaction; add Branch A/B/C inside
+   `update()`. **Do not** touch `edit()` (line 3981).
+2. `resources/views/service_company/job-applications/create.blade.php`
+   — edit-page Blade block + JS guard for `isEditPage`.
+3. `config/resumes.php` — add `'edit_page_v2' => (bool) env('RESUMES_FEATURE_EDIT_PAGE_V2', false)`.
+4. `routes/service.php` — `PATCH /job-applications/{id}` already exists;
+   no new route needed (the same endpoint branches on request shape).
+
+---
+
+#### Verification
+
+### Automated tests
+```
+php artisan test --filter=JobApplicationEditResumeTest
+# expect 11/11 green
+
+php artisan test --filter=ResumeV2
+# expect no regressions
+
+bash scripts/ai-guards.sh
+```
+
+### Manual checklist (staging)
+```
+# 1. Flag ON
+RESUMES_FEATURE_EDIT_PAGE_V2=true php artisan config:cache
+
+# 2. Open an existing application edit page
+curl -b cookies https://testing.jero.works/service_company/job-applications/<encrypted_id>/edit
+# Expected: form loads with "View current resume" + "Replace" + "Remove" controls
+
+# 3. Replace flow
+- Click "Replace resume" → pick new file → PUT to R2 (DevTools shows presign + direct R2 PUT)
+- Click Update
+- Verify in MySQL:
+  SELECT * FROM documents WHERE documentable_id = <id> AND name = 'Resume';
+  # Expect: 1 active row (new), 1 tombstoned row (old)
+  SELECT * FROM resume_upload_sessions WHERE uuid = '<uuid>';
+  # Expect: status='Linked'
+
+# 4. Remove flow
+- Uncheck "Remove existing resume" → click Update
+- Verify resume is '' and the documents row is tombstoned.
+
+# 5. No-change flow
+- Edit page → change phone → click Update (no resume touch)
+- Verify session_uuid is empty in network panel — no R2 PUT.
+
+# 6. Cross-tenant session_uuid
+- Try PATCH with a session_uuid from another company
+- Expect: 404
+
+# 7. Captain-or-submitter guard
+- Open edit page as a user who is neither
+- Expect: redirect with candidate_edit_denied (existing v1 behaviour)
+```
+
+---
+
+#### Out of scope for Step 19
+
+- Multipart chunked upload on EDIT (Step 10 already covers CREATE;
+  EDIT reuses the same presign endpoint, so chunks work for free —
+  no code change required in Step 19).
+- `documents.deleted_at` column does NOT exist in the schema today
+  (verified — `database/schema/mysql-schema.sql` line 1331-1342).
+  However, `documents` also has UNIQUE KEY `(company_id,
+  documentable_id, documentable_type, name)` (line 1341) which means
+  only ONE Resume row per JobApplication is allowed. Step 19's
+  Branch A uses UPDATE-in-place on the existing Resume row instead
+  of INSERT+tombstone, which respects the unique constraint without
+  requiring a schema change. A future Step 19.1 may add a
+  `document_history` table for full audit if compliance demands it.
+- Public career-edit pages — same controller code path; defer until
+  Step 17's extraction is complete.
+
+---
+
+**What success looks like:**
+- All 11 tests green
+- Staging rehearsal: replace / remove / keep-as-is all atomic
+- Zero PHP bytes on the resume-replacement path
+- Cross-tenant session_uuid → 404
+- `ai-guards.sh` clean
+
+---
+
 ## Feature flag reference
 
 | Flag | Config key | Env var | Default | Step | What it enables |
@@ -3749,6 +4109,7 @@ Re-run `php artisan config:cache`. The v1 path resumes serving.
 | Network resilience | `features.network_resilience` | `RESUMES_FEATURE_NETWORK_RESILIENCE` | `false` | 11 | Offline/online handling with preflight |
 | BroadcastChannel | `features.broadcast_channel` | `RESUMES_FEATURE_BROADCAST_CHANNEL` | `false` | 14 | Same-origin tab sync (zero server) |
 | Career controller | `features.career_controller` | `RESUMES_FEATURE_CAREER_CONTROLLER` | `false` | 16 | Extracted career controller |
+| Edit page v2 | `features.edit_page_v2` | `RESUMES_FEATURE_EDIT_PAGE_V2` | `false` | 19 | Edit page: replace / remove resume via 2-RTT flow |
 
 ---
 
