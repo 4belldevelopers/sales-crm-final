@@ -2169,7 +2169,23 @@ var cities = @json($cities);
 
     });
 
-  
+
+</script>
+
+<script>
+// Internet connectivity check used by both save and update handlers.
+async function isInternetAvailable() {
+    try {
+        await fetch("https://www.gstatic.com/generate_204", {
+            method: "GET",
+            cache: "no-cache",
+            mode: "no-cors"
+        });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
 </script>
 
 @php if($page_event == 'EDIT'){ @endphp
