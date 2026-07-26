@@ -5801,55 +5801,43 @@ protected $elasticService;
 		}
 		//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
 			//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
-		// Resume handling on UPDATE mirrors the one-stage flow used by store():
-		//   - Ajax pre-upload writes the file directly to Companies/{co}/Resumes/{y}/{m}/...
-		//   - Submit just verifies the URL still resolves and persists it on the row.
-		//   - Multipart fallback (browser that bypassed ajax) writes the file inline.
+		// Resume handling on UPDATE mirrors the two-stage flow used by store():
+		//   - Ajax pre-upload writes to R2 temp and stashes the path in session.
+		//   - Submit dispatches UploadResumeToTestRTwo to move temp → final R2
+		//     location, then persists the final URL on the row.
 		//   - If user picked nothing new, the existing resume column is preserved.
-		$resumeService = app(ResumeUploadService::class);
-		$resumeUrlInput = (string) $request->input('resume_url', '');
-		if ($resumeUrlInput === '' && (string) $request->input('resume_temp_path', '') !== '') {
-			$resumeUrlInput = (string) $request->input('resume_temp_path');
-		}
-		$newResumeUrl = null;
-		if ($resumeUrlInput !== '') {
-			$r2Path = $resumeUrlInput;
-			if (str_starts_with($r2Path, 'https://file.jero.works/')) {
-				$r2Path = substr($r2Path, strlen('https://file.jero.works/'));
-			}
-			if (! $resumeService->headCheck($r2Path)) {
-				throw ResumeUploadException::submitMissing($resumeUrlInput);
-			}
-			$newResumeUrl = $resumeUrlInput;
-		} elseif ($request->hasFile('resume')) {
-			$incoming = $request->file('resume');
-			$companyName = (string) ($this->user->company->company_name ?? 'unknown');
-			$companyId = (string) ($this->user->company_id ?? 'unknown');
-			$result = $resumeService->uploadDirect(
-				$incoming,
-				$incoming->getClientOriginalName(),
-				$companyName,
-				$companyId,
-				now()
-			);
-			$newResumeUrl = $result['url'];
+		if ($request->hasFile('resume')) {
+
+			$companyNameR2 = DB::table('companies')
+			->where('id',auth()->user()->company_id)
+			->value('company_name');
+			$companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
+			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
+			$year  = date('Y');
+            $month = date('m');
+
+			$tempPath = session('resume_temp_path');
+			$full_name = session('resume_original_name');
+			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+
+			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+
+			DB::table('job_applications')
+							->where('id', $jobApplication->id)
+							->update(['resume' =>$fileUrl]);
+							session()->forget([
+								'resume_temp_path',
+								'resume_original_name'
+							]);
+
+
 		}
 
-		if ($newResumeUrl !== null) {
+		if(empty($request->resumeCheck)){
 			DB::table('job_applications')
 				->where('id', $jobApplication->id)
-				->update(['resume' => $newResumeUrl]);
-		}
-		session()->forget(['resume_url', 'resume_original_name', 'resume_temp_path']);
-
-		// Resume wipe-on-empty is intentionally NOT replicated here. In the legacy two-stage
-		// flow resumeCheck signalled "user is uploading via the temp store". In the one-stage
-		// flow the resume_url field carries the truth; absence just means "no new file this time",
-		// and we must not blow away the candidate's existing resume on every plain edit.
-		if (false) { // @phpstan-ignore-line — legacy disabled on UPDATE; see comment.
-			DB::table('job_applications')
-				->where('id', $jobApplication->id)
-				->update(['resume' => '']);
+				->update(['resume' =>'']);
 		}
 
 		
