@@ -33,6 +33,7 @@ The state of the working tree as the design was written is captured in
 | 17 | [`90_rollout_plan.md`](90_rollout_plan.md) | 14-step small-shipped-live-tested rollout |
 | 18 | [`95_god_mode_spec.md`](95_god_mode_spec.md) | tier ladder — v2.5 / v3 — minimal PHP |
 | 19 | [`96_invariants.md`](96_invariants.md) | 5 kept-true invariants + tests |
+| 0b | [`00_STEPS_IMPLEMENTATION_PLAN.md`](00_STEPS_IMPLEMENTATION_PLAN.md) | **[START HERE]** 20-step implementation |
 | 20 | [`97_faq_enterprise.md`](97_faq_enterprise.md) | the 3 FAQ reviewer questions, expanded |
 | 21 | [`98_failure_matrix_never.md`](98_failure_matrix_never.md) | wall-poster recovery + never matrix |
 | 22 | [`99_decision_log.md`](99_decision_log.md) | ADRs (ADR-017 Worker presign, ADR-018 BroadcastChannel) |
