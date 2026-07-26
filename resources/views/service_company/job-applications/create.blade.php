@@ -278,9 +278,12 @@
                                 </button>
                             </div>
 
+                        </div>
+
                             <!-- ==========================
                                  After-upload Resume Information card
-                                 Hidden by default; shown by JS after upload + parse.
+                                 Outside #uploadBox so hiding the dropzone
+                                 does not hide this card.
                                  ========================== -->
                             <div class="up-info" id="upInfo">
                                 <div class="up-info-banner">
@@ -375,8 +378,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                        </div>
 
                     </div>
                 </div>
