@@ -36,10 +36,7 @@ Add columns; do not rename. CLAUDE.md rule 7.
 | `linked_candidate_id` | unsignedInteger | nullable | NEW in v2: distinct from candidate_id; conservative dedupe |
 | `expires_at` | timestamp | nullable | session TTL = Created + 30 min |
 | `upload_completed_at` | timestamp | nullable | |
-| `parser_started_at` | timestamp | nullable | |
-| `parser_completed_at` | timestamp | nullable | |
-| `parser_attempts` | unsignedTinyInt | default 0 | capped at 1 |
-| `last_error` | text | nullable | sanitized, code only |
+| `last_error` | text | nullable | sanitized, code only (e.g. `STUCK_SESSION`) — NOT parser-related in v2 |
 | `cleanup_reason` | varchar(64) | nullable | preserved from v1 migration |
 | `created_at` | timestamp | | |
 | `updated_at` | timestamp | | |
@@ -58,21 +55,15 @@ KEY `idx_company_created` (`company_id`, `created_at`)
 > transport retry to its existing session in O(1). It is **not** a
 > uniqueness gate. See INV-4, ADR-002, ADR-009.
 
-### `resume_parse_results` (new, additive)
+### `resume_parse_results` — REMOVED 2026-07-27
 
-Idempotent with the session row — one row per session. Linked from
-`resume_uploads.id` via `resume_upload_id`.
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | bigIncrements | PK |
-| `resume_upload_id` | unsignedBigInteger | FK |
-| `company_id` | unsignedInteger | tenant shadow |
-| `payload` | json | {name,email,phone,skills,experience,company,education,keywords} |
-| `extractor_version` | varchar(32) | e.g. `v2.0.0` |
-| `extracted_at` | timestamp | |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+> v2 has no server-side parser. The `resume_parse_results` table is
+> removed; there is no canonical extraction row to persist. Parsed
+> fields live on the candidate row at submit time. The `extractor_version`
+> and `extracted_at` columns are gone. The table-deletion migration is
+> `drop_resume_parse_results_table` — it is rare to drop a v2-added
+> table, but the table was never read by any non-test code path and
+> the dependency surface is small.
 
 ### `upload_session_audits` (new, additive)
 
@@ -97,12 +88,13 @@ Redis-only counter store (PHP unit tests stub). Keys live under
 ```
 resume:metrics:created_total            (int)
 resume:metrics:uploaded_total           (int)
-resume:metrics:parsed_total             (int)
 resume:metrics:reconciled_total         (int)
-resume:metrics:parse_failed_total       (int)
-resume:metrics:parser_429_total         (int)
 resume:metrics:presign_total            (int)
 resume:metrics:sessions_expired_total   (int)
+-- REMOVED 2026-07-27 — no server-side parser:
+-- resume:metrics:parsed_total
+-- resume:metrics:parse_failed_total
+-- resume:metrics:parser_429_total
 ```
 
 Counts are **monotonic** via Redis `INCRBY`.
@@ -115,13 +107,14 @@ final class ResumeUploadStatus {
     const CREATED            = 'Created';           // presign issued
     const UPLOADING          = 'Uploading';         // browser is at byte 0..100% (best-effort)
     const UPLOADED           = 'Uploaded';          // R2 object present, finalize POSTed
-    const QUEUED_FOR_PARSING = 'QueuedForParsing';  // parse job dispatched
-    const PARSING            = 'Parsing';           // worker picked up
-    const PARSED             = 'Parsed';            // payload stored
-    const FAILED             = 'Failed';            // parser >1 fail, terminal
+    const COMPLETED          = 'Completed';         // submit linked the session to a candidate row
     const CANCELLED          = 'Cancelled';         // recruiter clicked
     const RECONCILED         = 'Reconciled';        // orphan sweep
     const EXPIRED            = 'Expired';           // session too old
+    // REMOVED 2026-07-27 (no server-side parser): QUEUED_FOR_PARSING,
+    // PARSING, PARSED, FAILED-as-parser-terminal. FAILED is still reserved
+    // for cross-pod race losers where INV-3 forced a 409 rollback to
+    // terminal.
 }
 ```
 
@@ -158,14 +151,14 @@ also additive — DROP the new columns / DROP the new tables.
 | Date | Migration | Action |
 |---|---|---|
 | v2.0.0a | `add_resume_v2_indexes` | UQ (uuid, company_id), IDX (company_id, idempotency_key) — NO UNIQUE on idempotency_key (ADR-002, ADR-009) |
-| v2.0.0a | `add_resume_v2_session_columns` | parsesStarted/completed/parser_attempts/expires_at/last_error |
-| v2.0.0b | `create_resume_parse_results` | model+index |
+| v2.0.0a | `add_resume_v2_session_columns` | idempotency_key/file_size_bytes/mime_type/sha256_hex/expires_at/upload_completed_at/last_error/linked_candidate_id/linked_application_id (NO parser_* columns — REMOVED 2026-07-27) |
+| v2.0.0b | ~~`create_resume_parse_results`~~ — REMOVED | n/a — table gone in v2 |
 | v2.0.0b | `create_upload_session_audits` | audit table |
 
 ## Naming strictness
 
 - Resume-related **code** uses `Resume*` prefix.
-- Tables: `resume_uploads` (existing), `resume_parse_results` (new),
+- Tables: `resume_uploads` (existing), `upload_session_audits` (new),
   `upload_session_audits` (new; not `resume_session_*` because we may
   generalize the audit table to all file uploads in v3).
 - No `condidate`/`commericial` typos introduced — only `Resume` keywords.

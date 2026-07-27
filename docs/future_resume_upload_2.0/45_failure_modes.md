@@ -5,7 +5,9 @@
 
 ## FAIL-1 — Browser offline mid-upload
 
-**Surface:** badge "Network Lost"; progress bar frozen; parser paused.
+**Surface:** badge "Network Lost"; progress bar frozen; browser-side
+parser continues from `File` (no network needed) — form fields
+populated regardless.
 **Backend:** session row remains `Created`/`Uploading`. No partial finalize.
 **Recovery:** online event → validate server with HEAD/R2; resume PUT
 from offset (multipart upload ≥5 MB case) or restart (single-PUT case).
@@ -43,31 +45,30 @@ Same UUID holds for idempotency.
 **Diagnose:** metric `resume_presign_rotations_total`.
 
 ## FAIL-6 — R2 PUT 5xx (server-side)
+> Original wording referenced "parser suspended"; v2 has no
+> parser to suspend — wording updated to "browser-side parser
+> continues from `File`, form remains filled."
 
 **Surface:** retry modal, exponential backoff, max 3.
 **Backend:** same UUID holds. After 3, session row → `Failed` with
 `last_error='R2 503'`. UI shows "Upload unsuccessful" with retry CTA.
 **Diagnose:** metric `resume_upload_failed_total{reason}`.
 
-## FAIL-7 — Parser fails (network)
+## FAIL-7 — ~~Parser fails (network)~~ — REMOVED 2026-07-27
 
-**Surface:** "Parsing failed — We'll try once more in a moment" modal.
-**Backend:** parses_lines attempt=1. Once succeeded, status = `Parsed`.
-Once attempt=1 failed with no Retry-After, status = `Failed`.
-**Diagnose:** metric `resume_parse_attempts_total{outcome}`.
+> v2 has no server-side parser. There is no `ParseResumeJob`, no
+> `parser_attempts`, no `last_error='PAR_TIMEOUT'`, no
+> `resume_parser_*` metrics. Browser-side `pdf.js` is deterministic;
+> failures degrade to "empty fields" only, which INV-2 handles fine.
+> Failed failure-mode entries are renumbered below.
 
-## FAIL-8 — Parser 429 with `Retry-After`
+## FAIL-8 — ~~Parser 429 with `Retry-After`~~ — REMOVED 2026-07-27
 
-**Surface:** "Resume parse paused — server is busy; we'll continue automatically".
-**Backend:** `ResumeParserService` honors `Retry-After`
-(`sleep(min(seconds, cap=10))`); one attempt only.
-**Diagnose:** metric `resume_parser_429_total`.
+> v2 has no LLM call, no `Retry-After` surface, no `ResumeParserService`.
 
-## FAIL-9 — Parser exceeds timeout
+## FAIL-9 — ~~Parser exceeds timeout~~ — REMOVED 2026-07-27
 
-**Surface:** resubmit wait; do not auto-retry.
-**Backend:** one attempt only; status = `Failed` after timeout.
-**Diagnose:** `last_error='PAR_TIMEOUT'` on the row.
+> v2 has no server-side parser call to time-bound.
 
 ## FAIL-10 — Submit POST times out from browser; verify success
 
@@ -97,7 +98,7 @@ one manually.
 
 ## FAIL-13 — Reverb pod crash mid-broadcast
 
-**Surface:** "Parser progress" stuck at last-seen %.
+**Surface:** "Upload progress" stuck at last-seen %.
 **Backend:** session state still advances server-side. Recovery: refresh
 logic re-reads `/api/resume-sessions/{uuid}` and resyncs.
 **Diagnose:** Reverb pod health (separate endpoint).
@@ -128,12 +129,15 @@ else 403. URL smuggling can't bypass it.
 + length 1..128 enforced. Original persisted up to 128 chars.
 **Diagnose:** metric `resume_filename_sanitized_total`.
 
-## FAIL-18 — Stale finalize (modal open while session moved to `Parsed`)
+## FAIL-18 — Stale finalize (modal open while session moved to `Completed`)
 
-**Surface:** UI shows "Parser finished", but submit is misaligned.
-**Backend:** GET `/api/resume-sessions/{uuid}` returns `Parsed`; UI
+**Surface:** UI shows "Resume received", but submit is misaligned.
+**Backend:** GET `/api/resume-sessions/{uuid}` returns `Completed`; UI
 disables Update Candidate button (read-only inspection).
 **Diagnose:** metric `resume_stale_finalize_total`.
+
+> Original wording referenced `Parsed`; that status no longer exists in
+> v2 (2026-07-27) — the post-finalize terminal is `Completed`.
 
 ## FAIL-19 — Resume submitted, but ES index write fails
 

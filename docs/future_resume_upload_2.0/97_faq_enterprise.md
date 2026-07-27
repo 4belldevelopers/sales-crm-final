@@ -95,25 +95,26 @@ $auditor->record(session: $row, action: 'ActionIdempotentRejected', [
 
 ---
 
-## FAQ-2 — "What if parser hangs?"
+## FAQ-2 — REMOVED 2026-07-27 — "What if parser hangs?"
 
-### Overview
+> v2 has no server-side parser. The browser-side `pdf.js` runs in
+> 50–200 ms locally and never produces a "hang" state. The browser
+> parser either fills the form fields (success) or leaves them empty
+> (INV-2 handles this — recruiter types manually). There is no
+> `Parsing` status, no `parser_attempts`, no `parser_last_error`,
+> no `parser_fallback_mode`, no `PAR_TIMEOUT` / `PAR_429` codes,
+> and no `ActionParseStarted` / `ActionParseFailed` audit rows.
+>
+> The data-safety product rule "Nothing you've entered has been
+> lost" remains in force; the **mechanism** is different — manual
+> fields persist in `localStorage` until submit, and `resume_uploads`
+> stores them in `linked_candidate_id` on success.
+>
+> The customer-facing copy below is preserved verbatim in case the
+> question ever re-emerges (e.g. if a v3 reintroduces a server-side
+> parser), but is no longer triggered by any code path.
 
-The parser runs on a neighbor pod and bounded by HTTP timeout
-to the parser service. When it hangs (network drop, parser pod
-crash, response buffer overflow), the orchestrator MUST surface a
-defined terminal state, NEVER leave the row in `Parsing` indefinitely.
-
-### Behavior contract
-
-| Wait time | Server behavior | Frontend | Audit |
-|---|---|---|---|
-| 0-10 s | normal parse | progress 0..100% by 25% thresholds | `ActionParseStarted`, `ActionParseProgress` |
-| 10-30 s | parser nearing deadline | thinner progress | `ActionParseProgress` |
-| 30-60 s (timeout) | `parser_last_error = PAR_TIMEOUT`, status **= `Failed`** | "Resume parsing failed. We didn't see a response from the parser. Try again or paste the content." | `ActionParseFailed{reason='timeout'}` |
-| > 60 s (cron sweep) | RepairStuckSessionsJob marks stuck as `Failed` and re-queues if attempt<1 | already-`Failed`; UI displays last-error message | `ActionRepairStuckSwept` |
-
-### Customer-facing message
+### Customer-facing message (REFERENCE ONLY)
 
 > **English:** *"We're having trouble parsing your resume right now. We've*
 > *saved what you've typed, so please try again or manually fill the*
@@ -125,70 +126,6 @@ defined terminal state, NEVER leave the row in `Parsing` indefinitely.
 
 The "Nothing you've entered has been lost" sentence is the most
 important sentence — it affirms the v1 product rule of data safety.
-
-### UI behavior
-
-| Element | Behavior on `Failed` |
-|---|---|
-| Progress bar | stops, hides |
-| Cancel button | hides (already terminal) |
-| Retry button | visible — re-issues presigned PUT (if status=Cancelled) OR recreates session (NEW UUID) |
-| Manual fields | recruiter can still edit + hit Submit; the parse is no longer required for submit |
-| Submit button | enabled — recruiter can submit even without a `Parsed` status; system parses in background |
-
-### Audit shape
-
-```php
-$auditor->record(session: $row, action: 'ActionParseFailed', [
-    'reason_code' => 'PAR_TIMEOUT',
-    'reason_detail_safe' => Str::limit($e->getMessage(), 255, ''),
-    'total_attempts' => $row->parser_attempts,
-    'time_to_ms' => $tookMs,
-    'last_parser_pod' => $row->last_parser_pod_id,
-]);
-```
-
-### Runbook
-
-```bash
-# Ops: high parser failure rate
-1. /api/internal/health/resume: parser_backlog_count > 50?
-  - yes: alert already firing (P3 in 80_observability.md).
-  - no: small number, check individual session ids.
-
-2. SELECT * FROM resume_uploads
-   WHERE status IN ('Parsing', 'QueuedForParsing')
-     AND parser_started_at < NOW() - INTERVAL 60 SECOND;
-
-3. If root cause is pod crash:
-   - Restart pod.
-   - Recent ParseResumeJob on the pod re-queued by RepairStuckSessionsJob.
-   - Metric: resume_repair_dispatched_total increments.
-
-4. If root cause is dependency outage (OpenAI down):
-   - Trigger parser_fallback_mode=True (admin-only flag) — pure heuristic mode
-     until dependency back up.
-```
-
-### SLA
-
-| Scenario | Resolve time |
-|---|---|
-| Single ParseResumeJob timeout → Failed | 30 s end-to-end |
-| Bulk parser pod outage | RepairStuckSessionsJob runs every 15 min; P2 within 15 min |
-| Parser vendor (OpenAI/etc) 429 streak | parser_fallback_mode admin toggle, P1 within 1 hour |
-
-### What's already enforced vs aspirational
-
-| Behavior | Enforced | Aspirational |
-|---|---|---|
-| `parser_attempts` capped at 1 | ✅ INV-5 + ParseResumeJob guard |
-| `Failed` status surfaces to UI | ✅ |
-| `RepairStuckSessionsJob` cron | ✅ scheduler 15 min |
-| Manual submit works on `Failed` | ✅ |
-| parser_fallback_mode flag | — | v2.5 only if vendor reaches persistent outage |
-| Per-pod parser telemetry | ✅ |
-| Auto-retry capped at 1 (never loop) | ✅ INV-5 |
 
 ---
 
@@ -310,9 +247,9 @@ GROUP BY 1;
 | Idiom | Enterprise-level answer |
 |---|---|
 | Re-upload same file | **Same UUID reused; rotated presign; non-terminal states re-use.** Customer sees continuity, not duplicate; "trust" copy, not error. |
-| Parser hangs | **`Failed` status immediately; manual fields survive; auto-repair cron sweeps. Customer sees "Nothing you've entered has been lost" affirmation.** |
+| ~~Parser hangs~~ | REMOVED 2026-07-27 — no server parser to hang; manual fields persist via `localStorage` + INV-2 fallback. |
 | Two tabs in parallel submit | **One INSERT IGNORE wins; BROADCAST keeps tabs in sync; customer sees "two tabs reconciled" not "two applicants".** |
 
 The pattern across all three answers: **state of truth = the DB row**, customer copy emphasizes **continuity and trust**, failures are **immediately visible to ops**, and **no silent data loss**.
 
-A line in the contributor songbook: *"if a customer ever asks 'where is my data?' and the answer is anything but a single MySQL row with status='Parsed' and linked_candidate_id, we have a P1 bug."*
+A line in the contributor songbook: *"if a customer ever asks 'where is my data?' and the answer is anything but a single MySQL row with status='Uploaded' (REMOVED 2026-07-27: 'Parsed' is gone; the terminal in v2 is 'Uploaded') and linked_candidate_id, we have a P1 bug."*

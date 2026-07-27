@@ -86,8 +86,12 @@ Properties:
                               │
                               ├─ HEAD <key> from server (sanity check)
                               ├─ UPDATE row status = Uploaded
-                              ├─ emit Reverb ResumeUploaded
-                              └─ dispatch ParseResumeJob → parse_resumes queue
+                              └─ emit Reverb ResumeUploaded (status only)
+                              ↓
+                          (no server-side parser dispatch — REMOVED 2026-07-27.
+                           The browser-side pdf.js + re_test() populated the
+                           form fields during the PUT; parsing is done by
+                           the time finalize lands.)
 ```
 
 ## Idempotent retry on PUT
@@ -104,17 +108,13 @@ typical 6 MB+ files.
 
 ## Queue sizing
 
-### `parse_resumes`
+### `parse_resumes` — REMOVED 2026-07-27
 
-Each parse = 1 OpenAI call ≈ 8s wall. v2 concurrency cap per pod = 8.
-Pods = 2 (scales with HPA). Total throughput = 16 parses/sec sustained.
-
-At peak 1,200 files/sec (10K / 8 s avg upload), 16 parses/sec means
-queue depth can hit 1000 fast.
-
-Decision: pod count matches QueueFormula in
-`docs/future_resume_upload_2.0/75_capacity_plan.md` — v2 ships 3
-parser pods (24 parses/sec). Burst absorbs on Redis rate-limit side.
+> v2 has no server-side parser. There is no `parse_resumes` queue, no
+> `ParseResumeJob`, no `parser_attempts` cap, no `parser_backlog`,
+> no parser pod budget. Parsing happens entirely in the browser
+> (`pdf.js` + `re_test()`) from the local `File` object, parallel
+> with the R2 PUT. The candidate row is the only canonical record.
 
 ### `bulkelasticindex`
 
@@ -141,7 +141,7 @@ scrub_old_counters` command.
 
 | Failure | Auto-recovery | Manual |
 |---|---|---|
-| Pod killed mid-parse | Other pod picks up at next retry (timeout) | RerunParse resume job |
+| Pod killed mid-parse | REMOVED 2026-07-27 — no server parser to kill | n/a |
 | Redis OOM | Rate-limiter fails open with TODO | on-call |
 | R2 PUT latency | Client-side backoff already in JS | n/a |
 | ES shard unbalance | `/_cluster/reroute` | on-call via health endpoint |
@@ -153,9 +153,9 @@ scrub_old_counters` command.
 - MySQL: `SELECT 1` + a tiny query against `resume_uploads`
 - Redis: `PING`
 - R2: `Storage::disk('r2')->exists('__healthprobe')` (write + read + delete)
-- Queue: `Queue::size('default')` and `Queue::size('parse_resumes')`
+- Queue: `Queue::size('default')` (no `parse_resumes` — REMOVED 2026-07-27)
 - Scheduler: `Cache::lock('resume_scheduler_leader', 30)->get()`,
   `is_leader=$leader_owner_id === gethostname()`
 - Orphan + stuck counts: `ResumeMetrics::currentOrphanUploads()`,
   `currentStuckSessions()`
-- Parser backlog: `ResumeUpload::where('status', PARSING)->count()`
+- ~~Parser backlog~~ — REMOVED 2026-07-27 (no server parser).

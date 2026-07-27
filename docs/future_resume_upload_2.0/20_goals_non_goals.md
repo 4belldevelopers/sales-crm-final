@@ -19,7 +19,7 @@ load harness under `tests/Load/`.
 
 ### G-2 — Zero data loss on network failure
 
-If a tab loses connection during upload, refresh, parser, or submit,
+If a tab loses connection during upload, refresh, or submit,
 the resume either makes it to the S3 final bucket OR the user sees an
 honest "we didn't get it" state — never both-failed and never double-billed.
 
@@ -34,13 +34,14 @@ assert full_name bytes match the typed string (not the parsed one).
 
 **Measureable**: `test_manual_values_always_win_over_parser`.
 
-### G-4 — Exactly one parser attempt per resume per minute
+### G-4 — REMOVED 2026-07-27 — server-side parser removed
 
-OpenAI / parser-side 429 = `Retry-After` honored. A second failure goes
-to `Failed` and surfaces in UI; a third attempt must come from the recruiter
-re-clicking, not from automation.
-
-**Measureable**: `test_parser_not_retried_under_threshold`, `test_parser_three_failures_go_to_failed_status`.
+> v2 has no server-side parser. There is no per-minute attempt budget,
+> no `Retry-After` to honor, no `Failed` status from a parser outage.
+> The browser-side `pdf.js` runs in 50–200 ms locally; failures
+> degrade to "empty form fields" (INV-2) and the recruiter types
+> manually. This goal was the source of `test_parser_*` — those
+> tests are REMOVED.
 
 ### G-5 — State machine transitions are race-safe across N pods
 
@@ -50,13 +51,14 @@ extends the same correctness primitive to all transitions.
 
 **Measureable**: `test_two_pod_race_on_upload_finished_transition`.
 
-### G-6 — Realtime progress in every open tab on the same tenant
+### G-6 — Realtime status in every open tab on the same tenant
 
-Open two tabs → upload in tab A → tab B sees `parser_progress=42%` from
-Reverb.
+Open two tabs → upload in tab A → tab B sees `ResumeUploaded` from
+Reverb (status only — REMOVED 2026-07-27: parser progress is
+browser-side, never crosses Reverb).
 
-**Measureable**: `test_reverb_progress_visible_across_same_tenant_tabs`,
-`test_reverb_progress_NOT_visible_across_different_tenants`.
+**Measureable**: `test_reverb_status_visible_across_same_tenant_tabs`,
+`test_reverb_status_NOT_visible_across_different_tenants`.
 
 ### G-7 — Capacity numbers are predictable
 
@@ -78,10 +80,13 @@ cleanly at the boundary.
 
 ## Non-goals (v2 will explicitly NOT do these)
 
-### NG-1 — Replace `ChatGptService` with a polyglot fallback parser
+### NG-1 — REMOVED 2026-07-27 — no server parser to replace
 
-Future ticket. v2 wraps it cleanly behind `ResumeParserService` (this
-exists in v1 era; reused) but does not implement LLM failover.
+> v2 has no `ChatGptService` wrapper, no `ResumeParserService`, and
+> no LLM call. The parser is browser-side (`pdf.js` + `re_test()`)
+> and runs from the local `File` object. There is no polyglot
+> fallback to design. A future v3 may re-introduce a server-side
+> parser; this section would be the place to document the policy.
 
 ### NG-2 — Marketplace cross-tenant talent ingestion
 
@@ -90,8 +95,10 @@ Bench candidates come through a different pipeline
 
 ### NG-3 — Auto-extracted location inference (city/state from text)
 
-The parser returns 8 fields today; lat/lng is something we deliberately
-do not put in v2 — it's a downstream enrichment layer.
+The browser-side `pdf.js` exposes the same fields; lat/lng is
+something we deliberately do not put in v2 — it's a downstream
+enrichment layer. (REMOVED 2026-07-27: "parser returns" was
+rephrased; the parser is now a local pdf.js worker.)
 
 ### NG-4 — WebSocket for the public career form
 
@@ -106,8 +113,9 @@ Single-region primary + warm standby. DR is out of scope.
 
 The v2 work changes data-model and controller-side. The Blade is
 written against v2 contracts; restyling happens in a follow-up. The
-recruiter UX IS in scope (manual-always-wins, parallel upload + parse,
-offline / cancel / refresh), but the visual layout passes through as-is.
+recruiter UX IS in scope (manual-always-wins, parallel upload + browser
+parse, offline / cancel / refresh), but the visual layout passes
+through as-is.
 
 ### NG-7 — A 100% greenfield rewrite
 

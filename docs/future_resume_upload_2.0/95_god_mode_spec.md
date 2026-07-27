@@ -91,7 +91,7 @@ are real and we can measure the saving. ADR-017 captures why.
 | Recruiter, 1 tab, healthy network | 2 | 1 |
 | Recruiter, 3 tabs, same browser | 2 | 1 |
 | Same recruiter on phone + desktop | 2 + WS | 1 + WS |
-| Public career applicant | 1 (careerStore stays v1 form, parser is HTTP polling at 1 Hz) | 1 |
+| Public career applicant | 1 (careerStore stays v1 form, status polled at 1 Hz — REMOVED 2026-07-27: parser is browser-side, no server polling needed) | 1 |
 | Mobile, anonymous | 2 (polling) | 1 |
 
 (Note: mobile / anonymous still goes through Octane v1 path with multipart
@@ -123,7 +123,7 @@ function emitLocal(data) {
 | Server load contribution | **0** for same-origin tabs |
 | Limits | Single browser process only |
 
-Used for: upload progress, parser progress, badge state, cancel/refresh events.
+Used for: upload progress, badge state, cancel/refresh events. (REMOVED 2026-07-27: "parser progress" — no server parser.)
 
 ## Cross-machine / cross-device sync — Reverb (still needed)
 

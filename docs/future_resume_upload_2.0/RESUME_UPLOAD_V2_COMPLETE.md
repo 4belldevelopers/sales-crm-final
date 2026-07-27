@@ -6,6 +6,15 @@
 > detail; this is the **consolidated executive view** that links the canonical
 > contracts, invariants, ADRs, data model, API, rollout, and the no-merge
 > contract into one narrative.
+>
+> **Update 2026-07-27 — server-side parser removed.** v2 no longer runs
+> `ParseResumeJob`. Parsing happens entirely in the browser via
+> `pdf.js` + `re_test()` from the user's `File` object, **parallel with
+> the R2 PUT**. The form fields are filled by the time the upload finishes.
+> There is no `parse_resumes` queue, no LLM call, no `resume_parse_results`
+> table, no Retry-After semantics, no `RepairStuckSessionsJob` parser
+> sweep, and no `parser_fallback_mode`. The candidate row is the only
+> canonical record.
 
 > **Read this first.** All other docs in this tree are deep dives on a section
 > below.
@@ -52,7 +61,7 @@ Ownership Engine** observes and reports (badges), it never mutates.
 | # | Criterion | Where it lives |
 |---|---|---|
 | 1 | Super fast / responsive | Direct browser→R2 PUT (Step 5); `BroadcastChannel` zero-server fan-out for same-browser tabs (Step 14, ADR-018) |
-| 2 | Min server load for 10K concurrent | 0 bytes through PHP; ~3 RPS/recruiter on Octane; ≥4 parser pods with bounded concurrency (75_capacity_plan) |
+| 2 | Min server load for 10K concurrent | 0 bytes through PHP; ~3 RPS/recruiter on Octane; **client-side parsing** keeps server parse-path off entirely (75_capacity_plan) |
 | 3 | Covers network failure | Idempotency-Key header for transport retry (Step 7, ADR-002, INV-4); offline/online listeners + localStorage cache (Step 9) |
 | 4 | Perfect UX | Manual-values-always-win (INV-2); "Nothing you've entered has been lost" copy (97_faq_enterprise); no silent data loss |
 | 5 | Enterprise level | Health endpoint with bearer-token auth (Step 15, ADR-008); structured logs with `pod_id`/`hostname`/`request_id` (Phase 6); `Schedule::onOneServer()` leader election |
@@ -94,9 +103,11 @@ Ownership Engine** observes and reports (badges), it never mutates.
 - **No UNIQUE constraint** on `(company_id, idempotency_key)`.
 
 ### INV-5 — One parser result per session
-- `resume_parse_results.resume_upload_id` UNIQUE.
-- `ParseResumeJob::uniqueId()` returns the `resumeUploadId`; `uniqueFor = 60s`.
-- `parser_attempts` capped at 1 server-side.
+> **Removed 2026-07-27.** v2 has no server-side parser. The single parser
+> layer is `pdf.js` + `re_test()` running in the browser from the local
+> `File` object, parallel with the R2 PUT. There is no `parser_attempts`
+> counter, no `ParseResumeJob`, no `resume_parse_results` row. The
+> invariants collapse to INV-1..4 — see [`96_invariants.md`](96_invariants.md).
 
 ---
 
@@ -110,7 +121,7 @@ Ownership Engine** observes and reports (badges), it never mutates.
 | **002** | **`Idempotency-Key` header is per-request random UUID, NOT content hash** | **Content-addressed dedupe violates INV-1; orphans the v1.5 carousel** |
 | 003 | Reverb auth from session, not URL/localStorage | Cross-tenant leak prevention |
 | 004 | State machine on `status` column, not separate transitions table | Conditional UPDATE is race-safe; audit table covers who/when |
-| 005 | ONE Retry-After in parser; no retry loop | Fairness across tenants; 429 must not amplify |
+| 005 | ~~ONE Retry-After in parser; no retry loop~~ — REMOVED | Parser is client-side only in v2; no LLM call, no Retry-After surface |
 | 006 | v1 `POST /uploadresume` kept as fallback | Defense in depth on JS module load failure |
 | 007 | No `chmod 0777` on `bootstrap/cache` | Octane `octane:reload` shouldn't need world-writable |
 | 008 | Health endpoint ON in v2.0.0a, even alone | Ops cannot decide partial vs total without it |
@@ -120,7 +131,7 @@ Ownership Engine** observes and reports (badges), it never mutates.
 | 012 | Multipart R2 PUT for ≥5 MB | Single 6 MB PUT has too low success rate on small-loss networks |
 | 013 | Explicit "Manual values always win" test | Without this test, JS will eventually overwrite |
 | 014 | Vertical slices from `HomeController` (813 KB) + `ServiceCompanyJobApplicationController` (16,633 LOC) | God controllers caused v1 500-chain bugs |
-| 015 | Per-pod parser concurrency via Redis semaphore, key=`tenant_id` | One tenant spiking shouldn't throttle all |
+| 015 | ~~Per-pod parser concurrency via Redis semaphore, key=`tenant_id`~~ — REMOVED | No parser pods in v2; the parser runs in the browser and is bounded by `pdf.js` memory, not pod count |
 | 016 | `documents()` UNIQUE on `(name='Resume', company_id, candidate_id)` | v1 had cross-candidate collision on this column |
 | 017 | Move presign to Cloudflare Worker at v3.0, NOT v2 | Octane keeps low-risk proven path; v2.5 already halves load |
 | 018 | `BroadcastChannel` for same-origin tab sync, NOT Reverb, in v2.5 | 95% of multi-tab is same browser process; zero server for that |
@@ -144,10 +155,6 @@ CREATE TABLE resume_uploads (
     r2_final_key            VARCHAR(255),
     expires_at              TIMESTAMP,
     upload_completed_at     TIMESTAMP     NULL,
-    parser_started_at       TIMESTAMP     NULL,
-    parser_completed_at     TIMESTAMP     NULL,
-    parser_attempts         TINYINT       DEFAULT 0,
-    parser_last_error       VARCHAR(255)  NULL,
     last_error              VARCHAR(255)  NULL,
     cleanup_reason          VARCHAR(64)   NULL,     -- Phase 5 Reconciled
     linked_candidate_id     BIGINT UNSIGNED NULL,
@@ -161,14 +168,11 @@ CREATE TABLE resume_uploads (
     INDEX idx_expires (expires_at)
 );
 
-CREATE TABLE resume_parse_results (
-    id                  BIGINT UNSIGNED PRIMARY KEY,
-    resume_upload_id    BIGINT UNSIGNED NOT NULL UNIQUE, -- INV-5
-    payload             JSON,
-    parser_pod_id       VARCHAR(64),
-    parsed_at           TIMESTAMP,
-    -- ...
-);
+-- NOTE: resume_parse_results table REMOVED in v2. There is no
+-- server-side parser and therefore no canonical extraction row to
+-- persist. The candidate row is the only source of truth for parsed
+-- fields (typed by the user, optionally pre-filled by the browser
+-- pdf.js + re_test() parser running from the local File object).
 
 CREATE TABLE upload_session_audits (
     id                  BIGINT UNSIGNED PRIMARY KEY,
@@ -250,7 +254,8 @@ CREATE TABLE upload_session_audits (
 - Verify R2 object via HEAD (422 `upload_incomplete` if missing).
 - Conditional UPDATE `Created`/`Uploading` → `Uploaded`.
 - Emit Reverb `ResumeUploaded`.
-- Dispatch `ParseResumeJob`.
+- **No server-side parser dispatch.** The browser-side `pdf.js` already
+  produced the parsed fields during the R2 PUT; nothing more to do here.
 
 ### EP-4 — `DELETE /service_company/api/resume-sessions/{uuid}`
 
@@ -272,14 +277,18 @@ CREATE TABLE upload_session_audits (
          ┌────────────────────────────────────────────┐
          │                                            │
          ▼                                            │
-[Created] → [Uploading] → [Uploaded] → [QueuedForParsing] → [Parsing] → [Parsed]
-   │            │             │              │                    │          │
-   ▼            ▼             ▼              ▼                    ▼          ▼
-[Cancelled]  [Cancelled]  [Cancelled]   [Cancelled]            [Failed]  [Cancelled]
-                                                                 │
-                                                                 ▼
-                                                          [Failed (terminal)]
+[Created] → [Uploading] → [Uploaded] → [Completed]
+   │            │             │              │
+   ▼            ▼             ▼              ▼
+[Cancelled]  [Cancelled]  [Cancelled]   [Cancelled]
 ```
+
+**Note (2026-07-27):** the `QueuedForParsing → Parsing → Parsed` triple
+is **removed**. v2 has no server-side parser state machine. After
+`Uploaded`, the next transition is straight to `Completed` (set
+when the submit transaction links a candidate row). `Failed` is
+still reserved for cross-pod races that resolve to a loser, and
+`Reconciled` / `Expired` are still swept by jobs.
 
 **Transitions are guarded by conditional UPDATE:** `UPDATE … WHERE status=?`.
 
@@ -303,7 +312,7 @@ rows MAY exist transiently; the second is reconciled within 24 h by
 | **Phase A — Additive infra** | 1-3 | Schema migrations, models, audit table, cleanup job |
 | **Phase B — Idempotency + presign** | 4-6 | `idempotency_key` column, `POST /resume-sessions` endpoint, rate limits |
 | **Phase C — Browser flow** | 7-9 | `resume-presign.js`, R2 PUT, `localStorage` cache, refresh recovery |
-| **Phase D — Cross-tab + parser** | 10-14 | `BroadcastChannel`, `ParseResumeJob`, Reverb auth |
+| **Phase D — Cross-tab + browser parser** | 10-14 | `BroadcastChannel`, `pdf.js` + `re_test()` (browser-side), Reverb auth |
 | **Phase E — Submit + extraction** | 15-16 | `finalize` + submit merge, god-controller extraction |
 | **Phase F — Edit page** | 19 | Edit flow vertical slice with `Branch A`/`B`/`C` for replace/keep/remove |
 | **Phase G — Verify + load** | 17-18 | Load test (10K concurrent), curl examples, rollback runbook |
@@ -319,7 +328,11 @@ rows MAY exist transiently; the second is reconciled within 24 h by
 
 ### What the engine DOES
 - Read `documents` rows + `candidates` rows.
-- Compute a fingerprint per candidate.
+- Compute a fingerprint per candidate from **the candidate row scalars +
+  filename + sha256_hex**. (There is no `resume_parse_results` row in v2
+  — the engine derives fingerprints from what is already persisted on
+  the candidate row + the uploaded file's hash, both of which are
+  available immediately after submit.)
 - Surface a "possible duplicate" badge in the UI when two candidates share
   a fingerprint.
 
@@ -364,7 +377,7 @@ rows MAY exist transiently; the second is reconciled within 24 h by
 | v2.0.0a | Additive schema + health endpoint | `resumes.v2_health_endpoint` | ON |
 | v2.0.0b | Idempotency key + presign endpoint | `resumes.presign_endpoint` | OFF→ON in 0c |
 | v2.0.0c | Direct PUT to R2 + finalize | (same) | ON |
-| v2.0.0d | Parser queue + Reverb | `resumes.v2_reverb_events` | OFF→ON |
+| v2.0.0d | Browser parser wiring (pdf.js) + Reverb | `resumes.v2_reverb_events` | OFF→ON |
 | v2.0.0e | Submit preflight + dedup recovery | `resumes.submit_preflight` | ON |
 | v2.0.0f | Public career-apply extracted | (controller boundary) | shipped |
 | v2.0.0g | Recruiter add-candidate extracted | (controller boundary) | shipped |
@@ -419,11 +432,13 @@ rolls back without impact if smoke fails.**
 - Monolog processor pushes `pod_id` + `hostname` into every record's
   `extra`.
 - Structured events: `jobs.resume.session_created`, `jobs.resume.session_replayed`,
-  `jobs.resume.uploaded`, `jobs.resume.parsed`, `jobs.resume.parse_failed`.
+  `jobs.resume.uploaded`. (No `parsed` / `parse_failed` events — there is
+  no server-side parser in v2.)
 
 ### Health endpoint
 - `GET /api/internal/health/resume` with bearer-token auth.
-- Returns MySQL/Redis/R2/queue depth/orphan count/stuck count/parser backlog.
+- Returns MySQL/Redis/R2/queue depth/orphan count/stuck count.
+- (No `parser_backlog` — no server-side parser.)
 - Status `ok` if all checks `ok=true`, `degraded` if any `ok=false` BUT
   MySQL is `ok=true`, `down` if MySQL is `ok=false`.
 
@@ -438,9 +453,8 @@ rolls back without impact if smoke fails.**
 | Bytes through PHP | 0 (R2 direct) |
 | HTTP req/s on Octane | ~6,000 (v2.0); ~2,000 (v2.5 with `BroadcastChannel`) |
 | Reverb connections | ~10,000 (v2.0); ~500 (v2.5) |
-| Parser pods | ≥4 with bounded concurrency |
-| Parser timeout | 30 s |
-| Parser retry | 1 with `Retry-After` |
+| ~~Parser pods~~ | **REMOVED — parser is browser-side (`pdf.js` + `re_test()`) from the local `File` object** |
+| ~~Parser timeout / retry~~ | **REMOVED — no server parser call to time-bound or retry** |
 | Session TTL | 30 min after creation |
 | R2 temp lifecycle | 30 days |
 | Worst-case single recruiter | 700 ms (v2.0); 350 ms (v2.5) |
@@ -457,7 +471,7 @@ rolls back without impact if smoke fails.**
 | 4 | Two pods both move Created→Uploaded | Conditional UPDATE → one wins |
 | 5 | R2 PUT 4xx | Rotate presigned URL; same UUID holds |
 | 6 | R2 PUT 5xx | Retry modal ×3 → Failed |
-| 7-9 | Parser fails | 1 attempt; cap on retry; Failed status; manual fields survive |
+| 7-9 | ~~Parser fails~~ — REMOVED | v2 has no server-side parser. The browser-side `pdf.js` is deterministic; failures degrade to "empty fields" only. Manual fields survive by construction (INV-2). |
 | 10 | Submit POST times out | `200 session_replay_winner_found` on retry (INV-3) |
 | 11 | Submit 5xx, browser retries | Engine flags "possible duplicate" badge; **never merges** (Step 20) |
 | 12 | Session expires (>30 min) | PUT 403; "Resume expired, please pick again" |
@@ -466,7 +480,7 @@ rolls back without impact if smoke fails.**
 | 15 | Cross-tenant Reverb attempt | 403; metric `resume_reverb_auth_failed_total` |
 | 16 | File < 1 KB | 422 too_small |
 | 17 | Filename injection | `Illuminate\Support\Str::ascii(strip_control($orig))` + length 1..128 |
-| 18 | Stale finalize (modal open during Parsed) | Disables Update Candidate (read-only inspection) |
+| 18 | Stale finalize (modal open during Completed-state read) | Disables Update Candidate (read-only inspection) — same UX, no `Parsed` status to clash with |
 | 19 | ES index write fails | `bulkelasticindex` queue; retries 5×; audit `ActionElasticIndexFailed` |
 | 20 | Different `Idempotency-Key` on retry | New session, always (INV-1) |
 
@@ -505,7 +519,7 @@ A v2 step is **done** when ALL of these hold:
 
 1. ✅ Code matches the canonical contract (this doc + the 5 invariants).
 2. ✅ Schema is additive — no destructive migrations.
-3. ✅ Tests written for the change (≥1 invariant test if touching INV-1..5).
+3. ✅ Tests written for the change (≥1 invariant test if touching INV-1..4).
 4. ✅ `bash scripts/ai-guards.sh` clean (no `dd()`/`env()` in `app/`).
 5. ✅ Reverb auth callback still does `(int)` cast on `company_id`.
 6. ✅ `Idempotency-Key` is required and is per-request random UUID.
@@ -524,7 +538,7 @@ A v2 step is **done** when ALL of these hold:
 | Manual values always win | INV-2 | The v1 product brief's most important rule |
 | Server verifies state before insert | INV-3 | Retry safety at submit time |
 | `Idempotency-Key` is per-request random | INV-4 + ADR-002 | Not a content hash |
-| One parser result per session | INV-5 | Bounded concurrency |
+| ~~One parser result per session (INV-5)~~ | REMOVED 2026-07-27 | v2 has no server-side parser |
 | **Engine DETECTS and REPORTS; never MERGES** | **Step 20** | **The cardinal rule** |
 | INDEX (not UNIQUE) on `(company_id, idem_key)` | ADR-009 | Replay-lookup, not uniqueness |
 | `UNIQUE(uuid, company_id)` | INV-3 | Cross-tenant probe prevention |

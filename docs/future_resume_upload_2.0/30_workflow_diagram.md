@@ -18,7 +18,7 @@ flow** with v2 contracts annotated at each branch.
  │   ├── Register Offline/Online/Storage listeners  ← v2 keeps
  │   ├── Register Retry Manager
  │   ├── Register Upload Progress Events
- │   ├── Register Parser Progress Events  ← v2: via Reverb
+ │   ├── ~~Register Parser Progress Events~~ ← REMOVED 2026-07-27: parser is browser-side, no Reverb
  │   ├── Register Auto-fill Listener  ← v2: never overwrites
  │   ├── Restore localStorage Upload Session (if exists)
  │   ├── Restore Idempotency Key (if exists)
@@ -33,7 +33,7 @@ flow** with v2 contracts annotated at each branch.
  │                                                  ← NOT a content hash (ADR-002, INV-4, Step 20)
  │
  ├── Cache File + Metadata (memory)
- ├── Abort previous XHR/parser if any
+ ├── Abort previous XHR if any
  ├── Bump epoch token
  │
  └── POST /service_company/api/resume-sessions
@@ -53,15 +53,15 @@ flow** with v2 contracts annotated at each branch.
            ├── TTL: 30 min for session
            ├── ETA + speed + cancel button
            │
-           └── PARALLEL: parse starts when bytes ≥ 50 KB in stream
+           └── PARALLEL: browser-side pdf.js starts when bytes ≥ 50 KB in stream
                 │
-                ├── Validate File
-                ├── Extract Type
-                ├── Extract Text
-                ├── Extract Fields (8)
+                ├── Validate File (extension, MIME)
+                ├── Extract Type (PDF only — DOC/DOCX accepted but not parsed client-side)
+                ├── Extract Text (pdf.js text layer)
+                ├── Extract Fields (8 — regex over text)
                 ├── Emit parseInline ─► fill empty inputs only
                 │
-                └── Parser Finished
+                └── Browser Parser Finished (50–200 ms locally — no Reverb roundtrip)
 
  PUT Complete
  │
@@ -90,7 +90,7 @@ flow** with v2 contracts annotated at each branch.
  │     │
  │     ├── Server reachable? ─── NO: show "Server unavailable" with ETA counted
  │     ├── Upload Completed?    ─── NO: wait until ready (max 10 s)
- │     ├── Parser Completed?    ─── wait, timeout 30 s
+ │     ├── ~~Parser Completed?~~   ─── REMOVED 2026-07-27 (browser-side, already done by upload-completion)
  │     │
  │     └── POST /candidates store
            │
@@ -105,8 +105,7 @@ flow** with v2 contracts annotated at each branch.
            │    ├── UploadSessionAudit::record(action=SubmitLinked)
            │    └── COMMIT
            │
-           ├── dispatch ParseResumeJob → queue (parse_resumes)
-           │    (unconditional — even if pre-fill was rejected by user)
+           ├── ~~dispatch ParseResumeJob → queue (parse_resumes)~~ REMOVED 2026-07-27
            │
            └── dispatch elestic_aclone_index_candidate (batched bulk index)
 
@@ -114,7 +113,7 @@ flow** with v2 contracts annotated at each branch.
  │
  ├── Offline detected
  │     ├── badge "Network Lost"
- │     ├── abort XHR/parser
+ │     ├── abort XHR
  │     ├── pause progress
  │     ├── preserve uuid + idempotency key in localStorage
  │     └── wait for browser online event
