@@ -659,7 +659,7 @@
                                     </a>
                                 </div>
                                 <div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;">
-                                    <span style="font-size:10px;font-weight:600;color:#7e8299;margin-right:4px;">Skills</span>'
+                                    <span style="font-size:10px;font-weight:600;color:#15803d;background:#dcfce7;padding:2px 9px;border-radius:20px;display:inline-block;margin:1px 2px;">Skills</span>'
                                     . $skilltag .
                                 '</div>';
                             @endphp
@@ -732,9 +732,8 @@
                                     </a>
                                     <span class="fw-bold d-block fs-7" style="color:' . $comission_color . ';">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
-                                        ' . $comission_label . '
+                                        ' . $comission_label . ' Service
                                     </span>
-                                    <span class="fw-bold d-block fs-7" style="color:#6d7991;">Service</span>
                                 </div>';
                             @endphp
                         </td>
@@ -743,6 +742,11 @@
                         <td style="text-align:center;">
                             @php
                                 $html = '';
+                                $candSkillList = [];
+                                foreach ($skillExperiences as $se) { $candSkillList[] = strtolower(trim($se->skill_key)); }
+                                if (empty($candSkillList)) { foreach ($skillArr as $sv) { $sv = strtolower(trim($sv)); if ($sv) $candSkillList[] = $sv; } }
+                                $candSkillStr = implode(',', $candSkillList);
+
                                 if ($row->status == 2) {
                                     if (($row->countforadd ?? 0) >= 3) {
                                         $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
@@ -751,7 +755,15 @@
                                             <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar"
                                                data-row-source_from_type="2"
                                                data-row-id="' . @$row->id . '"
-                                               data-row-jobid="">Add to Job</a>
+                                               data-row-jobid=""
+                                               data-cname="' . htmlspecialchars(ucwords((string)@$row->full_name)) . '"
+                                               data-cdesig="' . htmlspecialchars(ucwords((string)@$row->current_designation)) . '"
+                                               data-cexp="' . htmlspecialchars($formattedExperience) . '"
+                                               data-cctc="' . htmlspecialchars(trim(strip_tags($bill_rate_currency) . ' ' . $bill_rate_amount)) . '"
+                                               data-cnp="' . htmlspecialchars(($modeNp == 2 ? 'Immediate' : $npDate)) . '"
+                                               data-cloc="' . htmlspecialchars(trim($row_city_name ?? '')) . '"
+                                               data-ctype="' . htmlspecialchars($outsourcingLabel) . '"
+                                               data-skills="' . htmlspecialchars($candSkillStr) . '">Add to Job</a>
                                         </div>';
                                     }
                                 } else {
@@ -817,39 +829,11 @@
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesCopy_toggle"
         data-kt-drawer-close=".kt_activitiesCopy_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">Select the job checkbox, then click "Save" to add the candidate</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-
-                  
-                    <div class="">
-                        <button type="button" id="submit-frm-btn" class="btn btn-primary copy_current_selected_applicant d-none"> 
-                            <span class="indicator-label">Save to Jobs</span> 
-                            <span class="indicator-progress">
-                                Please wait...
-                            </span> 
-                        </button>
-                    </div>
-
-
-                    <button type="button"
-                        class="btn btn-sm btn-icon btn-active-light-primary me-n5 kt_activitiesCopy_close"
-                        id="kt_activitiesCopy_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="#000000">
-                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect fill="#000000" opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
-                            </svg>
-                        </span> </button>
-                </div>
+            <div class="card-toolbar px-4 py-2 d-flex justify-content-end" id="kt_activities_header">
+                <button type="button" id="submit-frm-btn" class="btn btn-primary btn-sm copy_current_selected_applicant d-none me-2">
+                    <span class="indicator-label">Save to Jobs</span>
+                    <span class="indicator-progress">Please wait...</span>
+                </button>
             </div>
             <div class="card-body position-relative px-0 py-0" id="application_copy_body_content"></div>
         </div>
@@ -909,7 +893,19 @@
 }
 
 
+        window._candidateSkills = '';
+        window._candidateInfo   = {};
         $(document).on('click', '.openSideBar', function() {
+            window._candidateSkills = $(this).data('skills') || '';
+            window._candidateInfo   = {
+                name  : $(this).data('cname')  || '',
+                desig : $(this).data('cdesig') || '',
+                exp   : $(this).data('cexp')   || '',
+                ctc   : $(this).data('cctc')   || '',
+                np    : $(this).data('cnp')    || '',
+                loc   : $(this).data('cloc')   || '',
+                type  : $(this).data('ctype')  || ''
+            };
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.talent-add', ':id') }}";
@@ -918,7 +914,6 @@
             var token = "{{ csrf_token() }}";
             var idid = $(this).data('row-id');
             var currentUrl = window.location.href;
-            // alert(idid);
             var arr = [idid];
            
             $.ajax({
@@ -943,6 +938,7 @@
 
                     if (response.status == "success") {
                         $('#application_copy_body_content').html(response.view);
+                        setTimeout(function(){ if(typeof updateBenchHero==='function') updateBenchHero(); }, 80);
                     }
                 },
                 error: function(xhr) {
@@ -968,7 +964,7 @@
             });
         });
 
-        $(document).on('click','.bench_show_application_detail',function(){
+        $(document).on('click','.pbench_show_application_detail',function(){
 			//  table.on('click', '.bench_show_application_detail', function (){
                         var company_id = "{{ $company_id }}";
 						$('#kt_activitiesBenchApplication_toggle').trigger('click');

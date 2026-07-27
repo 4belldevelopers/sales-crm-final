@@ -407,7 +407,25 @@ $currencySymbole = GeneralMethod::currencySymbole();
                             <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" style="display:none;">
 
                             <div class="uf">
-                                Supports PDF, DOC, DOCX (Max 10MB)
+                                Supports PDF, DOC, DOCX (Max 6 MB)
+                            </div>
+
+                            <!-- Progress bar / pill / success banner -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
                             </div>
 
                             <!-- Selected File -->
@@ -1380,6 +1398,122 @@ $(document).ready(function () {
     const resumeInput = document.getElementById('resume');
 
     // ==========================
+    // Progress bar / XHR helpers
+    // ==========================
+    let upXhr = null;
+    // Set by `uploadWithProgress` so the legacy `handleFileInputChange`
+    // (still bound to #resume.change on the DOM listener at line 3124,
+    // below) can skip its redundant jQuery upload to /uploadresume.
+    // Reset by `resetProgress()` on each new pick.
+    window.__upXhrChannelClaimed = false;
+
+    function fmtKB(b) {
+        return (b / 1024).toFixed(1) + ' KB';
+    }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
+        $('#upWrap').hide();
+        $('#upBar').css('width', '0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        $('#uploaded_file_path').val('');
+        const $b = $('#upBanner');
+        $b.hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
+    }
+
+    function uploadWithProgress(file) {
+        // Claim the upload channel BEFORE any legacy path can fire so
+        // the same blob is never POSTed twice to the same origin (XHR +
+        // legacy jQuery POST would otherwise queue parser POSTs behind
+        // uploads on the HTTP/1.1 6-conn cap, which is what broke
+        // Career Summary fill-in).
+        window.__upXhrChannelClaimed = true;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+        $('#upWrap').show();
+        $('#upStats').text(
+            '0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size)
+        );
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('_token', '{{ csrf_token() }}');
+
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("get.uploadresume") }}', true);
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            const pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(
+                pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
+            );
+        };
+
+        upXhr.onload = function () {
+            let r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
+            if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text(
+                    '100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size)
+                );
+                $('#upPill').css('display', 'inline-flex');
+                const $b = $('#upBanner');
+                $b.removeClass('err').addClass('ok')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<polyline points="9 12 11 14 16 9"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload complete!</strong> '
+                        + 'Your resume has been uploaded successfully.</span>'
+                    ).show();
+                $('#uploaded_file_path').val(r.file_path || '');
+                // The server already staged the file in session; clear the
+                // multipart input so a later form submit does NOT re-upload
+                // the same blob.
+                $('#resume').val('');
+                $('#save-form, #update-form').prop('disabled', false);
+            } else {
+                const msg = (r && r.message) ? r.message : upXhr.statusText;
+                $('#upBanner')
+                    .removeClass('ok').addClass('err')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                        + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload failed:</strong> ' + msg + '</span>'
+                    ).show();
+            }
+            upXhr = null;
+        };
+
+        upXhr.onerror = function () {
+            $('#upBanner')
+                .removeClass('ok').addClass('err')
+                .html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/>'
+                    + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                    + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                    + '</svg>'
+                    + '<span><strong>Network error</strong> during upload. '
+                    + 'Click Remove and try again.</span>'
+                ).show();
+            upXhr = null;
+        };
+
+        upXhr.send(fd);
+    }
+
+    // ==========================
     // Common file handler
     // ==========================
     function processFile(file, event = null) {
@@ -1395,8 +1529,8 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
@@ -1411,6 +1545,8 @@ $(document).ready(function () {
         $('.download-file').addClass('d-none');
 
         console.log('Selected File:', file.name);
+
+        uploadWithProgress(file);
 
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
@@ -1491,6 +1627,9 @@ $(document).ready(function () {
         e.preventDefault();
         e.stopPropagation();
 
+        if (typeof resetProgress === 'function') {
+            resetProgress();
+        }
         $('#resume').val('');
         $('#resumeCheck').val('');
 
@@ -2735,6 +2874,9 @@ function re_test(text){
                       $('#dob').val(response.dob);
                       $('#current_company').val(response.currentjob);
                       $('#qualification').val(response.qualification).change();
+                      if (response.careerSummary) {
+                          $('#careersummary').val(response.careerSummary);
+                      }
 
                       tagifyskill.removeAllTags(); // Clear existing tags first
                       tagifyskill.addTags(response.skills); // Add new tags
@@ -2872,6 +3014,13 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
       }
 
+      // The modern XHR layer (`uploadWithProgress`) already POSTed this
+      // exact blob to /uploadresume with real progress feedback.
+      // Skip the redundant jQuery POST — but STILL run the parse path
+      // below so Career Summary can fill in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
        let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -2910,6 +3059,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
     });
+      } // end if (!__skipUpload)
 
       if (file.type === 'application/pdf' || fileExtension === 'pdf') {
       if (file) {

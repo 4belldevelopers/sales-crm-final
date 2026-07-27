@@ -127,6 +127,28 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        /*
+        | Laravel 11.48's HandleExceptions calls Log::channel('deprecations')
+        | LITERALLY when it logs a PHP deprecation warning, and LogManager::resolve()
+        | looks up config('logging.channels.deprecations'). Without this channel
+        | entry, it throws InvalidArgumentException("Log [deprecations] is not
+        | defined.") and propagates up the Froiden\Envato MigrateCheckCommand →
+        | checkMigrateStatus → Controller construct chain, 500ing every controller
+        | boot on the recruiter app (see laravel.EMERGENCY lines in
+        | storage/logs/laravel.log). The top-level 'deprecations' key in this file
+        | already points at the backing channel by name (for Symfony's
+        | resolveChannel()); LogManager::resolve() additionally needs the named
+        | entry inside channels[] to satisfy its own lookup. The two together is
+        | the Laravel 11+ idiom for "deprecations" support.
+        |
+        | Routes to NullHandler by default so production stays quiet. Set
+        | LOG_DEPRECATIONS_CHANNEL=single in .env to log per-request deprecations
+        | to storage/logs/deprecations.log while debugging.
+        */
+        'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null') === 'null'
+            ? ['driver' => 'monolog', 'handler' => NullHandler::class]
+            : ['driver' => 'single', 'path' => storage_path('logs/deprecations.log'), 'level' => 'debug'],
+
     ],
 
 ];

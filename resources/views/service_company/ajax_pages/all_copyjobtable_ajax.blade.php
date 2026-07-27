@@ -10,6 +10,22 @@
     $job_status      = GeneralMethod::job_status();
 @endphp
 
+@php
+    /* Sort jobs by skill match % DESC when candidate skills are provided */
+    if (!empty($candidateSkills) && count($data) > 0) {
+        $candSkillsForSort = $candidateSkills;
+        usort($data, function($a, $b) use ($candSkillsForSort) {
+            $calcPct = function($row) use ($candSkillsForSort) {
+                $jobSkills = collect($row['job_metronics_skills'] ?? [])->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->toArray();
+                $total = count($jobSkills);
+                if ($total === 0) return -1;
+                $matched = count(array_intersect($jobSkills, $candSkillsForSort));
+                return round(($matched / $total) * 100);
+            };
+            return $calcPct($b) <=> $calcPct($a);
+        });
+    }
+@endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
     @php
@@ -53,14 +69,31 @@
         /* ── Company logo ── */
         $logo_path = GeneralMethod::companyDetails($row->id);
 
-        /* ── Skills ── */
+        /* ── Skills + match ── */
+        $candSkills   = $candidateSkills ?? [];
+        $jobSkillNames = collect($row->job_metronics_skills ?? [])->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->toArray();
+        $matchedCount = 0;
+        $totalJobSkills = count($jobSkillNames);
         $skilltag = '';
         if (collect($row->job_metronics_skills)->isNotEmpty()) {
+            $matchedSkills = [];
+            $unmatchedSkills = [];
             foreach ($row->job_metronics_skills as $sval) {
                 $sval = (object) $sval;
+                $isMatch = in_array(strtolower(trim($sval->skill_name)), $candSkills);
+                if ($isMatch) { $matchedCount++; $matchedSkills[] = $sval; }
+                else { $unmatchedSkills[] = $sval; }
+            }
+            foreach ($matchedSkills as $sval) {
+                $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;">' . ucfirst($sval->skill_name) . '</span>  ';
+            }
+            foreach ($unmatchedSkills as $sval) {
                 $skilltag .= '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
             }
         }
+        $matchPct = ($totalJobSkills > 0 && !empty($candSkills)) ? round(($matchedCount / $totalJobSkills) * 100) : null;
+        $matchColor = $matchPct >= 70 ? '#15803d' : ($matchPct >= 40 ? '#b45309' : '#dc2626');
+        $matchBg    = $matchPct >= 70 ? '#dcfce7' : ($matchPct >= 40 ? '#fef3c7' : '#fee2e2');
 
         /* ── Department ── */
         $departmentRow = DB::table('job_categories')->where('id', $row->category_id ?? 0)->first();
@@ -145,14 +178,9 @@
         if ($partnersCount > 1) { $displayCount = '+' . ($partnersCount - 1); } else { $displayCount = $partnersCount; }
     @endphp
 
-    <div class="cj-job-row">
+    <div class="cj-job-row" data-match-pct="{{ $matchPct ?? 0 }}">
 
-        {{-- Checkbox --}}
-        <div class="cj-col-chk">
-            <div class="form-check form-check-sm form-check-custom form-check-solid">
-                <input class="form-check-input chk_copy_item" type="checkbox" value="{{ $row->id }}" />
-            </div>
-        </div>
+        {{-- Checkbox hidden --}}
 
         {{-- JOB DETAILS --}}
         <div class="col-job" style="position:relative; padding-bottom: 28px;">
@@ -178,8 +206,13 @@
             </div>
             @if($skilltag)
             <div style="position:absolute; bottom:-7px; left:1px; white-space:nowrap; overflow:hidden;">
-                <div class="job-meta-line">
-                    <span class="skills-inline"><b>Skills:</b> {!! $skilltag !!}</span>
+                <div class="job-meta-line" style="display:flex;align-items:center;gap:6px;">
+                    @if($matchPct !== null)
+                    <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:{{ $matchBg }};color:{{ $matchColor }};white-space:nowrap;flex-shrink:0;">
+                        {{ $matchPct }}% Match
+                    </span>
+                    @endif
+                    <span class="skills-inline">{!! $skilltag !!}</span>
                 </div>
             </div>
             @endif
@@ -233,7 +266,7 @@
                 <svg width="11" height="11" fill="none" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
-                Add
+                {{ empty($findTalentAdd ?? null) ? 'Copy Candidate' : 'Submit Candidate' }}
             </button>
         </div>
 

@@ -79,8 +79,6 @@ use Validator;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
-use App\Services\ResumeUploadService;
-use App\Exceptions\ResumeUploadException;
 use App\Services\GoogleSheetServiceCandidate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie;
@@ -116,71 +114,47 @@ protected $elasticService;
 	public function uploadresume(Request $request){
 
         $request->validate([
-            'file' => 'required|file|max:6048', // Max size 6MB
+            'file' => 'required|file|max:6048', // Max size 1MB
         ]);
-
+       
 		$file = $request->file('file');
-		$resumeService = app(ResumeUploadService::class);
-		// Phase 2: route through ResumeUploadSession so a ResumeUpload row
-		// is created in lock-step with the R2 file. Idempotency-Key from the
-		// header (if present) is honored; otherwise a fresh session is created.
-		// Fall-through for legacy clients (no header) preserves the legacy
-		// `result.{path|url}` shape via the resolver below.
-		$idempotencyKey = $request->header('Idempotency-Key');
-		/** @var \App\Services\ResumeUploadSession $sessionService */
-		$sessionService = app(\App\Services\ResumeUploadSession::class);
-		try {
-			$resultBag = $sessionService->createOrReplay(
-				file: $file,
-				originalFilename: $file->getClientOriginalName(),
-				companyName: (string) ($this->user->company->company_name ?? 'unknown'),
-				companyId: (string) $this->user->company_id,
-				userId: (int) ($this->user->id ?? 0),
-				idempotencyKey: $idempotencyKey,
-				jobId: $request->input('job_id'),
-				actorIp: $request->ip(),
-				userAgent: $request->userAgent(),
-				requestId: $request->header('X-Request-Id'),
-			);
-			$session = $resultBag['session'];
-			$result = [
-				'path' => $session->r2_path,
-				'url' => $session->r2_url,
-				'final_name' => $session->stored_filename,
-			];
-			$replayed = (bool) $resultBag['replayed'];
-			$sessionUuid = $session->uuid;
-		} catch (\App\Exceptions\ResumeUploadException $e) {
-			return response()->json([
-				'success' => false,
-				'message' => $e->getMessage(),
-				'code' => $e->reason,
-			], 422);
-		} catch (\RuntimeException $e) {
-			return response()->json([
-				'success' => false,
-				'message' => $e->getMessage(),
-			], 422);
-		}
 
+		$filename = uniqid('JERO_').'.'.$file->getClientOriginalExtension();
+
+		$tempPath = $file->storeAs('temp', $filename,'r2'); // STORAGE/app/temp
+		// ⭐ GET PUBLIC URL FROM R2
+		$tempUrl = Storage::disk('r2')->url($tempPath);
+		
+		$extension = pathinfo($tempPath, PATHINFO_EXTENSION);
+		$full_name = uniqid('JERO_');
+		$uniqueName = GeneralMethod::getUniqueCvName($full_name,$extension);
+		// ✅ STORE IN SESSION
+		// dd($uniqueName);
 		session([
-			'resume_url' => $result['url'],
-			'resume_original_name' => $file->getClientOriginalName(),
-			'resume_session_uuid' => $sessionUuid,
+			'resume_temp_path' => $tempPath,
+			'resume_original_name' => $filename,
 		]);
 
+        // Store the file
+        if ($request->hasFile('file')) {
+            
+            // $filePath = $file->store('uploads', 'public'); // Save to 'storage/app/public/uploads'
+
+            // Return a response
+            return response()->json([
+                'success' => true,
+                'message' => 'File uploaded successfully',
+                'file_path' => $tempPath,
+                'original_name' => $file->getClientOriginalName(),
+            ]);
+        }
+        // Handle failure
         return response()->json([
-            'success' => true,
-            'message' => 'File uploaded successfully',
-            'file_path' => $result['path'],
-            'url' => $result['url'],
-            'original_name' => $file->getClientOriginalName(),
-            // Phase 2 additions — clients that ignore these still work.
-            'session_uuid' => $sessionUuid,
-            'session_status' => $session->status,
-            'replayed' => $replayed,
-        ]);
-    }
+            'success' => false,
+            'message' => 'File upload failed',
+        ], 400);
+    
+	}
 	public function unsetFile(Request $request)
     {
         $filePath = $request->input('file_path');
@@ -1588,42 +1562,7 @@ protected $elasticService;
 		$this->currentPage = 1;
 		$this->resumeAwsPath = false;
         $this->currencyConverter = GeneralMethod::currencyConverter();
-		$this->resolveActiveUploadSessionForView($jobId);
 		return view('service_company.job-applications.create', $this->data);
-	}
-
-	/**
-	 * Phase 2: pre-fill session + parsed_data on form render.
-	 * Hits a separate dedicated method so both create() and edit() share the
-	 * same discovery logic.
-	 */
-	private function resolveActiveUploadSessionForView(?int $jobId): void
-	{
-		try {
-			/** @var \App\Services\ResumeUploadSession $sessionService */
-			$sessionService = app(\App\Services\ResumeUploadSession::class);
-			$session = $sessionService->activeForUser(
-				(int) $this->user->company_id,
-				(int) ($this->user->id ?? 0),
-			);
-			if ($session === null) {
-				$this->data['upload_session_uuid'] = null;
-				$this->data['upload_session_parsed'] = null;
-				return;
-			}
-			// Limit recovery to current job if known.
-			if ($jobId !== null && (int) ($session->job_id ?? 0) !== $jobId && $session->job_id !== null) {
-				$this->data['upload_session_uuid'] = null;
-				$this->data['upload_session_parsed'] = null;
-				return;
-			}
-			$this->data['upload_session_uuid'] = $session->uuid;
-			$this->data['upload_session_parsed'] = $session->parsed_data_json;
-		} catch (\Throwable $e) {
-			report($e);
-			$this->data['upload_session_uuid'] = null;
-			$this->data['upload_session_parsed'] = null;
-		}
 	}
 	public function statelist($cid)
 	{
@@ -1654,6 +1593,7 @@ protected $elasticService;
 	}
 	public function store(Request $request)
 	{
+
 		abort_if(Gate::denies('add_job_applications'), 403);
 
 		// $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
@@ -1935,61 +1875,7 @@ protected $elasticService;
 		$jobApplication->interview_mode_five = $request->interview_mode_five;
 		$jobApplication->interview_mode_six = $request->interview_mode_six;
 
-		// ----- Resume finalization (must succeed before the candidate row is saved) -----
-		// Resolves the resume source: prefer the URL the AJAX pre-upload
-		// already durably stored (Companies/{co}/Resumes/{y}/{m}/JERO_xxx.pdf).
-		// If neither URL nor multipart file was supplied, $jobApplication->resume
-		// stays null and the section-level gate in StoreJobApplication decides
-		// whether that's an error.
-		//
-		// No COPY step on submit: just one headCheck (~50-100 ms) on R2.
-		// Multipart fallback STILL writes via the service synchronously —
-		// ~600 ms — because the user skipped the AJAX pre-upload on this path.
-		$resumeService = app(ResumeUploadService::class);
-
-		$resumeUrl = (string) $request->input('resume_url', '');
-		if ($resumeUrl === '' && (string) $request->input('resume_temp_path', '') !== '') {
-			// Legacy clients / older flows still emit resume_temp_path; treat
-			// its value as a candidate URL for headCheck (faster than asking
-			// the user to redo). Prefer resume_url when both are present.
-			$resumeUrl = (string) $request->input('resume_temp_path');
-		}
-
-		if ($resumeUrl !== '') {
-			// Derive the R2 object key from the public URL. Storage::exists()
-			// takes the path, not the absolute URL.
-			$r2Path = $resumeUrl;
-			if (str_starts_with($r2Path, 'https://file.jero.works/')) {
-				$r2Path = substr($r2Path, strlen('https://file.jero.works/'));
-			}
-			if (! $resumeService->headCheck($r2Path)) {
-				throw ResumeUploadException::submitMissing($resumeUrl);
-			}
-			$jobApplication->resume = $resumeUrl;
-		} elseif ($request->hasFile('resume')) {
-			// Multipart fallback: synchronous write to final R2 path. Same
-			// service method as the AJAX pre-upload.
-			$incoming = $request->file('resume');
-			$companyName = (string) ($this->user->company->company_name ?? 'unknown');
-			$companyId = (string) ($this->user->company_id ?? 'unknown');
-			$result = $resumeService->uploadDirect(
-				$incoming,
-				$incoming->getClientOriginalName(),
-				$companyName,
-				$companyId,
-				now()
-			);
-			$jobApplication->resume = $result['url'];
-		}
-		// ----- End resume block -----
-
-		// Wrap the candidate row write in its own transaction so a DB failure
-		// here rolls back without persisting an empty-parts JobApplication. The
-		// resume-finalization above has already set $jobApplication->resume,
-		// so a successful commit implies the column is durably authored.
-		DB::transaction(function () use ($jobApplication) {
-			$jobApplication->save();
-		});
+		$jobApplication->save();
 
 		
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
@@ -2263,10 +2149,39 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		// Resume persistence is finalized synchronously ABOVE $jobApplication->save() and the
-		// content of the resume column is verified before the row is written, so the legacy
-		// optimistic-write block + the resumeCheck blank-out block have been removed entirely.
-		// The temp file is cleaned up after the redirect is fully prepared, just before return.
+		if ($request->hasFile('resume')) {
+
+			$companyNameR2 = DB::table('companies')
+			->where('id',auth()->user()->company_id)
+			->value('company_name');   // change column if needed
+			$companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
+			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
+			$year  = date('Y');
+            $month = date('m');
+
+			$tempPath = session('resume_temp_path');
+			$full_name = session('resume_original_name');
+			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+			
+			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+			
+			DB::table('job_applications')
+							->where('id', $jobApplication->id)
+							->update(['resume' =>$fileUrl]);
+							session()->forget([
+								'resume_temp_path',
+								'resume_original_name'
+							]);
+							
+
+		}
+
+		if(empty($request->resumeCheck)){
+			DB::table('job_applications')
+				->where('id', $jobApplication->id)
+				->update(['resume' =>'']);
+		}
 
 		if (isset($request->jobskill) && !empty($request->jobskill)) {
 			DB::table('candidate_skills_value')->where('job_id', $request->job_id)->where('candidate_id', $jobApplication->id)->delete();
@@ -2385,59 +2300,13 @@ protected $elasticService;
 		}
 		$this->currencyConverter = GeneralMethod::currencyConverter();
 
-		// Queue ES re-index now that the candidate row is committed and its resume URL
-		// is guaranteed durable (handled synchronously above). Side-effects stay async.
-		ElasticCandidateIndex::dispatch($jobApplication->id)->onConnection('emails');
-
-		// Clear the session-stashed resume_url now that the row is persisted.
-		// No temp files were created in the one-stage flow, so no cleanup needed.
-		session()->forget(['resume_url', 'resume_original_name', 'resume_temp_path']);
-
-		// Phase 2: if the form posted a session uuid, atomically Link the session
-		// to the new candidate row via the conditional UPDATE.
-		// tryLink() returns false on contention (e.g. duplicate submit) but the
-		// candidate row is still committed — the resume_url on the row is durable,
-		// and the audit graph is best-effort. We never roll back a candidate row
-		// because the session graph is messy underneath.
-		$postedSessionUuid = (string) (session('resume_session_uuid') ?? $request->input('upload_session_uuid', ''));
-		if ($postedSessionUuid !== '') {
-			/** @var \App\Services\ResumeUploadSession $sessionService */
-			$sessionService = app(\App\Services\ResumeUploadSession::class);
-			$linked = $sessionService->tryLink(
-				uuid: $postedSessionUuid,
-				companyId: (int) $this->user->company_id,
-				candidateId: (int) $jobApplication->id,
-				actorId: (int) ($this->user->id ?? 0),
-				requestId: $request->header('X-Request-Id'),
-			);
-			if ($linked) {
-				// Mirror the link on the candidate row so Phase 5 reconciliation
-				// and downstream reads (job_applications.current_resume_session_uuid)
-				// have the SSOT back-pointer.
-				DB::table('job_applications')
-					->where('id', $jobApplication->id)
-					->update(['current_resume_session_uuid' => $postedSessionUuid]);
-			}
-			session()->forget('resume_session_uuid');
-		}
-
+		// ElasticCandidateIndex::dispatch($lastInsertedId)->onConnection('emails');
 		if (!empty($request->job_id)) {
-			$redirectUrl = url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all');
+			return Reply::redirect(url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
 		} else {
-			$redirectUrl = route('service_company.job-applications.table');
+			return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications') . ' ' . __($message));
 		}
-
-		// Enrich the redirect payload with the persisted candidate id so the JS side
-		// can verify success and gate on a unique, observable artifact of the row.
-		return Reply::successWithData(
-			__('menu.jobApplications') . ' ' . __($message),
-			[
-				'action' => 'redirect',
-				'url' => $redirectUrl,
-				'candidate_id' => (int) $jobApplication->id,
-				'resume' => (string) ($jobApplication->resume ?? ''),
-			]
-		);
+		
 	}
 	public function googleSheetCandidateData(Request $request)
 	{
@@ -4365,11 +4234,6 @@ protected $elasticService;
 		}
 	    $this->default_loc = GeneralMethod::allCitiesSelected(array(@$this->application->city_id));
 		$this->currencyConverter = GeneralMethod::currencyConverter();
-		// Phase 2: pre-fill active resume session across ALL jobs — on edit
-		// flow the candidate may have come from anywhere. The candidate row's
-		// current_resume_session_uuid is more specific; we let the form
-		// prefer that path when the session is already Linked.
-		$this->resolveActiveUploadSessionForView(null);
 		// dd($id);
 		return view('service_company.job-applications.create', $this->data);
 	}
@@ -5937,55 +5801,43 @@ protected $elasticService;
 		}
 		//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
 			//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
-		// Resume handling on UPDATE mirrors the one-stage flow used by store():
-		//   - Ajax pre-upload writes the file directly to Companies/{co}/Resumes/{y}/{m}/...
-		//   - Submit just verifies the URL still resolves and persists it on the row.
-		//   - Multipart fallback (browser that bypassed ajax) writes the file inline.
+		// Resume handling on UPDATE mirrors the two-stage flow used by store():
+		//   - Ajax pre-upload writes to R2 temp and stashes the path in session.
+		//   - Submit dispatches UploadResumeToTestRTwo to move temp → final R2
+		//     location, then persists the final URL on the row.
 		//   - If user picked nothing new, the existing resume column is preserved.
-		$resumeService = app(ResumeUploadService::class);
-		$resumeUrlInput = (string) $request->input('resume_url', '');
-		if ($resumeUrlInput === '' && (string) $request->input('resume_temp_path', '') !== '') {
-			$resumeUrlInput = (string) $request->input('resume_temp_path');
-		}
-		$newResumeUrl = null;
-		if ($resumeUrlInput !== '') {
-			$r2Path = $resumeUrlInput;
-			if (str_starts_with($r2Path, 'https://file.jero.works/')) {
-				$r2Path = substr($r2Path, strlen('https://file.jero.works/'));
-			}
-			if (! $resumeService->headCheck($r2Path)) {
-				throw ResumeUploadException::submitMissing($resumeUrlInput);
-			}
-			$newResumeUrl = $resumeUrlInput;
-		} elseif ($request->hasFile('resume')) {
-			$incoming = $request->file('resume');
-			$companyName = (string) ($this->user->company->company_name ?? 'unknown');
-			$companyId = (string) ($this->user->company_id ?? 'unknown');
-			$result = $resumeService->uploadDirect(
-				$incoming,
-				$incoming->getClientOriginalName(),
-				$companyName,
-				$companyId,
-				now()
-			);
-			$newResumeUrl = $result['url'];
+		if ($request->hasFile('resume')) {
+
+			$companyNameR2 = DB::table('companies')
+			->where('id',auth()->user()->company_id)
+			->value('company_name');
+			$companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
+			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
+			$year  = date('Y');
+            $month = date('m');
+
+			$tempPath = session('resume_temp_path');
+			$full_name = session('resume_original_name');
+			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+
+			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+
+			DB::table('job_applications')
+							->where('id', $jobApplication->id)
+							->update(['resume' =>$fileUrl]);
+							session()->forget([
+								'resume_temp_path',
+								'resume_original_name'
+							]);
+
+
 		}
 
-		if ($newResumeUrl !== null) {
+		if(empty($request->resumeCheck)){
 			DB::table('job_applications')
 				->where('id', $jobApplication->id)
-				->update(['resume' => $newResumeUrl]);
-		}
-		session()->forget(['resume_url', 'resume_original_name', 'resume_temp_path']);
-
-		// Resume wipe-on-empty is intentionally NOT replicated here. In the legacy two-stage
-		// flow resumeCheck signalled "user is uploading via the temp store". In the one-stage
-		// flow the resume_url field carries the truth; absence just means "no new file this time",
-		// and we must not blow away the candidate's existing resume on every plain edit.
-		if (false) { // @phpstan-ignore-line — legacy disabled on UPDATE; see comment.
-			DB::table('job_applications')
-				->where('id', $jobApplication->id)
-				->update(['resume' => '']);
+				->update(['resume' =>'']);
 		}
 
 		
@@ -6249,40 +6101,9 @@ protected $elasticService;
          $recommendation_id = $relationget->to_company_id ?? null;
 		 $to_company_id = $relationget->to_company_id ?? null;
 
-		 // Phase 2: Link the new session to this candidate row (when present in the form).
-		$postedSessionUuid = (string) (session('resume_session_uuid') ?? $request->input('upload_session_uuid', ''));
-		$oldSessionUuid = (string) ($jobApplication->current_resume_session_uuid ?? '');
-		if ($postedSessionUuid !== '') {
-			/** @var \App\Services\ResumeUploadSession $sessionService */
-			$sessionService = app(\App\Services\ResumeUploadSession::class);
-			$linked = $sessionService->tryLink(
-				uuid: $postedSessionUuid,
-				companyId: (int) $this->user->company_id,
-				candidateId: (int) $jobApplication->id,
-				actorId: (int) ($this->user->id ?? 0),
-				requestId: $request->header('X-Request-Id'),
-			);
-			if ($linked) {
-				DB::table('job_applications')
-					->where('id', $jobApplication->id)
-					->update(['current_resume_session_uuid' => $postedSessionUuid]);
-			}
-			// Old session goes Replaced — only if Linked, so a flaky new upload
-			// doesn't burn the previous resume.
-			if ($oldSessionUuid !== '' && $oldSessionUuid !== $postedSessionUuid) {
-				$sessionService->markReplacedAfterReplacementLinked(
-					oldUuid: $oldSessionUuid,
-					companyId: (int) $this->user->company_id,
-					newUuid: $postedSessionUuid,
-					actorId: (int) ($this->user->id ?? 0),
-				);
-			}
-			session()->forget('resume_session_uuid');
-		}
-
-		// Mirror store() response shape so the JS hardened success gate
+		 // Mirror store() response shape so the JS hardened success gate
 		 // (response.status===success && response.candidate_id && response.url) on create.blade.php passes.
-		 if($currentSlug=='cvtracker'){
+		 if($currentSlug=='cvtracker'){	
 				$redirectUrl = url('/service_company/cvtracker/');
 		 } elseif ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
 				$redirectUrl = url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($request->job_id) . '/all');
@@ -10436,23 +10257,7 @@ protected $elasticService;
 			$tempPath = session('resume_temp_path');
 			$full_name = session('resume_original_name');
 			
-			$postedSessionUuid = (string) (session('resume_session_uuid') ?? request()->input('upload_session_uuid', ''));
-			if ($postedSessionUuid !== '' && \App\Models\ResumeUpload::query()->where('uuid', $postedSessionUuid)->where('company_id', $company_id)->exists()) {
-				/** @var \App\Services\ResumeUploadSession $sessionService */
-				$sessionService = app(\App\Services\ResumeUploadSession::class);
-				$sessionService->tryLink(
-					uuid: $postedSessionUuid,
-					companyId: (int) $company_id,
-					candidateId: (int) $jobApplicationGet->id,
-					actorId: (int) (auth()->id() ?? 0),
-					requestId: request()->header('X-Request-Id'),
-				);
-				DB::table('job_applications')
-					->where('id', $jobApplicationGet->id)
-					->update(['current_resume_session_uuid' => $postedSessionUuid]);
-				session()->forget('resume_session_uuid');
-			} else {
-				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 			DB::table('job_applications')
 							->where('id', $jobApplicationGet->id)
@@ -10460,8 +10265,7 @@ protected $elasticService;
 							session()->forget([
 								'resume_temp_path',
 								'resume_original_name'
-							]);
-			}
+							]);	
 
 		}
 

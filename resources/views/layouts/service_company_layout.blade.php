@@ -102,6 +102,18 @@
   {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> --}}
 
+{{-- jQuery must load BEFORE @stack('head-script') so pages that push inline
+     <script>$(function(){...})</script> into the head (datepicker initialiser on
+     service_company/job-applications/create, and similar inline jQuery snippets
+     site-wide) find window.$/jQuery defined. Without this, those scripts run
+     synchronously during the head parse and throw "Uncaught ReferenceError: $ is
+     not defined", which cascades into select2 (null.offsetWidth) and tagify
+     (null.addEventListener) failures on every page that uses jQuery pushed
+     into the head. We keep the body-bottom copy commented as a one-liner with
+     a debug note for future readers instead of deleting it; if you delete it,
+     please delete this too. --}}
+<script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
+
 @stack('head-script')
 <style>         
       @media  only screen and (min-width: 1024px) and (max-width: 1440px)
@@ -1114,7 +1126,9 @@
 <script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
+{{-- jquery.min.js intentionally only loaded in the head (above @stack('head-script'))
+     to keep pages that push inline $(function(){...}) into the head from throwing
+     "$ is not defined". See the head-side comment for context. --}}
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
@@ -1450,7 +1464,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
 
 
-        $.post('/whatsapp/create',
+        $.post('{{ url('/whatsapp/create') }}',
         {_token:'{{ csrf_token() }}',
         userid: userid
         },function(){
@@ -1487,7 +1501,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
     function loadQR(userid){
       
-        $.get('/whatsapp/qr',{ userid: userid }, function(res){
+        $.get('{{ url('/whatsapp/qr') }}',{ userid: userid }, function(res){
             if(res.qr){
                audioUnlocked
                 $('#qrBox').html(
@@ -1502,7 +1516,7 @@ $(document).on('click', '.deleteBtn', function (e){
     // checkStatus();
     function checkStatus(userid){
         setInterval(function(){
-            $.get('/whatsapp/status',{ userid: userid },function(res){
+            $.get('{{ url('/whatsapp/status') }}',{ userid: userid },function(res){
                 if(res.instance && res.instance.state){
                     $('#statusBox').html(res.instance.state);
                     if(res.instance.state === "open"){
