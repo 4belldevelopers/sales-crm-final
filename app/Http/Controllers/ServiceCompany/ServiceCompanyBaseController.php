@@ -98,7 +98,7 @@ class ServiceCompanyBaseController extends Controller
 
 			}
 
-			if(count($this->user->getAllPermissions())< 0){
+			if(count($this->user->getAllPermissions()) <= 0){
 				if ($assignRole = User::find($user_id)) {
 					$rolesAs = DB::table('roles')
 					->join('role_user','role_user.role_id','=','roles.id')
@@ -107,6 +107,10 @@ class ServiceCompanyBaseController extends Controller
 					->first();
                     
 					$roleId = $rolesAs->id;
+					// if($this->user->id==5879){
+        			//     dd($roleId,count($this->user->getAllPermissions()));
+         			// }
+
 					
 					$role_row =	DB::table('roles')->select('roles.name')->where('roles.id',$roleId)->first();
 					// dd($role_row->name);

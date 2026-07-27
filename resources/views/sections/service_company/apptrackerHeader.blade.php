@@ -1,6 +1,6 @@
 @php
     // Hero KPI cards for the AppTracker header. Six routes (Pool / Similar Matching /
-    // In-house Bench / Agency Bench / Bench Talent Requests / Website Candidates) each
+    // In-house Bench / Agency Bench / Bench Talent Requests / Career Page) each
     // include this same partial with their own $tabactive flags, so the "active" card
     // here is decided entirely server-side per page — no JS tab-switch logic needed.
     $apthCards = [
@@ -23,6 +23,14 @@
             'bg' => '#dcfce7',
             'ic' => '#16a34a',
             'icon' => 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z',
+            // This is a count against the JOB'S DEFAULT skills/location/
+            // experience — not your live filter selection on the Similar
+            // Candidates page (starring a skill mandatory, adding a
+            // location, etc. only affects that page's own count while
+            // you're on it). The two are answering different questions by
+            // design, so a mismatch between this card and the Similar
+            // Candidates page's own number is expected, not a bug.
+            'hint' => 'Based on this job\'s default skills, location & experience — not any filters you\'ve customized on the Similar Candidates page itself.',
         ],
         [
             'title' => 'In-house Bench Talents',
@@ -55,7 +63,7 @@
             'icon' => 'M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3ZM6 6h.008v.008H6V6Z',
         ],
         [
-            'title' => 'Website Candidates',
+            'title' => 'Career Page',
             'url' => $tabactive['career_url'],
             'id' => $tabactive['career_id'],
             'value' => $tabactive['career_counter'],
@@ -124,6 +132,11 @@
         font-weight: 700;
         color: #181c32;
     }
+    .apth-hint {
+        cursor: help;
+        color: #b5b5c3;
+        font-size: 10px;
+    }
     .apth-row {
         display: flex;
         align-items: center;
@@ -177,7 +190,11 @@
         <a href="{{ $card['url'] }}"
             class="apth-card {{ $card['active'] ? 'active' : '' }}"
             style="--apth-color: {{ $card['ic'] }}; --apth-bg: {{ $card['bg'] }};">
-            <p class="apth-title">{{ $card['title'] }}</p>
+            <p class="apth-title">{{ $card['title'] }}
+                @if (!empty($card['hint']))
+                    <span class="apth-hint" id="apth_hint_{{ $card['id'] }}" title="{{ $card['hint'] }}">ⓘ</span>
+                @endif
+            </p>
             <div class="apth-row">
                 <span class="apth-row-left">
                     <span class="apth-icon" style="background: {{ $card['bg'] }};">

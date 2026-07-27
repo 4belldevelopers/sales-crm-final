@@ -82,6 +82,30 @@
     display: none !important;
 }
 
+/* Print — the "Print" button clones the already-rendered checked rows (no
+   extra server request) into this hidden container, then hands off to the
+   browser's own print dialog. Same pattern as CV Tracker/apptracker index. */
+#aptk_print_area { display: none; }
+@media print {
+    body * { visibility: hidden; }
+    #aptk_print_area, #aptk_print_area * { visibility: visible; }
+    #aptk_print_area {
+        display: block;
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    #aptk_print_area h2 { font-size: 16px; margin: 0 0 4px; }
+    #aptk_print_area .aptk-print-meta { font-size: 11px; color: #666; margin-bottom: 14px; }
+    #aptk_print_area table { width: 100%; border-collapse: collapse; }
+    #aptk_print_area th, #aptk_print_area td {
+        border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left;
+        vertical-align: top;
+    }
+    #aptk_print_area .form-check { display: none !important; }
+}
+
 /* Row selection action bar — hidden until candidates are checked, then sits
    directly above the results table. */
 .aptk-selection-bar {
@@ -140,6 +164,132 @@
 .aptk-selection-close:hover {
     background: #f1f5f9;
     color: #334155;
+}
+
+/* Search + Sort toolbar — same visual language as
+   similar_candidates.blade.php's simf-toolbar-card (no Filter button here,
+   this page keeps its existing Kanban stage pills). caf- prefix (ClientApp
+   Filter) to keep this page's styles/JS distinct from the plf-/ibf-/abf-/
+   simf-prefixed ones on other AppTracker tabs. */
+.caf-toolbar-card {
+    border: 1px solid #eef0f4;
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    font-family: 'Poppins', sans-serif;
+}
+.caf-search-wrap,
+.caf-sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e4e6ef;
+    border-radius: 10px;
+    padding: 0 14px;
+    height: 44px;
+}
+.caf-search-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.caf-sort-wrap {
+    flex-shrink: 0;
+    width: 220px;
+    position: relative;
+}
+.caf-search-icon,
+.caf-sort-icon {
+    color: #99a1b7;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.caf-search-icon svg,
+.caf-sort-icon svg {
+    flex-shrink: 0;
+    display: block;
+}
+.caf-search-input.form-control {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 13.5px;
+    line-height: 42px;
+    height: 42px;
+}
+.caf-sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #3f4254;
+    text-align: left;
+}
+.caf-sort-btn:focus { outline: none; }
+.caf-sort-btn span {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.caf-sort-btn .chevron {
+    flex-shrink: 0;
+    color: #99a1b7;
+    transition: transform .15s;
+}
+.caf-sort-btn.open .chevron {
+    transform: rotate(180deg);
+}
+.caf-sort-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 100%;
+    width: max-content;
+    max-width: 280px;
+    background: #fff;
+    border: 1px solid #eef0f4;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+    padding: 6px;
+    z-index: 60;
+    max-height: 320px;
+    overflow-y: auto;
+}
+.caf-sort-item {
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #3f4254;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.caf-sort-item:hover {
+    background: #f8f9fb;
+}
+.caf-sort-item.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+@media (max-width: 992px) {
+    .caf-sort-wrap { width: 160px; }
+}
+@media (max-width: 768px) {
+    .caf-search-wrap { flex-basis: 100%; }
+    .caf-sort-wrap { width: 140px; }
 }
 
 /* Hiring Pipeline card */
@@ -572,15 +722,27 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
          @include('sections.service_company.clientappHeader',['tabactive'=>$tabactive])
       </div>
         
-        <div class="card hp-toolbar-card mb-4">
+        <div class="card mb-4 caf-toolbar-card">
             <div class="card-body py-3">
-                <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                    <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                        <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="caf-search-wrap" style="position: relative;">
+                        <span class="caf-search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                        </span>
+                        <input type="text" class="form-control caf-search-input" name="inputJobSearch"
+                            value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" onchange="filtersdataget()" autocomplete="off" />
                     </div>
-                    <div style="width: 220px; flex-shrink: 0;">
-                        <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdataget()">
+                    <div class="caf-sort-wrap" id="caf_sort_wrap">
+                        <span class="caf-sort-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                        </span>
+                        <button type="button" class="caf-sort-btn" id="caf_sort_btn">
+                            <span id="caf_sort_label">Sort</span>
+                            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
                             <option value="Show All" selected="">Sort</option>
+                            <option value="10">Best Match</option>
                             <option value="1">Newest to Oldest (Upload Date)</option>
                             <option value="2">Oldest to Newest (Upload Date)</option>
                             <option value="3">Low to High (Salary)</option>
@@ -590,6 +752,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                             <option value="7">High to Low (Experience) </option>
                             <option value="8">Low to High (Experience)</option>
                         </select>
+                        <div class="caf-sort-panel d-none" id="caf_sort_panel"></div>
                     </div>
                 </div>
             </div>
@@ -691,7 +854,9 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
         {{-- Row selection action bar — hidden until candidates are checked. Reuses the
              exact same trigger classes as the legacy toolbar buttons (fwd_resume /
              application_copy) — this page has no working mass_mail/export handlers, so
-             those buttons are intentionally omitted here. --}}
+             those buttons are intentionally omitted here. Print is a new addition: it's
+             purely client-side (clones the checked rows already on the page), so it
+             doesn't need a working server-side handler the way mass_mail/export would. --}}
         <div class="aptk-selection-bar" id="aptk_selection_bar">
             <div class="form-check form-check-sm form-check-custom form-check-solid">
                 <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked title="Clear selection" />
@@ -707,6 +872,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                     <span class="svg-icon svg-icon-primary svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                     </span> Copy
+                </a>
+                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary aptk_print_btn" title="Export the selected candidates using your browser's print dialog">
+                    <span class="svg-icon svg-icon-primary svg-icon-1x">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    </span> Export
                 </a>
             </div>
             <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
@@ -744,6 +914,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
           </table>
           <!--end::Table-->
           <div id="paginationcandidate"></div>
+          {{-- Print target — populated client-side from the checked rows already
+               on this page (see the .aptk_print_btn click handler); no server
+               round-trip involved. --}}
+          <div id="aptk_print_area"></div>
           @endif </div>
         <!--end::Card body-->
       </div>
@@ -756,42 +930,55 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <!--end::Content-->
 
 
-<!--begin::Stage sub stage popup-->
-<!--<div class="modal fade" id="client_stage_sub_stage" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header flex-stack">
-        <h2>Stage and sub stage</h2>
-        <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal"  id="client_stage_sub_stage_close"> <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-          </svg>
-          </span> </div>
+<!--begin::Stage sub stage drawer-->
+<style>
+  #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+  #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+  #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+  #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+  #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
+  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
+  #csd_drawer .sd-btn-confirm .indicator-progress { display: none; }
+  #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e4e6ef; }
+  #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+  #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+</style>
+<div id="csd_drawer_toggle" style="display:none;"></div>
+<div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="sd-topbar">
+      <div class="sd-topbar-left">
+        <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
+        <div>
+          <div class="sd-topbar-title">Change Candidate Stage</div>
+          <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
+        </div>
       </div>
-      <div class="client_stage_body_content" id="client_stage_body_content"></div>
+      <div class="sd-topbar-right">
+        <button type="button" class="sd-btn-cancel" id="client_stage_sub_stage_new_close">Cancel</button>
+        <button type="button" class="sd-btn-confirm" id="int_stage_submit">
+          <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>
+          <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+        </button>
+        <span class="sd-divider"></span>
+        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-times"></i></span>
+      </div>
     </div>
-  </div>
-</div>-->
-
-<div class="modal fade" id="client_stage_sub_stage_new" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header flex-stack">
-        <h2>Stage and sub stage</h2>
-        <div class="btn btn-sm btn-icon btn-active-color-primary close" data-bs-dismiss="modal" data-dismiss="modal"  id="client_stage_sub_stage_new_close"> <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-          </svg>
-          </span> </div>
-      </div>
+    <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
       <div class="client_stage_body_content" id="client_stage_body_content"></div>
     </div>
   </div>
 </div>
 
-<!--end::Stage sub stage popup-->
+<!--end::Stage sub stage drawer-->
 
 
 
@@ -901,9 +1088,99 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
+    // Non-blocking toast for simple pass/fail notifications, same pattern
+    // as similar_candidates.blade.php's simfToast. Chained Swal.fire()
+    // flows elsewhere on this page (stage transitions, "No Internet" hard
+    // stops) stay as blocking dialogs since they gate a subsequent .then().
+    const cafToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        }
+    });
+
     @if(session('packageStatus'))
-    Swal.fire("Failed", "{{ session('packageStatus') }}" , "warning");	
+    cafToast.fire({ icon: 'warning', title: "{{ session('packageStatus') }}" });
     @endif
+
+    // Once a client-owned candidate has been sourced, the Job Stage badge
+    // is no longer a stage-change trigger (that authority now belongs to
+    // the client) — it's this notice instead, so the recruiter understands
+    // why the row no longer opens the drawer, rather than it silently doing
+    // nothing.
+    $(document).on('click', '.client_stage_locked_notice', function (e) {
+        e.preventDefault();
+        Swal.fire({
+            width: 460,
+            padding: '1.75em',
+            showCloseButton: true,
+            showConfirmButton: true,
+            confirmButtonText: 'Understood',
+            confirmButtonColor: '#2563EB',
+            html: `
+                <div style="font-family:'Poppins',sans-serif;text-align:left;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                        <span style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>
+                        </span>
+                        <div style="font-size:15px;font-weight:700;color:#181c32;line-height:1.3;">This Stage Is Managed by the Client</div>
+                    </div>
+                    <div style="font-size:13px;line-height:1.65;color:#4b5563;">
+                        This candidate has been sourced and is now part of the client's active hiring pipeline. From this point forward, every stage decision — review, evaluation, offer, and rejection — is owned and managed directly by the client's hiring team.
+                    </div>
+                    <div style="font-size:13px;line-height:1.65;color:#4b5563;margin-top:10px;">
+                        To discuss this candidate's progress or request a stage change, please coordinate with the client's Hiring Manager.
+                    </div>
+                </div>
+            `
+        });
+    });
+
+    // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
+    // simfRenderSortPanel — reads options straight from the real
+    // #sortingfilter <select> (single source of truth), keeps that
+    // select's value in sync so filtersdataget()/fetchCandidates() are
+    // unaffected, only replaces how the option list is PRESENTED.
+    function cafRenderSortPanel() {
+        var $panel = $('#caf_sort_panel').empty();
+        var current = $('#sortingfilter').val();
+        $('#sortingfilter option').each(function() {
+            var $opt = $(this);
+            var val = $opt.attr('value');
+            var label = $opt.text();
+            $('<div class="caf-sort-item"></div>').text(label)
+                .toggleClass('active', val === current)
+                .on('click', function() {
+                    $('#sortingfilter').val(val);
+                    $('#caf_sort_label').text(label);
+                    cafCloseSortPanel();
+                    filtersdataget();
+                })
+                .appendTo($panel);
+        });
+    }
+    function cafOpenSortPanel() {
+        cafRenderSortPanel();
+        $('#caf_sort_panel').removeClass('d-none');
+        $('#caf_sort_btn').addClass('open');
+    }
+    function cafCloseSortPanel() {
+        $('#caf_sort_panel').addClass('d-none');
+        $('#caf_sort_btn').removeClass('open');
+    }
+    $(document).on('click', '#caf_sort_btn', function(e) {
+        e.stopPropagation();
+        if ($('#caf_sort_panel').hasClass('d-none')) cafOpenSortPanel();
+        else cafCloseSortPanel();
+    });
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#caf_sort_wrap').length) cafCloseSortPanel();
+    });
 
    
    $( document ).ready(function() {
@@ -1484,17 +1761,17 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     </script>
 <script>
 
-	$('.chk_list').click(function(){ 
-		
+	$('.chk_list').click(function(){
+
 		if($(".chk_list").prop('checked') == true){
 			var chk_list 	=	$('.chk_list').val();
       $('.custom_hide').addClass("d-none");
-			$('.chk_list_item').attr('checked','checked');
+			$('.chk_list_item').prop('checked', true);
 		}else{
-			$('.chk_list_item').removeAttr('checked');		
+			$('.chk_list_item').prop('checked', false);
       $('.custom_hide').removeClass("d-none");
 		}
-	});	
+	});
 
 </script>
 <script>
@@ -1518,6 +1795,38 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		}
 		updateAptkSelectionBar();
 	 });
+
+	// Purely client-side — clones the checked rows' already-rendered markup
+	// (no new request, no server load) into #aptk_print_area and hands off
+	// to the browser's own print dialog. Same pattern as CV Tracker/apptracker.
+	$(document).on('click', '.aptk_print_btn', function() {
+		var $checked = $('.chk_list_item:checked');
+		if ($checked.length === 0) {
+			cafToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
+			return false;
+		}
+
+		var $table = $('<table></table>');
+		var $thead = $('#myTable thead tr').clone();
+		$thead.find('th').first().remove(); // drop the checkbox header column
+		$table.append($('<thead></thead>').append($thead));
+
+		var $tbody = $('<tbody></tbody>');
+		$checked.each(function() {
+			var $row = $(this).closest('tr').clone();
+			$row.find('td').first().remove(); // drop the checkbox cell
+			$tbody.append($row);
+		});
+		$table.append($tbody);
+
+		var $printArea = $('#aptk_print_area').empty();
+		$printArea.append('<h2>Candidates Summary</h2>');
+		$printArea.append('<div class="aptk-print-meta">Printed ' +
+			new Date().toLocaleString() + ' — ' + $checked.length + ' candidate(s)</div>');
+		$printArea.append($table);
+
+		window.print();
+	});
 
 	$(document).on('click', '.chk_list_item', ()=>{
 	   var i=0;
@@ -1677,7 +1986,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <script> 
 	
 	 $(document).ready(function(){
-   
+
+   		$('body').on('click', '#client_stage_sub_stage_new_close', function(){
+   				$('#csd_drawer_close').trigger('click');
+   		});
+
    		$('body').on('click', '#int_stage_submit', function(e){
    			
    				e.preventDefault();
@@ -1685,6 +1998,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 				
    				var master_status	=	$('input[name="master_status"]:checked').val();
    				if((master_status == 1) || (master_status == 7) || (master_status == 9) ){
+            if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                cafToast.fire({ icon: 'info', title: 'Please select a sub stage to continue.' });
+                return;
+            }
             $('#int_stage_submit').prop('disabled',true);
             $('.indicator-label').hide();
             $('.indicator-progress').show();
@@ -1699,7 +2016,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                       $('.indicator-progress').hide();
                                   if(response.status == 'coinCheck'){
    																	 Swal.fire("Failed",` ${response.message}` , "warning").then(function(){
-                                      $('#client_stage_sub_stage_new').modal('hide');
+                                      $('#csd_drawer_close').trigger('click');
                                      });	
                                     return false;
    																}
@@ -1707,7 +2024,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 																				if(response.status == 'success'){
 																					   Swal.fire("Success", 'Application stage update successfully !', "success").then(function(){ 
 																						// $('#stage_sub_stage').modal('hide');
-                                               $('#client_stage_sub_stage_new').modal('hide');
+                                               $('#csd_drawer_close').trigger('click');
 																					 });
 																					    
 																						// var table;
@@ -1722,23 +2039,20 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 								   
 																				}else if (response.status == 'cvpending'){ 																					 
 																					 Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function(){ 
-                                                                                    $("#stage_sub_stage_close").click();
+                                                                                    $('#csd_drawer_close').trigger('click');
 																					});	
 																				}else if (response.status == 'candidatevalidation'){ 																					 
 																					 Swal.fire("Warning", response.message, "warning").then(function(){ 
-                                                                                    $("#stage_sub_stage_close").click();
+                                                                                    $('#csd_drawer_close').trigger('click');
 																					});	
 																				}
 															}
    									})  
 				}else{
-							Swal.fire("Warning", 'Only Sourcing stage update!', "info");	
+							cafToast.fire({ icon: 'info', title: 'Only Sourcing stage update!' });
               
-                     $('#client_stage_sub_stage_new').modal('hide');
+                     $('#csd_drawer_close').trigger('click');
 				}
-				 
-   				e.run();	
-   						
    		});
    
    })
@@ -1760,11 +2074,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 							var jobStatus = $(this).data('job-status');
 							if (jobStatus === 'hold' || jobStatus === 'inactive') {
 								var statusLabel = jobStatus === 'hold' ? 'Hold' : 'Closed';
-								Swal.fire(
-									'Position ' + statusLabel,
-									'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.',
-									'warning'
-								);
+								cafToast.fire({
+									icon: 'warning',
+									title: 'Position ' + statusLabel,
+									text: 'The position has been ' + statusLabel + '. You cannot upload new profiles for this position — kindly connect with the Hiring Manager regarding the same.'
+								});
 								return false;
 							}
 
@@ -1839,7 +2153,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
               //   													buttonsStyling	: false
               // })
 		
-		          $('#client_stage_sub_stage_new').modal('show');  
+		          $('#client_stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+			          $('#csd_drawer_toggle').trigger('click');
 		  
 		  
 		 					// var inner_url 				=	"{{ route('service_company.auth-custom-package.validateClientPackage') }}";
@@ -1867,10 +2182,11 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                   success 	:	function (response) {
                                       if (response.status == "success") {
                                           $('#client_stage_body_content').html(response.view);
+                                          $('#csd_drawer_subtitle').text($('#client_stage_body_content .csd-info-name').first().text());
                                       }
                           }
-                          
-              });		
+
+              });
 										
               // }
               // else if (response.status == "info"){ 																					 
@@ -1889,22 +2205,23 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
             fetchCandidates();
 
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            // The pagination partial (ajax_pages/pagination.blade.php) renders
+            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
+            // handler was listening for a class that doesn't exist anywhere in
+            // the actual markup, so clicking a page number did nothing at all.
+            var cafPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (cafPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                cafPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cafPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    cafPaginationLoading = false;
                 });
             });
 
@@ -1921,7 +2238,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
             $('.loadingMessage').css({
                 display: 'block'
             });
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.apptracker.clientappdata_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {

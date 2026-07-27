@@ -196,6 +196,55 @@
         .wallet-card-balance-label { font-size: 11px; color: #8a8fa3; }
         .wallet-card-stats { border-top: 1px dashed rgba(0,0,0,.08); padding-top: 12px; margin-top: 14px; }
         .wallet-card-stat-label { font-size: 10px; color: #8a8fa3; }
+        .wallet-active-pkg-row { font-size: 12px; color: #5b59e8; border-top: 1px dashed rgba(0,0,0,.08); padding-top: 8px; }
+        /* Packages tab */
+        .pkg-page-title { font-size: 22px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+        .pkg-page-sub { font-size: 13px; color: #8a8fa3; }
+        .pkg-guidelines-link { color: #5b59e8; font-weight: 600; }
+        .pkg-card { background: #fff; border: 1px solid #e2e2ef; border-radius: 14px; padding: 24px 20px 20px; position: relative; height: 100%; display: flex; flex-direction: column; box-shadow: 0 1px 6px rgba(0,0,0,.05); transition: box-shadow .2s, border-color .2s; }
+        .pkg-card:hover { box-shadow: 0 4px 18px rgba(91,89,232,.12); border-color: #c4c2f8; }
+        .pkg-card-current { border-color: #5b59e8 !important; box-shadow: 0 4px 20px rgba(91,89,232,.2) !important; }
+        .pkg-card-current-sal { border-color: #10a34a !important; box-shadow: 0 4px 20px rgba(16,163,74,.2) !important; }
+        .pkg-off-badge { position: absolute; top: -12px; right: 16px; background: #ff6b6b; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 50px; }
+        .pkg-card-name { font-size: 18px; font-weight: 800; color: #1a1a2e; margin-bottom: 2px; }
+        .pkg-orig-price { font-size: 14px; color: #9ca3af; text-decoration: line-through; min-height: 20px; margin-top: 6px; }
+        .pkg-price-row { display: flex; align-items: baseline; gap: 2px; margin: 4px 0 2px; }
+        .pkg-currency { font-size: 16px; font-weight: 700; color: #5b59e8; }
+        .pkg-price-val { font-size: 32px; font-weight: 800; color: #1a1a2e; line-height: 1; }
+        .pkg-period { font-size: 12px; color: #8a8fa3; margin-left: 4px; }
+        .pkg-price-custom { font-size: 22px; font-weight: 800; color: #5b59e8; margin: 8px 0 2px; }
+        .pkg-coins-row { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+        .pkg-btn { display: block; width: 100%; text-align: center; padding: 10px 0; border-radius: 8px; font-size: 13px; font-weight: 700; margin-top: 14px; cursor: pointer; text-decoration: none; transition: opacity .2s; }
+        .pkg-btn:hover { opacity: .88; text-decoration: none; }
+        .pkg-btn-upgrade { background: #1a1a2e; color: #fff; border: none; }
+        .pkg-btn-upgrade-sal { background: #1a1a2e; color: #fff; border: none; }
+        .pkg-btn-current { background: linear-gradient(135deg,#5b59e8,#7c3aed); color: #fff; border: none; cursor: default; }
+        .pkg-btn-current-sal { background: linear-gradient(135deg,#16a34a,#10a34a); }
+        .pkg-btn-contact { background: #10a34a; color: #fff; border: none; }
+        .pkg-btn-contact-sal { background: #10a34a; color: #fff; border: none; }
+        .pkg-divider { border-color: #f0f0f8; margin: 14px 0 10px; }
+        .pkg-features { flex: 1; display: flex; flex-direction: column; gap: 0; }
+        .pkg-feature-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f5f5fb; font-size: 13px; color: #374151; }
+        .pkg-feature-row:last-child { border-bottom: none; }
+        .pkg-feature-val { font-weight: 600; color: #1a1a2e; }
+        /* Current Plan card */
+        .cp-card { background: #fff; border: 1px solid #e8e8f0; border-radius: 14px; padding: 20px 24px; box-shadow: 0 1px 8px rgba(0,0,0,.06); }
+        .cp-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; border-bottom: 1px solid #f0f0f8; padding-bottom: 14px; }
+        .cp-card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .cp-card-icon-op { background: #ede9fe; color: #7c3aed; }
+        .cp-card-icon-sal { background: #dcfce7; color: #16a34a; }
+        .cp-card-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+        .cp-card-subtitle { font-size: 12px; color: #8a8fa3; }
+        .cp-card-body { display: flex; flex-wrap: wrap; gap: 20px; }
+        .cp-stat { display: flex; align-items: center; gap: 12px; min-width: 160px; flex: 1; }
+        .cp-stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+        .cp-stat-icon-op { background: #ede9fe; color: #7c3aed; }
+        .cp-stat-icon-sal { background: #dcfce7; color: #16a34a; }
+        .cp-stat-label { font-size: 11px; color: #8a8fa3; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+        .cp-stat-value { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-top: 2px; }
+        .cp-stat-value-highlight { color: #5b59e8; }
+        .cp-stat-value-sal { color: #16a34a; }
+        .cp-no-plan { font-size: 13px; color: #8a8fa3; padding: 8px 0; }
 
         /* .package-switch.opra-tab-plan / .salse-tab-plan are pre-existing
            global rules meant for small pill buttons (solid bg + white bold
@@ -284,6 +333,11 @@
         .wallet-pkg-btn-solid:hover { background: #5b21b6; color: #fff; }
         .wallet-pkg-btn-success { color: #fff; background: #10a34a; border: 1px solid #10a34a; }
         .wallet-pkg-btn-success:hover { background: #0d8a3d; color: #fff; }
+        .wallet-pkg-btn-current-plan { color: #fff; background: linear-gradient(135deg,#5b59e8,#7c3aed); border: none; cursor: default; }
+        .wallet-pkg-btn-current-plan-sal { background: linear-gradient(135deg,#16a34a,#10a34a); }
+        .is-current-plan { border-color: #5b59e8 !important; box-shadow: 0 4px 20px rgba(91,89,232,.18); }
+        .is-current-plan-sal { border-color: #10a34a !important; box-shadow: 0 4px 20px rgba(16,163,74,.18); }
+        .wallet-pkg-badge-current { background: linear-gradient(135deg,#5b59e8,#7c3aed) !important; }
 
         .wallet-feature-strip { border-top: 1px solid #e4e6ef; border-bottom: 1px solid #e4e6ef; padding: 16px 0; margin: 24px 0; }
         .wallet-feature-strip-item { display: flex; align-items: center; gap: 10px; font-size: 11px; }
@@ -371,10 +425,6 @@
                                 </h1>
                                 <div class="text-gray-500 fs-8">Manage all your wallets, packages, coins and transactions in one place.</div>
                             </div>
-                            <a href="javascript:;" class="btn btn-sm wallet-buy-coins-btn"
-                                onclick="switchWalletCenterTab('packages'); return false;">
-                                <i class="fa fa-coins me-1"></i> <span id="walletBuyCoinsLabel">Buy Coins</span>
-                            </a>
                         </div>
 
                         <!--begin::Wallet cards-->
@@ -387,11 +437,24 @@
                                             <span class="wallet-card-icon"><i class="fa fa-cog"></i></span>
                                             <div class="ms-3">
                                                 <div class="fw-bold fs-6 text-gray-900">Operational Wallet</div>
-                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                                @if(!empty($current_coins_operational))
+                                                    <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                                @else
+                                                    <span class="badge badge-light-danger fs-9">NO ACTIVE PLAN</span>
+                                                @endif
                                             </div>
                                         </div>
                                         <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
                                     </div>
+                                    @if(!empty($current_coins_operational))
+                                    <div class="wallet-active-pkg-row mt-2">
+                                        <i class="fa fa-tag me-1"></i>
+                                        <span class="fw-bold">{{ $current_coins_operational[0]['title'] ?? '—' }}</span>
+                                        @if(!empty($current_coins_operational[0]['end_date']))
+                                            <span class="text-muted ms-2 fs-9">· Expires {{ date('d M Y', strtotime($current_coins_operational[0]['end_date'])) }}</span>
+                                        @endif
+                                    </div>
+                                    @endif
                                     <div class="d-flex align-items-end justify-content-between mt-3">
                                         <div>
                                             <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
@@ -425,11 +488,24 @@
                                             <span class="wallet-card-icon"><i class="fa fa-briefcase"></i></span>
                                             <div class="ms-3">
                                                 <div class="fw-bold fs-6 text-gray-900">Sales Wallet</div>
-                                                <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                                @if(!empty($current_coins_sales))
+                                                    <span class="badge badge-light-success fs-9">ACTIVE</span>
+                                                @else
+                                                    <span class="badge badge-light-danger fs-9">NO ACTIVE PLAN</span>
+                                                @endif
                                             </div>
                                         </div>
                                         <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
                                     </div>
+                                    @if(!empty($current_coins_sales))
+                                    <div class="wallet-active-pkg-row mt-2">
+                                        <i class="fa fa-tag me-1"></i>
+                                        <span class="fw-bold">{{ $current_coins_sales[0]['title'] ?? '—' }}</span>
+                                        @if(!empty($current_coins_sales[0]['end_date']))
+                                            <span class="text-muted ms-2 fs-9">· Expires {{ date('d M Y', strtotime($current_coins_sales[0]['end_date'])) }}</span>
+                                        @endif
+                                    </div>
+                                    @endif
                                     <div class="d-flex align-items-end justify-content-between mt-3">
                                         <div>
                                             <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
@@ -468,11 +544,7 @@
                         <!--begin::Tab nav-->
                         <ul class="wallet-tab-nav">
                             <li><a href="javascript:;" class="wallet-tab-link wt-active" data-tab="overview" onclick="switchWalletCenterTab('overview');return false;"><i class="fa fa-th-large"></i> Overview</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="packages" onclick="switchWalletCenterTab('packages');return false;"><i class="fa fa-box"></i> Packages</a></li>
                             <li><a href="javascript:;" class="wallet-tab-link" data-tab="transactions" onclick="switchWalletCenterTab('transactions');return false;"><i class="fa fa-exchange-alt"></i> Transactions</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="invoices" onclick="switchWalletCenterTab('invoices');return false;"><i class="fa fa-file-invoice"></i> Invoices</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="billing" onclick="switchWalletCenterTab('billing');return false;"><i class="fa fa-credit-card"></i> Billing</a></li>
-                            <li><a href="javascript:;" class="wallet-tab-link" data-tab="settings" onclick="switchWalletCenterTab('settings');return false;"><i class="fa fa-cog"></i> Settings</a></li>
                         </ul>
                         <!--end::Tab nav-->
                     </div>
@@ -482,6 +554,106 @@
                         <div id="wallet-pane-overview" class="wallet-tab-pane">
                         <div class="row g-5 g-xl-10 mb-5 mb-xl-10 px-5">
                             <div class="col-xl-12 col-lg-12">
+                                <div id="overview-only-section">
+
+                                <!--begin::Current Plan card - Operational-->
+                                <div class="cp-card operational-packages mb-5">
+                                    <div class="cp-card-header">
+                                        <span class="cp-card-icon cp-card-icon-op"><i class="fa fa-cog"></i></span>
+                                        <div>
+                                            <div class="cp-card-title">Current Plan</div>
+                                            <div class="cp-card-subtitle">Operational Wallet</div>
+                                        </div>
+                                    </div>
+                                    @if(!empty($current_coins_operational))
+                                    <div class="cp-card-body">
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-op"><i class="fa fa-layer-group"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Plan Name</div>
+                                                <div class="cp-stat-value">{{ $current_coins_operational[0]['title'] }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-op"><i class="fa fa-calendar-alt"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Expiration Date</div>
+                                                <div class="cp-stat-value">{{ !empty($current_coins_operational[0]['end_date']) ? date('d M Y', strtotime($current_coins_operational[0]['end_date'])) : '—' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-op"><i class="fa fa-coins"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Credit Coins</div>
+                                                <div class="cp-stat-value">{{ number_format($current_coins_operational[0]['actual_coins']) }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-op"><i class="fa fa-wallet"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Available Coins</div>
+                                                <div class="cp-stat-value cp-stat-value-highlight">{{ number_format($current_coins_operational[0]['coins']) }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="cp-no-plan">
+                                        <i class="fa fa-info-circle me-2"></i> No active operational plan found.
+                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="switchWalletCenterTab('packages');return false;">Browse Packages &rarr;</a>
+                                    </div>
+                                    @endif
+                                </div>
+                                <!--end::Current Plan card - Operational-->
+
+                                <!--begin::Current Plan card - Sales-->
+                                <div class="cp-card salse-packages mb-5" style="display:none;">
+                                    <div class="cp-card-header">
+                                        <span class="cp-card-icon cp-card-icon-sal"><i class="fa fa-briefcase"></i></span>
+                                        <div>
+                                            <div class="cp-card-title">Current Plan</div>
+                                            <div class="cp-card-subtitle">Sales Wallet</div>
+                                        </div>
+                                    </div>
+                                    @if(!empty($current_coins_sales))
+                                    <div class="cp-card-body">
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-sal"><i class="fa fa-layer-group"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Plan Name</div>
+                                                <div class="cp-stat-value">{{ $current_coins_sales[0]['title'] }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-sal"><i class="fa fa-calendar-alt"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Expiration Date</div>
+                                                <div class="cp-stat-value">{{ !empty($current_coins_sales[0]['end_date']) ? date('d M Y', strtotime($current_coins_sales[0]['end_date'])) : '—' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-sal"><i class="fa fa-coins"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Credit Coins</div>
+                                                <div class="cp-stat-value">{{ number_format($current_coins_sales[0]['actual_coins']) }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="cp-stat">
+                                            <div class="cp-stat-icon cp-stat-icon-sal"><i class="fa fa-wallet"></i></div>
+                                            <div>
+                                                <div class="cp-stat-label">Available Coins</div>
+                                                <div class="cp-stat-value cp-stat-value-highlight cp-stat-value-sal">{{ number_format($current_coins_sales[0]['coins']) }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="cp-no-plan">
+                                        <i class="fa fa-info-circle me-2"></i> No active sales plan found.
+                                        <a href="javascript:;" class="ms-2 fw-bold" onclick="switchWalletCenterTab('packages');return false;">Browse Packages &rarr;</a>
+                                    </div>
+                                    @endif
+                                </div>
+                                <!--end::Current Plan card - Sales-->
+
                                 <!--begin::Overview extras - Operational-->
                                 <div class="row g-4 mt-1 operational-packages">
                                     <div class="col-6 col-md-3">
@@ -516,11 +688,17 @@
                                         <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
-                                        @php $opIcons = ['fa-star text-warning', 'fa-crown text-primary', 'fa-gem text-info']; @endphp
+                                        @php
+                                            $opIcons = ['fa-star text-warning', 'fa-crown text-primary', 'fa-gem text-info'];
+                                            $activeOpPackageId = !empty($current_coins_operational) ? ($current_coins_operational[0]['coin_package_id'] ?? null) : null;
+                                        @endphp
                                         @foreach ($operational_package as $i => $opr_preview)
+                                            @php $isCurrentOp = ($activeOpPackageId && $opr_preview['id'] == $activeOpPackageId); @endphp
                                             <div class="col-md-3">
-                                                <div class="wallet-pkg-card {{ $opr_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '' }}">
-                                                    @if($opr_preview['custome_pck'] != 2 && $i == 1)
+                                                <div class="wallet-pkg-card {{ $isCurrentOp ? 'is-current-plan' : ($opr_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '') }}">
+                                                    @if($isCurrentOp)
+                                                        <span class="wallet-pkg-badge wallet-pkg-badge-current">CURRENT PLAN</span>
+                                                    @elseif($opr_preview['custome_pck'] != 2 && $i == 1)
                                                         <span class="wallet-pkg-badge">MOST POPULAR</span>
                                                     @endif
                                                     <div class="wallet-pkg-icon">
@@ -545,6 +723,14 @@
                                                     </ul>
                                                     @if($opr_preview['custome_pck'] == 2)
                                                         <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                    @elseif($isCurrentOp)
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-current-plan mb-2">
+                                                            <i class="fa fa-check-circle me-1"></i>Current Plan
+                                                        </a>
+                                                        <a href="javascript:;" data-id="{{ encrypt($opr_preview['id']) }}"
+                                                            class="wallet-pkg-btn wallet-pkg-btn-outline upgradeselect">
+                                                            <i class="fa fa-shopping-cart me-1"></i>Add to Cart
+                                                        </a>
                                                     @else
                                                         <a href="javascript:;" data-id="{{ encrypt($opr_preview['id']) }}"
                                                             class="wallet-pkg-btn upgradeselect {{ $i == 1 ? 'wallet-pkg-btn-solid' : 'wallet-pkg-btn-outline' }}">
@@ -633,11 +819,17 @@
                                         <a href="javascript:;" class="fs-8 fw-semibold" onclick="switchWalletCenterTab('packages');return false;">View all packages &rarr;</a>
                                     </div>
                                     <div class="row g-4">
-                                        @php $salIcons = ['fa-star text-warning', 'fa-crown text-success', 'fa-gem text-info']; @endphp
+                                        @php
+                                            $salIcons = ['fa-star text-warning', 'fa-crown text-success', 'fa-gem text-info'];
+                                            $activeSlPackageId = !empty($current_coins_sales) ? ($current_coins_sales[0]['coin_package_id'] ?? null) : null;
+                                        @endphp
                                         @foreach ($sales_package as $i => $sales_preview)
+                                            @php $isCurrentSal = ($activeSlPackageId && $sales_preview['id'] == $activeSlPackageId); @endphp
                                             <div class="col-md-3">
-                                                <div class="wallet-pkg-card {{ $sales_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '' }}" style="{{ $sales_preview['custome_pck'] != 2 && $i == 1 ? 'border-color:#10a34a;' : '' }}">
-                                                    @if($sales_preview['custome_pck'] != 2 && $i == 1)
+                                                <div class="wallet-pkg-card {{ $isCurrentSal ? 'is-current-plan is-current-plan-sal' : ($sales_preview['custome_pck'] != 2 && $i == 1 ? 'is-popular' : '') }}" style="{{ !$isCurrentSal && $sales_preview['custome_pck'] != 2 && $i == 1 ? 'border-color:#10a34a;' : '' }}">
+                                                    @if($isCurrentSal)
+                                                        <span class="wallet-pkg-badge wallet-pkg-badge-current">CURRENT PLAN</span>
+                                                    @elseif($sales_preview['custome_pck'] != 2 && $i == 1)
                                                         <span class="wallet-pkg-badge" style="background:#10a34a;">MOST POPULAR</span>
                                                     @endif
                                                     <div class="wallet-pkg-icon">
@@ -662,6 +854,15 @@
                                                     </ul>
                                                     @if($sales_preview['custome_pck'] == 2)
                                                         <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-success" onclick="switchWalletCenterTab('packages');return false;">Contact Sales</a>
+                                                    @elseif($isCurrentSal)
+                                                        <a href="javascript:;" class="wallet-pkg-btn wallet-pkg-btn-current-plan wallet-pkg-btn-current-plan-sal mb-2">
+                                                            <i class="fa fa-check-circle me-1"></i>Current Plan
+                                                        </a>
+                                                        <a href="javascript:;" data-id="{{ encrypt($sales_preview['id']) }}"
+                                                            class="wallet-pkg-btn upgradeselect"
+                                                            style="color:#10a34a;border:1px solid #10a34a;background:#fff;">
+                                                            <i class="fa fa-shopping-cart me-1"></i>Add to Cart
+                                                        </a>
                                                     @else
                                                         <a href="javascript:;" data-id="{{ encrypt($sales_preview['id']) }}"
                                                             class="wallet-pkg-btn upgradeselect {{ $i == 1 ? 'wallet-pkg-btn-success' : '' }}"
@@ -718,502 +919,216 @@
                                 <!--end::Overview extras - Sales-->
 
                                 </div>
+                                </div>{{-- end::overview-only-section --}}
                                 <!--end::wallet-pane-overview-->
 
                                 <div id="wallet-pane-packages" class="wallet-tab-pane" style="display:none">
 
-
-
                                 <!--begin::Packages - Operational-->
-                                <div id="kt_modal_upgrade_plan" class="operational-packages">
-                                    <!--begin::Heading-->
-                                    <div class="mb-13 text-center">
-                                        <h1 class="mb-3">Choose an Operational Package</h1>
-
-                                        <div class="text-muted fw-semibold fs-5">
-                                            If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
-                                                class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
-                                        </div>
+                                <div id="pkg-pane-operational" class="operational-packages px-2 py-4">
+                                    <div class="pkg-page-header text-center mb-8">
+                                        <h2 class="pkg-page-title">Upgrade a Plan</h2>
+                                        <p class="pkg-page-sub">If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}" class="pkg-guidelines-link" target="_blank">Pricing Guidelines</a>.</p>
                                     </div>
-                                    <!--end::Heading-->
+                                    <div class="row g-4">
+                                        @php
+                                            $opCurPkgId = null;
+                                            if (!empty($current_coins_operational) && is_array($current_coins_operational)) {
+                                                $opCurPkgId = reset($current_coins_operational)['coin_package_id'] ?? null;
+                                            }
+                                        @endphp
+                                        @if ($operational_package)
+                                        @foreach ($operational_package as $opr_val)
+                                            @php
+                                                $isOpCurrent = ($opCurPkgId && $opr_val['id'] == $opCurPkgId);
+                                                $months = 12;
+                                                $number = $opr_val['days'] ?? 0;
+                                                if ($number >= 365)      { $months = floor($number / 30); }
+                                                elseif ($number >= 30)   { $months = floor($number / 30); }
+                                                $perMonthCoins = $months > 0 ? round($opr_val['coins'] / $months) : $opr_val['coins'];
 
-                                    <!--begin::Plans-->
-                                    <div class="d-flex flex-column">
-                                        <!--begin::Nav group-->
+                                                // Displayed price & period
+                                                if ($opr_val['visibility_show'] == 1) {
+                                                    $dispPrice    = $currency == 'INR' ? $opr_val['price'] : $opr_val['price_usd'];
+                                                    $origPrice    = $opr_val['discount'] > 0 ? round($dispPrice / (1 - $opr_val['discount'] / 100)) : null;
+                                                    $period       = 'Year';
+                                                } elseif ($opr_val['visibility_show'] == 2) {
+                                                    $dispPrice    = $currency == 'INR' ? $opr_val['total_price_monthly'] : $opr_val['total_price_usd_monthly'];
+                                                    $origPrice    = $opr_val['discount'] > 0 ? round($dispPrice / (1 - $opr_val['discount'] / 100)) : null;
+                                                    $period       = 'Month';
+                                                } else {
+                                                    $dispPrice    = $currency == 'INR' ? $opr_val['total_price_days'] : $opr_val['total_price_usd_days'];
+                                                    $origPrice    = $opr_val['discount'] > 0 ? round($dispPrice / (1 - $opr_val['discount'] / 100)) : null;
+                                                    $period       = 'Day';
+                                                }
+                                                $currIcon = $currency == 'INR' ? '₹' : '$';
+                                            @endphp
+                                            <div class="col-xl-3 col-md-6">
+                                                <div class="pkg-card {{ $isOpCurrent ? 'pkg-card-current' : '' }}">
+                                                    @if($opr_val['discount'] > 0)
+                                                        <span class="pkg-off-badge">{{ $opr_val['discount'] }}% Off</span>
+                                                    @endif
+                                                    <div class="pkg-card-name">{{ $opr_val['title'] }}</div>
+                                                    @if($opr_val['custome_pck'] == 2)
+                                                        <div class="pkg-price-custom">Custom Pricing</div>
+                                                        <div class="pkg-coins-row text-success">Unlimited Coins</div>
+                                                    @else
+                                                        @if($origPrice)
+                                                            <div class="pkg-orig-price">{{ $currIcon }}{{ number_format($origPrice) }}</div>
+                                                        @else
+                                                            <div class="pkg-orig-price">&nbsp;</div>
+                                                        @endif
+                                                        <div class="pkg-price-row">
+                                                            <span class="pkg-currency">{{ $currIcon }}</span><span class="pkg-price-val">{{ number_format($dispPrice) }}</span>
+                                                            <span class="pkg-period">/ {{ $period }}</span>
+                                                        </div>
+                                                        <div class="pkg-coins-row text-primary">{{ number_format($opr_val['coins']) }} Coins</div>
+                                                    @endif
 
-                                        <!--begin::Row-->
-                                        <div class="row">
-                                                <!--begin::Col-->
-                                                {{-- @dd($operational_package); --}}
-                                                @if ($operational_package)
-                                                    @foreach ($operational_package as $opr_val)
+                                                    {{-- Button --}}
+                                                    @if($opr_val['custome_pck'] == 2)
+                                                        @if($isOpCurrent)
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-current"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
+                                                        @else
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact">Contact Sales</a>
+                                                        @endif
+                                                    @else
+                                                        @if($isOpCurrent)
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-current"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
+                                                            <a href="javascript:;" data-id="{{ encrypt($opr_val['id']) }}" class="pkg-btn pkg-btn-upgrade upgradeselect mt-2">Upgrade Now</a>
+                                                        @else
+                                                            <a href="javascript:;" data-id="{{ encrypt($opr_val['id']) }}" class="pkg-btn pkg-btn-upgrade upgradeselect">Upgrade Now</a>
+                                                        @endif
+                                                    @endif
 
-                                                                @php
-                                                                 $visibility_coins = 1; 
-                                                                    if($opr_val['visibility_show']==1){
-                                                                        $visibility_coins = 1;  // Yearly
-                                                                    }elseif($opr_val['visibility_show']==2){
-                                                                        $visibility_coins = 12; // monthaly
-                                                                    }elseif($opr_val['visibility_show']==0){
-                                                                        $visibility_coins = 365;  // Daily
-                                                                    }
+                                                    <hr class="pkg-divider">
 
-                                                                    $number = $opr_val['days'];
-                                                                     $months = 12;
-                                                                    if ($number >= 365) {
-                                                                        $months = floor($number / 30);
-                                                                        $remainingDays = $number % 30;
-                                                                    } elseif ($number >= 30) {
-                                                                        $months = floor($number / 30);
-                                                                       
-                                                                    }
-
-                                                                    $coisn = $opr_val['coins'];
-                                                                    $perMonthCoins = $coisn/$months;
-                                                                    
-
-                                                                @endphp
-                                                                
-                                                                    <div class="col-xl-3">
-                                                                        <div class="d-flex h-100 align-items-center">
-                                                                            <!--begin::Option-->
-                                                                            <div class="w-100 d-flex flex-column flex-center rounded-3 bg-light bg-opacity-75 py-15 px-10" style="position: relative;">
-                                                                                <!--begin::Heading-->
-                                                                                <div class="mb-7 text-center">
-                                                                                    <!--begin::Title-->
-                                                                                    <h1 class="text-gray-900 mb-5 fw-bolder">{{ $opr_val['title'] }}</h1>
-                                                                                    <!--end::Title-->
-
-                                                
-                                                                                    <!--begin::Description-->
-                                                                                    @if($opr_val['discount'] >0)
-                                                                                        @if($opr_val['visibility_show']==1)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $opr_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-primary mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($opr_val['price'] / (1 - $opr_val['discount'] / 100)) : ($opr_val['price_usd'] / (1 - $opr_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-                                                                                        @elseif($opr_val['visibility_show']==2)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $opr_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-primary mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($opr_val['total_price_monthly'] / (1 - $opr_val['discount'] / 100)) : ($opr_val['total_price_usd_monthly'] / (1 - $opr_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-
-                                                                                        @elseif($opr_val['visibility_show']==0)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $opr_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-primary mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($opr_val['total_price_days'] / (1 - $opr_val['discount'] / 100)) : ($opr_val['total_price_usd_days'] / (1 - $opr_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-                                                                                        @endif
-                                                                                    @else
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-primary mt-2 fw-bold">&nbsp;</div>                                             
-                                                                                        </div>
-                                                                                    @endif
-                                                                                    <!--end::Description-->
-                                                
-                                                                                    <!--begin::Price-->
-                                                                                    <div class="text-center">
-                                                                                        <span class="mb-2 text-primary">
-                                                                                            <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>
-                                                                                        </span>
-
-                                                                                        @if($opr_val['visibility_show']==1)
-                                                                                        <span class="fs-2x fw-bold text-primary" data-kt-plan-price-month="{{ $currency == 'INR' ? $opr_val['price'] : $opr_val['price_usd'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $opr_val['price'] : $opr_val['price_usd'] }}">
-                                                                                        {{ $currency == 'INR' ? $opr_val['price'] : $opr_val['price_usd'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Year</span>
-                                                                                        </span>
-                                                                                        @elseif($opr_val['visibility_show']==2)
-                                                                                        <span class="fs-2x fw-bold text-primary" data-kt-plan-price-month="{{ $currency == 'INR' ? $opr_val['total_price_monthly'] : $opr_val['total_price_usd_monthly'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $opr_val['total_price_monthly'] : $opr_val['total_price_usd_monthly'] }}">
-                                                                                        {{ $currency == 'INR' ? $opr_val['total_price_monthly'] : $opr_val['total_price_usd_monthly'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Month</span>
-                                                                                        </span>
-                                                                                        @elseif($opr_val['visibility_show']==0)
-                                                                                        <span class="fs-2x fw-bold text-primary" data-kt-plan-price-month="{{ $currency == 'INR' ? $opr_val['total_price_days'] : $opr_val['total_price_usd_days'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $opr_val['total_price_days'] : $opr_val['total_price_usd_days'] }}">
-                                                                                        {{ $currency == 'INR' ? $opr_val['total_price_days'] : $opr_val['total_price_usd_days'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Day</span>
-                                                                                        </span>
-                                                                                        @endif
-                                                                                       
-                                                                                       
-                                                                                    </div>
-                                                                                    <!--end::Price-->
-                                                                                </div>
-                                                                                <!--end::Heading-->
-
-                                                                                    <!--begin::Select-->
-                                                                                    @php
-                                                                                      $currentCoinPackageId = null;
-                                                                                        if (!empty($current_coins_operational) && is_array($current_coins_operational)) {
-                                                                                            $first = reset($current_coins_operational); // safe first element
-                                                                                            $currentCoinPackageId = $first['coin_package_id'] ?? null;
-                                                                                        }
-                                                                                    @endphp
-                                                                                @if($opr_val['custome_pck'] !=2)
-                                                                                    <a href="javascript:;" data-id="{{ encrypt($opr_val['id']) }}" class="btn btn-lg btn-{{ $opr_val['id'] === $current_coins_operational[0]['coin_package_id'] ? 'primary' : 'dark' }} upgradeselect">
-                                                                                     {{ $opr_val['id'] === $currentCoinPackageId ? 'Current Plan ' : 'Upgrade Now' }} </a>
-                                                                                 @else
-                                                                                 @if($opr_val['id'] === $currentCoinPackageId)
-                                                                                 <a href="javascript:;" class="btn btn-lg btn-primary">
-                                                                                     {{ $opr_val['id'] === $currentCoinPackageId ? 'Current Plan' : '' }} </a>
-
-                                                                                     @else
-                                                                                     <a href="javascript:;" class="btn btn-lg btn-primary" style="opacity: 0;">
-                                                                                        {{ $opr_val['id'] === $currentCoinPackageId ? 'Free' : 'Free' }} </a>
-
-                                                                                 @endif
-
-                                                                                 @endif
-                                                                                 <hr>
-                                                                                
-                                                                                 <!--end::Select-->
-
-                                                
-                                                                                <!--begin::Features-->
-                                                                                <div class="w-100 mb-10">       
-
-                                                                                    <div class="d-flex align-items-center mb-5">
-                                                                                        <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3">
-                                                                                            Coins
-                                                                                        </span>
-                                                                                        <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3" style="float: right;">
-                                                                                        {{round($perMonthCoins)}}
-                                                                                        </span>
-                                                                                    </div> 
-                                                                                    <div class="d-flex align-items-center mb-5">
-                                                                                        <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3"> Validity
-                                                                                        </span>
-                                                                                        <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3" style="float: right;">
-                                                                                           {{ $opr_val['days'] ? $opr_val['days'] . ' Days' : 'Custom' }}
-                                                                                        </span>
-                                                                                    </div> 
-
-                                                                                
-                                                                                @foreach ($opr_val['features'] as $features_val)
-                                                                                    <!--begin::Item-->     
-                                                                                    <div class="d-flex align-items-center mb-5">
-                                                                                       @if( $features_val->status)
-                                                                                        <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3">
-                                                                                            {{ $features_val->title }}
-                                                                                        </span>
-                                                                                        <i class="fa fa-check ki-check-circle fs-4 text-success">
-                                                                                            <span class="path1"></span>
-                                                                                            <span class="path2"></span>
-                                                                                        </i>
-                                                                                        @else
-
-                                                                                        <span class="fw-semibold fs-6 text-gray-600 flex-grow-1">
-                                                                                            {{ $features_val->title }}                                             
-                                                                                        </span>
-                                                                                        <i class="fa fa-times ki-cross-circle fs-4">
-                                                                                            <span class="path1"></span>
-                                                                                            <span class="path2"></span>
-                                                                                        </i>
-                                                                                        @endif
-                                                                                    </div>
-                                                                                    <!--end::Item--> 
-                                                                                @endforeach
-
-                                                                                          
-                                                                                </div>
-                                                                                <!--end::Features-->         
-                                                
-                                                                            
-                                                                            </div>
-                                                                            <!--end::Option-->
-                                                                        </div>
-                                                                    </div>
-                                                                @endforeach
+                                                    {{-- Features --}}
+                                                    <div class="pkg-features">
+                                                        <div class="pkg-feature-row">
+                                                            <span>Coins</span><span class="pkg-feature-val">{{ number_format($perMonthCoins) }}</span>
+                                                        </div>
+                                                        <div class="pkg-feature-row">
+                                                            <span>Validity</span><span class="pkg-feature-val">{{ $opr_val['days'] ? $opr_val['days'] . ' Days' : 'Custom' }}</span>
+                                                        </div>
+                                                        @foreach ($opr_val['features'] as $features_val)
+                                                        <div class="pkg-feature-row">
+                                                            <span class="{{ $features_val->status ? '' : 'text-muted' }}">{{ $features_val->title }}</span>
+                                                            @if($features_val->status)
+                                                                <i class="fa fa-check text-success"></i>
+                                                            @else
+                                                                <i class="fa fa-times text-muted"></i>
                                                             @endif
-                                                            <!--end::Col-->
+                                                        </div>
+                                                        @endforeach
                                                     </div>
-                                                    <!--end::Row-->
                                                 </div>
-                                                <!--end::Plans-->
-
-                                                <!--begin::Actions-->
-                                                <div class="d-flex flex-center flex-row-fluid pt-12 d-none">
-                                                    <button type="reset" class="btn btn-light me-3"
-                                                        data-bs-dismiss="modal">
-                                                        Close
-                                                    </button>
-
-                                                    <button type="submit" class="btn btn-primary"
-                                                        id="oper_kt_modal_upgrade_plan_btn">
-
-                                                        <!--begin::Indicator label-->
-                                                        <span class="indicator-label">
-                                                            Upgrade Plan</span>
-                                                        <!--end::Indicator label-->
-
-                                                        <!--begin::Indicator progress-->
-                                                        <span class="indicator-progress">
-                                                            Please wait... <span
-                                                                class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                        </span>
-                                                        <!--end::Indicator progress-->
-                                                    </button>
-                                                </div>
-                                                <!--end::Actions-->
+                                            </div>
+                                        @endforeach
+                                        @endif
+                                    </div>
                                 </div>
                                 <!--end::Packages - Operational-->
 
                                 <!--begin::Packages - Sales-->
-                                <div id="sales_kt_modal_upgrade_plan" class="salse-packages" style="display:none">
-                                    <!--begin::Heading-->
-                                                <div class="mb-13 text-center">
-                                                    <h1 class="mb-3">Choose a Sales Package</h1>
+                                <div id="pkg-pane-sales" class="salse-packages px-2 py-4" style="display:none">
+                                    <div class="pkg-page-header text-center mb-8">
+                                        <h2 class="pkg-page-title">Upgrade a Plan</h2>
+                                        <p class="pkg-page-sub">If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}" class="pkg-guidelines-link" target="_blank">Pricing Guidelines</a>.</p>
+                                    </div>
+                                    <div class="row g-4">
+                                        @php
+                                            $salCurPkgId = null;
+                                            if (!empty($current_coins_sales) && is_array($current_coins_sales)) {
+                                                $salCurPkgId = reset($current_coins_sales)['coin_package_id'] ?? null;
+                                            }
+                                        @endphp
+                                        @if ($sales_package)
+                                        @foreach ($sales_package as $sales_val)
+                                            @php
+                                                $isSalCurrent = ($salCurPkgId && $sales_val['id'] == $salCurPkgId);
+                                                $months = 12;
+                                                $number = $sales_val['days'] ?? 0;
+                                                if ($number >= 365)      { $months = floor($number / 30); }
+                                                elseif ($number >= 30)   { $months = floor($number / 30); }
+                                                $perMonthCoins = $months > 0 ? round($sales_val['coins'] / $months) : $sales_val['coins'];
 
-                                                    <div class="text-muted fw-semibold fs-5">
-                                                        If you need more info, please check <a href="{{ url('payment-terms-and-conditions') }}"
-                                                            class="link-primary fw-bold" target="_blank">Pricing Guidelines</a>.
+                                                if ($sales_val['visibility_show'] == 1) {
+                                                    $dispPrice = $currency == 'INR' ? $sales_val['price'] : $sales_val['price_usd'];
+                                                    $origPrice = $sales_val['discount'] > 0 ? round($dispPrice / (1 - $sales_val['discount'] / 100)) : null;
+                                                    $period    = 'Year';
+                                                } elseif ($sales_val['visibility_show'] == 2) {
+                                                    $dispPrice = $currency == 'INR' ? $sales_val['total_price_monthly'] : $sales_val['total_price_usd_monthly'];
+                                                    $origPrice = $sales_val['discount'] > 0 ? round($dispPrice / (1 - $sales_val['discount'] / 100)) : null;
+                                                    $period    = 'Month';
+                                                } else {
+                                                    $dispPrice = $currency == 'INR' ? $sales_val['total_price_days'] : $sales_val['total_price_usd_days'];
+                                                    $origPrice = $sales_val['discount'] > 0 ? round($dispPrice / (1 - $sales_val['discount'] / 100)) : null;
+                                                    $period    = 'Day';
+                                                }
+                                            @endphp
+                                            <div class="col-xl-3 col-md-6">
+                                                <div class="pkg-card pkg-card-sales {{ $isSalCurrent ? 'pkg-card-current pkg-card-current-sal' : '' }}">
+                                                    @if($sales_val['discount'] > 0)
+                                                        <span class="pkg-off-badge">{{ $sales_val['discount'] }}% Off</span>
+                                                    @endif
+                                                    <div class="pkg-card-name">{{ $sales_val['title'] }}</div>
+                                                    @if($sales_val['custome_pck'] == 2)
+                                                        <div class="pkg-price-custom text-success">Custom Pricing</div>
+                                                        <div class="pkg-coins-row text-success">Unlimited Coins</div>
+                                                    @else
+                                                        @if($origPrice)
+                                                            <div class="pkg-orig-price">{{ $currIcon }}{{ number_format($origPrice) }}</div>
+                                                        @else
+                                                            <div class="pkg-orig-price">&nbsp;</div>
+                                                        @endif
+                                                        <div class="pkg-price-row">
+                                                            <span class="pkg-currency text-success">{{ $currIcon }}</span><span class="pkg-price-val text-success">{{ number_format($dispPrice) }}</span>
+                                                            <span class="pkg-period">/ {{ $period }}</span>
+                                                        </div>
+                                                        <div class="pkg-coins-row text-success">{{ number_format($sales_val['coins']) }} Coins</div>
+                                                    @endif
+
+                                                    @if($sales_val['custome_pck'] == 2)
+                                                        @if($isSalCurrent)
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-current pkg-btn-current-sal"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
+                                                        @else
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-contact-sal">Contact Sales</a>
+                                                        @endif
+                                                    @else
+                                                        @if($isSalCurrent)
+                                                            <a href="javascript:;" class="pkg-btn pkg-btn-current pkg-btn-current-sal"><i class="fa fa-check-circle me-1"></i>Current Plan</a>
+                                                            <a href="javascript:;" data-id="{{ encrypt($sales_val['id']) }}" class="pkg-btn pkg-btn-upgrade-sal upgradeselect mt-2">Upgrade Now</a>
+                                                        @else
+                                                            <a href="javascript:;" data-id="{{ encrypt($sales_val['id']) }}" class="pkg-btn pkg-btn-upgrade-sal upgradeselect">Upgrade Now</a>
+                                                        @endif
+                                                    @endif
+
+                                                    <hr class="pkg-divider">
+
+                                                    <div class="pkg-features">
+                                                        <div class="pkg-feature-row">
+                                                            <span>Sales Coins</span><span class="pkg-feature-val">{{ number_format($perMonthCoins) }}</span>
+                                                        </div>
+                                                        <div class="pkg-feature-row">
+                                                            <span>Validity</span><span class="pkg-feature-val">{{ $sales_val['days'] ? $sales_val['days'] . ' Days' : 'Custom' }}</span>
+                                                        </div>
+                                                        @foreach ($sales_val['features'] as $features_val)
+                                                        <div class="pkg-feature-row">
+                                                            <span class="{{ $features_val->status ? '' : 'text-muted' }}">{{ $features_val->title }}</span>
+                                                            @if($features_val->status)
+                                                                <i class="fa fa-check text-success"></i>
+                                                            @else
+                                                                <i class="fa fa-times text-muted"></i>
+                                                            @endif
+                                                        </div>
+                                                        @endforeach
                                                     </div>
                                                 </div>
-                                                <!--end::Heading-->
-
-                                                <!--begin::Plans-->
-                                                <div class="d-flex flex-column">
-                                                    <!--begin::Nav group-->
-
-                                                    <!--begin::Row-->
-                                                    <div class="row">
-                                                        <!--begin::Col-->
-
-                                                         <!--begin::Col-->
-                                                         {{-- @dd($sales_package) --}}
-                                                         @if ($sales_package)
-                                                         @foreach ($sales_package as $sales_val)
-                                                            @php
-                                                            $visibility_coins = 1; 
-                                                                if($sales_val['visibility_show']==1){
-                                                                    $visibility_coins = 1;  // Yearly
-                                                                }elseif($sales_val['visibility_show']==2){
-                                                                    $visibility_coins = 12; // monthaly
-                                                                }elseif($sales_val['visibility_show']==0){
-                                                                    $visibility_coins = 365;  // Daily
-                                                                }
-                                                                $number = $sales_val['days'];
-                                                                     $months = 12;
-                                                                    if ($number >= 365) {
-                                                                        $months = floor($number / 30);
-                                                                        $remainingDays = $number % 30;
-                                                                    } elseif ($number >= 30) {
-                                                                        $months = floor($number / 30);
-                                                                    }
-
-                                                                    $coisn = $sales_val['coins'];
-                                                                    $perMonthCoins = $coisn/$months;
-
-                                                            @endphp
-
-                                                             <div class="col-xl-3">
-                                                                 <div class="d-flex h-100 align-items-center">
-                                                                     <!--begin::Option-->
-                                                                     <div class="w-100 d-flex flex-column flex-center rounded-3 bg-light bg-opacity-75 py-15 px-10" style="position: relative;">
-                                                                         <!--begin::Heading-->
-                                                                         <div class="mb-7 text-center">
-                                                                             <!--begin::Title-->
-                                                                             <h1 class="text-gray-900 mb-5 fw-bolder">{{ $sales_val['title'] }}</h1>
-                                                                             <!--end::Title-->
-                                         
-                                                                             <!--begin::Description-->
-                                                                             @if($sales_val['discount'] >0)
-                                                                                        @if($sales_val['visibility_show']==1)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $sales_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-success mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($sales_val['price'] / (1 - $sales_val['discount'] / 100)) : ($sales_val['price_usd'] / (1 - $sales_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-                                                                                        @elseif($sales_val['visibility_show']==2)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $sales_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-success mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($sales_val['total_price_monthly'] / (1 - $sales_val['discount'] / 100)) : ($sales_val['total_price_usd_monthly'] / (1 - $sales_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-
-                                                                                        @elseif($sales_val['visibility_show']==0)
-                                                                                        <div class="text-gray-600 fw-semibold mb-5" style="position: absolute;top: -10px;right: -10px;background: #ff6b6b;color: #fff;padding: 5px 19px;font-size: 12px;font-weight: bold;border-radius: 50px;">
-                                                                                            <span class="text-white" style="font-size: 14px;">{{ $sales_val['discount'] }}% Off</span>                                             
-                                                                                        </div>
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-success mt-2 fw-bold" style="font-size: 16px;"><i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>  <del>{{ $currency == 'INR' ? ($sales_val['total_price_days'] / (1 - $sales_val['discount'] / 100)) : ($sales_val['total_price_usd_days'] / (1 - $sales_val['discount'] / 100)) }} </del></div>                                             
-                                                                                        </div>
-                                                                                        @endif
-                                                                                    @else
-                                                                                        <div class="text-gray-600 fw-semibold mb-5">
-                                                                                            <div class="text-success mt-2 fw-bold">&nbsp;</div>                                             
-                                                                                        </div>
-                                                                                    @endif
-                                                                             <!--end::Description-->
-                                         
-                                                                             <!--begin::Price-->
-                                                                             <div class="text-center">
-                                                                                 <span class="mb-2 text-success ">
-                                                                                     <i class="fa fa-{{ $currency == 'INR' ? 'inr' : 'usd' }}" aria-hidden="true"></i>
-                                                                                 </span>
-                                         
-                                                                                 @if($sales_val['visibility_show']==1)
-                                                                                        <span class="fs-2x fw-bold text-success" data-kt-plan-price-month="{{ $currency == 'INR' ? $sales_val['price'] : $sales_val['price_usd'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $sales_val['price'] : $sales_val['price_usd'] }}">
-                                                                                        {{ $currency == 'INR' ? $sales_val['price'] : $sales_val['price_usd'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Year</span>
-                                                                                        </span>
-                                                                                @elseif($sales_val['visibility_show']==2)
-                                                                                        <span class="fs-2x fw-bold text-success" data-kt-plan-price-month="{{ $currency == 'INR' ? $sales_val['total_price_monthly'] : $sales_val['total_price_usd_monthly'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $sales_val['total_price_monthly'] : $sales_val['total_price_usd_monthly'] }}">
-                                                                                        {{ $currency == 'INR' ? $sales_val['total_price_monthly'] : $sales_val['total_price_usd_monthly'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Month</span>
-                                                                                        </span>
-                                                                                @elseif($sales_val['visibility_show']==0)
-                                                                                        <span class="fs-2x fw-bold text-success" data-kt-plan-price-month="{{ $currency == 'INR' ? $sales_val['total_price_days'] : $sales_val['total_price_usd_days'] }}"
-                                                                                        data-kt-plan-price-annual="{{ $currency == 'INR' ? $sales_val['total_price_days'] : $sales_val['total_price_usd_days'] }}">
-                                                                                        {{ $currency == 'INR' ? $sales_val['total_price_days'] : $sales_val['total_price_usd_days'] }}
-                                                                                        </span>
-                                                                                        <span class="fs-7 fw-semibold opacity-50">/ 
-                                                                                            <span data-kt-element="period">Day</span>
-                                                                                        </span>
-                                                                                @endif
-                                                                                 
-                                                                             </div>
-                                                                             <!--end::Price-->
-                                                                         </div>
-                                                                         <!--end::Heading-->
-
-                                                                          <!--begin::Select-->
-                                                                            @php
-                                                                                $currentCoinPackageId = null;
-                                                                                if (!empty($current_coins_sales) && is_array($current_coins_sales)) {
-                                                                                    $first = reset($current_coins_sales); // safe first element
-                                                                                    $currentCoinPackageId = $first['coin_package_id'] ?? null;
-                                                                                }
-                                                                            @endphp
-
-                                                                          @if($sales_val['custome_pck'] !=2)
-                                                                          <a href="javascript:;" data-id="{{ encrypt($sales_val['id']) }}" class="btn btn-lg btn-{{ $sales_val['id'] === $currentCoinPackageId  ? 'success' : 'dark' }}  upgradeselect">
-                                                                         {{ $sales_val['id'] === $currentCoinPackageId  ? 'Current Plan' : 'Upgrade Now' }}</a>
-                                                                         @else
-                                                                         @if($sales_val['id'] === $currentCoinPackageId )
-                                                                         <a href="javascript:;" class="btn btn-lg btn-success ">
-                                                                             {{ $sales_val['id'] === $currentCoinPackageId  ? 'Current Plan' : '' }} </a>
-
-                                                                             @else
-                                                                                <a href="javascript:;" class="btn btn-lg btn-primary" style="opacity: 0;">
-                                                                                {{ $opr_val['id'] === $currentCoinPackageId  ? 'Free' : 'Free' }} </a>
-
-                                                                         @endif
-                                                                        
-                                                                     @endif
-                                                                     <hr>
-                                                                      <!--end::Select-->
-
-                                         
-                                                                         <!--begin::Features-->
-                                                                         <div class="w-100 mb-10">    
-
-                                                                            <div class="d-flex align-items-center mb-5">
-                                                                             <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3">
-                                                                                 Sales Coins
-                                                                             </span>
-                                                                             <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3" style="float: right;">
-                                                                                {{round($perMonthCoins)}}
-                                                                             </span>
-                                                                            </div>
-                                                                            
-                                                                            <div class="d-flex align-items-center mb-5">
-                                                                                <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3"> Validity
-                                                                                </span>
-                                                                                <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3" style="float: right;">
-                                                                                   {{ $sales_val['days'] ? $sales_val['days'] . ' Days' : 'Custom' }}
-                                                                                </span>
-                                                                            </div>
-
-
-                                                                         @foreach ($sales_val['features'] as $features_val)
-                                                                             <!--begin::Item-->     
-                                                                             <div class="d-flex align-items-center mb-5">
-                                                                                @if( $features_val->status)
-                                                                                 <span class="fw-semibold fs-6 text-gray-800 flex-grow-1 pe-3">
-                                                                                     {{ $features_val->title }}
-                                                                                 </span>
-                                                                                 <i class="fa fa-check ki-check-circle fs-4 text-success">
-                                                                                     <span class="path1"></span>
-                                                                                     <span class="path2"></span>
-                                                                                 </i>
-                                                                                 @else
-
-                                                                                 <span class="fw-semibold fs-6 text-gray-600 flex-grow-1">
-                                                                                     {{ $features_val->title }}                                             
-                                                                                 </span>
-                                                                                 <i class="fa fa-times ki-cross-circle fs-4">
-                                                                                     <span class="path1"></span>
-                                                                                     <span class="path2"></span>
-                                                                                 </i>
-                                                                                 @endif
-                                                                             </div>
-                                                                             <!--end::Item--> 
-                                                                         @endforeach
-
-                                                                                   
-                                                                         </div>
-                                                                         <!--end::Features-->         
-                                         
-                                                                        
-                                                                     </div>
-                                                                     <!--end::Option-->
-                                                                 </div>
-                                                             </div>
-                                                         @endforeach
-                                                     @endif
-                                                     <!--end::Col-->
-                                                    </div>
-                                                    <!--end::Row-->
-                                                </div>
-                                                <!--end::Plans-->
-
-                                                <!--begin::Actions-->
-                                                <div class="d-flex flex-center flex-row-fluid pt-12 d-none">
-                                                    <button type="reset" class="btn btn-light me-3"
-                                                        data-bs-dismiss="modal">
-                                                        Close
-                                                    </button>
-
-                                                    <button type="submit" class="btn btn-primary"
-                                                        id="sales_kt_modal_upgrade_plan_btn">
-
-                                                        <!--begin::Indicator label-->
-                                                        <span class="indicator-label">
-                                                            Upgrade Plan</span>
-                                                        <!--end::Indicator label-->
-
-                                                        <!--begin::Indicator progress-->
-                                                        <span class="indicator-progress">
-                                                            Please wait... <span
-                                                                class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                        </span>
-                                                        <!--end::Indicator progress-->
-                                                    </button>
-                                                </div>
-                                                <!--end::Actions-->
+                                            </div>
+                                        @endforeach
+                                        @endif
+                                    </div>
                                 </div>
                                 <!--end::Packages - Sales-->
 
@@ -1474,10 +1389,7 @@
 
                                 <!--begin::wallet-pane-transactions-->
                                 <div id="wallet-pane-transactions" class="wallet-tab-pane" style="display:none">
-                                    <div id="walletTransactionsContent" class="text-center text-muted py-15">
-                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                        Loading transactions...
-                                    </div>
+                                    @include('service_company.ajax_pages.subscription_transactions', ['cart_transaction_history' => $cart_transaction_history])
                                 </div>
                                 <!--end::wallet-pane-transactions-->
 
@@ -1579,44 +1491,46 @@
                 }
             });
 
-            // Wallet Center: top-level tab switching (Overview / Packages /
-            // Transactions / Invoices / Billing / Settings). Pure client-side
-            // show/hide — all tab content is already in the DOM except
-            // Transactions, which is lazy-loaded once via AJAX on first view.
-            var walletTransactionsLoaded = false;
+            // Wallet Center tab switching.
+            // wallet-pane-overview is a permanent outer wrapper — never hidden.
+            // Overview-specific content lives in #overview-only-section inside it.
+            // All other panes (transactions, packages…) are also inside that wrapper.
+            // So we hide/show #overview-only-section and the target pane, not the wrapper.
+            window.switchWalletCenterTab = function(tab, noScroll) {
+                // Hide all inner panes (packages, transactions, etc.) but NOT the outer overview wrapper
+                $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
 
-            window.switchWalletCenterTab = function(tab) {
-                $('.wallet-tab-pane').hide();
-                $('#wallet-pane-' + tab).show();
+                if (tab === 'overview') {
+                    $('#overview-only-section').show();
+                } else {
+                    $('#overview-only-section').hide();
+                    $('#wallet-pane-' + tab).show();
+                }
+
                 $('.wallet-tab-link').removeClass('wt-active');
                 $('.wallet-tab-link[data-tab="' + tab + '"]').addClass('wt-active');
 
-                if (tab === 'transactions' && !walletTransactionsLoaded) {
-                    walletTransactionsLoaded = true;
-                    $.ajax({
-                        url: "{{ route('service_company.transactions.subscriptionAjax') }}",
-                        type: 'GET',
-                        success: function(response) {
-                            $('#walletTransactionsContent').html(response.html);
-                        },
-                        error: function() {
-                            walletTransactionsLoaded = false;
-                            $('#walletTransactionsContent').html(
-                                '<div class="text-center text-danger py-10">Could not load transactions. Please try again.</div>'
-                            );
-                        }
-                    });
+                // Scroll to the tab nav so table content is visible from the top.
+                // noScroll=true is used on initial page load to avoid jarring jump.
+                if (!noScroll) {
+                    var $nav = $('.wallet-tab-nav');
+                    if ($nav.length) {
+                        $('html, body').animate({ scrollTop: $nav.offset().top - 20 }, 150);
+                    }
                 }
             };
 
-            // Deep-link support: sidebar links to this page can append
-            // #tab=packages (etc.) to open directly on that tab.
-            (function() {
+            // On load: switch to hash tab if valid, otherwise default to overview.
+            function applyHashTab(fromHashChange) {
                 var match = /tab=([a-z]+)/.exec(window.location.hash || '');
                 if (match && $('#wallet-pane-' + match[1]).length) {
-                    switchWalletCenterTab(match[1]);
+                    switchWalletCenterTab(match[1], !fromHashChange);
+                } else {
+                    switchWalletCenterTab('overview', !fromHashChange);
                 }
-            })();
+            }
+            applyHashTab(false);
+            $(window).on('hashchange', function() { applyHashTab(true); });
 
 
             $(document).on('click', '.topupcustom,.customsubscription,.customsubscription_sal', function(e) {
@@ -1803,6 +1717,35 @@
                     }
                 });
 
+            });
+
+            // AJAX pagination for the Transactions tab.
+            // Intercepts clicks on any pagination link inside the transactions pane,
+            // calls the subscriptionAjax endpoint with the correct ?page= param,
+            // and swaps the pane content in-place — no full page reload.
+            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
+
+            $(document).on('click', '#wallet-pane-transactions .pagination a.page-link', function (e) {
+                e.preventDefault();
+                var href = $(this).attr('href');
+                var page = 1;
+                var match = /[?&]page=(\d+)/.exec(href);
+                if (match) page = parseInt(match[1], 10);
+
+                var $pane = $('#wallet-pane-transactions');
+                $pane.css('opacity', '0.5');
+
+                $.ajax({
+                    url: txAjaxUrl,
+                    type: 'GET',
+                    data: { page: page },
+                    success: function (res) {
+                        $pane.html(res.html).css('opacity', '1');
+                    },
+                    error: function () {
+                        $pane.css('opacity', '1');
+                    }
+                });
             });
         </script>
 @endpush

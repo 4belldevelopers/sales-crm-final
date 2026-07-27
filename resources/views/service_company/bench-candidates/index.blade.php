@@ -271,12 +271,12 @@
 @endpush
 
 @section('content')
-    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-1" id="kt_content">
+    <div class="bench-dash content d-flex flex-column flex-column-fluid pt-4" id="kt_content" style="margin-top: -60px;">
         <div class="post d-flex flex-column-fluid" id="kt_post">
-            <div id="kt_content_container" class="container-fluid px-3">
+            <div id="kt_content_container" class="container-fluid px-5">
 
                 <!-- Header -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-2" style="background:#fff;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap mb-2 py-3" style="background:#fff;padding: 6px;">
                     <div class="d-flex flex-column">
                         <h5 class="page-title text-dark fw-bolder my-0 d-flex align-items-center gap-2">
                             Inhouse Talents

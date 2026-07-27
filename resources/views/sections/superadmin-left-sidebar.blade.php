@@ -584,7 +584,7 @@
 
 
                 <!--begin::Coins Settings-->
-                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/coin-features') || request()->is('super-admin/coin-packages') || request()->is('super-admin/add-edit-coin-featutes') || request()->is('super-admin/add-edit-coin-packages') ? 'show' : '' }}  ">
+                <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->is('super-admin/coin-features') || request()->is('super-admin/coin-packages') || request()->is('super-admin/add-edit-coin-featutes') || request()->is('super-admin/add-edit-coin-packages') || request()->is('super-admin/coupons*') ? 'show' : '' }}  ">
                     <span class="menu-link">
                         <span class="menu-icon">
                             <!--begin::Svg Icon-->
@@ -639,6 +639,18 @@
                             </a>
                         </div>
                         <!--end::Coins Packages-->
+
+                        <!--begin::Coupons-->
+                        <div class="menu-item">
+                            <a href="{{ route('superadmin.coupons.index') }}"
+                                class="menu-link {{ request()->is('super-admin/coupons*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">Coupons</span>
+                            </a>
+                        </div>
+                        <!--end::Coupons-->
 
                     </div>
                 </div>

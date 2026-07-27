@@ -538,12 +538,37 @@ CREATE TABLE `carts` (
   `gst_amount` double DEFAULT NULL,
   `total_price` double(15,2) NOT NULL,
   `discount` double(15,2) NOT NULL DEFAULT '0.00',
+  `coupon_id` bigint unsigned DEFAULT NULL,
+  `coupon_code` varchar(255) DEFAULT NULL,
   `user_id` int DEFAULT NULL,
   `status` int NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
+-- TABLE: coupons
+-- Added 2026-07-15 for checkout coupon-code feature (Super Admin
+-- managed). Discount replaces the package's own discount when applied
+-- (does not stack). times_redeemed is a global counter across all
+-- companies, incremented when a coupon is successfully applied to a
+-- cart; max_redemptions is the global cap.
+-- ============================================================
+CREATE TABLE `coupons` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `code` varchar(255) NOT NULL,
+  `discount_percent` decimal(5,2) NOT NULL,
+  `expiry_date` date NOT NULL,
+  `max_redemptions` int unsigned NOT NULL,
+  `times_redeemed` int unsigned NOT NULL DEFAULT '0',
+  `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `created_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `coupons_code_unique` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
 -- TABLE: cities
@@ -980,6 +1005,7 @@ CREATE TABLE `companies` (
   `success_per` int NOT NULL DEFAULT '10',
   `terms` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `offer_terms` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `agency_offer_terms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `last_login` datetime DEFAULT CURRENT_TIMESTAMP,
   `leadCount` int NOT NULL DEFAULT '0',
   `bench_show_mode` int NOT NULL DEFAULT '0',
@@ -1485,6 +1511,7 @@ CREATE TABLE `global_settings` (
   `bench_status` int NOT NULL DEFAULT '0' COMMENT '0-manual process, 1-auto approved',
   `terms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci COMMENT 'vendor terms ',
   `offer_terms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `agency_offer_terms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `privacy_policy` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `terms_and_conditions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `payment_policy` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,

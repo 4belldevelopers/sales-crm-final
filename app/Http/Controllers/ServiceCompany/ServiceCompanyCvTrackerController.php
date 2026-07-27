@@ -345,6 +345,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 		}
 
+		// Feeds the row partial's skill-chip highlighting: which entered Skills
+		// filter terms are starred (mandatory, shown blue) vs unstarred
+		// (optional, shown green). Both stay empty when no Skills filter is
+		// applied at all, which the partial reads as "fall back to highlighting
+		// against each row's own job's required skills instead."
+		$mandatorySkillsForDisplay = !empty($checkedSkills ?? []) ? array_values(array_map('strtolower', array_column($checkedSkills, 'value'))) : [];
+		$optionalSkillsForDisplay = !empty($uncheckedSkills ?? []) ? array_values(array_map('strtolower', array_column($uncheckedSkills, 'value'))) : [];
+
 		$previousUrl = url()->previous();
 		$path = parse_url($previousUrl, PHP_URL_PATH); 
 		$segments = explode('/', trim($path, '/'));
@@ -406,6 +414,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			// dd($chkAdminRole);
 
 		$sort = [];
+		// $requiredSkills is only ever assigned above inside the cus_search_skill
+		// branch — default it here so case 30 (Best Match) can safely check it
+		// even when no skill filter was entered.
+		$requiredSkills = $requiredSkills ?? [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -605,6 +617,53 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 				break;
 			case 15:
 				$sort[] = ['of_offer_amount' => ['order' => 'desc', 'unmapped_type' => 'float']];
+				break;
+			case 30: // Best Match — CV Tracker has no single job to derive default
+				// skills from (unlike the AppTracker family), so this ranks by how
+				// many of the Skills filter's entered/starred terms ($requiredSkills,
+				// already computed above from cus_search_skill) each candidate
+				// matches. With no skills entered there's nothing to rank against,
+				// so it falls back to the same newest-first the default case uses.
+				if (empty($requiredSkills)) {
+					$sort[] = ['created_at' => ['order' => 'desc']];
+				} else {
+					$sort[] = [
+						'_script' => [
+							'type' => 'number',
+							'script' => [
+								'lang' => 'painless',
+								'source' => "
+									def candidateSkills = [];
+									if (params._source.containsKey('job_application_skills')) {
+										for (item in params._source.job_application_skills) {
+											if (item.containsKey('skills') && item.skills != null) {
+												candidateSkills.add(item.skills.toString().toLowerCase());
+											}
+										}
+									}
+									def designation = params._source.containsKey('current_designation') && params._source.current_designation != null
+										? params._source.current_designation.toString().toLowerCase() : '';
+									int matchCount = 0;
+									for (req in params.skills) {
+										boolean found = designation.contains(req);
+										if (!found) {
+											for (cand in candidateSkills) {
+												if (cand.contains(req)) { found = true; break; }
+											}
+										}
+										if (found) { matchCount += 1; }
+									}
+									return matchCount;
+								",
+								'params' => [
+									'skills' => array_values($requiredSkills)
+								]
+							],
+							'order' => 'desc'
+						]
+					];
+					$sort[] = ['created_at' => ['order' => 'desc']];
+				}
 				break;
 			default:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -1353,8 +1412,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			];
 		}
 
+		// CV Tracker isn't job-scoped — each row can belong to a different job —
+		// so the "no filter applied" default highlight/match-% falls back to
+		// EACH row's own job's required skills, not one shared set. Batched
+		// once per page of results (distinct jobIds only) instead of a
+		// per-row query.
+		$jobSkillsByJobId = [];
+		if ($page_view === 'all_candidates') {
+			$jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
+			if (!empty($jobIdsOnPage)) {
+				DB::table('job_metronics_skills')
+					->whereIn('job_id', $jobIdsOnPage)
+					->select('job_id', 'skill_name')
+					->get()
+					->each(function ($r) use (&$jobSkillsByJobId) {
+						$jobSkillsByJobId[$r->job_id][] = strtolower(trim($r->skill_name));
+					});
+			}
+		}
+
 		$responseData = [
-			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter'))->render(),
+			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','modeFilter','currencyFilter','symbolsFilter','mandatorySkillsForDisplay','optionalSkillsForDisplay','jobSkillsByJobId'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			'counts' => $offerCounts,
@@ -1713,6 +1791,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 			'q' => $searchQuery,
 			'user_id' => $this->user->id,
 			'custom_search' => $custom_search,
+			'candidateSkills' => $request->candidateSkills ?? '',
 		];
 
 		$versionKey = 'allcopyjobslist_version_user_'.$this->user->id;
@@ -1952,8 +2031,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
 
 		$userPermissions = $this->userPermissions;
+		$candidateSkills = array_filter(array_map('strtolower', array_map('trim', explode(',', $request->candidateSkills ?? ''))));
 		$responseData = [
-			'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data','userPermissions','company_id'))->render(),
+			'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data','userPermissions','company_id','candidateSkills','findTalentAdd'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
@@ -2269,11 +2349,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 					
 				// 	dd($skillArr, $candidateSkills);
 
-				$matchedSkills = array_intersect($skillArr, $candidateSkills);
+				// array_intersect() required an exact string match between
+				// the searched skill keyword ("java") and the candidate's
+				// own skill entry ("java developer") — same phrase-prefix
+				// fix as GeneralMethod::matchedSkillsList()/skill_percentage().
+				$matchedSkills = GeneralMethod::matchedSkillsList($candidateSkills, $skillArr);
 
 				$matchedCount = count($matchedSkills);
 
 				$source['skill_match_score'] = $matchedCount;
+				$source['matched_skills'] = implode(',', $matchedSkills);
 
 				$source['skill_match_percent'] = round(
 					($matchedCount / count($skillArr)) * 100
@@ -3000,7 +3085,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if( $request->mtype==1){
 			$title = 'Candidate Email Send';
 		}else{
-			$title = 'Approval Email Send';
+			$title = 'Select Approval';
 		}
 		
 
@@ -6533,10 +6618,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 					
 				}else{
-					return Reply::dataOnly(['status' => 'error', 'url' => '']);	
+					return Reply::dataOnly(['status' => 'error', 'url' => '']);
 				}
 
 	}
-
 
 }

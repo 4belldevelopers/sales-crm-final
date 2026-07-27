@@ -113,9 +113,9 @@
         $ctc = $convertedAmounCtc[$mod];
 
         $max_salary = '';
-        $max_salary = GeneralMethod::thousandsCurrencyFormat($ectc);
+        $max_salary = GeneralMethod::formatK($ectc);
         $min_salary = '';
-        $min_salary = GeneralMethod::thousandsCurrencyFormat($ctc);
+        $min_salary = GeneralMethod::formatK($ctc);
 
         $work_type = 'Work From Office';
         if($row->work_type=='no'){
@@ -385,7 +385,7 @@
                             @endphp
 
                             {{-- <button class="btn-submit">Submit Bench Profiles <i class="fa-solid fa-chevron-down"></i></button> --}}
-                            <button class="btn-view client-show-detail" data-row-id="{{ $row->id }}">View Requirement</button>
+                            <button class="btn-view market-show-detail" data-row-id="{{ $row->id }}">View Requirement</button>
                             <button class="btn-view client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ 
                               $row->recommendation_relation_id }}">View T&C</button>
                             <div class="save-job-link">{{ $agencyJobsCandidatesCount->offer_candidates }} Offered</div> 

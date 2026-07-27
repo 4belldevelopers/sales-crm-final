@@ -366,71 +366,33 @@ function tableLoad(type)
 													});
                         });  
 
-  $(document).on('click', '.request_approval', function ()
-   	{
-   		
-   		var jobId    					=	$(this).data('row-id');
-		var recommendation_relation_id  =	$(this).data('row-recommendation_relation_id');
-		var status    					=	$(this).data('row-status');
-		
-   		var url   						=	"{{ route('service_company.jobs.requestapproval',':jobId') }}";
-   		url     						=	url.replace(':jobId', jobId);	
-		var baseurl    					=	"{{ asset('assets/images/Loading2.gif') }}"; 
-   		
-		                     
-													const swalWithBootstrapButtons = Swal.mixin({
-																									customClass: {
-																														confirmButton	: 'btn btn-success',
-																														cancelButton	: 'btn btn-danger'
-																												},
-																									buttonsStyling	: false
-													})
-													swalWithBootstrapButtons.fire({
-																					  title				: 'Are you sure?',
-																					  text				: "You won't be able to revert this!",
-																					  icon				: 'warning',
-																					  showCancelButton	: true,
-																					  confirmButtonText	: 'Yes, Accept',
-																					  cancelButtonText	: 'No, cancel!',
-																					  reverseButtons	: true
-																				})
-													.then((result) => {
-																				
-													  if (result.isConfirmed) {
-															
-																$.ajax({
-																			type  		: 'GET',
-																			url   		: url,
-																			data		: {'jobId': jobId, 'rec_relation_id': recommendation_relation_id, 'status':status },
-																			success 	: function (response) {
-																				$('#span_allRequisition').html(response.dataCnt.allRequisition);
-																				$('#span_clientRequisition').html(response.dataCnt.clientRequisition);
-																				$('#span_customRequisition').html(response.dataCnt.customRequisition);
-																				$('#span_jobRequest').html(response.dataCnt.jobRequest);
-																																											
-																							
-																						if(status == 'success'){
-																							swalWithBootstrapButtons.fire
-																							('Accept!', 'Selected request has been accepted successfully.', 'success')	
-																						}else if(status == 'ignore'){
-																							swalWithBootstrapButtons.fire
-																							('Ignore!', 'Selected request has been ignored successfully.', 'success')
-																						}else if(status == 'ignoreClient'){
-																							swalWithBootstrapButtons.fire
-																							('Ignore!', 'Selected request has been ignored successfully.', 'success')
-																						}			
-                                            // table._fnDraw();
-																						// tableLoad('load');	
-                                            location.reload();
-                                            fetchCandidates();																							
-																			}
-																	});
-														} 
-														else if (result.dismiss === Swal.DismissReason.cancel) {
-															swalWithBootstrapButtons.fire('Cancelled', 'Selected request is safe :)', 'error')
-														}
-													
-													})}); 
+  $(document).on('click', '.request_approval', function () {
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+
+        var jobId                    = $btn.data('row-id');
+        var recommendation_relation_id = $btn.data('row-recommendation_relation_id');
+        var status                   = $btn.data('row-status');
+        var originalHtml             = $btn.html();
+
+        var url = "{{ route('service_company.jobs.requestapproval',':jobId') }}";
+        url = url.replace(':jobId', jobId);
+
+        $btn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Please wait...');
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: { 'jobId': jobId, 'rec_relation_id': recommendation_relation_id, 'status': status },
+            success: function (response) {
+                fetchCandidates();
+            },
+            error: function () {
+                $btn.prop('disabled', false).html(originalHtml);
+            }
+        });
+  });
 
 
 

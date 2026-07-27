@@ -5287,6 +5287,10 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $this->th_email_template = DB::table('global_settings')->select('global_settings.grievances as terms')->first();	
             $this->title = 'Grievances';
             $this->used = 'For Website';
+        }elseif($id==10){
+            $this->th_email_template = DB::table('global_settings')->select('global_settings.agency_offer_terms as terms')->first();	
+            $this->title = 'Agency Offer terms';
+            $this->used = 'For Candidates';
         }
         				
 				
@@ -5340,6 +5344,10 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
      }elseif($id==9){
         $values = array(
             'grievances' =>$request->editor1
+        );
+     }elseif($id==10){
+        $values = array(
+            'agency_offer_terms' =>$request->editor1
         );
      }
 

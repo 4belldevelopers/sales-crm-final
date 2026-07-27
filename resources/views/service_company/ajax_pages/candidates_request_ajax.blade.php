@@ -9,6 +9,10 @@
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
 
+    // Valid days from features table (id=4) — same source candidateRequestAutoExpiredAfterValidDate() uses.
+    $benchExpireFeature = DB::table('features')->where('id', 4)->first();
+    $benchExpireDays = (int) (@$benchExpireFeature->days ?: 30);
+
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -114,27 +118,55 @@
                     $skilltag = '';
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
-                    $percentage =  GeneralMethod::skill_percentage($jobid,$skillArr);
+
+                    $percentage=0;
+                    $matches = $row->matched_skill_count ?? 0;
+                    $totalElements = count($requiredSkillsForDisplay ?? []);
+                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                    $matchPercentage = min($matchPercentage, 100);
+                    $percentage = round($matchPercentage, 1);
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used across the other apptracker tabs: >90
                     // green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
+                    if ($percentage == 0) {
                         $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
+                    } elseif ($percentage < 50) {
                         $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
+                    } elseif ($percentage <= 90) {
                         $matchBg = '#fef3c7'; $matchColor = '#d97706';
                     } else {
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
-                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$percentage.'%</span>';
 
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
+                    // Matched skill highlighting, three tiers — mirrors
+                    // internal_bench_ajax.blade.php: a match against a STARRED
+                    // (mandatory) requirement is a different signal than a match
+                    // against a skill that was just typed but not starred.
+                    // $row->matched_skills and $row->matched_mandatory_skills are
+                    // both computed server-side (GeneralMethod::matchedSkillsList())
+                    // in candidates_request_data_ajax()'s must+should hybrid query.
+                    $matchedSkillsArr = $row->matched_skills ?? [];
+                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
+                    $optionalMatched = array_values(array_udiff($matchedSkillsArr, $mandatoryMatched, 'strcasecmp'));
+                    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+
+                    foreach ($mandatoryMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($optionalMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {
@@ -453,14 +485,15 @@
                         $posted_by_image = url('public/user-uploads/team_profile_img/' . @$row->posted_by_image);
                     }
                     $dateupdate = GeneralMethod::ymdTodmyNotTime($row->updated_at);
-                    $comission_type = $row->comission_type == 1 ? 'Free' : 'Paid ';
+                    $comission_type = $row->comission_type == 1 ? 'Free' : 'Paid';
+
                     echo '<div class="d-flex flex-column">
 				  <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="" data-bs-original-title="">' .
                         $dateupdate .
                         '</span>
 				 <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip">' .
                         $comission_type .
-                        '</span> 
+                        '</span>
 				  </div>
 				  ';
 
@@ -468,24 +501,37 @@
             </td>
             <td>
                 @php
+                    // Expiry date = created_at + configured days (features id=4)
+                    $expireDate = '';
+                    $expireColor = '#d97706';
+                    if (!empty($row->created_at)) {
+                        $expireTs = strtotime("+{$benchExpireDays} days", strtotime($row->created_at));
+                        $expireDate = date('d M y', $expireTs);
+                        $expireColor = ($expireTs < time() || $row->ac_status == 2) ? '#dc2626' : '#d97706';
+                    }
+
                     $name = '';
-                
+
                     if ($row->ac_status==0) {
-                        echo ' <div class="d-flex flex-column">
+                        echo '<div class="d-flex flex-column">
                             <a href="javascript:void(0);" data-row-id="' . @$row->source_jobid .'" data-recomnded-id="' . @$row->rec_candidate_assign_id .'" data-condidate-id="' .@$row->id .'" class="btn btn-sm btn-primary add_to_list">Add to job</a>
+                            <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
                         </div>';
-                    }elseif($row->ac_status==1){
-                            echo '<div class="d-flex flex-column">
+                    } elseif ($row->ac_status==1) {
+                        echo '<div class="d-flex flex-column">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>
-                        </div> ';
-                    } elseif($row->ac_status==2){
-                            echo '<div class="d-flex flex-column">
+                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+                        </div>';
+                    } elseif ($row->ac_status==2) {
+                        echo '<div class="d-flex flex-column">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-danger">Expired</a>
-                        </div> ';
-                    }else{
+                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+                        </div>';
+                    } else {
                         echo '<div class="d-flex flex-column">
 				      <a href="javascript:void(0);" class="btn btn-sm btn-danger">Removed</a>
-			  </div> ';
+                      <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+			      </div>';
                     }
                 @endphp
             </td>

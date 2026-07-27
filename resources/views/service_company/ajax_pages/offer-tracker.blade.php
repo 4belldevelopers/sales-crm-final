@@ -249,18 +249,6 @@
             @if($offerStatusDate)
                 <span class="ot-offer-date">{{ $offerStatusDate }}</span>
             @endif
-            @if(!$hasPendingOffer && $isOwnJob && in_array($offerAcceptance, [0, 1]))
-                <a href="javascript:void(0);"
-                   class="ot-send-btn fwd_offer"
-                   data-jobid="{{ $row->jobId }}"
-                   data-candidate="{{ $row->wiseId }}"
-                   data-mtype="1"
-                   data-offerid="{{ $row->offer_id }}"
-                   style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:10.5px;font-weight:600;color:#2563eb;cursor:pointer;text-decoration:none;padding:3px 8px;border:1px solid #bfdbfe;border-radius:6px;background:#eff6ff;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                    Send to Candidate
-                </a>
-            @endif
         </td>
 
         {{-- Joining --}}

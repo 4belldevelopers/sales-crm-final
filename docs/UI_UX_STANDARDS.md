@@ -131,3 +131,21 @@ Before shipping any new screen, verify:
 - [ ] No N+1 queries, no full table scans
 - [ ] Large datasets paginated, heavy work queued
 - [ ] AA contrast met
+
+---
+
+## 9. Data display casing conventions
+
+Some fields have a fixed display casing regardless of how they were entered
+or how they're stored — apply this **as CSS `text-transform`** (or an
+uppercase transform at render time on a display-only copy), never by
+mutating the underlying stored value. The value used for matching/filtering
+(e.g. against `qualification_master.name`) must stay exactly as entered/
+stored; only what the user *sees* changes.
+
+| Field | Casing |
+|---|---|
+| Education / degree / qualification (anywhere it's shown: results tables, filter dropdowns, filter chips/badges, drawers, tooltips) | **UPPERCASE** |
+
+When adding a new place education data is displayed, apply this rule there
+too — it is not scoped to any single page.

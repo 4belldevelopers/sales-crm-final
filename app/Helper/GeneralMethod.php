@@ -144,10 +144,84 @@ END:VCALENDAR";
 	}
 	public static function ymdTodmyNotTime($originalDate)
 	{
-		
+
 		return  date("d M y", strtotime($originalDate));
-	
-	}	
+
+	}
+	/**
+	 * Icon + color + short description for a candidate_status (sub-stage/
+	 * rejection-reason) row — these are free-text, per-company admin-entered
+	 * names with no icon/description column in the DB, so all three are
+	 * inferred client-render-time via keyword match. Used by the Change
+	 * Candidate Stage drawer (stage_body_content/client_stage_body_content/
+	 * child_stage) as a display-only affordance; never affects what's
+	 * actually submitted (still just the candidate_status.id).
+	 *
+	 * 'icon' is inline SVG inner-markup (stroke-based, 24x24 viewBox), not a
+	 * Font Awesome class — this app only has Font Awesome **4.7.0** loaded
+	 * (see demo/css/font-awesome.min.css), which predates the fa5/6 "fas"
+	 * prefix and most icon names a newer FA cheat-sheet would suggest; SVG
+	 * matches the existing $hpStages/stage-pill icon convention and renders
+	 * reliably regardless of which icon font happens to be loaded.
+	 */
+	public static function csdSubStatusMeta($name)
+	{
+		$n = strtolower((string) $name);
+		$svgCopy       = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+		$svgClock      = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>';
+		$svgUser       = '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/>';
+		$svgDollar     = '<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>';
+		$svgCalendar   = '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>';
+		$svgXCircle    = '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>';
+		$svgAlert      = '<path d="M10.3 4 2 18a1.8 1.8 0 0 0 1.5 2.7h17a1.8 1.8 0 0 0 1.5-2.7L13.7 4a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>';
+		$svgUserX      = '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><path d="M17 9l4 4M21 9l-4 4"/>';
+		$svgUserCheck  = '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6"/><path d="M15 13l2.5 2.5L22 11"/>';
+		$svgPause      = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+		$svgShield     = '<path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3Z"/>';
+		$svgLogOut     = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>';
+		$svgPlusCircle = '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>';
+		$svgDot        = '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>';
+
+		// [needle, icon, color, bg, description] — first match wins, so more
+		// specific phrases are listed before their broader/generic overlaps.
+		$map = [
+			['duplicate',       $svgCopy,       '#f1416c', '#fdedf0', 'Duplicate profile'],
+			['not interest',    $svgClock,      '#ffa800', '#fff4de', 'Candidate not interested'],
+			['not looking',     $svgClock,      '#ffa800', '#fff4de', 'Not actively looking'],
+			['not relevant',    $svgUser,       '#3e97ff', '#eef4ff', 'Profile not relevant to role'],
+			['mismatch',        $svgUser,       '#3e97ff', '#eef4ff', 'Does not match role'],
+			['stability',       $svgAlert,      '#ffa800', '#fff4de', 'Stability concerns'],
+			['high salary',     $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
+			['salary',          $svgDollar,     '#17c653', '#eafcf3', 'Salary expectations high'],
+			['compensation',    $svgDollar,     '#17c653', '#eafcf3', 'Compensation expectations high'],
+			['notice',          $svgCalendar,   '#7239ea', '#f8f5ff', 'Notice period too long'],
+			['interview reject',$svgXCircle,    '#f1416c', '#fdedf0', 'Rejected in interview'],
+			['fake',            $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
+			['proxy',           $svgAlert,      '#ffa800', '#fff4de', 'Fake or proxy candidate'],
+			['no show',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['noshow',          $svgUserX,      '#f1416c', '#fdedf0', 'Candidate did not show up'],
+			['backed',          $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['back out',        $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['backout',         $svgUserX,      '#f1416c', '#fdedf0', 'Candidate backed out'],
+			['onboard',         $svgUserCheck,  '#17c653', '#eafcf3', 'Candidate onboarded'],
+			['hold',            $svgPause,      '#ffa800', '#fff4de', 'On hold'],
+			['schedul',         $svgCalendar,   '#3e97ff', '#eef4ff', 'Interview scheduled'],
+			['background',      $svgShield,     '#3e97ff', '#eef4ff', 'Background check pending'],
+			['bgv',             $svgShield,     '#3e97ff', '#eef4ff', 'Background check pending'],
+			['withdraw',        $svgLogOut,     '#7e8299', '#eef0f2', 'Candidate withdrew'],
+			['unresponsive',    $svgXCircle,    '#7e8299', '#eef0f2', 'Candidate unresponsive'],
+			['not contact',     $svgXCircle,    '#7e8299', '#eef0f2', 'Unable to reach candidate'],
+			['reject',          $svgXCircle,    '#f1416c', '#fdedf0', 'Rejected'],
+			['declin',          $svgXCircle,    '#f1416c', '#fdedf0', 'Declined'],
+			['other',           $svgPlusCircle, '#ffa800', '#fff4de', 'Add custom reason'],
+		];
+		foreach ($map as [$needle, $icon, $color, $bg, $desc]) {
+			if (strpos($n, $needle) !== false) {
+				return ['icon' => $icon, 'color' => $color, 'bg' => $bg, 'desc' => $desc];
+			}
+		}
+		return ['icon' => $svgDot, 'color' => '#7e8299', 'bg' => '#eef0f2', 'desc' => ''];
+	}
 	/**
 	 * Human-friendly display label for a permission group_name on the Roles & Permissions
 	 * screens. Display-only remap agreed with the product owner — the underlying DB
@@ -540,6 +614,41 @@ END:VCALENDAR";
 			
 			return $application_cnt;						
 	}
+	public static function checkDuplicateCandidateClient($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days,$phone)
+	{
+			$application_cnt	=	0;
+			if($app_duplicate == 1)
+			{
+				$application_cnt		= DB::table('job_applications')->select('*')
+												->where(function($query) use ($company_id) {
+													$query->where('thirdparty_company_id',$company_id);
+												})
+												->where('job_id', $job_id)
+												->where(function($query) use ($email, $phone) {
+													$query->where('email', $email)
+													->orWhere('phone', $phone);
+												})
+												->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
+												->count();			
+			}
+			else if($app_duplicate == 2)
+			{				
+				$application_cnt		= DB::table('job_applications')->select('*')
+												->where(function($query) use ($company_id) {
+													$query->where('thirdparty_company_id', $company_id);
+												})
+												->where(function($query) use ($email, $phone) {
+													$query->where('email', $email)
+													->orWhere('phone', $phone);
+												})
+												->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
+												->count();									
+				//echo $application_cnt."- query execute";										
+			}
+			
+			
+			return $application_cnt;						
+	}
 	public static function getUserContribution($user_id)
 	{
 			$contributionArr 	= DB::table('clients')
@@ -668,10 +777,25 @@ END:VCALENDAR";
 
 
     }
+	/** Format a number as compact K/M (e.g. 24500 → "24.5K", 1200000 → "1.2M") */
+	public static function formatK($num): string
+	{
+		$num = (float) $num;
+		if ($num >= 1_000_000) {
+			$val = $num / 1_000_000;
+			return rtrim(rtrim(number_format($val, 1), '0'), '.') . 'M';
+		}
+		if ($num >= 1_000) {
+			$val = $num / 1_000;
+			return rtrim(rtrim(number_format($val, 1), '0'), '.') . 'K';
+		}
+		return number_format($num, 0);
+	}
+
 	public static function salaryMode()
 	{
-		$array 	=	array(	
-							0	=>	"Annual", 
+		$array 	=	array(
+							0	=>	"Annual",
 							1	=>	"Monthly", 
 							2	=>	"Hourly"
 						);
@@ -3753,6 +3877,84 @@ END:VCALENDAR";
 
 		return $notification;
 	}
+	// The single, shared source for a job's DEFAULT skills/location/
+	// experience/salary — reads the Elasticsearch ELASTIC_JOBS document
+	// only, deliberately never MySQL. Used by every AppTracker tab page
+	// that pre-populates its filter drawer from the job's defaults
+	// (similar_candidates(), internal_bench(), career_apply(),
+	// public_bench()) AND by custome_count_all() (the header counter
+	// shown on all six tabs). Before this, each of those read the job
+	// separately — most via gdFilterData()/JobcitiesTags() (MySQL),
+	// custome_count_all() via ES directly — so if a job's skills/
+	// location/salary were edited and the ES reindex lagged even
+	// briefly, different tabs would silently compute against different
+	// versions of the same job and show disagreeing counts on a fresh
+	// page load, with no filter having been touched. Every caller now
+	// reading the identical ES document is what makes that permanent
+	// rather than something that can quietly drift apart again the next
+	// time one call site is edited and another isn't.
+	//
+	// city_list/state_list/countries lookups below stay MySQL — that's
+	// static reference data (city names), not the job's own editable
+	// state, so it carries none of the staleness risk this exists to
+	// avoid.
+	// $resolveLocationNames: skip when the caller only needs raw city_ids
+	// (e.g. custome_count_all(), which builds an Elasticsearch terms filter
+	// from them) — the city_list/state_list/countries join to produce
+	// "City | State | Country" display strings is only useful to callers
+	// populating a UI field (the filter drawer's default_loc). Avoids an
+	// unnecessary MySQL join on every header-counter computation, which
+	// runs on every AppTracker tab page load.
+	public static function jobDefaultsFromEs($id, $resolveLocationNames = true)
+	{
+		$elasticService = app(ElasticService::class);
+		$jobEsDoc = (object) $elasticService->getClient()->get([
+			'index' => ELASTIC_JOBS,
+			'id' => $id,
+		])['_source'];
+
+		$skillArr = [];
+		foreach ($jobEsDoc->job_metronics_skills ?? [] as $sval) {
+			$sval = (object) $sval;
+			$skillArr[] = $sval->skill_name;
+		}
+
+		$cityIds = [];
+		foreach ($jobEsDoc->client_city_jobs ?? [] as $sval) {
+			$sval = (object) $sval;
+			$cityIds[] = $sval->city_id;
+		}
+		$locationTags = [];
+		if ($resolveLocationNames && !empty($cityIds)) {
+			$locationTags = DB::table('client_city_jobs')
+				->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+				->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+				->join('countries', 'countries.id', '=', 'state_list.country_id')
+				->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+				->where('city_list.city', '!=', '')
+				->whereIn('city_list.city_id', $cityIds)
+				->get()
+				->map(function ($city) {
+					return $city->city_name . ' | ' . $city->state_name . ' | ' . $city->country_name;
+				})
+				->toArray();
+		}
+
+		return (object) [
+			'jobEsDoc' => $jobEsDoc,
+			'min_exp' => $jobEsDoc->min_exp,
+			'max_exp' => $jobEsDoc->max_exp,
+			'min_salary_currency' => $jobEsDoc->min_salary_currency,
+			'min_salary' => $jobEsDoc->min_salary,
+			'max_salary' => $jobEsDoc->max_salary,
+			'min_sal_mode' => $jobEsDoc->min_sal_mode,
+			'qualification' => $jobEsDoc->qualification ?? '',
+			'default_skill' => implode(',', $skillArr),
+			'default_loc' => $locationTags[0] ?? '',
+			'default_locations' => $locationTags,
+		];
+	}
+
 	public static function gdFilterData($jobId){
 		$company_id = auth()->user()->company_id;
 		$job = Job::findOrFail($jobId);
@@ -4267,7 +4469,7 @@ END:VCALENDAR";
 				];
 			}
 			if($data_candidate->condidate_type=='other'){
-				if (empty($data_candidate->ctc) || is_null($data_candidate->ctc)) {
+				if (empty($data_candidate->ectc) || is_null($data_candidate->ectc)) {
 					$data = [
 						'status'=>true,
 						'message'=>'Current CTC is required please recheck candidate form'
@@ -4612,6 +4814,31 @@ END:VCALENDAR";
 
 				return ($jobCitySelectedTag) ? implode(" , ",$jobCitySelectedTag) : '';
 
+
+	}
+
+	// Same query as JobcitiesTags() but WITHOUT the ->take(1) — that limit
+	// meant a job configured with multiple locations (e.g. "Hyderabad + 1
+	// Other City") only ever had its FIRST city auto-applied as a filter,
+	// silently dropping the rest. JobcitiesTags() itself is left untouched
+	// since it has ~13 other call sites across the codebase that expect a
+	// single joined string; this returns every configured city as a plain
+	// array of "City | State | Country" strings instead, for callers that
+	// want to seed all of them (e.g. multiple Tagify tags), not just one.
+	public static function JobcitiesTagsAll($jobID){
+
+		$citylistSelect = DB::table('client_city_jobs')
+				->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+			->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+			->join('countries', 'countries.id', '=', 'state_list.country_id')
+			->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+			->where('city_list.city','!=','')
+			->where('client_city_jobs.job_id', $jobID)
+			->get()->map(function($city) {
+				return $city->city_name . ' | ' . $city->state_name . ' | ' . $city->country_name;
+			});
+
+		return $citylistSelect->toArray();
 
 	}
 	public static function companyMainAddress($companyId){
@@ -6411,13 +6638,22 @@ END:VCALENDAR";
 			}, $skillArr);
 			
 
+			// in_array() required an EXACT string match between the job's
+			// skill keyword ("java") and the candidate's own skill entry
+			// ("java developer") — never equal, so a candidate whose skill
+			// list only had compound entries scored 0% even when they
+			// clearly had the skill. Same phrase-prefix check
+			// buildSkillMatchClause()/matchedSkillsList() use elsewhere.
 			$matches = 0;
-			foreach ($lowercaseArray2 as $value) {
-				if (in_array($value, $lowercaseArray1)) {
-					$matches++;
+			foreach ($lowercaseArray1 as $required) {
+				foreach ($lowercaseArray2 as $candidate) {
+					if (self::skillMatchesPhrasePrefix($required, $candidate)) {
+						$matches++;
+						break;
+					}
 				}
 			}
-			
+
 			$totalElements = count($lowercaseArray1);
 			$matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
 
@@ -6444,13 +6680,19 @@ END:VCALENDAR";
 		}, $skillArr);
 		
 
+		// Same phrase-prefix fix as skill_percentage() above — in_array()
+		// required an exact string match, so a candidate skill of "java
+		// developer" never counted against a required "java".
 		$matches = 0;
-		foreach ($lowercaseArray2 as $value) {
-			if (in_array($value, $lowercaseArray1)) {
-				$matches++;
+		foreach ($lowercaseArray1 as $required) {
+			foreach ($lowercaseArray2 as $candidate) {
+				if (self::skillMatchesPhrasePrefix($required, $candidate)) {
+					$matches++;
+					break;
+				}
 			}
 		}
-		
+
 		$totalElements = count($lowercaseArray1);
 		$matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
 
@@ -8841,8 +9083,92 @@ END:VCALENDAR";
 		]);
 
 		return (object)($response['hits']['hits'][0]['_source'] ?? []);
-		
+
 	}
+
+	/**
+	 * Bulk variant of getrRcommendationRelationData() for list rendering —
+	 * ONE Elasticsearch search for a whole page of jobs instead of one per
+	 * row. Returns [job_id => latest relation object], using the same
+	 * "newest created_at wins" selection as the single-row helper; jobs
+	 * with no relation are absent from the map (callers default to
+	 * (object)[], matching the single-row helper's empty-object return).
+	 * Tenancy: results are scoped by $company_id (to_company_id term).
+	 */
+	public static function getrRcommendationRelationDataBulk($company_id, array $jobIds)
+	{
+		if (empty($jobIds)) { return []; }
+		$elasticService = app(ElasticService::class);
+		$map = [];
+		try {
+			$response = $elasticService->getClient()->search([
+				'index' => ELASTIC_JOB_REQUEST,
+				'body' => [
+					// headroom for multiple relation rows per job — newest-first
+					// sort below means the first hit seen per job wins
+					'size' => count($jobIds) * 5,
+					'query' => [
+						'bool' => [
+							'must' => [
+								['term' => ['to_company_id' => (int) $company_id]],
+								['terms' => ['job_id' => array_map('intval', $jobIds)]],
+							],
+						],
+					],
+					'sort' => [['created_at' => ['order' => 'desc']]],
+				],
+			]);
+			foreach ($response['hits']['hits'] ?? [] as $hit) {
+				$src = $hit['_source'] ?? [];
+				$jid = $src['job_id'] ?? null;
+				if ($jid !== null && !isset($map[$jid])) {
+					$map[$jid] = (object) $src;
+				}
+			}
+		} catch (\Throwable $e) {
+			\Log::error('getrRcommendationRelationDataBulk failed: '.$e->getMessage());
+		}
+		return $map;
+	}
+
+	/**
+	 * Bulk variant of benchRequestCheck() — ONE Elasticsearch search for all
+	 * jobs on the page. Returns [job_id => request object]; an absent key
+	 * means no request exists (the single-row helper's null).
+	 */
+	public static function benchRequestCheckBulk($candidate_id, array $jobIds)
+	{
+		if (empty($jobIds)) { return []; }
+		$elasticService = app(ElasticService::class);
+		$map = [];
+		try {
+			$response = $elasticService->getClient()->search([
+				'index' => ELASTIC_CANDIDATES_REQUEST,
+				'body' => [
+					'size' => count($jobIds) * 2,
+					'query' => [
+						'bool' => [
+							'filter' => [
+								['term' => ['candidate_id' => $candidate_id]],
+								['terms' => ['job_id' => array_map('intval', $jobIds)]],
+							],
+						],
+					],
+				],
+			]);
+			foreach ($response['hits']['hits'] ?? [] as $hit) {
+				$src = $hit['_source'] ?? [];
+				$jid = $src['job_id'] ?? null;
+				if ($jid !== null && !isset($map[$jid])) {
+					$map[$jid] = (object) $src;
+				}
+			}
+		} catch (\Throwable $e) {
+			\Log::error('benchRequestCheckBulk failed: '.$e->getMessage());
+		}
+		return $map;
+	}
+
 	public static function getAgencyRelationData($from_company_id,$to_company_id)
 	{
 		$elasticService = app(ElasticService::class);
@@ -11168,17 +11494,186 @@ END:VCALENDAR";
 				   return $intRow ?? null;
 
 	}
+	// Expands a skill into a match_phrase_prefix query for itself, OR (if
+	// it has known synonyms in config/skill_synonyms.php) a nested bool
+	// "should" covering every variant — a candidate matching ANY variant
+	// satisfies this one skill slot. match_phrase_prefix (not
+	// match_phrase): a job requiring "Java" was not matching a candidate
+	// whose stored skill value is the compound phrase "Java Developer" —
+	// match_phrase requires an exact phrase match, and "java" alone isn't
+	// the same phrase as "java developer". match_phrase_prefix matches
+	// "java" as a completable prefix wherever it occurs, so "Java
+	// Developer" / "Senior Java Developer" now correctly match. It's also
+	// the efficient choice: Lucene can use the term dictionary's sorted
+	// prefix range directly, unlike a *java*-style wildcard (full
+	// field-value scan, forbidden by docs/UI_UX_STANDARDS.md for exactly
+	// this performance reason).
+	//
+	// Shared between ServiceCompanyAppTrackerController::
+	// similar_existing_data_ajax() (the actual results query) and
+	// custome_count_all() below (the header tab counters shown on every
+	// AppTracker page) specifically so the two can never drift out of
+	// sync again — they did drift once already (skill matching, location
+	// clustering, and salary-missing-data handling were all improved in
+	// the results query without this counter being updated to match,
+	// which is why the same job could show very different "Similar
+	// Candidates" numbers depending on which tab you were viewing it
+	// from).
+	// Mirrors buildSkillMatchClause()'s match_phrase_prefix semantics in
+	// PHP: a required skill counts as matched when its words appear as a
+	// consecutive prefix match within the candidate's skill text — e.g.
+	// required "java" matches a candidate skill entry of "Java Developer"
+	// or "Sr. Java Fullstack Developer", not only an exact "Java". The
+	// candidate-list endpoints used to compute matched_skills with a plain
+	// array_intersect() (exact string equality), so a candidate ES itself
+	// had already returned via this same phrase-prefix query would show up
+	// in results with NONE of their skill tags highlighted as matched.
+	public static function skillMatchesPhrasePrefix(string $requiredSkill, string $candidateSkill): bool
+	{
+		$requiredWords = preg_split('/[\s\/,\-]+/', strtolower(trim($requiredSkill)), -1, PREG_SPLIT_NO_EMPTY);
+		$candidateWords = preg_split('/[\s\/,\-]+/', strtolower(trim($candidateSkill)), -1, PREG_SPLIT_NO_EMPTY);
+		$wordCount = count($requiredWords);
+		if ($wordCount === 0 || count($candidateWords) < $wordCount) {
+			return false;
+		}
+
+		for ($i = 0; $i <= count($candidateWords) - $wordCount; $i++) {
+			$isMatch = true;
+			foreach ($requiredWords as $idx => $word) {
+				$candidateWord = $candidateWords[$i + $idx];
+				// Every word must match exactly except the LAST word of the
+				// required skill, which only needs to be a prefix — same as
+				// match_phrase_prefix treating the final query token as a
+				// prefix search.
+				$isLastWord = $idx === $wordCount - 1;
+				if ($isLastWord ? !str_starts_with($candidateWord, $word) : $candidateWord !== $word) {
+					$isMatch = false;
+					break;
+				}
+			}
+			if ($isMatch) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Returns the subset of $candidateSkills that phrase-prefix-match any
+	// entry in $requiredSkills — the "which of this candidate's skills
+	// satisfy the job's requirements" computation every AppTracker tab's
+	// results endpoint needs for its Match % badge and skill highlighting
+	// (see skillMatchesPhrasePrefix() above). Preserves each matched
+	// candidate skill's original wording/casing (callers ucfirst() it for
+	// display), only $requiredSkills is expected pre-lowercased.
+	public static function matchedSkillsList(array $candidateSkills, array $requiredSkills): array
+	{
+		$matched = [];
+		foreach ($candidateSkills as $candidateSkill) {
+			foreach ($requiredSkills as $requiredSkill) {
+				if (self::skillMatchesPhrasePrefix($requiredSkill, $candidateSkill)) {
+					$matched[] = $candidateSkill;
+					break;
+				}
+			}
+		}
+		return array_values(array_unique($matched, SORT_STRING));
+	}
+
+	public static function buildSkillMatchClause(string $skill): array
+	{
+		$synonymMap = config('skill_synonyms', []);
+		$variants = array_values(array_unique(array_merge([$skill], $synonymMap[$skill] ?? [])));
+
+		if (count($variants) === 1) {
+			return [
+				'match_phrase_prefix' => [
+					'job_application_skills.skills' => $variants[0]
+				]
+			];
+		}
+
+		return [
+			'bool' => [
+				'should' => array_map(function ($variant) {
+					return [
+						'match_phrase_prefix' => [
+							'job_application_skills.skills' => $variant
+						]
+					];
+				}, $variants),
+				'minimum_should_match' => 1
+			]
+		];
+	}
+
+	// Given the exact city_ids the recruiter selected (or, for the header
+	// counters, the job's own default location) and the raw city names
+	// those selections resolved from, widens the location filter to
+	// include every other city in the same metro cluster (see
+	// config/location_clusters.php) — e.g. selecting/defaulting to Gurgaon
+	// also pulls in Noida/Delhi/Faridabad/Ghaziabad/Greater Noida
+	// candidates. Returns both sets so the caller can filter on 'expanded'
+	// while still ranking 'exact' first via a priority sort. If no
+	// selected city belongs to a configured cluster, 'expanded' just
+	// equals 'exact' — unchanged original behaviour. See
+	// buildSkillMatchClause() above for why this lives here shared, not on
+	// the controller.
+	public static function resolveLocationCluster(array $exactCityIds, array $cityNames): array
+	{
+		$clusters = config('location_clusters', []);
+		if (empty($clusters) || empty($cityNames)) {
+			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
+		}
+
+		$matchedFragments = [];
+		foreach ($cityNames as $cityName) {
+			$lower = strtolower($cityName);
+			foreach ($clusters as $cluster) {
+				foreach ($cluster['city_fragments'] as $fragment) {
+					if (str_contains($lower, $fragment)) {
+						$matchedFragments = array_merge($matchedFragments, $cluster['city_fragments']);
+						continue 2;
+					}
+				}
+			}
+		}
+
+		if (empty($matchedFragments)) {
+			return ['exact' => $exactCityIds, 'expanded' => $exactCityIds];
+		}
+
+		$matchedFragments = array_values(array_unique($matchedFragments));
+
+		$clusterCityIds = DB::table('city_list')
+			->where('city', '!=', '')
+			->where(function ($q) use ($matchedFragments) {
+				foreach ($matchedFragments as $fragment) {
+					$q->orWhere('city', 'LIKE', '%' . $fragment . '%');
+				}
+			})
+			->pluck('city_id')
+			->map(function ($id) { return (int) $id; })
+			->toArray();
+
+		return [
+			'exact' => $exactCityIds,
+			'expanded' => array_values(array_unique(array_merge($exactCityIds, $clusterCityIds))),
+		];
+	}
+
 	public static function  custome_count_all($id){
 	   
 		$elasticService = app(ElasticService::class);
 		$company_id = auth()->user()->company_id;
-		$params = [
-				'index' => ELASTIC_JOBS,
-				'id'    => $id,
-		];
-		
-		$response = $elasticService->getClient()->get($params);
-		$jobs_details = (object) $response['_source'];
+
+		// Same shared ES-only job lookup every tab page's default-filter
+		// population uses (see jobDefaultsFromEs() above) — jobEsDoc is the
+		// raw ELASTIC_JOBS _source, kept under this same $jobs_details name
+		// so the rest of this (large, multi-counter) function is unchanged.
+		// false: this function only ever uses raw city_ids in ES filters
+		// below, never the resolved "City | State | Country" display
+		// strings, so skip that extra MySQL join.
+		$jobs_details = self::jobDefaultsFromEs($id, false)->jobEsDoc;
         //  dd($jobs_details);
 		$min_exp = ($jobs_details->min_exp >= 1) ? $jobs_details->min_exp - 1 : $jobs_details->min_exp;
 		$max_exp = $jobs_details->max_exp + 1;
@@ -11229,6 +11724,21 @@ END:VCALENDAR";
 			$location_arr[] = $sval->city_id;
 		}
 		$location = $location_arr;
+
+		// Same Delhi NCR-style metro cluster expansion
+		// similar_existing_data_ajax() applies to the actual results (see
+		// resolveLocationCluster() above) — without this, this counter used
+		// only the job's exact default city while the results page (once a
+		// clustered city like Gurgaon is involved) counted every city in
+		// the cluster, which is the other half of why the two numbers
+		// diverged. city_list has no name on the job's own city_id list, so
+		// resolve it first purely to determine cluster membership.
+		$exactLocationIds = array_map('intval', $location);
+		$locationCityNames = !empty($exactLocationIds)
+			? DB::table('city_list')->whereIn('city_id', $exactLocationIds)->pluck('city')->toArray()
+			: [];
+		$locationCluster = self::resolveLocationCluster($exactLocationIds, $locationCityNames);
+		$location = $locationCluster['expanded'];
 
 		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
 			->where('job_id', '=', $id)->pluck('job_application_id')->toArray();
@@ -11356,17 +11866,20 @@ END:VCALENDAR";
 			]
 		];
 		// dd($requiredSkills);
-		
+
+		// Same match_phrase_prefix-based matching similar_existing_data_ajax()
+		// uses for the actual results — see buildSkillMatchClause() above for
+		// why (a job requiring "Java" needs to match a candidate whose skill
+		// is stored as "Java Developer"). This counter has no concept of a
+		// mandatory/starred skill (it only knows the job's own default skill
+		// list), so every skill stays an OR condition — unchanged structure,
+		// just the corrected match type.
 		if (!empty($requiredSkills)) {
 			if (!empty($requiredSkills)) {
 				$should = [];
 
 				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+					$should[] = self::buildSkillMatchClause($skill);
 				}
 
 				$boolQuery['bool']['filter'][] = [
@@ -11393,7 +11906,7 @@ END:VCALENDAR";
 		}
 
 		if (!empty($location)) {
-			
+
 			$boolQuery['bool']['filter'][] = [
 				'terms' => [
 					 'city_id' => array_map('intval', $location)
@@ -11467,21 +11980,43 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// similar_candidates.blade.php's filter drawer hardcodes its Min
+		// Salary field to 0 (not the job's own min_salary) — every other
+		// tab's older-style filter modal (internal_bench/public_bench)
+		// defaults that field to the job's real min_salary instead. This
+		// counter has to match whichever floor the CORRESPONDING live page
+		// actually applies on load, not the job's raw value uniformly, or
+		// this counter and the Similar Candidates page disagree the moment
+		// you land on either one — same 0 floor as the live page, only for
+		// this block.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {
 				$salaryRange['lte'] = $max_salary;
 			}
 
+			// Same missing-salary-inclusive handling
+			// similar_existing_data_ajax() uses for the actual results: a
+			// plain range filter only matches documents that HAVE the
+			// field, so a candidate missing salary data was silently
+			// excluded from this counter (but NOT from the results page
+			// after that fix), which was the third source of the two
+			// numbers disagreeing.
 			$boolQuery['bool']['filter'][] = [
-				'range' => [
-					$salaryField => $salaryRange
+				'bool' => [
+					'should' => [
+						['range' => [$salaryField => $salaryRange]],
+						['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+					],
+					'minimum_should_match' => 1,
 				]
 			];
 		}
@@ -11489,7 +12024,7 @@ END:VCALENDAR";
 
 
 		// dd($boolQuery);
-		
+
 		$params = [
 			'index' => ELASTIC_CANDIDATES,
 			'request_cache' => true,
@@ -11657,12 +12192,20 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// internal_bench.blade.php's filter drawer now defaults Min Salary
+		// to 0 (not the job's own min_salary) — every AppTracker tab's Min
+		// Salary field is 0 by default, same as similar_candidates.blade.php
+		// (see custome_count_all()'s Existing counter block above), so this
+		// counter has to use the same 0 floor as the live In-house Bench
+		// page or the two disagree the moment you land on either one.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {
@@ -11676,9 +12219,12 @@ END:VCALENDAR";
 			];
 		}
 
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryInternalBench['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
-
-		
 		// Build the final query
 		$params = [
 			'index' => ELASTIC_CANDIDATES_BENCH,
@@ -11882,12 +12428,20 @@ END:VCALENDAR";
 				default => 'ectc_yearly'
 		};
 
-		if ((!empty($min_salary) && $min_salary!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
+		// public_bench.blade.php's filter drawer now defaults Min Salary to
+		// 0 (not the job's own min_salary) — every AppTracker tab's Min
+		// Salary field is 0 by default, same as similar_candidates.blade.php
+		// (see custome_count_all()'s Existing counter block above), so this
+		// counter has to use the same 0 floor as the live Agency Bench page
+		// or the two disagree the moment you land on either one.
+		$minSalaryForThisCounter = 0;
+
+		if ((!empty($minSalaryForThisCounter) && $minSalaryForThisCounter!=0.00) || (!empty($max_salary) && $max_salary!=0.00)) {
 
 			$salaryRange = [];
 
-			if (!empty($min_salary)) {
-				$salaryRange['gte'] = $min_salary;
+			if (!empty($minSalaryForThisCounter)) {
+				$salaryRange['gte'] = $minSalaryForThisCounter;
 			}
 
 			if (!empty($max_salary)) {
@@ -11901,6 +12455,11 @@ END:VCALENDAR";
 			];
 		}
 
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryMarketBench['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params = [
@@ -11950,7 +12509,6 @@ END:VCALENDAR";
 		$boolQuerytBenchRequest = [
 			'bool' => [
 				'should' => [
-					// First condition
 					[
 						'bool' => [
 							'must' => array_merge([
@@ -11961,7 +12519,11 @@ END:VCALENDAR";
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' => [] // We'll add all filters here
+				'must_not' => [
+					// Exclude already-added candidates from the tab counter too.
+					['term' => ['ac_status' => 1]],
+				],
+				'filter' => []
 			]
 		];
 		$params = [
@@ -11971,17 +12533,13 @@ END:VCALENDAR";
 				'query' => $boolQuerytBenchRequest,
 			]
 		];
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_REQUEST)) {
 			$total_RequestBenchApplications = 0;
 				$data = [];
 		}else{
 				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs BEFORE collapse
-				$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-				// Count of current page records (after pagination & collapse)
-				$records = $response['hits']['hits'] ?? [];
-				$total_RequestBenchApplications = count($records);
+				// This total reflects ALL matching docs, not just the current page.
+				$total_RequestBenchApplications = $response['hits']['total']['value'] ?? 0;
 		}
 		//####################################  END  Bench Talent Request
 
@@ -12007,9 +12565,16 @@ END:VCALENDAR";
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' =>[] // We'll add all filters here
+				'filter' =>[], // We'll add all filters here
+				'must_not' => []
 			]
 		];
+
+		if (!empty($existingCandidatesQuery)) {
+			$boolQueryCareer['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params_career = [
@@ -12135,19 +12700,33 @@ END:VCALENDAR";
 
 	}
 	public static function whatsappConnectCheck($id){
-		
-		$instance 		= self :: getInstance($id);
-		$baseUrl 		= self :: baseUrl();
-		if(!$instance){
-           return null;
+
+		$instance = self::getInstance($id);
+		$baseUrl  = self::baseUrl();
+		if (!$instance) {
+            return null;
 		}
+
+        /* Check live connection state first — must be 'open' to count as connected */
+        try {
+            $stateResponse = Http::withHeaders([
+                'apikey' => config('services.evolution.global_key')
+            ])->get($baseUrl . "/instance/connectionState/" . $instance->instance_name);
+            $stateData = $stateResponse->json();
+            $state = $stateData['instance']['state'] ?? $stateData['state'] ?? null;
+            if ($state !== 'open') {
+                return null;
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+
 		$responseConnected = Http::withHeaders([
 			'apikey' => config('services.evolution.global_key')
 		])->get(
 			$baseUrl."/instance/fetchInstances"
 		);
 		$dataConnected = $responseConnected->json();
-		// dd($dataConnected);
 		$connectedNumber = collect($dataConnected)
 			->firstWhere('name', @$instance->instance_name)['ownerJid'] ?? null;
 

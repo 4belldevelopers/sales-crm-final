@@ -71,7 +71,7 @@ if(@$tabshow){
     if($job->self_company==1){
       $description = ucfirst(@$job->company_description);
     }else{
-        if($job->comId == auth()->user()->company_id){
+        if(($job->comId ?? $job->company_id ?? null) == auth()->user()->company_id){
             $description = ucfirst(@$job->client_description);
         }else{
             $description = ucfirst(@$job->company_description);
@@ -1111,7 +1111,7 @@ $end_date   =	date('d-M-Y', $date);
     $targetJobId = $job->id;
     $company_id = auth()->user()->company_id;
     $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
-    $companyidcount= $job->comId;
+    $companyidcount= ($job->comId ?? $job->company_id ?? null) ?? $job->company_id ?? null;
     $from_company_id = $relationget->from_company_id ?? null;
     $to_company_id = $relationget->to_company_id ?? null;
     $applicationCounter = GeneralMethod::statusCountAll($job->id);
@@ -1121,7 +1121,7 @@ $end_date   =	date('d-M-Y', $date);
     $offerCount = GeneralMethod::statusCount($companyidcount, $job->id,5);
     $joindCount = GeneralMethod::statusCount($companyidcount, $job->id,6);
     $recommendation_id = $to_company_id;
-    if ($recommendation_id > 0 && $job->comId != auth()->user()->company_id) {
+    if ($recommendation_id > 0 && ($job->comId ?? $job->company_id ?? null) != auth()->user()->company_id) {
         $applicationCounter = GeneralMethod::statusCountThirdpartyAll($to_company_id,$job->id);
         $interview_counter = GeneralMethod::statusCountThirdpartyInterview(auth()->user()->company_id, $job->id);
         $souCount = GeneralMethod::statusCountThirdparty($to_company_id, $job->id,1);
@@ -1130,50 +1130,74 @@ $end_date   =	date('d-M-Y', $date);
         $joindCount = GeneralMethod::statusCountThirdparty($to_company_id, $job->id,6);
     }
     $applicationCounter = number_format($applicationCounter);
-    $job_assign = $job->job_assign;
-    $jobAssign = collect($job_assign);
+    $hiringManager = $hiringManagerdesignation = $hiringManagerCompany = $contact_person_number = $contact_person_email = '--------';
+    $hrManager = $hrManagerdesignation = $hrcontact_person_number = $hrcontact_person_email = '';
+    // client_contact_info_jobs is an array when loaded via Elasticsearch (drawer); absent on DB::table() result (market-job-detail full page)
+    if (is_array(@$job->client_contact_info_jobs)) {
+        $job_assign = $job->job_assign;
+        $jobAssign = collect($job_assign);
 
-    $hiringManager = $hiringManagerdesignation = $hiringManagerCompany = $contact_person_number = $contact_person_email ='--------';
-    if(count($job->client_contact_info_jobs)>0){
-        $hiringManager = @$job->client_contact_info_jobs[0]['contact_person_name'];
-        $hiringManagerdesignation = @$job->client_contact_info_jobs[0]['contact_person_designation'];
-        $contact_person_number = @$job->client_contact_info_jobs[0]['contact_person_number'];
-        $contact_person_email = @$job->client_contact_info_jobs[0]['contact_person_email'];
-        $companyId = @$job->client_contact_info_jobs[0]['company_id'];
-        $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name;
-    }
-            
-    if ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
-        $jobAssignListCaptain = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $job->comId)
-        ->filter()
-        ->map(fn ($c) => ($c))
-        ->values()
-        ->all();
-        // dd($jobAssignListCaptain);
-        $clientjobAssignListCaptain = '';
-        if(count($jobAssignListCaptain)>0 && $job->comId != auth()->user()->company_id){
-            $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
-            $companyId = $jobAssignListCaptain[0]['company_id'];
-            $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
+        if(count($job->client_contact_info_jobs)>0){
+            $hiringManager = @$job->client_contact_info_jobs[0]['contact_person_name'];
+            $hiringManagerdesignation = @$job->client_contact_info_jobs[0]['contact_person_designation'];
+            $contact_person_number = @$job->client_contact_info_jobs[0]['contact_person_number'];
+            $contact_person_email = @$job->client_contact_info_jobs[0]['contact_person_email'];
+            $companyId = @$job->client_contact_info_jobs[0]['company_id'];
             $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name;
-            $users = DB::table('users')->select('users_profile.designation','users.email','users.mobile')
-            ->leftJoin('users_profile','users_profile.user_id','=','users.id')
-            ->where('users.id',$spok_user_id)->first();
-            $hiringManagerdesignation = @$users->designation ?? '';
-            $contact_person_number = @$users->mobile ?? '';;
-            $contact_person_email = @$users->email ?? '';;
         }
-        
-    }
-    $hrManager  = $hrManagerdesignation = $hrcontact_person_number = $hrcontact_person_email = '';
-    if ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
-        $jobId = $job->id;
 
-        $partnersData = $jobAssign->where('company_id', $to_company_id)->where('job_id', $jobId)
-        ->filter(function ($rowJob) {
-                return $rowJob['user_id'] == $rowJob['spok_user_id'];
+        if ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
+            $jobAssignListCaptain = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', ($job->comId ?? $job->company_id ?? null))
+            ->filter()
+            ->map(fn ($c) => ($c))
+            ->values()
+            ->all();
+            // dd($jobAssignListCaptain);
+            $clientjobAssignListCaptain = '';
+            if(count($jobAssignListCaptain)>0 && ($job->comId ?? $job->company_id ?? null) != auth()->user()->company_id){
+                $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
+                $companyId = $jobAssignListCaptain[0]['company_id'];
+                $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
+                $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name;
+                $users = DB::table('users')->select('users_profile.designation','users.email','users.mobile')
+                ->leftJoin('users_profile','users_profile.user_id','=','users.id')
+                ->where('users.id',$spok_user_id)->first();
+                $hiringManagerdesignation = @$users->designation ?? '';
+                $contact_person_number = @$users->mobile ?? '';
+                $contact_person_email = @$users->email ?? '';
+            }
 
-        })->sortBy('user_name')->take(1)->values();
+        }
+        if ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
+            $jobId = $job->id;
+
+            $partnersData = $jobAssign->where('company_id', $to_company_id)->where('job_id', $jobId)
+            ->filter(function ($rowJob) {
+                    return $rowJob['user_id'] == $rowJob['spok_user_id'];
+
+            })->sortBy('user_name')->take(1)->values();
+                foreach ($partnersData as $pval) {
+                    $pval = (object) $pval;
+                    $users = DB::table('users')->select('users_profile.designation','users.name','users.email','users.mobile')
+                    ->leftJoin('users_profile','users_profile.user_id','=','users.id')
+                    ->where('users.id',$pval->spok_user_id)->first();
+                    $hrManager = ucfirst(@$users->name);
+                    $hrManagerdesignation = @$users->designation ?? '';
+                    $hrcontact_person_number = @$users->mobile ?? '';
+                    $hrcontact_person_email = @$users->email ?? '';
+                }
+        } else {
+
+            $jobId = $job->id;
+
+            $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
+            ->unique('user_id')->count();
+
+            $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
+            ->filter(function ($rowJob) {
+                    return $rowJob['user_id'] == $rowJob['spok_user_id'];
+            })->sortBy('user_name')->take(1)->values();
+            $showCount = 0;
             foreach ($partnersData as $pval) {
                 $pval = (object) $pval;
                 $users = DB::table('users')->select('users_profile.designation','users.name','users.email','users.mobile')
@@ -1181,30 +1205,9 @@ $end_date   =	date('d-M-Y', $date);
                 ->where('users.id',$pval->spok_user_id)->first();
                 $hrManager = ucfirst(@$users->name);
                 $hrManagerdesignation = @$users->designation ?? '';
-                $hrcontact_person_number = @$users->mobile ?? '';;
-                $hrcontact_person_email = @$users->email ?? '';;
+                $hrcontact_person_number = @$users->mobile ?? '';
+                $hrcontact_person_email = @$users->email ?? '';
             }
-    } else {
-        
-        $jobId = $job->id;
-
-        $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
-        ->unique('user_id')->count();
-
-        $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $jobId)
-        ->filter(function ($rowJob) {
-                return $rowJob['user_id'] == $rowJob['spok_user_id'];
-        })->sortBy('user_name')->take(1)->values();
-        $showCount = 0;
-        foreach ($partnersData as $pval) {   
-            $pval = (object) $pval;
-            $users = DB::table('users')->select('users_profile.designation','users.name','users.email','users.mobile')
-            ->leftJoin('users_profile','users_profile.user_id','=','users.id')
-            ->where('users.id',$pval->spok_user_id)->first();
-            $hrManager = ucfirst(@$users->name);
-            $hrManagerdesignation = @$users->designation ?? '';
-            $hrcontact_person_number = @$users->mobile ?? '';;
-            $hrcontact_person_email = @$users->email ?? '';;
         }
     }
 
@@ -1215,6 +1218,7 @@ $end_date   =	date('d-M-Y', $date);
 
 
 
+    @if(empty($hideMarketSections))
     <div class="card-toolbar">
         <button type="button" class="btn btn-sm btn-icon page-close btn-active-light-danger me-n5" id="kt_activitiesJob_close"> 
             <span class="svg-icon svg-icon-1">
@@ -1227,6 +1231,7 @@ $end_date   =	date('d-M-Y', $date);
             </span> 
         </button>
     </div>
+    @endif {{-- hideMarketSections: kt_activitiesJob_close --}}
 
     <div class="app-container">
 
@@ -1236,7 +1241,7 @@ $end_date   =	date('d-M-Y', $date);
                @if(@$jobfindhide!=false) --}}
                     <?php
                        $public_bench_path = url('/service_company/apptracker/public_bench/' . GeneralMethod::value_encrypt(@$job->id));
-                        if($job->comId==auth()->user()->company_id){
+                        if(($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id){
                             $url  = url("service_company/apptracker/".GeneralMethod::value_encrypt(@$job->id)."/all");
                             $urladd =url('service_company/job-applications/create/' . GeneralMethod::value_encrypt(@$job->id) . '/0');
                         }else{
@@ -1245,6 +1250,7 @@ $end_date   =	date('d-M-Y', $date);
                         }
                     ?>
 
+                    @if(empty($hideMarketSections))
                     <div class="top-actions">
                         @if($benchshowtab)
                             @if($jobfindhide)
@@ -1293,13 +1299,20 @@ $end_date   =	date('d-M-Y', $date);
                                     @endif
                                  @endif
                             @endif
+                            @if(empty($hideMarketSections))
                             <button class="action-btn hm-listing" data-row-id="{{ @$job->id }}">
                                 <i class="fas fa-users"></i>Add Team
                             </button>
+                            @endif
                             @if(@$tabshow)
                                 @if($viewmore)
                                     @if($agencyView)
-                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}" data-toggle="modal" data-target="#status_stage">
+                                    @php
+                                        // Same Direct Client check used on the jobs list — a job recommended to
+                                        // this agency isn't this agency's to change the status of.
+                                        $isDirectClientJob = $recommendation_id > 0 && @$to_company_id == auth()->user()->company_id;
+                                    @endphp
+                                    <button class="action-btn status_stage" data-row-id="{{ @$job->id }}" data-direct-client="{{ $isDirectClientJob ? '1' : '0' }}">
                                         <i class="fas fa-sync-alt"></i>Change Status
                                         <i class="fas fa-chevron-down" style="margin-left:4px;font-size:10px;"></i>
                                     </button>
@@ -1309,6 +1322,7 @@ $end_date   =	date('d-M-Y', $date);
                         @endif
 
                     </div>
+                    @endif {{-- hideMarketSections: top-actions --}}
                 {{-- @endif          
             @endif --}}
 
@@ -1354,6 +1368,7 @@ $end_date   =	date('d-M-Y', $date);
                                         ?>
                                     {{-- <span class="job-tag more">+2</span> --}}
                                 </div>
+                                @if(empty($hideMarketSections))
                                 <div class="hero-personnel-inline">
                                     <div class="personnel-card-inline" onclick="showPersonnelDetails('hiring-manager')">
                                         <span class="personnel-avatar-inline" style="background: #cdcaca; padding: 7px 0px 0px 11px;"><i class="far fa-user"></i>
@@ -1398,12 +1413,13 @@ $end_date   =	date('d-M-Y', $date);
                                         </div>
                                     </div>
                                 </div>
+                                @endif {{-- hideMarketSections: hero-personnel-inline --}}
                             </div>
                         </div>
                         <div class="job-actions">
                              @if (in_array('edit_jobs', $userPermissions))
                                 @if($benchshowtab)
-                                    @if ($viewmore && $job->comId==auth()->user()->company_id)
+                                    @if ($viewmore && ($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)
                                     <a href="<?php echo route('service_company.jobs.edit', GeneralMethod::value_encrypt($job->id)); ?>" class="">
                                         <button class="job-action-btn edit" style="width: 100%;">
                                             <i class="fas fa-pencil-alt"></i>Edit Job
@@ -1422,9 +1438,11 @@ $end_date   =	date('d-M-Y', $date);
                                 </button>
                             </a>
                             @endif
+                            @if(empty($hideMarketSections))
                             <button class="job-action-btn" onclick="downloadJobPDF()">
                                 <i class="fas fa-download"></i>Download Job
                             </button>
+                            @endif
                             {{-- <button class="job-action-btn" onclick="showAllActions()">
                                 <i class="fas fa-ellipsis-h"></i>All Actions
                             </button> --}}
@@ -1432,6 +1450,7 @@ $end_date   =	date('d-M-Y', $date);
                     </div>
                 </div>
 
+                @if(empty($hideMarketSections))
                 <div class="pipeline-section fade-in-up delay-1">
                     <div class="pipeline-card">
                         <div class="pipeline-icon applied"><i class="far fa-thumbs-up"></i></div>
@@ -1494,6 +1513,7 @@ $end_date   =	date('d-M-Y', $date);
                         </div>
                     </div>
                 </div>
+                @endif {{-- hideMarketSections: pipeline-section --}}
 
                 <div class="tabs-section fade-in-up delay-2">
                     <div class="tabs-nav">
@@ -1506,14 +1526,14 @@ $end_date   =	date('d-M-Y', $date);
                                 @if(@$tabshow)
                                     <button class="tab-btn" onclick="switchTab(this, 'team')">Team</button>
                                 @endif
-                                @if($job->comId==auth()->user()->company_id)         
+                                @if(($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)         
                                     @if(@$tabshow)   
                                         @if ($viewmore)
                                            <button class="tab-btn" onclick="switchTab(this, 'agencies')">Agencies</button>
                                         @endif
                                     @endif
                                 @endif
-                                @if($job->comId==auth()->user()->company_id)
+                                @if(($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id)
                                         <button class="tab-btn" onclick="switchTab(this, 'agency_t_c')">Agency T&C</button>
                                 @endif
                                         <button class="tab-btn" onclick="switchTab(this, 'dashboard')">Job Dashboard</button>
@@ -1602,6 +1622,7 @@ $end_date   =	date('d-M-Y', $date);
                                     {{-- <button class="view-more" onclick="showFullDescription()">View More <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></button> --}}
                                 </div>
 
+                                @if(empty($hideMarketSections))
                                 <div class="desc-card" id="card-about">
                                     <div class="desc-card-header">
                                         <h3>About Company</h3>
@@ -1617,8 +1638,10 @@ $end_date   =	date('d-M-Y', $date);
                                     @endif
                                     {{-- <button class="view-more" onclick="showFullCompany()">View More <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></button> --}}
                                 </div>
+                                @endif {{-- hideMarketSections: about-company --}}
                             </div>
 
+                            @if(empty($hideMarketSections))
                             <div class="questions-section">
                                 <div class="questions-card" id="card-questions">
                                     <div class="questions-card-header">
@@ -1687,6 +1710,7 @@ $end_date   =	date('d-M-Y', $date);
                                     </div>
                                 </div>
                             </div>
+                            @endif {{-- hideMarketSections: job-questions + company-details --}}
                         </div>
                         <div id="interviews" class="tab-panel">
                             <style>

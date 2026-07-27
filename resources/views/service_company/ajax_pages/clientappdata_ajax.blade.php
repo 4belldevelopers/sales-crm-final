@@ -132,10 +132,29 @@
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
                     $percentage =  GeneralMethod::skill_percentage($jobid,$skillArr);
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
+
+                    // Matched vs unmatched skill highlighting — same job
+                    // required-skills source skill_percentage() above already
+                    // reads (job_metronics_skills), phrase-prefix matched via
+                    // GeneralMethod::matchedSkillsList(). No mandatory/starred
+                    // tier — this page has no user-driven skill filter to
+                    // star against.
+                    $jobRequiredSkills = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray();
+                    $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
+                    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+
+                    foreach ($matchedSkillsArr as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
@@ -562,9 +581,9 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
+                        strtoupper(@$row->qualification_name) .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
+                        strtoupper(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
                 </div>';
 
@@ -577,7 +596,17 @@
                     if (!empty($row->posted_by_image)) {
                         $posted_by_image = url('public/user-uploads/team_profile_img/' . @$row->posted_by_image);
                     } 
-                    $post_company_name = @$row->post_company_name;
+                    // The actual company the recruiter (posted_by user) belongs
+                    // to, via users.company_id — not thirdparty_company_id
+                    // (post_company_name) or add_job_wise_condidates.company_id
+                    // (company_name), which don't necessarily match the
+                    // submitting user's own company. Falls back to the older
+                    // fields for any candidate not yet re-indexed since this
+                    // field was added.
+                    $post_company_name = @$row->submitted_by_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->post_company_name;
+                    }
                     if (!$post_company_name) {
                         $post_company_name = @$row->company_name;
                     }
@@ -638,11 +667,16 @@
 												</a>
 											</div>';
                     } else {
+                        // Once sourced, stage ownership passes to the client —
+                        // this is no longer a dead badge but a live trigger
+                        // that surfaces a notice explaining that, instead of
+                        // silently doing nothing (see client_stage_locked_notice
+                        // handler in apptracker/clientapp.blade.php).
                         $html =
                             '<div class="d-flex flex-column">
-												<span href="javascript.void(0);" data-row-id="' .
+												<a href="javascript:void(0);" data-row-id="' .
                             @$row->condidate_id .
-                            '" class="d-flex flex-column ">
+                            '" class="d-flex flex-column client_stage_locked_notice">
 													<span class="badge fw-bolder fs-6 ' .
                             @$row->css_style .
                             ' px-2 py-1">' .
@@ -651,7 +685,7 @@
 													<span class="text-muted fw-bold d-block fs-7 px-3 py-1">' .
                             @$name .
                             '</span>
-												</span>
+												</a>
 											</div>';
                     }
 

@@ -308,6 +308,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$filters = [];
 		$customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
 
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads for the row Match % badge), used by the
+		// "Higher Match" sort option below to rank candidates against this
+		// job specifically. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
+
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
@@ -336,9 +342,52 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		switch ($valCheck) {
 			case 1:
+				// Stage grouping (InReview → Sourcing → ... → Rejected) stays
+				// the primary sort here too — same as the default view —
+				// with newest-upload-date as the secondary tiebreak within
+				// each stage, matching what the sort label promises instead
+				// of a flat created_at sort that ignores stage entirely.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'desc']];
 				break;
 			case 2:
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			case 3:
@@ -510,6 +559,80 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				break;
 			case 8:
 				$sort[] = ['total_exp' => ['order' => 'asc', 'unmapped_type' => 'float']];
+				break;
+			case 10: // Higher Match — stage grouping (In-Review → Sourcing →
+				// Screening → ... → Rejected) STAYS the primary sort, same
+				// as the default view; this only replaces the secondary
+				// "id desc" tiebreak within each stage with match ranking,
+				// so a Screening candidate can never outrank an In-Review
+				// one just for matching better — it only reorders who's
+				// shown first WITHIN In-Review, WITHIN Sourcing, etc.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				// Ranks by how many of the job's own required skills
+				// (job_metronics_skills) this candidate's skill list
+				// satisfies. doc['...keyword'].contains(s) checks EXACT list
+				// membership, not substring — so a required "java" never
+				// matched a candidate skill of "Java Developer" (case
+				// mismatch AND no phrase-prefix), leaving the ranking
+				// uncorrelated with the Match % badge shown on the row
+				// (which uses skill_percentage()'s phrase-prefix, case-
+				// insensitive comparison). Reading params._source directly
+				// and doing a lowercase substring check per candidate skill
+				// mirrors that same logic closely enough to sort in the
+				// order the badge implies.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				// Same stage, same match count — whoever was uploaded/added
+				// first ranks first (not the global "id desc" newest-first
+				// fallback below, which only applies once this also ties).
+				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			default:
 				// Custom job_master_status_id order
@@ -742,18 +865,35 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		$job = $this->job;
 		$jobid = $job->id;
-		$gdFilterData = GeneralMethod::gdFilterData($id);
 
-		// dd($gdFilterData);
-		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		// Single shared source (GeneralMethod::jobDefaultsFromEs(), ES only)
+		// for a job's default skills/location/experience/salary — used here
+		// AND by custome_count_all() (the header counter on every other
+		// AppTracker tab), so the two can't drift out of sync the way
+		// gdFilterData()/JobcitiesTags() (MySQL) vs custome_count_all() (ES)
+		// did: a job edited in MySQL with the ES reindex lagging even
+		// briefly used to make this page and the header counter compute
+		// against genuinely different data, disagreeing on a fresh load
+		// before any filter was touched.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
+
+		$this->default_loc = $jobDefaults->default_loc;
+		// All configured locations for this job, not just the first — the
+		// Similar Candidates filter drawer uses this array to pre-select
+		// every configured city.
+		$this->default_locations = $jobDefaults->default_locations;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		// dd($jobid,$title,$min_exp,$max_exp,$min_salary,$max_salary);
 
@@ -814,6 +954,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			GeneralMethod::skillsAddElastic($skillsAddElastic);
 		}
 
+		// $mandatorySkills tracks only the starred/checked skills (used to
+		// build a strict "must match" clause below). $requiredSkills is
+		// EVERY entered skill, checked or not — it previously got
+		// overwritten to contain ONLY the checked skills the moment any
+		// skill was starred, which silently dropped every other typed
+		// skill from filtering AND from the relevance-sort script AND
+		// from the "Match %" badge (all three read $requiredSkills). A
+		// recruiter starring one skill out of four was unknowingly
+		// discarding the other three everywhere, not just marking one as
+		// required. $requiredSkills now always reflects everything typed;
+		// $mandatorySkills is the separate, additive "must have" set.
+		$mandatorySkills = [];
 		if (\request('cus_search') != "") {
 
 			$checkedSkills = array_filter($custom_search, function ($skill) {
@@ -824,15 +976,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				return $skill['checked'] == false;
 			});
 
-			if (!empty($checkedSkills)) {
-				$requiredSkills = array_column($checkedSkills, 'value');
-			} else {
-				$requiredSkills = array_column($uncheckedSkills, 'value');
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 
 		}
 
-		// dd($requiredSkills,$custom_search,$checkedSkills,$uncheckedSkills);
+		// dd($requiredSkills,$mandatorySkills,$custom_search,$checkedSkills,$uncheckedSkills);
 
 		$location = request('kt_tagify_location');
 		$custom_location = json_decode($location, true);
@@ -935,11 +1084,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 		$location = array();
+		$locationCityNames = array();
 		if (\request('kt_tagify_location') != "") {
 			foreach ($custom_location as $sval) {
 				$parts = explode('|', $sval['value']);
 				// Trim to remove any leading or trailing whitespace
 				$cityName = trim($parts[0]);
+				$locationCityNames[] = $cityName;
 				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
 				if ($loc_data) {
 					array_push($location, $loc_data->city_id);
@@ -947,6 +1098,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			}
 		}
+
+		// Delhi NCR-style metro clustering: widen $location to include every
+		// city in the same cluster as any selected city (see
+		// resolveLocationCluster() / config/location_clusters.php). The
+		// existing "if (!empty($location))" filter block below is untouched
+		// — it now just filters on the expanded set automatically. Exact
+		// selections still rank first via the priority sort added further
+		// down, and $exactLocationIds is threaded through to the response
+		// mapping so the UI can show a "Nearby" badge on cluster-only rows.
+		$exactLocationIds = array_map('intval', $location);
+		$locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
+		$location = $locationCluster['expanded'];
+		$locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
 		$education = array();
 		if (\request('kt_tagify_education') != "") {
 			foreach ($custom_education as $sval) {
@@ -958,32 +1122,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
-		$relevanceCase = "";
-		if (\request('cus_search') != "") {
-			$relevanceCase = "";
-
-
-			$checkedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == true;
-			});
-
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$value = $skill['value'];
-					$relevanceCase .= " + CASE WHEN job_application_skills.skills LIKE '%{$value}%' THEN 1 ELSE 0 END";
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$value = $skill['value'];
-					$relevanceCase .= " + CASE WHEN job_application_skills.skills LIKE '%{$value}%' THEN 1 ELSE 0 END";
-				}
-			}
-
-		}
+		// (A $relevanceCase block used to sit here, building a MySQL-style
+		// "CASE WHEN ... LIKE" string from the same checked/unchecked skill
+		// split computed above — it was never read anywhere after being
+		// built, since this method queries Elasticsearch, not MySQL. Removed
+		// as dead code rather than left to confuse future readers into
+		// thinking skill relevance is scored via a SQL CASE expression.)
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -994,14 +1138,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$from = ($page - 1) * $size;
         // dd(array_values($requiredSkills));
 		$requiredSkills = array_map('strtolower', $requiredSkills);
-		
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
+
+		// Computed here (not down where the search filter clause is built)
+		// specifically so it can be included in $cachePayload below — the
+		// cache key is derived from this payload, and a parameter left out
+		// of it means two different searches with identical other filters
+		// would collide on the same cache key and one could silently serve
+		// the other's stale results.
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -1060,6 +1213,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				]
 			];
 		}
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -1242,9 +1400,103 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Higher Match — no stage grouping here (this page isn't
+				// stage-gated like the Pool tab). Ranked by: (1) match count
+				// against the job's own required skills, desc; (2) tied on
+				// match — most recently uploaded first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['created_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
 				break;
+		}
+
+		// Metro-cluster expansion (see resolveLocationCluster() above) widens
+		// the location filter to include nearby cities, but the recruiter's
+		// exact pick should still come first. Prepending this makes it the
+		// PRIMARY sort key — every criterion the switch above just built
+		// still applies, but only as the tie-breaker within "exact" and
+		// within "nearby" separately, not across the two groups. Only added
+		// when expansion actually happened (empty city name, or a city with
+		// no configured cluster, both leave $locationClusterExpanded false),
+		// so there's zero extra query cost for jobs/searches that never
+		// touch a clustered city.
+		if (!empty($locationClusterExpanded)) {
+			array_unshift($sort, [
+				'_script' => [
+					'type' => 'number',
+					'script' => [
+						'lang' => 'painless',
+						'source' => 'return params.exactCityIds.contains((int) doc["city_id"].value) ? 0 : 1;',
+						'params' => [
+							'exactCityIds' => array_values($exactLocationIds)
+						]
+					],
+					'order' => 'asc'
+				]
+			]);
 		}
 
 		$mustSubmittedBy = [];
@@ -1305,44 +1557,54 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			]
 		];
 
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
-
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-
-				// APPEND, do not overwrite
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'must' => $must
-								]
-				];
+		// Starred/mandatory skills are a hard requirement (must — every one of
+		// them has to match). Skills typed but left unstarred are additive
+		// once at least one skill is starred: they still boost relevance
+		// (the sort script and the Match % badge both read $requiredSkills,
+		// which includes them) but are never required on their own. This
+		// matches how "mandatory keyword" reads in Naukri-style search —
+		// required PLUS preferred, not required INSTEAD OF preferred, which
+		// is what the previous must/should EITHER-OR branch actually did:
+		// starring one skill silently discarded every other typed skill
+		// from filtering entirely.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
-		}else{
-			if (!empty($requiredSkills)) {
-				$should = [];
 
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 				}
-
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
-				];
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required; adding a minimum would turn them
+				// back into a second hard requirement layered on the must.
+				$skillBool['should'] = $shouldSkills;
 			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			// Nothing starred: unchanged original behaviour — match at
+			// least one of the entered skills.
+			$should = [];
+
+			foreach ($requiredSkills as $skill) {
+				$should[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+
+			$boolQuery['bool']['filter'][] = [
+							'bool' => [
+								'should' => $should,
+								'minimum_should_match' => 1
+							]
+			];
 		}
 
 
@@ -1391,87 +1653,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					$salaryRange['lte'] = (float) $max_salary;
 				}
 
+				// Inclusive of candidates with no salary recorded: a plain
+				// `range` filter only matches documents that HAVE the field,
+				// so a candidate missing salary data would silently vanish
+				// from the results the instant any salary filter was
+				// applied, with no indication why. Matching either "salary
+				// is in range" OR "salary field is missing entirely" keeps
+				// those candidates visible instead of penalizing them for a
+				// data gap that isn't their fault.
 				$boolQuery['bool']['filter'][] = [
-					'range' => [
-						$salaryField => $salaryRange
+					'bool' => [
+						'should' => [
+							['range' => [$salaryField => $salaryRange]],
+							['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+						],
+						'minimum_should_match' => 1,
 					]
 				];
 			}
-		// if (!empty($max_salary)) {
-		// 	// Normalize inputs
-        //     $min = is_numeric($min_salary) ? (float) $min_salary : 0.0;
-        //     $max = is_numeric($max_salary) ? (float) $max_salary : null;
-            
-        //     if($min >0 && $max > 0){
-                
-                
-    	// 		$salaryField = 'ectc_yearly'; // default
-    	// 		switch ($sal_mode) {
-    	// 			case 2: $salaryField = 'ectc_hourly'; break;
-    	// 			case 1: $salaryField = 'ectc_monthly'; break;
-    	// 		}
-    			
-    	// 		$boolQuery['bool']['filter'][] = [
-    	// 			'range' => [
-    	// 				$salaryField => [
-    	// 					'gte' => (float)$min_salary,
-    	// 					'lte' => (float)$max_salary
-    	// 				]
-    	// 			]
-    	// 		];
-			
-                
-        //     }else{
-            
-        //         // Decide salary field
-        //         $salaryField = 'ectc_yearly'; // default
-        //         switch ($sal_mode) {
-        //             case 2:
-        //                 $salaryField = 'ectc_hourly';
-        //                 break;
-        //             case 1:
-        //                 $salaryField = 'ectc_monthly';
-        //                 break;
-        //         }
-                
-        //         // Build salary filter
-        //         $salaryFilter = [
-        //             'bool' => [
-        //                 'should' => [
-        //                     // 1️⃣ Salary >= min (covers numeric values)
-        //                     [
-        //                         'range' => [
-        //                             $salaryField => [
-        //                                 'gte' => $min
-        //                             ]
-        //                         ]
-        //                     ],
-                
-        //                     // 2️⃣ Salary IS NULL (field missing)
-        //                     [
-        //                         'bool' => [
-        //                             'must_not' => [
-        //                                 ['exists' => ['field' => $salaryField]]
-        //                             ]
-        //                         ]
-        //                     ]
-        //                 ],
-        //                 'minimum_should_match' => 1
-        //             ]
-        //         ];
-                
-        //         // Add max salary only if provided and > 0
-        //         if ($max !== null && $max > 0) {
-        //             $salaryFilter['bool']['should'][0]['range'][$salaryField]['lte'] = $max;
-        //         }
-                
-        //         // Attach filter to main query
-        //         $boolQuery['bool']['filter'][] = $salaryFilter;
-        //     }
-		// }
-		// dd($salaryField,$min_salary,$max_salary);
 
-		
 		// Education filter
 		if (!empty($education)) {
 			$boolQuery['bool']['filter'][] = [
@@ -1558,6 +1758,52 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				]
 			];
 
+		}
+
+		// Free-text search box (candidate name, recruiter/ownership, client
+		// or company name, job title/position, location, skills, and Job ID).
+		// Appended to the SAME $boolQuery['bool']['filter'] array every other
+		// filter above uses — that array is AND-ed by Elasticsearch, so this
+		// narrows whatever the other active filters already matched instead
+		// of searching the full unfiltered candidate pool. ($freeTextSearch
+		// itself is computed earlier, alongside $cachePayload, so it's part
+		// of the cache key.)
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'client_name',
+							'company_name',
+							'title^2',
+							'city',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			// job_id is a numeric field — a term/match query against it
+			// errors on non-numeric input rather than just finding zero
+			// matches, so only add this clause when the typed text is
+			// purely digits.
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['job_id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
 		}
 
 		if ($valCheck==22) {
@@ -1677,8 +1923,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills, $exactLocationIds) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -1686,11 +1932,36 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 				    $matchCount = count($matchedSkills);
+					// Split out of matched_skills specifically: which matches
+					// were against a STARRED/mandatory requirement vs just an
+					// entered-but-not-starred one. A recruiter reading the
+					// row should be able to tell "this candidate has the
+					// skill I marked mandatory" apart from "this candidate
+					// happens to have one of my other entered skills too" —
+					// both currently rendered with the identical highlight.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
+					// True when this candidate is only in the results because
+					// of metro-cluster expansion (e.g. a Noida candidate
+					// surfaced by a Gurgaon search) — lets the UI show a
+					// "Nearby" badge instead of silently mixing them in with
+					// the exact-location matches.
+					$candidateCityId = isset($source['city_id']) ? (int) $source['city_id'] : null;
+					$isNearbyLocation = !empty($exactLocationIds)
+						&& $candidateCityId !== null
+						&& !in_array($candidateCityId, $exactLocationIds, true);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills,
+						// The candidate's FULL skill list (already computed above
+						// for the intersect, just not previously exposed) — lets
+						// the results row show every skill the candidate has,
+						// highlighting the ones that match the job instead of
+						// only showing the matched subset and hiding the rest.
+						'all_skills' => $jobSkills,
+						'is_nearby_location' => $isNearbyLocation
 					]);
 				}, $response['hits']['hits']);
 				
@@ -1710,9 +1981,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			// Lets the empty-state message in the results partial distinguish
+			// "no candidates at all for this job" from "no matches for your
+			// current filters/search" — a plain "No data available" reads as
+			// a possible bug once search is AND-ed onto every other filter,
+			// since an over-filtered zero-result state is now more common.
+			$hasActiveFilters = !empty($requiredSkills) || !empty($location) || !empty($education)
+				|| $min_exp !== '' || $max_exp !== ''
+				|| (!empty($app_int_status) && (int) $app_int_status > 0)
+				|| (!empty($app_int_notice) && (int) $app_int_notice > 1)
+				|| !empty($app_int_activity)
+				|| ($min_salary !== null && $min_salary !== '' && $min_salary != 0.00)
+				|| ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00);
+			$search = $freeTextSearch;
 			// dd($data);
 			$responseData  =[
-				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -1724,6 +2008,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 
 	}
+
+
 
 	// Helper method for search conditions
 	protected function getSearchConditions($custom_search, $country) {
@@ -1858,7 +2144,39 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				return null;
 		}
 	}
-	
+
+	// Same synonym-aware match_phrase_prefix approach as
+	// GeneralMethod::buildSkillMatchClause(), but against a flat 'skills'
+	// field — candidates_request_data_ajax()'s index (ELASTIC_CANDIDATES_REQUEST)
+	// has no nested job_application_skills structure, so the shared helper
+	// (hardcoded to that nested path) doesn't apply here.
+	protected function buildFlatSkillMatchClause(string $skill): array
+	{
+		$synonymMap = config('skill_synonyms', []);
+		$variants = array_values(array_unique(array_merge([$skill], $synonymMap[$skill] ?? [])));
+
+		if (count($variants) === 1) {
+			return [
+				'match_phrase_prefix' => [
+					'skills' => $variants[0]
+				]
+			];
+		}
+
+		return [
+			'bool' => [
+				'should' => array_map(function ($variant) {
+					return [
+						'match_phrase_prefix' => [
+							'skills' => $variant
+						]
+					];
+				}, $variants),
+				'minimum_should_match' => 1
+			]
+		];
+	}
+
 	public function clientapp($id, $mstatus_id)
 	{
 
@@ -2104,11 +2422,59 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			return response()->json(cache()->get($cacheKeySet));
 		}
 
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads for the row Match % badge), used by the
+		// "Best Match" sort option below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
+
 		switch ($valCheck) {
 			case 1:
+				// Stage grouping (InReview → Sourcing → ... → Rejected) stays
+				// the primary sort here too — same as the default view —
+				// with newest-upload-date as the secondary tiebreak within
+				// each stage, matching what the sort label promises instead
+				// of a flat created_at sort that ignores stage entirely.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'desc']];
 				break;
 			case 2:
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
 				$sort[] = ['created_at' => ['order' => 'asc']];
 				break;
 			case 3:
@@ -2280,6 +2646,67 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Best Match — stage grouping (In-Review → Sourcing →
+				// Screening → ... → Rejected) STAYS the primary sort, same
+				// as the default view; this only replaces the secondary
+				// "id desc" tiebreak within each stage with match ranking,
+				// then who was uploaded/added first within a tied match
+				// count — mirrors allDataAjax()'s identical case 10.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def orderMap = ['8':0, '1':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7];
+								if (doc.containsKey('job_master_status_id') && !doc['job_master_status_id'].empty) {
+									String val = doc['job_master_status_id'].value.toString();
+									if (orderMap.containsKey(val)) {
+										return orderMap[val];
+									}
+								}
+								return 999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				// Same stage, same match count — whoever was uploaded/added
+				// first ranks first (not the global "id desc" newest-first
+				// fallback below, which only applies once this also ties).
+				$sort[] = ['created_at' => ['order' => 'asc']];
+				break;
 			default:
 				// ✅ Custom job_master_status_id order
 				$orderMapScript = "
@@ -2414,12 +2841,39 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'size' => $size,
 				'sort' => $sort,
 				'query' => $boolQuery,
-				'aggs' => [
-					'status_counts' => [
-						'terms' => [
-							'field' => 'job_master_status_id'
+			]
+		];
+
+		// Kanban stage-pill counts (Sourcing/Screening/.../Rejected) — same
+		// shape and same [7,9]-as-Rejected definition as this page's own
+		// initial-load aggs above, but scoped ONLY by jobId+ClientComID (not
+		// by whichever stage tab or filters are currently active), so every
+		// pill always reflects the true per-stage total. fetchCandidates()'s
+		// success handler already expects these exact keys
+		// (response.SourcingCounter etc.) — they just weren't being
+		// returned, so the pills used to freeze at their page-load values
+		// after any filter/sort/paginate action.
+		$counterParams = [
+			'index' => ELASTIC_CANDIDATES,
+			'body' => [
+				'size' => 0,
+				'query' => [
+					'bool' => [
+						'must' => [
+							['term' => ['jobId' => $jobid]],
+							['term' => ['ClientComID' => $company_id]],
 						]
 					]
+				],
+				'aggs' => [
+					'allCandidate' => ['value_count' => ['field' => 'id']],
+					'Sourcing' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+					'Screening' => ['filter' => ['term' => ['job_master_status_id' => 2]]],
+					'Interview' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+					'Negotiation' => ['filter' => ['term' => ['job_master_status_id' => 4]]],
+					'Offered' => ['filter' => ['term' => ['job_master_status_id' => 5]]],
+					'Joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+					'Rejected' => ['filter' => ['terms' => ['job_master_status_id' => [7, 9]]]],
 				]
 			]
 		];
@@ -2427,6 +2881,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
 			$total = 0;
 			$data = [];
+			$allCandidateCounter = $SourcingCounter = $ScreeningCounter = $InterviewCounter = 0;
+			$NegotiationCounter = $OfferedCounter = $JoinedCounter = $RejectedCounter = 0;
 		}else{
 			$response = $this->elasticService->getClient()->search($params);
 			$total = $response['hits']['total']['value'] ?? 0;
@@ -2434,16 +2890,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				return $hit['_source'];
 			}, $response['hits']['hits']);
 
-			// Extract status-wise count
-			$statusCounts = [];
-			if (isset($response['aggregations']['status_counts']['buckets'])) {
-				foreach ($response['aggregations']['status_counts']['buckets'] as $bucket) {
-					$statusCounts[$bucket['key']] = $bucket['doc_count'];
-				}
-			}
-
+			$counterResponse = $this->elasticService->getClient()->search($counterParams);
+			$allCandidateCounter = $counterResponse['aggregations']['allCandidate']['value'] ?? 0;
+			$SourcingCounter = $counterResponse['aggregations']['Sourcing']['doc_count'] ?? 0;
+			$ScreeningCounter = $counterResponse['aggregations']['Screening']['doc_count'] ?? 0;
+			$InterviewCounter = $counterResponse['aggregations']['Interview']['doc_count'] ?? 0;
+			$NegotiationCounter = $counterResponse['aggregations']['Negotiation']['doc_count'] ?? 0;
+			$OfferedCounter = $counterResponse['aggregations']['Offered']['doc_count'] ?? 0;
+			$JoinedCounter = $counterResponse['aggregations']['Joined']['doc_count'] ?? 0;
+			$RejectedCounter = $counterResponse['aggregations']['Rejected']['doc_count'] ?? 0;
 		}
-	
+
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
@@ -2460,189 +2917,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$app_int_outsource = request('app_int_outsource');
 		$responseData = [
 			'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid'))->render(),
+			'total' => $total,
+			'allCandidateCounter' => $allCandidateCounter,
+			'SourcingCounter' => $SourcingCounter,
+			'ScreeningCounter' => $ScreeningCounter,
+			'InterviewCounter' => $InterviewCounter,
+			'NegotiationCounter' => $NegotiationCounter,
+			'OfferedCounter' => $OfferedCounter,
+			'JoinedCounter' => $JoinedCounter,
+			'RejectedCounter' => $RejectedCounter,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		
-		
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENT_APP_TIME));
 
 		return response()->json($responseData);
-
-
-
-
-
-		$jobApplications = DB::table('job_applications')
-			->select(
-				'job_applications.*',
-				'jobs.title',
-				'jobs.max_salary_currency',
-				'jobs.max_sal_mode',
-				'job_locations.location',
-				'application_status.status as a_status',
-				'clients.name as client_name',
-				'users.name as posted_by',
-				'users.image as posted_by_image',
-				'qualification_master.name as qualification_name',
-				'master_status.name',
-				'master_status.css_style',
-				'state_list.state as state_name',
-				'city_list.city as indian_city_name',
-				'master_status.id as available_status',
-				'companies.company_name',
-				'add_job_wise_condidates.master_status_id as masterstatusid',
-				'add_job_wise_condidates.child_status_id as childstatusid',
-				'add_job_wise_condidates.id as condidate_id'
-			)->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-			->join('master_status', function ($join) {
-				$join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-			})
-			->join('jobs', function ($join) {
-				$join->on('jobs.id', 'add_job_wise_condidates.job_id');
-			})
-			// ->join('jobs', 'jobs.id', 'job_applications.job_id')
-			->join('recommendation_relation', 'recommendation_relation.job_id', 'jobs.id')
-			// ->leftjoin('master_status', 'master_status.id', 'job_applications.master_status_id')
-			->leftjoin('job_skills', 'jobs.id', 'job_skills.job_id')
-			->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-			->leftjoin('clients', 'clients.id', 'jobs.client_id')
-			->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
-			->leftjoin('companies', 'companies.id', 'users.company_id')
-			->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-			->leftjoin('application_status', 'application_status.id', 'job_applications.status_id')
-			->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-			->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id');
-		if (\request('search') != "") {
-			$search = request('search');
-			// $jobApplications = $jobApplications->where('job_applications.full_name', 'LIKE', "%$search%");
-		}
-		if (\request('cus_search') != "") {
-
-			$jobApplications = $jobApplications->where(function ($query) use ($custom_search, $company_id) {
-				$query->where('job_applications.full_name', 'like', "%{$custom_search}%");
-				$query->orWhere('job_applications.email', 'like', "%{$custom_search}%");
-				$query->orWhere('job_applications.phone', 'like', "%{$custom_search}%");
-				$query->orWhere('users.name', 'like', "%{$custom_search}%");
-				$query->orWhere('companies.company_name', 'like', "%{$custom_search}%");
-			});
-		}
-		if ($request->mstatus_id != 'all') {
-			if ($request->mstatus_id == 7) {
-				$jobApplications = $jobApplications->whereIn('add_job_wise_condidates.master_status_id', array(7, 9));
-			} else {
-				$jobApplications = $jobApplications->where('add_job_wise_condidates.master_status_id', $request->mstatus_id);
-			}
-		}
-		if ($request->jobid != '') {
-			$jobApplications = $jobApplications->where('add_job_wise_condidates.job_id', $request->jobid);
-		}
-		$jobApplications = $jobApplications->where('add_job_wise_condidates.thirdparty_company_id', auth()->user()->company_id);
-		$jobApplications = $jobApplications->where('recommendation_relation.to_company_id', auth()->user()->company_id);
-
-		$customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
-		if (\request('sortingfilter') != "") {
-			$valCheck = request('sortingfilter');
-			if ($valCheck == 1) {
-				$jobApplications = $jobApplications->orderBy('add_job_wise_condidates.created_at', 'DESC');
-			} elseif ($valCheck == 2) {
-				$jobApplications = $jobApplications->orderBy('add_job_wise_condidates.created_at', 'ASC');
-			} elseif ($valCheck == 3) {
-				$jobApplications = $jobApplications->orderBy('job_applications.ctc', 'ASC');
-			} elseif ($valCheck == 4) {
-				$jobApplications = $jobApplications->orderBy('job_applications.ctc', 'DESC');
-			} elseif ($valCheck == 5) {
-				$jobApplications = $jobApplications->orderBy('job_applications.np_id', 'ASC');
-			} elseif ($valCheck == 6) {
-				$jobApplications = $jobApplications->orderBy('job_applications.np_id', 'DESC');
-			} elseif ($valCheck == 7) {
-				$jobApplications = $jobApplications->orderBy('job_applications.total_exp', 'DESC');
-			} elseif ($valCheck == 8) {
-				$jobApplications = $jobApplications->orderBy('job_applications.total_exp', 'ASC');
-			} elseif ($valCheck == 9) {
-				$jobApplications = $jobApplications->orderByRaw("FIELD(job_applications.np_id, 'Immediate') DESC")
-					->orderBy('np_id', 'DESC');
-			} else {
-				$jobApplications = $jobApplications->orderByRaw("FIELD(add_job_wise_condidates.master_status_id, " . implode(',', $customOrder) . ")");
-				$jobApplications = $jobApplications->orderby('add_job_wise_condidates.id', 'DESC');
-			}
-
-		} else {
-			$jobApplications = $jobApplications->orderByRaw("FIELD(add_job_wise_condidates.master_status_id, " . implode(',', $customOrder) . ")");
-			$jobApplications = $jobApplications->orderby('add_job_wise_condidates.id', 'DESC');
-		}
-
-		$jobApplications = $jobApplications->groupBy('add_job_wise_condidates.id');
-		
-		$perPage = 10;
-		$page = $request->get('page', 1);
-		// dd($page);
-		$total = count($jobApplications->get());
-		// dd($total);
-		$data = $jobApplications->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-		// dd($total,$data);
-		$jobid = @$request->jobid;
-
-		$pagination = [
-			'total' => $total,
-			'current_page' => $page,
-			'last_page' => ceil($total / $perPage),
-			'listType' => 'allcandidate',
-		];
-		// dd($pagination);
-		$userPermissions = $this->userPermissions;
-		$app_int_activity = request('app_int_activity');
-		$app_int_status = request('app_int_status');
-		$app_int_notice = request('app_int_notice');
-		$sal_mode = request('sal_mode');
-		$min_salary_currency = request('min_salary_currency');
-		$app_int_outsource = request('app_int_outsource');
-
-		$applicationCounter = DB::table('job_applications')
-			->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-
-			->where('add_job_wise_condidates.job_id', '=',$jobid)
-			->where('add_job_wise_condidates.thirdparty_company_id', auth()->user()->company_id)
-			->select(
-				DB::raw("count(add_job_wise_condidates.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined"),
-				DB::raw(
-					"SUM(CASE WHEN add_job_wise_condidates.master_status_id = 7 THEN 1 WHEN add_job_wise_condidates.master_status_id = 9 THEN 1 ELSE 0 END) AS Rejected"
-				)
-			)
-			->groupBy('add_job_wise_condidates.job_id')
-			->first();
-
-			$allCandidateCounter	=	@$applicationCounter->allCandidate > 0 ? @$applicationCounter->allCandidate : 0; 	
-			$SourcingCounter		=	@$applicationCounter->Sourcing > 0 ? @$applicationCounter->Sourcing : 0;
-			$ScreeningCounter		=	@$applicationCounter->Screening > 0 ? @$applicationCounter->Screening : 0 ;		
-			$InterviewCounter		=	@$applicationCounter->Interview > 0 ? @$applicationCounter->Interview : 0;	
-			$NegotiationCounter		=	@$applicationCounter->Negotiation > 0 ? @$applicationCounter->Negotiation : 0;	
-			$OfferedCounter			=	@$applicationCounter->Offered > 0 ? @$applicationCounter->Offered : 0;	
-			$JoinedCounter			=	@$applicationCounter->Joined > 0 ? @$applicationCounter->Joined : 0; 	
-			$RejectedCounter		=	@$applicationCounter->Rejected > 0 ? @$applicationCounter->Rejected : 0;
-
-
-		return response()->json([
-			'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid'))->render(),
-			'allCandidateCounter'=>$allCandidateCounter,
-			'SourcingCounter'=>$SourcingCounter,
-			'ScreeningCounter'=>$ScreeningCounter,
-			'InterviewCounter'=>$InterviewCounter,
-			'NegotiationCounter'=>$NegotiationCounter,
-			'OfferedCounter'=>$OfferedCounter,
-			'JoinedCounter'=>$JoinedCounter,
-			'RejectedCounter'=>$RejectedCounter,
-			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		]);
-
-
 	}
 	public function rec_candidate_assign(Request $request)
 	{
@@ -3087,8 +3376,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 							];
 							GeneralMethod::teamRankElastic($teamRankElastic);
 			
-			// ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
-			GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);			
+			// Horizon isn't consuming this queue in this environment — jobs sit
+			// unprocessed and the candidate never reflects in the UI. Reverted
+			// to synchronous until a worker is confirmed running.
+			GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);
 
 
 		}
@@ -3514,6 +3805,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 
 
+			// Horizon isn't consuming this queue in this environment — jobs sit
+			// unprocessed and the candidate never reflects in the UI. Reverted
+			// to synchronous until a worker is confirmed running.
 			GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
 
 		}
@@ -3699,6 +3993,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
+		// Horizon isn't consuming this queue in this environment — jobs sit
+		// unprocessed and the candidate never reflects in Total Candidates In
+		// Job. Reverted to synchronous until a worker is confirmed running.
 		GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
 
 
@@ -3766,6 +4063,110 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$mstatus_id = $request->input('mstatus_id');
 		$cus_search = $request->input('cus_search');
 
+		// This index (ELASTIC_CANDIDATES_REQUEST) has no nested
+		// job_application_skills structure and no master_status_id/Company
+		// concept — only what's actually in the row partial below is
+		// filterable here: flat 'skills', city_id, qualification,
+		// total_exp, ectc_yearly/monthly/hourly, np_id/
+		// serving_notice_period_mode, outsourcing_type, updated_at. No
+		// Stages or Company filter — this page has neither field.
+		$searchTerms = request('cus_search');
+		$custom_search = json_decode($searchTerms, true);
+
+		$current_date = date('Y-m-d H:i:s');
+		$current_timestamp = strtotime($current_date);
+		$current_previous_30_days = date('Y-m-d H:i:s', strtotime('-30 days', $current_timestamp));
+		$current_previous_60_days = date('Y-m-d H:i:s', strtotime('-60 days', $current_timestamp));
+		$current_previous_90_days = date('Y-m-d H:i:s', strtotime('-90 days', $current_timestamp));
+		$current_previous_180_days = date('Y-m-d H:i:s', strtotime('-180 days', $current_timestamp));
+		$current_previous_1_year = date('Y-m-d H:i:s', strtotime('-365 days', $current_timestamp));
+
+		// $mandatorySkills tracks only the starred/checked skills (used to
+		// build a strict "must match" clause below). $requiredSkills is
+		// EVERY entered skill, checked or not. Mirrors
+		// internal_bench_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid, adapted to this index's flat 'skills' field (see
+		// benchReqBuildSkillMatchClause() below — GeneralMethod::
+		// buildSkillMatchClause() is hardcoded to the nested
+		// job_application_skills.skills path used elsewhere and doesn't
+		// apply to this index).
+		$requiredSkills = [];
+		$mandatorySkills = [];
+		$checkedSkills = [];
+		if (is_array($custom_search)) {
+			$checkedSkills = array_filter($custom_search, function ($skill) {
+				return $skill['checked'] == true;
+			});
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
+		}
+		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
+
+		// Free-text search box (#kt_tagify_2, "search by candidate name,
+		// skills, education or location") — sent as 'search', same as every
+		// other AppTracker page.
+		$freeTextSearch = trim((string) $request->input('search', ''));
+
+		$location = request('kt_tagify_location');
+		$custom_location = json_decode($location, true);
+		$education = request('kt_tagify_education');
+		$custom_education = json_decode($education, true);
+
+		if (\request('min_exp') != "" || \request('max_exp') != "") {
+			$min_exp = request('min_exp');
+			$max_exp = request('max_exp');
+		} else {
+			$min_exp = '';
+			$max_exp = '';
+		}
+
+		$app_int_activity = request('app_int_activity');
+		$app_int_notice = request('app_int_notice');
+		$app_int_outsource = request('app_int_outsource');
+		$sal_mode = request('sal_mode') ?? $job->max_sal_mode;
+		$min_salary_currency = request('min_salary_currency') ?? $job->max_salary_currency;
+		$currency = GeneralMethod::currency();
+		$currencyCheck = $currency[$min_salary_currency] ?? null;
+
+		if (\request('min_sal') != "" || \request('max_sal') != "") {
+			$min_salary = request('min_sal');
+			$max_salary = request('max_sal');
+			if ($min_salary_currency > 0 && $currencyCheck) {
+				$min_salary = GeneralMethod::convertToINR($min_salary, $currencyCheck);
+				$max_salary = GeneralMethod::convertToINR($max_salary, $currencyCheck);
+			}
+		} else {
+			$min_salary = 0;
+			$max_salary = request('max_sal');
+			if ($min_salary_currency > 0 && $currencyCheck && $max_salary) {
+				$max_salary = GeneralMethod::convertToINR($max_salary, $currencyCheck);
+			}
+		}
+
+		$location = array();
+		if (\request('kt_tagify_location') != "" && is_array($custom_location)) {
+			foreach ($custom_location as $sval) {
+				$parts = explode('|', $sval['value']);
+				$cityName = trim($parts[0]);
+				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
+				if ($loc_data) {
+					array_push($location, $loc_data->city_id);
+				}
+			}
+		}
+
+		$education = array();
+		if (\request('kt_tagify_education') != "" && is_array($custom_education)) {
+			foreach ($custom_education as $sval) {
+				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
+				if ($education_data) {
+					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
+					$education = array_merge($education, $educationfiletr);
+				}
+			}
+		}
+
 		$symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
 		$symbolsValue = !empty($symbolsValue) ? $symbolsValue : [
 			0	=>	"INR",
@@ -3812,6 +4213,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		
 
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -3988,6 +4394,74 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc — this index has no
+				// nested job_application_skills structure (no live skill
+				// search exists on this tab), so this reads the flat
+				// comma-separated 'skills' field the row partial already
+				// uses; (2) tied on match — most recently applied first;
+				// (3) still tied — Immediate joiners rank top, then
+				// candidates currently serving notice (date-based), then by
+				// ascending notice-period days (fewer days ranks higher); no
+				// notice-period data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('skills') && params._source.skills != null) {
+									for (s in params._source.skills.toString().splitOnToken(',')) {
+										candidateSkills.add(s.trim().toLowerCase());
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['created_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				// Custom job_master_status_id order
 				$sort[] = ['ac_status' => ['order' => 'asc']];
@@ -4002,7 +4476,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$boolQuery = [
 			'bool' => [
 				'should' => [
-					// First condition
 					[
 						'bool' => [
 							'must' => array_merge([
@@ -4013,12 +4486,158 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					],
 				],
 				'minimum_should_match' => 1,
-				'filter' => $filters // We'll add all filters here
+				'must_not' => [
+					// Exclude already-added candidates (ac_status=1) so they
+					// don't appear in the list and are not counted in the total.
+					['term' => ['ac_status' => 1]],
+				],
+				'filter' => $filters
 			]
 		];
 
+		// Free-text search box: candidate name, designation, current
+		// company, location, and skills, plus an exact ID match when the
+		// typed text is purely numeric.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'current_designation^2',
+							'current_company',
+							'city',
+							'country',
+							'qualification_name',
+							'skills^2',
+						],
+					],
+				],
+			];
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = ['term' => ['candidate_id' => (int) $freeTextSearch]];
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// Skills filter — must(mandatory)+should(optional) hybrid against
+		// the flat 'skills' field (see buildFlatSkillMatchClause() above).
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = $this->buildFlatSkillMatchClause($skill);
+			}
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = $this->buildFlatSkillMatchClause($skill);
+				}
+				$skillBool['should'] = $shouldSkills;
+			}
+			$boolQuery['bool']['filter'][] = ['bool' => $skillBool];
+		} elseif (!empty($requiredSkills)) {
+			$skillShould = [];
+			foreach ($requiredSkills as $skill) {
+				$skillShould[] = $this->buildFlatSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $skillShould,
+					'minimum_should_match' => 1
+				]
+			];
+		}
+
+		// Experience filter
+		$expRange = [];
+		if ($min_exp !== '' && $min_exp !== null) {
+			$expRange['gte'] = (float) $min_exp;
+		}
+		if ($max_exp !== '' && $max_exp !== null) {
+			$expRange['lte'] = (float) $max_exp;
+		}
+		if (!empty($expRange)) {
+			$boolQuery['bool']['filter'][] = ['range' => ['total_exp' => $expRange]];
+		}
+
+		// Salary filter — inclusive of candidates with no salary recorded.
+		$salaryFieldName = match($sal_mode) {
+			0 => 'ectc_yearly',
+			1 => 'ectc_monthly',
+			2 => 'ectc_hourly',
+			default => 'ectc_yearly'
+		};
+		if (($min_salary !== null && $min_salary !== '' && $min_salary != 0.00) || ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00)) {
+			$salaryRange = [];
+			if ($min_salary !== null && $min_salary !== '' && $min_salary != 0.00) {
+				$salaryRange['gte'] = (float) $min_salary;
+			}
+			if ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00) {
+				$salaryRange['lte'] = (float) $max_salary;
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => [
+						['range' => [$salaryFieldName => $salaryRange]],
+						['bool' => ['must_not' => [['exists' => ['field' => $salaryFieldName]]]]],
+					],
+					'minimum_should_match' => 1,
+				]
+			];
+		}
+
+		// Location filter
+		if (!empty($location)) {
+			$boolQuery['bool']['filter'][] = ['terms' => ['city_id' => $location]];
+		}
+
+		// Education filter
+		if (!empty($education)) {
+			$boolQuery['bool']['filter'][] = ['terms' => ['qualification' => $education]];
+		}
+
+		// Notice period filter
+		if (!empty($app_int_notice) && (int) $app_int_notice > 1) {
+			$noticeFilter = $this->getNoticePeriodFilter($app_int_notice, $current_date);
+			if ($noticeFilter) {
+				$boolQuery['bool']['filter'][] = $noticeFilter;
+			}
+		}
+
+		// Activity filter
+		if (!empty($app_int_activity)) {
+			$activityFilter = $this->getActivityFilter(
+				$app_int_activity,
+				$current_previous_30_days,
+				$current_previous_60_days,
+				$current_previous_90_days,
+				$current_previous_180_days,
+				$current_previous_1_year,
+				$current_date
+			);
+			if ($activityFilter) {
+				$boolQuery['bool']['filter'][] = $activityFilter;
+			}
+		}
+
+		// Hiring type filter
+		if ((int) $app_int_outsource > 0) {
+			$boolQuery['bool']['filter'][] = ['term' => ['outsourcing_type' => $app_int_outsource]];
+		}
+
 		if ($valCheck==22) {
-			$today = date('Y-m-d');  
+			$today = date('Y-m-d');
 			$next30 = date('Y-m-d', strtotime('+30 days'));
 
 			// Serving candidates filter
@@ -4103,11 +4722,33 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		}else{
 			$response = $this->elasticService->getClient()->search($params);
 			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
+
+			// If every skill filter is empty, Match % would drop to 0 for
+			// everyone instead of staying meaningful against the job it's
+			// being viewed from.
+			$requiredSkillsForDisplay = !empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort;
+
+			$data = array_map(function ($hit) use ($requiredSkillsForDisplay, $mandatorySkills) {
+				$source = $hit['_source'];
+				// This index has no nested job_application_skills structure —
+				// 'skills' is a flat comma-separated string.
+				$candidateSkills = array_values(array_filter(array_map('trim', explode(',', (string) data_get($source, 'skills', '')))));
+
+				$matchedSkills = GeneralMethod::matchedSkillsList($candidateSkills, $requiredSkillsForDisplay);
+				$matchCount = count($matchedSkills);
+				// Which matches were against a STARRED/mandatory requirement
+				// vs just an entered-but-not-starred one — feeds the 3-tier
+				// skill chip rendering in candidates_request_ajax.blade.php.
+				$matchedMandatorySkills = GeneralMethod::matchedSkillsList($candidateSkills, $mandatorySkills);
+				return array_merge($source, [
+					'matched_skill_count' => $matchCount,
+					'matched_skills' => $matchedSkills,
+					'matched_mandatory_skills' => $matchedMandatorySkills
+				]);
 			}, $response['hits']['hits']);
 		}
-		
+		$requiredSkillsForDisplay = $requiredSkillsForDisplay ?? (!empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort);
+
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
@@ -4124,7 +4765,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$app_int_outsource = request('app_int_outsource');
 
 				$responseData =  [
-					'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','total','jobid','modeFilter','currencyFilter','symbolsFilter'))->render(),
+					'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','total','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+					'total' => $total,
 					'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 				];
 
@@ -4222,28 +4864,34 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 		$this->job = Job::findOrFail($id);
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		// dd($gdFilterData);
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc =GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp =$gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->custome_count = $this->custome_count($id);
 		$return_data = GeneralMethod::custome_count_all($id);
 		$this->pool_counter = $return_data->pool_counter;
 		$this->existing_counter = $return_data->existing_counter;
-		$this->internal_bench_counter = $return_data->internal_bench_counter;		
-		$this->public_bench_counter = $return_data->public_bench_counter;	
-		$this->recomnded_counter = $return_data->recomnded_counter;	
+		$this->internal_bench_counter = $return_data->internal_bench_counter;
+		$this->public_bench_counter = $return_data->public_bench_counter;
+		$this->recomnded_counter = $return_data->recomnded_counter;
 		$this->career_counter = $return_data->career_counter;;
 
 		$this->cities = GeneralMethod::allCities();
@@ -4439,25 +5087,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->where('name', 'admin')
 		// 	->count();
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors similar_existing_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
 		$requiredSkills = [];
+		$mandatorySkills = [];
+		$checkedSkills = [];
 		if (\request('cus_search') != "") {
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$requiredSkills = array_column($checkedSkills, 'value');
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
-
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -4467,13 +5113,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
+		// Free-text search box (#kt_tagify_2, "search by candidate name,
+		// skills, education or location") — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Same multi_match pattern similar_existing_data_ajax()
+		// uses, adapted to this index's actual field names (city_name/
+		// country_name, not city — confirmed via internal_bench_ajax.blade.php).
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -4528,6 +5183,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -4710,6 +5370,73 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated on the bench first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
 				break;
@@ -4737,46 +5464,88 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		
 
 
-		// Skills filter
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
+		// Free-text search box: candidate name, designation, relationship
+		// manager (posted_by, if present on this index), location, skills,
+		// and candidate ID (as an exact match when the typed text is purely
+		// numeric). AND-ed into the same $boolQuery['bool']['filter'] array
+		// every other filter above uses, so it narrows whatever's already
+		// matched rather than searching the unfiltered full bench.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
 
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				// APPEND, do not overwrite
-				$boolQuery['bool']['filter'][] = [
-					'bool' => [
-						'must' => $must
-					]
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
 				];
 			}
-		}else{
-			if (!empty($requiredSkills)) {
 
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// similar_existing_data_ajax(): starred skills are a hard requirement
+		// (must — every one of them has to match), skills typed but left
+		// unstarred stay additive once at least one skill is starred (they
+		// still boost relevance/Match % via $requiredSkills, but are never
+		// required on their own). If nothing is starred, behaviour is
+		// unchanged: match at least one of the entered skills.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
 			$skillShould = [];
 
-				foreach ($requiredSkills as $skill) {
-					$skillShould[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				// append skill filter
-				$boolQuery['bool']['filter'][] = [
-					'bool' => [
-						'should' => $skillShould,
-						'minimum_should_match' => 1
-					]
-				];
-					
+			foreach ($requiredSkills as $skill) {
+				$skillShould[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
+			// append skill filter
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $skillShould,
+					'minimum_should_match' => 1
+				]
+			];
 		}
 
 		// Experience filter
@@ -4981,16 +5750,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
 			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
-			// if (!empty($existingCandidatesQuery)) {
-			// 		$boolQuery['bool']['must_not'][] = [
-			// 			'terms' => [
-			// 				'id' => $existingCandidatesQuery
-			// 			]
-			// 		];
-			// }
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 		if ($valCheck==22) {
-			$today = date('Y-m-d');  
+			$today = date('Y-m-d');
 			$next30 = date('Y-m-d', strtotime('+30 days'));
 
 			// Serving candidates filter
@@ -5101,24 +5870,37 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				];
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
-				$source = $hit['_source'];
-				$jobSkills = collect(data_get($source, 'job_application_skills', []))
-				->pluck('skills')
-				->filter()
-				->unique()
-				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
-					$matchCount = count($matchedSkills);
-					return array_merge($source, [
-						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
-					]);
-				}, $response['hits']['hits']);
+				// "Show All Bench Candidates" clears the Skills tagify along
+				// with every other filter, so $requiredSkills goes empty —
+				// without this fallback, Match % would drop to 0 for
+				// everyone the instant filters are cleared, instead of
+				// staying meaningful against the job it's being viewed from.
+				$requiredSkillsForDisplay = !empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort;
+
+				$data = array_map(function ($hit) use ($requiredSkillsForDisplay, $mandatorySkills) {
+
+			$source = $hit['_source'];
+			$jobSkills = collect(data_get($source, 'job_application_skills', []))
+			->pluck('skills')
+			->filter()
+			->unique()
+			->toArray();
+
+				$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkillsForDisplay);
+				$matchCount = count($matchedSkills);
+				// Which matches were against a STARRED/mandatory requirement
+				// vs just an entered-but-not-starred one — feeds the 3-tier
+				// skill chip rendering in internal_bench_ajax.blade.php.
+				$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
+				return array_merge($source, [
+					'matched_skill_count' => $matchCount,
+					'matched_skills' => $matchedSkills,
+					'matched_mandatory_skills' => $matchedMandatorySkills
+				]);
+			}, $response['hits']['hits']);
 		}
+		$requiredSkillsForDisplay = $requiredSkillsForDisplay ?? (!empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort);
 			
 			$pagination = [
 				'total' => $total,
@@ -5135,7 +5917,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -5162,20 +5944,26 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$company_id = auth()->user()->company_id;
 		$this->job = Job::findOrFail($id);
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc = GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification = GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = '';//$gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->custome_count = $this->custome_count($id);
 		$return_data = GeneralMethod::custome_count_all($id);
@@ -5379,23 +6167,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->where('name', 'admin')
 		// 	->count();
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors internal_bench_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
 		$requiredSkills = [];
+		$mandatorySkills = [];
+		$checkedSkills = [];
 		if (\request('cus_search') != "") {
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$requiredSkills = array_column($checkedSkills, 'value');
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
 
 
@@ -5407,14 +6194,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
-
+		// Free-text search box (#kt_tagify_2, "search by candidate name,
+		// skills, education or location") — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Same multi_match pattern internal_bench_data_ajax()
+		// uses, adapted to this index's field names.
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -5434,7 +6228,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		];
 
 		// dd($cachePayload );
-		
+
 		$versionKey = 'allcareerapplydata_version_user_'.$this->user->id;
 		$version = cache()->get($versionKey, 1);
 		$cacheKeySet = 'ats:allcareerapplydata:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
@@ -5446,6 +6240,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		}
          
 		// $sort[] = ['status' => ['order' => 'asc', 'unmapped_type' => 'long']];
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads for the row Match % badge), used by the
+		// "Best Match" sort option below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -5688,6 +6486,72 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Best Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated first; (3) still tied — Immediate joiners
+				// rank top, then candidates currently serving notice (date-
+				// based), then by ascending notice-period days (fewer days
+				// ranks higher); no notice-period data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				$sort[] = [
 					'_script' => [
@@ -5721,7 +6585,192 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			]
 		];
 
-	
+		// Free-text search box: candidate name, designation, location,
+		// qualification, and skills, plus an exact ID match when the typed
+		// text is purely numeric. AND-ed into the same
+		// $boolQuery['bool']['filter'] array every other filter below uses.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// internal_bench_data_ajax(): starred skills are a hard requirement
+		// (must — every one of them has to match), skills typed but left
+		// unstarred stay additive once at least one skill is starred (they
+		// still boost relevance/Match % via $requiredSkills, but are never
+		// required on their own). If nothing is starred, behaviour is
+		// unchanged: match at least one of the entered skills.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			$skillShould = [];
+
+			foreach ($requiredSkills as $skill) {
+				$skillShould[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $skillShould,
+					'minimum_should_match' => 1
+				]
+			];
+		}
+
+		// Experience filter
+		$expRange = [];
+		if ($min_exp !== '' && $min_exp !== null) {
+			$expRange['gte'] = (float) $min_exp;
+		}
+		if ($max_exp !== '' && $max_exp !== null) {
+			$expRange['lte'] = (float) $max_exp;
+		}
+		if (!empty($expRange)) {
+			$boolQuery['bool']['filter'][] = [
+				'range' => [
+					'total_exp' => $expRange
+				]
+			];
+		}
+
+		// Salary filter — inclusive of candidates with no salary recorded: a
+		// plain range filter only matches documents that HAVE the field, so
+		// a candidate missing salary data would silently vanish the instant
+		// any salary filter was applied.
+		$salaryFieldName = match($sal_mode) {
+			0 => 'ectc_yearly',
+			1 => 'ectc_monthly',
+			2 => 'ectc_hourly',
+			default => 'ectc_yearly'
+		};
+		if (($min_salary !== null && $min_salary !== '' && $min_salary != 0.00) || ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00)) {
+			$salaryRange = [];
+			if ($min_salary !== null && $min_salary !== '' && $min_salary != 0.00) {
+				$salaryRange['gte'] = (float) $min_salary;
+			}
+			if ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00) {
+				$salaryRange['lte'] = (float) $max_salary;
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => [
+						['range' => [$salaryFieldName => $salaryRange]],
+						['bool' => ['must_not' => [['exists' => ['field' => $salaryFieldName]]]]],
+					],
+					'minimum_should_match' => 1,
+				]
+			];
+		}
+
+		// Location filter
+		if (!empty($location)) {
+			$boolQuery['bool']['filter'][] = [
+				'terms' => [
+					'city_id' => $location
+				]
+			];
+		}
+
+		// Education filter
+		if (!empty($education)) {
+			$boolQuery['bool']['filter'][] = [
+				'terms' => [
+					'qualification' => $education
+				]
+			];
+		}
+
+		// Status filter
+		if (!empty($app_int_status) && (int) $app_int_status > 0) {
+			$boolQuery['bool']['filter'][] = [
+				'term' => [
+					'job_master_status_id' => (int) $app_int_status
+				]
+			];
+		}
+
+		// Notice period filter
+		if (!empty($app_int_notice) && (int) $app_int_notice > 1) {
+			$noticeFilter = $this->getNoticePeriodFilter($app_int_notice, $current_date);
+			if ($noticeFilter) {
+				$boolQuery['bool']['filter'][] = $noticeFilter;
+			}
+		}
+
+		// Activity filter
+		if (!empty($app_int_activity)) {
+			$activityFilter = $this->getActivityFilter(
+				$app_int_activity,
+				$current_previous_30_days,
+				$current_previous_60_days,
+				$current_previous_90_days,
+				$current_previous_180_days,
+				$current_previous_1_year,
+				$current_date
+			);
+			if ($activityFilter) {
+				$boolQuery['bool']['filter'][] = $activityFilter;
+			}
+		}
+
+		// Hiring type filter
+		if ((int) $app_int_outsource > 0) {
+			$boolQuery['bool']['filter'][] = [
+				'term' => [
+					'outsourcing_type' => $app_int_outsource
+				]
+			];
+		}
+
+
 
 
 		if ($valCheck==22) {
@@ -5791,7 +6840,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
 		}
 
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
+		if (!empty($existingCandidatesQuery)) {
+			if (!isset($boolQuery['bool']['must_not'])) {
+				$boolQuery['bool']['must_not'] = [];
+			}
+			$boolQuery['bool']['must_not'][] = [
+				'terms' => ['id' => $existingCandidatesQuery]
+			];
+		}
 
 		// Build the final query
 		$params = [
@@ -5836,9 +6895,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				];
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+
+				// If every skill filter is empty (nothing typed, or the drawer
+				// was just cleared), Match % would drop to 0 for everyone
+				// instead of staying meaningful against the job it's being
+				// viewed from.
+				$requiredSkillsForDisplay = !empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort;
+
+				$data = array_map(function ($hit) use ($requiredSkillsForDisplay, $mandatorySkills) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -5846,15 +6911,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkillsForDisplay);
 					$matchCount = count($matchedSkills);
+					// Which matches were against a STARRED/mandatory requirement
+					// vs just an entered-but-not-starred one — feeds the 3-tier
+					// skill chip rendering in career_apply_ajax.blade.php.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills
 					]);
 				}, $response['hits']['hits']);
 		}
-			
+			$requiredSkillsForDisplay = $requiredSkillsForDisplay ?? (!empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort);
+
 			$pagination = [
 				'total' => $total,
 				'current_page' => $page,
@@ -5871,7 +6942,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -5902,20 +6973,26 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		session()->put('job_id', $id);
 
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates() and custome_count_all() (the header
+		// counter on every tab) use, so this page's defaults can't drift
+		// out of sync with the header count the way gdFilterData()/
+		// JobcitiesTags() (MySQL) vs custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
-		// dd($gdFilterData->default_loc);
-		// $this->default_loc = $gdFilterData->default_loc;
-		// $this->qualification = $gdFilterData->qualification;
-		$this->default_loc = GeneralMethod::JobcitiesTags($id);//$gdFilterData->default_loc;
-		$this->qualification ='';// GeneralMethod::allQualificationSelected($id); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp =$gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		$this->default_loc = $jobDefaults->default_loc;
+		$this->qualification = '';// GeneralMethod::allQualificationSelected($id);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->cities = GeneralMethod::allCities();
 		$this->qualificationTag = DB::table('qualification_master')
@@ -6116,24 +7193,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->where('name', 'admin')
 		// 	->count();
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors similar_existing_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
 		$requiredSkills = [];
+		$mandatorySkills = [];
 		if (\request('cus_search') != "") {
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-			if (!empty($checkedSkills)) {
-				foreach ($checkedSkills as $skill) {
-					$requiredSkills = array_column($checkedSkills, 'value');
-				}
-			} else {
-				foreach ($uncheckedSkills as $skill) {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-			}
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
+		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -6142,15 +7219,20 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$page = max((int) $request->input('page', 1), 1);
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
-		$requiredSkills = array_map('strtolower', $requiredSkills);
 
-
+		// Free-text search box (#kt_tagify_2) — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Same multi_match pattern similar_existing_data_ajax()
+		// uses, adapted to this index's actual field names (city_name/
+		// country_name, not city — confirmed via public_bench_ajax.blade.php).
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -6205,6 +7287,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Higher Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -6382,6 +7469,73 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 						'script' => [
 							'lang' => 'painless',
 							'source' => "params['_source']['immediate_join'] == 'Immediate' ? 0 : 1"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
+			case 10: // Higher Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated on the bench first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
 						],
 						'order' => 'asc'
 					]
@@ -6607,50 +7761,89 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 		
-		// Skills filter
+		// Free-text search box: candidate name, designation, relationship
+		// manager (posted_by, if present on this index), location, skills,
+		// and candidate ID (as an exact match when the typed text is purely
+		// numeric). AND-ed into the same $boolQuery['bool']['filter'] array
+		// every other filter above uses, so it narrows whatever's already
+		// matched rather than searching the unfiltered full marketplace.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
 
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-					$must = [];
-
-					foreach ($requiredSkills as $skill) {
-						$must[] = [
-							'match_phrase' => [
-								'job_application_skills.skills' => $skill
-							]
-						];
-					}
-
-					$boolQuery = [
-						'bool' => [
-							'filter' => [
-								[
-									'bool' => [
-										'must' => $must
-									]
-								]
-							]
-						]
-					];
-			}
-		}else{
-			if (!empty($requiredSkills)) {
-				$should = [];
-
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
 				];
 			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// similar_existing_data_ajax()/internal_bench_data_ajax(): starred
+		// skills are a hard requirement (must), unstarred entered skills stay
+		// additive. APPENDED to $boolQuery['bool']['filter'][] — the previous
+		// version of this block REASSIGNED $boolQuery entirely in the
+		// mandatory-skill branch, silently discarding the must_not company_id
+		// (this tab excludes the requesting company's own candidates) and
+		// every other filter (status/education/location/range) already built
+		// above the instant any skill was starred.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+
+			$skillBool = ['must' => $mustSkills];
+
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			$should = [];
+
+			foreach ($requiredSkills as $skill) {
+				$should[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+							'bool' => [
+								'should' => $should,
+								'minimum_should_match' => 1
+							]
+			];
 		}
 
 		if ($valCheck==22) {
@@ -6721,16 +7914,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		}
 
 
-		// $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-		// 	->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-			
-		// 	if (!empty($existingCandidatesQuery)) {
-		// 		$boolQuery['bool']['must_not'][] = [
-		// 			'terms' => [
-		// 				'id' => $existingCandidatesQuery
-		// 			]
-		// 		];
-		// }
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
+
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 
 		// Build the final query
@@ -6777,8 +7970,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -6786,11 +7979,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
+					// Which matches were against a STARRED/mandatory requirement
+					// vs just an entered-but-not-starred one — feeds the 3-tier
+					// skill chip rendering in public_bench_ajax.blade.php.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills
 					]);
 				}, $response['hits']['hits']);
 		}
@@ -6871,19 +8069,32 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->internal_bench_counter = $return_data->internal_bench_counter;		
 		$this->career_counter = $return_data->career_counter;;
 
-
-		$gdFilterData = GeneralMethod::gdFilterData($id);
 		$jobid = $id;
-		// dd($gdFilterData);
-		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates()/internal_bench()/etc. and
+		// custome_count_all() (the header counter on every tab) use, so
+		// this page's defaults can't drift out of sync with the header
+		// count the way gdFilterData()/JobcitiesTags() (MySQL) vs
+		// custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
+
+		$this->default_loc = $jobDefaults->default_loc;
+		// All configured locations for this job, not just the first — the
+		// new filter drawer uses this array to pre-select every configured
+		// city.
+		$this->default_locations = $jobDefaults->default_locations;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 
 
 		$skill_arr = array();
@@ -6939,22 +8150,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			GeneralMethod::skillsAddElastic($skillsAddElastic);
 		}
 
+		// $mandatorySkills tracks only the starred/checked skills (used to
+		// build a strict "must match" clause below). $requiredSkills is
+		// EVERY entered skill, checked or not — it used to get overwritten
+		// to ONLY the checked skills the instant any skill was starred,
+		// silently dropping every other typed skill from filtering, the
+		// sort script, and the Match % badge. Mirrors
+		// similar_existing_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
+		$mandatorySkills = [];
 		if (\request('cus_search') != "") {
-
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-
-			if (!empty($checkedSkills)) {
-				$requiredSkills = array_column($checkedSkills, 'value');
-			} else {
-				$requiredSkills = array_column($uncheckedSkills, 'value');
-			}
-
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
 
 		$location = request('kt_tagify_location');
@@ -7064,11 +8274,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		}
 
 		$location = array();
+		$locationCityNames = array();
 		if (\request('kt_tagify_location') != "") {
 			foreach ($custom_location as $sval) {
 				$parts = explode('|', $sval['value']);
 				// Trim to remove any leading or trailing whitespace
 				$cityName = trim($parts[0]);
+				$locationCityNames[] = $cityName;
 				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
 				if ($loc_data) {
 					array_push($location, $loc_data->city_id);
@@ -7076,6 +8288,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 			}
 		}
+
+		// Delhi NCR-style metro clustering: widen $location to include every
+		// city in the same cluster as any selected city (see
+		// resolveLocationCluster() / config/location_clusters.php). Exact
+		// selections still rank first via the priority sort added further
+		// down, and $exactLocationIds is threaded through to the response
+		// mapping so the UI can show a "Nearby" badge on cluster-only rows.
+		$exactLocationIds = array_map('intval', $location);
+		$locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
+		$location = $locationCluster['expanded'];
+		$locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
+
 		$education = array();
 		if (\request('kt_tagify_education') != "") {
 			foreach ($custom_education as $sval) {
@@ -7097,13 +8321,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$from = ($page - 1) * $size;
         // dd(array_values($requiredSkills));
 		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
 		// dd($requiredSkills);
+
+		// Free-text search box (#kt_tagify_2, now an independent search
+		// field — see the drawer port comment for why it's no longer
+		// synced to the Skills tagify). Computed here, alongside
+		// $cachePayload, so it's part of the cache key.
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -7159,6 +8391,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Best Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
+
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['created_at' => ['order' => 'desc']];
@@ -7341,6 +8579,74 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Best Match — no stage grouping here (this page isn't
+				// stage-gated). Ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match —
+				// most recently uploaded first; (3) still tied — Immediate
+				// joiners rank top, then candidates currently serving
+				// notice (date-based), then by ascending notice-period
+				// days (fewer days ranks higher); no notice-period data at
+				// all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['created_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
 				break;
@@ -7413,10 +8719,34 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
 		}
 
+		// Metro-cluster expansion (see resolveLocationCluster() above) widens
+		// the location filter to include nearby cities, but the recruiter's
+		// exact pick should still come first. Prepending this makes it the
+		// PRIMARY sort key — every criterion built above still applies, but
+		// only as the tie-breaker within "exact" and within "nearby"
+		// separately, not across the two groups. Only added when expansion
+		// actually happened, so there's zero extra query cost for jobs that
+		// never touch a clustered city.
+		if (!empty($locationClusterExpanded)) {
+			array_unshift($sort, [
+				'_script' => [
+					'type' => 'number',
+					'script' => [
+						'lang' => 'painless',
+						'source' => 'return params.exactCityIds.contains((int) doc["city_id"].value) ? 0 : 1;',
+						'params' => [
+							'exactCityIds' => array_values($exactLocationIds)
+						]
+					],
+					'order' => 'asc'
+				]
+			]);
+		}
+
 		$mustSubmittedBy = [];
 
 		$custom_search = "";
-    
+
 		// dd($custom_search);
 
 		// $skillsList = array_filter($requiredSkills, fn($s) => $s !== 'skill');
@@ -7527,12 +8857,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$salaryRange['lte'] = (float) $max_salary;
 			}
 
+			// Inclusive of candidates with no salary recorded: a plain
+			// `range` filter only matches documents that HAVE the field,
+			// so a candidate missing salary data would silently vanish
+			// from the results the instant any salary filter was applied.
 			$boolQuery['bool']['filter'][] = [
-				'range' => [
-					$salaryField => $salaryRange
+				'bool' => [
+					'should' => [
+						['range' => [$salaryField => $salaryRange]],
+						['bool' => ['must_not' => [['exists' => ['field' => $salaryField]]]]],
+					],
+					'minimum_should_match' => 1,
 				]
 			];
 		}
+		// if (!empty($max_salary)) {
 		// if (!empty($max_salary)) {
 		// 	// Normalize inputs
         //     $min = is_numeric($min_salary) ? (float) $min_salary : 0.0;
@@ -7659,44 +8998,87 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 		
-		// Skills filter
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// similar_existing_data_ajax(): starred skills are a hard requirement
+		// (must — every one of them has to match), skills typed but left
+		// unstarred stay additive once at least one skill is starred (they
+		// still boost relevance/Match % via $requiredSkills, but are never
+		// required on their own). If nothing is starred, behaviour is
+		// unchanged: match at least one of the entered skills.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
 
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
+			$skillBool = ['must' => $mustSkills];
 
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 				}
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
 
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'must' => $must
-								]
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			$should = [];
+
+			foreach ($requiredSkills as $skill) {
+				$should[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+							'bool' => [
+								'should' => $should,
+								'minimum_should_match' => 1
+							]
+			];
+		}
+
+		// Free-text search box (#kt_tagify_2, now an independent search
+		// field): candidate name, recruiter/ownership, client or company
+		// name, job title/position, location, skills, and Job ID. AND-ed
+		// into the same $boolQuery['bool']['filter'] array every other
+		// filter above uses, so it narrows whatever's already matched
+		// rather than searching the unfiltered full pool.
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'client_name',
+							'company_name',
+							'title^2',
+							'city',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['job_id' => (int) $freeTextSearch],
 				];
 			}
-		}else{
-			if (!empty($requiredSkills)) {
-				$should = [];
 
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
-				];
-			} 
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
 		}
 
 		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
@@ -7764,8 +9146,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills, $exactLocationIds) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -7773,15 +9155,31 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 				    $matchCount = count($matchedSkills);
+					// Which matches were against a STARRED/mandatory
+					// requirement vs just an entered-but-not-starred one —
+					// feeds the 3-tier skill chip rendering in
+					// dsimilar_existing_ajax.blade.php.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
+					// True when this candidate is only in the results
+					// because of metro-cluster expansion — lets the UI show
+					// a "Nearby" badge instead of silently mixing them in
+					// with the exact-location matches.
+					$candidateCityId = isset($source['city_id']) ? (int) $source['city_id'] : null;
+					$isNearbyLocation = !empty($exactLocationIds)
+						&& $candidateCityId !== null
+						&& !in_array($candidateCityId, $exactLocationIds, true);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills,
+						'all_skills' => $jobSkills,
+						'is_nearby_location' => $isNearbyLocation
 					]);
 				}, $response['hits']['hits']);
 			}
-			
+
 			$pagination = [
 				'total' => $total,
 				'current_page' => $page,
@@ -7797,7 +9195,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -7853,18 +9251,32 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->internal_bench_counter = $return_data->internal_bench_counter;		
 		$this->career_counter = $return_data->career_counter;;
 
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		// ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
+		// same one similar_candidates()/internal_bench()/etc. and
+		// custome_count_all() (the header counter on every tab) use, so
+		// this page's defaults can't drift out of sync with the header
+		// count the way gdFilterData()/JobcitiesTags() (MySQL) vs
+		// custome_count_all() (ES) used to.
+		$jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 		$jobid = $id;
-		// dd($gdFilterData);
-		$this->default_loc = GeneralMethod::JobcitiesTags($jobid);//$gdFilterData->default_loc;
-		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid); // $gdFilterData->qualification;
-		$this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-		$this->max_exp = $gdFilterData->max_exp + 1;
-		$this->min_salary_currency = $gdFilterData->min_salary_currency;
-		$this->min_salary = $gdFilterData->min_salary;
-		$this->max_salary = $gdFilterData->max_salary;
-		$this->min_sal_mode = $gdFilterData->min_sal_mode;
-		$this->default_skill = $gdFilterData->default_skill;
+
+		$this->default_loc = $jobDefaults->default_loc;
+		// All configured locations for this job, not just the first — the
+		// new filter drawer uses this array to pre-select every configured
+		// city.
+		$this->default_locations = $jobDefaults->default_locations;
+		$this->qualification = '';//GeneralMethod::allQualificationSelected($jobid);
+		$this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
+		$this->max_exp = $jobDefaults->max_exp + 1;
+		$this->min_salary_currency = $jobDefaults->min_salary_currency;
+		// Every AppTracker filter drawer defaults Min Salary to 0, not the
+		// job's own min_salary (see custome_count_all()'s salary-floor
+		// comments) — the header counter and this page have to agree on
+		// the same floor or their candidate counts disagree on load.
+		$this->min_salary = 0;
+		$this->max_salary = $jobDefaults->max_salary;
+		$this->min_sal_mode = $jobDefaults->min_sal_mode;
+		$this->default_skill = $jobDefaults->default_skill;
 		// $this->jobclient = Client::findOrFail($this->job->client_id);
 
 		$skill_arr = array();
@@ -8031,22 +9443,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			GeneralMethod::skillsAddElastic($skillsAddElastic);
 		}
 
+		// $mandatorySkills tracks only the starred/checked skills (used to build
+		// a strict "must match" clause below). $requiredSkills is EVERY entered
+		// skill, checked or not — it used to get overwritten to ONLY the checked
+		// skills the instant any skill was starred, silently dropping every other
+		// typed skill from filtering, the sort script, and the Match % badge.
+		// Mirrors internal_bench_data_ajax()'s must(mandatory)+should(optional)
+		// hybrid fix.
+		$mandatorySkills = [];
+		$checkedSkills = [];
 		if (\request('cus_search') != "") {
-
 			$checkedSkills = array_filter($custom_search, function ($skill) {
 				return $skill['checked'] == true;
 			});
-
-			$uncheckedSkills = array_filter($custom_search, function ($skill) {
-				return $skill['checked'] == false;
-			});
-
-			if (!empty($checkedSkills)) {
-				$requiredSkills = array_column($checkedSkills, 'value');
-			} else {
-				$requiredSkills = array_column($uncheckedSkills, 'value');
-			}
-
+			$requiredSkills = array_column($custom_search, 'value');
+			$mandatorySkills = array_column($checkedSkills, 'value');
 		}
 
 
@@ -8092,12 +9503,20 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 		$requiredSkills = array_map('strtolower', $requiredSkills);
+		$mandatorySkills = array_map('strtolower', $mandatorySkills);
+
+		// Free-text search box (#kt_tagify_2, "search by candidate name,
+		// skills, education or location") — the JS already sent this as
+		// 'search' but nothing here ever read it, so typing in the box did
+		// nothing at all. Mirrors internal_bench_data_ajax()'s fix.
+		$freeTextSearch = trim((string) $request->input('search', ''));
 
 		$cachePayload = [
 			'company' => $company_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
+			'search' => $freeTextSearch,
 			'jobid' => $jobid,
 			'cus_search' => $requiredSkills ?? [],
 			'sortingfilter' => $valCheck,
@@ -8116,8 +9535,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			'sal_mode' =>$sal_mode
 		];
 
-		// dd($cachePayload );	
-		
+		// dd($cachePayload );
+
 		$versionKey = 'alldinternalbench_version_user_'.$this->user->id;
 		$version = cache()->get($versionKey, 1);
 		$cacheKeySet = 'ats:alldinternalbench:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
@@ -8151,6 +9570,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'order' => 'desc'
 			]
 		];
+
+		// Job's own required skills (job_metronics_skills — same source
+		// skill_percentage() reads), used by the "Best Match" sort option
+		// below. Fetched once here, not per-row.
+		$jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->values()->toArray();
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['updated_at' => ['order' => 'desc']];
@@ -8333,6 +9757,73 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				break;
+			case 10: // Best Match — ranked by: (1) match count against the
+				// job's own required skills, desc; (2) tied on match — most
+				// recently updated on the bench first; (3) still tied —
+				// Immediate joiners rank top, then candidates currently
+				// serving notice (date-based), then by ascending notice-
+				// period days (fewer days ranks higher); no notice-period
+				// data at all ranks last.
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								def candidateSkills = [];
+								if (params._source.containsKey('job_application_skills')) {
+									for (item in params._source.job_application_skills) {
+										if (item.containsKey('skills') && item.skills != null) {
+											candidateSkills.add(item.skills.toString().toLowerCase());
+										}
+									}
+								}
+								int matchCount = 0;
+								for (req in params.skills) {
+									boolean found = false;
+									for (cand in candidateSkills) {
+										if (cand.contains(req)) { found = true; break; }
+									}
+									if (found) { matchCount += 1; }
+								}
+								return matchCount;
+							",
+							'params' => [
+								'skills' => array_values($jobSkillsForSort)
+							]
+						],
+						'order' => 'desc'
+					]
+				];
+				$sort[] = ['updated_at' => ['order' => 'desc']];
+				$sort[] = [
+					'_script' => [
+						'type' => 'number',
+						'script' => [
+							'lang' => 'painless',
+							'source' => "
+								if (!doc.containsKey('serving_notice_period_mode') || doc['serving_notice_period_mode'].size() == 0) {
+									return 999999999;
+								}
+								int mode = (int) doc['serving_notice_period_mode'].value;
+								if (mode == 2) { return 0.0; }
+								if (mode == 1) { return 1.0; }
+								if (mode == 0) {
+									if (doc.containsKey('np_id.keyword') && doc['np_id.keyword'].size() > 0) {
+										try {
+											double days = Double.parseDouble(doc['np_id.keyword'].value.trim());
+											return 2.0 + days;
+										} catch (Exception e) {}
+									}
+									return 999999999;
+								}
+								return 999999999;
+							"
+						],
+						'order' => 'asc'
+					]
+				];
+				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
 				break;
@@ -8423,7 +9914,46 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				'must_not' => []
 			]
 		];
-       
+
+		// Free-text search box: candidate name, designation, relationship
+		// manager (posted_by, if present on this index), location, skills,
+		// and candidate ID (as an exact match when the typed text is purely
+		// numeric). AND-ed into the same $boolQuery['bool']['filter'] array
+		// every other filter below uses. Mirrors internal_bench_data_ajax().
+		if ($freeTextSearch !== '') {
+			$searchShould = [
+				[
+					'multi_match' => [
+						'query' => $freeTextSearch,
+						'type' => 'best_fields',
+						'fuzziness' => 'AUTO',
+						'fields' => [
+							'full_name^3',
+							'posted_by^2',
+							'current_designation^2',
+							'city_name',
+							'country_name',
+							'qualification_name',
+							'job_application_skills.skills^2',
+						],
+					],
+				],
+			];
+
+			if (ctype_digit($freeTextSearch)) {
+				$searchShould[] = [
+					'term' => ['id' => (int) $freeTextSearch],
+				];
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $searchShould,
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
 		// Experience filter
 	
 
@@ -8621,60 +10151,61 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 		
-		// Skills filter
-
-		if (!empty($checkedSkills)) {
-			if (!empty($requiredSkills)) {
-				$must = [];
-
-				foreach ($requiredSkills as $skill) {
-					$must[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
-				}
-
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'must' => $must
-								]
-				];
+		// Skills filter — must(mandatory)+should(optional) hybrid, mirroring
+		// internal_bench_data_ajax(): starred skills are a hard requirement
+		// (must — every one of them has to match), skills typed but left
+		// unstarred stay additive once at least one skill is starred (they
+		// still boost relevance/Match % via $requiredSkills, but are never
+		// required on their own). If nothing is starred, behaviour is
+		// unchanged: match at least one of the entered skills.
+		if (!empty($mandatorySkills)) {
+			$mustSkills = [];
+			foreach ($mandatorySkills as $skill) {
+				$mustSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 			}
-		}else{
-			if (!empty($requiredSkills)) {
 
-				$should = [];
+			$skillBool = ['must' => $mustSkills];
 
-				foreach ($requiredSkills as $skill) {
-					$should[] = [
-						'match_phrase' => [
-							'job_application_skills.skills' => $skill
-						]
-					];
+			$optionalSkills = array_values(array_diff($requiredSkills, $mandatorySkills));
+			if (!empty($optionalSkills)) {
+				$shouldSkills = [];
+				foreach ($optionalSkills as $skill) {
+					$shouldSkills[] = GeneralMethod::buildSkillMatchClause($skill);
 				}
-				$boolQuery['bool']['filter'][] = [
-								'bool' => [
-									'should' => $should,
-									'minimum_should_match' => 1
-								]
-				];
-			
-			} 
+				// No minimum_should_match here on purpose — these are
+				// preferred, not required.
+				$skillBool['should'] = $shouldSkills;
+			}
+
+			$boolQuery['bool']['filter'][] = [
+				'bool' => $skillBool
+			];
+		} elseif (!empty($requiredSkills)) {
+			$skillShould = [];
+
+			foreach ($requiredSkills as $skill) {
+				$skillShould[] = GeneralMethod::buildSkillMatchClause($skill);
+			}
+			$boolQuery['bool']['filter'][] = [
+				'bool' => [
+					'should' => $skillShould,
+					'minimum_should_match' => 1
+				]
+			];
 		}
 
 		
 
-		// $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-		// 	->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
-		// 	if (!empty($existingCandidatesQuery)) {
-		// 		$boolQuery['bool']['must_not'][] = [
-		// 			'terms' => [
-		// 				'id' => $existingCandidatesQuery
-		// 			]
-		// 		];
-		// }
+			if (!empty($existingCandidatesQuery)) {
+				$boolQuery['bool']['must_not'][] = [
+					'terms' => [
+						'id' => $existingCandidatesQuery
+					]
+				];
+			}
 
 
 
@@ -8722,9 +10253,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				];
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
 				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		
-				$data = array_map(function ($hit) use ($requiredSkills) {
-					
+
+				// "Show All Inhouse Bench" clears the Skills tagify along
+				// with every other filter, so $requiredSkills goes empty —
+				// without this fallback, Match % would drop to 0 for
+				// everyone the instant filters are cleared, instead of
+				// staying meaningful against the job it's being viewed from.
+				$requiredSkillsForDisplay = !empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort;
+
+				$data = array_map(function ($hit) use ($requiredSkillsForDisplay, $mandatorySkills) {
+
 				$source = $hit['_source'];
 				$jobSkills = collect(data_get($source, 'job_application_skills', []))
 				->pluck('skills')
@@ -8732,15 +10270,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkillsForDisplay);
 					$matchCount = count($matchedSkills);
+					// Which matches were against a STARRED/mandatory requirement
+					// vs just an entered-but-not-starred one — feeds the 3-tier
+					// skill chip rendering in dinternal_bench_ajax.blade.php.
+					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills
+						'matched_skills' => $matchedSkills,
+						'matched_mandatory_skills' => $matchedMandatorySkills
 					]);
 				}, $response['hits']['hits']);
 		}
-			
+			$requiredSkillsForDisplay = $requiredSkillsForDisplay ?? (!empty($requiredSkills) ? $requiredSkills : $jobSkillsForSort);
+
 			$pagination = [
 				'total' => $total,
 				'current_page' => $page,
@@ -8755,9 +10299,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
-			
+
 			$responseData = [
-				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -9722,7 +11266,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				->unique()
 				->toArray();
 
-					$matchedSkills = array_values(array_intersect($jobSkills, $requiredSkills));
+					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
 					$matchCount = count($matchedSkills);
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,

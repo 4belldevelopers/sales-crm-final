@@ -87,6 +87,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs_side_bar_job_ajax/data', [ServiceCompanyJobsController::class,'client_job_data_ajax'])->name('jobs.data_client_ajax');
 						Route::get('jobs/viewmore/{id?}', [ServiceCompanyJobsController::class,'viewMore'])->name('jobs.viewmore'); 
 						Route::get('jobs/clientviewmore/{id?}', [ServiceCompanyJobsController::class,'clientviewmore'])->name('jobs.clientviewmore');
+						Route::get('jobs/market-job-detail/{id}', [ServiceCompanyJobsController::class,'marketJobDetail'])->name('jobs.market_job_detail');
 						Route::get('jobs/spartnerlisting/{id?}', [ServiceCompanyJobsController::class,'spartnerlisting'])->name('jobs.spartnerlisting');
 						Route::get('jobs/spartnerlistingview/{id?}', [ServiceCompanyJobsController::class,'boostkeywordsAndrecommendedData'])->name('jobs.spartnerlistingview');
 						Route::get('jobs/requestapproval', [ServiceCompanyJobsController::class,'requestapproval'])->name('jobs.requestapproval'); 
@@ -98,7 +99,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/client_requisition/{id?}', [ServiceCompanyJobsController::class,'client_requisition'])->name('jobs.client_requisition'); 	
 						Route::get('jobs/custom_requisition/{id?}', [ServiceCompanyJobsController::class,'custom_requisition'])->name('jobs.custom_requisition');  
 						Route::get('jobs/market-jobs/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobs');
-						Route::get('market-jobs-list', [ServiceCompanyJobsController::class,'marketJobList'])->name('jobs.marketJobList');
+						Route::get('market-jobs-list/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobList');
 						Route::get('market-jobs-list-ajax', [ServiceCompanyJobsController::class,'marketJobList_ajax'])->name('jobs.marketJobList_ajax'); 
 						Route::get('market/requestaadded', [ServiceCompanyJobsController::class,'marketrequestaadded'])->name('jobs.marketrequestaadded'); 
 						Route::get('auction/send_job_request/{id?}', [ServiceCompanyJobsController::class,'auction_send_job_request'])->name('jobs.auction_send_job_request');
@@ -241,8 +242,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('apptracker/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data'])->name('apptracker.candidates_request_data');
 						Route::get('apptracker_request/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data_ajax'])->name('apptracker.candidates_request_data_ajax');
 						Route::get('apptracker/openRejFrm/{application_id?}/{job_id?}/{parent_status_id?}/{current_child_id?}', [ServiceCompanyAppTrackerController::class,'openRejFrm'])->name('apptracker.openRejFrm');
-						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp']);	
-						Route::get('apptracker/clientappdata', [ServiceCompanyAppTrackerController::class,'clientappdata'])->name('apptracker.clientappdata');
+						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp']);
 						Route::get('apptracker_ajax/clientappdata', [ServiceCompanyAppTrackerController::class,'clientappdata_ajax'])->name('apptracker.clientappdata_ajax');
 						Route::get('apptracker/dsimilar_existing_data', [ServiceCompanyAppTrackerController::class,'dsimilar_existing_data'])->name('apptracker.dsimilar_existing_data');
 						Route::post('apptracker/store', [ServiceCompanyAppTrackerController::class,'store'])->name('apptracker.store');
@@ -404,7 +404,10 @@ Route::group(['middleware' => 'auth'], function () {
 						//#############       	START CUSTOM REPORT MANAGEMENT  
 						Route::resource('customreport', ServiceCompanyCustomreportController::class);                            					
 						//END	  			
-						//#############			START COMPANY ACCOUNT   
+						//#############			START COMPANY ACCOUNT
+
+						Route::get('career-page/settings', [ServiceCompanyAccountSettingsController::class,'careerPageSettings'])->name('career.page.settings');
+						Route::post('career-page/settings/save', [ServiceCompanyAccountSettingsController::class,'careerPageSettingsSave'])->name('career.page.settings.save');
 
 						Route::get('account/google/{id?}', [ServiceCompanyAccountSettingsController::class,'google'])->name('account.google');
 						Route::resource('account', ServiceCompanyAccountSettingsController::class);	
@@ -543,6 +546,8 @@ Route::group(['middleware' => 'auth'], function () {
 			Route::post('custom-checkout-subscribe', [ManageSubscriptionController::class,'customCheckoutSubscribe'])->name('subscribe.customCheckoutSubscribe');
 
 			Route::get('deletecheckout-subscribe', [ManageSubscriptionController::class,'deletecheckout'])->name('subscribe.deletecheckout');
+			Route::post('checkout-subscribe/apply-coupon', [ManageSubscriptionController::class,'applyCoupon'])->name('subscribe.applyCoupon');
+			Route::post('checkout-subscribe/remove-coupon', [ManageSubscriptionController::class,'removeCoupon'])->name('subscribe.removeCoupon');
 			Route::get('cartcheckout-subscribe', [ManageSubscriptionController::class,'cartcheckout'])->name('subscribe.cartcheckout');
 			Route::get('receiptdownload-subscribe/{id?}', [ManageSubscriptionController::class,'receiptdownload'])->name('subscribe.receiptdownload');
 			

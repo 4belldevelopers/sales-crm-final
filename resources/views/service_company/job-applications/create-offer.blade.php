@@ -418,8 +418,11 @@
         .co-footer-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
         .co-btn-close { background: #fff !important; border: 1px solid #d7dae3 !important; color: #5e6278 !important; font-weight: 600 !important; min-width: 110px; height: 40px; border-radius: 8px; }
         .co-btn-close:hover { background: #f5f8fa !important; border-color: #c4c9d6 !important; }
-        .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; }
-        .co-btn-save:hover { background: #0b6cdb !important; border-color: #0b6cdb !important; }
+        .co-btn-save { background: #1b84ff !important; border: 1px solid #1b84ff !important; color: #fff !important; font-weight: 600 !important; min-width: 160px; height: 40px; border-radius: 8px; transition: background .15s, opacity .15s; }
+        .co-btn-save:hover:not(:disabled) { background: #0b6cdb !important; border-color: #0b6cdb !important; }
+        .co-btn-save:disabled { opacity: .72 !important; cursor: not-allowed !important; }
+        .co-btn-save .co-btn-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:co-spin .6s linear infinite; vertical-align:-2px; margin-right:6px; }
+        @keyframes co-spin { to { transform:rotate(360deg); } }
         /* Step 3 footer: Download Offer Letter pinned to the lower-left, Back/Continue stay right */
         .co-step3-footer { justify-content: space-between; }
         .co-step3-footer-right { display: flex; align-items: center; gap: 10px; }
@@ -511,6 +514,53 @@
            Same enterprise card language as steps 2/3. Capped at 12px, Poppins, white background. */
         #step4, #step4 * { font-family: 'Poppins', sans-serif; }
         #step4 { background: #fff; font-size: 12px; }
+
+        /* ── Full-height flex layout for steps 3/4/5 ──
+           KTScroll sets an explicit pixel height on #kt_activities_scroll.
+           Without this block, any step whose content is shorter than the
+           computed height leaves a blank white section at the bottom.
+           .co-step-flex-mode (toggled by syncStepHeader) turns the ancestor
+           chain into a flex column so the active step stretches to fill the
+           full scroll container — no gap, footer stays at the bottom. */
+        #kt_activities_scroll.co-step-flex-mode {
+            display: flex !important;
+            flex-direction: column !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+        #kt_activities_scroll.co-step-flex-mode > .mb-5 {
+            flex: 1 !important;
+            margin-bottom: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #kt_activities_scroll.co-step-flex-mode > .mb-5 > .card-body {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        #kt_activities_scroll.co-step-flex-mode .tab-content-section.active {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            min-height: 0 !important;
+        }
+        /* Step 4: approval layout fills remaining height; each column scrolls independently */
+        #step4.active .co-appr-layout {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            align-items: stretch !important;
+        }
+        #step4.active .co-appr-main,
+        #step4.active .co-appr-side {
+            overflow-y: auto !important;
+        }
+        /* Step 5: the main composer card fills remaining height and scrolls */
+        #step5.active .co-send-card {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+        }
         #step4 h1, #step4 h2, #step4 h3, #step4 h4, #step4 h5 { font-size: 12px !important; font-weight: 700; color: #181c32; margin: 0; }
 
         .co-appr-info-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -821,6 +871,32 @@
 
 
         initSample();
+
+        // Template switcher — swap CKEditor content when the dropdown changes
+        (function () {
+            var companyTpl = {!! json_encode($company_offer_terms ?? '') !!};
+            var agencyTpl  = {!! json_encode($agency_offer_terms ?? '') !!};
+
+            function setEditorContent(html) {
+                if (CKEDITOR.instances['editorterms1']) {
+                    CKEDITOR.instances['editorterms1'].setData(html);
+                } else {
+                    var el = document.getElementById('editorterms1');
+                    if (el) el.value = html;
+                }
+            }
+
+            document.addEventListener('change', function (e) {
+                if (e.target && e.target.id === 'co_tpl_select') {
+                    var val = e.target.value;
+                    if (val === 'agency-offer-letter-template') {
+                        setEditorContent(agencyTpl);
+                    } else {
+                        setEditorContent(companyTpl);
+                    }
+                }
+            });
+        })();
     </script>
 
 
@@ -2593,7 +2669,8 @@
                                     <div class="co-tpl-select-wrap">
                                         <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
                                         <select id="co_tpl_select" class="co-tpl-select">
-                                            <option value="company-offer-letter-template" selected>Company Offer Letter Template</option>
+                                            <option value="company-offer-letter-template" {{ empty($is_bench_candidate) ? 'selected' : '' }}>Company Offer Letter Template</option>
+                                            <option value="agency-offer-letter-template" {{ !empty($is_bench_candidate) ? 'selected' : '' }}>Agency Offer Letter Template</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2692,7 +2769,7 @@
                                 {{-- Shared footer for both tabs: one Back / Save & Next bar, bottom-right --}}
                                 <div class="co-footer-actions co-tpl-footer">
                                     <span class="btn co-btn-close" onclick="prevStep(event,2)">Back</span>
-                                    <button type="button" class="btn co-btn-save" onclick="$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
+                                    <button type="button" class="btn co-btn-save" id="step2SaveBtn" onclick="btnSaveLoading(this);$('#termConditioncreateForm').trigger('submit')">Save & Next</button>
                                 </div>
 
                             </div>
@@ -2952,9 +3029,13 @@
                                 </div>
 
                                 @php
-                                    // Native composer — all values are real (from createOffer's scope); no AJAX loader.
+                                    // Native composer — all values are real (from createOffer's scope); no AJAX loader. condidate_type
                                     $so_name    = trim((string) @$co_candidate_name) ?: (@$application->full_name ?: 'Candidate');
                                     $so_email   = @$co_candidate_email ?: @$application->email;
+                                    if(@$application->condidate_type=='bench_condidate'){
+                                         $bench_assign = DB::table('users')->join('bench_assign','bench_assign.user_id','=','users.id')->select('users.email')->where('bench_assign.bench_applications_id',@$application->id)->first();
+                                        $so_email   = @$bench_assign->email ?? @$application->email;
+                                    }
                                     $so_role    = @$designation ?: @$co_job_title;
                                     $so_exp     = @$application->total_exp;
                                     $so_location = trim((string) (@$application->current_location ?: @$application->city));
@@ -3087,7 +3168,7 @@
                                                 <select class="co-send-input" id="co_send_template">
                                                     <option value="">Select Email Template…</option>
                                                     @foreach($co_send_templates ?? [] as $co_tpl)
-                                                        <option value="{{ $co_tpl->id }}">{{ $co_tpl->display_name }}</option>
+                                                        <option value="{{ $co_tpl->id }}" {{ (!empty($is_bench_candidate) && stripos($co_tpl->display_name, 'Relationship Manager') !== false) ? 'selected' : '' }}>{{ $co_tpl->display_name }}</option>
                                                     @endforeach
                                                 </select>
                                                 <div class="co-send-hint">Choosing a template replaces the Subject and Body below</div>
@@ -3232,27 +3313,52 @@
                 });
 
                 // Function to move to the next step
+                /* ── Save & Next button loading state helpers ── */
+                function btnSaveLoading(btn) {
+                    /* only act on actual button/submit elements, never form or div */
+                    if (!btn || !btn.tagName) return;
+                    var tag = btn.tagName.toUpperCase();
+                    if (tag !== 'BUTTON' && tag !== 'INPUT') return;
+                    /* already in loading state — don't overwrite the saved original */
+                    if (btn.disabled) return;
+                    btn.disabled = true;
+                    btn._origHtml = btn.innerHTML;
+                    btn._origVal  = btn.value;
+                    btn.innerHTML = '<span class="co-btn-spinner"></span>Please wait...';
+                }
+                function btnSaveReset(btn) {
+                    if (!btn || !btn.tagName) return;
+                    var tag = btn.tagName.toUpperCase();
+                    if (tag !== 'BUTTON' && tag !== 'INPUT') return;
+                    btn.disabled = false;
+                    if (btn._origHtml !== undefined) btn.innerHTML = btn._origHtml;
+                    if (btn._origVal  !== undefined) btn.value     = btn._origVal;
+                }
+                /* reset every save button across the whole stepper */
+                function resetAllSaveBtns() {
+                    document.querySelectorAll('.co-btn-save').forEach(function(b) { btnSaveReset(b); });
+                    var inp = document.getElementById('save-form');
+                    if (inp) { inp.disabled = false; if (inp._origVal) inp.value = inp._origVal; }
+                }
+
                 function nextStep(event, currentStep) {
-                    event.preventDefault(); // Prevent form submission
+                    event.preventDefault();
+                    var btn = event.currentTarget || event.target;
                     if (currentStep == 2) {
+                        btnSaveLoading(btn);
                         var id = "{{ $offer_id }}";
                         var url = "{{ route('service_company.cvtracker.previewOfferLettetr', ':id') }}";
                         url = url.replace(':id', id);
-                        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                         var token = "{{ csrf_token() }}";
                         var offerId = "{{ $offer_id }}";
                         $.ajax({
                             type: 'POST',
                             url: url,
-                            data: {
-                                '_token': token,
-                                '_method': 'POST',
-                                'offerId': offerId
-                            },
+                            data: { '_token': token, '_method': 'POST', 'offerId': offerId },
                             cache: false,
                             success: function(response) {
+                                btnSaveReset(btn);
                                 if (response.status == "success") {
-                                    // $('#titleSet').text(response.title)
                                     $('#preview_offer_body_content').html(response.view);
                                     document.getElementById("step" + currentStep).classList.remove("active");
                                     document.getElementById("step" + (currentStep + 1)).classList.add("active");
@@ -3260,15 +3366,21 @@
                                 } else if (response.status == "error") {
                                     Swal.fire("Warning", "Offer letter not ready", "warning");
                                 }
+                            },
+                            error: function() {
+                                btnSaveReset(btn);
+                                Swal.fire("Error", "Something went wrong. Please try again.", "error");
                             }
                         });
-
                     } else {
-                        document.getElementById("step" + currentStep).classList.remove("active");
-                        document.getElementById("step" + (currentStep + 1)).classList.add("active");
-                        if (typeof syncStepHeader === 'function') syncStepHeader();
+                        btnSaveLoading(btn);
+                        setTimeout(function() {
+                            document.getElementById("step" + currentStep).classList.remove("active");
+                            document.getElementById("step" + (currentStep + 1)).classList.add("active");
+                            if (typeof syncStepHeader === 'function') syncStepHeader();
+                            btnSaveReset(btn);
+                        }, 600);
                     }
-
                 }
 
                 // Called by offerSendMail after each approval email is sent — adds a new row to the timeline
@@ -3360,6 +3472,7 @@
                 // Function to move to the previous step
                 function prevStep(event, currentStep) {
                     event.preventDefault();
+                    resetAllSaveBtns();
                     document.getElementById("step" + currentStep).classList.remove("active");
                     document.getElementById("step" + (currentStep - 1)).classList.add("active");
                     if (typeof syncStepHeader === 'function') syncStepHeader();
@@ -5074,7 +5187,13 @@
 
                     $('#createForm').on('submit', function(e) {
                         e.preventDefault();
-                        //  var formData = new FormData($('#createForm')[0]);	
+                        var $submitBtn = document.getElementById('save-form');
+                        /* input[type=submit] can't use innerHTML — use value instead */
+                        if ($submitBtn) {
+                            $submitBtn._origVal = $submitBtn.value;
+                            $submitBtn.disabled = true;
+                            $submitBtn.value = 'Please wait...';
+                        }
                         let formData = new FormData(this);
                         CKEDITOR.replace('kt_docs_tinymce_hidden');
                         $.ajax({
@@ -5082,8 +5201,8 @@
                                 '?_token=' + '{{ csrf_token() }}',
                             type: 'POST',
                             data: formData,
-                            processData: false, // tell jQuery not to process the data
-                            contentType: false, // tell jQuery not to set contentType
+                            processData: false,
+                            contentType: false,
                             redirect: true,
                             success: function(response) {
 
@@ -5097,23 +5216,28 @@
                                     var editorterms1 = CKEDITOR.instances.editorterms1.setData(response.terms);
                                     nextStep(event, 1);
                                     var page = $('#pagination .active_disabled').data('page');
-                                      fetchCandidates(page);
-                                    // tableLoad('load');
+                                    fetchCandidates(page);
+                                    /* btn resets automatically as next step renders */
+                                    if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     return false;
                                 } else if(response.status == 'errors') {
+                                    if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     Swal.fire({
                                         title: "Error",
                                         text: "Main Components must add up to exactly 100%. Please adjust the allocation of your Main Components and try again.",
                                         icon: "warning"
                                     });
                                 }else if(response.status == 'permisionInfo') {
+                                    if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     Swal.fire("Warning", response.view, "warning");
                                 }else{
+                                    if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     Swal.fire("Warning", response.message, "warning");
                                 }
 
                             },
                             error: function(response) {
+                                if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                 // Backend returns one message per empty field (e.g. "Offer point is
                                 // required.", "Bonus offer monthly is required.") — that reads like a
                                 // wall of jargon to a normal user. Group the raw field names into plain,
@@ -5159,9 +5283,9 @@
 
                     $('#termConditioncreateForm').on('submit', function(e) {
                         e.preventDefault();
-                        //  var formData = new FormData($('#createForm')[0]);	
+                        var $triggerBtn = $('#step2SaveBtn')[0];
                         let formData = new FormData(this);
-                        var editorterms1 = CKEDITOR.instances.editorterms1.getData(); //$('#editorterms1').val();	
+                        var editorterms1 = CKEDITOR.instances.editorterms1.getData();
                         var offerId = "{{ $offer_id }}";
                         formData.append('editor1', editorterms1);
                         formData.append('offerId', offerId);
@@ -5170,38 +5294,35 @@
                                 '?_token=' + '{{ csrf_token() }}',
                             type: 'POST',
                             data: formData,
-                            processData: false, // tell jQuery not to process the data
-                            contentType: false, // tell jQuery not to set contentType
+                            processData: false,
+                            contentType: false,
                             redirect: true,
                             success: function(response) {
-
                                 if (response.status == 'success') {
-                                    nextStep(event, 2);
-                                    return false;
+                                    /* nextStep will handle moving to step 3; reset btn after step loads */
+                                    var fakeEvent = { preventDefault: function(){}, currentTarget: $triggerBtn, target: $triggerBtn };
+                                    nextStep(fakeEvent, 2);
                                 } else {
+                                    btnSaveReset($triggerBtn);
                                     Swal.fire("Warning", response.message, "warning");
                                 }
-
                             },
                             error: function(response) {
-                                let errors = response.responseJSON.errors;
-                                let errorMessages = '';
-                                let counter = 1;
-
-                                $.each(errors, function(fieldName, errorMessage) {
-                                    // Add error messages with red color using inline CSS
-                                    errorMessages +=
-                                        `<span style="color:red;">${counter}. ${errorMessage[0]}</span><br>`;
-                                    counter++;
-                                });
-                                // Show error messages in SweetAlert
+                                btnSaveReset($triggerBtn);
+                                var errors = response.responseJSON && response.responseJSON.errors;
+                                var errorMessages = '';
+                                var counter = 1;
+                                if (errors) {
+                                    $.each(errors, function(fieldName, errorMessage) {
+                                        errorMessages += `<span style="color:red;">${counter}. ${errorMessage[0]}</span><br>`;
+                                        counter++;
+                                    });
+                                }
                                 Swal.fire({
                                     title: "Validation Errors",
-                                    html: errorMessages, // Display the errors with HTML content
+                                    html: errorMessages || "An error occurred.",
                                     icon: "warning",
-                                    customClass: {
-                                        popup: 'text-left' // Align the text to the left
-                                    }
+                                    customClass: { popup: 'text-left' }
                                 });
                             }
                         });
@@ -5491,6 +5612,14 @@
                         else if (n === active) coPaintStep(step, 'current');
                         else coPaintStep(step, 'pending');
                     });
+                    /* Full-height flex mode for steps 3-5: stretches the scroll
+                       container so the active step fills the full height with no
+                       blank white gap below the content. */
+                    var sc = document.getElementById('kt_activities_scroll');
+                    if (sc) {
+                        if (active >= 3) sc.classList.add('co-step-flex-mode');
+                        else sc.classList.remove('co-step-flex-mode');
+                    }
                     if (typeof coEnsureStep5Composer === 'function') coEnsureStep5Composer();
                 }
 
@@ -5661,6 +5790,14 @@
                         }
                     });
                 });
+
+                @if(!empty($is_bench_candidate))
+                // Auto-load the Relationship Manager template for bench candidates
+                $(function () {
+                    var $tpl = $('#co_send_template');
+                    if ($tpl.val()) { $tpl.trigger('change'); }
+                });
+                @endif
 
                 // ── Attachments ("+ Add Attachment" — real files, actually sent with the email) ──
                 var coAttachFiles = [];

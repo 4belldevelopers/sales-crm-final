@@ -170,10 +170,30 @@
                     }
                     $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
 
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
+                    // Matched vs unmatched skill highlighting — same job
+                    // required-skills source skill_percentage() above already
+                    // reads (job_metronics_skills), phrase-prefix matched via
+                    // the same GeneralMethod::matchedSkillsList() helper
+                    // Similar Candidates/CV Tracker use, so a required "Java"
+                    // correctly highlights a candidate skill of "Java
+                    // Developer" here too. No mandatory/starred tier — this
+                    // page has no user-driven skill filter to star against.
+                    $jobRequiredSkills = DB::table('job_metronics_skills')->where('job_id', $row->job_id)->pluck('skill_name')->toArray();
+                    $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
+                    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+
+                    foreach ($matchedSkillsArr as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {

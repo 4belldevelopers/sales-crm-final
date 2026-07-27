@@ -72,7 +72,8 @@
         // $min_sal_mode = $salaryMode[$row->min_sal_mode];
         // $max_sal_mode = $salaryMode[$row->max_sal_mode];
         
-        $min_sal_mode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
+        // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
+        $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
         $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
 
         $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
@@ -87,10 +88,10 @@
 
         $recommendation_text = __('messages.clinet_tag');
         $badge ="badge-client";
-        $svg = '<svg width="9" height="9" fill="none" viewBox="0 0 24 24">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2.5"></path>
-            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2.5"></circle>
-            </svg>';
+        // Direct Client only: handshake icon, same green as .badge-client's own text
+        // colour (#09b760) — same icon/colour used on the bench "Placed" listing for
+        // this exact concept (bench-place-candidate-ajax.blade.php).
+        $svg = '<i class="fas fa-handshake" style="color:#09b760;"></i>';
 
         $status = $active = $hold = $inactive = $class = $recommendation_id = '';
         $status = ucwords($row->status);
@@ -103,7 +104,14 @@
         if ($status == 'Inactive') {
             $status = 'Closed';
         }
-        $ulink ='<span data-row-id="' .@$row->id .'" class="badge-hiring ' .@$class .' status_stage" data-toggle="modal" data-target="#status_stage">' . $status .'</span>';
+        // Every job on this tab is recommended to this agency, not owned by it — the click
+        // handler in jobs/index.blade.php reads data-direct-client and shows a message
+        // instead of opening the status drawer (enforced server-side too, in
+        // ServiceCompanyJobsController::newUpdateJobstatus()).
+        $isDirectClientJob = $recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id;
+        // Same status icons as the Job Status drawer's cards (Hiring/Hold/Closed).
+        $statusIcon = $status == 'Hiring' ? 'fa-user-group' : ($status == 'Hold' ? 'fa-pause' : 'fa-box-archive');
+        $ulink ='<span data-row-id="' .@$row->id .'" data-direct-client="' .($isDirectClientJob ? '1' : '0').'" class="badge-hiring ' .@$class .' status_stage"><i class="fas ' .$statusIcon .'"></i>' . $status .'</span>';
         $final_status = '';
         if (
             ($row->final_status == 2 || $row->final_status == 3) &&
@@ -190,7 +198,7 @@
                   {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
                 </div>
                 <div class="sal-row">
-                  {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} {{ $min_sal_mode }}
+                  {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
                 </div>
                 <!-- FIX 4: job type badge here -->
                 <span class="badge-type {{ $badge }}">

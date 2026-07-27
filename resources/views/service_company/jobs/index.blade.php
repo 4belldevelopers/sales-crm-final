@@ -137,6 +137,11 @@
          'clientRequisition' =>@$dataCnt['clientRequisition'],
          'jobRequest' =>@$dataCnt['jobRequest'],
          'productAllowCompany' =>@$productAllowCompany,
+         'userPermissions' =>$userPermissions,
+         'hiringCount'    =>@$dataCnt['hiringCount'],
+         'holdCount'      =>@$dataCnt['holdCount'],
+         'closedCount'    =>@$dataCnt['closedCount'],
+         'allTabCount'    =>@$dataCnt['allTabCount'],
         ];
         $searchbar = [
          'userPermissions'=>$userPermissions
@@ -379,20 +384,49 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
   </div>
 </div>
 <!--end::Staffing Partners sidebar-->
-<div class="modal fade" id="status_stage" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header flex-stack">
-        <h2>Job Status</h2>
-        <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"  id="status_sub_stage_close"> <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
-          </svg>
-          </span> </div>
+<!-- Job Status drawer — replaces the old #status_stage modal. Slides in from the right,
+     capped to 80% of the viewport width on laptop/desktop (per design spec) so the top
+     menu bar stays visible/reachable beside it; expands to full width on small screens
+     where 80% would leave too little room for the two-column layout. Same trigger class
+     (.status_stage) and same AJAX endpoints as before — only the chrome changed. -->
+<style>
+  #status_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+  #status_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  #status_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  #status_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+  #status_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+  #status_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+  #status_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #status_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+  #status_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
+  #status_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
+  #status_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+  #status_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+  #status_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+</style>
+<div id="status_drawer_toggle" style="display:none;"></div>
+<div id="status_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="job-status"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm': '92%', 'lg': '80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#status_drawer_toggle" data-kt-drawer-close="#status_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="sd-topbar">
+      <div class="sd-topbar-left">
+        <span class="sd-topbar-ico"><i class="fas fa-briefcase"></i></span>
+        <div>
+          <div class="sd-topbar-title">Job Status</div>
+          <div class="sd-topbar-sub">Update the job status and manage its visibility across the platform.</div>
+        </div>
       </div>
-      <div class="status_body_content" id="status_body_content"></div>
+      <div class="sd-topbar-right">
+        <button type="button" class="sd-btn-cancel" id="status_sub_stage_close">Cancel</button>
+        <button type="button" class="sd-btn-confirm" id="status_confirm_btn" disabled onclick="newUpdateJobstatus()">
+          <span class="indicator-label changetextupdate">Update Status</span> <i class="fas fa-arrow-right"></i>
+        </button>
+        <span class="sd-close" id="status_drawer_close"><i class="fa fa-xmark"></i></span>
+      </div>
     </div>
+    <div class="status_body_content flex-grow-1" id="status_body_content" style="overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -565,6 +599,15 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
       fetchCandidates();
    	  //  table._fnDraw();
    	});
+
+    // Called from the tab row in jobHeader — filters table and marks tab active
+    function filterJobsByStatus(status) {
+        $('#status').val(status);
+        $('.jh-tab').removeClass('jh-tab-active');
+        $('.jh-tab[data-status="' + status + '"]').addClass('jh-tab-active');
+        localStorage.setItem('currentPageJobs', 1);
+        fetchCandidates(1);
+    }
     
    
    
@@ -593,9 +636,27 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
    	}); 
    	
 		
-  $(document).on('click', '.status_stage', function () { 
-		$('#status_body_content').html('');
-		var id        	=	$(this).data('row-id');	
+  $(document).on('click', '#status_sub_stage_close', function () { $('#status_drawer_close').trigger('click'); });
+
+  $(document).on('click', '.status_stage', function () {
+		// Direct Client jobs (recommended to this company, not owned by it)
+		// stay clickable, but only the owning company may actually change
+		// the status — enforced server-side too, in
+		// ServiceCompanyJobsController::newUpdateJobstatus(). Notify instead
+		// of opening a drawer whose submit would just get rejected.
+		if ($(this).data('direct-client') == 1) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'Restricted',
+				text: 'Direct Client Job Status cannot be changed by Agencies'
+			});
+			return false;
+		}
+		$('#status_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+		$('#status_confirm_btn').prop('disabled', true).css('background', '');
+		$('.changetextupdate').text('Update Status');
+		$('#status_drawer_toggle').trigger('click');
+		var id        	=	$(this).data('row-id');
 		var url       	=	"{{ route('service_company.jobs.editJobStatus',':id') }}";
 		url           	=	url.replace(':id', id);
 		$.ajax({
@@ -603,10 +664,15 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 					url   	: url,
 					success : function (response) {
 						if (response.status == "success") {
-							$('#status_body_content').html(response.view);      
+							$('#status_body_content').html(response.view);
+						} else {
+							$('#status_body_content').html('<div class="text-center py-20 text-danger">Could not load the job status details. Please close and try again.</div>');
 						}
+					},
+					error : function () {
+						$('#status_body_content').html('<div class="text-center py-20 text-danger">Something went wrong loading this job\'s status. Please close and try again.</div>');
 					}
-		}); 			
+		});
 });
 	
 $(document).on('click', '.client-show-detail', function ()
@@ -778,44 +844,42 @@ $(document).on('click', '.client-hm-listing', function ()
             // $.noConflict();
 
             fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
+
+            // Pagination bar markup (service_company.ajax_pages.pagination) uses .pagi-page /
+            // .pagi-arrow buttons and a #rowsPerPageSelect dropdown, not the old .page-link
+            // links this handler used to target — that mismatch is why Next/page-numbers and
+            // the per-page selector did nothing. Disabled states (.pagi-disabled /
+            // .pagi-active-disabled) already carry pointer-events:none in CSS, so clicks on
+            // them never reach here; the :not() below is just a defensive second check.
+            $(document).on('click', '#pagination .pagi-page:not(.pagi-active-disabled), #pagination .pagi-arrow:not(.pagi-disabled)', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('active_disabled')) return;
+                if (!page) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('active_disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+                fetchCandidates(page, $('#search').val());
             });
 
         });
 
-       
           var page_no = localStorage.getItem('currentPageJobs');
                 if (!page_no) {
                     page_no = 1;
                 }
-                
+          localStorage.removeItem('jobsPageSize'); // stale value from before page size was fixed at 10
+          var pageSize = 10;
 
-        function fetchCandidates(page = page_no, search = '') {
+
+        function fetchCandidates(page = page_no, search = '', size = pageSize) {
             var clientid = '1';
             if($('.inputJobSearch').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
+                $('.page-loader').css('display', 'flex');
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -823,13 +887,14 @@ $(document).on('click', '.client-hm-listing', function ()
                   search : $('#inputSearch').val(),
                   custom_hiringtype : $('#hiringtype').val(),
                   employment_type : $('#employment_type').val(),
-                  custom_search : $('.inputJobSearch').val()
+                  custom_search : $('.inputJobSearch').val(),
+                  size : size
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    localStorage.setItem('currentPageJobs', 1);
+                    localStorage.setItem('currentPageJobs', page);
                     $('#allJobList').html(response.html);
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);

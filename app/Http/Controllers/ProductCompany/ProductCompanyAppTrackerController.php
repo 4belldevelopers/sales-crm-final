@@ -713,43 +713,54 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
 			
 			->leftjoin('bench_applications', 'bench_applications.id', 'rec_candidate_assign.source_from_id');
 
-		if ($mstatus_id > 0) {
+		$jobApplications = $jobApplications->where(function ($outer) use ($company_id, $job_id, $search, $mstatus_id) {
 
-			$jobApplications = $jobApplications->where(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
-				if (!empty($search)) {
-					return $query->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('add_job_wise_condidates.job_id', '=', $job_id)->where('job_applications.full_name', 'LIKE', "%$search%");
-				} else {
-					return $query->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('add_job_wise_condidates.job_id', '=', $job_id);
-				}
-			});
-			$jobApplications = $jobApplications->orWhere(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
-				if (!empty($search)) {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
-						->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('job_applications.full_name', 'LIKE', "%$search%");
-				} else {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
-						->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id);
-				}
-			});
+			if ($mstatus_id > 0) {
 
-		} else {
+				$outer->where(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
+					if (!empty($search)) {
+						return $query->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('add_job_wise_condidates.job_id', '=', $job_id)->where('job_applications.full_name', 'LIKE', "%$search%");
+					} else {
+						return $query->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('add_job_wise_condidates.job_id', '=', $job_id);
+					}
+				});
+				$outer->orWhere(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
+					if (!empty($search)) {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
+							->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id)->where('job_applications.full_name', 'LIKE', "%$search%");
+					} else {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
+							->where('add_job_wise_condidates.master_status_id', '=', $mstatus_id);
+					}
+				});
 
-			$jobApplications = $jobApplications->where(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
-				if (!empty($search)) {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
-						->where('job_applications.full_name', 'LIKE', "%$search%");
-				} else {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id);
-				}
-			});
-			$jobApplications = $jobApplications->orWhere(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
-				if (!empty($search)) {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id)->where('job_applications.full_name', 'LIKE', "%$search%");
-				} else {
-					return $query->where('add_job_wise_condidates.job_id', '=', $job_id);
-				}
-			});
-		}
+			} else {
+
+				$outer->where(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
+					if (!empty($search)) {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id)
+							->where('job_applications.full_name', 'LIKE', "%$search%");
+					} else {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id);
+					}
+				});
+				$outer->orWhere(function ($query) use ($company_id, $job_id, $search, $mstatus_id) {
+					if (!empty($search)) {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id)->where('job_applications.full_name', 'LIKE', "%$search%");
+					} else {
+						return $query->where('add_job_wise_condidates.job_id', '=', $job_id);
+					}
+				});
+			}
+		});
+
+		// InReview(8) and agency-Rejected(9) are the submitting agency's
+		// private, pre-sourcing stages — the client company must never see
+		// these candidates until the agency sources them. index()'s own
+		// queries already exclude both; this endpoint (the one that actually
+		// renders the candidate table) was missing the exclusion entirely,
+		// so the "All" tab leaked every InReview/agency-Rejected candidate.
+		$jobApplications = $jobApplications->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9]);
 
 		$jobApplications = $jobApplications->groupBy('job_applications.id');
 		$dataTable = DataTables::of($jobApplications)

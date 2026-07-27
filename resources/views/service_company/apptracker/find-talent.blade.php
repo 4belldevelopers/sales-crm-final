@@ -4,16 +4,9 @@
     </script>
     
     <style>
-         @media only screen and (min-width: 1024px) and (max-width: 1440px) {
-            #kt_activitiesCopy {
-                width: 1025px;
-            }
-        }
-
-        @media only screen and (min-width: 1440px) and (max-width: 2560px) {
-            #kt_activitiesCopy {
-                width: 1200px;
-            }
+         #kt_activitiesCopy {
+            width: 80% !important;
+            max-width: 80% !important;
         }
 
         .selectednotice {
@@ -22,9 +15,16 @@
             color: white !important;
         }
 
+        .table-custom-class {
+            table-layout: fixed;
+            width: 100%;
+        }
         .table-custom-class tbody tr {
-            height: 82px;
+            height: 102px;
             position: relative;
+        }
+        .table-custom-class td, .table-custom-class th {
+            overflow: hidden;
         }
         
     </style>
@@ -34,8 +34,8 @@
 #kt_content_container,.content-area,.main-content{width:100%;max-width:100%;}
 
 #kt_activitiesCopy{
- width:100%!important;
- max-width:100%!important;
+ width:80%!important;
+ max-width:80%!important;
 }
 
 .table-container,
@@ -73,8 +73,8 @@ table{
 }
 
 tbody td{
- white-space:normal!important;
- word-break:break-word;
+ white-space:normal;
+ word-break:normal;
 }
 
 .candidate-cell{
@@ -736,6 +736,89 @@ table{
             }
         }
 
+        .shield-icon {
+            width: 22px;
+            height: 22px;
+            vertical-align: middle;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ── Hero section redesign ── */
+        .hero-section-wrap {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 24px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        }
+        .hero-head-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .hero-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.3;
+        }
+        .hero-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+        .hero-stats-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .h-stat-card {
+            flex: 1 1 160px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 140px;
+        }
+        .h-stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .h-stat-icon svg {
+            width: 20px !important;
+            height: 20px !important;
+        }
+        .h-icon-blue   { background: #eff6ff; color: #2563eb; }
+        .h-icon-green  { background: #f0fdf4; color: #16a34a; }
+        .h-icon-orange { background: #fff7ed; color: #ea580c; }
+        .h-icon-purple { background: #f5f3ff; color: #7c3aed; }
+        .h-stat-num {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .h-stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
         .mobile-menu-btn {
             display: none;
             align-items: center;
@@ -762,6 +845,50 @@ table{
                 display: block;
             }
         }
+    </style>
+    <style>
+    /* ── Filter Drawer ── */
+    #fd-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        z-index: 1045;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+    }
+    #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
+
+    #apptrackerfilter {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 80% !important;
+        height: 100vh !important;
+        z-index: 1050 !important;
+        background: #fff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
+        transform: translateX(100%);
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    #apptrackerfilter.fd-open { transform: translateX(0); }
+
+    #apptrackerfilter .modal-header.flex-stack {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f3f8;
+        flex-shrink: 0;
+    }
+    #apptrackerfilter .apptrackerfilter_body_content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #apptrackerfilter .modal-body { flex: 1; overflow-y: auto; padding: 20px !important; }
+    #apptrackerfilter .modal-footer { flex-shrink: 0; padding: 14px 20px; border-top: 1px solid #f1f3f8; }
+
+    @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
+    @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
     </style>
 
     <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -895,13 +1022,12 @@ table{
             <div id="kt_content_container" class="container-fluid px-3">
 
                 
-                <!--Start Popup-->
-                <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
+                <!--Start Filter Drawer-->
+                <div id="fd-overlay" onclick="fdClose()"></div>
+                <div id="apptrackerfilter" tabindex="-1">
                             <div class="modal-header flex-stack">
                                 <h2>Filter</h2>
-                                <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal"
+                                <div class="btn btn-sm btn-icon btn-active-color-primary" onclick="fdClose()"
                                     id="apptrackerfilter_close">
                                     <span class="svg-icon svg-icon-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -1334,8 +1460,8 @@ table{
                                 <!--</div>-->
                                 <div class="modal-footer flex-center">
                                     <div class="div1">
-                                        <button type="button" id="" class="btn btn-secondary me-3"
-                                            data-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-secondary me-3"
+                                            onclick="fdClose()">Close</button>
                                         <button type="button" id="changetextupdate"
                                             class="btn btn-primary changetextupdate" onclick="filtersdataget()">
                                             <span class="indicator-label">Submit</span></button>
@@ -1349,147 +1475,79 @@ table{
                                     src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716"
                                     type="text/javascript"></script>
                             </div>
-                        </div>
-                    </div>
                 </div>
-                <!--End Popup-->
+                <!--End Filter Drawer-->
 
                 <main class="main-content">
                     <!-- Content Area -->
                     <div class="content-area">
 
                         <!-- HERO -->
-                        <div class="hero-section">
-                            <div class="hero-left">
-                                <div class="hero-title">
-                                Bench Candidates
-                                <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
-                                </svg>
+                        <div class="hero-section-wrap">
+                            <div class="hero-head-row">
+                                <div>
+                                    <div class="hero-title">
+                                        Bench Candidates
+                                        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
+                                        </svg>
+                                    </div>
+                                    <div class="hero-sub">Discover verified bench candidates posted by agencies and add them to your open jobs</div>
                                 </div>
-                                <div class="hero-sub">Discover verified bench candidates requirements posted by clients and apply as an agency</div>
-                                <div class="stats-row">
-                                    <div class="stat-card">
-                                        <div class="stat-icon blue">
+                            </div>
+                            <div class="hero-stats-row">
+                                <div class="h-stat-card">
+                                    <div class="h-stat-icon h-icon-blue">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                                             <circle cx="9" cy="7" r="4"/>
                                             <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                                         </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">344</div>
-                                        <div class="stat-label">Total Agencies</div>
-                                        </div>
                                     </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon green">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">3333</div>
-                                        <div class="stat-label">Verified Agencies</div>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon yellow">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">92</div>
-                                        <div class="stat-label">Highly Rated (4★+)</div>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card with-badge">
-                                        <span class="new-badge">New</span>
-                                        <div class="stat-icon purple">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">24</div>
-                                        <div class="stat-label">AI Matched for You</div>
-                                        </div>
+                                    <div>
+                                        <div class="h-stat-num">344</div>
+                                        <div class="h-stat-label">Total Agencies</div>
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Illustration -->
-                            <div class="illus-svg-wrap">
-                                <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" width="220" height="160">
-                                <!-- Background floating card (left) -->
-                                <rect x="0" y="30" width="90" height="60" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-                                <circle cx="16" cy="60" r="9" fill="#94A3B8" transform="translate(8,0)"/>
-                                <rect x="34" y="52" width="46" height="6" rx="3" fill="#CBD5E1"/>
-                                <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
-                                <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
-                                <!-- Stars -->
-                                <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
-
-                                <!-- Female figure -->
-                                <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                                <!-- Body -->
-                                <rect x="108" y="90" width="24" height="38" rx="4" fill="#2563EB"/>
-                                <!-- Head -->
-                                <circle cx="120" cy="82" r="12" fill="#FBBF24"/>
-                                <!-- Hair -->
-                                <path d="M108 80 Q120 68 132 80" fill="#1E293B"/>
-                                <rect x="108" y="78" width="4" height="14" rx="2" fill="#1E293B"/>
-                                <!-- Collar -->
-                                <path d="M113 90 L120 98 L127 90" fill="white" opacity=".6"/>
-                                <!-- Arms -->
-                                <rect x="100" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                                <rect x="130" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                                <!-- Legs -->
-                                <rect x="112" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <rect x="121" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <!-- Shoes -->
-                                <ellipse cx="115" cy="143" rx="5" ry="3" fill="#111827"/>
-                                <ellipse cx="124" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                                <!-- Male figure -->
-                                <ellipse cx="175" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                                <!-- Body -->
-                                <rect x="163" y="90" width="24" height="38" rx="4" fill="#1E40AF"/>
-                                <!-- Head -->
-                                <circle cx="175" cy="82" r="12" fill="#D97706"/>
-                                <!-- Hair -->
-                                <path d="M163 78 Q175 68 187 78 Q185 72 175 70 Q165 72 163 78Z" fill="#1E293B"/>
-                                <!-- Beard -->
-                                <path d="M168 88 Q175 94 182 88 Q179 92 175 93 Q171 92 168 88Z" fill="#92400E" opacity=".7"/>
-                                <!-- Collar -->
-                                <path d="M168 90 L175 98 L182 90" fill="white" opacity=".6"/>
-                                <!-- Tie -->
-                                <path d="M175 94 L173 108 L175 110 L177 108 Z" fill="#EF4444"/>
-                                <!-- Arms -->
-                                <rect x="155" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                                <rect x="185" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                                <!-- Legs -->
-                                <rect x="167" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <rect x="176" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <!-- Shoes -->
-                                <ellipse cx="170" cy="143" rx="5" ry="3" fill="#111827"/>
-                                <ellipse cx="179" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                                <!-- Handshake -->
-                                <path d="M131 108 Q148 114 164 108" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none"/>
-                                <circle cx="131" cy="108" r="4" fill="#FBBF24"/>
-                                <circle cx="164" cy="108" r="4" fill="#FBBF24"/>
-
-                                <!-- Floating review card (right) -->
-                                <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-                                <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
-                                <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                                <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
-                                <!-- shield check floating -->
-                                <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
-                                <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                </svg>
+                                <div class="h-stat-card">
+                                    <div class="h-stat-icon h-icon-blue">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                            <path d="M9 9h6M9 13h4"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="h-stat-num">3333</div>
+                                        <div class="h-stat-label">Verified Agencies</div>
+                                    </div>
+                                </div>
+                                <div class="h-stat-card">
+                                    <div class="h-stat-icon h-icon-green">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="h-stat-num">92</div>
+                                        <div class="h-stat-label">Highly Rated (4★+)</div>
+                                    </div>
+                                </div>
+                                <div class="h-stat-card">
+                                    <div class="h-stat-icon h-icon-orange">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                            <line x1="12" y1="12" x2="12" y2="16"/>
+                                            <line x1="10" y1="14" x2="14" y2="14"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="h-stat-num">24</div>
+                                        <div class="h-stat-label">AI Matched for You</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1523,7 +1581,7 @@ table{
                                 </select>
                             </div>
                             
-                            <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
+                            <div class="more-filters-btn" onclick="fdOpen()" style="cursor:pointer;">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
                                 </svg>
@@ -1544,13 +1602,13 @@ table{
                                     <thead>
                                         <!--begin::Table row-->
                                         <tr class="fw-bolder text-muted">
-                                            <th class="">Candidate</th>
-                                            <th class="">Experience</th>
-                                            <th class="">Skills</th>
-                                            <th class="">Availability</th>
-                                            <th class="">Location</th>
-                                            <th class="">Expected Salary</th>
-                                            <th class="">Action</th>
+                                            <th style="width:18%;">Talent</th>
+                                            <th style="width:8%;">Experience</th>
+                                            <th style="width:13%;">Skills</th>
+                                            <th style="width:12%;">Availability</th>
+                                            <th style="width:13%;">Location</th>
+                                            <th style="width:14%;">Expected Salary</th>
+                                            <th style="width:15%;">Action</th>
                                         </tr>
                                         <!--end::Table row-->
                                     </thead>
@@ -1583,39 +1641,11 @@ table{
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesCopy_toggle"
         data-kt-drawer-close=".kt_activitiesCopy_close" style="z-index: 9999 !important;">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">Select the job checkbox, then click "Save" to add the candidate</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-
-                  
-                    <div class="">
-                        <button type="button" id="submit-frm-btn" class="btn btn-primary copy_current_selected_applicant d-none"> 
-                            <span class="indicator-label">Save to Jobs</span> 
-                            <span class="indicator-progress">
-                                Please wait...
-                            </span> 
-                        </button>
-                    </div>
-
-
-                    <button type="button"
-                        class="btn btn-sm btn-icon btn-active-light-primary me-n5 kt_activitiesCopy_close"
-                        id="kt_activitiesCopy_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="#000000">
-                                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect fill="#000000" opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
-                            </svg>
-                        </span> </button>
-                </div>
+            <div class="card-toolbar px-4 py-2 d-flex justify-content-end" id="kt_activities_header">
+                <button type="button" id="submit-frm-btn" class="btn btn-primary btn-sm copy_current_selected_applicant d-none me-2">
+                    <span class="indicator-label">Save to Jobs</span>
+                    <span class="indicator-progress">Please wait...</span>
+                </button>
             </div>
             <div class="card-body position-relative px-0 py-0" id="application_copy_body_content"></div>
         </div>
@@ -2127,18 +2157,11 @@ table{
 
         function filtersdataget() {
             $('.changetextupdate').text('Searching....!');
+            fdClose();
             setTimeout(() => {
-                // tableLoad('load');
                 fetchCandidates();
-            }, 1000);
-            var $this = $('#apptrackerfilter');
-            // $this.fadeOut(2000, function() {
-            $this.modal('hide');
-            // });
-            setTimeout(() => {
-                $('#apptrackerfilter_close').click();
-                $('.changetextupdate').text('Submit')
-            }, 2000);
+                $('.changetextupdate').text('Submit');
+            }, 500);
         }
 
         function tableLoad(type) {
@@ -2283,7 +2306,19 @@ table{
 
 
 
+        window._candidateSkills = '';
+        window._candidateInfo   = {};
         $(document).on('click', '.openSideBar', function() {
+            window._candidateSkills = $(this).data('skills') || '';
+            window._candidateInfo   = {
+                name  : $(this).data('cname')  || '',
+                desig : $(this).data('cdesig') || '',
+                exp   : $(this).data('cexp')   || '',
+                ctc   : $(this).data('cctc')   || '',
+                np    : $(this).data('cnp')    || '',
+                loc   : $(this).data('cloc')   || '',
+                type  : $(this).data('ctype')  || ''
+            };
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.talent-add', ':id') }}";
@@ -2316,11 +2351,12 @@ table{
 
                     if (response.status == "success") {
                         $('#application_copy_body_content').html(response.view);
+                        setTimeout(function(){ if(typeof updateBenchHero==='function') updateBenchHero(); }, 80);
                     }
                 }
             });
         });
-   
+
 
 
 
@@ -2653,7 +2689,18 @@ table{
 
 
 
-        
+
+    function fdOpen() {
+        document.getElementById('apptrackerfilter').classList.add('fd-open');
+        document.getElementById('fd-overlay').classList.add('fd-open');
+        document.body.style.overflowY = 'hidden';
+    }
+    function fdClose() {
+        document.getElementById('apptrackerfilter').classList.remove('fd-open');
+        document.getElementById('fd-overlay').classList.remove('fd-open');
+        document.body.style.overflowY = '';
+    }
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
 
     </script>
 @endpush

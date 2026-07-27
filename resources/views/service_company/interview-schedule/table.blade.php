@@ -256,6 +256,10 @@
 /* Old table compatibility */
 #Interview-trackers { display: contents; }
 
+/* Hide the duplicate "Showing X to Y of Z" text that comes from the
+   pagination partial — the #showingText div already provides this. */
+#pagination .pagi-info { display: none !important; }
+
 /* Follow Up Dropdown */
 .it-followup-dropdown { position: relative; display: inline-block; margin-top: 2px; }
 .it-followup-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: var(--it-radius); font-size: 10px; font-weight: 500; font-family: 'Poppins', sans-serif; border: 1px solid var(--it-border); background: white; color: var(--it-text-muted); cursor: pointer; transition: var(--it-transition); }
@@ -743,52 +747,30 @@ $(document).on('click', '.interview_mention_link', function(){
     });
 });
 
-$(document).ready(function() {
-    fetchCandidates();
+// ── Pagination state ────────────────────────────────────────────────────────
+var itCurrentPage = 1;
+var itCurrentSize = 10;
 
-    $(document).on('click', '#pagination .page-link', function(e) {
+$(document).ready(function() {
+    fetchCandidates(1);
+
+    // Delegate clicks to both page-number buttons and prev/next arrows rendered
+    // by the pagination.blade.php partial (class .pagi-page and .pagi-arrow).
+    $(document).on('click', '#pagination [data-page]', function(e) {
         e.preventDefault();
-        const page = $(this).data('page');
-        if (!page || $(this).hasClass('disabled')) return;
-        $(this).addClass('disabled');
-        fetchCandidates(page, $('#search').val()).then(() => {
-            $('#pagination .page-link').removeClass('disabled');
-        }).catch(() => {
-            $('#pagination .page-link').removeClass('disabled');
-        });
+        var page = parseInt($(this).data('page'), 10);
+        if (!page || page < 1 || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+        itCurrentPage = page;
+        fetchCandidates(itCurrentPage);
+    });
+
+    // "Rows per page" select rendered inside #pagination by the partial.
+    $(document).on('change', '#pagination [data-perpage]', function() {
+        itCurrentSize = parseInt($(this).val(), 10) || 10;
+        itCurrentPage = 1;
+        fetchCandidates(itCurrentPage);
     });
 });
-
-function fetchCandidates(page = 1, search = '') {
-    var clientid = '1';
-    if($('#kt_tagify_2').val()!=''){
-        $('.loader_search').css({ display: 'block' });
-    }else{
-        $('.page-loader').css('display', 'flex');
-    }
-    $.ajax({
-        url: `{!! route('service_company.interview-schedule.data_ajax') !!}?page=${page}`,
-        type: 'GET',
-        data: {
-            custom_status: $('#status').val(),
-            search: $('#inputSearch').val(),
-            custom_hiringtype: $('#sortingfilter').val(),
-            custom_search: $('#kt_tagify_2').val()
-        },
-        success: function(response) {
-            $('.loadingMessage').css({ display: 'none' });
-            $('.loader_search').css({ display: 'none' });
-            $('.page-loader').css('display', 'none');
-            $('#Interview-trackers').html(response.html);
-            $('#pagination').html(response.pagination);
-
-            // Update showing text if total is provided
-            if(response.total) {
-                $('#showingText').text('Showing ' + response.total + ' entries');
-            }
-        }
-    });
-}
 
 async function isInternetAvailablecheck() {
     try {
@@ -941,28 +923,36 @@ function setFollowUpStatus(el, id, status) {
     });
 }
 
-// Update fetchCandidates to include new filters and update stats
-function fetchCandidates(page = 1, search = '') {
-    var clientid = '1';
-    if($('#kt_tagify_2').val()!=''){
+// Update fetchCandidates to include new filters and update stats.
+// Page is driven by itCurrentPage; size is driven by itCurrentSize.
+function fetchCandidates(page, search) {
+    // Accept an explicit page argument (e.g. from resetFilters) but always
+    // keep itCurrentPage in sync so the pagination handler stays coherent.
+    if (page !== undefined) { itCurrentPage = page; }
+    if (search !== undefined) { /* search arg ignored; read from DOM below */ }
+
+    if ($('#kt_tagify_2').val() !== '') {
         $('.loader_search').css({ display: 'block' });
-    }else{
+    } else {
         $('.page-loader').css('display', 'flex');
     }
+
     $.ajax({
-        url: `{!! route('service_company.interview-schedule.data_ajax') !!}?page=${page}`,
+        url: '{!! route('service_company.interview-schedule.data_ajax') !!}',
         type: 'GET',
         data: {
-            custom_status: $('#status').val(),
-            search: $('#inputSearch').val(),
-            custom_hiringtype: $('#sortingfilter').val(),
-            custom_search: $('#kt_tagify_2').val(),
-            tab: activeTab,
-            stage_filter: filterValues.stage,
-            status_filter: filterValues.status,
-            owner_filter: filterValues.owner,
-            vendor_filter: filterValues.vendor,
-            mode_filter: filterValues.mode
+            page:               itCurrentPage,
+            size:               itCurrentSize,
+            custom_status:      $('#status').val(),
+            search:             $('#inputSearch').val(),
+            custom_hiringtype:  $('#sortingfilter').val(),
+            custom_search:      $('#kt_tagify_2').val(),
+            tab:                activeTab,
+            stage_filter:       filterValues.stage,
+            status_filter:      filterValues.status,
+            owner_filter:       filterValues.owner,
+            vendor_filter:      filterValues.vendor,
+            mode_filter:        filterValues.mode
         },
         success: function(response) {
             $('.loadingMessage').css({ display: 'none' });
@@ -971,13 +961,18 @@ function fetchCandidates(page = 1, search = '') {
             $('#Interview-trackers').html(response.html);
             $('#pagination').html(response.pagination);
 
-            // Update showing text if total is provided
-            if(response.total) {
-                $('#showingText').text('Showing ' + response.total + ' entries');
+            // Update the "showing" text – prefer the richer from/to info if
+            // the server returned it, otherwise fall back to a simple total.
+            if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
+                $('#showingText').text(
+                    'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' records'
+                );
+            } else if (response.total) {
+                $('#showingText').text('Showing ' + response.total + ' records');
             }
 
             // Update stats if provided (set unconditionally so 0 shows correctly)
-            if(response.stats) {
+            if (response.stats) {
                 $('#stat-interview-month').text(response.stats.interview_month ?? 0);
                 $('#stat-today').text(response.stats.today ?? 0);
                 $('#stat-upcoming').text(response.stats.upcoming ?? 0);
@@ -985,14 +980,14 @@ function fetchCandidates(page = 1, search = '') {
             }
 
             // Update tab counts if provided
-            if(response.tab_counts) {
-                if(response.tab_counts.all) $('#tab-count-all').text(response.tab_counts.all);
-                if(response.tab_counts.today) $('#tab-count-today').text(response.tab_counts.today);
-                if(response.tab_counts.upcoming) $('#tab-count-upcoming').text(response.tab_counts.upcoming);
-                if(response.tab_counts.pending_feedback) $('#tab-count-pending').text(response.tab_counts.pending_feedback);
-                if(response.tab_counts.selected) $('#tab-count-selected').text(response.tab_counts.selected);
-                if(response.tab_counts.rejected) $('#tab-count-rejected').text(response.tab_counts.rejected);
-                if(response.tab_counts.rescheduled) $('#tab-count-rescheduled').text(response.tab_counts.rescheduled);
+            if (response.tab_counts) {
+                if (response.tab_counts.all)             $('#tab-count-all').text(response.tab_counts.all);
+                if (response.tab_counts.today)           $('#tab-count-today').text(response.tab_counts.today);
+                if (response.tab_counts.upcoming)        $('#tab-count-upcoming').text(response.tab_counts.upcoming);
+                if (response.tab_counts.pending_feedback)$('#tab-count-pending').text(response.tab_counts.pending_feedback);
+                if (response.tab_counts.selected)        $('#tab-count-selected').text(response.tab_counts.selected);
+                if (response.tab_counts.rejected)        $('#tab-count-rejected').text(response.tab_counts.rejected);
+                if (response.tab_counts.rescheduled)     $('#tab-count-rescheduled').text(response.tab_counts.rescheduled);
             }
         }
     });
