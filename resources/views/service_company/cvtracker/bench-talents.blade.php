@@ -1,4 +1,4 @@
-@php 
+@php
 		use App\Helper\GeneralMethod;
 @endphp
 <style>
@@ -7,6 +7,21 @@
 .symbol1 .symbol-label1{width: 32px!important; height: 32px!important;}
 .table > :not(caption) > * > *{padding: 0rem 0.4rem;}
 
+/* ── Bench Talents drawer — matches Inhouse Talents design language ── */
+.bench-bt, .bench-bt * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
+.bench-bt .table thead tr th {
+    font-size: 11px !important; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #a1a5b7; padding: 8px 6px !important;
+    border-bottom: 2px solid #f1f3f8; white-space: nowrap;
+}
+.bench-bt .table tbody tr { border-bottom: 1px solid #f1f3f8; }
+.bench-bt .table tbody tr:hover { background: #fafbff; }
+.bench-bt .table tbody td { padding: 8px 6px !important; vertical-align: top; }
+.bench-bt .table .fs-6 { font-size: 13px !important; }
+.bench-bt .table .fs-7 { font-size: 11px !important; }
+
+/* Skill chips in the footer strip */
+.bench-bt .skill { font-size: 10px !important; font-weight: 300 !important; }
 </style>
 <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
   <input type="hidden" name="hid_job_id" id="hid_job_id" value="" />
@@ -214,24 +229,25 @@
 
 
         
-        <table class="table align-middle table-row-dashed fs-6 gy-5">
+        <div class="bench-bt">
+        <table class="table align-middle table-row-dashed fs-6">
           <thead>
             <tr class="fw-bolder text-muted">
-              <th class="">Talent Name</th>
-              <th class="">Exp.</th>
-              <th class="">Rates</th>
-              <th class="">Education</th>
-              <th class="">Availability</th>
-              <th class="">Location</th>
-              <th class="">Status</th>
-              <th class="">Upload</th>
-              <th class="">Manager</th>
-              <th class="">Action</th>
+              <th>Talent Name</th>
+              <th>Exp.</th>
+              <th>Rates</th>
+              <th>Education</th>
+              <th>Availability</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Upload</th>
+              <th>Relationship Manager</th>
+              <th>Action</th>
             </tr>
           </thead>
-		   <tbody class="text-gray-600 fw-bold" id="copyJobTable">
-            </tbody>
+          <tbody class="text-gray-600 fw-bold" id="copyJobTable"></tbody>
         </table>
+        </div>
 		 <div id="paginationcopy"></div>
       </div>
     </div>
@@ -297,9 +313,17 @@
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    $('#copyJobTable').html(response.html);
-                    $('#paginationcopy').html(response.pagination);
+                    if (response && response.html !== undefined) {
+                        $('#copyJobTable').html(response.html);
+                        $('#paginationcopy').html(response.pagination);
+                    }
                     $('#apptrackerfilterBench_close').click();
+                },
+                error: function(xhr) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#copyJobTable').html('<tr><td colspan="10" class="text-center text-muted py-4">Failed to load data. Please refresh and try again.</td></tr>');
                 }
             });
     }
