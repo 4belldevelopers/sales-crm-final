@@ -450,7 +450,7 @@
       if(v.length !== 10) return 'Phone number must be 10 digits long';
       return '';
     },
-    kt_tagify_work_location: function(v){ return v.trim() === '' ? 'Please select your city' : ''; },
+    kt_tagify_work_location: function(v){ v = v.trim(); return (v === '' || v === '[]') ? 'Please select your city' : ''; },
     linkedin: function(v){ // optional
       v = v.trim();
       if(v === '') return '';
@@ -904,14 +904,40 @@ $( document ).ready(function() {
 
 $(document).on('click', '#updateProfile', function() {
 
- 	/*if(! $(#kt_account_profile_details_form).valid())
-	{
-		alert("false");
-		return false;
-	}else{
-		alert("true");
-		return false;
-	} */
+    // ── Required field validation ──
+    var errors = [];
+    function reqCheck(id, label) {
+        var el = document.getElementById(id);
+        var $field = el ? $(el).closest('.jp-field') : null;
+        var val = el ? (el.value || '').trim() : '';
+        // tagify stores JSON array — treat [] as empty
+        if (val === '[]') val = '';
+        if (!val) {
+            errors.push(label);
+            if ($field) {
+                $field.addClass('has-error');
+                var box = $field.find('.invalid-feedback')[0];
+                if (box) box.textContent = label + ' is required';
+            }
+        } else {
+            if ($field) {
+                $field.removeClass('has-error');
+                var box = $field.find('.invalid-feedback')[0];
+                if (box) box.textContent = '';
+            }
+        }
+    }
+    reqCheck('name',                      'Full name');
+    reqCheck('designation',               'Designation');
+    reqCheck('mobile',                    'Phone number');
+    reqCheck('kt_tagify_work_location',   'Location (city)');
+
+    if (errors.length > 0) {
+        // Scroll to first error
+        var $first = $('.jp-field.has-error').first();
+        if ($first.length) $first[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
 
    	var data 			=	new FormData();
    	var form_data 		=	$('#kt_account_profile_details_form').serializeArray();
@@ -923,10 +949,6 @@ $(document).on('click', '#updateProfile', function() {
    	for (var i = 0; i < file_data.length; i++) {
        		data.append("logo", file_data[i]);
    	}
-    // Client-side validation: shows inline errors and focuses the first invalid field
-    if (typeof window.jpValidateAll === 'function' && !window.jpValidateAll()) {
-      return false; // Stop form submission
-    }
 
     const fileInput = document.getElementById('avatar'); // Replace with your file input ID
     const file = fileInput.files[0];
