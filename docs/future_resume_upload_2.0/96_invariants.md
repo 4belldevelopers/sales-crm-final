@@ -10,7 +10,9 @@
 2. INV-2 — manual values always win
 3. INV-3 — submit idempotency via server state
 4. INV-4 — overall upload idempotency
-5. INV-5 — parser result belongs to one session
+5. ~~INV-5 — parser result belongs to one session~~ — REMOVED 2026-07-27
+   (v2 has no server-side parser; the candidate row + browser memory
+   are the only parsed-field stores)
 
 Each invariant below shows: **canonical statement**, **where it lives**,
 **what enforces it**, **the test that proves it holds**.
@@ -61,9 +63,10 @@ only if the input was empty **and** the parser's value is non-empty.
 - JS: `resume-populate-if-empty.js` checks
   `!input.value && input.dataset.parserPopulated === 'false'`
   before assigning.
-- Server: `ResumeParserService` does not write back into the form; the
-  JS read is independent. Server writes only to
-  `resume_parse_results.payload`.
+- Server: in v2 there is no server-side `ResumeParserService`. The
+  parser runs in the browser via `pdf.js` + `re_test()`, never on the
+  server; the only state the server writes is the parsed-field column
+  on the candidate row at submit time.
 
 **Test:** `tests/Feature/ResumeV2Invariant2Test.php`
 - `test_manual_values_always_win_over_parser` (the test name is fixed;
@@ -145,24 +148,18 @@ for the upload subsystem.
 - `test_new_header_creates_new_uuid_even_after_previous_session_linked`
 - `test_replay_does_not_resurrect_terminal_session`
 
-## INV-5 — One parser result belongs to one upload session
+## INV-5 — REMOVED 2026-07-27
 
-**Canonical:** There is at most one `resume_parse_results` row per
-`resume_upload_id`. Parser dispatch is bounded: Laravel's
-`ShouldBeUnique(60s)` AND `parser_attempts` is incremented BEFORE the
-parse and capped at 1 server-side.
+> v2 has no server-side parser. There is no `resume_parse_results`
+> table, no `parser_attempts` counter, no `ParseResumeJob::uniqueId()`,
+> no `uniqueFor=60s` window. The single parser runs in the browser
+> (`pdf.js` + `re_test()`) from the local `File` object, parallel with
+> the R2 PUT; parsed-field state lives in browser memory + on the
+> candidate row at submit time. **INV-5 is kept here as a tombstone
+> to preserve the invariant numbering; the rule is no longer in force.**
 
-**Where it lives:**
-- DB: `resume_parse_results.resume_upload_id` FK with `UNIQUE` per row.
-- Job: `ParseResumeJob::uniqueId()` returns the `resumeUploadId`;
-  `uniqueFor = 60`.
-- Server: `ParseResumeJob::handle()` reads `parser_attempts` first
-  and short-circuits if already attempted.
-
-**Test:** `tests/Feature/ResumeV2Invariant5Test.php`
-- `test_parser_dispatched_twice_within_60s_runs_only_once`
-- `test_parser_attempts_incremented_before_parse_call`
-- `test_parser_second_attempt_within_window_short_circuits`
+The invariants collapse to **INV-1..4**. Every test in
+`ResumeV2Invariant5Test.php` is also removed.
 
 ## Why each invariant maps to a measurable test
 
@@ -172,7 +169,7 @@ parse and capped at 1 server-side.
 | INV-2 | G-3, ADR-013 |
 | INV-3 | FAIL-10, FAIL-11, ADR-013 fallback |
 | INV-4 | ADR-002, ADR-009, G-5, C5 (current state gap) |
-| INV-5 | ADR-005, G-4, C7 (current state gap) |
+| ~~INV-5~~ | REMOVED 2026-07-27 — no server-side parser |
 
 ## Original draft — what was kept, what was sharpened
 
@@ -182,7 +179,7 @@ parse and capped at 1 server-side.
 | 2 | "Parser may populate empty fields only" | Kept as INV-2 — matches G-3 verbatim. |
 | 3 | "Submission must never replay automatically. Always verify server state before retry." | Sharpened into INV-3 — the original self-contradicts; we keep half (verify-first) and correct the other (browser may replay; server deduplicates). |
 | 4 | "Every upload is idempotent" | Kept as INV-4 — the canonical statement. |
-| 5 | "One parser result belongs to one upload session" | Kept as INV-5 — verbatim. |
+| 5 | "One parser result belongs to one upload session" | REMOVED 2026-07-27 — verbatim no longer applies (no server parser). |
 
 ## Frequently-asked review questions
 

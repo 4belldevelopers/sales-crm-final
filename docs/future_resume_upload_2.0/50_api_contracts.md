@@ -125,8 +125,11 @@ Mark session as `Uploaded`. Idempotent.
 2. HEAD R2 `r2_temp_key`. If 404 → 422 `upload_incomplete`.
 3. Conditional UPDATE: status='Created' OR status='Uploading' → `Uploaded`,
    `upload_completed_at=now()`.
-4. Emit Reverb event `ResumeUploaded`.
-5. Dispatch `ParseResumeJob` to `parse_resumes` queue.
+4. Emit Reverb event `ResumeUploaded` (status only — no payload).
+5. **No server-side parser dispatch** (REMOVED 2026-07-27). The
+   browser-side `pdf.js` + `re_test()` populated the form fields
+   during Step 4's R2 PUT (parallel); by the time `finalize` lands
+   parsing is done.
 
 **Error matrix**:
 | Code | Cause |
@@ -137,7 +140,9 @@ Mark session as `Uploaded`. Idempotent.
 
 ### EP-4 — `DELETE /service_company/api/resume-sessions/{uuid}`
 
-Cancel + cleanup. RECOMMENDED before `Parsed`; safe to call any time.
+Cancel + cleanup. RECOMMENDED before `Completed` (terminal link);
+safe to call any time. (Original wording referenced `Parsed`; that
+status no longer exists in v2 — REMOVED 2026-07-27.)
 
 **Server steps**:
 1. Conditional UPDATE: status NOT IN ('Cancelled','Reconciled','Expired') → 'Cancelled'.

@@ -2,89 +2,31 @@
 
 > *Intent: name each job, each Reverb event, each queue, with retry policy +*
 > *fan-out budget.*
+>
+> **Update 2026-07-27 — `ParseResumeJob`, `parse_resumes` queue, and*
+> *four Reverb parse-events REMOVED.** v2 has no server-side parser;*
+> *the parser is browser-side (`pdf.js` + `re_test()`). The remaining*
+> *job surface is `ReconcileOrphanUploadsJob` (orphan sweep only),*
+> *`RepairStuckSessionsJob` (orphan recovery only — parser-half gone),*
+> *and `BulkElasticIndexCandidateJob`. Reverb events collapse to*
+> *`ResumeUploaded`, `ResumeCancelled`, `ResumeFailed` (status only).*
 
 ## Jobs
 
-### `ParseResumeJob` (queue: `parse_resumes`)
+### `ParseResumeJob` (queue: `parse_resumes`) — REMOVED 2026-07-27
 
-Orchestrates the parser invocation. Reads `resume_uploads` row,
-calls `ResumeParserService::parse($session)`, writes to
-`resume_parse_results`, updates session status.
-
-```php
-class ParseResumeJob implements ShouldQueue, ShouldBeUnique
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    public int $uniqueFor = 60; // dedups duplicate dispatches within 60 s
-
-    public int $tries = 1;
-    public int $timeout = 30;
-    public array $backoff = [];
-
-    public function __construct(public int $resumeUploadId) {}
-
-    public function handle(ResumeParserService $parser): void {
-        ResumeLogContext::initJob('parse_resumes', 'ParseResumeJob');
-        $session = ResumeUpload::findOrFail($this->resumeUploadId);
-
-        if ($session->status !== ResumeUploadStatus::QUEUED_FOR_PARSING) {
-            // Already parsed (re-dispatch race). Idempotent short-circuit.
-            return;
-        }
-
-        if ($session->parser_attempts >= 1) {
-            $session->update(['status' => ResumeUploadStatus::FAILED, 'last_error' => 'ALREADY_ATTEMPTED']);
-            return;
-        }
-
-        // Bump attempts BEFORE parse so POD crash mid-parse counts as a try.
-        $session->update([
-            'status' => ResumeUploadStatus::PARSING,
-            'parser_started_at' => now(),
-            'parser_attempts' => $session->parser_attempts + 1,
-        ]);
-        broadcast(new ResumeParseStarted($session))->toOthers();
-
-        try {
-            $results = $parser->parse($session->r2_temp_key, $session->mime_type);
-            $session->resumeParseResult()->create([
-                'company_id'         => $session->company_id,
-                'payload'            => $results->payload(),
-                'extractor_version'  => 'v2.0.0',
-                'extracted_at'       => now(),
-            ]);
-            $session->update([
-                'status' => ResumeUploadStatus::PARSED,
-                'parser_completed_at' => now(),
-            ]);
-            broadcast(new ResumeParsed($session))->toOthers();
-            ResumeLogContext::event('parse_completed', ['uuid' => $session->uuid, 'took_ms' => $tookMs]);
-        } catch (RetryAfterException $e) {
-            // Honor Retry-After, single short retry
-            sleep(min($e->retryAfterSeconds, 10));
-            $service->parse(...); // single retry inline; never re-dispatched
-        } catch (Throwable $e) {
-            $session->update([
-                'status' => ResumeUploadStatus::FAILED,
-                'last_error' => Str::limit($e->getMessage(), 200, ''),
-                'parser_completed_at' => now(),
-            ]);
-            broadcast(new ResumeParseFailed($session, $e))->toOthers();
-            ResumeLogContext::event('parse_failed', ['uuid' => $session->uuid, 'code' => $e->getCode()]);
-        }
-    }
-
-    public function uniqueId(): string {
-        return (string) $this->resumeUploadId;
-    }
-}
-```
+> v2 has no `ParseResumeJob`. There is no `ResumeParserService`; no
+> call site; no `parse_resumes` queue; no `parser_attempts` cap;
+> no `parser_started_at` / `parser_completed_at` columns; no
+> `ResumeParseStarted` / `ResumeParseProgress` / `ResumeParsed` /
+> `ResumeParseFailed` Reverb events; no `extractor_version` column.
+> The remaining upload-side event surface is **status only**.
+> See [`COMPLETE_FLOW_UPLOAD_AND_EDIT.md`](COMPLETE_FLOW_UPLOAD_AND_EDIT.md)
+> §4 "Parser pipeline (ONE layer — browser only)".
 
 ### `ReconcileOrphanUploadsJob` (queue: `reconcile_orphans`)
 
-Daily at 03:30 IST. (Inherited from v1; v2 widens scope to also
-bill parser-timeout orphans.)
+Daily at 03:30 IST. Inherited from v1.
 
 ```php
 // ... same shape as v1
@@ -92,15 +34,24 @@ public int $tries = 1;
 public int $timeout = 600;
 ```
 
+> **2026-07-27 update:** this job no longer "widens scope to bill
+> parser-timeout orphans." Parser-timeout orphans no longer exist;
+> the job is the orphan-reaper only.
+
 ### `RepairStuckSessionsJob` (queue: `repair_stuck`)
 
-Every 15 min. Re-queues parser jobs for sessions in
+Every 15 min. Original scope: re-queues parser jobs for sessions in
 `QueuedForParsing`/`Parsing` for > 30 min.
 
 ```php
 public int $tries = 1;
 public int $timeout = 840;
 ```
+
+> **2026-07-27 update:** the parser-half is removed. The job still
+> runs every 15 minutes (`onOneServer()`) but only sweeps
+> `Created`/`Uploading` orphans and never re-dispatches any
+> `ParseResumeJob` (there is none).
 
 ### `BulkElasticIndexCandidateJob` (queue: `bulkelasticindex`)
 
@@ -140,7 +91,8 @@ $schedule->command('index:bulk-candidate')
 
 Broadcast on `private-resume.{company_id}` channel.
 
-**Payload**:
+**Payload** (status only — REMOVED 2026-07-27: the previous
+`ResumeParsed` payload that included `fields_summary` is gone):
 ```json
 {
   "uuid": "...",
@@ -150,40 +102,23 @@ Broadcast on `private-resume.{company_id}` channel.
 }
 ```
 
-### `ResumeParseProgress`
+### `ResumeParseProgress` — REMOVED 2026-07-27
 
-For long-running parses; broadcast every 25% threshold.
+> v2 has no server-side parser. There is no progress to broadcast;
+> the browser-side `pdf.js` runs in 50–200 ms locally and emits a
+> `parseInline` event in-browser — no Reverb round-trip needed.
 
-**Payload**:
-```json
-{
-  "uuid": "...",
-  "pct": 25 | 50 | 75 | 100,
-  "stage": "extract_text" | "extract_fields" | "build_payload"
-}
-```
+### `ResumeParsed` — REMOVED 2026-07-27
 
-### `ResumeParsed`
+> v2 has no server-side `ResumeParserService` and therefore no
+> `extractor_version`. Form fields are filled by the browser's
+> `pdf.js` + `re_test()` during the R2 PUT, not by a server call.
 
-**Payload**:
-```json
-{
-  "uuid": "...",
-  "fields_summary": { "n_fields": 8, "took_ms": 7400, "extractor_version": "v2.0.0" }
-}
-```
+### `ResumeParseFailed` — REMOVED 2026-07-27
 
-### `ResumeParseFailed`
-
-**Payload**:
-```json
-{
-  "uuid": "...",
-  "code": "PAR_TIMEOUT" | "PAR_429" | "PAR_AUTH" | "PAR_BODY" | "PAR_OTHER",
-  "retry_after_s": 5,        // only for PAR_429
-  "message_safe": "Server is busy, please try again later"
-}
-```
+> v2 has no LLM call, no `Retry-After`, no `PAR_TIMEOUT` /
+> `PAR_429` / `PAR_AUTH` / `PAR_BODY` codes. Parser failures
+> degrade to "empty form fields" only, which INV-2 handles fine.
 
 ### `ResumeCancelled`
 
@@ -195,14 +130,30 @@ For long-running parses; broadcast every 25% threshold.
 }
 ```
 
+### `ResumeFailed` (status-only, NOT parser-related)
+
+> Still in the model for cross-pod INV-3 races that force a 409
+> rollback to terminal. Carrier is the session status alone; no
+> parser payload.
+
+**Payload**:
+```json
+{
+  "uuid": "...",
+  "last_error": "RESUME_ALREADY_FINALIZED" | "R2 503" | ...
+}
+```
+
 ## Event payload delivery guarantees
 
 | Event | Best-effort | Future enhancement |
 |---|---|---|
 | `ResumeUploaded` | at least once | n/a |
-| `ResumeParseProgress` | at most once (throttled) | confirmation backlog |
-| `ResumeParsed` | at least once | n/a |
-| `ResumeParseFailed` | at least once | n/a |
+| `ResumeCancelled` | at least once | n/a |
+| `ResumeFailed` | at least once | n/a |
+| ~~`ResumeParseProgress`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`ResumeParsed`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`ResumeParseFailed`~~ | REMOVED 2026-07-27 | n/a |
 
 We use Reverb, which is in-memory; for at-least-once semantics the
 server's last-write-wins is the user-perceived truth (and we never

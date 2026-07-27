@@ -57,8 +57,8 @@
 ### What stays EXACTLY the same (untouched)
 | Area | Why untouched |
 |------|---------------|
-| Client-side parser (pdf.js → re_test()) | Already runs in browser from `File` object, instant, no server needed |
-| Form fields + manual edit | Parser fills fields via `re_test()`, manual values always win |
+| Client-side parser (pdf.js → re_test()) | Already runs in browser from `File` object, instant, no server needed — REMOVED 2026-07-27: confirms there is NO server-side parser; this is the only parser |
+| Form fields + manual edit | Browser-side pdf.js fills fields via `re_test()`, manual values always win |
 | Submit button + candidate creation | Same controller, same `StoreJobApplication` — just adds optional `session_uuid` param |
 | Career-apply public pages | Same HomeController code until Step 17 extraction |
 | UI theme (Metronic, Poppins, 14px) | Not a UI redesign |
@@ -352,13 +352,11 @@ return new class extends Migration
             // NOT business duplicate detection (see INV-1, INV-4).
             $table->char('idempotency_key', 64)->nullable()->after('uuid');
 
-            // Parser tracking
-            $table->timestamp('parser_started_at')->nullable()->after('file_path');
-            $table->timestamp('parser_completed_at')->nullable()->after('parser_started_at');
-            $table->unsignedTinyInteger('parser_attempts')->default(0)->after('parser_completed_at');
-            $table->text('last_error')->nullable()->after('parser_attempts');
-            $table->string('last_parser_pod_id', 64)->nullable()->after('last_error');
-            
+            // Parser tracking — REMOVED 2026-07-27: no server-side parser
+            // (parser_started_at, parser_completed_at, parser_attempts,
+            //  last_parser_pod_id columns all removed.)
+            $table->text('last_error')->nullable();   // generic last_error, NOT parser-specific
+
             // Lifecycle
             $table->timestamp('expires_at')->nullable()->after('updated_at');
         });
@@ -369,11 +367,7 @@ return new class extends Migration
         Schema::table('resume_uploads', function (Blueprint $table) {
             $table->dropColumn([
                 'idempotency_key',
-                'parser_started_at',
-                'parser_completed_at',
-                'parser_attempts',
-                'last_error',
-                'last_parser_pod_id',
+                'last_error',   // REMOVED 2026-07-27: was 'last_parser_pod_id' before parser removal
                 'expires_at',
             ]);
         });
@@ -516,10 +510,11 @@ return new class extends Migration
 │  │       — HTTP `Idempotency-Key` header value,      │
 │  │         per-request random. Transport retry        │
 │  │         replay only — NOT business dedupe.        │
-│  ├ parser_started_at / parser_completed_at           │
-│  ├ parser_attempts (default 0)                       │
 │  ├ last_error (text, nullable)                       │
-│  ├ last_parser_pod_id (varchar 64, nullable)         │
+│  │       REMOVED 2026-07-27: parser_started_at,       │
+│  │       parser_completed_at, parser_attempts,        │
+│  │       last_parser_pod_id all dropped (no server    │
+│  │       parser to track).                            │
 │  └ expires_at (timestamp, nullable)                  │
 │                                                      │
 │  NEW indexes:                                        │
@@ -705,11 +700,7 @@ class ResumeUpload extends Model
         'mime_type',
         'status',
         'idempotency_key',
-        'parser_started_at',
-        'parser_completed_at',
-        'parser_attempts',
         'last_error',
-        'last_parser_pod_id',
         'expires_at',
         'linked_candidate_id',
         'cleanup_reason',
@@ -717,11 +708,10 @@ class ResumeUpload extends Model
 
     protected $casts = [
         'file_size' => 'integer',
-        'parser_attempts' => 'integer',
-        'parser_started_at' => 'datetime',
-        'parser_completed_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
+    // REMOVED 2026-07-27: parser_started_at, parser_completed_at,
+    // parser_attempts, last_parser_pod_id columns no longer exist.
 
     // ─── Scopes ───────────────────────────────────
 
@@ -1749,7 +1739,7 @@ returns 404.
 **Intent:** Replace the current `uploadWithProgress()` multipart POST
 with a direct-to-R2 flow. The browser calls `POST /resume-sessions`
 to get a presigned URL, then PUTs the file directly to Cloudflare R2.
-The client-side parser (pdf.js → re_test()) continues running unchanged.
+The client-side parser (pdf.js → re_test()) continues running unchanged. REMOVED 2026-07-27 note: there is no server-side parser; the ONLY parser is this one.
 
 **This is the core v2 change.** Every other step is supporting
 infrastructure around this.
@@ -2025,7 +2015,7 @@ const RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_up
 - PUT to R2 directly (Network tab shows direct R2 PUT, no PHP upload)
 - Progress bar fills 0% → 100%
 - Session finalized → status = Uploaded
-- Client-side parser still runs and fills fields (pdf.js/mammoth)
+- Client-side parser (pdf.js/mammoth) still runs and fills fields — REMOVED 2026-07-27: this IS the only parser (no server-side one)
 
 **Test on staging:**
 ```bash
@@ -2059,7 +2049,7 @@ try {
 #   No "Upload through PHP" messages
 #   pdf.js still extracts text → fields filled
 
-# 4. Client-side parser still works
+# 4. Client-side parser (the ONLY parser — REMOVED 2026-07-27: no server-side) still works
 # Upload a PDF with known text
 # Confirm name/email/phone fields are filled via re_test()
 
@@ -4301,13 +4291,13 @@ php artisan config:cache
 
 **What "rollback" does NOT do:** the database migrations are
 additive (`add_resume_v2_indexes`, `add_resume_v2_session_columns`,
-`create_resume_parse_results`, `create_upload_session_audits`) so
-the schema stays. v1 needs the v2 tables to exist (it just doesn't
+`create_upload_session_audits`) so the schema stays. ~~`create_resume_parse_results`~~ — REMOVED 2026-07-27 (no parser, no parse_results table).
+v1 needs the v2 tables to exist (it just doesn't
 write to them). To REVERT a migration:
 
 ```bash
-php artisan migrate:rollback --step=4
-# Order matters: rollback audits, then parse_results, then session
+php artisan migrate:rollback --step=3
+# Order matters: rollback audits, then session
 # columns, then indexes. The composer-up command in v1 era is
 # preserved in storage/app/rollback_resume_v2.sql as the
 # forward-equivalent DDL if migrate:rollback is not available.

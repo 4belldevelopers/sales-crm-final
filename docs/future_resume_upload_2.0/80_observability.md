@@ -2,6 +2,13 @@
 
 > *Intent: name every counter, log line, and health probe. This is what we*
 > *read when production breaks.*
+>
+> **Update 2026-07-27 — server-side parser removed.** Counters,
+> log lines, health checks, dashboards, alerts, and the on-call
+> SQL view no longer reference the `parse_resumes` queue,
+> `ParseResumeJob`, `ResumeParserService`, or parser pod budget.
+> The remaining surface is upload + finalize + Reverb broadcasts
+> (status only).
 
 ## Logging contract
 
@@ -11,7 +18,7 @@ Every v2 log line includes, at minimum:
 |---|---|---|
 | `pod_id` | `gethostname()` | multi-pod forensics |
 | `request_id` | `RequestContextMiddleware` | one request → all its lines |
-| `trace_id` | ULID generated on entry | cross-service tracing (SG→API→Parser) |
+| `trace_id` | ULID generated on entry | cross-service tracing (SG→API→R2/Browser) |
 | `uu_id` (resume upload uuid) | contextual | one upload → all its lines |
 | `company_id` | from `Auth::user()` (NEVER from body) | tenant-scope only |
 | `event` | structured event name | grep-friendly |
@@ -27,17 +34,18 @@ jobs.resume.upload_started      { uuid, file_size_bytes, mime_type }
 jobs.resume.upload_progress     { uuid, pct, eta_ms }   # throttled at ±5% increments
 jobs.resume.upload_finalized    { uuid, took_ms_status }
 jobs.resume.upload_failed       { uuid, reason, attempts }
-jobs.resume.parse_started       { uuid, extractor_version }
-jobs.resume.parse_progress      { uuid, pct, stage }    # throttled to 4 events
-jobs.resume.parse_completed     { uuid, took_ms, n_fields }
-jobs.resume.parse_failed        { uuid, code, retry_after_s? }
-jobs.resume.parse_retry         { uuid, attempt, waited_ms }
 jobs.resume.submit_attempted    { uuid, idempotency_token }
 jobs.resume.submit_completed    { uuid, candidate_id, took_ms }
 jobs.resume.submit_recovered    { uuid, candidate_id from cache }
 jobs.resume.cross_tenant_attempted { supplied_company_id, actual_company_id }
 jobs.resume.security.throttled  { tenant, ip_hash, reason }
 ```
+
+> **Removed 2026-07-27 — parse events.** The five
+> `jobs.resume.parse_*` log lines are gone with the server-side
+> parser. The browser-side `pdf.js` runs in 50–200 ms locally and
+> emits `parseInline` in the JS event loop only — it never writes
+> to Redis, never logs to Monolog, never produces a Reverb event.
 
 ## Metrics: Redis counter store
 
@@ -53,16 +61,16 @@ Each metric has:
 | `resume_upload_started_total` | counter | API tier |
 | `resume_upload_completed_total` | counter | API tier, on finalize |
 | `resume_upload_failed_total`  | counter | catch-all at PUT and finalize; tagged with reason |
-| `resume_parse_started_total` | counter | Pickup from queue |
-| `resume_parse_completed_total` | counter | ParseResumeJob success path |
-| `resume_parse_failed_total` | counter | ParseResumeJob failure path; tagged code |
-| `resume_parser_429_total` | counter | parser returned Retry-After |
 | `resume_submit_total` | counter | store() called |
 | `resume_submit_duplicate_total` | counter | store() returns existing |
 | `resume_resolve_total` | counter | UI expands `resume_session_uuid_*` |
 | `resume_reverb_failed_total` | counter | Reverb crash markers |
 | `resume_idempotency_key_reuse_total` | counter | new sessions that reused idem UUID |
 | `resume_idempotency_key_rotation_total` | counter | new sessions seeing diff idem key |
+| ~~`resume_parse_started_total`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`resume_parse_completed_total`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`resume_parse_failed_total`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`resume_parser_429_total`~~ | REMOVED 2026-07-27 | n/a — no parser, no Retry-After |
 
 ## Health endpoint
 
@@ -79,16 +87,20 @@ GET `/service_company/api/internal/health/resume` — bearer token auth.
     "redis":               { "ok": true | false, "latency_ms": 1, "code": null, "message": null },
     "r2":                  { "ok": true | false, "latency_ms": 12, "code": null, "message": null },
     "queue_default":       { "ok": true | false, "depth": 12 },
-    "queue_parse_resumes": { "ok": true | false, "depth": 24 },
     "queue_bulkelasticindex": { "ok": true | false, "depth": 8 },
     "scheduler_leadership":{ "is_leader": true | false, "lock_owner_pod": "app-1" },
     "orphan_uploads_count":            0,
     "stuck_sessions_count":             0,
-    "parser_backlog_count":             7,
     "global_throttle_hit_total":       14
   }
 }
 ```
+
+> **Removed 2026-07-27:** `queue_parse_resumes` and
+> `parser_backlog_count`. There is no `parse_resumes` queue and no
+> parser backlog — the only queue-depth signal worth reading is
+> `queue_default` (for any incidental background jobs) and
+> `queue_bulkelasticindex`.
 
 `/`s status map:
 - All checks ok → "ok"
@@ -114,16 +126,19 @@ Two boards in v2.0.0b:
 
 - orphan_uploads over time
 - stuck_sessions over time
-- parser 429 rate
-- Parser pod CPU
+- Octane ingest 5xx rate
+- R2 PUT 5xx rate
+
+> **Removed 2026-07-27:** "parser 429 rate" and "Parser pod CPU"
+> panels. No parser pod, no parser 429s.
 
 ## Alerting
 
 | Alert | Trigger | Severity |
 |---|---|---|
-| ResumeParseFailed > 5% in 5 min | `parse_failed_total/(parse_started_total) > 0.05` for 5 min | P3 |
+| ~~ResumeParseFailed > 5% in 5 min~~ | REMOVED 2026-07-27 — no server parser | n/a |
 | R2 PUT 5xx > 1% in 1 min | `upload_failed_total{reason=r2_5xx}/upload_started_total > 0.01` | P2 |
-| Queue depth > 1000 sustained | `parse_resumes depth > 1000` for 5 min | P2 |
+| ~~Queue depth > 1000 sustained on parse_resumes~~ | REMOVED 2026-07-27 — no `parse_resumes` queue | n/a |
 | Stale sessions > 50 | `currentStuckSessions() > 50` | P3 |
 | MySQL latency > 150 ms | `mysql.latency_ms > 150` for 1 min | P2 |
 | Pod 5xx rate > 0.5% | pod metric | P2 |
@@ -143,7 +158,7 @@ v2.0.0b:
 ```sql
 SELECT
   ru.uuid, ru.company_id, ru.status, ru.created_at,
-  ru.parser_started_at, ru.parser_completed_at,
+  -- ru.parser_started_at, ru.parser_completed_at, -- REMOVED 2026-07-27
   ru.last_error,
   u.email AS recruiter_email,
   a.action AS last_audit_action, a.created_at
@@ -158,5 +173,9 @@ LEFT JOIN upload_session_audits a
   )
 WHERE ru.uuid = ?;
 ```
+
+> **Removed 2026-07-27:** `ru.parser_started_at`,
+> `ru.parser_completed_at` columns in the on-call view. Those columns
+> no longer exist on `resume_uploads`; only `last_error` remains.
 
 Used by on-call. NEVER referenced from app code.

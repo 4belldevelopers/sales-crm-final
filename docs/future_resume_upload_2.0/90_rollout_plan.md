@@ -24,8 +24,8 @@
 **Changes:**
 - Migration 1: `add_resume_v2_indexes` — UNIQUE(uuid, company_id), INDEX(company_id, idempotency_key) — **NO UNIQUE on idempotency_key** (ADR-002, ADR-009)
 - Migration 2: `add_resume_v2_session_columns`
-- Migration 3: `create_resume_parse_results`
-- Migration 4: `create_upload_session_audits`
+- ~~Migration 3: `create_resume_parse_results`~~ — REMOVED 2026-07-27
+- Migration 3: `create_upload_session_audits`
 - Add `ResumeUploadStatus` enum (does NOT replace existing status string)
 - Add v2 `ResumeMetrics` (Redis-direct counter, fail-fast)
 - Add health endpoint `/api/internal/health/resume` with bearer-token auth
@@ -85,24 +85,26 @@ OFF for public careers.
 
 **Sign-off** — codepath replacement.
 
-### v2.0.0d — Parser queue + Reverb
+### v2.0.0d — Browser parser wiring (pdf.js) + Reverb
 
-**Changes:**
-- Replace `ChatGptService` raw cURL consumer with `ResumeParserService` wrapper.
-- New `parse_resumes` queue in Horizon.
-- `ParseResumeJob` introduced.
+**Changes (post-removal 2026-07-27):**
+- ~~Replace `ChatGptService` raw cURL consumer with `ResumeParserService` wrapper~~ — REMOVED: no server parser
+- ~~New `parse_resumes` queue in Horizon~~ — REMOVED: no server parser queue
+- ~~`ParseResumeJob` introduced~~ — REMOVED: no server parser job
 - Reverb channel auth (private-resume.{company_id}).
-- `ResumeParseProgress` and `ResumeParsed` events broadcast.
+- `ResumeUploaded` event broadcast on finalize (status only — no parser payload).
+- Browser-side `pdf.js` + `re_test()` populated form fields during the
+  R2 PUT (parallel), no server dispatch required.
 
 **Flag:** `resumes.v2_reverb_events` for 1 tenant in staging.
 
 **Validation:**
-1. Filter: `ResumeV2ParserQueueTest`.
-2. Browser smoke: tab A submits, tab B sees parser progress.
+1. Filter: `ResumeV2ReverbEventsTest` (renamed from `ResumeV2ParserQueueTest` — REMOVED 2026-07-27).
+2. Browser smoke: tab A submits, tab B sees `ResumeUploaded` event.
 3. Cross-tenant smoke: tab A in tenant X, tab B in tenant Y → no events visible.
-4. Force OpenAI 429 (mock), confirm `Retry-After` honored.
+4. ~~Force OpenAI 429 (mock), confirm `Retry-After` honored~~ — REMOVED 2026-07-27 (no parser 429s).
 
-**Sign-off** — parser behavior change.
+**Sign-off** — Reverb event surface change.
 
 ### v2.0.0e — Submit preflight + dedup + idempotent submit recovery
 
@@ -150,16 +152,17 @@ OFF for public careers.
 **Validation:**
 - Filter: `ResumeV2CancelTest`, `ResumeV2RefreshRecoveryTest`
 
-### v2.0.0j — Retry manager: parser + upload dual retry
+### v2.0.0j — Retry manager: upload + transport retry only
 
-**Changes:**
+**Changes (post-removal 2026-07-27):**
 - `resume-retry-manager.js` introduced.
-- Honors Retry-After on parser 429.
+- ~~Honors Retry-After on parser 429~~ — REMOVED 2026-07-27 (no parser).
 - Resumes PUT from offset on multipart failure.
+- Honors `Idempotency-Key` on transport retry (HTTP header replayed).
 
 **Validation:**
 - Filter: `ResumeV2RetryTest`
-- Chaos harness CAOS-7 (parse 429 honor)
+- ~~Chaos harness CAOS-7 (parse 429 honor)~~ — REMOVED 2026-07-27
 
 ### v2.0.0k — Bulk upload path (separate, but composable)
 
@@ -171,8 +174,9 @@ OFF for public careers.
 
 ### v2.0.0l — Performance tuning + DTrace
 
-**Changes:**
-- Horizon metrics for parser queue; alert thresholds tuned.
+**Changes (post-removal 2026-07-27):**
+- ~~Horizon metrics for parser queue~~ — REMOVED 2026-07-27 (no parser queue).
+- Horizon metrics for remaining queues (bulkelasticindex, reconcile_orphans, repair_stuck); alert thresholds tuned.
 - Redis cluster tested under synthetic 20K burst.
 
 ### v2.0.0m — Public apply (career-apply) extracted from HomeController
@@ -194,8 +198,9 @@ OFF for public careers.
 |---|---|
 | 5xx rate uploads | < 0.01% |
 | 5xx rate finalize | < 0.001% |
-| Parser success rate | ≥ 95% |
-| Parser 429 rate | < 2% (target) |
+| ~~Parser success rate~~ | REMOVED 2026-07-27 — no server parser to measure |
+| ~~Parser 429 rate~~ | REMOVED 2026-07-27 — no parser 429s |
+| Browser parser pass rate (pdf.js rejects) | tracked via client-side `parseInline` error events (visual only, not correctness) |
 | Submit duplicate merge rate | n/a (no merge — by design, Step 20) |
 | Submit candidate-creation-per-submit ratio | **1.0** (one submit = one candidate, always) |
 | Duplicate-badge display rate | tracked (recruiter UX signal, not a correctness KPI) |

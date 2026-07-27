@@ -1,16 +1,51 @@
 # Complete Flow — Resume Upload v2: From File Pick to ATS Row, and the Edit Path
 
+> **Update 2026-07-27 — server-side parser removed.** This document was
+> rewritten without `ParseResumeJob`, `ResumeParserService`,
+> `resume_parse_results`, `parse_resumes` queue, `ResumeParsed` /
+> `ResumeParseStarted` / `ResumeParseProgress` / `ResumeParseFailed`
+> Reverb events, `parser_attempts`/`parser_last_error` columns, or any
+> "why both parsers" justification. The single parser layer in v2 runs
+> in the browser from the local `File` object via `pdf.js` +
+> `re_test()`, parallel with the R2 PUT. The candidate row is the only
+> canonical record — there is no parser-stage durable table.
+
 > **Intent:** Walk through the **end-to-end lifecycle of a resume** in v2.
 > Two journeys, one truth:
 >
-> 1. **CREATE flow** — recruiter picks a file, sees parser auto-fill, submits,
->    candidate appears in the ATS view, with a "possible duplicate" badge if
->    the Duplicate Ownership Engine sees a fingerprint match.
+> 1. **CREATE flow** — recruiter picks a file, sees parser auto-fill
+>    (browser-side, parallel with upload), submits, candidate appears
+>    in the ATS view, with a "possible duplicate" badge if the Duplicate
+>    Ownership Engine sees a fingerprint match.
 > 2. **EDIT flow** — recruiter opens an existing candidate, keeps /
 >    replaces / removes the resume, submits, row updates atomically.
 >
-> Both flows respect the same 5 invariants, share the same `resume_uploads`
-> table, and never violate Step 20's no-merge contract.
+> Both flows respect the 4 invariants (INV-1..4), share the same
+> `resume_uploads` table, and never violate Step 20's no-merge contract.
+
+## TL;DR — the parser works parallel with the upload
+
+This is the most-asked question about v2, so the answer is up top:
+
+**There is ONE parser layer running in parallel with the upload (not
+sequential, not queued):**
+
+| Where | Runs | When | Cost |
+|---|---|---|---|
+| **Browser-side** (`pdf.js` + `mammoth` + `re_test()`) | From the local `File` object (0 bytes through the server) | Starts as soon as bytes stream into the `FileReader` (typically ≥50 KB) | 0 bytes through PHP |
+
+The browser-side parser is the **only** parser in v2. Form fields fill
+**while the upload progress bar is still moving**. By the time the
+upload progress bar hits 100% and `finalize` lands, the form fields
+are already populated (or left empty if the user types first). The user
+clicks Submit, the candidate row is inserted with the values that are
+already on the form.
+
+There is **no** server-side parser, no `parse_resumes` queue, no LLM
+call, no `resume_parse_results` row, no Retry-After semantics, no
+`parser_fallback_mode`, no `RepairStuckSessionsJob` parser sweep, and
+no `extractor_version`. INV-2's `data-parser-populated="false"`
+attribute still gates the auto-fill so manual values always win.
 
 ---
 
@@ -34,17 +69,16 @@
   existing session guard; tenant = `Auth::user()->company_id`.
 - **Candidate** — the person whose resume was uploaded. Has zero direct
   interaction with v2 (the public career-apply path is v1, deferred).
-- **Parser pod** — server-side worker (≥4 instances) running
-  `ParseResumeJob`.
-- **Reverb pod** — websocket broadcaster for parser/upload progress.
+- **Reverb pod** — websocket broadcaster for status-only progress
+  (uploaded/cancelled/failed). There is no parser pod in v2.
 - **Scheduler** — single leader pod (per `Schedule::onOneServer()`) running
-  cleanup / reconcile / repair.
+  cleanup / reconcile.
 
 ### Tables involved (and the baked-in typos)
 | Table | Purpose | Owned by |
 |---|---|---|
 | `resume_uploads` | **v2 source of truth** — every file pick = 1 row | upload subsystem |
-| `resume_parse_results` | 1:1 parser output per `resume_uploads.id` (INV-5) | parser |
+| ~~`resume_parse_results`~~ | **REMOVED** — v2 has no canonical parser-output row. Parsed fields live on the candidate row + browser memory. | n/a |
 | `upload_session_audits` | every state transition + auth context | upload subsystem |
 | `documents` | resume file linked to a candidate row (UNIQUE per candidate) | upload subsystem |
 | `add_job_wise_condidates` | the candidate row visible in ATS view | upload subsystem + ATS read-path |
@@ -210,26 +244,50 @@ that never reach `Uploaded` are reaped).
 
 ---
 
-### Stage 4 — Browser PUTs the file directly to R2
+### Stage 4 — Browser PUTs the file directly to R2 **while running the browser-side parser in parallel**
 
-**Browser-side (`resume-upload-progress.js`):**
+> This is the only parsing stage in v2. There is **one** parser layer,
+> running in the browser from the local `File` object via
+> `pdf.js` + `mammoth.js` + `re_test()`. It starts as soon as bytes
+> stream into the `FileReader` (typically at ≥50 KB; see v1 brief:
+> *"PARALLEL: parse starts when bytes ≥ 50 KB in stream"*). The parser
+> is the v1 brief's original UX — no LLM call, no server round-trip.
+
+**Browser-side, two paths running concurrently (`resume-upload-progress.js`
++ `resume-populate-if-empty.js`):**
 1. Hide the native file input.
 2. Show progress bar + cancel button + ETA.
-3. **PUT** file bytes directly to the presigned URL.
-4. Emit progress events 0% → 100% via `BroadcastChannel` (same-browser tabs
-   receive them zero-server).
-5. On ≥5 MB files: switch to **multipart upload** — initiate, upload parts
-   in parallel, complete multipart, then PUT completes.
-6. **Cancel button**: calls `DELETE /service_company/api/resume-sessions/{uuid}`.
+3. **Start two paths simultaneously:**
+   - **Path A — R2 upload**: PUT file bytes directly to the presigned URL.
+   - **Path B — Browser-side parse**: stream bytes into `pdf.js` (PDF) /
+     `mammoth.js` (DOCX) / `re_test()` regex extractors. On ≥50 KB streamed
+     (or on the first `FileReader.onload` chunk) → emit `parseInline` event
+     with extracted fields. Zero network, instant.
+4. As `parseInline` fires, run `resume-populate-if-empty.js`: for each input
+   with `data-parser-populated="false"` AND empty value, assign the parser's
+   value. The UI sees form fields auto-fill **while the upload progress bar
+   is still moving**.
+5. Path A: emit progress events 0% → 100% via `BroadcastChannel`
+   (same-browser tabs receive them zero-server).
+6. Path A: on ≥5 MB files, switch to **multipart upload** — initiate,
+   upload parts in parallel, complete multipart, then PUT completes.
+7. **Cancel button**: calls `DELETE /service_company/api/resume-sessions/{uuid}`.
 
-**R2 state:**
+**R2 state (Path A):**
 - Object exists at `temp/{year}/{month}/{cid}/{uuid-prefix}-{h7}.pdf`.
 - Lifecycle rule will auto-expire after 30 days if the object is never
   promoted to `final/`.
 
+**Browser parser state (Path B):**
+- The form fields are populated with parsed values.
+- `data-parser-populated="false"` is flipped to `"true"` on inputs the parser
+  filled.
+- The user can now type over them; INV-2 (manual values always win) is
+  preserved for submit.
+
 ---
 
-### Stage 5 — Browser calls finalize
+### Stage 5 — Browser calls finalize (no server-side parser dispatch)
 
 **User action:** progress bar hits 100%; JS auto-POSTs
 `/service_company/api/resume-sessions/{uuid}/finalize` (no user click).
@@ -259,10 +317,13 @@ UploadSessionAudit::record($uuid, 'ActionFinalizeCompleted', [
     'upload_completed_at' => now(),
 ]);
 
-// 5. Dispatch ParseResumeJob (queue: parse_resumes)
-ParseResumeJob::dispatch($session->id)->onQueue('parse_resumes');
+// 5. NO ParseResumeJob::dispatch() here — there is no server-side
+//    parser in v2. The browser-side pdf.js + re_test() in Stage 4
+//    has already populated the form fields while the file streamed
+//    to R2. By the time finalize lands, parsing is done (or the
+//    form is empty, which INV-2 handles fine).
 
-// 6. Emit Reverb event for same-tab UI sync
+// 6. Emit Reverb event for same-tab UI sync (status only — no payload)
 broadcast(new ResumeUploaded($session))->toOthers();
 ```
 
@@ -274,105 +335,14 @@ but the session is already `Uploaded`. The client treats 409 as success.
 { "status": "Uploaded", "upload_completed_at": "...", "uuid": "..." }
 ```
 
----
-
-### Stage 6 — Parser picks up the job
-
-**Queue:** `parse_resumes` (Horizon)
-**Worker:** `ParseResumeJob` — bounded concurrency via Redis semaphore.
-
-**Algorithm:**
-```php
-public function handle(): void
-{
-    // 1. Re-read row inside the worker (may be racing)
-    $row = DB::table('resume_uploads')->where('id', $this->uploadId)->first();
-
-    // 2. INV-5 short-circuit: if already parsed, no-op
-    abort_if($row->status === 'Parsed', 200, 'ALREADY_PARSED');
-
-    // 3. INV-5 cap: parser_attempts capped at 1
-    abort_if(
-        $row->parser_attempts >= 1,
-        422,
-        'PARSER_ATTEMPTS_EXHAUSTED'
-    );
-
-    // 4. Mark QueuedForParsing → Parsing (with bounded retry)
-    DB::table('resume_uploads')
-        ->where('id', $row->id)
-        ->whereIn('status', ['Uploaded','QueuedForParsing'])
-        ->update([
-            'status' => 'Parsing',
-            'parser_started_at' => now(),
-            'parser_attempts'   => $row->parser_attempts + 1,
-        ]);
-
-    // 5. Call parser service (LLM call, bounded 30 s)
-    $payload = ResumeParserService::extract($row);
-
-    // 6. On success: write resume_parse_results (UNIQUE 1:1)
-    DB::table('resume_parse_results')->insertOrIgnore([
-        'resume_upload_id' => $row->id,
-        'payload'          => json_encode($payload),
-        'parser_pod_id'    => gethostname(),
-        'parsed_at'        => now(),
-    ]);
-
-    // 7. Conditional UPDATE → Parsed
-    DB::table('resume_uploads')
-        ->where('id', $row->id)
-        ->where('status', 'Parsing')
-        ->update([
-            'status' => 'Parsed',
-            'parser_completed_at' => now(),
-        ]);
-
-    // 8. Audit + Reverb event
-    UploadSessionAudit::record($row->uuid, 'ActionParsed', [...]);
-    broadcast(new ResumeParsed($row->uuid, $payload))->toOthers();
-}
-```
-
-**Failure paths:**
-| Failure | Behavior |
-|---|---|
-| Parser HTTP timeout (>30 s) | `status=Failed`, `parser_last_error=PAR_TIMEOUT`, audit `ActionParseFailed` |
-| Parser 429 with `Retry-After` | One attempt only; `sleep(min(Retry-After, 10))` then retry once (ADR-005) |
-| Parser 5xx | `status=Failed`, audit `ActionParseFailed{reason=5xx}` |
-
-**RepairStuckSessionsJob (every 15 min, single leader):**
-- `status IN ('QueuedForParsing','Parsing') AND parser_started_at < NOW() - INTERVAL 60 SECOND` → mark `Failed` and re-queue once.
+**Renumbered note:** what used to be Stage 6 (server-side parser job)
+and Stage 7 (server-side parser refine) is GONE. Stage 4's Pipeline B
+(client-side parse) is the only parser. Submit (now Stage 6) sees the
+already-populated form, locks the session, inserts the candidate row.
 
 ---
 
-### Stage 7 — Browser receives parse result via Reverb
-
-**Reverb channel:** `private-resume.{companyId}` (tenant-scoped auth).
-
-**Event broadcast:** `ResumeParsed(uuid, payload)` — auth callback enforces
-`(int) Auth::user()->company_id === (int) $companyId` (with `int` cast).
-
-**Browser-side (`resume-populate-if-empty.js`):**
-```js
-// On ResumeParsed event:
-document.querySelectorAll('input[data-parser-populated="false"]').forEach(input => {
-    if (input.value === '' && payload[input.name]) {
-        input.value = payload[input.name];
-        input.dataset.parserPopulated = 'true';
-    }
-});
-```
-
-**INV-2 enforced:** recruiter's typed values are NEVER overwritten. The
-`data-parser-populated="false"` attribute is the gate.
-
-**Same-origin tab sync:** the `BroadcastChannel` fires the same event
-locally so other tabs see the auto-fill without a Reverb round-trip.
-
----
-
-### Stage 8 — Recruiter clicks Submit
+### Stage 6 (was Stage 8) — Recruiter clicks Submit
 
 **User action:** clicks "Add Candidate" submit button.
 
@@ -409,7 +379,7 @@ DB::transaction(function () use ($request) {
     }
 
     abort_unless(
-        in_array($session->status, ['Uploaded','Parsed'], true),
+        in_array($session->status, ['Uploaded'], true),
         422,
         'RESUME_SESSION_NOT_READY'
     );
@@ -444,7 +414,7 @@ DB::transaction(function () use ($request) {
     // 6. Conditional UPDATE: link session → candidate (terminal link state)
     DB::table('resume_uploads')
         ->where('id', $session->id)
-        ->whereIn('status', ['Uploaded','Parsed'])
+        ->whereIn('status', ['Uploaded'])
         ->update([
             'linked_candidate_id'   => $candidateId,
             'linked_application_id' => $candidateId,
@@ -477,7 +447,7 @@ candidates; both persist forever. The engine observes and badges them.
 
 ---
 
-### Stage 9 — Observer syncs Elasticsearch
+### Stage 7 (was Stage 9) — Observer syncs Elasticsearch
 
 **Trigger:** `CandidateObserver` (or ES sync job dispatched after the
 transaction commits).
@@ -499,7 +469,7 @@ fail, audit row `ActionElasticIndexFailed`; ops follow-up.
 
 ---
 
-### Stage 10 — Duplicate Ownership Engine observes (no write)
+### Stage 8 (was Stage 10) — Duplicate Ownership Engine observes (no write)
 
 > **Out of the upload subsystem's code path.** Engine runs as a separate
 > scheduled job / event listener.
@@ -529,7 +499,7 @@ fail, audit row `ActionElasticIndexFailed`; ops follow-up.
 
 ---
 
-### Stage 11 — ATS view loads with the candidate row
+### Stage 9 (was Stage 11) — ATS view loads with the candidate row
 
 **Route:** `GET /service_company/candidates` (or equivalent list page).
 
@@ -709,39 +679,44 @@ $jobApp->save();
 
 ## Parser, Reverb, and observer pipeline
 
-### Parser pipeline
+### Parser pipeline (ONE layer — browser only)
 
-| Layer | What runs | Where |
+| Step | What runs | Where |
 |---|---|---|
-| 1. Dispatch | `ParseResumeJob::dispatch($uploadId)->onQueue('parse_resumes')` | inside `finalize()` |
-| 2. Worker pickup | Horizon dispatches to next free parser pod | `parse_resumes` queue |
-| 3. Bound check | `parser_attempts < 1` (INV-5) | inside `handle()` |
-| 4. Service call | `ResumeParserService::extract($row)` — LLM call | `app/Services/ResumeParserService.php` |
-| 5. Result write | `resume_parse_results` row (UNIQUE 1:1) | inside `handle()` |
-| 6. State UPDATE | `Parsing → Parsed` (conditional) | inside `handle()` |
-| 7. Audit | `ActionParsed` row | `UploadSessionAudit::record()` |
-| 8. Broadcast | `ResumeParsed(uuid, payload)` via Reverb | `broadcast(new ResumeParsed(...))` |
-
-**Parser safety:**
-- Bounded 30 s timeout.
-- One `Retry-After` attempt on 429 (cap = 10 s sleep).
-- No retry on 5xx — surface as `Failed` with `last_error`.
-- `RepairStuckSessionsJob` every 15 min marks `Parsing > 60s` as Failed.
+| 1. Trigger | File picked; `FileReader.onloadstart` or ≥50 KB streamed | browser |
+| 2. Library | `pdf.js` (PDF) / `mammoth.js` (DOCX) / `re_test()` regex extractors | browser |
+| 3. Extract | Text → name/email/phone/skills/education | browser |
+| 4. Emit | `parseInline` event with extracted fields | browser |
+| 5. Apply | `resume-populate-if-empty.js` (INV-2 — manual wins) | browser |
+| 6. Network | **0 bytes** — runs entirely from the local `File` object | — |
 
 **Sanitization (CLAUDE.md + SECURITY.md):**
-- Strip `<>{}` from `raw_text` before parse payload.
+- Strip `<>{}` from `raw_text` before stuffing into form inputs.
 - Strip emails beyond the FIRST match.
 - Strip URLs beyond the FIRST 3.
-- Cap `raw_text` length to 25 KB (~6 MB compressed DOCX → ~150 KB raw).
+- Cap raw_text length at 25 KB before regex extraction
+  (~6 MB compressed DOCX → ~150 KB raw, then trim).
+
+**Why no server-side parser? (2026-07-27 decision recap.)**
+The v2 contract is: **the candidate row is the only canonical record**.
+A second, durable parser pipeline would create a side-channel of
+"ground truth" that competes with the user-visible form. Browser memory
+is bounded but transient — that's sufficient for the form-fill UX. Any
+downstream consumer (search, ES, engine fingerprint) reads the candidate
+row after submit. There is no LLM call, no queue, no pod — the server
+subsystem never sees the resume text.
 
 ### Reverb pipeline
 
 | Event | Channel | Auth | Payload |
 |---|---|---|---|
 | `ResumeUploaded` | `private-resume.{companyId}` | `(int) Auth::user()->company_id === (int) $cid` | `{ uuid, status: "Uploaded", upload_completed_at }` |
-| `ResumeParsed` | same | same | `{ uuid, payload: {...} }` |
 | `ResumeCancelled` | same | same | `{ uuid }` |
-| `ResumeFailed` | same | same | `{ uuid, last_error }` |
+| `ResumeFailed` | same | same | `{ uuid, last_error }` (only on cross-pod race, not parser-related) |
+
+> **Removed events:** `ResumeParsed`, `ResumeParseStarted`,
+> `ResumeParseProgress`, `ResumeParseFailed`. There is no server-side
+> parser; there is no parse progress to broadcast.
 
 **Same-browser shortcut:** `BroadcastChannel('resume-sync-{companyId}')`
 fires the same event locally first; Reverb is the fallback for
@@ -803,7 +778,7 @@ allows the request (degraded mode). Production startup fails loud if
 | Filename injection | `Illuminate\Support\Str::ascii(strip_control($orig))` + length 1..128 |
 | Path traversal in R2 keys | UUID + 7-char hash prefix, no user input in path |
 | XSS in resume auto-fill | `e()` on all Blade outputs (NEVER `{!! !!}` for user-supplied data) |
-| LLM prompt injection | Sanitize `<>{}`, strip emails/URLs beyond limits |
+| ~~LLM prompt injection~~ | REMOVED — no LLM call in v2 |
 | R2 bucket policy | bucket-prefix token binding (Worker presign is v3; ADR-017) |
 
 ---
@@ -831,10 +806,18 @@ only one pod runs; the other pods skip.
 
 ### `uploads:repair` — every 15 minutes
 
-**What it does:**
-1. Find `status IN ('QueuedForParsing','Parsing') AND parser_started_at < NOW() - INTERVAL 60 SECOND`.
-2. Mark as `Failed` with `parser_last_error=PAR_STUCK`.
-3. Optionally re-dispatch `ParseResumeJob` (cap = 1 attempt total).
+**What it does (in v2, server-side-parser-removed build):**
+1. Find sessions stuck in `Created`/`Uploading` with `expires_at <
+   NOW() - INTERVAL 1 HOUR` and no `upload_completed_at`.
+2. Conditional UPDATE → `Reconciled` (status guard prevents re-running).
+3. DELETE the R2 temp object (best-effort).
+4. Audit `ActionReconcileScored`.
+5. Increment `resume_orphan_reconciled_total` (Redis counter).
+
+> The original spec for `uploads:repair` covered parser-stuck-session
+> recovery (`status IN ('QueuedForParsing','Parsing') AND
+> parser_started_at < …`). Those states no longer exist in v2; the
+> job's parser-half is removed and only the orphan-reaper half remains.
 
 ### R2 lifecycle rules (bucket policy)
 
@@ -850,7 +833,7 @@ only one pod runs; the other pods skip.
 |---|---|
 | `ActionPresignIssued` | 365 days |
 | `ActionFinalizeCompleted` | 365 days |
-| `ActionParsed` / `ActionParseFailed` | 365 days |
+| ~~`ActionParsed` / `ActionParseFailed`~~ | REMOVED — no server-side parser |
 | `ActionSubmitLinked` | 365 days |
 | `ActionSubmitReplayWinnerFound` | 365 days |
 | `ActionResumeReplaced` / `ActionResumeRemoved` | 365 days |
@@ -907,78 +890,95 @@ ES query → `condidate_v1` index alias `candidates-{company_id}-v2`.
 
 ## End-to-end sequence diagram
 
-### CREATE flow
+### CREATE flow (browser-side parser runs in parallel with R2 PUT)
 
 ```
-Browser                Server (Octane)              R2                 Parser pod           ATS View
-   │                         │                       │                      │                    │
-   │  GET /create            │                       │                      │                    │
-   │ ──────────────────────► │                       │                      │                    │
-   │  200 + form + JS        │                       │                      │                    │
-   │ ◄────────────────────── │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │  (user picks file)      │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │  POST /resume-sessions  │                       │                      │                    │
-   │  Idempotency-Key: uuid  │                       │                      │                    │
-   │ ──────────────────────► │                       │                      │                    │
-   │                         │ INSERT resume_uploads │                      │                    │
-   │                         │ (Created, r2_temp_key)│                      │                    │
-   │  201 { session, upload }│                       │                      │                    │
-   │ ◄────────────────────── │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │  PUT file bytes ─────────────────────────────────────────────────►   │                    │
-   │                         │                       │  (object written)    │                    │
-   │                         │                       │                      │                    │
-   │  POST /finalize         │                       │                      │                    │
-   │ ──────────────────────► │ HEAD r2_temp_key      │                      │                    │
-   │                         │ ─────────────────────►│                      │                    │
-   │                         │  200 OK               │                      │                    │
-   │                         │ ◄─────────────────────│                      │                    │
-   │                         │ UPDATE Created→Uploaded (conditional)        │                    │
-   │                         │ dispatch ParseResumeJob (parse_resumes)      │                    │
-   │                         │ ───────────────────────────────────────────────────────────────►  │
-   │  200 { Uploaded }       │                       │                      │                    │
-   │ ◄────────────────────── │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │  BroadcastChannel       │                       │                      │                    │
-   │  (same-browser tabs sync)│                       │                      │                    │
-   │                         │                       │                      │                    │
-   │                         │                       │  (LLM call, ≤30 s)   │                    │
-   │                         │                       │  extract fields      │                    │
-   │                         │                       │ ◄─────────────────────│                    │
-   │                         │                       │  INSERT resume_parse_results              │
-   │                         │                       │  UPDATE Parsing→Parsed                   │
-   │                         │                       │  broadcast ResumeParsed via Reverb       │
-   │                         │                       │                      │                    │
-   │  Reverb event received  │                       │                      │                    │
-   │ ───────────────────────────────────────────────────────────────────────────────────────►  │
-   │  populate-if-empty.js   │                       │                      │                    │
-   │  (INV-2: only empty)    │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │  (user clicks Submit)   │                       │                      │                    │
-   │  POST /candidates       │                       │                      │                    │
-   │ ──────────────────────► │ TX:                   │                      │                    │
-   │                         │   verify session      │                      │                    │
-   │                         │   INSERT candidate    │                      │                    │
-   │                         │   INSERT documents    │                      │                    │
-   │                         │   UPDATE session→Completed                     │                    │
-   │                         │   audit ActionSubmitLinked                    │                    │
-   │                         │ COMMIT                                          │                    │
-   │                         │ dispatch ES reindex (bulkelasticindex)        │                    │
-   │  201 { candidate_id }   │                       │                      │                    │
-   │ ◄────────────────────── │                       │                      │                    │
-   │                         │                       │                      │                    │
-   │                         │                       │  (observer fires)    │                    │
-   │                         │                       │  ES index updated    │                    │
-   │                         │                       │                      │                    │
-   │                         │               (Duplicate Ownership Engine observes; never writes)   │
-   │                         │                       │                      │                    │
-   │  GET /candidates        │                       │                      │                    │
-   │ ───────────────────────────────────────────────────────────────────────────────────────►  │
-   │  200 [candidates, possible_dup badge]                                   │                    │
-   │ ◄──────────────────────────────────────────────────────────────────────────────────────  │
+Browser                  Server (Octane)              R2                              ATS View
+   │  [client parser]            │                       │                                │
+   │   ║                          │                       │                                │
+   │   ╠═══════════════════════════════════════════════════════════════════════════════════►│
+   │   ║  [R2 upload PUT]          │                       │                                │
+   │   ║                          │                       │                                │
+   │  GET /create                 │                       │                                │
+   │ ──────────────────────────► │                       │                                │
+   │  200 + form + JS             │                       │                                │
+   │ ◄────────────────────────── │                       │                                │
+   │                             │                       │                                │
+   │  (user picks file)          │                       │                                │
+   │                             │                       │                                │
+   │  POST /resume-sessions      │                       │                                │
+   │  Idempotency-Key: uuid      │                       │                                │
+   │ ──────────────────────────► │                       │                                │
+   │                             │ INSERT resume_uploads │                                │
+   │                             │ (Created, r2_temp_key)│                                │
+   │  201 { session, upload }    │                       │                                │
+   │ ◄────────────────────────── │                       │                                │
+   │                             │                       │                                │
+   │ ╔══════════════════════════════════════════════════════════════════════════════════════╗ │
+   │ ║ START TWO PARALLEL PATHS (both browser-side):                                         ║ │
+   │ ║                                                                                        ║ │
+   │ ║ Path A — R2 PUT (network)                                                              ║ │
+   │ ║ Path B — pdf.js + re_test (local File object, 0 bytes through server)                 ║ │
+   │ ╚══════════════════════════════════════════════════════════════════════════════════════╝ │
+   │                             │                       │                                │
+   │  PUT bytes ════════════════════════════════════════►│  (object written)              │
+   │  (Path A)                   │                       │                                │
+   │                             │                       │                                │
+   │  pdf.js extracts ════════►  │                       │                                │
+   │  (Path B, no network)       │                       │                                │
+   │  parseInline event ─────────────────────────────────────────────────────────────────► │
+   │  populate-if-empty.js       │                       │                                │
+   │  (form fields fill)         │                       │                                │
+   │                             │                       │                                │
+   │  BroadcastChannel           │                       │                                │
+   │  (same-browser tabs sync)   │                       │                                │
+   │                             │                       │                                │
+   │  POST /finalize             │                       │                                │
+   │ ──────────────────────────► │ HEAD r2_temp_key      │                                │
+   │                             │ ─────────────────────►│                                │
+   │                             │  200 OK               │                                │
+   │                             │ ◄─────────────────────│                                │
+   │                             │ UPDATE Created→Uploaded (conditional)                  │
+   │                             │ — NO ParseResumeJob dispatch —                          │
+   │  200 { Uploaded }           │                       │                                │
+   │ ◄────────────────────────── │                       │                                │
+   │                             │                       │                                │
+   │  (user clicks Submit)       │                       │                                │
+   │  POST /candidates           │                       │                                │
+   │ ──────────────────────────► │ TX:                   │                                │
+   │                             │   verify session      │                                │
+   │                             │   INSERT candidate    │                                │
+   │                             │   INSERT documents    │                                │
+   │                             │   UPDATE session→Completed                           │
+   │                             │   audit ActionSubmitLinked                            │
+   │                             │ COMMIT                                                │
+   │                             │ dispatch ES reindex (bulkelasticindex)                │
+   │  201 { candidate_id }       │                       │                                │
+   │ ◄────────────────────────── │                       │                                │
+   │                             │                       │                                │
+   │                             │                       │  (observer fires)              │
+   │                             │                       │  ES index updated              │
+   │                             │                       │                                │
+   │                             │               (Duplicate Ownership Engine observes; never writes) │
+   │                             │                       │                                │
+   │  GET /candidates            │                       │                                │
+   │ ─────────────────────────────────────────────────────────────────────────────────────────►│
+   │  200 [candidates, possible_dup badge]                                                   │
+   │ ◄─────────────────────────────────────────────────────────────────────────────────────────│
 ```
+
+**The single-parser parallelism in plain English:**
+
+- **t=0**: file picked → `crypto.randomUUID()` generated
+- **t=100ms**: presign POST returns → two paths begin **simultaneously**
+  (Path A: R2 PUT, Path B: pdf.js + re_test from local `File`)
+- **t=200ms**: pdf.js finishes extracting fields → `parseInline` event →
+  form fields fill while upload progress bar still moves
+- **t=2-8s** (depends on file size + connection): R2 PUT completes
+- **t=8s**: `finalize` POST → conditional UPDATE Created→Uploaded;
+  **no parser dispatch**
+- **t=anytime**: user clicks Submit → TX inserts candidate row + documents
+  row + ES reindex; Duplicate Ownership Engine observes; ATS view updates
 
 ### EDIT flow (Branch A — Replace resume)
 
@@ -999,10 +999,11 @@ Browser                Server                  R2                Audit
    │  PUT bytes ─────────────────────────────────►│                  │
    │  POST /finalize       │ HEAD ok             │                  │
    │ ────────────────────► │ UPDATE →Uploaded    │                  │
-   │                       │ dispatch ParseResumeJob                │
+   │                       │ — no ParseResumeJob —                  │
    │  200 { Uploaded }     │                     │                  │
    │ ◄──────────────────── │                     │                  │
-   │  (parse via Reverb)   │                     │                  │
+   │  (form already filled │                     │                  │
+   │   by browser parser)  │                     │                  │
    │                       │                     │                  │
    │  PATCH /job-applications/{id}                │                  │
    │  session_uuid=...     │                     │                  │
@@ -1040,14 +1041,14 @@ Browser                Server                  R2                Audit
 | Create flow | Controller | `ServiceCompanyJobApplicationController::create()` + `store()` |
 | Edit flow | Controller | `ServiceCompanyJobApplicationController::edit()` + `update()` |
 | Session service | Service | `app/Services/ResumeUploadSessionService.php` |
-| Parser service | Service | `app/Services/ResumeParserService.php` |
+| ~~Parser service~~ | REMOVED | n/a — no server-side parser |
 | Metrics service | Service | `app/Services/ResumeMetrics.php` |
 | Log context | Helper | `app/Logging/ResumeLogContext.php` |
-| Parser job | Job | `app/Jobs/ParseResumeJob.php` |
+| ~~Parser job~~ | REMOVED | n/a — no server-side parser |
 | ES reindex job | Job | `app/Jobs/ElasticIndexCandidateJob.php` |
 | Reconcile job | Job | `app/Jobs/ReconcileOrphanUploadsJob.php` |
-| Repair job | Job | `app/Jobs/RepairStuckSessionsJob.php` |
-| Reverb events | Event | `app/Events/ResumeUploaded.php`, `ResumeParsed.php`, etc. |
+| ~~Repair job (parser-half)~~ | REMOVED | parser-half gone; only the orphan-reaper half remains in `uploads:repair` |
+| Reverb events | Event | `app/Events/ResumeUploaded.php` (status only) |
 | Reverb auth | Channel | `routes/channels.php` |
 | ES observer | Observer | `app/Observers/CandidateObserver.php` |
 | Rate-limit middleware | Middleware | `app/Http/Middleware/CompanyThrottleMiddleware.php` |

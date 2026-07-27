@@ -1,5 +1,13 @@
 # Implementation Prompt — Resume Upload v2 (for another AI)
 
+> **Update 2026-07-27 — server-side parser removed.** This prompt now
+> instructs the implementing AI to build a parser-free upload subsystem.
+> The single parser is `pdf.js` + `re_test()` running in the browser
+> from the local `File` object, parallel with the R2 PUT. There is no
+> `ParseResumeJob`, no `parse_resumes` queue, no
+> `resume_parse_results` table, and no `ResumeParsed` /
+> `ResumeParseFailed` events.
+
 > **Intent:** A self-contained prompt you can paste into a fresh AI session to
 > have it implement Resume Upload v2 for JERO. The prompt bakes in the
 > project rules, the canonical contracts, the no-merge rule, and the doc tree
@@ -28,12 +36,12 @@
 | 3 | [`docs/future_resume_upload_2.0/00_STEPS_IMPLEMENTATION_PLAN.md`](00_STEPS_IMPLEMENTATION_PLAN.md) | The 20-step plan with code |
 | 4 | [`docs/future_resume_upload_2.0/40_data_model.md`](40_data_model.md) | Schema, indexes, status enum |
 | 5 | [`docs/future_resume_upload_2.0/50_api_contracts.md`](50_api_contracts.md) | EP-1..6 JSON shapes, headers, errors |
-| 6 | [`docs/future_resume_upload_2.0/99_decision_log.md`](99_decision_log.md) | 18 ADRs — read ADR-002 + ADR-009 first |
+| 6 | [`docs/future_resume_upload_2.0/99_decision_log.md`](99_decision_log.md) | ADRs 001..004, 006..014, 016..018 — ADR-005 + ADR-015 REMOVED (parser-related) |
 | 7 | [`docs/future_resume_upload_2.0/90_rollout_plan.md`](90_rollout_plan.md) | 14-step rollout + feature flags |
 | 8 | [`docs/future_resume_upload_2.0/45_failure_modes.md`](45_failure_modes.md) | All 20 FAIL-* scenarios |
 | 9 | [`docs/future_resume_upload_2.0/55_tenancy_and_security.md`](55_tenancy_and_security.md) | Tenant scope + file validation |
 | 10 | [`docs/future_resume_upload_2.0/60_storage_and_queue.md`](60_storage_and_queue.md) | R2 + queue config |
-| 11 | [`docs/future_resume_upload_2.0/70_jobs_and_events.md`](70_jobs_and_events.md) | ParseResumeJob + Reverb payloads |
+| 11 | [`docs/future_resume_upload_2.0/70_jobs_and_events.md`](70_jobs_and_events.md) | Reverb payloads (status only — no parser events) |
 | 12 | [`docs/future_resume_upload_2.0/75_capacity_plan.md`](75_capacity_plan.md) | Pod/queue/Redis numbers |
 | 13 | [`docs/future_resume_upload_2.0/30_architecture.md`](30_architecture.md) | 6-tier architecture |
 | 14 | [`docs/future_resume_upload_2.0/30_workflow_diagram.md`](30_workflow_diagram.md) | v1 tree adapted to v2 contracts |
@@ -116,16 +124,18 @@ DOCS TO READ (in this order)
 
 1. `docs/future_resume_upload_2.0/RESUME_UPLOAD_V2_COMPLETE.md`
    — executive view, all sections.
-2. `docs/future_resume_upload_2.0/96_invariants.md` — 5 invariants
-   + tests.
+2. `docs/future_resume_upload_2.0/96_invariants.md` — 4 invariants
+   (INV-1..4) + tests. (INV-5 removed 2026-07-27.)
 3. `docs/future_resume_upload_2.0/00_STEPS_IMPLEMENTATION_PLAN.md`
-   — 20-step plan, contains the canonical code samples.
+   — 20-step plan, contains the canonical code samples (parser-
+   half steps updated to browser-only).
 4. `docs/future_resume_upload_2.0/40_data_model.md` — schema,
-   indexes, status enum.
+   indexes, status enum (no parser_* columns, no
+   resume_parse_results table).
 5. `docs/future_resume_upload_2.0/50_api_contracts.md` — endpoint
    shapes, headers, error matrix.
-6. `docs/future_resume_upload_2.0/99_decision_log.md` — 18 ADRs.
-   ADR-002 + ADR-009 are the most important.
+6. `docs/future_resume_upload_2.0/99_decision_log.md` — ADRs
+   001..004, 006..014, 016..018. ADR-005 + ADR-015 REMOVED.
 
 ==============================================================
 THE 5 INVARIANTS — never violate
@@ -147,8 +157,10 @@ INV-4 — `Idempotency-Key` HTTP header is a **per-request random
 UUID from `crypto.randomUUID()`**, NOT a content hash. NO UNIQUE
 constraint on `(company_id, idempotency_key)`. INDEX only.
 
-INV-5 — One parser result per upload session. `parser_attempts`
-capped at 1 server-side.
+INV-5 — REMOVED (2026-07-27). v2 has no server-side parser; the
+parser is browser-side only (`pdf.js` + `re_test()` from the local
+`File` object, parallel with the R2 PUT). The invariants collapse
+to INV-1..4.
 
 ==============================================================
 THE CARDINAL RULE — Step 20 (NEVER merge)
@@ -189,10 +201,11 @@ The flow:
    returns presigned PUT URL + `r2_temp_key` + session UUID.
 3. Browser PUTs file bytes to R2 directly.
 4. Browser POSTs `/service_company/api/resume-sessions/{uuid}/finalize`.
-5. Server HEADs R2, conditional UPDATE status→Uploaded, dispatches
-   ParseResumeJob, broadcasts Reverb `ResumeUploaded`.
-6. Parser writes `resume_parse_results` row.
-7. Recruiter clicks Submit → conditional UPDATE status→Parsed +
+5. Server HEADs R2, conditional UPDATE status→Uploaded, broadcasts
+   Reverb `ResumeUploaded` (status only — no payload).
+6. **(No `ParseResumeJob`. The browser-side `pdf.js` + `re_test()`
+   has already populated the form fields during step 3's R2 PUT.)**
+7. Recruiter clicks Submit → conditional UPDATE status→Completed +
    `linked_candidate_id` set, insert `documents` row, insert
    `add_job_wise_condidates` row.
 
@@ -224,8 +237,10 @@ Phase B — Idempotency + presign (Steps 4-6)
 Phase C — Browser flow (Steps 7-9)
   `resume-presign.js`, R2 PUT, `localStorage` cache, refresh
   recovery.
-Phase D — Cross-tab + parser (Steps 10-14)
-  `BroadcastChannel`, `ParseResumeJob`, Reverb auth.
+Phase D — Cross-tab + browser parser (Steps 10-14)
+  `BroadcastChannel`, browser-side `pdf.js` + `re_test()` wiring,
+  Reverb auth. (No `ParseResumeJob`, no `parse_resumes` queue, no
+  LLM call.)
 Phase E — Submit + extraction (Steps 15-16)
   `finalize` + submit merge, god-controller extraction.
 Phase F — Edit page (Step 19)
@@ -286,6 +301,14 @@ WHAT NOT TO DO
 - DO NOT add a Repository layer (no repos in this codebase).
 - DO NOT add a separate `resume_upload_state_transitions` table.
 - DO NOT move presign to a Cloudflare Worker (that's v3; ADR-017).
+- DO NOT add a server-side parser. v2 has only the browser-side one.
+  No `ParseResumeJob`, no `ResumeParserService`, no
+  `resume_parse_results` table, no `parse_resumes` queue, no
+  `parser_attempts` column, no `parser_started_at`,
+  no `ResumeParsed` / `ResumeParseStarted` / `ResumeParseProgress` /
+  `ResumeParseFailed` Reverb events, no `Retry-After` honor, no
+  `RepairStuckSessionsJob` parser-half, no `parser_fallback_mode`,
+  no `extractor_version`.
 
 ==============================================================
 WHEN YOU HAVE A QUESTION
@@ -337,15 +360,16 @@ Deliverables:
    INDEX(company_id, idempotency_key). NO UNIQUE on idempotency_key.
 2. Migration: `add_resume_v2_session_columns` — idempotency_key,
    file_size_bytes, mime_type, sha256_hex, expires_at,
-   upload_completed_at, parser_started_at, parser_completed_at,
-   parser_attempts, parser_last_error, last_error,
-   linked_candidate_id, linked_application_id.
-3. Migration: `create_resume_parse_results` — FK to resume_uploads
-   with UNIQUE per row.
+   upload_completed_at, last_error, linked_candidate_id,
+   linked_application_id. **(No parser_started_at, no
+   parser_completed_at, no parser_attempts, no
+   parser_last_error — those columns are gone.)**
+3. ~~Migration `create_resume_parse_results`~~ — REMOVED. v2 has no
+   server-side parser and therefore no canonical extraction row.
 4. Migration: `create_upload_session_audits`.
-5. Eloquent models: ResumeUpload, ResumeParseResult,
-   UploadSessionAudit. ResumeUpload scopes: `forCompany($cid)`,
-   `byUuid($uuid)`. NO `ResumeUpload::all()`.
+5. Eloquent models: ResumeUpload, UploadSessionAudit.
+   ~~ResumeParseResult~~ — REMOVED. ResumeUpload scopes:
+   `forCompany($cid)`, `byUuid($uuid)`. NO `ResumeUpload::all()`.
 6. Audit record() helper.
 7. Tests covering the schema and the scopes.
 

@@ -117,19 +117,21 @@ replaced by `upload_session_audits.action_at`.
 
 ---
 
-## ADR-005 — ONE Retry-After attempt in parser, NO automatic retry loop
+## ADR-005 — ~~ONE Retry-After attempt in parser, NO automatic retry loop~~ — REMOVED 2026-07-27
 
-**Context.** OpenAI / parser-side 429 has a `Retry-After`. v1 had no
+**Context (historic).** OpenAI / parser-side 429 has a `Retry-After`. v1 had no
 honor; blast retry pattern likely.
 
-**Decision.** v2 honors `Retry-After` once, then fails.
+**Original decision.** v2 honors `Retry-After` once, then fails.
 
-**Why now.** The aim is fairness across tenants. A 429 from OpenAI
-should NOT be amplified by our retry storm.
+**REMOVAL reason.** v2 has no server-side parser. There is no LLM call
+to receive a `Retry-After`, no parser queue to retry. Browser-side
+`pdf.js` is deterministic; failures degrade to "empty fields" only,
+which INV-2 handles fine. ADR-005 is kept here as a tombstone to
+preserve the ADR numbering for downstream cross-references; the
+content is no longer in force.
 
-**Trade-offs.** Failed parses require user click retry. This is honest.
-
-**Reversible?** Yes — env `RESUMES_QUEUE_PARSER_TRIES` for staging.
+**Reversible?** N/A — concept removed, not deferred.
 
 ---
 
@@ -322,19 +324,21 @@ Mitigated by leaving the legacy path during v2.
 
 ---
 
-## ADR-015 — One parser pod per "tenant hotness", Redis-locked per-pod concurrency
+## ADR-015 — ~~One parser pod per "tenant hotness", Redis-locked per-pod concurrency~~ — REMOVED 2026-07-27
 
-**Context.** One tenant spiking triggers throttling on the parser.
+**Context (historic).** One tenant spiking triggers throttling on the parser.
 
-**Decision.** Per-pod concurrency cap via Redis semaphore keyed by
+**Original decision.** Per-pod concurrency cap via Redis semaphore keyed by
 `tenant_id`; max is configurable.
 
-**Why now.** Distributes Backpressure fairly.
+**REMOVAL reason.** v2 has no parser pods. The single parser layer runs
+in the browser from the local `File` object; browser memory is bounded
+per-tab, and per-tab throttling is the browser's responsibility, not
+the server's. ADR-015 is kept here as a tombstone to preserve the ADR
+numbering for downstream cross-references; the content is no longer
+in force.
 
-**Trade-offs.** A failure in Redis is "fail open = no per-tenant cap"
-which is contained.
-
-**Reversible?** Yes.
+**Reversible?** N/A — concept removed, not deferred.
 
 ---
 

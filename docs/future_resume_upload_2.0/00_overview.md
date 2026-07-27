@@ -8,7 +8,7 @@
 It does this by moving the heavy bytes out of PHP (direct browser-to-R2
 presigned PUT), queueing every stateful transition behind a row-level DB
 state machine (the same correctness primitive from Phase 5 of v1), capping
-parser fan-out behind a Redis semaphore, and putting observability on
+parser fan-out behind a Redis semaphore (REMOVED 2026-07-27 — parser is now browser-side; no Redis semaphore needed), and putting observability on
 every transition so 10K × 1 failure produces one structured log line per
 pod, not an avalanche.
 
