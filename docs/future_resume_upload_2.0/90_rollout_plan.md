@@ -22,7 +22,7 @@
 ### v2.0.0a — Additive schema + health endpoint (background infra)
 
 **Changes:**
-- Migration 1: `add_resume_v2_indexes` (unique on company_id+idempotency_key)
+- Migration 1: `add_resume_v2_indexes` — UNIQUE(uuid, company_id), INDEX(company_id, idempotency_key) — **NO UNIQUE on idempotency_key** (ADR-002, ADR-009)
 - Migration 2: `add_resume_v2_session_columns`
 - Migration 3: `create_resume_parse_results`
 - Migration 4: `create_upload_session_audits`
@@ -196,7 +196,9 @@ OFF for public careers.
 | 5xx rate finalize | < 0.001% |
 | Parser success rate | ≥ 95% |
 | Parser 429 rate | < 2% (target) |
-| Submit duplicate merge rate | < 0.1% |
+| Submit duplicate merge rate | n/a (no merge — by design, Step 20) |
+| Submit candidate-creation-per-submit ratio | **1.0** (one submit = one candidate, always) |
+| Duplicate-badge display rate | tracked (recruiter UX signal, not a correctness KPI) |
 | Cross-tenant event leak | zero |
 | Health endpoint latency | < 250 ms p95 |
 

@@ -28,8 +28,9 @@ flow** with v2 contracts annotated at each branch.
  └──────────────────────────────────────────────────────────────
  Recruiter Selects Resume
  │
- ├── SHA256(file_bytes)
- ├── Build idem key = sha256(file + company_id + safe_filename)
+ ├── SHA256(file_bytes)                            ← sanity check only; NOT used as idem key
+ ├── Generate Idempotency-Key = crypto.randomUUID()  ← per-request random; HTTP header (NOT body)
+ │                                                  ← NOT a content hash (ADR-002, INV-4, Step 20)
  │
  ├── Cache File + Metadata (memory)
  ├── Abort previous XHR/parser if any

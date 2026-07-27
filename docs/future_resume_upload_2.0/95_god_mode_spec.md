@@ -29,8 +29,12 @@ down and broadcast-peer channels for same-machine tabs.
 
 ### Why this is safe
 
-- IDEMPOTENCY (`sha256(file_bytes + company_id + safe_filename)` UNIQUE)
-  eliminates double-session race.
+- IDEMPOTENCY (per-request random UUID via `crypto.randomUUID()`,
+  HTTP `Idempotency-Key` header, **INDEX** — NOT UNIQUE — on
+  `(company_id, idempotency_key)`; see ADR-002, ADR-009, INV-4)
+  handles transport-retry replay; double-session race at the
+  upload-subsystem level is handled by the canonical state-machine
+  row transitions, not by a UNIQUE constraint.
 - `finalize` no longer exists as a separate request — submit does it
   inside one transaction.
 - Session moves `Created` → `Uploaded` (HEAD-verified) → `Parsed`

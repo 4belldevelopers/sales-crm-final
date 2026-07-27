@@ -82,8 +82,12 @@ UI shows green "We received your submission".
 **Surface:** user double-clicks.
 **Backend:** server check on candidate uniqueness (composite idx:
 company_id, email, phone) — second insert returns 200 with the existing
-candidate_id; UI merges.
-**Diagnose:** metric `resume_submit_duplicate_merged_total`.
+candidate_id; UI surfaces "you already submitted — here is the prior
+candidate row" banner. The Duplicate Ownership Engine flags a "possible
+duplicate" badge on the candidate; **the engine NEVER merges or
+deletes candidates** (Step 20). Recruiter decides whether to archive
+one manually.
+**Diagnose:** metric `resume_submit_recovered_total`.
 
 ## FAIL-12 — Session expires (presign → upload-complete > 30 min)
 
@@ -140,11 +144,15 @@ retries up to 5 times with exponential backoff; on terminal fail, audit
 row `ActionElasticIndexFailed` written; ops follow-up.
 **Diagnose:** metric `resume_es_index_failed_total`.
 
-## FAIL-20 — Same idempotency key, different filename (rare)
+## FAIL-20 — Browser retries presign POST with a different `Idempotency-Key` (intentional new pick)
 
-**Surface:** server returns the existing session.
-**Backend:** idem key built as `sha256(file_bytes + company_id + safe_filename)`.
-A user renaming a file in OS before upload generates a NEW session
-rather than reuse. This is intentional — same name does NOT guarantee
-same bytes.
+**Surface:** server returns a NEW session (different UUID, different
+`Idempotency-Key`) for the second request. The first session's row is
+left in its current state; the second is a brand-new session.
+**Backend:** idem key is `crypto.randomUUID()` per request, NOT a
+content hash (ADR-002, INV-4). A user re-picking the same file or
+renaming the file before upload always emits a new key → always gets
+a new session. This is INV-1: every file pick = brand-new session.
+The Duplicate Ownership Engine flags the dup at submit time (Step 20);
+it NEVER merges.
 **Diagnose:** metric `resume_idempotency_key_rotations_total`.

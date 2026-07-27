@@ -25,7 +25,7 @@ Add columns; do not rename. CLAUDE.md rule 7.
 | `original_filename` | varchar(255) | | |
 | `stored_filename` | varchar(255) | | |
 | `file_hash` | char(64) | (compound idem) | SHA256 of file bytes |
-| `idempotency_key` | char(64) | UQ (company_id) | sha256(file+company_id+filename) |
+| `idempotency_key` | char(64) | idx (company_id) | per-request random UUID from `Idempotency-Key` HTTP header (NOT a content hash; see ADR-002, INV-4) |
 | `r2_temp_key` | varchar(512) | nullable | |
 | `r2_temp_url` | varchar(512) | nullable | presigned URL |
 | `r2_url` | varchar(512) | nullable | baked-final S3 URL |
@@ -47,11 +47,16 @@ Add columns; do not rename. CLAUDE.md rule 7.
 **Indexes:**
 
 ```sql
-UNIQUE KEY `uq_company_idem` (`company_id`, `idempotency_key`)
 UNIQUE KEY `uq_uuid_company` (`uuid`, `company_id`)
+KEY `idx_company_idem` (`company_id`, `idempotency_key`)            -- replay-lookup (NO UNIQUE — INV-1, ADR-002, ADR-009)
 KEY `idx_status_expires` (`status`, `expires_at`)
 KEY `idx_company_created` (`company_id`, `created_at`)
 ```
+
+> The `idx_company_idem` index is a **replay-lookup aid** so the
+> INSERT-then-SELECT pattern in `createOrPresign()` resolves a
+> transport retry to its existing session in O(1). It is **not** a
+> uniqueness gate. See INV-4, ADR-002, ADR-009.
 
 ### `resume_parse_results` (new, additive)
 
@@ -152,9 +157,9 @@ also additive — DROP the new columns / DROP the new tables.
 
 | Date | Migration | Action |
 |---|---|---|
-| v2.0.0a | `add_resume_v2_indexes` | UQ (company_id, idempotency_key), UQ (uuid, company_id) |
+| v2.0.0a | `add_resume_v2_indexes` | UQ (uuid, company_id), IDX (company_id, idempotency_key) — NO UNIQUE on idempotency_key (ADR-002, ADR-009) |
 | v2.0.0a | `add_resume_v2_session_columns` | parsesStarted/completed/parser_attempts/expires_at/last_error |
-| v2.0.0b | `create_resume_parse_results_can{ORmˈnˈstrim sh_table9 ] | n001` | model+index |
+| v2.0.0b | `create_resume_parse_results` | model+index |
 | v2.0.0b | `create_upload_session_audits` | audit table |
 
 ## Naming strictness

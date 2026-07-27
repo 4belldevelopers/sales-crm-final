@@ -54,7 +54,7 @@ test fixtures before relying on them.
 | Parser retry | **once** with `Retry-After` | memory map §"OpenAI" |
 | Session TTL | 30 min after creation | R2 lifecycle |
 | Live progress WS | Reverb, same-tenant private channel | Pusher/100-conn/limit ok at 1:4 fan-out |
-| Idempotency key | `sha256(file_bytes + company_id + safe_filename)` | file hash dedupes S3 objects |
+| Idempotency key | per-request random UUID via `crypto.randomUUID()` | HTTP `Idempotency-Key` header; replay-lookup only, NOT content dedupe (ADR-002, INV-4, Step 20) |
 | Rate limit — create session | 30/min/user, **120/min/company** | fairness across tenants |
 | Rate limit — submit candidate | 20/min/user | user-level abuse guard |
 

@@ -28,10 +28,10 @@ For v2:
 
 | Check | Where | Failure mode |
 |---|---|---|
-| `idempotency_key` is hex64 | server | 400 |
+| `idempotency_key` (per-request random UUID via `crypto.randomUUID()`) | server | 400 if missing/malformed |
 | `mime_type` ∈ allowed (PDF/DOC/DOCX) | server | 422 |
 | `file_size_bytes` ≤ 6 MB | server | 422 |
-| `sha256_hex` matches file (server HEAD later) | server | 422 |
+| `sha256_hex` (sanity-check field; client-stated, server re-verifies at HEAD; NOT used as idem key) | server | mismatch logged, not 422 — idem key is independent (ADR-002, INV-4) |
 | filename length 1..128 | server | 422 |
 
 ### On R2 PUT
