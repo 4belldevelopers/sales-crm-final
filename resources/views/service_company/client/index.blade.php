@@ -34,153 +34,170 @@
     <!--begin::Container-->
     <div id="kt_content_container" class="container-fluid px-3">
 
+        <style>
+        /* ── Client Hero Redesign ── */
+        .cl-hero { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; gap:12px; }
+        .cl-hero-left { display:flex; flex-direction:column; gap:3px; }
+        .cl-hero-title { display:flex; align-items:center; gap:8px; font-size:20px; font-weight:700; color:#181c32; line-height:1.2; }
+        .cl-hero-title svg { width:20px; height:20px; flex-shrink:0; }
+        .cl-hero-sub { font-size:12px; color:#7e8299; margin-top:2px; }
+        .cl-add-btn { display:inline-flex; align-items:center; gap:6px; background:#1b84ff; color:#fff; border:none; border-radius:7px; padding:9px 18px; font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; white-space:nowrap; }
+        .cl-add-btn:hover { background:#056ee9; color:#fff; }
+
+        /* Stat cards */
+        .cl-stats { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+        .cl-stat { flex:1; min-width:140px; background:#fff; border:1px solid #e4e6ef; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:box-shadow .15s; text-decoration:none; }
+        .cl-stat:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); text-decoration:none; }
+        .cl-stat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .cl-stat-icon svg { width:20px; height:20px; }
+        .cl-stat-icon.blue { background:#eff6ff; color:#2563eb; }
+        .cl-stat-icon.indigo { background:#eef2ff; color:#4f46e5; }
+        .cl-stat-icon.green { background:#f0fdf4; color:#16a34a; }
+        .cl-stat-icon.orange { background:#fff7ed; color:#ea580c; }
+        .cl-stat-icon.purple { background:#faf5ff; color:#7c3aed; }
+        .cl-stat-num { font-size:20px; font-weight:700; color:#181c32; line-height:1.1; }
+        .cl-stat-label { font-size:11px; color:#7e8299; margin-top:2px; }
+
+        /* Filter bar */
+        .cl-filter { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+        .cl-search-wrap { position:relative; flex:1; min-width:160px; }
+        .cl-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:#a1a5b7; pointer-events:none; }
+        .cl-search-input { width:100%; border:1px solid #e4e6ef; border-radius:7px; padding:7px 10px 7px 32px; font-size:12px; font-family:'Poppins',sans-serif; color:#181c32; outline:none; background:#fff; }
+        .cl-search-input:focus { border-color:#1b84ff; }
+        .cl-select { border:1px solid #e4e6ef; border-radius:7px; padding:7px 28px 7px 10px; font-size:12px; font-family:'Poppins',sans-serif; color:#181c32; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a5b7' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center; appearance:none; outline:none; cursor:pointer; }
+        .cl-filter-right { display:flex; align-items:center; gap:6px; margin-left:auto; }
+        .cl-filter-btn { display:inline-flex; align-items:center; gap:5px; border:1px solid #e4e6ef; border-radius:7px; background:#fff; padding:7px 12px; font-size:11px; font-weight:500; color:#5e6278; cursor:pointer; white-space:nowrap; text-decoration:none; }
+        .cl-filter-btn:hover { border-color:#1b84ff; color:#1b84ff; }
+        .cl-filter-btn svg { width:13px; height:13px; }
+        .cl-icon-btn { width:32px; height:32px; border:1px solid #e4e6ef; border-radius:7px; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5e6278; }
+        .cl-icon-btn:hover { border-color:#1b84ff; color:#1b84ff; }
+        .cl-icon-btn svg { width:13px; height:13px; }
+
+        /* Tabs */
+        .cl-tabs { display:flex; align-items:center; gap:0; border-bottom:2px solid #e4e6ef; margin-bottom:14px; overflow-x:auto; }
+        .cl-tab { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; font-size:12px; font-weight:500; color:#7e8299; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-2px; white-space:nowrap; cursor:pointer; }
+        .cl-tab:hover { color:#181c32; text-decoration:none; }
+        .cl-tab.active { color:#1b84ff; border-bottom-color:#1b84ff; font-weight:600; }
+        .cl-tab svg { width:14px; height:14px; }
+        </style>
+
         <!-- HERO -->
-        <div class="hero-section">
-            <div class="hero-left">
-                <div class="hero-title">
+        <div class="cl-hero">
+            <div class="cl-hero-left">
+                <div class="cl-hero-title">
                     Clients
-                    <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
+                        <path d="m9 12 2 2 4-4" stroke="#16A34A" stroke-width="2.5"/>
                     </svg>
                 </div>
-                <div class="hero-sub">Manage and track your clients</div>
-                <div class="stats-row">
-                    <a href="{{ route('service_company.clients.index') }}" class="stat-card active">
-                        <div class="stat-icon blue">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-num">{{ @$clientDataCnt['clientAll'] ?? 0 }}</div>
-                            <div class="stat-label">All Clients</div>
-                        </div>
-                    </a>
-                    <a href="{{ url('service_company/clients/direct_client/0') }}" class="stat-card">
-                        <div class="stat-icon green">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-num">{{ @$clientDataCnt['clientDirect'] ?? 0 }}</div>
-                            <div class="stat-label">Direct Clients</div>
-                        </div>
-                    </a>
-                    <a href="{{ url('service_company/clients/custom_client/0') }}" class="stat-card">
-                        <div class="stat-icon yellow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-num">{{ @$clientDataCnt['clientCustom'] ?? 0 }}</div>
-                            <div class="stat-label">Internal Clients</div>
-                        </div>
-                    </a>
-                    <a href="{{ url('service_company/clients/client_request/0') }}" class="stat-card with-badge">
-                        <span class="new-badge">New</span>
-                        <div class="stat-icon purple">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <div class="stat-num">{{ @$clientDataCnt['clientRequest'] ?? 0 }}</div>
-                            <div class="stat-label">Client Requests</div>
-                        </div>
-                    </a>
+                <div class="cl-hero-sub">Manage and track your clients, relationships and business performance.</div>
+            </div>
+            @if(in_array("add_clients", $userPermissions))
+            <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Client
+            </a>
+            @endif
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="cl-stats">
+            <a href="{{ route('service_company.clients.index') }}" class="cl-stat">
+                <div class="cl-stat-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                    <div class="cl-stat-num">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
+                    <div class="cl-stat-label">Total Clients</div>
+                </div>
+            </a>
+            <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-stat">
+                <div class="cl-stat-icon indigo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div>
+                    <div class="cl-stat-num">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
+                    <div class="cl-stat-label">Internal Clients</div>
+                </div>
+            </a>
+            <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-stat">
+                <div class="cl-stat-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div>
+                    <div class="cl-stat-num">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
+                    <div class="cl-stat-label">Direct Clients</div>
+                </div>
+            </a>
+            <div class="cl-stat">
+                <div class="cl-stat-icon orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                </div>
+                <div>
+                    <div class="cl-stat-num">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
+                    <div class="cl-stat-label">Clients Actively Hiring</div>
                 </div>
             </div>
-            <!-- Illustration -->
-            <div class="illus-svg-wrap">
-                <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" width="220" height="160">
-                    <rect x="0" y="30" width="90" height="60" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-                    <circle cx="16" cy="60" r="9" fill="#94A3B8" transform="translate(8,0)"/>
-                    <rect x="34" y="52" width="46" height="6" rx="3" fill="#CBD5E1"/>
-                    <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
-                    <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
-                    <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
-                    <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                    <rect x="108" y="90" width="24" height="38" rx="4" fill="#2563EB"/>
-                    <circle cx="120" cy="82" r="12" fill="#FBBF24"/>
-                    <path d="M108 80 Q120 68 132 80" fill="#1E293B"/>
-                    <rect x="108" y="78" width="4" height="14" rx="2" fill="#1E293B"/>
-                    <path d="M113 90 L120 98 L127 90" fill="white" opacity=".6"/>
-                    <rect x="100" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                    <rect x="130" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                    <rect x="112" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                    <rect x="121" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                    <ellipse cx="115" cy="143" rx="5" ry="3" fill="#111827"/>
-                    <ellipse cx="124" cy="143" rx="5" ry="3" fill="#111827"/>
-                    <ellipse cx="175" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                    <rect x="163" y="90" width="24" height="38" rx="4" fill="#1E40AF"/>
-                    <circle cx="175" cy="82" r="12" fill="#D97706"/>
-                    <path d="M163 78 Q175 68 187 78 Q185 72 175 70 Q165 72 163 78Z" fill="#1E293B"/>
-                    <path d="M168 88 Q175 94 182 88 Q179 92 175 93 Q171 92 168 88Z" fill="#92400E" opacity=".7"/>
-                    <path d="M168 90 L175 98 L182 90" fill="white" opacity=".6"/>
-                    <path d="M175 94 L173 108 L175 110 L177 108 Z" fill="#EF4444"/>
-                    <rect x="155" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                    <rect x="185" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                    <rect x="167" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                    <rect x="176" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                    <ellipse cx="170" cy="143" rx="5" ry="3" fill="#111827"/>
-                    <ellipse cx="179" cy="143" rx="5" ry="3" fill="#111827"/>
-                    <path d="M131 108 Q148 114 164 108" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none"/>
-                    <circle cx="131" cy="108" r="4" fill="#FBBF24"/>
-                    <circle cx="164" cy="108" r="4" fill="#FBBF24"/>
-                    <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-                    <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
-                    <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                    <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
-                    <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
-                    <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-            </div>
+            <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-stat">
+                <div class="cl-stat-icon purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+                </div>
+                <div>
+                    <div class="cl-stat-num">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
+                    <div class="cl-stat-label">Pending Requests</div>
+                </div>
+            </a>
         </div>
 
         <!-- FILTER BAR -->
-        <div class="filter-bar">
-            <div class="search-input-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" class="search-input" name="inputJobSearch" value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
-                <div id="loader_search" class="loader_search hidden_search" style="position:absolute; right:12px; top:50%; transform:translateY(-50%);"></div>
+        <div class="cl-filter">
+            <div class="cl-search-wrap" style="flex:1;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="cl-search-input" name="inputJobSearch" value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
+                <div id="loader_search" class="loader_search hidden_search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);"></div>
             </div>
+            <select class="cl-select" id="sortingfilter" onchange="filtersdataget()" style="min-width:160px;">
+                <option value="Show All" selected>Sort</option>
+                <option value="1">Newest to Oldest (Upload Date)</option>
+                <option value="2">Oldest to Newest (Upload Date)</option>
+            </select>
+            <select class="cl-select" id="country" onchange="filtersdataget()" style="min-width:160px;">
+                <option value="" selected>Location</option>
+                @if (!empty($countries))
+                    @foreach ($countries as $country)
+                        <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                    @endforeach
+                @endif
+            </select>
+        </div>
 
-            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                <select class="form-select form-select-lg" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdataget()">
-                    <option value="Show All" selected="">Sort</option>
-                    <option value="1">Newest to Oldest (Upload Date)</option>
-                    <option value="2">Oldest to Newest (Upload Date)</option>
-                </select>
-            </div>
-
-            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                <select class="form-select form-select-lg" data-hide-search="true" id="country" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdataget()">
-                    <option value="" selected="selected">Location</option>
-                    @if (!empty($countries))
-                        @foreach ($countries as $country)
-                            <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                        @endforeach
-                    @endif
-                </select>
-            </div>
-
-            @if(in_array("add_clients", $userPermissions))
-            <a href="{{ url('service_company/clients/create') }}">
-                <button type="button" class="ai-match-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                        <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-                    </svg>
-                    Add Client
-                </button>
+        <!-- TABS -->
+        <div class="cl-tabs">
+            <a href="{{ route('service_company.clients.index') }}" class="cl-tab active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                All Clients
             </a>
-            @endif
+            <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Internal Clients
+            </a>
+            <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Direct Clients
+            </a>
+            <a href="#" class="cl-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                Hiring
+            </a>
+            <a href="#" class="cl-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                Inactive
+            </a>
+            <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Pending Job Requests
+            </a>
         </div>
 
         @if(in_array("view_clients", $userPermissions))

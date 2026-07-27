@@ -1258,6 +1258,134 @@
           margin-left: 0;
         }
       }
+
+      /* ══════════════════════════════════════════════════════════
+         Agencies Hero  (ag-*)
+      ══════════════════════════════════════════════════════════ */
+      .ag-wrap {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px 24px 20px;
+        margin-bottom: 14px;
+        border: 1px solid #E5E7EB;
+      }
+      .ag-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .ag-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        line-height: 1.2;
+      }
+      .ag-shield { width: 20px; height: 20px; color: #2563EB; flex-shrink: 0; }
+      .ag-headline-sub { font-size: 12.5px; color: #6B7280; }
+      .ag-top-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+      .ag-btn-primary {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #2563EB; color: #fff;
+        font-size: 13px; font-weight: 600;
+        padding: 9px 16px; border-radius: 8px; border: none;
+        cursor: pointer; font-family: 'Poppins', sans-serif;
+        white-space: nowrap; transition: background 0.15s;
+      }
+      .ag-btn-primary:hover { background: #1d4ed8; }
+      .ag-btn-outline {
+        display: inline-flex; align-items: center; gap: 7px;
+        background: #fff; color: #2563EB;
+        font-size: 13px; font-weight: 600;
+        padding: 8px 16px; border-radius: 8px;
+        border: 1.5px solid #BFDBFE; cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+        white-space: nowrap; transition: background 0.15s;
+      }
+      .ag-btn-outline:hover { background: #EFF6FF; }
+
+      /* Stat cards */
+      .ag-stats { display: flex; gap: 14px; }
+      .ag-card {
+        flex: 1; background: #fff; border: 1px solid #E5E7EB;
+        border-radius: 12px; padding: 16px 18px;
+        display: flex; align-items: center;
+        justify-content: space-between; gap: 12px; min-width: 0;
+        transition: box-shadow 0.15s, transform 0.15s;
+      }
+      .ag-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
+      .ag-card-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .ag-icon {
+        width: 46px; height: 46px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      }
+      .ag-icon svg { width: 22px; height: 22px; }
+      .ag-icon-blue   { background: #EFF6FF; color: #2563EB; }
+      .ag-icon-green  { background: #DCFCE7; color: #16A34A; }
+      .ag-icon-purple { background: #F3F0FF; color: #7C3AED; }
+      .ag-icon-orange { background: #FFF7ED; color: #EA580C; }
+      .ag-card-info { min-width: 0; }
+      .ag-num { font-size: 22px; font-weight: 700; color: #111827; line-height: 1.1; }
+      .ag-lbl { font-size: 12.5px; font-weight: 600; color: #374151; margin-top: 2px; white-space: nowrap; }
+      .ag-sub-lbl { font-size: 11px; color: #9CA3AF; margin-top: 1px; white-space: nowrap; }
+      .ag-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+      .ag-trend { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+      .ag-trend-up     { color: #16A34A; }
+      .ag-trend-down   { color: #DC2626; }
+      .ag-trend-neutral{ color: #6B7280; }
+      .ag-sparkline { width: 80px; height: 32px; }
+
+      /* Filter bar */
+      .ag-filter-bar {
+        display: flex; align-items: center; gap: 10px;
+        background: #fff; border: 1px solid #E5E7EB;
+        border-radius: 12px; padding: 12px 16px;
+        margin-bottom: 14px; flex-wrap: nowrap;
+      }
+      .ag-search-wrap { position: relative; flex: 1; min-width: 200px; }
+      .ag-search-icon {
+        position: absolute; left: 10px; top: 50%;
+        transform: translateY(-50%); color: #9CA3AF; pointer-events: none;
+      }
+      .ag-search-input {
+        width: 100%; border: 1px solid #E5E7EB; border-radius: 8px;
+        padding: 7px 10px 7px 32px; font-size: 12.5px; color: #374151;
+        font-family: 'Poppins', sans-serif; outline: none;
+        background: #F9FAFB; transition: border-color 0.15s;
+      }
+      .ag-search-input:focus { border-color: #93C5FD; background: #fff; }
+      .ag-search-input::placeholder { color: #9CA3AF; }
+      .ag-filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+      .ag-select-wrap { position: relative; display: flex; flex-direction: column; min-width: 90px; }
+      .ag-select-label {
+        font-size: 10px; font-weight: 600; color: #9CA3AF;
+        text-transform: uppercase; letter-spacing: 0.3px;
+        line-height: 1; margin-bottom: 2px; pointer-events: none;
+      }
+      .ag-select {
+        appearance: none; -webkit-appearance: none;
+        border: 1px solid #E5E7EB; border-radius: 8px;
+        padding: 5px 28px 5px 10px; font-size: 12.5px; font-weight: 600;
+        color: #374151; font-family: 'Poppins', sans-serif;
+        background: #fff; outline: none; cursor: pointer;
+        transition: border-color 0.15s; white-space: nowrap;
+      }
+      .ag-select:focus { border-color: #93C5FD; }
+      .ag-select-caret { position: absolute; right: 8px; bottom: 8px; color: #9CA3AF; pointer-events: none; }
+      .ag-filters-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #F9FAFB; color: #374151;
+        font-size: 12.5px; font-weight: 600;
+        padding: 7px 14px; border-radius: 8px; border: 1px solid #E5E7EB;
+        cursor: pointer; font-family: 'Poppins', sans-serif;
+        white-space: nowrap; align-self: flex-end; margin-bottom: 1px;
+        transition: background 0.15s;
+      }
+      .ag-filters-btn:hover { background: #E5E7EB; }
     </style>
 
     <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -1386,185 +1514,196 @@
                         
 
                         <!-- HERO -->
-                        <div class="hero-section">
-                            <div class="hero-left">
-                                <div class="hero-title">
-                                Agencies
-                                <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
-                                </svg>
-                                </div>
-                                <div class="hero-sub">Discover verified Agencies</div>
-                                <div class="stats-row">
-                                    <div class="stat-card">
-                                        <div class="stat-icon blue">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="9" cy="7" r="4"/>
-                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">344</div>
-                                        <div class="stat-label">Total Agencies</div>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon green">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <div class="ag-wrap">
+                            <div class="ag-top">
+                                <div>
+                                    <div class="ag-title">
+                                        Agencies
+                                        <svg class="ag-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            <path d="m9 12 2 2 4-4" stroke="#16A34A" stroke-width="2.5"/>
                                         </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">33</div>
-                                        <div class="stat-label">Active Agencies</div>
-                                        </div>
                                     </div>
-                                    <div class="stat-card">
-                                        <div class="stat-icon yellow">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">92</div>
-                                        <div class="stat-label">New This Month</div>
-                                        </div>
-                                    </div>
-                                    <div class="stat-card with-badge">
-                                        <span class="new-badge">New</span>
-                                        <div class="stat-icon purple">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                        </svg>
-                                        </div>
-                                        <div class="stat-info">
-                                        <div class="stat-num">24</div>
-                                        <div class="stat-label">Top Performers</div>
-                                        </div>
-                                    </div>
+                                    <div class="ag-headline-sub">Manage and monitor all your recruitment partners in one place.</div>
+                                </div>
+                                <div class="ag-top-right">
+                                    @if (in_array('add_staffing_partners', $userPermissions))
+                                    <button class="ag-btn-primary add_staffing_partners_frm" data-toggle="modal" data-target="#add_staffing_partners">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+                                        Add Agency
+                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </button>
+                                    @endif
                                 </div>
                             </div>
-                            <!-- Illustration -->
-                            <div class="illus-svg-wrap">
-                                <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" width="220" height="160">
-                                <!-- Background floating card (left) -->
-                                <rect x="0" y="30" width="90" height="60" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-                                <circle cx="16" cy="60" r="9" fill="#94A3B8" transform="translate(8,0)"/>
-                                <rect x="34" y="52" width="46" height="6" rx="3" fill="#CBD5E1"/>
-                                <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
-                                <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
-                                <!-- Stars -->
-                                <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
 
-                                <!-- Female figure -->
-                                <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                                <!-- Body -->
-                                <rect x="108" y="90" width="24" height="38" rx="4" fill="#2563EB"/>
-                                <!-- Head -->
-                                <circle cx="120" cy="82" r="12" fill="#FBBF24"/>
-                                <!-- Hair -->
-                                <path d="M108 80 Q120 68 132 80" fill="#1E293B"/>
-                                <rect x="108" y="78" width="4" height="14" rx="2" fill="#1E293B"/>
-                                <!-- Collar -->
-                                <path d="M113 90 L120 98 L127 90" fill="white" opacity=".6"/>
-                                <!-- Arms -->
-                                <rect x="100" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                                <rect x="130" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                                <!-- Legs -->
-                                <rect x="112" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <rect x="121" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <!-- Shoes -->
-                                <ellipse cx="115" cy="143" rx="5" ry="3" fill="#111827"/>
-                                <ellipse cx="124" cy="143" rx="5" ry="3" fill="#111827"/>
+                            <div class="ag-stats">
+                                <!-- Card 1: All Agencies -->
+                                <div class="ag-card">
+                                    <div class="ag-card-left">
+                                        <div class="ag-icon ag-icon-blue">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ag-card-info">
+                                            <div class="ag-num" id="span_spartnerAll">{{ @$spartnerDataCnt['spartnerAll'] ?? 344 }}</div>
+                                            <div class="ag-lbl">All Agencies</div>
+                                            <div class="ag-sub-lbl">Registered Partners</div>
+                                        </div>
+                                    </div>
+                                    <div class="ag-card-right">
+                                        <div class="ag-trend ag-trend-up">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            12 this month
+                                        </div>
+                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <polyline points="0,24 12,20 24,22 36,14 48,16 60,10 72,8 80,6" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
 
-                                <!-- Male figure -->
-                                <ellipse cx="175" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                                <!-- Body -->
-                                <rect x="163" y="90" width="24" height="38" rx="4" fill="#1E40AF"/>
-                                <!-- Head -->
-                                <circle cx="175" cy="82" r="12" fill="#D97706"/>
-                                <!-- Hair -->
-                                <path d="M163 78 Q175 68 187 78 Q185 72 175 70 Q165 72 163 78Z" fill="#1E293B"/>
-                                <!-- Beard -->
-                                <path d="M168 88 Q175 94 182 88 Q179 92 175 93 Q171 92 168 88Z" fill="#92400E" opacity=".7"/>
-                                <!-- Collar -->
-                                <path d="M168 90 L175 98 L182 90" fill="white" opacity=".6"/>
-                                <!-- Tie -->
-                                <path d="M175 94 L173 108 L175 110 L177 108 Z" fill="#EF4444"/>
-                                <!-- Arms -->
-                                <rect x="155" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                                <rect x="185" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                                <!-- Legs -->
-                                <rect x="167" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <rect x="176" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                                <!-- Shoes -->
-                                <ellipse cx="170" cy="143" rx="5" ry="3" fill="#111827"/>
-                                <ellipse cx="179" cy="143" rx="5" ry="3" fill="#111827"/>
+                                <!-- Card 2: Newly Onboarded -->
+                                <div class="ag-card">
+                                    <div class="ag-card-left">
+                                        <div class="ag-icon ag-icon-green">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                                <path d="M9 12l2 2 4-4"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ag-card-info">
+                                            <div class="ag-num">18</div>
+                                            <div class="ag-lbl">Newly Onboarded</div>
+                                            <div class="ag-sub-lbl">Last 7 Days</div>
+                                        </div>
+                                    </div>
+                                    <div class="ag-card-right">
+                                        <div class="ag-trend ag-trend-up">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            5 this week
+                                        </div>
+                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <polyline points="0,26 12,22 24,24 36,18 48,14 60,12 72,8 80,6" stroke="#16A34A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
 
-                                <!-- Handshake -->
-                                <path d="M131 108 Q148 114 164 108" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none"/>
-                                <circle cx="131" cy="108" r="4" fill="#FBBF24"/>
-                                <circle cx="164" cy="108" r="4" fill="#FBBF24"/>
+                                <!-- Card 3: Working on Jobs -->
+                                <div class="ag-card">
+                                    <div class="ag-card-left">
+                                        <div class="ag-icon ag-icon-purple">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ag-card-info">
+                                            <div class="ag-num">126</div>
+                                            <div class="ag-lbl">Working on Jobs</div>
+                                            <div class="ag-sub-lbl">Assigned Agencies</div>
+                                        </div>
+                                    </div>
+                                    <div class="ag-card-right">
+                                        <div class="ag-trend ag-trend-up">
+                                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            11 this month
+                                        </div>
+                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <polyline points="0,22 12,18 24,20 36,16 48,20 60,12 72,10 80,8" stroke="#7C3AED" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
 
-                                <!-- Floating review card (right) -->
-                                <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-                                <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
-                                <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                                <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
-                                <!-- shield check floating -->
-                                <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
-                                <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                </svg>
+                                <!-- Card 4: Actively Submitting -->
+                                <div class="ag-card">
+                                    <div class="ag-card-left">
+                                        <div class="ag-icon ag-icon-orange">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ag-card-info">
+                                            <div class="ag-num">32</div>
+                                            <div class="ag-lbl">Actively Submitting</div>
+                                            <div class="ag-sub-lbl">Last 30 Days</div>
+                                        </div>
+                                    </div>
+                                    <div class="ag-card-right">
+                                        <div class="ag-trend ag-trend-neutral">Today: 18</div>
+                                        <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <polyline points="0,20 12,16 24,22 36,14 48,18 60,10 72,16 80,12" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- FILTER BAR -->
-                        <div class="filter-bar">
-                            <div class="search-input-wrap">
-                                <input type="text" class="search-input" name="inputJobSearch"
-                                    value="" placeholder="Search....." id="kt_tagify_2" onchange="filtersdataget()" />
-                            </div>
-                            
-                            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                                <select class="form-select form-select-lg" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" onchange="filtersdataget()">
-                                        <option value="Show All" selected="">Sort</option>
-                                        <option value="1">Newest to Oldest (Upload Date)</option>
-                                        <option value="2">Oldest to Newest (Upload Date)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="col-lg-2 d-flex align-items-center px-2" style="width: 20%;">
-                                <select class="form-select form-select-lg" data-hide-search="true"
-                                    id="country" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" onchange="filtersdataget()">
-                                    <option value="" selected="selected">Location</option>
-                                    @if ($countries)
-                                        @foreach ($countries as $country)
-                                            <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                            </div>
-                            
-                            <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+                        <div class="ag-filter-bar">
+                            <div class="ag-search-wrap">
+                                <svg class="ag-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                                 </svg>
-                                More Filters
+                                <input type="text" class="ag-search-input" name="inputJobSearch"
+                                    placeholder="Search agency name, contact, email, skills..." id="kt_tagify_2" onkeyup="filtersdataget()"/>
                             </div>
-                            @if (in_array('add_staffing_partners', $userPermissions))
-                                <button class="ai-match-btn add_staffing_partners_frm" data-toggle="modal" data-target="#add_staffing_partners">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                    </svg>
-                                    Add {{__('messages.Agency')}}
-                                </button>
-                            @endif
 
+                            <div class="ag-filter-group">
+                                <div class="ag-select-wrap">
+                                    <div class="ag-select-label">Status</div>
+                                    <select class="ag-select" id="sortingfilter" onchange="filtersdataget()">
+                                        <option value="">All Status</option>
+                                        <option value="1">Active</option>
+                                        <option value="2">Inactive</option>
+                                    </select>
+                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </div>
+
+                                <div class="ag-select-wrap">
+                                    <div class="ag-select-label">Performance</div>
+                                    <select class="ag-select" id="agency_performance" onchange="filtersdataget()">
+                                        <option value="">All</option>
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </div>
+
+                                <div class="ag-select-wrap">
+                                    <div class="ag-select-label">Specialization</div>
+                                    <select class="ag-select" id="country" onchange="filtersdataget()">
+                                        <option value="">All</option>
+                                        @if ($countries)
+                                            @foreach ($countries as $country)
+                                                <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </div>
+
+                                <div class="ag-select-wrap">
+                                    <div class="ag-select-label">Response SLA</div>
+                                    <select class="ag-select" id="response_sla" onchange="filtersdataget()">
+                                        <option value="">All</option>
+                                        <option value="24h">Within 24h</option>
+                                        <option value="48h">Within 48h</option>
+                                        <option value="72h">Within 72h</option>
+                                    </select>
+                                    <svg class="ag-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </div>
+
+                                <button class="ag-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                                    </svg>
+                                    Filters
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Table -->

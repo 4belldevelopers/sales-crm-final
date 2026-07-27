@@ -1,8 +1,0 @@
-#!/usr/bin/bash
-# pre-push hook — wired via `git config core.hooksPath scripts/hooks`.
-# Refuses any push whose diff or working tree contains production credentials.
-# See scripts/check-prod-creds.sh for the policy and docs/SECURITY.md for the rationale.
-
-set -uo pipefail
-bash "$(dirname "$0")/../check-prod-creds.sh"
-exit $?

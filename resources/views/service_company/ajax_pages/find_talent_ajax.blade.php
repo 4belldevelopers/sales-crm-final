@@ -235,11 +235,28 @@
                         if ($row->countforadd >= 3) {
                             $html = '<a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a>';
                         } else {
+                            /* Build candidate skill string for match % feature */
+                            $ftCandSkills = [];
+                            if ($skillExperiences->isNotEmpty()) {
+                                foreach ($skillExperiences as $se) { $ftCandSkills[] = strtolower(trim($se->skill_key)); }
+                            } else {
+                                foreach ($skillArr as $sv) { $sv = strtolower(trim($sv)); if ($sv) $ftCandSkills[] = $sv; }
+                            }
+                            $ftSkillStr = htmlspecialchars(implode(',', $ftCandSkills));
+
                             $html = '<div class="d-flex flex-column" style="margin-bottom:6px;">
                                 <a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar"
                                    data-row-source_from_type="2"
                                    data-row-id="' . @$row->id . '"
-                                   data-row-jobid="' . @$jobid . '">Add to Job</a>
+                                   data-row-jobid="' . @$jobid . '"
+                                   data-cname="' . htmlspecialchars(ucwords((string)@$row->full_name)) . '"
+                                   data-cdesig="' . htmlspecialchars(ucwords((string)@$row->current_designation)) . '"
+                                   data-cexp="' . htmlspecialchars($formattedExperience) . '"
+                                   data-cctc="' . htmlspecialchars(trim(strip_tags($currencySymbole[$billFormatViewSalary->currency] ?? '') . ' ' . GeneralMethod::formatK($billFormatViewSalary->amount))) . '"
+                                   data-cnp="' . htmlspecialchars($modeNp == 2 ? 'Immediate' : $npDate) . '"
+                                   data-cloc="' . htmlspecialchars(trim((string)@$row_city_name)) . '"
+                                   data-ctype="' . htmlspecialchars($outsourcingLabel) . '"
+                                   data-skills="' . $ftSkillStr . '">Add to Job</a>
                             </div>';
                         }
                     } else {

@@ -1638,7 +1638,60 @@ protected $elasticService;
 			->count();
 
 		$dataCnt['jobRequest'] = $jobRequest;
-		
+
+		// Tab counts — same access conditions as all_data_ajax, filtered by status
+		$tabMust = [];
+		$tabMust[] = [
+			'bool' => [
+				'should' => [
+					['term' => ['comId' => $company_id]],
+					[
+						'nested' => [
+							'path' => 'recommendation_relation',
+							'query' => [
+								'bool' => [
+									'must' => [
+										['term' => ['recommendation_relation.to_company_id' => $company_id]],
+										['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+									],
+								],
+							],
+						],
+					],
+				],
+				'minimum_should_match' => 1,
+			],
+		];
+		if (!(($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+			$tabMust[] = [
+				'nested' => [
+					'path' => 'job_assign',
+					'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]],
+				],
+			];
+		}
+		$tabStatusCounts = ['active' => 0, 'hold' => 0, 'inactive' => 0];
+		if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+			foreach ($tabStatusCounts as $status => $val) {
+				$res = $this->elasticService->getClient()->count([
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'query' => [
+							'bool' => [
+								'must'   => $tabMust,
+								'filter' => [['term' => ['status' => $status]]],
+							],
+						],
+					],
+				]);
+				$tabStatusCounts[$status] = $res['count'] ?? 0;
+			}
+		}
+		$dataCnt['hiringCount'] = $tabStatusCounts['active'];
+		$dataCnt['holdCount']   = $tabStatusCounts['hold'];
+		$dataCnt['closedCount'] = $tabStatusCounts['inactive'];
+		$dataCnt['allTabCount'] = $tabStatusCounts['active'] + $tabStatusCounts['hold'] + $tabStatusCounts['inactive'];
+
 		return $dataCnt;
 
 	}
@@ -2705,6 +2758,20 @@ protected $elasticService;
 				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc']];
+		}
+
+		// Always show active jobs first, then hold, then inactive/closed
+		if ($custom_status === '' || $custom_status === 'all') {
+			array_unshift($sort, [
+				'_script' => [
+					'type'   => 'number',
+					'order'  => 'asc',
+					'script' => [
+						'lang'   => 'painless',
+						'source' => "def s = doc['status'].size() > 0 ? doc['status'].value : ''; if (s == 'active') return 0; if (s == 'hold') return 1; return 2;",
+					],
+				],
+			]);
 		}
 
 

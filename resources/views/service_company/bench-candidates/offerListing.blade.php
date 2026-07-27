@@ -597,7 +597,7 @@
 
 @section('content')
     <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
+    <div class="toolbar d-none" id="kt_toolbar">
         <div id="kt_toolbar_container" class="container-fluid">
             <input type="hidden" id="inputSearch" name="inputSearch" />
         </div>
@@ -623,7 +623,7 @@
     @endphp
     @if (in_array('view_bench', $userPermissions))
         <!--begin::Content-->
-        <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+        <div class="content d-flex flex-column flex-column-fluid pt-0" id="kt_content" style="margin-top:-42px">
             <div class="post d-flex flex-column-fluid" id="kt_post">
                 <div id="kt_content_container" class="container-fluid px-3">
 
