@@ -81,7 +81,7 @@ $auditor->record(session: $row, action: 'ActionIdempotentRejected', [
 | Re-pick same file (normal) | sub-second; no UI flash |
 | Re-pick on terminal session | sub-200 ms |
 | Re-pick with cross-tenant leak | enterprise: P2 alert, SLA 4 hours |
-| Multi-pod idem race | one wins; one logs `ActionIdempotentRejected`; resolver auto-merged |
+| Multi-pod idem race | one wins; one logs `ActionIdempotentRejected`; Duplicate Ownership Engine shows "possible duplicate" badge but never merges (Step 20) |
 
 ### What's already enforced vs aspirational
 
@@ -278,7 +278,9 @@ GROUP BY 1;
 4. Real duplicate:
   - email + phone matches a candidate from <2 minutes ago.
   - composite idx (company_id, email, phone) returns the existing.
-  - UI merges them.
+  - UI surfaces "you already submitted" banner; engine flags "possible
+    duplicate" badge on the candidate. **Engine NEVER merges or deletes**
+    (Step 20). Recruiter decides whether to archive one manually.
 ```
 
 ### SLA
@@ -294,7 +296,7 @@ GROUP BY 1;
 
 | Behavior | Enforced | Aspirational |
 |---|---|---|
-| `UNIQUE (company_id, idempotency_key)` | ✅ INV-4 |
+| `INDEX (company_id, idempotency_key)` (NOT a UNIQUE constraint — replay-lookup only) | ✅ INV-4 |
 | `linked_candidate_id` UNIQUE behavior on duplicate | ✅ INV-3 |
 | BroadcastChannel for same-browser tabs | ✅ v2.5 (ADR-018) |
 | Reverb cross-device cross-tab | ✅ |
