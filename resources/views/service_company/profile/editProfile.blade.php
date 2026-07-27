@@ -29,7 +29,7 @@ body
       <!--begin::Separator-->
       <span class="h-20px border-gray-200 border-start mx-4"></span>
       <!--end::Separator-->
-      <span class="text-dark-800 fw-bold" id="kt_subheader_total">Edit company details and save</span> </div>
+      <span class="text-dark-800 fw-bold" id="kt_subheader_total">Edit company details and save </span> </div>
     <!--end::Page title-->
   </div>
   <!--end::Container-->
