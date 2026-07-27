@@ -86,6 +86,15 @@
     .mm-field-col .tagify--readonly { background: #F3F4F6 !important; }
     .mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
     .mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+    /* Chip / tag display for readonly To field */
+    .mm-chips-box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 6px 10px; background: #F9FAFB; min-height: 40px; }
+    .mm-chip { display: inline-flex; align-items: center; gap: 6px; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 20px; padding: 3px 10px 3px 4px; font-size: 12.5px; color: #1E40AF; font-family: 'Poppins', sans-serif; }
+    .mm-chip-av { width: 22px; height: 22px; border-radius: 50%; background: #DC2626; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .mm-chip-text { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mm-chip-x { background: none; border: none; padding: 0; margin-left: 2px; color: #93C5FD; cursor: default; font-size: 13px; line-height: 1; }
+    .mm-addfrom { font-size: 12px; font-weight: 600; color: #9CA3AF; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+    .mm-addfrom a { color: #2563EB; text-decoration: none; font-weight: 600; }
+    .mm-addfrom a:hover { text-decoration: underline; }
     .mm-editor-wrap { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
     .mm-row-body { align-items: flex-start; }
     .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
@@ -109,31 +118,67 @@
         <input type="hidden" value="{{ $applicationDataID }}" name="applicationDataId" id="applicationDataId">
         <input name="attached_cv" id="attached_cv" type="checkbox" value="1" checked="checked" class="d-none" />
 
-        {{-- From --}}
+        {{-- From + Reply To (aligned with label column) --}}
         <div class="mm-row">
           <div class="mm-label-col">
             <span class="mm-label-icon mm-ic-blue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
             </span>
-            From Email ID
+            From
           </div>
-          <div class="mm-field-col">
-            <input class="mm-input" name="from_email_mass_mail" id="from_email_mass_mail" value="{{ $userdata->email }}" readonly data-role="from_email">
-            <div class="mm-hint">This will be the email sender address</div>
+          <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
+            <select class="mm-select" name="from_email_mass_mail" id="from_email_mass_mail" style="flex:1;min-width:0;">
+              <option value="{{ $userdata->email }}">{{ $userdata->name ?? $userdata->email }} &lt;{{ $userdata->email }}&gt;</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
+              <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+              </span>
+              Reply To
+            </div>
+            <select class="mm-select" name="reply_to_email" id="reply_to_email" style="flex:1;min-width:0;">
+              <option value="{{ $userdata->email }}">{{ $userdata->email }}</option>
+            </select>
           </div>
         </div>
 
         {{-- To --}}
-        <div class="mm-row">
-          <div class="mm-label-col">
+        @php
+          $toChipEmails = array_values(array_filter(array_map('trim', explode(',', @$cc_email ?? ''))));
+          // avatar colour palette cycling by index
+          $chipColors = ['#DC2626','#7C3AED','#0891B2','#16A34A','#D97706','#DB2777'];
+        @endphp
+        <div class="mm-row" style="align-items:flex-start;">
+          <div class="mm-label-col" style="padding-top:10px;">
             <span class="mm-label-icon mm-ic-blue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </span>
-            To Email ID <span class="mm-req">*</span>
+            To <span class="mm-req">*</span>
           </div>
           <div class="mm-field-col">
-            <input class="mm-input" name="to_email_mass_mail" id="to_email_mass_mail" value="{{ @$cc_email }}" placeholder="Enter recipient email">
-            <div class="mm-hint">Primary candidate email address</div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                {{-- hidden input for form submission --}}
+                <input type="hidden" name="to_email_mass_mail" id="to_email_mass_mail" value="{{ @$cc_email }}">
+                <div class="mm-chips-box">
+                  @forelse($toChipEmails as $ci => $temail)
+                    @php
+                      $localPart = explode('@', $temail)[0] ?? 'U';
+                      $parts     = preg_split('/[.\-_]/', $localPart);
+                      $initials  = strtoupper(substr($parts[0] ?? 'U', 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
+                      $avColor   = $chipColors[$ci % count($chipColors)];
+                    @endphp
+                    <span class="mm-chip">
+                      <span class="mm-chip-av" style="background:{{ $avColor }};">{{ $initials }}</span>
+                      <span class="mm-chip-text">{{ $temail }}</span>
+                      <button type="button" class="mm-chip-x" title="Readonly">×</button>
+                    </span>
+                  @empty
+                    <span style="font-size:12.5px;color:#9CA3AF;">No recipient</span>
+                  @endforelse
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -620,13 +665,8 @@
     }
 </script>
 <script>
-    // $.noConflict();
-
-    var from_email = document.querySelector('#from_email_mass_mail');
-    new Tagify(from_email);
-
-    var to_email = document.querySelector('#to_email_mass_mail');
-    new Tagify(to_email);
+    // from_email_mass_mail is a <select> — no Tagify needed
+    // to_email_mass_mail is readonly (hidden input) — no Tagify
 
     // var cc_email	=	document.querySelector('#cc_email');
     // new Tagify(cc_email);
