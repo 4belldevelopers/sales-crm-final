@@ -226,7 +226,25 @@
                             <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" style="display:none;">
 
                             <div class="uf">
-                                Supports PDF, DOC, DOCX (Max 10MB)
+                                Supports PDF, DOC, DOCX (Max 6 MB)
+                            </div>
+
+                            <!-- Progress bar / pill / success banner -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
                             </div>
 
                             <!-- Selected File -->
@@ -261,6 +279,106 @@
                             </div>
 
                         </div>
+
+                            <!-- ==========================
+                                 After-upload Resume Information card
+                                 Outside #uploadBox so hiding the dropzone
+                                 does not hide this card.
+                                 ========================== -->
+                            <div class="up-info" id="upInfo">
+                                <div class="up-info-banner">
+                                    <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="9 12 11 14 16 9"/>
+                                    </svg>
+                                    <span><strong>Resume uploaded successfully!</strong></span>
+                                </div>
+
+                                <div class="up-file-card">
+                                    <span class="up-file-icon">PDF</span>
+                                    <div class="up-file-meta">
+                                        <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                        <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                    </div>
+                                    <span class="up-file-pill">
+                                        <svg class="up-file-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+
+                                <div class="up-actions">
+                                    <button type="button" id="upReplaceBtn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="23 4 23 10 17 10"/>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                        </svg>
+                                        Replace Resume
+                                    </button>
+                                    <button type="button" id="upRemoveBtn" class="up-remove">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                            <path d="M10 11v6"/><path d="M14 11v6"/>
+                                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <h4 class="up-details-h">Resume Details</h4>
+                                <div class="up-details-grid">
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Uploaded On</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon ok">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Parser Status</div>
+                                            <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                                <line x1="8" y1="13" x2="16" y2="13"/>
+                                                <line x1="8" y1="17" x2="16" y2="17"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Type</div>
+                                            <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Pages</div>
+                                            <div class="up-detail-val" id="upDetailPages">&mdash;</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                     </div>
                 </div>
                 <div class="fs fv-row" style="margin-bottom:0">
@@ -1219,8 +1337,9 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        // Server is `max:6048` KB = 6 MB. Keep the JS check in sync.
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
@@ -1237,10 +1356,212 @@ $(document).ready(function () {
 
         $('.download-file').addClass('d-none');
 
+        // Drive the real-time XHR progress bar first; the legacy pipeline
+        // (hFIC) uploads the same blob in parallel. Setting this flag tells
+        // hFIC to skip its jQuery POST — keeping same-origin POSTs to one
+        // for the file, so the parser POST `/extract-resume-applications`
+        // is never queued behind an upload on the HTTP/1.1 6-conn cap.
+        window.__upXhrChannelClaimed = true;
+        if (typeof uploadWithProgress === 'function') {
+            uploadWithProgress(file);
+        }
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
         }
+        // Reset so the legacy channel is open for the *next* pick.
+        window.__upXhrChannelClaimed = false;
     }
+
+    // ==========================
+    // XHR progress helpers
+    // ==========================
+    let upXhr = null;
+
+    function fmtKB(b) {
+        return (b / 1024).toFixed(1) + ' KB';
+    }
+
+    function fmtSize(b) {
+        return b >= 1024 * 1024
+            ? (b / (1024 * 1024)).toFixed(1) + ' MB'
+            : Math.round(b / 1024) + ' KB';
+    }
+
+    function extLabel(file) {
+        var e = (file.name.split('.').pop() || '').toUpperCase();
+        if (e !== 'PDF' && e !== 'DOC' && e !== 'DOCX') e = 'PDF';
+        return e;
+    }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
+        $('#upWrap').hide();
+        $('#upBar').css('width', '0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        const $b = $('#upBanner');
+        $b.hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
+    }
+
+    // Go back to the dropzone / progress-possible state. Called by
+    // the #removeFile button and the card's Replace/Remove buttons.
+    function backToDropzone() {
+        resetProgress();
+        $('#upInfo').removeClass('show');
+        $('#uploadBox').show();
+        $('#fileInfo').hide();
+        $('#fileName').text('');
+        $('#resume').val('');
+        $('#resumeCheck').val('');
+        $('.download-file').addClass('d-none');
+        window.__upLoc = null;
+    }
+
+    // Populate the post-upload Resume Information card from the picked
+    // file. Sets the initial details (Uploaded On, File Type, File Size,
+    // Parser Status = Pending). When parserResponse is provided (from
+    // re_test), it refreshes skills count, parser status, and pages.
+    function showUploadedCard(file, parserResponse) {
+        var ext = extLabel(file);
+        var $info = $('#upInfo');
+        $info.find('.up-file-icon').text(ext);
+        $('#upFileName').text(file.name);
+        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+
+        var now = new Date();
+        var day = String(now.getDate()).padStart(2, '0');
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var month = months[now.getMonth()];
+        var year = now.getFullYear();
+        var hh = String(now.getHours()).padStart(2, '0');
+        var mm = String(now.getMinutes()).padStart(2, '0');
+        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm);
+
+        $('#upDetailParserStatus').text('Pending');
+        $('#upDetailFileType').text(ext);
+        $('#upDetailPages').html('&mdash;');
+
+        if (parserResponse) {
+            $('#upDetailParserStatus').text('Completed');
+            if (typeof parserResponse.pages === 'number' && parserResponse.pages > 0) {
+                $('#upDetailPages').text(parserResponse.pages);
+            }
+        }
+
+        // Hide the dropzone + file-info strip and show the new card.
+        $('#uploadBox').hide();
+        $('#fileInfo').hide();
+        $info.addClass('show');
+    }
+
+    function uploadWithProgress(file) {
+        window.__upXhrChannelClaimed = true;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+
+        $('#upWrap').show();
+        $('#upStats').text(
+            '0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size)
+        );
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('_token', '{{ csrf_token() }}');
+
+        window.__upLoc = { file: file };
+
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            const pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(
+                pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
+            );
+        };
+        upXhr.onload = function () {
+            let r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
+            if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text(
+                    '100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size)
+                );
+                $('#upPill').css('display', 'inline-flex');
+                const $b = $('#upBanner');
+                $b.removeClass('err').addClass('ok')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<polyline points="9 12 11 14 16 9"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload complete!</strong> '
+                        + 'Your resume has been uploaded successfully.</span>'
+                    ).show();
+                // Set the hidden input the controller's `clientappstore`
+                // reads from session path. We do NOT clear #resume —
+                // `hasFile('resume')` is the trigger that fires the
+                // session-based UploadResumeToTestRTwo dispatch.
+                $('#uploaded_file_path').val(r.file_path || '');
+
+                // Swap to the Resume Information card immediately.
+                showUploadedCard(file, null);
+            } else {
+                const msg = (r && r.message) ? r.message : upXhr.statusText;
+                $('#upBanner')
+                    .removeClass('ok').addClass('err')
+                    .html(
+                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                        + '<circle cx="12" cy="12" r="10"/>'
+                        + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                        + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                        + '</svg>'
+                        + '<span><strong>Upload failed:</strong> ' + msg + '</span>'
+                    ).show();
+            }
+            upXhr = null;
+        };
+
+        upXhr.onerror = function () {
+            $('#upBanner')
+                .removeClass('ok').addClass('err')
+                .html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/>'
+                    + '<line x1="15" y1="9" x2="9" y2="15"/>'
+                    + '<line x1="9" y1="9" x2="15" y2="15"/>'
+                    + '</svg>'
+                    + '<span><strong>Network error</strong> during upload. '
+                    + 'Click Remove and try again.</span>'
+                ).show();
+            upXhr = null;
+        };
+
+        upXhr.send(fd);
+    }
+
+    // Replace / Remove buttons inside the post-upload Resume Information card.
+    // Replace = reset state and reopen the OS file picker.
+    // Remove  = reset state and stay on the empty dropzone.
+    // NOTE: `resumeInput.click()` MUST run synchronously inside this
+    // user-gesture handler. Wrapping it in setTimeout() / Promise
+    // .then() breaks the user-gesture chain and modern Chrome silently
+    // refuses to open the file picker for a programmatic .click().
+    $(document).on('click', '#upReplaceBtn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        backToDropzone();
+        resumeInput.click();
+    });
+
+    $(document).on('click', '#upRemoveBtn', function (e) {
+        e.preventDefault();
+        backToDropzone();
+    });
 
     // ==========================
     // Choose File Button
@@ -1318,6 +1639,10 @@ $(document).ready(function () {
 
         e.preventDefault();
         e.stopPropagation();
+
+        if (typeof resetProgress === 'function') {
+            resetProgress();
+        }
 
         $('#resume').val('');
         $('#resumeCheck').val('');
@@ -1844,7 +2169,23 @@ var cities = @json($cities);
 
     });
 
-  
+
+</script>
+
+<script>
+// Internet connectivity check used by both save and update handlers.
+async function isInternetAvailable() {
+    try {
+        await fetch("https://www.gstatic.com/generate_204", {
+            method: "GET",
+            cache: "no-cache",
+            mode: "no-cors"
+        });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
 </script>
 
 @php if($page_event == 'EDIT'){ @endphp
@@ -2095,7 +2436,7 @@ var cities = @json($cities);
 												var formData = new FormData($('#createForm')[0]);		
                         // formData.append('_method', 'PUT');					
 												$.ajax({
-                          url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',								   
+url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
 														   type 			: 'POST',
 														   data 			: formData,
 														   processData		: false,  	// tell jQuery not to process the data
@@ -2119,7 +2460,7 @@ var cities = @json($cities);
                                 }
 
 
-                                submitButton.removeAttribute('data-kt-indicator');
+submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
                                     Swal.fire({
                                 text				: "You have successfully updated",
@@ -2138,8 +2479,38 @@ var cities = @json($cities);
 
 																				window.location = response.url;
 																			},
-															error			: function (response) {
-																									//handleFails(response);
+															error			: function (xhr, textStatus, errorThrown) {
+                                                                            $("#update-form").prop("disabled", false);
+                                                                            $("#update-form").html(`Update`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                            console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                                                            // Try to extract a useful server-side message; fall back to the bare status.
+                                                                            var serverMsg = '';
+                                                                            try {
+                                                                                var body = xhr.responseText || '';
+                                                                                var jsonStart = body.indexOf('{');
+                                                                                if (jsonStart >= 0) {
+                                                                                    var parsed = JSON.parse(body.substring(jsonStart));
+                                                                                    serverMsg = parsed.message || parsed.error || '';
+                                                                                }
+                                                                            } catch (e) {}
+                                                                            var display = serverMsg
+                                                                                ? serverMsg
+                                                                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                                                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                            // Safety net: if the success handler didn't fire (e.g. session timeout, 5xx, or an exception
+                                                                            // thrown mid-redirect), make sure the button doesn't stay stuck on the spinner.
+                                                                            // We re-enable the button only if the page is still here (success handler that
+                                                                            // triggered window.location would have started navigation by now).
+                                                                            if ($("#update-form").length) {
+                                                                                $("#update-form").prop("disabled", false);
+                                                                                $("#update-form").html(`Update`);
+                                                                                submitButton.removeAttribute('data-kt-indicator');
+                                                                                submitButton.disabled = false;
+                                                                            }
 																			}
 													});
 							
@@ -2952,9 +3323,35 @@ var KTAddCandidate = function () {
                                    window.location = response.url;
 
 																			},
-															error			: function (response) {
+															error			: function (xhr, textStatus, errorThrown) {
                                 $("#save-form").prop("disabled", false);
-																									//handleFails(response);
+                                $("#save-form").html(`Submit`);
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                var serverMsg = '';
+                                try {
+                                    var body = xhr.responseText || '';
+                                    var jsonStart = body.indexOf('{');
+                                    if (jsonStart >= 0) {
+                                        var parsed = JSON.parse(body.substring(jsonStart));
+                                        serverMsg = parsed.message || parsed.error || '';
+                                    }
+                                } catch (e) {}
+                                var display = serverMsg
+                                    ? serverMsg
+                                    : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                        // Safety net: if the success handler didn't fire, make sure
+                                                                        // the button doesn't stay stuck on the spinner.
+                                                                        if ($("#save-form").length) {
+                                                                            $("#save-form").prop("disabled", false);
+                                                                            $("#save-form").html(`Submit`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                        }
 																			}
 													});
 							
@@ -3016,7 +3413,7 @@ function re_test(text){
                     }
 
                       if(page_event_check != 'EDIT'){
-                      $('#full_name').val(response.name);                      
+                      $('#full_name').val(response.name);
                       $('#careersummary').val(response.careerSummary);
                       $('#phone').val(response.number);
                       $('#email').val(response.email);
@@ -3029,6 +3426,12 @@ function re_test(text){
                       tagifylocation.removeAllTags(); // Clear existing tags first
                       tagifylocation.addTags(response.country); // Add new tags
 
+                      // Refresh the post-upload Resume Information card
+                      // with the parser's per-file metadata. Skills count +
+                      // Parser Status flip from defaults to actual values.
+                      if (window.__upLoc && window.__upLoc.file) {
+                          try { showUploadedCard(window.__upLoc.file, response); } catch (e) {}
+                      }
 
                       var resumeText = $('#uploaded_file_path').val();
                       $.ajax({
@@ -3160,6 +3563,13 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
       }
 
+      // uploadWithProgress() already POSTed this blob to /uploadresume
+      // with real progress feedback. Skip the redundant jQuery POST.
+      // The PDFjs / mammoth parse path below still runs so Career
+      // Summary fills in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
        let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -3177,19 +3587,28 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         success: function (response) {
 
-            console.log(response);
-
-            if(response.status){
+            if(response.success){
 
                 $('#resume_path').val(response.file_path);
 
                 toastr.success('Resume uploaded successfully');
+
+            } else {
+
+                toastr.error(response.message || 'CV upload failed. Please try again.');
+
             }
 
         },
         error: function (xhr) {
 
-            toastr.error('Upload failed');
+            var msg = 'CV upload failed. Please try again.';
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if(res.message) msg = res.message;
+                else if(res.errors && res.errors.file) msg = res.errors.file[0];
+            } catch(e){}
+            toastr.error(msg);
 
         },
         complete: function () {
@@ -3198,6 +3617,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
     });
+      } // end if (!__skipUpload)
 
 
 

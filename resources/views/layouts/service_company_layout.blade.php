@@ -6,7 +6,7 @@
       //  print_r($profilesCompletion->clientsprofiles->tags);
       $popup_tags = 1;//($profilesCompletion->clientsprofiles) ? $profilesCompletion->clientsprofiles->tags : '';
       $popup_address = ($profilesCompletion->clientsprofiles) ? $profilesCompletion->clientsprofiles->address : '';
-      $popup_company_name = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->company_name : '';
+      $popup_company_name =  ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->company_name : '';
       $popup_industries = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->industries : '';
       $popup_description = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->description : '';
 
@@ -102,6 +102,18 @@
   {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> --}}
 
+{{-- jQuery must load BEFORE @stack('head-script') so pages that push inline
+     <script>$(function(){...})</script> into the head (datepicker initialiser on
+     service_company/job-applications/create, and similar inline jQuery snippets
+     site-wide) find window.$/jQuery defined. Without this, those scripts run
+     synchronously during the head parse and throw "Uncaught ReferenceError: $ is
+     not defined", which cascades into select2 (null.offsetWidth) and tagify
+     (null.addEventListener) failures on every page that uses jQuery pushed
+     into the head. We keep the body-bottom copy commented as a one-liner with
+     a debug note for future readers instead of deleting it; if you delete it,
+     please delete this too. --}}
+<script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
+
 @stack('head-script')
 <style>         
       @media  only screen and (min-width: 1024px) and (max-width: 1440px)
@@ -117,14 +129,20 @@
        #kt_activitiesIntTeam{width: 1200px;} }
       #kt_activitiesIntTeam{z-index:9999;}
 
-      @media  only screen and (min-width: 1024px) and (max-width: 1440px)
-      {
-        #kt_activitiesIntTeamtra{width: 1025;}
+      /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
+         set via data-kt-drawer-width on the element itself (KTDrawer computes
+         the responsive width in JS) — capped here so it never exceeds
+         ~1080px on very large monitors, and never drops below a usable
+         minimum on the "lg" breakpoint. */
+      #kt_activitiesIntTeamtra{ max-width: 1080px !important; }
+      @media only screen and (min-width: 992px) {
+        #kt_activitiesIntTeamtra{ min-width: 640px !important; }
       }
-      @media  only screen and (min-width: 1440px) and (max-width: 2560px){	
-        #kt_activitiesIntTeamtra{width: 1200px;} 
-      }
-      #kt_activitiesIntTeamtra{z-index:9999;}
+      /* Opened on top of #interview_schedule_drawer (z-index: 1000000
+         !important, see its own definition further down). This must sit
+         unambiguously higher — see the matching overlay z-index bump in the
+         .in_tr_email_panel click handler below. */
+      #kt_activitiesIntTeamtra{ z-index: 1000020 !important; }
 
        @media only screen and (min-width: 1024px) and (max-width: 1440px){
         #kt_activitiesJob_show{width: 1025px;}
@@ -482,11 +500,121 @@
   <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar" ></div>
 </div>
 
-<div class="modal fade" id="interview_schedule" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content" id="app_interview_schedule_content"></div>
+<style>
+  /* Interview Schedule drawer shell — scoped so it never collides with page-local styles. */
+  #interview_schedule_drawer .isd-shell-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid #eef0f4; flex-wrap:wrap; flex-shrink:0; font-family:'Poppins',sans-serif; }
+  #interview_schedule_drawer .isd-shell-topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
+  #interview_schedule_drawer .isd-shell-topbar-ico { width:48px; height:48px; border-radius:12px; background:#eef4ff; color:#3e97ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:22px; }
+  #interview_schedule_drawer .isd-shell-topbar-title { font-size:16px; font-weight:700; color:#181c32; line-height:1.3; }
+  #interview_schedule_drawer .isd-shell-topbar-sub { font-size:11.5px; font-weight:400; color:#7e8299; margin-top:1px; }
+  #interview_schedule_drawer .isd-shell-topbar-right { display:flex; align-items:center; gap:10px; }
+  #interview_schedule_drawer .isd-shell-btn-cancel { border:1px solid #e4e6ef; background:#fff; color:#3f4254; border-radius:8px; padding:9px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:500; cursor:pointer; }
+  #interview_schedule_drawer .isd-shell-btn-cancel:hover { background:#f8f9fb; }
+  #interview_schedule_drawer .isd-shell-btn-back { border:1px solid #e4e6ef; background:#fff; color:#3e97ff; border-radius:8px; padding:9px 16px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; }
+  #interview_schedule_drawer .isd-shell-btn-back:hover { background:#f5f9ff; }
+  #interview_schedule_drawer .isd-shell-btn-primary { border:none; background:#3e97ff; color:#fff; border-radius:8px; padding:8px 18px; font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer; text-align:left; line-height:1.3; }
+  #interview_schedule_drawer .isd-shell-btn-primary small { display:block; font-size:10px; font-weight:400; opacity:.85; }
+  #interview_schedule_drawer .isd-shell-btn-primary:hover { filter:brightness(.94); }
+  #interview_schedule_drawer .isd-shell-btn-primary:disabled { background:#c2c9d6 !important; cursor:not-allowed; }
+  #interview_schedule_drawer .isd-shell-divider { width:1px; height:22px; background:#e4e6ef; }
+  #interview_schedule_drawer .isd-shell-close { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#7e8299; cursor:pointer; flex-shrink:0; }
+  #interview_schedule_drawer .isd-shell-close:hover { background:#f8f9fb; color:#f64e60; }
+
+  /* This drawer is opened from *inside* the already-open Job Details drawer
+     (#kt_activitiesApplication, z-index 999999) — it must render above it,
+     not behind. Its own overlay is deliberately disabled below (data-kt-drawer-overlay="false"):
+     a second shared .drawer-overlay would collide (same z-index) with the Job
+     Details drawer's overlay that's already dimming the page, which made both
+     drawers fight over the same backdrop and close unexpectedly. The page is
+     already dimmed by whichever drawer this one is nested inside; this one
+     just needs to render above it.
+     Kept comfortably within the 32-bit z-index range browsers actually honor
+     (values like 99999999999 get silently clamped to the same internal max
+     as any other huge number, which ties stacking order instead of ordering
+     it — that clamping broke the Select-Interviewer picker drawer nested
+     inside this one, since both had "huge" but effectively-equal z-indices). */
+  #interview_schedule_drawer { z-index: 1000000 !important; }
+  /* KTDrawer sets height via inline style at runtime (full viewport height,
+     same as every other drawer in the app). That's fine when content is long,
+     but this drawer's content is often shorter than the screen, leaving a
+     large blank white gap below it. Cap it to content height instead, with
+     the viewport as a ceiling so it still scrolls normally for long content. */
+  #interview_schedule_drawer { height: auto !important; max-height: 100vh !important; bottom: auto !important; }
+  #interview_schedule_drawer > .d-flex.flex-column { height: auto !important; max-height: 100vh !important; }
+  #interview_schedule_drawer #app_interview_schedule_content { flex-grow: 0 !important; max-height: calc(100vh - 76px) !important; }
+</style>
+<div id="interview_schedule_drawer_toggle" style="display:none;"></div>
+<div id="interview_schedule_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="interview-schedule"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'82%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#interview_schedule_drawer_toggle" data-kt-drawer-close="#interview_schedule_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="isd-shell-topbar">
+      <div class="isd-shell-topbar-left">
+        <span class="isd-shell-topbar-ico"><i class="ti ti-calendar-clock"></i></span>
+        <div>
+          <div class="isd-shell-topbar-title" id="interview_schedule_drawer_title">Interview Schedule</div>
+          <div class="isd-shell-topbar-sub" id="interview_schedule_drawer_subtitle">Schedule and invite candidate &amp; interview panel</div>
+        </div>
+      </div>
+      <div class="isd-shell-topbar-right">
+        <button type="button" class="isd-shell-btn-back" id="interview_schedule_drawer_back" style="display:none;">Back</button>
+        <button type="button" class="isd-shell-btn-cancel" id="interview_schedule_drawer_cancel" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()">Cancel</button>
+        <button type="button" class="isd-shell-btn-primary" id="interview_schedule_drawer_primary" onclick="if(jQuery('#div_interview_schedule_second').is(':visible')){jQuery('#sendEmailBtn').trigger('click');}else if(typeof window.submitForm==='function'){window.submitForm();}">
+          <span class="indicator-label">Schedule Interview<small>Confirm &amp; send invitations</small></span>
+          <span class="indicator-progress" style="display:none;">Please wait...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+        </button>
+        <span class="isd-shell-divider"></span>
+        <span class="isd-shell-close" id="interview_schedule_drawer_close" onclick="(function(){var el=document.getElementById('interview_schedule_drawer');if(el){el.classList.remove('drawer-on');el.style.removeProperty('transform');}})()"><i class="ti ti-x"></i></span>
+      </div>
+    </div>
+    <div class="flex-grow-1" style="overflow-y:auto;min-height:0;" id="app_interview_schedule_content"></div>
   </div>
 </div>
+<script>
+  // Single header contract for both steps of the AJAX-loaded interview-schedule
+  // content: the content calls window.isdShellSetStep('main'|'email') when it
+  // switches steps, and this shell adapts its one primary button accordingly
+  // instead of the content drawing its own duplicate header/footer.
+  window.isdShellSetStep = function(step){
+    if (step === 'email') {
+      $('#interview_schedule_drawer_title').text('Interview Schedule Email');
+      $('#interview_schedule_drawer_back').show();
+      $('#interview_schedule_drawer_primary .indicator-label').html('Send Email');
+    } else {
+      $('#interview_schedule_drawer_title').text('Interview Schedule');
+      $('#interview_schedule_drawer_back').hide();
+      $('#interview_schedule_drawer_primary .indicator-label').html('Schedule Interview<small>Confirm &amp; send invitations</small>');
+    }
+  };
+  $(document).on('click', '#interview_schedule_drawer_back', function(){
+    $('.divback').trigger('click');
+  });
+  // Clean up the inline transform we force-set when opening, so KTDrawer's
+  // CSS (.drawer.drawer-end { transform: translateX(100%) }) takes over once closed.
+  $(document).on('click', '#interview_schedule_drawer_close', function(){
+    var el = document.getElementById('interview_schedule_drawer');
+    if (el) { el.classList.remove('drawer-on'); el.style.removeProperty('transform'); }
+  });
+  $(document).on('click', '#interview_schedule_drawer_primary', function(){
+    if ($('#div_interview_schedule_second').is(':visible')) {
+      $('#sendEmailBtn').trigger('click');
+    } else if (typeof submitForm === 'function') {
+      submitForm();
+    }
+  });
+
+  // Safe open helper — always uses the drawer element (not the toggle div),
+  // so it works whether the drawer was previously opened, closed, or never init'd.
+  window.openInterviewScheduleDrawer = function() {
+    var el = document.getElementById('interview_schedule_drawer');
+    if (!el) return;
+    if (!el.classList.contains('drawer')) el.classList.add('drawer', 'drawer-end');
+    el.classList.add('drawer-on');
+    el.style.transform = 'none';
+  };
+</script>
+<!--end::Interview Schedule drawer-->
 
 <div id="kt_activitiesIntTeam_toggle"></div>
 <div id="kt_activitiesIntTeam" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeam_toggle" data-kt-drawer-close="#kt_activitiesIntTeam_close">
@@ -494,7 +622,7 @@
 </div>
 
 <div id="kt_activitiesIntTeamtra_toggle"></div>
-<div id="kt_activitiesIntTeamtra" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeamtra_toggle" data-kt-drawer-close="#kt_activitiesIntTeamtra_close">
+<div id="kt_activitiesIntTeamtra" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default: '100%', 'md': '75%', 'lg': '60%'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesIntTeamtra_toggle" data-kt-drawer-close="#kt_activitiesIntTeamtra_close">
   <div class="card shadow-none rounded-0 w-100" id="kt_activitiesIntTeamtra_body"></div>
 </div>
 
@@ -853,113 +981,385 @@
 
 
 <!--start profile is incomplete section-->
-<div class="modal fade" id="profile_popup_modal" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-      <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 24px; font-weight: 600; color: #1e293b; margin: 0;">Your company profile is incomplete</h2>
-        <button class="btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal" style="padding: 8px; border-radius: 50%; background: transparent; border: none; cursor: pointer; transition: background-color 0.2s;">
-          <span class="svg-icon svg-icon-1" style="display: flex; align-items: center; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-              <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-            </svg>
-          </span>
-        </button>
-      </div>
-      
-      <div class="card-body" style="padding: 40px 30px; position: relative;">
-        <div style="font-family: system-ui, -apple-system, sans-serif;">
+<style>
+/* ── Profile Popup Modal ── */
+.ppi-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+.ppi-wrap .modal-content { border-radius: 16px; border: none; box-shadow: 0 24px 64px rgba(0,0,0,0.15); overflow: hidden; }
 
+/* Top banner */
+.ppi-banner { display: flex; align-items: stretch; gap: 0; padding: 24px 28px 24px; background: #fff; border-bottom: 1px solid #F1F5F9; position: relative; }
+.ppi-banner-left { flex: 1; display: flex; align-items: flex-start; gap: 18px; }
+.ppi-banner-illo { flex-shrink: 0; width: 100px; }
+.ppi-banner-illo svg { width: 100%; height: auto; }
+.ppi-banner-text { flex: 1; }
+.ppi-banner-title { font-size: 17px; font-weight: 700; color: #0F172A; margin: 0 0 5px; line-height: 1.3; }
+.ppi-banner-sub { font-size: 11.5px; color: #64748B; margin: 0 0 14px; line-height: 1.5; max-width: 340px; }
+.ppi-benefits { display: flex; gap: 8px; flex-wrap: wrap; }
+.ppi-benefit-chip { display: inline-flex; align-items: center; gap: 6px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 5px 10px; font-size: 10.5px; font-weight: 600; color: #374151; }
+.ppi-benefit-chip svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-          <div style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+/* Completion card */
+.ppi-comp-card { flex-shrink: 0; width: 230px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 18px; margin-left: 20px; }
+.ppi-comp-label { font-size: 10.5px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.ppi-comp-pct-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.ppi-comp-pct { font-size: 28px; font-weight: 700; color: #0F172A; line-height: 1; }
+.ppi-comp-badge { font-size: 11px; font-weight: 600; color: #16A34A; background: #DCFCE7; border-radius: 20px; padding: 2px 8px; }
+.ppi-comp-bar-bg { background: #E2E8F0; border-radius: 100px; height: 7px; margin-bottom: 10px; }
+.ppi-comp-bar-fill { height: 7px; border-radius: 100px; background: #2563EB; }
+.ppi-comp-meta { display: flex; align-items: center; justify-content: space-between; }
+.ppi-comp-meta span { font-size: 10px; color: #64748B; display: flex; align-items: center; gap: 4px; }
+.ppi-comp-meta svg { width: 11px; height: 11px; }
 
-            <!-- Progress Circle -->
-            <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              <!-- Outer Circle with Progress -->
-              <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; 
-                  background: conic-gradient(
-                      #f31b4d {{ $profile_completion_percentage }}%, /* Progress color */
-                      #e2e8f0 {{ $profile_completion_percentage }}% /* Remaining color */
-                  );">
-              </div>
-              <!-- Inner Circle (Hollow Center) -->
-              <div style="position: absolute; width: 80%; height: 80%; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 20px; font-weight: bold; color: #475569;">
-                  {{ round($profile_completion_percentage, 2) }}%
-                </span>
-              </div>
-            </div>
-          
-            <!-- Steps -->
-            <div style="display: flex; align-items: center; gap: 12px;">
-              @if(!$popup_company_name)
-                <!-- Step 1: Add Company Name -->
-                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                  @if($popup_company_name)
-                  <span style="color: #22c55e; font-size: 18px;">✓</span>
-                  @else
-                  <span style="color: #ef4444; font-size: 18px;">✗</span>
-                  @endif
-                  <span style="color: #475569; font-size: 14px; font-weight: 500;">
-                    <a href="{{ ($popup_company_name) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}">Add{{ $popup_company_name ? 'ed' :'' }} Company Name</a>
-                    <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-                </div>
-              @endif
-              @if(!$popup_industries)
-              <!-- Step 2: Add Industry -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_industries)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_industries) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}">Add{{ $popup_industries ? 'ed' :'' }} Company Industry</a><br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-              </div>
-              @endif
-              @if(!$popup_description)
-              <!-- Step 3: Add Description -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_description)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_description) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=1">Add{{ $popup_description ? 'ed' :'' }} Company Description</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
+/* Close btn */
+.ppi-close-btn { position: absolute; top: 12px; right: 12px; background: #F1F5F9; border: none; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748B; transition: background 0.13s; z-index: 10; }
+.ppi-close-btn:hover { background: #E2E8F0; }
 
-               
-              </div>
-           @endif
-             @if(!$popup_address)
-              <!-- Step 4: Add Address -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_address)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_address) ? 'javascript:;' :  route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=2">Add{{ $popup_address ? 'ed' :'' }} Company Address</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-              </div>
-          @endif
-           @if(!$popup_tags)
-              <!-- Step 5: Add Services -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_tags)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_tags) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=1">Add{{ $popup_tags ? 'ed' :'' }} Company Services</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}"> (Click Here) </a> </span></span>
-              </div>
-            @endif
-          
-            </div>
-          
-          </div>
-          
+/* Body 3-col */
+.ppi-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; background: #F8FAFC; }
+
+/* Left col – Profile Overview */
+.ppi-overview { padding: 20px 18px; border-right: 1px solid #E2E8F0; }
+.ppi-col-title { font-size: 12px; font-weight: 700; color: #0F172A; margin-bottom: 14px; }
+.ppi-ov-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+.ppi-ov-item:last-child { border-bottom: none; }
+.ppi-ov-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-ov-icon svg { width: 15px; height: 15px; }
+.ppi-ov-info { flex: 1; min-width: 0; }
+.ppi-ov-name { font-size: 11.5px; font-weight: 600; color: #1E293B; }
+.ppi-ov-sub  { font-size: 10px; color: #94A3B8; }
+.ppi-ov-status-ok   { color: #16A34A; flex-shrink: 0; }
+.ppi-ov-status-fail { color: #EF4444; flex-shrink: 0; }
+.ppi-ov-status-ok svg, .ppi-ov-status-fail svg { width: 16px; height: 16px; }
+
+/* Middle col – Complete These Sections */
+.ppi-sections { padding: 20px 18px; }
+.ppi-sec-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+.ppi-sec-card:last-child { margin-bottom: 0; }
+.ppi-sec-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-sec-icon svg { width: 18px; height: 18px; }
+.ppi-sec-content {}
+.ppi-sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.ppi-sec-name { font-size: 12.5px; font-weight: 700; color: #0F172A; }
+.ppi-sec-badge-req  { font-size: 9.5px; font-weight: 700; background: #FEE2E2; color: #DC2626; border-radius: 4px; padding: 1px 7px; }
+.ppi-sec-badge-rec  { font-size: 9.5px; font-weight: 700; background: #DBEAFE; color: #2563EB; border-radius: 4px; padding: 1px 7px; }
+.ppi-sec-desc { font-size: 10.5px; color: #64748B; line-height: 1.4; margin-bottom: 5px; }
+.ppi-sec-note { display: flex; align-items: flex-start; gap: 4px; font-size: 10px; color: #F59E0B; font-weight: 500; }
+.ppi-sec-note svg { width: 11px; height: 11px; flex-shrink: 0; margin-top: 1px; }
+.ppi-sec-btn { display: inline-flex; align-items: center; gap: 5px; background: #2563EB; color: #fff; font-size: 11px; font-weight: 600; padding: 8px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.13s; }
+.ppi-sec-btn:hover { background: #1D4ED8; color: #fff; text-decoration: none; }
+
+/* Right col – Why */
+.ppi-why { padding: 20px 16px; border-left: 1px solid #E2E8F0; }
+.ppi-why-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.ppi-why-item:last-child { margin-bottom: 0; }
+.ppi-why-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-why-icon svg { width: 16px; height: 16px; }
+.ppi-why-title { font-size: 11.5px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
+.ppi-why-desc  { font-size: 10px; color: #64748B; line-height: 1.4; }
+
+/* Footer */
+.ppi-footer { display: flex; align-items: center; padding: 14px 24px; background: #fff; border-top: 1px solid #E2E8F0; }
+.ppi-footer-sec { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #94A3B8; margin-right: auto; }
+.ppi-footer-sec svg { width: 13px; height: 13px; flex-shrink: 0; }
+.ppi-skip-btn { background: none; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; color: #64748B; cursor: pointer; margin-right: 10px; font-family: 'Poppins', sans-serif; transition: background 0.13s; }
+.ppi-skip-btn:hover { background: #F8FAFC; }
+.ppi-complete-btn { display: inline-flex; align-items: center; gap: 7px; background: #2563EB; color: #fff; font-size: 12px; font-weight: 600; padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; text-decoration: none; transition: background 0.13s; }
+.ppi-complete-btn:hover { background: #1D4ED8; color: #fff; text-decoration: none; }
+.ppi-complete-btn svg { width: 14px; height: 14px; }
+</style>
+
+<div class="modal fade ppi-wrap" id="profile_popup_modal" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:860px;">
+    <div class="modal-content">
+    @php
+      $ppiCompleted = collect([$popup_company_name,$popup_industries,$popup_description,$popup_address,$popup_tags])->filter()->count();
+      $ppiTotal     = 5;
+      $ppiRemain    = $ppiTotal - $ppiCompleted;
+      $ppiMins      = max(1, $ppiRemain * 2);
+      $ppiAccEdit   = route('service_company.account.edit', GeneralMethod::value_encrypt($company_id));
+    @endphp
+
+    {{-- ── TOP BANNER ── --}}
+    <div class="ppi-banner">
+      <div class="ppi-banner-left">
+        {{-- Illustration --}}
+        <div class="ppi-banner-illo">
+          <svg viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="30" width="80" height="70" rx="6" fill="#DBEAFE"/>
+            <rect x="20" y="20" width="60" height="80" rx="5" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+            <rect x="30" y="35" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="52" y="35" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="30" y="57" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="52" y="57" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="38" y="78" width="20" height="22" rx="3" fill="#93C5FD"/>
+            <rect x="8" y="65" width="16" height="35" rx="3" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+            <rect x="11" y="72" width="5" height="5" rx="1" fill="#93C5FD"/>
+            <rect x="11" y="82" width="5" height="5" rx="1" fill="#93C5FD"/>
+            <circle cx="85" cy="38" r="18" fill="#DCFCE7"/>
+            <path d="M77 38l5 5 8-10" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="0" y="99" width="120" height="3" rx="1.5" fill="#E2E8F0"/>
+            <rect x="5" y="99" width="110" height="3" rx="1.5" fill="#CBD5E1"/>
+          </svg>
+        </div>
+        <div class="ppi-banner-text">
+          <div class="ppi-banner-title">Complete Your Company Profile ✨</div>
+          <div class="ppi-banner-sub">A complete profile builds trust, increases visibility and helps you get better results on Jero Marketplace.</div>
+          <div class="ppi-benefits">
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              Verified Company Badge
+            </span>
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Higher Marketplace Ranking
+            </span>
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+              Better AI Recommendations
+            </span>
           </div>
         </div>
       </div>
+
+      {{-- Completion card --}}
+      <div class="ppi-comp-card">
+        <div class="ppi-comp-label">Profile Completion</div>
+        <div class="ppi-comp-pct-row">
+          <span class="ppi-comp-pct">{{ round($profile_completion_percentage) }}%</span>
+          <span class="ppi-comp-badge">Complete</span>
+        </div>
+        <div class="ppi-comp-bar-bg">
+          <div class="ppi-comp-bar-fill" style="width:{{ $profile_completion_percentage }}%;"></div>
+        </div>
+        <div class="ppi-comp-meta">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {{ $ppiCompleted }} of {{ $ppiTotal }} sections completed
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{ $ppiMins }} min remaining
+          </span>
+        </div>
+      </div>
+
+      <button class="ppi-close-btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    {{-- ── BODY 3-COL ── --}}
+    <div class="ppi-body">
+
+      {{-- LEFT: Profile Overview --}}
+      <div class="ppi-overview">
+        <div class="ppi-col-title">Profile Overview</div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FEF3C7;color:#D97706;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Name</div><div class="ppi-ov-sub">Your organization name</div></div>
+          @if($popup_company_name)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#EDE9FE;color:#7C3AED;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Logo</div><div class="ppi-ov-sub">Your company logo</div></div>
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#E0F2FE;color:#0284C7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Website</div><div class="ppi-ov-sub">Your company website</div></div>
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FEE2E2;color:#DC2626;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Headquarters</div><div class="ppi-ov-sub">Your company location</div></div>
+          @if($popup_address)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#DCFCE7;color:#16A34A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Industry</div><div class="ppi-ov-sub">Your company industry</div></div>
+          @if($popup_industries)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Description</div><div class="ppi-ov-sub">About your organization</div></div>
+          @if($popup_description)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+      </div>
+
+      {{-- MIDDLE: Complete These Sections --}}
+      <div class="ppi-sections">
+        <div class="ppi-col-title">Complete These Sections</div>
+
+        @if(!$popup_industries)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#EDE9FE;color:#7C3AED;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Industry</span><span class="ppi-sec-badge-req">Required</span></div>
+            <div class="ppi-sec-desc">Select the industry that best describes your organization.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Required for AI job matching and marketplace visibility
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_description)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Description</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Add a short description about your company, mission and expertise.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Helps build trust and improves your marketplace visibility
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=1" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_company_name)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FEF3C7;color:#D97706;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Name</span><span class="ppi-sec-badge-req">Required</span></div>
+            <div class="ppi-sec-desc">Add your registered company name to get verified on the platform.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Required to activate your company profile
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_address)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FEE2E2;color:#DC2626;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Address</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Add your office location to improve local talent matching.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Improves local search visibility on the marketplace
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=2" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_tags)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#E0F2FE;color:#0284C7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Services</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Tag services you offer to match the right opportunities.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Helps AI match you with relevant companies
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=1" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+      </div>
+
+      {{-- RIGHT: Why --}}
+      <div class="ppi-why">
+        <div class="ppi-col-title">Why complete your profile?</div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#DCFCE7;color:#16A34A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Get discovered by more companies</div><div class="ppi-why-desc">Complete profiles rank higher in search results.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#FCE7F3;color:#DB2777;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Increase trust &amp; credibility</div><div class="ppi-why-desc">Verified and complete profiles build stronger relationships.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#DBEAFE;color:#2563EB;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Better AI recommendations</div><div class="ppi-why-desc">AI understands your company better and recommends the right matches.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Higher marketplace visibility</div><div class="ppi-why-desc">Stand out from other companies and attract top agencies.</div></div>
+        </div>
+
+      </div>
+    </div>{{-- end ppi-body --}}
+
+    {{-- ── FOOTER ── --}}
+    <div class="ppi-footer">
+      <span class="ppi-footer-sec">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Your information is secure and will never be shared.
+      </span>
+      <button class="ppi-skip-btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal">Skip for now</button>
+      <a href="{{ $ppiAccEdit }}" class="ppi-complete-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Complete Profile
+      </a>
+    </div>
+
     </div>
   </div>
 </div>
@@ -998,7 +1398,9 @@
 <script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
+{{-- jquery.min.js intentionally only loaded in the head (above @stack('head-script'))
+     to keep pages that push inline $(function(){...}) into the head from throwing
+     "$ is not defined". See the head-side comment for context. --}}
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
@@ -1290,25 +1692,15 @@ $(document).on('change', '#max_exp_bench', function () {
 $(document).on('click', '.deleteBtn', function (e){
     e.preventDefault();
     var userid = $(this).data('userid');
-    if(confirm("Are you sure?")){
-        $.post('/whatsapp/delete',{
-            _token:'{{ csrf_token() }}',
-             userid: userid
-        },function(res){
-            alert("Instance deleted");
-            // $('#deleteBtn').addClass('d-none');
-            $('.connectBtn').css('right', '10px');
-            $('.sendwhatsapp_connected_'+userid).addClass('d-none');
-            $('.sendwhatsapp_connect_'+userid).removeClass('d-none');
-            // if(res.status == 404){
-                // Change button class
-               
-                // Show connected number
-                $('#f_phone_'+userid).text(res.connectedNumberGet);
-
-            // }
-        });
-    }
+    $.post('{{ url('/whatsapp/delete') }}',{
+        _token:'{{ csrf_token() }}',
+         userid: userid
+    },function(res){
+        $('.connectBtn').css('right', '10px');
+        $('.sendwhatsapp_connected_'+userid).addClass('d-none');
+        $('.sendwhatsapp_connect_'+userid).removeClass('d-none');
+        $('#f_phone_'+userid).text(res.connectedNumberGet);
+    });
 });
 
     $(document).on('click', '.sendwhatsapp_panel', function (){
@@ -1344,7 +1736,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
 
 
-        $.post('/whatsapp/create',
+        $.post('{{ url('/whatsapp/create') }}',
         {_token:'{{ csrf_token() }}',
         userid: userid
         },function(){
@@ -1381,7 +1773,7 @@ $(document).on('click', '.deleteBtn', function (e){
 
     function loadQR(userid){
       
-        $.get('/whatsapp/qr',{ userid: userid }, function(res){
+        $.get('{{ url('/whatsapp/qr') }}',{ userid: userid }, function(res){
             if(res.qr){
                audioUnlocked
                 $('#qrBox').html(
@@ -1396,7 +1788,7 @@ $(document).on('click', '.deleteBtn', function (e){
     // checkStatus();
     function checkStatus(userid){
         setInterval(function(){
-            $.get('/whatsapp/status',{ userid: userid },function(res){
+            $.get('{{ url('/whatsapp/status') }}',{ userid: userid },function(res){
                 if(res.instance && res.instance.state){
                     $('#statusBox').html(res.instance.state);
                     if(res.instance.state === "open"){
@@ -1842,7 +2234,7 @@ $(document).ready(function(){
               var datatime    		=	$(this).attr('data-time');
               var datatmode    		=	$(this).attr('data-mode');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);		   
+         			url     		=	url.replace(':id', id);
               if (datadate && datatime) {
                   let query = [];
                   if (datadate) query.push('datadate=' + encodeURIComponent(datadate));
@@ -1850,19 +2242,20 @@ $(document).ready(function(){
                   if (datatmode) query.push('datatmode=' + encodeURIComponent(datatmode));
                   url += '?' + query.join('&');
               }
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		: 'GET',
          							url   		: url,
          							beforeSend	: function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          							},
-         							success : function (response) 
+         							success : function (response)
          							{
-                        // $('#interview_schedule').modal('show');
-         								$('#app_interview_schedule_content').html(response.view);		
+         								$('#app_interview_schedule_content').html(response.view);
          							}
-         				});	
+         				});
          });
 
 
@@ -1881,6 +2274,13 @@ $(document).ready(function(){
                 drawerInstance.show();
             }
 
+            // #interview_schedule_drawer (behind this one) has its own overlay
+            // deliberately disabled and sits at z-index 1000000 !important, so
+            // KTDrawer's own overlay for THIS drawer would otherwise render
+            // underneath it and never visibly dim it. Bump just the overlay
+            // this drawer created (the most recently appended one) above that,
+            // but below #kt_activitiesIntTeamtra itself (1000020 !important).
+            setTimeout(function(){ $('.drawer-overlay').last().css('z-index', 1000010); }, 0);
 
                 var client_id	=	$('#client_idMail').val();
          				var token 		=	"{{ csrf_token() }}";
@@ -1974,14 +2374,15 @@ $(document).ready(function(){
 			var assign					=	$('#team_select_'+rel).attr("data-assign");
 			var title					=	$('#team_select_'+rel).attr("data-title");
 			var email					=	$('#team_select_'+rel).attr("data-email");
-			
+			var designation				=	$('#team_select_'+rel).attr("data-designation");
+
 			if(assign ==0)
 			{
 				$(this).addClass("btn-light-danger");
 				$(this).removeClass("btn-light-primary");
 				$(this).text('Remove');
 				$(this).attr("data-assign", 1);
-				AddEventPanel(title, email);
+				AddEventPanel(title, email, designation);
 			}
 			else if(assign ==1)
 			{
@@ -1994,7 +2395,7 @@ $(document).ready(function(){
 			
 	});
 
-  function AddEventPanel(name, email)
+  function AddEventPanel(name, email, designation)
   {
       var currentValue			=	$('#panellist').val();
       var cc_email				=	$('#cc_email').val();
@@ -2003,18 +2404,20 @@ $(document).ready(function(){
         var includeStr			=	currentValue.includes(name);
         if(includeStr  === false)
         {
-          var assignNewValue	=	currentValue +' , '+name;	
-          $('#panellist').val(assignNewValue);	
-          
-          var assignNewEmail	=	cc_email +' , '+email;	
+          var assignNewValue	=	currentValue +' , '+name;
+          $('#panellist').val(assignNewValue);
+
+          var assignNewEmail	=	cc_email +' , '+email;
           $('#cc_email').val(assignNewEmail);
-        }							
+        }
       }
-      else   
+      else
       {
-        $('#panellist').val(name);	
+        $('#panellist').val(name);
         $('#cc_email').val(email);
       }
+      if (typeof isdRegisterPanelMeta === 'function') { isdRegisterPanelMeta(name, email, designation); }
+      if (typeof isdSyncChipsFromField === 'function') { isdSyncChipsFromField(); }
   }
 
   function DeleteEventPanel(contact_person_name, email)
@@ -2052,8 +2455,9 @@ $(document).ready(function(){
               
         }	
         
-        $('#panellist').val(tem_hiring_namager);		
-        $('#cc_email').val(team_hiring_manager_email);			
+        $('#panellist').val(tem_hiring_namager);
+        $('#cc_email').val(team_hiring_manager_email);
+        if (typeof isdSyncChipsFromField === 'function') { isdSyncChipsFromField(); }
   }
 
 
@@ -2519,11 +2923,12 @@ $( document ).ready(function() {
 						});
 		 });   
         $('body').on('click', '#app_interview_schedule', function(){
-            // localStorage.setItem('toggleOpen', 'true');
          			var id    		=	$(this).attr('rel');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-         			url     		=	url.replace(':id', id);		   
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			url     		=	url.replace(':id', id);
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2531,22 +2936,23 @@ $( document ).ready(function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          											},
          							success 	:	function (response) {
-         																$('#app_interview_schedule_content').html(response.view);	
+         																$('#app_interview_schedule_content').html(response.view);
                                         setTimeout(() => {
                                           $('#kt_activities_scroll').removeAttr('style');
-                                        }, 500);	
+                                        }, 500);
          											}
-         				});	
+         				});
          });
-         
+
          $('body').on('click', '.app_mail_schedule', function(){
                     localStorage.setItem('toggleOpen', 'true');
-                    // $('#interview_schedule').modal('show');
          			var id    		=	$(this).attr('rel');
          			var relint    		=	$(this).attr('relint');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}"+"?relint="+relint;
-         			url     		=	url.replace(':id', id);		   
-         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+         			url     		=	url.replace(':id', id);
+         			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+              (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              window.isdShellSetStep('main');
          			$.ajax({
          							type  		:	'GET',
          							url   		:	url,
@@ -2554,14 +2960,18 @@ $( document ).ready(function() {
          														$('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
          											},
          							success 	:	function (response) {
-         							    	   
-         																$('#app_interview_schedule_content').html(response.view);	
-         															
+
+         																$('#app_interview_schedule_content').html(response.view);
+
          																$('#div_interview_schedule_first').hide();
-   			                                $('#div_interview_schedule_second').show();	
+   			                                $('#div_interview_schedule_second').show();
          											}
-         				});	
+         				});
          });
+
+        $(document).on('click', '#interview_schedule_drawer_cancel', function(){
+              $('#interview_schedule_drawer_close').trigger('click');
+        });
          
         $('body').on('click', '.add_panel', function(){
          				$('#kt_activitiesIntTeam_toggle').trigger('click');
@@ -2635,11 +3045,12 @@ $( document ).ready(function() {
 
 
                 function flatpickrfunDefine(){
-                          // localStorage.setItem('toggleOpen', 'true');
                           var id    		=	'1';
                           var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-                          url     		=	url.replace(':id', id);		   
-                          var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+                          url     		=	url.replace(':id', id);
+                          var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
+                          (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              window.isdShellSetStep('main');
                           $.ajax({
                                   type  		:	'GET',
                                   url   		:	url,

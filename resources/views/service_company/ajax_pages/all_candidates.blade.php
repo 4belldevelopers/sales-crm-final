@@ -177,9 +177,52 @@
                         $skilltag = '';
                         $skilltagclass = '';
                         $skillArr = explode(',', $row->skills);
+                        $candidateSkillsLower = array_map(fn($s) => strtolower(trim($s)), $skillArr);
 
-                        if(@$row->wiseId){
-                            $percentage =  GeneralMethod::skill_percentage($row->jobId,$skillArr);
+                        // Highlighting/match basis: the applied Skills filter
+                        // (mandatory = starred, optional = unstarred) when one
+                        // exists, otherwise this row's OWN job's required
+                        // skills — CV Tracker isn't job-scoped, so "no filter
+                        // applied" falls back to each row's own job instead of
+                        // one shared default (see allcandidates()).
+                        $mandatoryBasis = $mandatorySkillsForDisplay ?? [];
+                        $optionalBasis = $optionalSkillsForDisplay ?? [];
+                        $hasFilterSkills = !empty($mandatoryBasis) || !empty($optionalBasis);
+                        if (!$hasFilterSkills) {
+                            $optionalBasis = ($jobSkillsByJobId[$row->jobId] ?? []);
+                        }
+
+                        $matchedMandatory = [];
+                        $matchedOptional = [];
+                        foreach ($skillArr as $sval) {
+                            $svalLower = strtolower(trim($sval));
+                            $isMandatory = false;
+                            foreach ($mandatoryBasis as $req) {
+                                if (GeneralMethod::skillMatchesPhrasePrefix($req, $svalLower)) { $isMandatory = true; break; }
+                            }
+                            if ($isMandatory) { $matchedMandatory[] = $sval; continue; }
+                            foreach ($optionalBasis as $req) {
+                                if (GeneralMethod::skillMatchesPhrasePrefix($req, $svalLower)) { $matchedOptional[] = $sval; break; }
+                            }
+                        }
+
+                        // Match % — against the same basis driving the highlighting
+                        // above, rather than always the row's own job.
+                        $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
+                        if (@$row->wiseId) {
+                            if (!$hasFilterSkills) {
+                                $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                            } elseif (!empty($percentBasis)) {
+                                $matches = 0;
+                                foreach ($percentBasis as $req) {
+                                    foreach ($candidateSkillsLower as $cand) {
+                                        if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
+                                    }
+                                }
+                                $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
+                            } else {
+                                $percentage = '0%';
+                            }
                         }
 
                         // Match % badge — color reflects the numeric match score:
@@ -196,15 +239,14 @@
                         }
                         $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
 
-
-                        // dd($per,$job_skills,$skillArr);
-
-                        // dd($skillArr);
                         if (empty($limit)) {
-                            if (count($skillArr) > 0) {
-                                foreach ($skillArr as $key => $sval) {
-                                    $skilltag .=
-                                        '<span class="badge badge-light my-1 skill" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                            foreach ($skillArr as $sval) {
+                                if (in_array($sval, $matchedMandatory, true)) {
+                                    $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill">★ ' . ucfirst($sval) . '</span>  ';
+                                } elseif (in_array($sval, $matchedOptional, true)) {
+                                    $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                                } else {
+                                    $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
                                 }
                             }
                         } else {
@@ -533,9 +575,9 @@
                         ucwords(mb_substr($row_city_name, 0, 10)) . ', ' . strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
                     	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        htmlspecialchars(ucwords(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
+                        htmlspecialchars(strtoupper(@$row->qualification_name), ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 15)) .
+                        strtoupper(mb_substr(@$row->qualification_name, 0, 15)) .
                         '</span>
                     </div>';
                 @endphp
@@ -558,8 +600,15 @@
                         $rowpostedby = $row->posted_by;
                     }
                     // $rowpostedby = ucwords($row->posted_by); post_company_name
-                    
-                    $post_company_name = @$row->post_company_name;
+
+                    // The actual company the recruiter (posted_by user) belongs
+                    // to, via users.company_id — same fix as ClientApp's row
+                    // partial. Falls back to the older fields for any candidate
+                    // not yet re-indexed since this field was added.
+                    $post_company_name = @$row->submitted_by_company_name;
+                    if (!$post_company_name) {
+                        $post_company_name = @$row->post_company_name;
+                    }
                     if (!$post_company_name) {
                         $post_company_name = @$row->company_name;
                     }
@@ -691,12 +740,18 @@
                     if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
                         $stage_default_css = 'client_stage_sub_stage';
                     }
+                    // Once sourced, stage ownership passes to the client — this
+                    // used to strip the trigger class entirely (a dead badge
+                    // that did nothing on click). Now it's a live trigger that
+                    // surfaces a notice explaining that, instead of silently
+                    // doing nothing (see client_stage_locked_notice handler in
+                    // cvtracker/index.blade.php).
                     if (
                         $row->thirdparty_company_id > 0 &&
                         $row->thirdparty_company_id == $company_id &&
                         $row->job_master_status_id != 8
                     ) {
-                        $stage_default_css = '';
+                        $stage_default_css = 'client_stage_locked_notice';
                     }
                     $name = '';
                     if ($row->job_master_status_id == 8) {
@@ -712,14 +767,15 @@
                             $name = @$childStatus->name;
                         }
                     }
+                    $stageModalAttrs = ($stage_default_css === 'client_stage_locked_notice')
+                        ? ''
+                        : ' data-toggle="modal" data-target="#' . $stage_default_css . '"';
                     echo '<div class="d-flex flex-column">
-                            <a href="javascript.void(0);" data-row-id="' .
+                            <a href="javascript:void(0);" data-row-id="' .
                                     @$row->wiseId .
                                     '" class="d-flex flex-column ' .
                                     $stage_default_css .
-                                    '" data-toggle="modal" data-target="#' .
-                                    $stage_default_css .
-                                    '">
+                                    '"' . $stageModalAttrs . '>
                                 <span class="badge fw-bolder fs-6 ' .
                                     @$row->css_style .
                                     ' px-2 py-1">' .

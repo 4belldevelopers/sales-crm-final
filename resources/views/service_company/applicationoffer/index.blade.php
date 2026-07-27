@@ -566,6 +566,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
     overflow: hidden !important;
     flex: 1 1 0 !important;
     min-height: 0 !important;
+    position: relative !important;
 }
 </style>
 
@@ -587,23 +588,49 @@ a:hover .ot-comp-change { text-decoration: underline; }
     </div>
 </div>
 
-<div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header flex-stack">
-                <h2>Stage and sub stage</h2>
-                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="stage_sub_stage_close">
-                    <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"/>
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"/>
-                        </svg>
-                    </span>
-                </div>
-            </div>
-            <div class="stage_body_content" id="stage_body_content"></div>
+<style>
+  #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+  #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+  #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+  #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+  #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+  #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+  #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+  #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
+  #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
+  #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e4e6ef; }
+  #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+  #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+</style>
+<div id="csd_drawer_toggle" style="display:none;"></div>
+<div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+  <div class="d-flex flex-column h-100 w-100">
+    <div class="sd-topbar">
+      <div class="sd-topbar-left">
+        <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
+        <div>
+          <div class="sd-topbar-title">Change Candidate Stage</div>
+          <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
         </div>
+      </div>
+      <div class="sd-topbar-right">
+        <button type="button" class="sd-btn-cancel" id="stage_sub_stage_close">Cancel</button>
+        <button type="button" class="sd-btn-confirm" id="custom_stage_submit">
+          <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>
+        </button>
+        <span class="sd-divider"></span>
+        <span class="sd-close" id="csd_drawer_close"><i class="fa fa-times"></i></span>
+      </div>
     </div>
+    <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
+      <div class="stage_body_content" id="stage_body_content"></div>
+    </div>
+  </div>
 </div>
 
 </div>{{-- /container-fluid --}}
@@ -788,10 +815,12 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     });
 
-    /* pagination (delegated) */
+    /* pagination (delegated) — the pagination partial (ajax_pages/
+       pagination.blade.php) renders buttons with class .pagi-page/
+       .pagi-arrow, not .page-link, so this was never matching anything. */
     document.getElementById('ot_pagination').addEventListener('click', function (e) {
-        var link = e.target.closest('.page-link');
-        if (!link || link.classList.contains('disabled')) return;
+        var link = e.target.closest('.pagi-page, .pagi-arrow');
+        if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
         e.preventDefault();
         var pg = parseInt(link.dataset.page, 10);
         if (!pg) return;
@@ -800,11 +829,21 @@ a:hover .ot-comp-change { text-decoration: underline; }
     });
 
     /* Stage sub-stage */
+    $(document).on('click', '#stage_sub_stage_close', function () {
+        $('#csd_drawer_close').trigger('click');
+    });
+
     $(document).on('click', '.stage_sub_stage', function () {
-        $('#stage_body_content').html('');
+        $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+        $('#csd_drawer_toggle').trigger('click');
         var id  = $(this).data('row-id');
         var url = '{{ route('service_company.job-applications.stage_body_content', ':id') }}'.replace(':id', id);
-        $.ajax({ type:'GET', url:url, success:function(r){ if(r.status=='success') $('#stage_body_content').html(r.view); } });
+        $.ajax({ type:'GET', url:url, success:function(r){
+            if(r.status=='success') {
+                $('#stage_body_content').html(r.view);
+                $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
+            }
+        } });
     });
 
     $(document).on('click', '#custom_stage_submit', function (e) {
@@ -812,12 +851,14 @@ a:hover .ot-comp-change { text-decoration: underline; }
         var ms = $('input[name="master_status"]:checked').val();
         var cm = $('#comment').val();
         if (ms == 8 && !cm) { Swal.fire("Warning",'InReview Comment Required!',"info"); return; }
+        if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) { Swal.fire("Warning",'Please select a sub stage to continue.',"info"); return; }
         $(this).prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
         $.ajax({
             url:'{{ route('service_company.job-applications.stage_submit') }}', type:'POST',
             data: $('#status_frm').serialize(),
             success:function(r){
-                $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label">Submit</span>');
+                $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>');
+                csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
                 if(r.status=='success'){
                     Swal.fire("Success",'Stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
                     fetchTable(false);
@@ -831,11 +872,20 @@ a:hover .ot-comp-change { text-decoration: underline; }
         $('#kt_fwd_offer_drawer').addClass('drawer-on');
         $('#kt_fwd_offer_overlay').addClass('active');
         $('body').css('overflow', 'hidden');
+        // KTScroll re-fires on DOM changes — strip its inline height so our flex CSS wins
+        setTimeout(function() {
+            var sc = document.getElementById('kt_activities_scroll');
+            if (sc) sc.style.removeProperty('height');
+        }, 50);
     }
     function closeApproverDrawer() {
         $('#kt_fwd_offer_drawer').removeClass('drawer-on');
         $('#kt_fwd_offer_overlay').removeClass('active');
         $('body').css('overflow', '');
+        setTimeout(function() {
+            var sc = document.getElementById('kt_activities_scroll');
+            if (sc) sc.style.removeProperty('height');
+        }, 50);
     }
     $(document).on('click', '#kt_fwd_offer_close, #kt_fwd_offer_overlay', closeApproverDrawer);
 

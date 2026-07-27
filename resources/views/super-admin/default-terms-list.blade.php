@@ -236,7 +236,23 @@
                                                 <i class="fa fa-edit text-primary fs-4" aria-hidden="true">Edit/View</i>
                                             </a>
                                         </td>
-                                    </tr>   
+                                    </tr> 
+                                     <tr>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">10</a>
+                                        </td>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Agency Offer terms</a>
+                                        </td>
+                                       
+                                        <td> For Candidates</td>
+                                        <td class="">
+                                            <a href="{{ route('superadmin.company.defaultTerms',[encrypt(10)]) }}"
+                                                class="" data-toggle="tooltip" data-original-title="Edit">
+                                                <i class="fa fa-edit text-primary fs-4" aria-hidden="true">Edit/View</i>
+                                            </a>
+                                        </td>
+                                    </tr>  
                                 </tbody>
                             </table>
                         </div>

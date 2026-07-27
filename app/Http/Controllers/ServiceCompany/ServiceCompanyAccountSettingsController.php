@@ -782,6 +782,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 								  if($global_settings){
 									if($request->descriptiontype=='offer_terms'){
 										$terms = @$global_settings->offer_terms;
+									}elseif($request->descriptiontype=='agency_offer_terms'){
+										$terms = @$global_settings->agency_offer_terms;
 									}elseif($request->descriptiontype=='offer_terms_admin'){
 										// $global_settings = Company::findOrFail(auth()->user()->company_id);
 										$terms = @$global_settings->offer_terms;
@@ -804,6 +806,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 							$company->offer_terms 				=	@$request->description;
 							$company->save();
 							return Reply::dataOnly(['status' => 'success','terms' => $company->offer_terms]);
+						 }elseif($request->pageterms=='termsagencyoffer'){
+							$company_id      					=	auth()->user()->company_id;
+					        $company 							=	Company::findOrFail($company_id);
+							$company->agency_offer_terms 		=	@$request->description;
+							$company->save();
+							return Reply::dataOnly(['status' => 'success','terms' => $company->agency_offer_terms]);
 						 }
 			
 					$company_logo_path					=	'';
@@ -1473,6 +1481,163 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 			
 		}
 			
+		/* Career Page Settings */
+		public function careerPageSettings()
+		{
+			$company_id       = auth()->user()->company_id;
+			$this->company    = DB::table('companies')->where('id', $company_id)->first();
+			$this->global     = DB::table('global_settings')->first();
+			try {
+				$this->careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+			} catch (\Exception $e) {
+				$this->careerSettings = null;
+			}
+			/* Ensure table + all Template Design columns exist */
+			DB::statement("CREATE TABLE IF NOT EXISTS `company_career_settings` (
+				`id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+				`company_id` bigint(20) UNSIGNED NOT NULL,
+				`primary_color` varchar(20) DEFAULT '#2563EB',
+				`secondary_color` varchar(20) DEFAULT '#10B981',
+				`font_family` varchar(50) DEFAULT 'Poppins',
+				`default_language` varchar(10) DEFAULT 'en',
+				`currency` varchar(10) DEFAULT 'INR',
+				`page_layout` varchar(20) DEFAULT 'modern',
+				`jobs_display` varchar(20) DEFAULT 'card',
+				`career_page_status` tinyint(1) DEFAULT 1,
+				`td_template` varchar(30) DEFAULT 'modern',
+				`td_color_primary` varchar(20) DEFAULT '#2563EB',
+				`td_color_secondary` varchar(20) DEFAULT '#1F2937',
+				`td_color_accent` varchar(20) DEFAULT '#10B981',
+				`td_color_bg` varchar(20) DEFAULT '#FFFFFF',
+				`td_theme_mode` varchar(10) DEFAULT 'light',
+				`td_layout` varchar(20) DEFAULT 'wide',
+				`td_logo_path` varchar(500) DEFAULT NULL,
+				`td_favicon_path` varchar(500) DEFAULT NULL,
+				`td_hero_img1_path` varchar(500) DEFAULT NULL,
+				`td_hero_img2_path` varchar(500) DEFAULT NULL,
+				`td_opt_life` tinyint(1) DEFAULT 1,
+				`td_opt_testi` tinyint(1) DEFAULT 1,
+				`td_opt_animation` tinyint(1) DEFAULT 1,
+				`td_custom_css` text DEFAULT NULL,
+				`stat_departments` int DEFAULT 15,
+				`stat_countries` int DEFAULT 5,
+				`stat_employees` varchar(20) DEFAULT '220+',
+				`stat_retention` varchar(20) DEFAULT '95%',
+				`created_at` timestamp NULL DEFAULT NULL,
+				`updated_at` timestamp NULL DEFAULT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `company_career_settings_company_id_unique` (`company_id`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+			/* Add columns if table existed before Template Design was introduced */
+			$tdColumns = [
+				'td_template'       => "ALTER TABLE `company_career_settings` ADD COLUMN `td_template` varchar(30) DEFAULT 'modern'",
+				'td_color_primary'  => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_primary` varchar(20) DEFAULT '#2563EB'",
+				'td_color_secondary'=> "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_secondary` varchar(20) DEFAULT '#1F2937'",
+				'td_color_accent'   => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_accent` varchar(20) DEFAULT '#10B981'",
+				'td_color_bg'       => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_bg` varchar(20) DEFAULT '#FFFFFF'",
+				'td_theme_mode'     => "ALTER TABLE `company_career_settings` ADD COLUMN `td_theme_mode` varchar(10) DEFAULT 'light'",
+				'td_layout'         => "ALTER TABLE `company_career_settings` ADD COLUMN `td_layout` varchar(20) DEFAULT 'wide'",
+				'td_logo_path'      => "ALTER TABLE `company_career_settings` ADD COLUMN `td_logo_path` varchar(500) DEFAULT NULL",
+				'td_favicon_path'   => "ALTER TABLE `company_career_settings` ADD COLUMN `td_favicon_path` varchar(500) DEFAULT NULL",
+				'td_hero_img1_path' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img1_path` varchar(500) DEFAULT NULL",
+				'td_hero_img2_path' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img2_path` varchar(500) DEFAULT NULL",
+				'td_opt_life'       => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_life` tinyint(1) DEFAULT 1",
+				'td_opt_testi'      => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_testi` tinyint(1) DEFAULT 1",
+				'td_opt_animation'  => "ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_animation` tinyint(1) DEFAULT 1",
+				'td_custom_css'     => "ALTER TABLE `company_career_settings` ADD COLUMN `td_custom_css` text DEFAULT NULL",
+				'stat_departments'  => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_departments` int DEFAULT 15",
+				'stat_countries'    => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_countries` int DEFAULT 5",
+				'stat_employees'    => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_employees` varchar(20) DEFAULT '220+'",
+				'stat_retention'    => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_retention` varchar(20) DEFAULT '95%'",
+			];
+			$existing = DB::select("SHOW COLUMNS FROM `company_career_settings`");
+			$existingCols = array_column($existing, 'Field');
+			foreach ($tdColumns as $col => $sql) {
+				if (!in_array($col, $existingCols)) {
+					try { DB::statement($sql); } catch (\Exception $ex) {}
+				}
+			}
+			if (!$this->careerSettings) {
+				$this->careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+			}
+			return view('service_company.career-page.settings', $this->data);
+		}
+
+		public function careerPageSettingsSave(Request $request)
+		{
+			$company_id = auth()->user()->company_id;
+
+			$data = [
+				'primary_color'      => $request->primary_color,
+				'secondary_color'    => $request->secondary_color,
+				'font_family'        => $request->font_family,
+				'default_language'   => $request->default_language,
+				'currency'           => $request->currency,
+				'page_layout'        => $request->page_layout,
+				'jobs_display'       => $request->jobs_display,
+				'career_page_status' => $request->has('career_page_status') ? 1 : 0,
+				/* Template Design fields */
+				'td_template'        => $request->input('td_template', 'modern'),
+				'td_color_primary'   => $request->input('td_color_primary', '#2563EB'),
+				'td_color_secondary' => $request->input('td_color_secondary', '#1F2937'),
+				'td_color_accent'    => $request->input('td_color_accent', '#10B981'),
+				'td_color_bg'        => $request->input('td_color_bg', '#FFFFFF'),
+				'td_theme_mode'      => $request->input('td_theme_mode', 'light'),
+				'td_layout'          => $request->input('td_layout', 'wide'),
+				'td_opt_life'        => $request->has('td_opt_life') ? 1 : 0,
+				'td_opt_testi'       => $request->has('td_opt_testi') ? 1 : 0,
+				'td_opt_animation'   => $request->has('td_opt_animation') ? 1 : 0,
+				'td_custom_css'      => $request->input('td_custom_css', ''),
+				'updated_at'         => now(),
+			];
+
+			/* Handle logo upload */
+			if ($request->hasFile('td_logo') && $request->file('td_logo')->isValid()) {
+				$logo = $request->file('td_logo');
+				$logoName = 'career_logo_' . $company_id . '_' . time() . '.' . $logo->getClientOriginalExtension();
+				$logo->move(public_path('uploads/career'), $logoName);
+				$data['td_logo_path'] = 'uploads/career/' . $logoName;
+			}
+
+			/* Handle favicon upload */
+			if ($request->hasFile('td_favicon') && $request->file('td_favicon')->isValid()) {
+				$fav = $request->file('td_favicon');
+				$favName = 'career_favicon_' . $company_id . '_' . time() . '.' . $fav->getClientOriginalExtension();
+				$fav->move(public_path('uploads/career'), $favName);
+				$data['td_favicon_path'] = 'uploads/career/' . $favName;
+			}
+
+			/* Handle hero image 1 upload */
+			if ($request->hasFile('td_hero_img1') && $request->file('td_hero_img1')->isValid()) {
+				$img1 = $request->file('td_hero_img1');
+				$img1Name = 'hero1_' . $company_id . '_' . time() . '.' . $img1->getClientOriginalExtension();
+				if (!is_dir(base_path('img/images'))) { mkdir(base_path('img/images'), 0755, true); }
+				$img1->move(base_path('img/images'), $img1Name);
+				$data['td_hero_img1_path'] = 'img/images/' . $img1Name;
+			}
+
+			/* Handle hero image 2 upload */
+			if ($request->hasFile('td_hero_img2') && $request->file('td_hero_img2')->isValid()) {
+				$img2 = $request->file('td_hero_img2');
+				$img2Name = 'hero2_' . $company_id . '_' . time() . '.' . $img2->getClientOriginalExtension();
+				if (!is_dir(base_path('img/images'))) { mkdir(base_path('img/images'), 0755, true); }
+				$img2->move(base_path('img/images'), $img2Name);
+				$data['td_hero_img2_path'] = 'img/images/' . $img2Name;
+			}
+
+			DB::table('company_career_settings')->updateOrInsert(
+				['company_id' => $company_id],
+				array_merge($data, ['company_id' => $company_id, 'created_at' => now()])
+			);
+
+			/* Ensure upload directory exists */
+			if (!is_dir(public_path('uploads/career'))) {
+				mkdir(public_path('uploads/career'), 0755, true);
+			}
+
+			return Reply::success('Career page settings saved successfully.');
+		}
+
 		public function google($id)
     	{			
 			$company_id      			=	auth()->user()->company_id;

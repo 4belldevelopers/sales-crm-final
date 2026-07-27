@@ -1,7 +1,7 @@
 @php
     // Hero KPI cards for the client-job AppTracker header (Pool / Similar / In-house
     // Bench tabs only — a direct-client job has no Agency Bench, Bench Talent
-    // Request, or Website Candidates tabs at all; those sourcing channels don't
+    // Request, or Career Page tabs at all; those sourcing channels don't
     // apply to a job this company doesn't own, and career_apply.blade.php isn't
     // built to be reached from this flow. Same visual language as
     // sections/service_company/apptrackerHeader.blade.php; titles/colors kept in
@@ -26,6 +26,10 @@
             'bg' => '#dcfce7',
             'ic' => '#16a34a',
             'icon' => 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z',
+            // Same clarification as apptrackerHeader.blade.php's Similar
+            // Candidates card — this is the job's default count, not your
+            // live filter selection on the Similar Candidates page itself.
+            'hint' => 'Based on this job\'s default skills, location & experience — not any filters you\'ve customized on the Similar Candidates page itself.',
         ],
         [
             'title' => 'In-house Bench Talents',
@@ -97,6 +101,11 @@
         font-weight: 700;
         color: #181c32;
     }
+    .apth-hint {
+        cursor: help;
+        color: #b5b5c3;
+        font-size: 10px;
+    }
     .apth-row {
         display: flex;
         align-items: center;
@@ -147,7 +156,11 @@
         <a href="{{ $card['url'] }}"
             class="apth-card {{ $card['active'] ? 'active' : '' }}"
             style="--apth-color: {{ $card['ic'] }}; --apth-bg: {{ $card['bg'] }};">
-            <p class="apth-title">{{ $card['title'] }}</p>
+            <p class="apth-title">{{ $card['title'] }}
+                @if (!empty($card['hint']))
+                    <span class="apth-hint" id="apth_hint_{{ $card['id'] }}" title="{{ $card['hint'] }}">ⓘ</span>
+                @endif
+            </p>
             <div class="apth-row">
                 <span class="apth-row-left">
                     <span class="apth-icon" style="background: {{ $card['bg'] }};">

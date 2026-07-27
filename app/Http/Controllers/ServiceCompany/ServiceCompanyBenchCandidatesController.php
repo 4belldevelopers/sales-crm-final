@@ -4884,7 +4884,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->stage = $stage;
 		$this->bench_id = $id;
 		$this->recomCount = $this->benchjobAndRecomCount($id);
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode')
+		$this->heroKpis = $this->benchHeroKpis($this->bench_id);
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','bench_master_status.css_style','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
@@ -4931,41 +4932,34 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$chkAdminRole = $this->user->hasRole('admin');
 		$stage = $request->input('stage');
 
-		$params = [
-        	'index' => ELASTIC_CANDIDATES_BENCH,
-        	'id'    => $bench_id,
-        ];
-        $response = $this->elasticService->getClient()->get($params);
-		$data = (object) $response['_source'];
-		$yourArray = $data->jobs;
-		// ✅ Apply stage filter only if NOT 'all'
-		if ($stage != 'all') {
-			$yourArray = array_filter($yourArray, function ($job) use ($stage) {
-				return isset($job['master_status_id']) && $job['master_status_id'] == $stage;
-			});
-		}
-
-		$jobIds = array_column($yourArray, 'job_id');
-
-
-		$searchQuery = $request->input('q');
 		$page = max((int) $request->input('page', 1), 1);
 		$size = (int) $request->input('size', 10); // Default 20 results per page
 		$from = ($page - 1) * $size;
 
-		$custom_search = trim(request('custom_search'));
+		// The toolbar search box actually sends 'cus_search' (see
+		// fetchBenchExploreJobCandidateList()) — 'q'/'custom_search' were never
+		// populated by the frontend, which is why free-text search was dead.
+		$custom_search = trim((string) $request->input('cus_search'));
 		$custom_status = request('statusfilter');
+		$bxr_company  = json_decode((string) $request->input('bxr_company', '[]'), true) ?: [];
+		$bxr_location = json_decode((string) $request->input('bxr_location', '[]'), true) ?: [];
+		$bxr_min_sal  = $request->input('bxr_min_sal');
+		$bxr_max_sal  = $request->input('bxr_max_sal');
+		$bxr_activity = $request->input('bxr_activity');
 
 		$cachePayload = [
 			'page' => $page,
 			'size' => $size,
-			'q' => $searchQuery,
 			'company' => $company_id,
 			'stage' => $request->input('stage'),
-			'search' =>$request->input('search'),
-			'cus_search' => $request->input('cus_search'),
+			'cus_search' => $custom_search,
 			'statusfilter' =>$request->input('statusfilter'),
 			'sortingfilter' => $request->input('sortingfilter'),
+			'bxr_company' => $bxr_company,
+			'bxr_location' => $bxr_location,
+			'bxr_min_sal' => $bxr_min_sal,
+			'bxr_max_sal' => $bxr_max_sal,
+			'bxr_activity' => $bxr_activity,
 			'user_id' => $this->user->id,
 			'bench_id' =>$request->input('bench_id')
 		];
@@ -5076,13 +5070,84 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				];
 			}
 
+			// Job status (active/hold/inactive) — $statusArr was computed above but
+			// never actually applied to the query; wiring it to the real indexed
+			// field (jobs.status, denormalized onto each doc as `job_status`) is
+			// what makes the Status filter actually do something.
+			if (!empty($statusArr)) {
+				$filters[] = ['terms' => ['job_status' => $statusArr]];
+			}
+
+			// Free-text search — company name, job title, or the recruiter who
+			// submitted the candidate (matches the toolbar's placeholder text).
+			if ($custom_search !== '') {
+				$must[] = [
+					'multi_match' => [
+						'query'     => $custom_search,
+						'fields'    => ['client_name', 'title', 'posted_by'],
+						'fuzziness' => 'AUTO',
+					],
+				];
+			}
+
+			// Company / Client Name (Tagify — array of {value: "..."} tags)
+			if (!empty($bxr_company)) {
+				$companyShould = [];
+				foreach ($bxr_company as $tag) {
+					$val = is_array($tag) ? ($tag['value'] ?? '') : $tag;
+					if ($val !== '') {
+						$companyShould[] = ['match_phrase' => ['client_name' => $val]];
+					}
+				}
+				if (!empty($companyShould)) {
+					$filters[] = ['bool' => ['should' => $companyShould, 'minimum_should_match' => 1]];
+				}
+			}
+
+			// Job Location (Tagify)
+			if (!empty($bxr_location)) {
+				$locationShould = [];
+				foreach ($bxr_location as $tag) {
+					$val = is_array($tag) ? ($tag['value'] ?? '') : $tag;
+					if ($val !== '') {
+						$locationShould[] = ['match_phrase' => ['city_name' => $val]];
+						$locationShould[] = ['match_phrase' => ['location' => $val]];
+					}
+				}
+				if (!empty($locationShould)) {
+					$filters[] = ['bool' => ['should' => $locationShould, 'minimum_should_match' => 1]];
+				}
+			}
+
+			// Salary / Bill Rate range — compares each job's own stored max_salary
+			// as-is (same convention the sort switch above already uses), no
+			// cross-currency normalization since jobs here can use different
+			// currencies. Needs jobs indexed after the min_salary/max_salary
+			// fields were added to ElasticCandidatesIndex to actually match.
+			if ($bxr_min_sal !== null && $bxr_min_sal !== '') {
+				$filters[] = ['range' => ['max_salary' => ['gte' => (float) $bxr_min_sal]]];
+			}
+			if ($bxr_max_sal !== null && $bxr_max_sal !== '') {
+				$filters[] = ['range' => ['max_salary' => ['lte' => (float) $bxr_max_sal]]];
+			}
+
+			// Activity — how recently this job-application record last changed.
+			if ($bxr_activity !== null && $bxr_activity !== '' && $bxr_activity !== '1') {
+				$activityDays = ['2' => 30, '3' => 60, '4' => 90, '5' => 180, '6' => 365][$bxr_activity] ?? null;
+				if ($activityDays) {
+					$filters[] = ['range' => ['updated_at' => ['gte' => now()->subDays($activityDays)->toIso8601String()]]];
+				}
+			}
+
 			$params = [
 				'index' => ELASTIC_CANDIDATES,
 				'body'  => [
 					'from' => $from,
 					'size' => $size,
+					'sort' => $sort,
 					'query' => [
 						'bool' => [
+							'must'   => $must,
 							'filter' => $filters
 						]
 					]
@@ -5116,67 +5181,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			// cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
 
 			return response()->json($responseData);
-
-			
-
-			
-
-
-
-		// FINAL ELASTIC PARAMS
-		$params = [
-			'index' => ELASTIC_JOBS,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => [
-							[
-								'terms' => [
-									'id' => $jobIds
-								]
-							]
-						],
-					],
-				],
-			],
-		];
-
-		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
-			$total = 0;
-			$data = [];
-		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
-		}
-        //    dd($data);
-		$pagination = [
-			'total' => $total,
-			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
-		];
-
-		$userPermissions = $this->userPermissions;
-		$responseData =  [
-			'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data','userPermissions','company_id','salaryMode','currencySymbole','job_status','feedback_status','bench_id'))->render(),
-			'total' => $total,
-			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		];
-
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
-
-	    return response()->json($responseData);
-
-		
-  
 	}
 	public function bench_explore_listing(Request $request)
 	{
@@ -5690,34 +5694,33 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
 			->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// dd($gdFilterData);
-		$this->default_loc = '';//gdFilterData->default_loc;
-		$this->qualification = '';//$gdFilterData->qualification;
-		$this->min_exp = '';//$gdFilterData->min_exp >=1) ? $gdFilterData->min_exp-1 : $gdFilterData->min_exp;
-		$this->max_exp = '';//$gdFilterData->max_exp+1;
-		$this->min_salary_currency = 0;//$gdFilterData->min_salary_currency;
-		$this->min_salary ='';// $gdFilterData->min_salary;
-		$this->max_salary = '';//$gdFilterData->max_salary;
-		$this->min_sal_mode = 0;//$gdFilterData->min_sal_mode;
+		// Filter drawer defaults — deliberately NEUTRAL for experience,
+		// location and salary. The summary-card counts (benchjobAndRecomCount)
+		// filter by the candidate's skills only, so any extra prefilled
+		// filter here made the list's first load narrower than the card
+		// number ("card says 12, list shows 5"). Skills stay prefilled (the
+		// drawer input reads $bench_detail->skills directly); everything
+		// else starts as "Any" so card count == list total on load.
+		$this->default_loc = '';
+		$this->qualification = $gdFilterData->qualification;
+		$this->min_exp = '';
+		$this->max_exp = '';
+		$this->min_salary_currency = $gdFilterData->min_salary_currency;
+		$this->min_salary = 0;
+		$this->max_salary = '';
+		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
-		// $this->max_exp = floor($this->max_exp / 10) * 10;
-		//  dd($this->max_salary,($this->max_exp));
 		$cities = DB::table('city_list')->pluck('city')->toArray();
-		
-		// [
-        //     "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", 
-        //     "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"
-        // ];
-
-        $this->cities =  $cities; 
+        $this->cities =  $cities;
 
 
 		$this->segment = ($request->segment(4)) ? $request->segment(4) : '';
@@ -5728,34 +5731,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 	{
 		// dd($request->id);
 		$this->bench_id =$request->id;
-		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly')
+		$this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name','job_applications.status as statusCheck','countries.country_name','state_list.state as state_name','city_list.city as city_name','job_applications.total_exp','job_applications.rel_exp','job_applications.pay_rate_amount','job_applications.bill_rate_amount','job_applications.bill_rate_currency','job_applications.bill_rate_mode','job_applications.ectc_yearly','job_applications.created_at')
 			->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
 			->join('countries', 'countries.id', '=', 'job_applications.country')
 			->join('state_list', 'state_list.id', '=', 'job_applications.state')
 			->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
 			->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
 		$gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
-		// dd($gdFilterData);
-		$this->default_loc = '';//$gdFilterData->default_loc;
-		$this->qualification = '';//$gdFilterData->qualification;
-		$this->min_exp = '';//($gdFilterData->min_exp >=1) ? $gdFilterData->min_exp-1 : $gdFilterData->min_exp;
-		$this->max_exp = '';//$gdFilterData->max_exp+1;
-		$this->min_salary_currency = 0;//$gdFilterData->min_salary_currency;
-		$this->min_salary ='';// $gdFilterData->min_salary;
-		$this->max_salary = '';//$gdFilterData->max_salary;
-		$this->min_sal_mode = 0;//$gdFilterData->min_sal_mode;
+		// Filter drawer defaults — deliberately NEUTRAL (see the identical
+		// comment in recommend_req() above): only skills are prefilled so
+		// the first-load list query matches the summary-card count query.
+		$this->default_loc = '';
+		$this->qualification = $gdFilterData->qualification;
+		$this->min_exp = '';
+		$this->max_exp = '';
+		$this->min_salary_currency = $gdFilterData->min_salary_currency;
+		$this->min_salary = 0;
+		$this->max_salary = '';
+		$this->min_sal_mode = $gdFilterData->min_sal_mode;
 		$this->default_skill = $gdFilterData->default_skill;
-		// $this->max_exp = floor($this->max_exp / 10) * 10;
-		//  dd($this->max_salary,($this->max_exp));
 		$cities = DB::table('city_list')->pluck('city')->toArray();
-		
-		// [
-        //     "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", 
-        //     "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"
-        // ];
-
-        $this->cities =  $cities; 
+        $this->cities =  $cities;
 
 
 		$this->segment = ($request->segment(4)) ? $request->segment(4) : '';
@@ -5989,18 +5987,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				array_push($set_skill, trim($val));
 			}
 		}
-		$skill = DB::table('job_metronics_skills')->whereIn('skill_name', $set_skill)->pluck('job_id')->toArray();
-
-		// dd($skill);
-
-		// ksort($skill);  // Sort by values
-
-		// foreach ($skill as $value => $count) {
-		// 	echo "<br>";
-		// 	echo "Value: $value, Count: $count" . PHP_EOL;
-		// }
-
-		// dd(explode(",",$JobApplication->skills),array_unique($skill),$set_skill);
+		// (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
+		// query here whose $skill result was never read anywhere below —
+		// removed as dead load. $set_skill — the candidate's own skills —
+		// is kept; it now also drives the "Best Match" sort, case 10 below.)
 		abort_if(Gate::denies('view_jobs'), 403);
 
 		$company_id = auth()->user()->company_id;
@@ -6046,6 +6036,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$custom_search = trim(request('custom_search'));
 
 		$cachePayload = [
+			// condidate_id was missing here — every request for THIS candidate's
+			// recommended jobs hashed to the same cache key as any OTHER
+			// candidate with the same filter state (very likely with empty/
+			// default filters, e.g. two candidates with no skills recorded),
+			// so one candidate's cached list/total could be served back for a
+			// completely different candidate. This is the root cause behind
+			// "count says N but the list shows 0" and results changing
+			// unexpectedly when switching between candidates.
+			'condidate_id' => $condidate_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
@@ -6059,10 +6058,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'max_exp' => $max_exp,
 			'max_salary' => $max_salary,
 			'min_salary' => $min_salary,
-			'requiredSkills' => $requiredSkills ?? [],			
+			'requiredSkills' => $requiredSkills ?? [],
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
-			'custom_hiringtype' => $custom_hiringtype
+			'custom_hiringtype' => $custom_hiringtype,
+			'work_mode' => request('work_mode'),
 		];
 
 
@@ -6073,7 +6073,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		⚡ Check DragonflyDB first
 		----------------------------- */
 		if (cache()->has($cacheKeySet)) {
-			// return response()->json(cache()->get($cacheKeySet));
+			return response()->json(cache()->get($cacheKeySet));
 		}
 
 		$statusArr = ['active', 'hold', 'inactive', '2'];
@@ -6083,6 +6083,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$sort = [];
 
 		$valCheck = request('custom_hiringtype');
+		// Optional scoring clauses (filled only by Best Match, case 10) —
+		// added to the bool query's "should" so they rank without filtering.
+		$scoreShould = [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6090,17 +6093,60 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			case 2:
 				$sort[] = ['id' => ['order' => 'asc']];
 				break;
+			// Cases 3-6 get an id tiebreaker: without one, documents with equal
+			// salary / client_name have no stable order between requests, so
+			// paging could show the same job on two pages and skip another.
 			case 3:
 				$sort[] = ['max_salary' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 4:
 				$sort[] = ['max_salary' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 5:
 				$sort[] = ['client_name' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
+				break;
+			case 10:
+				// "Best Match" — rank jobs by how many of the candidate's own
+				// skills each job's nested job_metronics_skills matches, using
+				// ES native scoring: each skill is an optional constant_score(1)
+				// nested clause, so _score == number of matched skills. Jobs
+				// matching nothing still appear (score 0), newest first.
+				// (The previous implementation was a painless _script sort that
+				// read params._source — _source is not accessible in the sort
+				// context and job_metronics_skills is nested, so ES rejected
+				// the entire search request; since Best Match is the default
+				// sort, every first page load failed.)
+				foreach (array_values(array_filter(array_map('trim', $set_skill))) as $bmSkill) {
+					if ($bmSkill === '') { continue; }
+					$scoreShould[] = [
+						'nested' => [
+							'path' => 'job_metronics_skills',
+							'score_mode' => 'max',
+							'query' => [
+								'constant_score' => [
+									'filter' => [
+										'match' => [
+											'job_metronics_skills.skill_name' => [
+												'query' => strtolower($bmSkill),
+												'operator' => 'and',
+											],
+										],
+									],
+									'boost' => 1,
+								],
+							],
+						],
+					];
+				}
+				$sort[] = ['_score' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6113,6 +6159,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				$filter[] = ['term' => ['employment_type' => 0]];
 			} elseif ($custom_hiringtype == 1) {
 				$filter[] = ['term' => ['employment_type' => 1]];
+			}
+		}
+
+		// 2b. WORK MODE (new filter) — comma-separated work_type values from
+		// the Work Mode chips (no=Onsite, other=Hybrid, yes=Remote), same
+		// values already used to render each job's work mode in
+		// bench-recommend-req-ajax.blade.php. Multi-select, additive only —
+		// no filter is applied when nothing is selected.
+		$workMode = request('work_mode');
+		if (!empty($workMode)) {
+			$workModeArr = array_values(array_filter(array_map('trim', explode(',', $workMode))));
+			if (!empty($workModeArr)) {
+				$filter[] = ['terms' => ['work_type' => $workModeArr]];
 			}
 		}
 
@@ -6234,7 +6293,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			];
 		}
 
-		// FINAL ELASTIC PARAMS
+		// FREE-TEXT TOOLBAR SEARCH — $custom_search was read (and hashed into
+		// the cache key) but never applied to the query, so the search box on
+		// this page did nothing at all. Matches the fields the job card shows:
+		// title, client name, company name. Analyzed fields make it
+		// case-insensitive; phrase_prefix covers partial keywords; fuzziness
+		// covers typos; AND operator handles multi-keyword input.
+		if ($custom_search !== '') {
+			$searchFields = ['title^3', 'client_name^2', 'company_name'];
+			$must[] = [
+				'bool' => [
+					'should' => [
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'operator' => 'and', 'fuzziness' => 'AUTO']],
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'type' => 'phrase_prefix']],
+					],
+					'minimum_should_match' => 1,
+				],
+			];
+		}
+
+		// FINAL ELASTIC PARAMS — "should" carries Best Match's optional scoring
+		// clauses when active (they rank, never filter).
+		$boolQuery = ['must' => $must, 'filter' => $filter];
+		if (!empty($scoreShould)) { $boolQuery['should'] = $scoreShould; }
 		$params = [
 			'index' => ELASTIC_JOBS,
 			'request_cache' => true,
@@ -6242,26 +6323,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				'from' => $from,
 				'size' => $size,
 				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => $filter,
-					],
-				],
+				'query' => ['bool' => $boolQuery],
 			],
 		];
-
-		// dd($location);
 
 		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
 			$total = 0;
 			$data = [];
 		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+			// Graceful degradation: an ES failure renders the empty state
+			// instead of a 500; the error is logged, and the (empty) response
+			// is NOT cached so recovery is immediate.
+			try {
+				$response = $this->elasticService->getClient()->search($params);
+				$total = $response['hits']['total']['value'] ?? 0;
+				$data = array_map(function ($hit) {
+					return $hit['_source'];
+				}, $response['hits']['hits']);
+			} catch (\Throwable $esException) {
+				\Log::error('all_data_ajax ES search failed: '.$esException->getMessage());
+				$total = 0;
+				$data = [];
+				$esSearchFailed = true;
+			}
 		}
 
 		$pagination = [
@@ -6278,7 +6362,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		if (empty($esSearchFailed)) { cache()->put($cacheKeySet, $responseData, now()->addMinutes(3)); } // never cache an errored (empty) response
 
 	     return response()->json($responseData);
 
@@ -6377,18 +6461,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				array_push($set_skill, trim($val));
 			}
 		}
-		$skill = DB::table('job_metronics_skills')->whereIn('skill_name', $set_skill)->pluck('job_id')->toArray();
-
-		// dd($skill);
-
-		// ksort($skill);  // Sort by values
-
-		// foreach ($skill as $value => $count) {
-		// 	echo "<br>";
-		// 	echo "Value: $value, Count: $count" . PHP_EOL;
-		// }
-
-		// dd(explode(",",$JobApplication->skills),array_unique($skill),$set_skill);
+		// (Previously ran an unused DB::table('job_metronics_skills')->whereIn(...)
+		// query here whose $skill result was never read anywhere below —
+		// removed as dead load. $set_skill — the candidate's own skills —
+		// is kept; it now also drives the "Best Match" sort, case 10 below.)
 		abort_if(Gate::denies('view_jobs'), 403);
 
 		$company_id = auth()->user()->company_id;
@@ -6439,6 +6515,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 
 		$cachePayload = [
+			// condidate_id was missing here — every request for THIS candidate's
+			// recommended jobs hashed to the same cache key as any OTHER
+			// candidate with the same filter state (very likely with empty/
+			// default filters, e.g. two candidates with no skills recorded),
+			// so one candidate's cached list/total could be served back for a
+			// completely different candidate. This is the root cause behind
+			// "count says N but the list shows 0" and results changing
+			// unexpectedly when switching between candidates.
+			'condidate_id' => $condidate_id,
 			'page' => $page,
 			'size' => $size,
 			'q' => $searchQuery,
@@ -6452,10 +6537,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			'max_exp' => $max_exp,
 			'max_salary' => $max_salary,
 			'min_salary' => $min_salary,
-			'requiredSkills' => $requiredSkills ?? [],			
+			'requiredSkills' => $requiredSkills ?? [],
 			'custom_status' => $custom_status,
 			'user_id' => $this->user->id,
-			'custom_hiringtype' => $custom_hiringtype
+			'custom_hiringtype' => $custom_hiringtype,
+			'work_mode' => request('work_mode'),
 		];
 
 		$versionKey = 'allbenchrecommendinternalreq_version_user_'.$this->user->id;
@@ -6478,6 +6564,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$sort = [];
 
 		$valCheck = request('custom_hiringtype');
+		// Optional scoring clauses (filled only by Best Match, case 10) —
+		// added to the bool query's "should" so they rank without filtering.
+		$scoreShould = [];
 		switch ($valCheck) {
 			case 1:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6485,17 +6574,60 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			case 2:
 				$sort[] = ['id' => ['order' => 'asc']];
 				break;
+			// Cases 3-6 get an id tiebreaker: without one, documents with equal
+			// salary / client_name have no stable order between requests, so
+			// paging could show the same job on two pages and skip another.
 			case 3:
 				$sort[] = ['max_salary' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 4:
 				$sort[] = ['max_salary' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 5:
 				$sort[] = ['client_name' => ['order' => 'asc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			case 6:
 				$sort[] = ['client_name' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
+				break;
+			case 10:
+				// "Best Match" — rank jobs by how many of the candidate's own
+				// skills each job's nested job_metronics_skills matches, using
+				// ES native scoring: each skill is an optional constant_score(1)
+				// nested clause, so _score == number of matched skills. Jobs
+				// matching nothing still appear (score 0), newest first.
+				// (The previous implementation was a painless _script sort that
+				// read params._source — _source is not accessible in the sort
+				// context and job_metronics_skills is nested, so ES rejected
+				// the entire search request; since Best Match is the default
+				// sort, every first page load failed.)
+				foreach (array_values(array_filter(array_map('trim', $set_skill))) as $bmSkill) {
+					if ($bmSkill === '') { continue; }
+					$scoreShould[] = [
+						'nested' => [
+							'path' => 'job_metronics_skills',
+							'score_mode' => 'max',
+							'query' => [
+								'constant_score' => [
+									'filter' => [
+										'match' => [
+											'job_metronics_skills.skill_name' => [
+												'query' => strtolower($bmSkill),
+												'operator' => 'and',
+											],
+										],
+									],
+									'boost' => 1,
+								],
+							],
+						],
+					];
+				}
+				$sort[] = ['_score' => ['order' => 'desc']];
+				$sort[] = ['id' => ['order' => 'desc']];
 				break;
 			default:
 				$sort[] = ['id' => ['order' => 'desc']];
@@ -6629,34 +6761,59 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			}
 			
 
-				// FINAL ELASTIC PARAMS
-			$params = [
-				'index' => ELASTIC_JOBS,
-				'request_cache' => true,
-				'body' => [
-					'from' => $from,
-					'size' => $size,
-					'sort' => $sort,
-					'query' => [
-						'bool' => [
-							'must' => $must,
-							'filter' => $filter,
-						],
+		// FREE-TEXT TOOLBAR SEARCH — $custom_search was read (and hashed into
+		// the cache key) but never applied to the query, so the search box on
+		// this page did nothing at all. Matches the fields the job card shows:
+		// title, client name, company name. Analyzed fields make it
+		// case-insensitive; phrase_prefix covers partial keywords; fuzziness
+		// covers typos; AND operator handles multi-keyword input.
+		if ($custom_search !== '') {
+			$searchFields = ['title^3', 'client_name^2', 'company_name'];
+			$must[] = [
+				'bool' => [
+					'should' => [
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'operator' => 'and', 'fuzziness' => 'AUTO']],
+						['multi_match' => ['query' => $custom_search, 'fields' => $searchFields, 'type' => 'phrase_prefix']],
 					],
+					'minimum_should_match' => 1,
 				],
 			];
+		}
 
-		// dd($location);
+		// FINAL ELASTIC PARAMS — "should" carries Best Match's optional scoring
+		// clauses when active (they rank, never filter).
+		$boolQuery = ['must' => $must, 'filter' => $filter];
+		if (!empty($scoreShould)) { $boolQuery['should'] = $scoreShould; }
+		$params = [
+			'index' => ELASTIC_JOBS,
+			'request_cache' => true,
+			'body' => [
+				'from' => $from,
+				'size' => $size,
+				'sort' => $sort,
+				'query' => ['bool' => $boolQuery],
+			],
+		];
 
 		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
 			$total = 0;
 			$data = [];
 		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+			// Graceful degradation: an ES failure renders the empty state
+			// instead of a 500; the error is logged, and the (empty) response
+			// is NOT cached so recovery is immediate.
+			try {
+				$response = $this->elasticService->getClient()->search($params);
+				$total = $response['hits']['total']['value'] ?? 0;
+				$data = array_map(function ($hit) {
+					return $hit['_source'];
+				}, $response['hits']['hits']);
+			} catch (\Throwable $esException) {
+				\Log::error('all_internal_data_ajax ES search failed: '.$esException->getMessage());
+				$total = 0;
+				$data = [];
+				$esSearchFailed = true;
+			}
 		}
 
 		$pagination = [
@@ -6674,7 +6831,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		];
 
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		if (empty($esSearchFailed)) { cache()->put($cacheKeySet, $responseData, now()->addMinutes(3)); } // never cache an errored (empty) response
 
 	     return response()->json($responseData);
 
@@ -7003,6 +7160,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         } 
         return Reply::dataOnly(['status' => 'faild','pack_status'=>$pack_status]);
     }
+	/**
+	 * Hero KPI counters (Views / Downloads / Interviews) for the bench
+	 * candidate detail pages — previously these rendered a hardcoded 0
+	 * because job_applications has no such columns. Uses the same counting
+	 * semantics the bench listing already uses elsewhere in this controller
+	 * (bench_count_view_download: type 1=view / 2=download, status 0) plus
+	 * this candidate's scheduled interviews. Three indexed single-column
+	 * counts, once per page load. Tenancy: rows are keyed to the candidate
+	 * id, which each caller has already findOrFail'd.
+	 */
+	private function benchHeroKpis($id)
+	{
+		return [
+			'views'      => DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count(),
+			'downloads'  => DB::table('bench_count_view_download')->where('type', 2)->where('status', 0)->where('candidate_id', $id)->count(),
+			'interviews' => DB::table('interview_schedules')->where('job_application_id', $id)->count(),
+		];
+	}
+
 	private function benchjobAndRecomCount($id)
     {
         //   dd($id);
@@ -7100,6 +7276,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$size = 10000; // Default 20 results per page
 		$from = ($page - 1) * $size;
 
+		// Mirror the two range clauses all_data_ajax()/all_internal_data_ajax()
+		// ALWAYS apply, even in the filter drawer's neutral default state
+		// (min_exp is forced to 0 server-side there → max_exp >= 0; the drawer
+		// always posts a salary mode with min salary 0 → {mode field} >= 0).
+		// Without these, this card count can include job documents the list
+		// query can never return (docs missing max_exp / salary fields), which
+		// showed up as "card says 12, list shows 10". Single source of truth:
+		// this count must be the list's default query, exactly.
+		$salaryFieldByMode = [0 => 'max_yearly', 1 => 'max_monthly', 2 => 'max_hourly'];
+		$countSalaryField  = $salaryFieldByMode[(int) $sal_mode] ?? 'max_yearly';
+		$must[] = ['range' => ['max_exp' => ['gte' => 0]]];
+		$must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
+
 		$params = [
 			'index' => ELASTIC_JOBS,
 			'body' => [
@@ -7129,10 +7318,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         	'id'    => $id,
         ];
 
-        $response = $this->elasticService->getClient()->get($params);
-		$data = (object) $response['_source'];
-		$yourArray = $data->jobs;
-		$jobIds = array_column($yourArray, 'job_id');
+		// get() throws Missing404Exception when the candidate has no bench
+		// document yet (new/never-indexed candidates) — that used to 500 the
+		// entire page. A missing doc just means zero pool jobs.
+		$jobIds = [];
+		try {
+			$response = $this->elasticService->getClient()->get($params);
+			$jobIds = array_column(((object) $response['_source'])->jobs ?? [], 'job_id');
+		} catch (\Throwable $benchDocMissing) {
+			\Log::warning('benchjobAndRecomCount: bench doc missing for candidate '.$id);
+		}
 
 		// dd(count($jobIds));
 
@@ -7196,6 +7391,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$page = 1;
 		$size = 10000; // Default 20 results per page
 		$from = ($page - 1) * $size;
+
+		// Same default-query mirror as the client-jobs count above —
+		// $countSalaryField was computed there from the candidate's salary mode.
+		$must[] = ['range' => ['max_exp' => ['gte' => 0]]];
+		$must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
 
 		$paramsInternal = [
 			'index' => ELASTIC_JOBS,

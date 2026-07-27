@@ -1,142 +1,112 @@
 <style>
-    .custom-pagination {
-        display: flex;
-        gap: 5px;
-        justify-content: flex-end;
-        margin-top: 0px;
-    }
-
-    .custom-pagination .page-link {
-        padding: 0.375rem 0.75rem;
-        cursor: pointer;
-        color: #333;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.475rem;
-        height: 2.5rem;
-        min-width: 2.5rem;
-        font-weight: 500;
-        font-size: 1.075rem;
-    }
-
-    .custom-pagination .page-link.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    .pagination-info {
-        text-align: left;
-        margin-bottom: 0px;
-        font-weight: 500;
-        color: #5e6278;
-        font-size: 13px;
-    }
-
-    .pagination-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-    .previous_disabled{
-        pointer-events: none;
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    .next_disabled{
-        pointer-events: none;
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    .active_disabled{
-        pointer-events: none;
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    .pagination-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-        padding: 11px 14px;
-        border-top: 1px solid #e4e6ef;
-        background: #ffffff;
-    }
-    /* rows-per-page selector: cosmetic only where no backend size-change is wired elsewhere */
-    .rows-per-page-select {
-        border: 1px solid #e4e6ef;
-        border-radius: 0.475rem;
-        padding: 0.35rem 0.75rem;
-        font-size: 13px;
-        font-weight: 500;
-        color: #5e6278;
-        background-color: #f9f9f9;
-    }
+/* ── Pagination bar ───────────────────────────── */
+.pagi-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px;
+    padding:12px 20px;
+    border-top:1px solid #F0F2F5;
+    background:#fff;
+    font-family:'Poppins',sans-serif;
+    width:100%;
+}
+.pagi-info{
+    font-size:13px; font-weight:500; color:#64748B;
+}
+.pagi-right{
+    display:flex; align-items:center; gap:6px;
+}
+/* Prev / Next arrow buttons */
+.pagi-arrow{
+    width:32px; height:32px;
+    border:1.5px solid #E5E9F0; border-radius:8px;
+    background:#fff; color:#64748B;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:14px; transition:all .15s;
+}
+.pagi-arrow:hover:not(.pagi-disabled){ background:#2563EB; color:#fff; border-color:#2563EB; }
+.pagi-arrow.pagi-disabled{ opacity:.35; pointer-events:none; cursor:not-allowed; }
+/* Page number buttons */
+.pagi-page{
+    min-width:32px; height:32px; padding:0 8px;
+    border:1.5px solid #E5E9F0; border-radius:8px;
+    background:#fff; color:#374151;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:13px; font-weight:600;
+    transition:all .15s; font-family:'Poppins',sans-serif;
+}
+.pagi-page:hover:not(.pagi-active-disabled){ background:#F5F8FF; }
+.pagi-page.pagi-active{
+    background:#2563EB; color:#fff;
+    border-color:#2563EB; pointer-events:none;
+}
+.pagi-page.pagi-active-disabled{ pointer-events:none; }
+.pagi-dots{
+    font-size:13px; color:#94A3B8; padding:0 4px;
+    display:flex; align-items:center;
+}
+/* Fixed page-size label (10 / page) — not interactive, no selector */
+.pagi-perpage{
+    height:32px; padding:0 10px;
+    display:inline-flex; align-items:center;
+    border:1.5px solid #E5E9F0; border-radius:8px;
+    font-size:13px; font-weight:500; color:#374151;
+    background:#fff;
+    font-family:'Poppins',sans-serif; margin-left:8px;
+}
 </style>
-@if($pagination['total'] >0)
+
+@if($pagination['total'] > 0)
 @php
-    // per_page falls back to 10 for the ~70 other controller actions that render this
-    // shared partial without passing it, so this change is backward compatible.
-    $perPage = $pagination['per_page'] ?? 10;
+    $perPage    = $pagination['per_page'] ?? 10;
+    $total      = $pagination['total'];
+    $totalPages = $pagination['last_page'];
+    $curPage    = $pagination['current_page'];
+    $listType   = $pagination['listType'];
+    $from       = ($curPage - 1) * $perPage + 1;
+    $to         = min($curPage * $perPage, $total);
+    $label      = (isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
+                  ? 'companies' : 'records';
 @endphp
-<div class="pagination-bar">
-    <div class="d-flex align-items-center gap-4">
-        <div class="pagination-info">
-            Showing {{ ($pagination['current_page'] - 1) * $perPage + 1 }}
-            to {{ min($pagination['current_page'] * $perPage, $pagination['total']) }}
-            of {{ $pagination['total'] }} records.
-        </div>
+
+<div class="pagi-bar">
+    {{-- Left: info text --}}
+    <div class="pagi-info">
+        Showing {{ $from }} to {{ $to }} of {{ $total }} {{ $label }}
+    </div>
+
+    {{-- Right: prev + pages + next + per-page --}}
+    <div class="pagi-right">
+        {{-- Prev --}}
+        <button class="pagi-arrow {{ $curPage <= 1 ? 'pagi-disabled' : '' }}"
+                data-page="{{ $curPage - 1 }}" data-listType="{{ $listType }}">
+            <i class="ti ti-chevron-left"></i>
+        </button>
+
+        {{-- Page numbers --}}
+        @for ($i = 1; $i <= $totalPages; $i++)
+            @if ($i == 1 || $i == $totalPages || ($i >= $curPage - 2 && $i <= $curPage + 2))
+                <button class="pagi-page {{ $i == $curPage ? 'pagi-active pagi-active-disabled' : '' }}"
+                        data-page="{{ $i }}" data-listType="{{ $listType }}">{{ $i }}</button>
+            @elseif ($i == $curPage - 3 || $i == $curPage + 3)
+                <span class="pagi-dots">…</span>
+            @endif
+        @endfor
+
+        {{-- Next --}}
+        <button class="pagi-arrow {{ $curPage >= $totalPages ? 'pagi-disabled' : '' }}"
+                data-page="{{ $curPage + 1 }}" data-listType="{{ $listType }}">
+            <i class="ti ti-chevron-right"></i>
+        </button>
+
+        {{-- Rows per page selector — changing this triggers itCurrentSize update in JS --}}
         @if(isset($pagination['listType']) && $pagination['listType'] === 'allcandidate')
-            <div class="d-flex align-items-center gap-2">
-                <span class="pagination-info mb-0">Rows per page</span>
-                <select class="rows-per-page-select" id="rowsPerPageSelect">
-                    <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
-                </select>
-            </div>
+        <select class="pagi-perpage" data-perpage="1" style="cursor:pointer;padding:0 28px 0 10px;appearance:auto;"
+                title="Rows per page">
+            @foreach([10, 20, 50, 100] as $opt)
+                <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }} / page</option>
+            @endforeach
+        </select>
         @endif
     </div>
-    <div class="pagination-wrapper">
-
-        <div class="custom-pagination">
-            @php
-                $totalPages = $pagination['last_page'];
-                $currentPage = $pagination['current_page'];
-                $maxLinks = 5; // Number of links to display before truncating
-                $listType = $pagination['listType'];
-            @endphp
-
-            {{-- Previous Button --}}
-            {{-- @if ($currentPage > 1) --}}
-                <button class="page-link {{ ($currentPage > 1) ? '' : 'previous_disabled' }}" data-page="{{ $currentPage - 1 }}" data-listType="{{ $listType }}">Previous</button>
-            {{-- @endif --}}
-
-            {{-- Page Links --}}
-            @for ($i = 1; $i <= $totalPages; $i++)
-                {{-- Always show first and last pages --}}
-                @if ($i == 1 || $i == $totalPages || ($i >= $currentPage - 2 && $i <= $currentPage + 2))
-
-                    @if($i<=1000)
-                        <button class="page-link {{ $i == $currentPage ? 'active active_disabled' : '' }} " data-page="{{ $i }}" data-listType="{{ $listType }}">{{ $i }}</button>
-                        @else
-
-                    @endif
-
-                @elseif ($i == $currentPage - 3 || $i == $currentPage + 3)
-                    {{-- Show dots when skipping pages --}}
-                    <span class="page-link dots">...</span>
-                @endif
-            @endfor
-
-            {{-- Next Button --}}
-            {{-- @if ($currentPage < $totalPages) --}}
-                <button class="page-link {{ ($currentPage < $totalPages) ? '' : 'next_disabled' }}" data-page="{{ $currentPage + 1 }}" data-listType="{{ $listType }}">Next</button>
-            {{-- @endif --}}
-        </div>
-    </div>
 </div>
-
 @endif

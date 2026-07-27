@@ -102,6 +102,7 @@ class ElasticCandidatesIndex
                         'clients.name as client_name',
                         'users.name as posted_by',
                         'users.image as posted_by_image',
+                        'submitter_com.company_name as submitted_by_company_name',
                         'master_status.name',
                         'master_status.css_style',
                         'qualification_master.name as qualification_name',
@@ -147,6 +148,8 @@ class ElasticCandidatesIndex
                         'offer_job_applications.assignment_project_outcome',
                         'offer_job_applications.assignment_remarks',
                         'add_job_wise_condidates.thirdparty_company_id as ClientComID',
+                        'jobs.min_salary',
+                        'jobs.max_salary',
                         'add_job_wise_condidates.updated_at',
                         'add_job_wise_condidates.created_at',
                         'add_job_wise_condidates.company_id',
@@ -187,6 +190,9 @@ class ElasticCandidatesIndex
                     //->leftjoin('notice_periods', 'notice_periods.np_id', 'job_applications.np_id')
                     ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
                     ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
+                    ->leftjoin('companies as submitter_com', function ($join) {
+                        $join->on('submitter_com.id', 'users.company_id');
+                    })
                     ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
                     ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
                     // ->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
@@ -274,6 +280,7 @@ class ElasticCandidatesIndex
                             'client_name' => $application->client_name,
                             'posted_by' => $application->posted_by,
                             'posted_by_image' => $application->posted_by_image,
+                            'submitted_by_company_name' => $application->submitted_by_company_name,
                             'name' => $application->name,
                             'post_company_name' => $application->post_company_name,
                             'css_style' => $application->css_style,
@@ -301,6 +308,8 @@ class ElasticCandidatesIndex
                             'of_offer_amount' => $application->of_offer_amount,
                             'offer_id' => $application->offer_id,
                             'ClientComID' => $application->ClientComID,
+                            'min_salary' => $application->min_salary,
+                            'max_salary' => $application->max_salary,
                             'is_viewed' => $application->is_viewed,
                             'column_priority' => $application->column_priority,
                             'phone_code' => $application->phone_code,

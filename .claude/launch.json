@@ -6,6 +6,12 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["-S", "127.0.0.1:8899", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/C--Users-VIBHANSHU-JAISWAL-000-Documents-GitHub-JWMaincode28June2026/d062b23a-f83c-4434-b009-a21e673eb936/scratchpad/preview"],
       "port": 8899
+    },
+    {
+      "name": "interview-drawer-preview",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8900", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/C--Users-VIBHANSHU-JAISWAL-000-Documents-GitHub-JWMaincode28June2026/2531af2c-931a-44f2-8797-ca9ccf6a04ac/scratchpad/preview"],
+      "port": 8900
     }
   ]
 }

@@ -3,532 +3,352 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
-    $salaryMode = GeneralMethod::salaryMode();
+    $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-
+    $currency        = GeneralMethod::currency();
+    $job_status_arr  = GeneralMethod::job_status();
 @endphp
+
 @if (count($data) > 0)
-    @foreach ($data as $rowArr)
-    @php
+@foreach ($data as $rowArr)
+@php
     $row = (object) $rowArr;
-    $jobDetails = GeneralMethod::jobDetails($row->jobId);
-    $company_id = auth()->user()->company_id;
+    $jobDetails      = GeneralMethod::jobDetails($row->jobId);
+    $company_id      = auth()->user()->company_id;
+    $relationget     = GeneralMethod::getrRcommendationRelationData($company_id, $row->jobId);
 
-    $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$row->jobId);
+    $from_company_id   = $relationget->from_company_id ?? null;
+    $to_company_id     = $relationget->to_company_id   ?? null;
+    $recommendation_id = $relationget->id              ?? null;
+    $final_status      = $relationget->final_status    ?? null;
 
-    $from_company_id = $relationget->from_company_id ?? null;
-    $to_company_id = $relationget->to_company_id ?? null;
-    $recommendation_id = $relationget->id ?? null;
-    $final_status = $relationget->final_status ?? null;
+    $row->final_status       = $final_status;
+    $row->recommendation_id  = $recommendation_id;
+    $row->to_company_id      = $to_company_id;
+    $row->from_company_id    = $from_company_id;
+    $row->companyidcount     = $jobDetails->comId;
+    $row->clients_name       = $jobDetails->client_name;
 
-    $row->final_status = $final_status;
-    $row->recommendation_id =$recommendation_id;
-    $row->to_company_id = $to_company_id;
-    $row->from_company_id = $from_company_id;
-    $row->companyidcount= $jobDetails->comId;
-    $row->clients_name = $jobDetails->client_name;
+    $job_assign  = $jobDetails->job_assign;
+    $jobAssign   = collect($job_assign);
 
-    
-    
-    $job_assign = $jobDetails->job_assign;
-    $jobAssign = collect($job_assign);
+    /* ── Company logo / initials ─────────────────── */
+    $profile_detail_class = ($recommendation_id > 0 && @$row->to_company_id == $company_id)
+                          ? 'client-show-detail' : 'show-detail';
 
+    $logo_path = @$jobDetails->logo ?? '';
+    $company_display_name = ucwords(@$jobDetails->company_name ?? '');
 
-    @endphp
-        <tr style="height: 102px; position: relative;">
-            <td>
-                @php
-                    echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" value="' .
-                        $jobDetails->id .
-                        '" />
-                  </div>';
-                @endphp
-            </td>
-            <td class=" d-flex align-items-center">
-                @php
-                    $clients_name = '';
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$jobDetails->title);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
+    $str      = strtolower(trim(@$jobDetails->title)[0] ?? 'j');
+    $ord      = ord($str);
+    $initials = strtoupper($str);
+    if     ($ord >= 97  && $ord <= 101) { $initBg = '#FEE2E2'; $initClr = '#DC2626'; }
+    elseif ($ord >= 102 && $ord <= 106) { $initBg = '#FEF3C7'; $initClr = '#D97706'; }
+    elseif ($ord >= 107 && $ord <= 111) { $initBg = '#DBEAFE'; $initClr = '#2563EB'; }
+    elseif ($ord >= 112 && $ord <= 116) { $initBg = '#DCFCE7'; $initClr = '#16A34A'; }
+    elseif ($ord >= 117 && $ord <= 121) { $initBg = '#1E293B'; $initClr = '#94A3B8'; }
+    else                                { $initBg = '#F1F5F9'; $initClr = '#475569'; }
 
-                    $profile_detail_class = 'show-detail';
-                    $clients_name = ucwords(mb_substr(@$jobDetails->clients_name, 0, 15));
+    /* ── Skills + Match % — same computation/highlighting as AppTracker's
+       candidate-row Match badge (resources/views/service_company/ajax_pages/all_apptracker.blade.php),
+       just replicated here in the job-perspective direction: this candidate's
+       skills matched against THIS job's required skills. No new queries —
+       job_metronics_skills is already eager-loaded on $jobDetails. ── */
+    $skillArr = DB::table('job_application_skills')
+        ->where('job_application_id', $bench_id)
+        ->pluck('skills')->toArray();
+    $skillArrc_skills = array_column($jobDetails->job_metronics_skills, 'skill_name');
+    $percentage       = GeneralMethod::skill_percentage($jobDetails->id, $skillArr);
 
-                    $logo_path = '';
-                    //$logo_path				=	url('img/client-default.png');
-                    if (!empty($jobDetails->logo_logical_path)) {
-                        $logo_path = @$jobDetails->logo_logical_path;
-                    }
+    $matchNum = (float) rtrim($percentage ?: '0%', '%');
+    if ($matchNum == 0) { $matchBg = '#F1F5F9'; $matchColor = '#64748B'; }
+    elseif ($matchNum < 50) { $matchBg = '#FEE2E2'; $matchColor = '#DC2626'; }
+    elseif ($matchNum <= 90) { $matchBg = '#FEF3C7'; $matchColor = '#D97706'; }
+    else { $matchBg = '#DCFCE7'; $matchColor = '#16A34A'; }
+    $matchBadge = '<span class="bxr-match-badge" style="background:'.$matchBg.';color:'.$matchColor.';">Match '.$percentage.'</span>';
 
-                    if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        $recommendation_text =
-                            '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
-                        $profile_detail_class = 'client-show-detail';
-                        $clients_name = ucwords(mb_substr(@$jobDetails->company_name, 0, 15));
+    $matchedSkillsArr   = GeneralMethod::matchedSkillsList($skillArr, $skillArrc_skills);
+    $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
 
-                        if (!empty(@$jobDetails->logo) && strlen(@$jobDetails->logo) > 10) {
-                            $logo_path = @$jobDetails->logo;
-                        }
-                    }
+    $skillHtml = '';
+    foreach ($matchedSkillsArr as $sk) {
+        $skillHtml .= '<span class="bxr-skill matched" title="Matches a required skill">' . ucfirst($sk) . '</span>';
+    }
+    $maxShow = 3;
+    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxShow);
+    foreach ($unmatchedShown as $sk) {
+        $skillHtml .= '<span class="bxr-skill">' . ucfirst($sk) . '</span>';
+    }
+    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
+    if ($unmatchedRemaining > 0) {
+        $skillHtml .= '<span class="bxr-skill more">+' . $unmatchedRemaining . ' more</span>';
+    }
 
-                    if (@$jobDetails->self_company == 1) {
-                        if (!empty(@$jobDetails->logo) && strlen(@$jobDetails->logo) > 10) {
-                            $logo_path = @$jobDetails->logo;
-                        }
-                    }
-                    $logo_path = @$jobDetails->logo;
-                    $clients_name = ucwords(mb_substr(@$jobDetails->company_name, 0, 15));
+    /* ── Experience ──────────────────────────────── */
+    $expMax = @$jobDetails->max_exp ?? '—';
+    $expMin = @$jobDetails->min_exp ?? '—';
+    $expRange = ($expMin && $expMax) ? "{$expMin} - {$expMax} Years" : "{$expMax}+ Years";
 
-                    $icon =
-                        '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
-                    <a href="javascript:void(0);" data-row-id="' .
-                        $jobDetails->id .
-                        '" class="' .
-                        $profile_detail_class .
-                        '">
-                      <div class="symbol-label ' .
-                        $bgTextDecore .
-                        ' border-radius-5">' .
-                        ucwords($strVal) .
-                        '</div>
-                    </a>
-                  </div>';
+    /* ── Salary — same display format as the jobs page (all_jobs_ajax):
+       "₹ 1500K - 2500K /Annum" via thousandsCurrencyFormat + mode suffix ── */
+    $min_salary_raw = (float)($jobDetails->min_salary ?? 0);
+    $max_salary_raw = (float)($jobDetails->max_salary ?? 0);
+    /* GeneralMethod::currencySymbole() returns raw <i class="fa fa-…"> markup
+       that depends on FontAwesome being loaded — on this AJAX response path
+       the font isn't always present, so the literal tag leaks through as text.
+       Map currency_id → unicode glyph instead. */
+    $currencyGlyphs = [0=>'₹', 1=>'€', 2=>'¥', 3=>'£', 4=>'$', 5=>'د.إ'];
+    $salCurrencySym = $currencyGlyphs[(int)@$jobDetails->min_salary_currency] ?? '₹';
+    $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
+    $salaryDisplay = '';
+    if ($min_salary_raw > 0 || $max_salary_raw > 0) {
+        $salaryDisplay = GeneralMethod::thousandsCurrencyFormat($min_salary_raw)
+            . ' - ' . GeneralMethod::thousandsCurrencyFormat($max_salary_raw);
+    }
 
-                    if (!empty($logo_path)) {
-                        $icon =
-                            '<div data-row-id="' .
-                            $jobDetails->id .
-                            '"  class="symbol symbol-circle symbol-40px overflow-hidden me-2  ' .
-                            $profile_detail_class .
-                            ' border-radius-5">
-                                        <a href="javascript:void(0);">
-                                            <div class="symbol-label border-radius-5">
-                                            	<img src="' .
-                            @$logo_path .
-                            '" alt="Company Logo" class="border-radius-5 w-100">
-                                            </div>
-                                        </a>
-                                    </div>';
-                    }
+    $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
 
-                    $skilltag = '';
-                    $skillArr = [];
-                    $skillArr = DB::table('job_application_skills')
-                        ->select('*')
-                        ->where('job_application_id', $bench_id)
-                        ->pluck('skills')->toArray();
-                        // dd($skillArr);
-                        $skillArrc_skills = array_column($jobDetails->job_metronics_skills, 'skill_name');
-                        //  dd($skillArr, $skillArrc_skills);
-                        // $skillArrc_skills = explode(',', $row->c_skills);
-                        $percentage =  GeneralMethod::skill_percentage($jobDetails->id,$skillArr);
+    /* ── Location — city list comes straight off the ES job document
+       (client_city_jobs is already in $jobDetails), replacing the two
+       per-row MySQL lookups that used to run here. Labels match the jobs
+       page: Office / Remote / Hybrid ('any' and 'other' both mean hybrid
+       in the data). ── */
+    $jobid         = $jobDetails->id;
+    $cityArr       = is_array(@$jobDetails->client_city_jobs) ? $jobDetails->client_city_jobs : [];
+    $jobCityCount  = count($cityArr);
+    $firstCityName = $cityArr[0]['city_name'] ?? '';
+    $workMode      = 'Office';
+    $cityDisplay   = ($jobCityCount > 1) ? 'Multiple' : ucwords(mb_substr($firstCityName, 0, 15));
 
-                    if (!empty($skillArrc_skills)) {
-                        foreach ($skillArrc_skills as $sval) {
-                            $skilltag .=
-                                '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                        }
-                    }
+    if ($jobDetails->work_type == 'yes') {
+        $workMode    = 'Remote';
+        $cityDisplay = 'Remote';
+    } elseif (in_array($jobDetails->work_type, ['any', 'other'], true)) {
+        $workMode = 'Hybrid';
+    }
 
-                    echo $icon .
-                        '<div class="d-flex flex-column">
-					<a href="javascript:void(0);"  data-row-id="' .
-                        $jobDetails->id .
-                        '"   data-row-job_applications_id="' .
-                        $bench_id .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 ' .
-                        $profile_detail_class .
-                        '"  data-toggle="tooltip1" title="' .
-                        ucwords(@$jobDetails->title) .
-                        '" >' .
-                        ucwords(mb_substr(@$jobDetails->title, 0, 15)) .
-                        '</a> 
-					<a href="javascript:void(0);" data-row-id="' .
-                        $jobDetails->id .
-                        '"   data-row-job_applications_id="' .
-                        $bench_id .
-                        '"   class="fw-bold text-muted d-block fs-7 text-hover-primary ' .
-                        $profile_detail_class .
-                        '">' .
-                        $clients_name .
-                        '</a>
-									</div>
-										<div style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-														<span class="badge badge-light my-1">'.$percentage.'</span>
-													
-													' .
-                        $skilltag .
-                        '
-															
-													
-														</div> 
-									';
+    /* ── Client Type Badge — derived from the same branch that the jobs
+       page uses to colour its $internalBadge. Pure data-derivation, no
+       new queries. Routed recommendations (recommendation_id > 0 with
+       to_company_id == viewer's company_id) → Direct Client (green);
+       in-house (self_company == 1) or any non-routed route → Internal
+       Client (blue). The numeric "· jobId" suffix matches the legacy
+       "Internal Client · 1410" / "Direct Client · 1390" form so a
+       reader familiar with the page sees the ID jump out at the same
+       spot it always did. The badge occupies the third vertical slot
+       in the EXPERIENCE column (under exp + salary) for visual
+       hierarchy: profile-anchored text first, classification last. ── */
+    if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+        $clientBadgeKey   = 'direct';
+        $clientBadgeLabel = 'Direct Client';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+    } else {
+        $clientBadgeKey   = 'internal';
+        $clientBadgeLabel = 'Internal Client';
+        $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-7h6v7"/></svg>';
+    }
 
-                @endphp
-            </td>
-            <td>
-                @php
-                    echo '<div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">' .
-                        @$jobDetails->max_exp .
-                        '+</span>
-                    <span class="text-muted fw-bold text-muted d-block fs-7">' .
-                        @$jobDetails->min_exp .
-                        '+</span>
-                  </div>';
-                @endphp
+    /* Category/department line (e.g. "IT (Information Technology)") — one
+       lookup per DISTINCT category on the page, memoized across rows. */
+    static $bxrDeptCache = [];
+    $deptName = '';
+    $catId = @$jobDetails->category_id;
+    if ($catId) {
+        if (!array_key_exists($catId, $bxrDeptCache)) {
+            $bxrDeptCache[$catId] = DB::table('job_categories')->where('id', $catId)->value('name') ?? '';
+        }
+        $deptName = $bxrDeptCache[$catId];
+    }
 
-            </td>
-            <td>
-                @php
+    /* ── Job status ──────────────────────────────── */
+    $statusLabel = ucwords($jobDetails->status ?? '');
+    if ($statusLabel == 'Active')   { $statusLabel = 'Hiring'; $statusClass = 'bxr-b gr'; }
+    elseif ($statusLabel == 'Inactive') { $statusLabel = 'Closed'; $statusClass = 'bxr-b rd'; }
+    elseif ($statusLabel == 'Hold')     { $statusLabel = 'Hold';   $statusClass = 'bxr-b yw'; }
+    else                                { $statusClass = 'bxr-b gy'; }
 
-                    $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary =
-                        '';
-                    $min_sal_mode = strtoupper(mb_substr($salaryMode[$jobDetails->min_sal_mode], 0, 1));
-                    $max_sal_mode = strtoupper(mb_substr($salaryMode[$jobDetails->max_sal_mode], 0, 1));
-                    $min_salary_currency = $currencySymbole[@$jobDetails->min_salary_currency];
-                    $max_salary_currency = $currencySymbole[@$jobDetails->max_salary_currency];
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($jobDetails->max_salary);
-                    $min_salary = GeneralMethod::thousandsCurrencyFormat($jobDetails->min_salary);
-                    echo '<div class="d-flex flex-column">
-                    <span class="text-dark fw-bolder fs-6">' .
-                        $min_salary_currency .
-                        $max_salary .
-                        '/' .
-                        $max_sal_mode .
-                        '</span>                    
-                    <span class="fw-bold d-block fs-7">' .
-                        $min_salary_currency .
-                        $min_salary .
-                        '/' .
-                        $min_sal_mode .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $country_id = $country_name = '';
-                    $jobid = $jobDetails->id;
-                    $client_loc = DB::table('client_location_jobs')
-                        ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                        ->select(
-                            'client_location.address',
-                            'client_location.city',
-                            'client_location.postcode',
-                            'client_location.country_id',
-                            'city_list.city as city_name',
-                        )
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->first();
+    /* ── Hiring Manager ──────────────────────────── */
+    $hiringManager    = '—';
+    $hiringDesig      = '';
+    if (count($jobDetails->client_contact_info_jobs) > 0) {
+        $hiringManager = ucwords($jobDetails->client_contact_info_jobs[0]['contact_person_name'] ?? '');
+        $hiringDesig   = $jobDetails->client_contact_info_jobs[0]['designation'] ?? '';
+    }
+    if ($jobDetails->comId != $company_id) {
+        $captains = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $jobDetails->comId)->values()->all();
+        if (count($captains) > 0) {
+            $hiringManager = ucfirst($captains[0]['user_name'] ?? '');
+        }
+    }
 
-                    $country_id = @$client_loc->country_id;
-                    if (@$country_id > 0) {
-                        $country_name = GeneralMethod::getCountryName($country_id);
-                        foreach ($country_name as $cval) {
-                            $country_name = ucwords($cval['sortname']);
-                        }
-                    }
+    /* HM avatar — initials if a name is available, em-dash placeholder
+       for the empty case. Empty state uses a dashed grey fill so the
+       column reads cleanly even when the data isn't populating. */
+    $hmHasName  = ($hiringManager !== '—' && trim($hiringManager) !== '');
+    $hmInitials = $hmHasName ? strtoupper(mb_substr($hiringManager, 0, 1)) : '–';
+    $skipDesigList = ['role','designation','n/a','na','--','-','none',''];
+    $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesigList);
 
-                    $city = mb_substr(@$client_loc->city, 0, 6);
-                    // if (@$client_loc->country_id == 101) {
-                    $city = mb_substr(@$client_loc->city_name, 0, 6);
-                    // }
+    /* ── Internal / Client tag ───────────────────── */
+    $recommendation_text = ($jobDetails->comId == $company_id)
+        ? __('messages.internal_tag') : __('messages.clinet_tag');
+    $jobIdText = $jobDetails->id . '-' . $recommendation_text;
 
-                    $jobLocation = DB::table('client_location_jobs')
-                        ->where('client_location_jobs.job_id', $jobid)
-                        ->count();
+    /* ── Job stage ───────────────────────────────── */
+    $stageName  = ucwords(mb_substr($row->name ?? '', 0, 12));
+    $stageCss   = $row->css_style ?? 'badge-light';
+    $privateTag = '';
+    if (@$row->job_master_status_id == 8) {
+        $privateTag = '<span class="bxr-b gy" style="margin-top:4px;">Private</span>';
+    }
+    $childName = '';
+    if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
+        $cs = DB::table('candidate_status')->where('id', $row->childStatus)->first();
+        if ($cs) { $childName = $cs->name; }
+    }
+    $job_wise_condidates = DB::table('add_job_wise_condidates')
+        ->join('master_status','master_status.id','=','add_job_wise_condidates.master_status_id')
+        ->select('add_job_wise_condidates.master_status_id','add_job_wise_condidates.child_status_id','master_status.name','master_status.css_style')
+        ->where('add_job_wise_condidates.job_id', $jobDetails->id)
+        ->where('add_job_wise_condidates.job_application_id', $bench_id)->first();
 
-                    $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
+    /* ── Added by / date ─────────────────────────── */
+    $addedDate  = GeneralMethod::ymdTodmyNotTime($row->created_at ?? '');
+    $daysAgo    = '';
+    if (!empty($row->created_at)) {
+        try { $daysAgo = Carbon::parse($row->created_at)->diffForHumans(); } catch(\Exception $e){}
+    }
 
-                    $employment_type = 'Full-time';
-                    if ($jobDetails->employment_type == 1) {
-                        $employment_type = 'Contract';
-                    }
-                    // dd($jobCitySelected,$row->work_type);
+    /* ── Added by user ───────────────────────────── */
+    $addedByName = '';
+    $addedByUser = DB::table('users')->where('id', $row->submitted_by ?? 0)->select('name')->first();
+    if ($addedByUser) { $addedByName = ucwords($addedByUser->name); }
+@endphp
 
-                    if ($jobDetails->work_type == 'yes') {
-                        echo ' <div class="d-flex flex-column">
-						<span class="text-dark fw-bolder fs-6">Remote</span>
-						<div class="d-flex align-items-center">
-						  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                            ucwords(@$employment_type) .
-                            '" >' .
-                            ucwords(mb_substr(@$employment_type, 0, 10)) .
-                            '</span>
-						  </div>
-						</div>
-					  </div>';
-                    } elseif ($jobDetails->work_type == 'no' || $jobDetails->work_type =='other') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
+<tr>
+    {{-- ① JOB DETAILS --}}
+    <td>
+        <div class="bxr-job-row">
+            {{-- Logo / initial --}}
+            @if(!empty($logo_path))
+                <img src="{{ $logo_path }}" alt="" class="bxr-co-logo {{ $profile_detail_class }}"
+                     data-row-id="{{ $jobDetails->id }}" style="cursor:pointer;">
+            @else
+                <div class="bxr-co-init {{ $profile_detail_class }}" data-row-id="{{ $jobDetails->id }}"
+                     style="background:{{ $initBg }};color:{{ $initClr }};cursor:pointer;">{{ $initials }}</div>
+            @endif
 
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							  <span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    } elseif ($jobDetails->work_type == 'any') {
-                        if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                            $client_loc = DB::table('client_city_jobs')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                                ->select('city_list.city as city_name', 'countries.country_name')
-                                ->where('client_city_jobs.job_id', $jobid)
-                                ->first();
-                            $city = mb_substr(@$client_loc->city_name, 0, 21);
-                            $country_name = mb_substr(@$client_loc->country_name, 0, 6);
+            <div style="min-width:0;">
+                <div class="bxr-job-title {{ $profile_detail_class }}"
+                     data-row-id="{{ $jobDetails->id }}"
+                     data-row-job_applications_id="{{ $bench_id }}"
+                     style="cursor:pointer;">
+                    {{ ucwords(mb_substr(@$jobDetails->title, 0, 22)) }}
+                </div>
+                <div class="bxr-job-co">{{ $company_display_name }}</div>
+                <div class="bxr-skills">
+                    {!! $matchBadge !!}
+                    {!! $skillHtml !!}
+                </div>
+            </div>
+        </div>
+    </td>
 
-                            echo ' <div class="d-flex flex-column">
-							<div class="d-flex align-items-center">
-								  <span class="text-dark fw-bolder fs-6">' .
-                                ucwords(mb_substr(@$city, 0, 10)) .
-                                '</span>
-								</div>
-								
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
-							  </div>
-							</div>
-						  </div>';
-                        } else {
-                            echo ' <div class="d-flex flex-column">
-						<div class="d-flex align-items-center">
-						  <span class="text-dark fw-bolder fs-6">Remote</span>
-						  &nbsp;|&nbsp;
-								  <span class="text-dark fw-bolder fs-6">Multiple</span>
-								</div>
-							<span class="fw-bold text-muted d-block fs-7" data-toggle="tooltip4" title="' .
-                                ucwords(@$employment_type) .
-                                '" >' .
-                                ucwords(mb_substr(@$employment_type, 0, 10)) .
-                                '</span>
+    {{-- ② EXPERIENCE (vertical: clock ▸ exp · ₹ ▸ salary · Client Type Badge) --}}
+    <td>
+        <div class="bxr-col-exp-stack">
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                <span>{{ $expRange }}</span>
+            </div>
+            @if($salaryDisplay)
+            <div class="bxr-col-exp-row">
+                <span class="bxr-icon-box">{{ $salCurrencySym }}</span>
+                <span>{{ $salaryDisplay }}{!! $salSuffix !== '' ? ' <span class="bxr-col-exp-mode">'.$salSuffix.'</span>' : '' !!}</span>
+            </div>
+            @endif
+            <div>
+                <span class="client-badge client-badge--{{ $clientBadgeKey }}">
+                    <span class="client-badge-stripe"></span>
+                    {!! $clientBadgeSvg !!}
+                    <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
+                    <span class="client-badge-id">· {{ $jobDetails->id }}</span>
+                </span>
+            </div>
+        </div>
+    </td>
 
-						  </div>
-						</div>
-					  </div>';
-                        }
-                    }
-                @endphp
-            </td>
-            <td>
-                @php
-                    $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                    $status = ucwords($jobDetails->status);
-                    $class = $job_status[$jobDetails->status];
+    {{-- ③ HIRING & LOCATION --}}
+    <td>
+        <div class="bxr-col-loc-stack">
+            <div>
+                <span class="{{ $statusClass }}">
+                    <svg viewBox="0 0 24 24" width="7" height="7" fill="currentColor" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/></svg> {{ $statusLabel }}
+                </span>
+            </div>
+            @if($cityDisplay && $cityDisplay !== '—')
+            <div class="bxr-col-loc-row">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;display:inline-block;vertical-align:middle;"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                <span>{{ $cityDisplay }}</span>
+            </div>
+            <div class="bxr-col-loc-mode">{{ $workMode }}</div>
+            @endif
+        </div>
+    </td>
 
-                    if ($status == 'Active') {
-                        $status = 'Hiring';
-                    }
+    {{-- ④ HIRING MANAGER --}}
+    <td>
+        <div class="bxr-col-hm-row">
+            <span class="bxr-col-hm-av {{ $hmHasName ? 'bxr-col-hm-av--filled' : 'bxr-col-hm-av--empty' }}">{{ $hmInitials }}</span>
+            <div class="bxr-col-hm-info">
+                <span class="bxr-col-hm-name">{{ $hiringManager }}</span>
+                @if($showDesig)
+                    <span class="bxr-col-hm-role">{{ $hiringDesig }}</span>
+                @else
+                    <span class="bxr-col-hm-role">Hiring Manager</span>
+                @endif
+                <span class="bxr-b gy" style="font-size:10px;margin-top:2px;align-self:flex-start;">{{ $employment_type }}</span>
+            </div>
+        </div>
+    </td>
 
-                    if ($status == 'Inactive') {
-                        $status = 'Closed';
-                    }
-                    $recommendation_text = __('messages.internal_tag');
-                    if ($jobDetails->comId != auth()->user()->company_id) {
-                        $recommendation_text = __('messages.clinet_tag');
-                    }
+    {{-- ⑤ JOB STAGE --}}
+    <td>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+            @if(!empty($job_wise_condidates) && $job_wise_condidates->master_status_id == 8)
+                <a href="javascript:void(0);" data-row-id="{{ $jobDetails->id }}"
+                   class="client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage">
+                    <span class="badge fw-bolder {{ $stageCss }} px-2 py-1" style="font-size:11px;">{{ $stageName }}</span>
+                </a>
+            @else
+                <span class="badge fw-bolder {{ $stageCss }} px-2 py-1" style="font-size:11px;">{{ $stageName }}</span>
+            @endif
+            @if($childName)
+                <span class="bxr-b gy" style="font-size:10px;">{{ $childName }}</span>
+            @endif
+            {!! $privateTag !!}
+        </div>
+    </td>
 
-                    $ulink =
-                        '<a href="javascript.void(0);" data-row-id="' .
-                        @$jobDetails->id .
-                        '" class="d-flex flex-column ' .
-                        @$class .
-                        ' status_stage text-hover-success" data-toggle="modal" data-target="#status_stage">' .
-                        $status .
-                        '</a>';
-                    echo '<div class="d-flex flex-column">
-                       ' .
-                        $ulink .
-                        '
-                      <span class="fw-bold text-muted d-block fs-7">' .
-                        @$jobDetails->id .'-'.$recommendation_text.
-                        '</span>
-                    </div>';
+    {{-- ⑥ ADDED BY --}}
+    <td style="white-space:nowrap;">
+        @if($addedByName)
+        <div class="bxr-c1" style="font-size:12px;">{{ mb_substr($addedByName,0,16) }}</div>
+        @endif
+        <div class="bxr-c2">{{ $addedDate }}</div>
+        @if($daysAgo)
+        <div class="bxr-c2" style="color:#94A3B8;font-size:10px;margin-top:2px;">{{ $daysAgo }}</div>
+        @endif
+    </td>
+</tr>
 
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    $total_positions = '';
-                    $total_positions = number_format($jobDetails->total_positions);
-
-                    
-                    $hiringManager = '--------';
-                    if(count($jobDetails->client_contact_info_jobs)>0){
-                        $hiringManager = $jobDetails->client_contact_info_jobs[0]['contact_person_name'];
-                    }
-
-                    if ($jobDetails->comId != auth()->user()->company_id) {
-                        $jobAssignListCaptain = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $jobDetails->comId)
-                        ->filter()
-                        ->map(fn ($c) => ($c))
-                        ->values()
-                        ->all();
-                        if(count($jobAssignListCaptain)>0 && $jobDetails->comId != auth()->user()->company_id){
-                            $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
-                        }
-                        
-                    }
-
-
-                    $created_at = '';
-                    $created_at = $row->created_at;
-                    $newDate = GeneralMethod::ymdTodmyNotTime($created_at); //date("d M, Y", strtotime($created_at));
-                    echo '<div class="d-flex flex-column">
-                        <span class="text-dark fw-bolder fs-6">' .
-                        $newDate .
-                        '</span>
-                        <span class="text-muted fw-bold d-block fs-7">' .
-                        ucwords(mb_substr(@$hiringManager, 0, 10)) .
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $schedule_date = $className = $schedule_time = '';
-                    
-                    $html = '';
-                    if ($row->schedule_date) {
-                        $schedule_date = @$row->schedule_date;
-                        $schedule_date = date('d M, Y', strtotime($schedule_date));
-                        $timezone_abbreviation = ($row->timezone_abbreviation) ? ' ('.$row->timezone_abbreviation.')' : '';
-                        $schedule_time = @$row->schedule_to_time. ' '.$timezone_abbreviation;
-                        // $schedule_time = Carbon::parse($schedule_date)->format('h:i A');
-                    } else {
-                        $html = '<div style="width:150px" id="interview_date">&nbsp;</div>';
-                    }
-                    
-                    echo '<div class="d-flex flex-column">
-                        <span class="text-dark fw-bolder fs-6">' . @$schedule_date .'</span>
-                        <span class="text-muted fw-bold d-block fs-7' . @$schedule_time .' px-1">' . @$schedule_time .'</span>
-                        </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $name = '';
-
-                    $job_wise_condidates = DB::table('add_job_wise_condidates')
-                    ->join('master_status','master_status.id', '=','add_job_wise_condidates.master_status_id')
-                    ->select('add_job_wise_condidates.master_status_id','add_job_wise_condidates.child_status_id','master_status.name','master_status.css_style')
-                    ->where('add_job_wise_condidates.job_id','=',$jobDetails->id)
-                    ->where('add_job_wise_condidates.job_application_id','=',$bench_id)->first();
-
-                    if ($row->job_master_status_id == 8) {
-                        $name = "Private";
-                    }
-                    if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->childStatus)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
-                        }
-                    }
-                    $stage_default_css = 'stage_sub_stage';
-                    $html = '';
-                    if ($job_wise_condidates->master_status_id == 8) {
-                        $html =
-                            '<div class="d-flex flex-column">
-								<a href="javascript.void(0);" data-row-id="' .
-                            @$jobDetails->id .
-                            '" class="d-flex flex-column client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage">
-								<span class="badge fw-bolder fs-6 ' .@$row->css_style .' px-2 py-1">' .ucwords(mb_substr($row->name, 0, 10)) .
-                            '</span>
-								<span class="text-muted fw-bold d-block fs-7 ">' .
-                            @$name .
-                            '</span>
-								</a>
-								</div>';
-                    } else {
-                        $html =
-                            '<div class="d-flex flex-column">
-								<span href="javascript.void(0);" data-row-id="' .
-                            @$jobDetails->id .
-                            '" class="d-flex flex-column ">
-								<span class="badge fw-bolder fs-6 ' .
-                            @$row->css_style .
-                            ' px-2 py-1">' .
-                            ucwords(mb_substr($row->name, 0, 10)) .
-                            '</span>
-								<span class="text-muted fw-bold d-block fs-7">' .
-                            @$name .
-                            '</span>
-								</span>
-								</div>';
-                    }
-                    echo $html;
-                @endphp
-            </td>
-
-        </tr>
-    @endforeach
+@endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="10" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+<tr>
+    <td colspan="6" style="text-align:center;padding:40px 0;color:#94A3B8;">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto 8px;"><path d="M3 13l3-8h12l3 8M3 13v7h18v-7M3 13h5l2 3h4l2-3h5"/></svg>
+        No companies processing this candidate yet
+    </td>
+</tr>
 @endif

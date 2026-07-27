@@ -33,9 +33,8 @@
                 ->where('company_id', $row->company_id)
                 ->where('spok_user_id', $row->id)
                 ->distinct()->count('job_id');
-            $trmTalents = DB::table('job_applications')
-                ->where('company_id', $row->company_id)
-                ->where('submitted_by', $row->id)
+            $trmTalents = DB::table('bench_assign')
+                ->where('user_id', $row->id)
                 ->count();
 
             // ---- Role pill colour ----

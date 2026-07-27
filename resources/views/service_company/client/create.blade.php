@@ -1247,7 +1247,7 @@ if ($page_event == 'EDIT') {
                       </div>
 
                       <div class="client-drawer-field">
-                        <label class="cdf-label" for="client_drawer_phone">Phone Number<span class="cdf-required">*</span></label>
+                        <label class="cdf-label" for="client_drawer_phone">Phone Number</label>
                         <div class="cdf-input-wrap">
                           <i class="la la-phone cdf-input-icon" aria-hidden="true"></i>
                           <input type="number" id="client_drawer_phone" placeholder="Enter 10-digit phone number" autocomplete="off">
@@ -2444,9 +2444,9 @@ for (let i = 0; i < countAddrees; i++) {
       $firstBad = $firstBad || $('#client_drawer_email');
       valid = false;
     }
-    if (!phone || phone.length !== 10 || isNaN(phone)) {
+    if (phone && (phone.length !== 10 || isNaN(phone))) {
       $('#client_drawer_phone').addClass('is-invalid');
-      $('#cdf_err_phone').text(!phone ? 'Phone number is required.' : 'Please enter a valid 10-digit phone number.').addClass('visible');
+      $('#cdf_err_phone').text('Please enter a valid 10-digit phone number.').addClass('visible');
       $firstBad = $firstBad || $('#client_drawer_phone');
       valid = false;
     }

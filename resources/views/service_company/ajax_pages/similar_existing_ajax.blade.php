@@ -154,12 +154,76 @@
                     } else {
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
-                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$percentage.'%</span>';
-
-                    if (count($skillArr) > 0) {
-                        foreach ($skillArr as $sval) {
-                            $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    // Tooltip breaking down WHY this candidate scored this
+                    // percentage — matched vs missing skills — so the badge
+                    // isn't just an unexplained number. Uses a plain native
+                    // title attribute (not data-toggle="tooltip") since this
+                    // partial is injected via AJAX on every filter/sort/page
+                    // change and a Bootstrap-tooltip re-init isn't guaranteed
+                    // to run against freshly-injected markup; a native title
+                    // works with zero JS dependency regardless.
+                    // A plain array_diff() compared required skill KEYWORDS
+                    // ("java") against the candidate's own matched skill TEXT
+                    // ("java developer") as exact strings — never equal, so a
+                    // required skill the candidate actually has (via a
+                    // differently-worded skill entry) still showed up in the
+                    // tooltip as "Missing". Same phrase-prefix check
+                    // matched_skills itself was computed with.
+                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
+                        foreach ($skillArr as $matched) {
+                            if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) {
+                                return false;
+                            }
                         }
+                        return true;
+                    }));
+                    $matchTooltipParts = [];
+                    if (!empty($skillArr)) {
+                        $matchTooltipParts[] = 'Matched: ' . implode(', ', array_map('ucfirst', $skillArr));
+                    }
+                    if (!empty($missingSkills)) {
+                        $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
+                    }
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+
+                    $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;cursor:help;">Match '.$percentage.'%</span>';
+
+                    // Show every skill the candidate has, highlighting the
+                    // ones that match the job's required skills instead of
+                    // only showing the matched subset and hiding the rest —
+                    // $row->all_skills is the candidate's full skill list,
+                    // already computed server-side alongside matched_skills
+                    // (same Elasticsearch document, no extra query).
+                    // Three tiers, not two: a match against a STARRED
+                    // (mandatory) requirement is a different signal than a
+                    // match against a skill that was just typed but not
+                    // starred — the two used to render identically. Mandatory
+                    // matches get the star + the same blue used for the
+                    // mandatory chip in the filter drawer, so the color
+                    // language is consistent across the page; other matches
+                    // stay plain green. Unmatched skills are capped so a
+                    // candidate with a long skill list doesn't make the row
+                    // unreadable.
+                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
+                    $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
+                    $allSkillsList = $row->all_skills ?? $skillArr;
+                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $skillArr, 'strcasecmp'));
+                    $maxUnmatchedShown = 6;
+                    $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
+                    $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
+
+                    foreach ($mandatoryMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($optionalMatched as $sval) {
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    }
+                    foreach ($unmatchedShown as $sval) {
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
+                    }
+                    if ($unmatchedRemaining > 0) {
+                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkills, $maxUnmatchedShown)));
+                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {
@@ -421,14 +485,26 @@
                         $npColorStyle = 'color:#7c3aed !important;';
                     }
 
+                    // The 2nd row (current company) was silently cutting off
+                    // at 10 characters with no ellipsis — a company name any
+                    // longer than that just stopped mid-word with no visual
+                    // sign it was truncated (e.g. a company literally named
+                    // "(formerly ..." would render as just "(formerly " and
+                    // read as broken/garbled rather than truncated text).
+                    $currentCompanyFull = ucwords(@$row->current_company);
+                    $currentCompanyShort = ucwords(mb_substr(@$row->current_company, 0, 10));
+                    if (mb_strlen(@$row->current_company) > 10) {
+                        $currentCompanyShort .= '…';
+                    }
+
                     echo '<div class="d-flex flex-column">
 								<a href="javascript:void(0);" class="fw-bolder fs-6" style="' .
                         $npColorStyle .
                         '">' .
                         @$np .
                         '</a>
-						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
+						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' . htmlspecialchars($currentCompanyFull, ENT_QUOTES, 'UTF-8') .
+                        '">' . htmlspecialchars($currentCompanyShort, ENT_QUOTES, 'UTF-8') .
                         '</span>
 							</div>';
                 @endphp
@@ -490,6 +566,13 @@
                     // Row 2 is now Education (merged in from the removed Education
                     // column) instead of state — same qualification_name field/
                     // truncation the removed column used.
+                    //
+                    // Nearby-location visual badge removed per design
+                    // feedback (didn't fit) — the underlying metro-cluster
+                    // expansion and exact-first priority sort
+                    // (resolveLocationCluster() in the controller) are
+                    // untouched, this only drops the "Nearby" label.
+
                     echo '<div class="d-flex flex-column">
 									<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
                         ucwords($row_city_name) .
@@ -501,9 +584,9 @@
                         strtoupper(mb_substr($row_country_name, 0, 2)) .
                         '</a>
 									<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
+                        mb_strtoupper(@$row->qualification_name) .
                         '">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 14)) .
+                        mb_strtoupper(mb_substr(@$row->qualification_name, 0, 14)) .
                         '</span>
 								</div>';
 
@@ -797,7 +880,7 @@
 
                     if ($recCounter > 0) {
                         $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>' .
+                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>' .
                             @$row->wiseId .
                             ' </div>';
                     } else {
@@ -822,13 +905,13 @@
 
                         if ($public_bench_conter > 0) {
                             $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } elseif ($internal_bench_conter > 0) {
                             $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         }elseif($existingCandidatesQuery){
                             $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
                         } else {
                             $html =
                                 '<div class="d-flex flex-column"> 
@@ -853,11 +936,32 @@
         </tr>
     @endforeach
 @else
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="12" style="text-align: center; color: black;">
-            No data available in table
+    {{-- Context-aware empty state: distinguishes "no candidates for this job
+         at all" from "your filters/search narrowed it to zero" — with search
+         now AND-ed onto every active filter, the latter is common and a bare
+         "No data available" reads like a bug rather than an expected outcome
+         of a tight filter combination. --}}
+    <tr style="height: 160px; position: relative; background: #fffcfc7a;">
+        <td colspan="12" style="text-align: center; padding: 32px 16px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;font-family:'Poppins',sans-serif;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#c4c9d4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                @if (!empty($search ?? null))
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates match &quot;{{ $search }}&quot;</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">
+                        @if (!empty($hasActiveFilters ?? false))
+                            Try a different search term, or clear one of your active filters to widen the results.
+                        @else
+                            Try a different search term or check the spelling.
+                        @endif
+                    </div>
+                @elseif (!empty($hasActiveFilters ?? false))
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates match your current filters</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">Try widening or clearing a filter — Experience, Salary and Location are common ones to loosen first.</div>
+                @else
+                    <div style="font-size:14px;font-weight:600;color:#3f4254;">No candidates found for this job yet</div>
+                    <div style="font-size:12.5px;color:#99a1b7;max-width:360px;">New matches will appear here as candidates are added.</div>
+                @endif
+            </div>
         </td>
-
     </tr>
 @endif

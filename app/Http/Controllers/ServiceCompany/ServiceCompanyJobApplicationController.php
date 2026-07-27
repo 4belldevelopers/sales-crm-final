@@ -553,9 +553,9 @@ protected $elasticService;
                            $bookbtn1 = 'book-btn';
                            $bookbtn2 = 'book-btn';
                            $bookbtn3 = 'book-btn';
-                           $modal1 = 'data-toggle=modal data-target=#interview_schedule';
-                           $modal2 = 'data-toggle=modal data-target=#interview_schedule';
-                           $modal3 = 'data-toggle=modal data-target=#interview_schedule';
+                           $modal1 = '';
+                           $modal2 = '';
+                           $modal3 = '';
 						   $date1 =  Carbon::parse($interviewDateOne)->format('Y-m-d H:i:s');
 						    $date2 =  Carbon::parse($interviewDateTwo)->format('Y-m-d H:i:s');
 							$date3 =  Carbon::parse($interviewDateThree)->format('Y-m-d H:i:s');
@@ -1824,10 +1824,10 @@ protected $elasticService;
 		$app_duplicate_days = $this->user->company->app_duplicate_days;
 		$applicationEmail = $request->email;
 		$applicationPhone =$request->phone;
-		
+
 		if (($this->user->company->app_duplicate == 1) || ($this->user->company->app_duplicate == 2)) {
 			$returnCount = GeneralMethod::checkDuplicateCandidate($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days,$applicationPhone);
-			
+
 			if ($returnCount > 0 && $app_duplicate == 1) {
 				$message = 'Duplicate :: application already in this job';
 				$jobApplication->duplicate = 1;
@@ -1973,7 +1973,7 @@ protected $elasticService;
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
 		$add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
-		
+
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
 					'alljobslist_version_user_'.$this->user->id
@@ -2460,8 +2460,7 @@ protected $elasticService;
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
 		$add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
-		
-		
+
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
 					'alljobslist_version_user_'.$this->user->id
@@ -3278,7 +3277,7 @@ protected $elasticService;
 			if($currentSlug==='apptracker'){
 				$this->skillAndQuestions = true;
 			}
-			if($currentSlug==='apptracker' || $currentSlug==='cvtracker'){
+			if($currentSlug==='apptracker' || $currentSlug==='cvtracker' || $currentSlug==='interview-schedule'){
 				$this->editprofile = true;
 				$this->currentSlug = $_GET['slug'];
 			}
@@ -3846,7 +3845,7 @@ protected $elasticService;
 			  if($currentSlug==='apptracker'){
                   $this->skillAndQuestions = true;
 			  }
-			if($currentSlug==='apptracker' || $currentSlug==='cvtracker'){
+			if($currentSlug==='apptracker' || $currentSlug==='cvtracker' || $currentSlug==='interview-schedule'){
 				$this->editprofile = true;
 				$this->currentSlug = $_GET['slug'];
 			}
@@ -3998,7 +3997,7 @@ protected $elasticService;
 					->on('ja.company_id', '=', 'ajwc.company_id');
 			})
 			->where('ajwc.id', $id)
-			->where('ajwc.company_id', $company_id)
+			// ->where('ajwc.company_id', $company_id)
 			->where(function ($query) use ($authUserId) {
 				$query->where('ja.spok_user_id', $authUserId)
 					->orWhere('ajwc.submitted_by', $authUserId);
@@ -4617,6 +4616,9 @@ protected $elasticService;
 			$offer_terms =  (@$this->offer_terms_conditions->terms_condition) ? $this->offer_terms_conditions->terms_condition : '';
 		}else{
 			$offer_terms =  (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms; 
+			if($this->application->condidate_type=='bench_condidate'){
+				$offer_terms =  (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+			}
 		}
 		$rowDataOfferDetails = GeneralMethod::offerLetterdetails($this->offer_id);
 	
@@ -4636,9 +4638,17 @@ protected $elasticService;
 				 $of_joined_date_update = "[JOINING_DATE]";
 		}
 
-		$this->offer_terms = str_replace(["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"],[$candidate_name, $candidate_email,$candidate_mobile,$comapny_name,$job_title,$of_joined_date_update,$job_title,date("d M Y")], $offer_terms);
-		// dd($this->offer_terms,$offer_terms,$this->account );
-		// $this->offer_terms = $offer_terms;
+		$replaceFrom = ["[CANDIDATE_NAME]","[CANDIDATE_EMAIL]","[CANDIDATE_MOBILE]","[COMPANY_NAME]","[JOB_TITLE]","[JOINING_DATE]","[{JOB_TITLE}]","[TODAY_DATE]"];
+		$replaceTo   = [$candidate_name, $candidate_email, $candidate_mobile, $comapny_name, $job_title, $of_joined_date_update, $job_title, date("d M Y")];
+
+		$this->offer_terms = str_replace($replaceFrom, $replaceTo, $offer_terms);
+
+		// Resolve both templates with variables replaced so the view can switch between them
+		$raw_company_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
+		$raw_agency_terms  = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+		$this->company_offer_terms = str_replace($replaceFrom, $replaceTo, (string)$raw_company_terms);
+		$this->agency_offer_terms  = str_replace($replaceFrom, $replaceTo, (string)$raw_agency_terms);
+		$this->is_bench_candidate  = ($this->application->condidate_type == 'bench_condidate');
 
 		// Same values used in the merge above, exposed to the view so the Template step's
 		// "Insert Variable" chips can insert this offer's actual resolved values.
@@ -5396,7 +5406,7 @@ protected $elasticService;
 					->on('ja.company_id', '=', 'ajwc.company_id');
 			})
 			->where('ajwc.job_application_id', $id)
-			->where('ajwc.company_id', $authCompanyId)
+			// ->where('ajwc.company_id', $authCompanyId)
 			->where(function ($query) use ($authUserId) {
 				$query->where('ja.spok_user_id', $authUserId)
 					->orWhere('ajwc.submitted_by', $authUserId);
@@ -5790,11 +5800,17 @@ protected $elasticService;
 
 		}
 		//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
+			//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
+		// Resume handling on UPDATE mirrors the two-stage flow used by store():
+		//   - Ajax pre-upload writes to R2 temp and stashes the path in session.
+		//   - Submit dispatches UploadResumeToTestRTwo to move temp → final R2
+		//     location, then persists the final URL on the row.
+		//   - If user picked nothing new, the existing resume column is preserved.
 		if ($request->hasFile('resume')) {
 
-             $companyNameR2 = DB::table('companies')
+			$companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
-			->value('company_name');   // change column if needed
+			->value('company_name');
 			$companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
 			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
 			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
@@ -5803,17 +5819,19 @@ protected $elasticService;
 
 			$tempPath = session('resume_temp_path');
 			$full_name = session('resume_original_name');
-			
 			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+
 			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+
 			DB::table('job_applications')
 							->where('id', $jobApplication->id)
 							->update(['resume' =>$fileUrl]);
 							session()->forget([
 								'resume_temp_path',
 								'resume_original_name'
-							]);				
-				
+							]);
+
+
 		}
 
 		if(empty($request->resumeCheck)){
@@ -6083,16 +6101,21 @@ protected $elasticService;
          $recommendation_id = $relationget->to_company_id ?? null;
 		 $to_company_id = $relationget->to_company_id ?? null;
 
+		 // Mirror store() response shape so the JS hardened success gate
+		 // (response.status===success && response.candidate_id && response.url) on create.blade.php passes.
 		 if($currentSlug=='cvtracker'){	
-				return Reply::redirect(url('/service_company/cvtracker/'), __('menu.jobApplications') . ' ' . __('messages.createdSuccessfully'));
-		 }else{
-
-			if ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
-				return Reply::redirect(url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __('messages.createdSuccessfully'));
-			} else {
-				return Reply::redirect(url('/service_company/apptracker/' . GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __('messages.createdSuccessfully'));
-			}
-	  }
+				$redirectUrl = url('/service_company/cvtracker/');
+		 } elseif ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
+				$redirectUrl = url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($request->job_id) . '/all');
+		 } else {
+				$redirectUrl = url('/service_company/apptracker/' . GeneralMethod::value_encrypt($request->job_id) . '/all');
+		 }
+		 return Reply::successWithData(__('messages.createdSuccessfully'), [
+			'action' => 'redirect',
+			'url' => $redirectUrl,
+			'candidate_id' => (int) $jobApplication->id,
+			'resume' => (string) ($jobApplication->resume ?? ''),
+		 ]);
 
 	}
 	function formatInterviewDateTime($date, $time, $defaultTimeFormat) {
@@ -6365,7 +6388,14 @@ protected $elasticService;
 	           
 	    }
 		$this->timezone 					=	DB::table('master_timezone')->select('*')->orderByDesc('master_timezone.priority')->get();
-	    
+
+		// Real, company-scoped interview round master data (App\InterviewProcess model
+		// class doesn't exist, so the interview_processes table is read directly here).
+		$this->interview_processes = DB::table('interview_processes')
+			->where('company_id', auth()->user()->company_id)
+			->orderBy('name', 'ASC')
+			->get();
+
 		$this->reschedule = @$_REQUEST['reschedule'];
 		$view = view('service_company.job-applications.interview-create', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -6441,7 +6471,12 @@ protected $elasticService;
         $assignDataFinal = collect(array_merge($assignDataclient, $mergedData))->unique('id')->values()->toArray();
 		// $assignDataFinal = array_merge($assignDataclient,$mergedData);
 		$this->cc_email_assignData = $assignDataFinal;
-		
+		// Same internal/client split already computed above ($mergedData / $assignDataclient),
+		// exposed separately so the picker can show them under distinct Internal/Client tabs
+		// (same source-split pattern as the offer-approval picker in create-offer.blade.php).
+		$this->picker_internal = $mergedData;
+		$this->picker_client = $assignDataclient;
+
 
 		$view = view('service_company.job-applications.contact-persion-with-team', $this->data)->render();
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -8232,7 +8267,18 @@ protected $elasticService;
 		$company_id = "";
 		$company_id = auth()->user()->company_id;
 
-		$master_status_id = $id;
+		// Rejected has two master_status ids — 7 (client-side/"custom client"
+		// Rejected, reachable once sourced) and 9 ("agency-Rejected", the one
+		// actually shown in the normal agency-self-view drawer, reachable
+		// straight from InReview). Settings > Interview Process only ever
+		// lets a company configure candidate_status rows for parent=7 — there
+		// is no form field for parent=9 at all — so without this fold,
+		// child_stage(9) (the id the standard drawer submits) would ALWAYS
+		// come back empty, even when Rejected reasons ARE configured, since
+		// they're stored under parent=7. Both ids represent the same
+		// conceptual "Rejected" reason list to the company, just gated to a
+		// different client relationship type.
+		$master_status_id = ((int) $id === 9) ? 7 : $id;
 		// dd($master_status_id,$company_id);
 		$candidate_status_Arr = DB::table('candidate_status')
 			->select('*')
@@ -8244,25 +8290,81 @@ protected $elasticService;
 		$html = '';
 		// dd($candidate_status_Arr);
 		if (!empty($candidate_status_Arr)) {
-			$cnt = 1;
 			foreach ($candidate_status_Arr as $cstatus) {
+				$csdMeta = GeneralMethod::csdSubStatusMeta(@$cstatus->name);
+				$csdName = e(@$cstatus->name);
+				$csdDesc = $csdMeta['desc'] !== '' ? '<div class="ds">' . e($csdMeta['desc']) . '</div>' : '';
 
-				$html .= '<div class="div' . $cnt . ' d-inline-block ws-25 px-2">
-									<input type="radio" class="btn-check" name="sub_stages" value="' . @$cstatus->id . '" id="screening' . $cnt . '">
-									<label
-										class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center"
-										for="screening' . $cnt . '"> <span class="d-block fw-bold text-start"> <span
-												class="text-dark-800 fw-bolder d-block fs-5">' . @$cstatus->name . '</span> </span>
-									</label>
+				// Same .csd-sub-tile markup/classes the two body-content
+				// Blade partials render initially — this AJAX response (used
+				// by both the plain and client-gated drawers) must match so
+				// switching stages mid-drawer looks identical to the first
+				// paint. onclick calls the shared, flow-aware csdSelectSub().
+				// csdMeta['icon'] is inline SVG inner-markup (not a Font
+				// Awesome class — this app only has FA 4.7.0 loaded, which
+				// lacks the icon names/prefix a newer cheat-sheet suggests).
+				$html .= '<div class="csd-sub-tile" onclick="csdSelectSub(this)">
+									<input type="radio" class="d-none" name="sub_stages" value="' . @$cstatus->id . '" id="sub_stage_' . @$cstatus->id . '">
+									<span class="ic" style="background:' . $csdMeta['bg'] . ';color:' . $csdMeta['color'] . ';"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' . $csdMeta['icon'] . '</svg></span>
+									<div class="txt">
+										<div class="nm">' . $csdName . '</div>
+										' . $csdDesc . '
+									</div>
 								</div>';
-
-				$cnt++;
 			}
 		}
 		// dd($html);
 		return Reply::dataOnly(['status' => 'success', 'html' => $html]);
 
 	}
+
+	/**
+	 * Builds the "one stage at a time" validation message shared by
+	 * stage_submit() and client_stage_submit() whenever a candidate is
+	 * moved more than one step ahead, or more than one step backward, in
+	 * the stage sequence. Rather than just saying the attempted move is
+	 * blocked, it tells the user exactly which stages ARE reachable from
+	 * where the candidate currently sits (previous / next / Rejected),
+	 * since that's the actionable information they need next.
+	 *
+	 * @param array  $stages       Same order map ($id => ['display' => ..., 'order' => ...]) already built in the caller.
+	 * @param int    $currentOrder Order value of the candidate's current stage.
+	 * @param string $currentName  Display name of the candidate's current stage.
+	 * @param string $targetName   Display name of the stage the user attempted to jump to.
+	 */
+	private function stageSequenceGuardMessage(array $stages, int $currentOrder, string $currentName, string $targetName): string
+	{
+		$prevName = null;
+		$nextName = null;
+		foreach ($stages as $sid => $s) {
+			if ($s['order'] === $currentOrder - 1) {
+				$prevName = $s['display'];
+			}
+			// Rejected (7 in both flows, 9 in the client flow's agency-only
+			// bucket) is always offered separately below — excluded here so
+			// it's never mentioned twice.
+			if ($s['order'] === $currentOrder + 1 && !in_array((int) $sid, [7, 9], true)) {
+				$nextName = $s['display'];
+			}
+		}
+
+		$options = [];
+		if ($prevName) {
+			$options[] = "<b style='color:#F59E0B;'>{$prevName}</b> (previous stage)";
+		}
+		if ($nextName) {
+			$options[] = "<b style='color:#3B82F6;'>{$nextName}</b> (next stage)";
+		}
+		$options[] = "<b style='color:#EF4444;'>Rejected</b>";
+
+		$last = array_pop($options);
+		$optionsText = count($options) ? implode(', ', $options) . ' or ' . $last : $last;
+
+		return "Candidates move through hiring stages one step at a time.<br>"
+			. "From <b style='color:#181c32;'>{$currentName}</b>, you can move to {$optionsText}.<br>"
+			. "Jumping directly to <b style='color:#181c32;'>{$targetName}</b> isn't supported — please select an adjacent stage to continue.";
+	}
+
 	public function stage_submit(Request $request)
 	{
 
@@ -8587,17 +8689,12 @@ protected $elasticService;
 
 					$currentName  = $stages[$currentStageId]['display'];
 					$newName      = $stages[$newStageId]['display'];
-					$nextStage    = collect($stages)->firstWhere('order', $currentOrder + 1)['display'] ?? 'Next Step';
 
 					// 🔹 Check if jumping ahead
 					if ($newOrder > $currentOrder + 1) {
 						return Reply::dataOnly([
 							'status' => 'candidatevalidation',
-							'message' => "You cannot jump directly from 
-										<b style='color:#EF4444;'>{$currentName}</b> 
-										to <b style='color:#3B82F6;'>{$newName}</b>.<br>
-										Please complete the required step in 
-										<b style='color:#F59E0B;'>{$nextStage}</b> first."
+							'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
 						]);
 					}
 
@@ -8605,13 +8702,11 @@ protected $elasticService;
 
 					// 🔹 Check if going backward
 					if ($newOrder < $currentOrder) {
-						
+
 					if($currentOrder != $newOrder+1){
 						return Reply::dataOnly([
 								'status' => 'candidatevalidation',
-								'message' => "You cannot move backward from 
-											<b style='color:#EF4444;'>{$currentName}</b> 
-											to <b style='color:#F59E0B;'>{$newName}</b>."
+								'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
 							]);
 					}
 
@@ -9961,7 +10056,7 @@ protected $elasticService;
 		$applicationEmail = $request->email;
 		$applicationPhone =$request->phone;
 		if (($this->user->company->app_duplicate == 1) || ($this->user->company->app_duplicate == 2)) {
-			$returnCount = GeneralMethod::checkDuplicateCandidate($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days,$applicationPhone);
+			$returnCount = GeneralMethod::checkDuplicateCandidateClient($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days,$applicationPhone);
 			if ($returnCount > 0 && $app_duplicate == 1) {
 				$message = 'Duplicate :: application already in this job';
 				$job_application_arr['duplicate'] = 1;
@@ -10036,9 +10131,6 @@ protected $elasticService;
 
 		$query_update = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
-		
-		
-	
 
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
@@ -11009,6 +11101,274 @@ protected $elasticService;
 		$sub_stages = @$request->sub_stages;
 		$comment = @$request->comment;
 
+
+		
+		$exists = $this->elasticService->getClient()->exists([
+				'index' => ELASTIC_CANDIDATES,
+				'id' => $addJobWiseCondidate_id
+			]);	
+		if ($exists) {
+				$params = [
+						'index' => ELASTIC_CANDIDATES,
+						'id'    =>$addJobWiseCondidate_id,
+				];
+				
+				$response = $this->elasticService->getClient()->get($params);
+				$data = (object) $response['_source'];
+				$clientConId = $data->company_id;
+				$companiesData  = DB::table('companies')->select('app_duplicate','app_duplicate_days')->where('id', $clientConId)->first();
+				$app_duplicate = $companiesData->app_duplicate;
+				$app_duplicate_days = $companiesData->app_duplicate_days;
+				
+				$applicationEmail = $data->email;
+				$applicationPhone =$data->phone;
+				$jobId =$data->jobId;
+
+				$duplicate = 0; // 0 = New
+
+				if($master_status==1){
+
+					/*
+					|--------------------------------------------------------------------------
+					| Common Query
+					|--------------------------------------------------------------------------
+					*/
+
+					$must = [];
+
+					// Email / Phone Match
+					$must[] = [
+						'bool' => [
+							'should' => [
+								[
+									'term' => [
+										'email' => $applicationEmail
+									]
+								],
+								[
+									'term' => [
+										'phone' => $applicationPhone
+									]
+								]
+							],
+							'minimum_should_match' => 1
+						]
+					];
+
+					// Current Job
+					if ($app_duplicate == 1) {
+
+						$must[] = [
+							'term' => [
+								'jobId' => $jobId
+							]
+						];
+					}
+
+					// Duplicate Days
+					
+					if (!empty($app_duplicate_days)) {
+
+						$must[] = [
+							'range' => [
+								'created_at' => [
+									'gte' => now()
+										->subDays($app_duplicate_days)
+										->toIso8601String()
+								]
+							]
+						];
+					}
+
+					/*
+					|--------------------------------------------------------------------------
+					| Company Duplicate
+					|--------------------------------------------------------------------------
+					*/
+
+					$companyParams = [
+						'index' => ELASTIC_CANDIDATES,
+						'body' => [
+							'size' => 1,
+							'query' => [
+								'bool' => [
+									'must' => array_merge($must, [
+
+										[
+											'term' => [
+												'company_id' => $clientConId
+											]
+										],
+
+										[
+											'bool' => [
+												'should' => [
+
+													// ClientComID = 0
+													[
+														'term' => [
+															'ClientComID' => 0
+														]
+													],
+
+													// ClientComID = Current Company
+													[
+														'term' => [
+															'ClientComID' => $clientConId
+														]
+													],
+
+													// ClientComID field does not exist
+													[
+														'bool' => [
+															'must_not' => [
+																[
+																	'exists' => [
+																		'field' => 'ClientComID'
+																	]
+																]
+															]
+														]
+													]
+
+												],
+												'minimum_should_match' => 1
+											]
+										]
+
+									])
+								]
+							]
+						]
+					];
+
+
+					$companyResult = $this->elasticService->getClient()->search($companyParams);
+
+					if (($companyResult['hits']['total']['value'] ?? 0) > 0) {
+
+						$duplicateType = 'COMPANY_DUPLICATE';
+
+					} else {
+
+						/*
+						|--------------------------------------------------------------------------
+						| Agency Duplicate
+						|--------------------------------------------------------------------------
+						*/
+
+						$agencyParams = [
+							'index' => ELASTIC_CANDIDATES,
+							'body' => [
+								'size' => 1,
+								'query' => [
+									'bool' => [
+										'must' => array_merge($must, [
+
+											[
+												'term' => [
+													'company_id' => $clientConId
+												]
+											],
+
+											[
+												'bool' => [
+													'should' => [
+
+														// Case 1: ClientComID > 0 AND Status must be 1-7
+														[
+															'bool' => [
+																'must' => [
+																	[
+																		'range' => [
+																			'ClientComID' => [
+																				'gt' => 0
+																			]
+																		]
+																	],
+																	[
+																		'terms' => [
+																			'job_master_status_id' => [1,2,3,4,5,6,7]
+																		]
+																	]
+																]
+															]
+														],
+
+														// Case 2: ClientComID is 0 or missing
+														[
+															'bool' => [
+																'must_not' => [
+																	[
+																		'range' => [
+																			'ClientComID' => [
+																				'gt' => 0
+																			]
+																		]
+																	]
+																]
+															]
+														]
+
+													],
+													'minimum_should_match' => 1
+												]
+											]
+
+										])
+									]
+								]
+							]
+						];
+
+						$agencyResult = $this->elasticService->getClient()->search($agencyParams);
+
+						if (($agencyResult['hits']['total']['value'] ?? 0) > 0) {
+
+							$duplicateType = 'AGENCY_DUPLICATE';
+
+						} else {
+
+							$duplicateType = 'NEW';
+						}
+					}
+
+					/*
+					|--------------------------------------------------------------------------
+					| Duplicate Flag
+					|--------------------------------------------------------------------------
+					*/
+
+					$duplicate = ($duplicateType == 'NEW') ? 0 : 1;
+
+					/*
+					|--------------------------------------------------------------------------
+					| Update Current Candidate
+					|--------------------------------------------------------------------------
+					*/
+					
+                     $updateTime = now()->toIso8601String();
+					$updateParams = [
+						'index' => ELASTIC_CANDIDATES,
+						'id'    => $addJobWiseCondidate_id,
+						'body'  => [
+							'doc' => [
+								'duplicate'       => $duplicate,
+								'updated_at'      => $updateTime
+
+							],
+							'doc_as_upsert' => false
+						],
+						'refresh' => true
+					];
+
+					$this->elasticService->getClient()->update($updateParams);
+
+
+				}
+		}
+		
+
 		$userId = auth()->id(); 
 		$isValid = DB::table('add_job_wise_condidates as ajwc')
 			->leftJoin('job_assign as ja', function ($join) {
@@ -11055,9 +11415,6 @@ protected $elasticService;
 			GeneralMethod::coinsDeductions((int) $addJobWiseCondidate->company_id,$eventId,auth()->user()->id,$addJobWiseCondidate->thirdparty_company_id,'','');
 		}
 
-
-
-
 		$offer_id = null;
 		$exists = $this->elasticService->getClient()->exists([
 				'index' => ELASTIC_CANDIDATES,
@@ -11094,7 +11451,41 @@ protected $elasticService;
                 if($data->job_master_status_id==7){
                     // dd($data->job_master_status_id);
                     $stage_point_tb = DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->first();
-                   
+
+                    // Same backward-recovery guard stage_submit() applies when
+                    // un-rejecting: resume at exactly the stage left off at,
+                    // or (if it had already reached Offered/Joined) restart at
+                    // Sourcing — no skipping to an arbitrary stage in between.
+                    if($stage_point_tb){
+                        if($stage_point_tb->stage_id !=5 && $stage_point_tb->stage_id !=6){
+                            if($stage_point_tb->stage_id!=$master_status){
+                                $currentName  = $stages[$master_status]['display'];
+                                $newName      = $stages[$stage_point_tb->stage_id]['display'];
+                                return Reply::dataOnly([
+                                    'status' => 'candidatevalidation',
+                                    'message' => "You cannot move backward from
+                                                <b style='color:#EF4444;'>Rejected</b>
+                                                to <b style='color:#F59E0B;'>{$currentName}</b>..<br>
+                                            Please complete the required step in
+                                            <b style='color:#F59E0B;'>{$newName}</b> first."
+                                ]);
+                            }
+                        }elseif($stage_point_tb->stage_id==5 || $stage_point_tb->stage_id==6){
+                            if($master_status !=1){
+                                $currentName  = $stages[$master_status]['display'];
+                                $newName      = $stages[$stage_point_tb->stage_id]['display'];
+                                return Reply::dataOnly([
+                                    'status' => 'candidatevalidation',
+                                    'message' => "You cannot move backward from
+                                                <b style='color:#EF4444;'>Rejected</b>
+                                                to <b style='color:#F59E0B;'>{$currentName}</b>..<br>
+                                            Please complete the required step in
+                                            <b style='color:#F59E0B;'>{$newName}</b> first."
+                                ]);
+                            }
+                        }
+                    }
+
                     DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->delete();
                     //  dd($master_status);
                     $values = array(
@@ -11104,10 +11495,10 @@ protected $elasticService;
                     'user_id' => $data->submitted_by,
                     'created_at' => date('Y-m-d'),
                     'updated_at' => date('Y-m-d')
- 
+
                 );
                 DB::table('stage_point_tb')->insert($values);
- 
+
                 }else{
  
                     if (!isset($stages[$currentStageId]) || !isset($stages[$newStageId])) {
@@ -11121,39 +11512,73 @@ protected $elasticService;
  
                     $currentOrder = $stages[$currentStageId]['order'];
                     $newOrder     = $stages[$newStageId]['order'];
- 
+
                     $currentName  = $stages[$currentStageId]['display'];
                     $newName      = $stages[$newStageId]['display'];
-                    $nextStage    = collect($stages)->firstWhere('order', $currentOrder + 1)['display'] ?? 'Next Step';
- 
-                    // 🔹 Check if jumping ahead
-                    if ($newOrder > $currentOrder + 1) {
+
+                    // InReview(8) and agency-Rejected(9) are the submitting
+                    // agency's own territory — once a candidate is sourced
+                    // (currentStageId 1-7), control belongs to the client
+                    // company, not the agency, and the agency can no longer
+                    // change its stage at all (not even to reject via 9).
+                    $isAgencySubmission = ((int) $addJobWiseCondidate->thirdparty_company_id === (int) $company_id)
+                        && (int) $addJobWiseCondidate->thirdparty_company_id > 0;
+
+                    // The only valid moves touching InReview/agency-Rejected:
+                    // 8->1 (agency sources it), 8->9 (agency rejects pre-
+                    // sourcing), 9->8 (agency un-rejects, back to review).
+                    // 9->1 directly is explicitly NOT allowed — it must go
+                    // back through InReview first.
+                    $isSpecialAgencyEdge = ($currentStageId == 8 && in_array($newStageId, [1, 9], true))
+                        || ($currentStageId == 9 && $newStageId == 8);
+
+                    if ($currentStageId == 9 && $newStageId == 1) {
                         return Reply::dataOnly([
                             'status' => 'candidatevalidation',
-                            'message' => "You cannot jump directly from
-                                        <b style='color:#EF4444;'>{$currentName}</b>
-                                        to <b style='color:#3B82F6;'>{$newName}</b>.<br>
-                                        Please complete the required step in
-                                        <b style='color:#F59E0B;'>{$nextStage}</b> first."
+                            'message' => 'Move this candidate back to InReview before sourcing it again.'
                         ]);
                     }
- 
-                    // dd($newOrder,$currentOrder);
- 
-                    // 🔹 Check if going backward
-                    if ($newOrder < $currentOrder) {
-						dd($currentOrder != $newOrder+1);
-                    if($currentOrder != $newOrder+1){
+
+                    if (!$isSpecialAgencyEdge && $isAgencySubmission && !in_array($currentStageId, [8, 9], true)) {
                         return Reply::dataOnly([
+                            'status' => 'candidatevalidation',
+                            'message' => 'This candidate has already been sourced — only the client company can change its stage now.'
+                        ]);
+                    }
+
+                    // The company can never send a candidate back to
+                    // InReview once it's been sourced — that stage belongs
+                    // to the agency, and reverting it isn't the company's
+                    // call to make.
+                    if (!$isSpecialAgencyEdge && $newStageId == 8) {
+                        return Reply::dataOnly([
+                            'status' => 'candidatevalidation',
+                            'message' => 'A candidate cannot be moved back to InReview once sourced.'
+                        ]);
+                    }
+
+                    if (!$isSpecialAgencyEdge) {
+                        // 🔹 Check if jumping ahead — Rejected(7) is reachable
+                        // directly from any active company stage, so it's
+                        // exempt from the "no skipping ahead" rule.
+                        if ($newStageId != 7 && $newOrder > $currentOrder + 1) {
+                            return Reply::dataOnly([
                                 'status' => 'candidatevalidation',
-                                'message' => "You cannot move backward from
-                                            <b style='color:#EF4444;'>{$currentName}</b>
-                                            to <b style='color:#F59E0B;'>{$newName}</b>."
+                                'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
                             ]);
+                        }
+
+                        // 🔹 Check if going backward
+                        if ($newOrder < $currentOrder) {
+                            if($currentOrder != $newOrder+1){
+                                return Reply::dataOnly([
+                                        'status' => 'candidatevalidation',
+                                        'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName)
+                                    ]);
+                            }
+                        }
                     }
- 
-                    }
- 
+
                     $sourcing=0; $screening=0;  $evaluation=0;  $negotiation=0;
                     // if (!isset($stages[$currentStageId]) || !isset($stages[$newStageId])) {
  
@@ -11194,25 +11619,31 @@ protected $elasticService;
                             'negotiation'=>$negotiation
                     ];
                     GeneralMethod::teamRankElastic($teamRankElastic);
- 
+
                     DB::table('stage_point_tb')->where('job_id','=',$data->jobId)->where('candidate_id','=',$data->candidate_id)->delete();
-                   
+
+                    // When this move IS a rejection (newStageId 7), the resume
+                    // point must be the stage being rejected FROM, not 7 itself —
+                    // recording 7 here permanently blocked ever moving back to
+                    // InReview/wherever the candidate was, since un-rejecting
+                    // later requires the target to match this recorded stage_id.
+                    $resumeStageId = ($newStageId == 7) ? $currentStageId : $master_status;
                     $values = array(
                         'job_id' => $data->jobId,
                         'candidate_id' => $data->candidate_id,
-                        'stage_id' => $master_status,
+                        'stage_id' => $resumeStageId,
                         'user_id' => $data->submitted_by,
                         'created_at' => date('Y-m-d'),
                         'updated_at' => date('Y-m-d')
- 
+
                     );
                     DB::table('stage_point_tb')->insert($values);
- 
+
                 }
             }
 
 		}
-       
+
 		if($master_status != 9){
 
 			// dd("this is error section ");

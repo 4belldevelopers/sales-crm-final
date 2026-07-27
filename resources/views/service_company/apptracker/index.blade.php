@@ -96,6 +96,31 @@
             display: none !important;
         }
 
+        /* Print — the "Print" button clones the already-rendered checked rows
+           (no extra server request) into this hidden container, then hands
+           off to the browser's own print dialog. Same pattern as CV
+           Tracker's #cvh_print_area. */
+        #aptk_print_area { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #aptk_print_area, #aptk_print_area * { visibility: visible; }
+            #aptk_print_area {
+                display: block;
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%;
+                padding: 20px;
+            }
+            #aptk_print_area h2 { font-size: 16px; margin: 0 0 4px; }
+            #aptk_print_area .aptk-print-meta { font-size: 11px; color: #666; margin-bottom: 14px; }
+            #aptk_print_area table { width: 100%; border-collapse: collapse; }
+            #aptk_print_area th, #aptk_print_area td {
+                border: 1px solid #ccc; padding: 6px 8px; font-size: 11px; text-align: left;
+                vertical-align: top;
+            }
+            #aptk_print_area .form-check { display: none !important; }
+        }
+
         /* Row selection action bar — same design/position as CV Tracker's
            #cvh_selection_bar: hidden until candidates are checked, then sits directly
            above the results table. */
@@ -155,6 +180,138 @@
         .aptk-selection-close:hover {
             background: #f1f5f9;
             color: #334155;
+        }
+
+        /* Search + Sort toolbar — same visual language as
+           similar_candidates.blade.php's simf-toolbar-card (no Filter
+           button here, this page keeps its existing Kanban stage pills
+           instead of a filter drawer). plf- prefix (Pool List Filter) to
+           keep this page's styles/JS distinct from the ibf-/abf-/simf-
+           prefixed ones on other AppTracker tabs. */
+        .plf-toolbar-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        .plf-search-wrap,
+        .plf-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+        .plf-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .plf-sort-wrap {
+            flex-shrink: 0;
+            width: 220px;
+            position: relative;
+        }
+        .plf-search-icon,
+        .plf-sort-icon {
+            color: #99a1b7;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plf-search-icon svg,
+        .plf-sort-icon svg {
+            flex-shrink: 0;
+            display: block;
+        }
+        .plf-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13.5px;
+            line-height: 42px;
+            height: 42px;
+        }
+        /* Custom Sort control — the native <select> can't be styled
+           cross-browser once its dropdown is open, so the visible control
+           is this button + an owned dropdown panel; the real
+           <select id="sortingfilter"> stays hidden underneath purely so
+           filtersdataget()/fetchCandidates() keep reading it unchanged. */
+        .plf-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .plf-sort-btn:focus { outline: none; }
+        .plf-sort-btn span {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .plf-sort-btn .chevron {
+            flex-shrink: 0;
+            color: #99a1b7;
+            transition: transform .15s;
+        }
+        .plf-sort-btn.open .chevron {
+            transform: rotate(180deg);
+        }
+        .plf-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .plf-sort-item {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .plf-sort-item:hover {
+            background: #f8f9fb;
+        }
+        .plf-sort-item.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        @media (max-width: 992px) {
+            .plf-sort-wrap { width: 160px; }
+        }
+        @media (max-width: 768px) {
+            .plf-search-wrap { flex-basis: 100%; }
+            .plf-sort-wrap { width: 140px; }
         }
 
         /* Hiring Pipeline card */
@@ -632,32 +789,38 @@
                 
 
 
-                <div class="card hp-toolbar-card mb-4">
+                <div class="card mb-4 plf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
-                                    <div style="position: absolute; top: 0px; right: 12px;">
-                                        <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 8px;"></div>
-                                     </div>
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="plf-search-wrap" style="position: relative;">
+                                <span class="plf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control plf-search-input" name="inputJobSearch"
+                                    value="" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" autocomplete="off" />
+                                <div id="loader_search" class="loader_search hidden_search" style="position: absolute; top: 50%; right: 0; transform: translateY(-50%);"></div>
                             </div>
-                            <div style="width: 220px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                    onchange="filtersdataget()">
+                            <div class="plf-sort-wrap" id="plf_sort_wrap">
+                                <span class="plf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="plf-sort-btn" id="plf_sort_btn">
+                                    <span id="plf_sort_label">Sort</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
                                     <option value="Show All" selected="">Sort</option>
+                                    <option value="10">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
                                     <option value="4">High to Low (Salary)</option>
-                                    <!--<option value="9">Notice Period (Immediate)</option>-->
                                     <option value="21">Notice Period (Immediate)</option>
                                     <option value="22">Notice Period (Serving)</option>
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
+                                <div class="plf-sort-panel d-none" id="plf_sort_panel"></div>
                             </div>
                         </div>
                     </div>
@@ -737,12 +900,12 @@
                     </div>
                     <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
                     <div class="aptk-selection-actions">
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" data-toggle="modal" data-target="#mass_mail">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary mass_mail" id="kt_mass_mail_drawer_toggle_aptk">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
                             </span> Send Email
                         </a>
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" id="kt_fwd_resume_drawer_toggle_aptk">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
                             </span> Forward Resume
@@ -752,23 +915,23 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V4a2 2 0 0 1 2-2h10"/></svg>
                             </span> Copy
                         </a>
-                        <button type="button" class="btn btn-sm btn-light-primary exportRecord" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
-                            <span class="svg-icon svg-icon-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black"/>
-                                </svg>
+                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary exportRecord" title="Export the selected candidates using your browser's print dialog">
+                            <span class="svg-icon svg-icon-primary svg-icon-1x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                             </span> Export
-                        </button>
+                        </a>
                     </div>
                     <button type="button" class="aptk-selection-close" id="aptk_selection_close" title="Clear selection">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <div class="card">
+                <div class="card" id="sc_table_card" style="display:none;">
                     <div class="card-body pt-3 px-5">
                         @if (in_array('view_job_applications', $userPermissions))
-                           <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                           <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                               <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                           </div>
                             <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class">
                                 <thead>
                                     <tr class="fw-bolder text-muted">
@@ -795,6 +958,10 @@
                                 </tbody>
                             </table>
                             <div id="paginationcandidate"></div>
+                            {{-- Print target — populated client-side from the checked rows already
+                                 on this page (see the .exportRecord click handler); no server
+                                 round-trip involved. --}}
+                            <div id="aptk_print_area"></div>
                         @endif
                     </div>
                 </div>
@@ -802,30 +969,52 @@
         </div>
     </div>
 
-    <!--begin::Stage sub stage popup-->
-    <div class="modal fade" id="stage_sub_stage" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Stage and sub stage</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal"
-                        id="stage_sub_stage_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-                <div class="stage_body_content" id="stage_body_content"></div>
+    <!--begin::Stage sub stage drawer-->
+    <style>
+      #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+      #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+      #csd_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+      #csd_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+      #csd_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+      #csd_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+      #csd_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+      #csd_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 20px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: filter .15s; }
+      #csd_drawer .sd-btn-confirm:hover { filter: brightness(0.94); }
+      #csd_drawer .sd-btn-confirm:disabled { background: #c2c9d6 !important; cursor: not-allowed; }
+      #csd_drawer .sd-divider { width: 1px; height: 22px; background: #e4e6ef; }
+      #csd_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+      #csd_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+    </style>
+    <div id="csd_drawer_toggle" style="display:none;"></div>
+    <div id="csd_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="candidate-stage"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm':'92%', 'lg':'80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#csd_drawer_toggle" data-kt-drawer-close="#csd_drawer_close">
+      <div class="d-flex flex-column h-100 w-100">
+        <div class="sd-topbar">
+          <div class="sd-topbar-left">
+            <span class="sd-topbar-ico"><i class="fa fa-random"></i></span>
+            <div>
+              <div class="sd-topbar-title">Change Candidate Stage</div>
+              <div class="sd-topbar-sub" id="csd_drawer_subtitle">&nbsp;</div>
             </div>
+          </div>
+          <div class="sd-topbar-right">
+            <button type="button" class="sd-btn-cancel" id="stage_sub_stage_close">Cancel</button>
+            <button type="button" class="sd-btn-confirm" id="custom_stage_submit">
+              <span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>
+            </button>
+            <span class="sd-divider"></span>
+            <span class="sd-close" id="csd_drawer_close"><i class="fa fa-times"></i></span>
+          </div>
         </div>
+        <div class="flex-grow-1 px-6 py-4" style="overflow-y:auto;">
+          <div class="stage_body_content" id="stage_body_content"></div>
+        </div>
+      </div>
     </div>
-    <!--end::Stage sub stage popup-->
+    <!--end::Stage sub stage drawer-->
 
 
     <div id="kt_activitiesCopy_toggle"></div>
@@ -834,62 +1023,36 @@
         data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesCopy_toggle"
         data-kt-drawer-close=".kt_activitiesCopy_close">
         <div class="card shadow-none rounded-0 w-100">
-            <div class="card-header px-5 py-0" id="kt_activities_header">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark">Select the job checkbox, then click "Save" to add the candidate</h3>
-                    <span class="h-20px border-gray-200 border-start mx-4 d-none"></span>
-                </div>
-                <div class="card-toolbar">
-                    
-                    <div class="">
-                        <button type="button" id="submit-frm-btn" class="btn btn-primary copy_current_selected_applicant d-none"> 
-                            <span class="indicator-label">Save to Jobs</span> 
-                            <span class="indicator-progress">
-                                Please wait...
-                            </span> 
-                        </button>
-                    </div>
-
-                    <button type="button"
-                        class="btn btn-sm btn-icon btn-active-light-danger me-n5 kt_activitiesCopy_close"
-                        id="kt_activitiesCopy_close"> <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="currentColor">
-                                    <rect x="0" y="7" width="16" height="2" rx="1" />
-                                    <rect opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1" />
-                                </g>
-                            </svg>
-                        </span> </button>
-                </div>
+            <div class="card-toolbar px-4 py-2 d-flex justify-content-end" id="kt_activities_header">
+                <button type="button" id="submit-frm-btn" class="btn btn-primary btn-sm copy_current_selected_applicant d-none me-2">
+                    <span class="indicator-label">Save to Jobs</span>
+                    <span class="indicator-progress">Please wait...</span>
+                </button>
             </div>
             <div class="card-body position-relative px-0 py-0" id="application_copy_body_content"></div>
         </div>
     </div>
 
 
-    <div class="modal fade" id="fwd_resume" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Forward Resume</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
+    <div id="kt_fwd_resume_drawer_aptk" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="fwd-resume-aptk"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_fwd_resume_drawer_close_aptk">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+            <div class="card-header px-5 py-0 flex-shrink-0">
+                <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_fwd_resume_drawer_close_aptk">
                         <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
+                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
                             </svg>
                         </span>
-                    </div>
+                    </button>
                 </div>
-                <div class="card-body position-relative px-0 py-0" id="application_fwd_resume_body_content"></div>
             </div>
+            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_fwd_resume_body_content"></div>
         </div>
     </div>
 
@@ -971,29 +1134,29 @@
         </div>
     </div>
 
-    <!--begin::Mass Mail - Modal-->
-    <div class="modal fade" id="mass_mail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header flex-stack">
-                    <h2>Send Email</h2>
-                    <div class="btn btn-sm btn-icon btn-active-light-danger" data-dismiss="modal">
+    <!--begin::Mass Mail - Drawer-->
+    <div id="kt_mass_mail_drawer_aptk" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="mass-mail-aptk"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#kt_mass_mail_drawer_toggle_aptk" data-kt-drawer-close="#kt_mass_mail_drawer_close_aptk">
+        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+            <div class="card-header px-5 py-0 flex-shrink-0">
+                <h3 class="card-title fw-bolder text-dark mb-0">Send Email</h3>
+                <div class="card-toolbar">
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_mass_mail_drawer_close_aptk">
                         <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                    transform="rotate(-45 6 17.3137)" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
+                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
                             </svg>
                         </span>
-                    </div>
+                    </button>
                 </div>
-                <div class="card-body position-relative px-0 py-0" id="application_mass_mail_body_content"></div>
             </div>
+            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_mass_mail_body_content"></div>
         </div>
     </div>
-    <!--end::Mass Mail - Modal-->
+    <!--end::Mass Mail - Drawer-->
 @endsection
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
@@ -1005,9 +1168,70 @@
     </script>
 
     <script>
+        // Non-blocking toast for simple pass/fail notifications, same pattern
+        // as similar_candidates.blade.php's simfToast — reserved for
+        // notifications with no dependent UI logic waiting on them. Stage
+        // transitions and "No Internet" hard-stops elsewhere on this page
+        // stay as blocking Swal.fire() dialogs since they gate a chained
+        // .then() (closing a modal) or need explicit acknowledgement before
+        // the user can retry.
+        const poolToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
         @if (session('packageStatus'))
-            Swal.fire("Failed", "{{ session('packageStatus') }}", "warning");
+            poolToast.fire({ icon: 'warning', title: "{{ session('packageStatus') }}" });
         @endif
+
+        // Custom Sort dropdown, same pattern as similar_candidates.blade.php's
+        // simfRenderSortPanel — reads options straight from the real
+        // #sortingfilter <select> (single source of truth), keeps that
+        // select's value in sync so filtersdataget()/fetchCandidates() are
+        // unaffected, only replaces how the option list is PRESENTED since a
+        // native <select>'s open dropdown can't be styled cross-browser.
+        function plfRenderSortPanel() {
+            var $panel = $('#plf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="plf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#plf_sort_label').text(label);
+                        plfCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function plfOpenSortPanel() {
+            plfRenderSortPanel();
+            $('#plf_sort_panel').removeClass('d-none');
+            $('#plf_sort_btn').addClass('open');
+        }
+        function plfCloseSortPanel() {
+            $('#plf_sort_panel').addClass('d-none');
+            $('#plf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#plf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#plf_sort_panel').hasClass('d-none')) plfOpenSortPanel();
+            else plfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#plf_sort_wrap').length) plfCloseSortPanel();
+        });
 
         $(document).ready(function() {
 
@@ -1190,6 +1414,10 @@
             });
         }
         countder();
+        $(document).on('click', '#stage_sub_stage_close', function() {
+            $('#csd_drawer_close').trigger('click');
+        });
+
         $(document).on('click', '.stage_sub_stage', async function(e) {
 
             e.preventDefault();
@@ -1204,12 +1432,11 @@
                             confirmButton: "btn btn-warning"
                         }
                     });
-                    $('body').removeClass('modal-open');
-                    $('.modal-backdrop').remove();
                     return; // ⛔ STOP EXECUTION
                 }
 
-            $('#stage_body_content').html('');
+            $('#stage_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+            $('#csd_drawer_toggle').trigger('click');
             var id = $(this).data('row-id');
             var url = "{{ route('service_company.job-applications.stage_body_content', ':id') }}";
             url = url.replace(':id', id);
@@ -1218,163 +1445,53 @@
                 url: url,
                 success: function(response) {
                     if (response.status == "success") {
-                        $('#stage_body_content').html('');
                         $('#stage_body_content').html(response.view);
+                        $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
                     }
                 }
             });
 
         });
 
-        $(document).on('click', '.master_status_div', function(e) {
-
-            e.preventDefault();
-
-            var id = $(this).data('master-status-id');
-            $("#master_status_" + id).attr('checked', true);
-            $('#main_substage').show();
-            $('#comment_div').show();
-
-            $("#inreview").attr('checked', false);
-            $("#sourcing").attr('checked', false);
-            $("#screening").attr('checked', false);
-            $("#evaluation").attr('checked', false);
-            $("#negotation").attr('checked', false);
-            $("#offer").attr('checked', false);
-            $("#joined").attr('checked', false);
-            $("#rejected").attr('checked', false);
-
-            if (id == 1) {
-                $("#sourcing").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('sourcing-bg');
-            } else if (id == 2) {
-                $("#screening").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('screening-bg');
-            } else if (id == 3) {
-                $("#evaluation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('interview');
-            } else if (id == 4) {
-                $("#negotation").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-negotation');
-            } else if (id == 5) {
-                $("#offer").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-offer');
-            } else if (id == 6) {
-                $("#joined").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-joined');
-            } else if (id == 7) {
-                $("#rejected").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('btn-rejected');
-                // $('#main_substage').hide();	
-                $('#comment_div').show();
-            } else if (id == 8) {
-                $("#inreview").attr('checked', true);
-                $('lbl_master_status_' + id).addClass('bg-light-warning text-warning');
-                $('#main_substage').hide();
-            }
-
-            if (id > 0 && (id != 8)) {
-
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var url = "{{ route('service_company.job-applications.child_stage', ':id') }}";
-                url = url.replace(':id', id);
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    contentType: false,
-                    cache: false,
-                    processData: false,
-                    beforeSend: function() {
-                        $('#substage').html('<img src="' + baseurl + '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (response.html == '') {
-                                $('#main_substage').hide();
-                            }
-                            $('#substage').html('');
-                            $('#substage').html(response.html);
-                        }
-                    }
-                });
-
-            }
-
-            e.run();
-
-        });
+        // Stage-pill click handling now lives in stage_body_content.blade.php
+        // itself (csdSelectStage) — the single shared partial used by all 5
+        // pages — so it no longer needs its own copy of this handler here.
 
         $(document).ready(function() {
 
+          // Replaces the old server-side Excel export — purely client-side:
+          // clones the checked rows' already-rendered markup (no new
+          // request, no server load) into #aptk_print_area and hands off to
+          // the browser's own print dialog. Same pattern as CV Tracker.
           $(document).on('click', '.exportRecord', function() {
 
-                var action_type = $(this).val();
-                var id = 0;
-                var url =
-                "{{ route('service_company.candidateexport.candidate-job-applications', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var token = "{{ csrf_token() }}";
-                var jobId = "{{ @$job->id }}";
-                var arr = [];
-                var jobIdArr = [jobId];
-                $('.chk_list_item:checked').each(function() {
+                var $checked = $('.chk_list_item:checked');
+                if ($checked.length === 0) {
+                    poolToast.fire({ icon: 'warning', title: 'Select at least one candidate first' });
+                    return false;
+                }
 
-                    var jobId = $(this).attr('data-jobId');
-                    var wiid = $(this).attr('data-wiid');
-                    arr.push(wiid);
+                var $sourceTable = $('#candidatetList').closest('table');
+                var $table = $('<table></table>');
+                var $thead = $sourceTable.find('thead tr').clone();
+                $thead.find('th').first().remove(); // drop the checkbox header column
+                $table.append($('<thead></thead>').append($thead));
+
+                var $tbody = $('<tbody></tbody>');
+                $checked.each(function() {
+                    var $row = $(this).closest('tr').clone();
+                    $row.find('td').first().remove(); // drop the checkbox cell
+                    $tbody.append($row);
                 });
+                $table.append($tbody);
 
-                $.ajax({
-                    type: 'GET',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'GET',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr
-                    },
-                    beforeSend: function() {
-                        $('.exportRecord').html('<img src="' + baseurl +
-                            '" height="35px" width="100%">');
-                    },
-                    success: function(response) {
+                var $printArea = $('#aptk_print_area').empty();
+                $printArea.append('<h2>Candidates Summary</h2>');
+                $printArea.append('<div class="aptk-print-meta">Printed ' +
+                    new Date().toLocaleString() + ' — ' + $checked.length + ' candidate(s)</div>');
+                $printArea.append($table);
 
-                        if (response.status == 'info') {
-                            Swal.fire("Success", ` ${response.message}`, "warning");
-
-                            $('.exportRecord').html(
-                                '<span class="svg-icon svg-icon-primary svg-icon-1x"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <rect x="0" y="0" width="24" height="24"></rect><path d="M6,9 L6,15 C6,16.6568542 7.34314575,18 9,18 L15,18 L15,18.8181818 C15,20.2324881 14.2324881,21 12.8181818,21 L5.18181818,21 C3.76751186,21 3,20.2324881 3,18.8181818 L3,11.1818182 C3,9.76751186 3.76751186,9 5.18181818,9 L6,9 Z" fill="#000000" fill-rule="nonzero"></path><path d="M10.1818182,4 L17.8181818,4 C19.2324881,4 20,4.76751186 20,6.18181818 L20,13.8181818 C20,15.2324881 19.2324881,16 17.8181818,16 L10.1818182,16 C8.76751186,16 8,15.2324881 8,13.8181818 L8,6.18181818 C8,4.76751186 8.76751186,4 10.1818182,4 Z" fill="#000000" opacity="0.3"></path></g></svg></span> Export '
-                                );
-
-                            return false;
-                        }
-
-
-                        window.location.href = response.file_url;
-
-                        setTimeout(() => {
-                            $('.exportRecord').text('Export');
-                            $.ajax({
-                                type: 'GET',
-                                url: "{{ route('service_company.unlink.sample-job-applications', ':id') }}",
-                                data: {
-                                    '_token': token,
-                                    '_method': 'GET',
-                                    'file_name': response.file_name
-                                },
-                                beforeSend: function() {},
-                                success: function(response) {
-
-
-                                }
-                            });
-
-                        }, 2000);
-                    }
-                });
-
-
+                window.print();
             });
 
             $(document).on('click', '#custom_stage_submit', async function(e) {
@@ -1397,7 +1514,9 @@
                 var master_status = $('input[name="master_status"]:checked').val();
                 var comment = $('#comment').val();
                 if (master_status == 8 && comment=='') {
-                    Swal.fire("Warning", 'InReview Comment Required !', "info");
+                    poolToast.fire({ icon: 'info', title: 'InReview Comment Required!' });
+                } else if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+                    poolToast.fire({ icon: 'info', title: 'Please select a sub stage to continue.' });
                 } else {
                     $("#custom_stage_submit").prop("disabled", true);
                     $("#custom_stage_submit").html(
@@ -1412,7 +1531,8 @@
                         success: function(response) {
                             $("#custom_stage_submit").prop("disabled", false);
                             $("#custom_stage_submit").html(
-                                `<span class="indicator-label">Submit</span>`);
+                                `<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>`);
+                            csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
                             if (response.status == 'success') {
                                 Swal.fire("Success", 'Application stage update successfully !',
                                     "success").then(function() {
@@ -1442,7 +1562,6 @@
 
 
             });
-            e.run();
         })
 
         $(document).ready(function() {
@@ -1652,10 +1771,16 @@
         });
 
         $(document).on('click', '.fwd_resume', function() {
-            localStorage.setItem('toggleOpen', 'true');
-            // alert("kf");
+            var drawerEl = document.getElementById('kt_fwd_resume_drawer_aptk');
+            if (drawerEl && typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) { drawer.show(); }
+            }
             $('#application_mass_mail_body_content').html('');
-            $('#application_fwd_resume_body_content').html('');
+            $('#application_fwd_resume_body_content').html(
+                '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+            );
             var id = {{ $job->id }};
             var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
             url = url.replace(':id', id);
@@ -1688,8 +1813,15 @@
         });
 
         $(document).on('click', '.mass_mail', function() {
-
-            $('#application_mass_mail_body_content').html('');
+            var drawerEl = document.getElementById('kt_mass_mail_drawer_aptk');
+            if (drawerEl && typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) { drawer.show(); }
+            }
+            $('#application_mass_mail_body_content').html(
+                '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+            );
             $('#application_fwd_resume_body_content').html('');
             var id = {{ $job->id }};
             var arr = [];
@@ -1731,6 +1863,7 @@
 
     <script>
        $(document).on('click', '.application_copy', function() {
+            window._currentCandidateName = '';
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.application_copy', ':id') }}";
@@ -1777,23 +1910,24 @@
             // $.noConflict();
 
             fetchCandidates();
-            
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+
+            // The pagination partial (ajax_pages/pagination.blade.php) renders
+            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
+            // handler was listening for a class that doesn't exist anywhere in
+            // the actual markup, so clicking a page number did nothing at all.
+            var aptkPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (aptkPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                aptkPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 });
             });
 
@@ -1827,13 +1961,13 @@
            
 
             var clientid = '1';
+            $('.loadingMessage').css({ display: 'flex' });
             if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -1845,10 +1979,11 @@
                   cus_search : $('#kt_tagify_2').val()
                 },
                 success: function(response) {
-                     countder();
-                     $('.loadingMessage').css({ display: 'none' });
+                    countder();
+                    $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
                     $('#candidatetList').html(response.html);
                     $('#pool_counter').html(response.total);
                      localStorage.setItem('currentPage', 1);
@@ -1911,8 +2046,13 @@
                     $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
                 }
 
-
-
+                },
+                error: function(xhr) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+                    $('#sc_table_card').show();
+                    console.error('allDataAjax failed:', xhr.status, xhr.responseText);
                 }
             });
         }

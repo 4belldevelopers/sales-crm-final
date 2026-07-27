@@ -15,6 +15,7 @@ use App\Helper\Reply;
 use App\Helper\GeneralMethod;
 use App\Http\Requests\StoreJob;
 use App\Models\Job;
+use App\Models\JobStatusLog;
 use App\Models\OpenworkspaceJob;
 use App\Models\JobCategory;
 use App\Models\JobLocation;
@@ -1637,7 +1638,60 @@ protected $elasticService;
 			->count();
 
 		$dataCnt['jobRequest'] = $jobRequest;
-		
+
+		// Tab counts — same access conditions as all_data_ajax, filtered by status
+		$tabMust = [];
+		$tabMust[] = [
+			'bool' => [
+				'should' => [
+					['term' => ['comId' => $company_id]],
+					[
+						'nested' => [
+							'path' => 'recommendation_relation',
+							'query' => [
+								'bool' => [
+									'must' => [
+										['term' => ['recommendation_relation.to_company_id' => $company_id]],
+										['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+									],
+								],
+							],
+						],
+					],
+				],
+				'minimum_should_match' => 1,
+			],
+		];
+		if (!(($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+			$tabMust[] = [
+				'nested' => [
+					'path' => 'job_assign',
+					'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]],
+				],
+			];
+		}
+		$tabStatusCounts = ['active' => 0, 'hold' => 0, 'inactive' => 0];
+		if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+			foreach ($tabStatusCounts as $status => $val) {
+				$res = $this->elasticService->getClient()->count([
+					'index' => ELASTIC_JOBS,
+					'body'  => [
+						'query' => [
+							'bool' => [
+								'must'   => $tabMust,
+								'filter' => [['term' => ['status' => $status]]],
+							],
+						],
+					],
+				]);
+				$tabStatusCounts[$status] = $res['count'] ?? 0;
+			}
+		}
+		$dataCnt['hiringCount'] = $tabStatusCounts['active'];
+		$dataCnt['holdCount']   = $tabStatusCounts['hold'];
+		$dataCnt['closedCount'] = $tabStatusCounts['inactive'];
+		$dataCnt['allTabCount'] = $tabStatusCounts['active'] + $tabStatusCounts['hold'] + $tabStatusCounts['inactive'];
+
 		return $dataCnt;
 
 	}
@@ -1755,6 +1809,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 		$userPermissions = $this->userPermissions;
@@ -2705,6 +2760,20 @@ protected $elasticService;
 				$sort[] = ['id' => ['order' => 'desc']];
 		}
 
+		// Always show active jobs first, then hold, then inactive/closed
+		if ($custom_status === '' || $custom_status === 'all') {
+			array_unshift($sort, [
+				'_script' => [
+					'type'   => 'number',
+					'order'  => 'asc',
+					'script' => [
+						'lang'   => 'painless',
+						'source' => "def s = doc['status'].size() > 0 ? doc['status'].value : ''; if (s == 'active') return 0; if (s == 'hold') return 1; return 2;",
+					],
+				],
+			]);
+		}
+
 
 		// 1. STATUS FILTERING
 		// if (!session()->has('UrlMailJobId')) {
@@ -2885,6 +2954,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -3202,6 +3272,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -3469,6 +3540,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 		$userPermissions = $this->userPermissions;
@@ -3492,7 +3564,7 @@ protected $elasticService;
 		return view('service_company.jobs.job_request', $this->data);
 	}
 
-	public function marketJobs($id)
+	public function marketJobs($id = null)
 	{
 		$company_id = auth()->user()->company_id;
 		$this->pageTitle = __('Market Jobs');
@@ -3975,6 +4047,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -4734,6 +4807,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -4885,6 +4959,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -5022,6 +5097,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -6919,6 +6995,9 @@ protected $elasticService;
 		if ($request->viewmore == 'viewmore') {
 			$this->viewmore = true;
 		}
+
+		// Hide hiring-manager, action-buttons and pipeline sections when opened from market-jobs
+		$this->hideMarketSections = (bool) @$request->hideMarketSections;
 		if (session()->has('UrlMailJobId')) {
 			$this->viewmore = false;
 		}					
@@ -10864,6 +10943,7 @@ protected $elasticService;
 			'total' => $total,
 			'current_page' => $page,
 			'last_page' =>ceil($total / $size),
+			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
@@ -13342,6 +13422,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -13494,6 +13575,7 @@ protected $elasticService;
 							$pdfContent = $pdf->output();
 							$filename = "terms-and-conditions-".$jobRow->id.".pdf";
 							// Option 1: Save PDF to storage and attach file path
+							Storage::disk('public')->makeDirectory('termConditionsSendRequest');
 							$pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
 							file_put_contents($pdfPath, $pdfContent);
 							$hashname = str_replace('index.php','',url('storage/app/public/termConditionsSendRequest/'.$filename.''));
@@ -14441,7 +14523,17 @@ protected $elasticService;
 	{
 		$this->id = $id;
 		if ($this->id) {
-			$this->job = DB::table('jobs')->select('*')->where('id', '=', $this->id)->first();
+			$this->job = DB::table('jobs')
+				->where('jobs.id', '=', $this->id)
+				->first();
+
+			// "Last updated by" footer — most recent status change of any kind, for attribution only.
+			$this->lastStatusChange = DB::table('job_status_logs')
+				->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+				->select('job_status_logs.created_at', 'users.name as changed_by_name')
+				->where('job_status_logs.job_id', $this->id)
+				->orderByDesc('job_status_logs.created_at')
+				->first();
 		}
 		$view = view('service_company.jobs.status', $this->data)->render();
 		// dd($view);
@@ -14454,15 +14546,25 @@ protected $elasticService;
 		$company_id = auth()->user()->company_id;
 		$job_id = $_REQUEST['job_id'];
 		$status = $_REQUEST['status'];
-		
+		$rawToStatus = $status; // raw enum value, kept before $status gets swapped for the "Hiring" display label below
 
-		
+
 
 		$data = array();
 
 		$data['status'] = $status;
 		
 		$job = Job::find($job_id);
+
+		// A job posted by another company and merely recommended/assigned to
+		// this agency (a "Direct Client" job on the Client Jobs tab) is not
+		// this company's to change the status of — only the company that
+		// owns the job (jobs.company_id) may transition it. Without this,
+		// any agency with access to the status drawer could flip a client's
+		// own job to Closed/Hold/Hiring.
+		if (!$job || (int) $job->company_id !== (int) $company_id) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Only the company that owns this job can change its status.']);
+		}
 
 		if($status=='active'){
 
@@ -14491,10 +14593,19 @@ protected $elasticService;
 			    $start_date = date('Y-m-d');
                 $end_date = date('Y-m-d', strtotime($start_date. ' + '.@$daysDifference.' days'));
 		        $job->start_date = 	$start_date;
-           
+
 			    $data['auto_date_job'] = $start_date;
+			    // start_date must be persisted too, not just set on the in-memory $job object —
+			    // otherwise it stays frozen at the original creation date forever while end_date
+			    // keeps advancing each cycle, so daysDifference (and the auto-close duration
+			    // derived from it) grows longer every time the job is reopened instead of staying
+			    // fixed at the originally-selected N days.
+			    $data['start_date'] = $start_date;
 			    $data['end_date'] = $end_date;
-				$data['closeType'] =0;
+				// Keep closeType=1 (auto-close still configured) so this recompute runs again on every
+				// future close -> reopen cycle, not just the first one. Previously reset to 0 here, which
+				// silently disabled the "auto-close in N days" behaviour after a single reactivation.
+				$data['closeType'] = 1;
 		   }
 
 		   $data['auto_date_job'] = Carbon::today();
@@ -14513,6 +14624,16 @@ protected $elasticService;
 		   
 
 		DB::table('jobs')->where('id', @$job_id)->limit(1)->update($data);
+
+		// Status Timeline audit row for the Job Status drawer — one append-only entry per transition.
+		JobStatusLog::create([
+			'job_id' => $job_id,
+			'company_id' => $company_id,
+			'from_status' => $job->status,
+			'to_status' => $rawToStatus,
+			'changed_by' => auth()->id(),
+			'created_at' => Carbon::now(),
+		]);
 
 		$this->activeJobCounter = DB::table('jobs')->select('id')->where('status', '=', 'active')->where('company_id', '=', $company_id)->count();
 		$this->inactiveJobCounter = DB::table('jobs')->select('id')->where('status', '=', 'inactive')->where('company_id', '=', $company_id)->count();
@@ -14893,6 +15014,124 @@ protected $elasticService;
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
 	}
+	// Full-page job details for market-jobs "View Requirement" link.
+	// Same data as clientviewmore() but returns a full Blade page instead of JSON.
+	public function marketJobDetail(Request $request, $id)
+	{
+		abort_if(Gate::denies('view_jobs'), 403);
+
+		$company_id = auth()->user()->company_id;
+		$this->salaryMode = GeneralMethod::salaryMode();
+		$this->employmentType = GeneralMethod::employmentType();
+		$this->job = DB::table('jobs')
+			->Select(
+				'jobs.id', 'jobs.title', 'jobs.work_type', 'jobs.slug', 'jobs.company_id',
+				'jobs.job_description', 'jobs.job_requirement', 'jobs.total_positions',
+				'jobs.work_shifts', 'jobs.location_id', 'jobs.category_id',
+				'jobs.start_date', 'jobs.end_date', 'jobs.status',
+				'jobs.required_columns', 'jobs.meta_details', 'jobs.section_visibility',
+				'jobs.created_at', 'jobs.updated_at', 'jobs.priority', 'jobs.client_id',
+				'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary',
+				'jobs.qualification', 'jobs.employment_type',
+				'jobs.min_salary_currency', 'jobs.max_salary_currency',
+				'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.carrier_website',
+				'clients.name as client_name', 'clients.description as client_description',
+				'clients.logo_logical_path', 'job_categories.name as cat_name',
+				'qualification_master.name as qualification_name'
+			)
+			->join('clients', 'clients.id', '=', 'jobs.client_id')
+			->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+			->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
+			->where('jobs.id', '=', $id)
+			->first();
+
+		abort_if(!$this->job, 404);
+
+		$this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
+
+		$company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
+		$this->company_name = @$company_arr->company_name;
+		$this->logo_path = url('img/client-default.png');
+		if (!empty(@$company_arr->logo) && strlen(@$company_arr->logo) > 10) {
+			$this->logo_path = url('public/user-uploads/company-logo/' . @$company_arr->logo);
+		}
+
+		$this->jobLocation = '';
+		if ($this->job->id > 0) {
+			$this->jobLocation = DB::table('client_location_jobs')
+				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+				->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+				->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
+				->where('client_location_jobs.job_id', $this->job->id)
+				->orderBy('client_location_jobs.id', 'DESC')
+				->first();
+
+			$this->clientContactPersonListing = DB::table('client_contact_info_jobs')
+				->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
+				->select('client_contact_info.contact_person_name')
+				->where('client_contact_info_jobs.job_id', $this->job->id)
+				->get();
+		}
+
+		$this->recruiterlist = DB::table('job_assign')
+			->join('users', 'users.id', '=', 'job_assign.user_id')
+			->join('role_user', 'role_user.user_id', 'users.id')
+			->join('roles', 'roles.id', 'role_user.role_id')
+			->leftJoin("add_job_wise_condidates", function ($join) {
+				$join->on("add_job_wise_condidates.job_id", "=", "job_assign.job_id")
+					->on("add_job_wise_condidates.submitted_by", "=", "users.id");
+			})
+			->select(
+				'users.id', 'users.name', 'users.email', 'users.image', 'users.mobile',
+				'roles.display_name',
+				DB::raw("count(add_job_wise_condidates.id) as allCandidate"),
+				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
+				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined")
+			)
+			->where('users.company_id', $company_id)
+			->where('job_assign.job_id', $this->job->id)
+			->where('users.type', '=', 0)
+			->groupBy('users.id')
+			->orderBy('users.name', 'DESC')
+			->get();
+
+		$companiesDetails = DB::table('recommendation_relation')
+			->select('recommendation_relation.accepterms')
+			->where('recommendation_relation.to_company_id', $company_id)
+			->where('recommendation_relation.job_id', '=', $this->job->id)
+			->first();
+		$this->terms = ($companiesDetails) ? $companiesDetails->accepterms : '';
+
+		$this->conactPersonListing = DB::table('job_assign')
+			->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+			->join("users", function ($join) {
+				$join->on("users.id", "=", "job_assign.user_id")
+					->on("users.company_id", "=", "jobs.company_id");
+			})
+			->select('users.id', 'users.name', 'users.email')
+			->where('job_assign.job_id', $this->job->id)
+			->orderBy('users.name', 'DESC')
+			->get();
+
+		$this->jobCitySel = DB::table('client_city_jobs')
+			->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+			->where('client_city_jobs.job_id', $this->job->id)
+			->pluck('city_list.city')
+			->toArray();
+
+		if ($this->job->work_type == 'yes') {
+			$this->jobCitySelected = 'Remote';
+		} elseif ($this->job->work_type == 'no') {
+			$this->jobCitySelected = implode(", ", $this->jobCitySel);
+		} elseif ($this->job->work_type == 'any') {
+			$this->jobCitySelected = 'Remote / ' . implode(", ", $this->jobCitySel);
+		} else {
+			$this->jobCitySelected = implode(", ", $this->jobCitySel);
+		}
+
+		return view('service_company.jobs.market-job-detail', $this->data);
+	}
+
 	public function removeJob(Request $request)
 	{
 

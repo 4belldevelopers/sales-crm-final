@@ -44,6 +44,300 @@
         outline-offset: 2px;
     }
 
+    /* ── Filter Drawer ── */
+    #fd-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        z-index: 1045;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+    }
+    #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
+
+    #apptrackerfilter {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 80% !important;
+        height: 100vh !important;
+        z-index: 1050 !important;
+        background: #fff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
+        transform: translateX(100%);
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+    }
+    #apptrackerfilter.fd-open { transform: translateX(0); }
+
+    #apptrackerfilter .modal-header.flex-stack {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f3f8;
+        flex-shrink: 0;
+    }
+    #apptrackerfilter .apptrackerfilter_body_content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #apptrackerfilter .modal-body { flex: 1; overflow-y: auto; padding: 20px !important; }
+    #apptrackerfilter .modal-footer { flex-shrink: 0; padding: 14px 20px; border-top: 1px solid #f1f3f8; }
+
+    @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
+    @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
+
+    /* ══════════════════════════════════════════
+       Market Jobs Hero  (mjh-*)
+    ══════════════════════════════════════════ */
+    .mjh-wrap {
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 14px;
+        padding: 22px 24px 20px;
+        margin-bottom: 14px;
+    }
+    .mjh-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .mjh-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+        line-height: 1.2;
+    }
+    .mjh-sub {
+        font-size: 12.5px;
+        color: #6B7280;
+        max-width: 600px;
+    }
+    .mjh-btn-post {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #fff;
+        color: #2563EB;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 9px 18px;
+        border-radius: 8px;
+        border: 1.5px solid #BFDBFE;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        font-family: 'Poppins', sans-serif;
+        transition: background 0.15s;
+    }
+    .mjh-btn-post:hover { background: #EFF6FF; }
+
+    /* Stat cards */
+    .mjh-stats { display: flex; gap: 14px; }
+    .mjh-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        flex: 1;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 16px 18px;
+        transition: box-shadow 0.15s, transform 0.15s;
+        min-width: 0;
+    }
+    .mjh-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    .mjh-icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .mjh-icon svg { width: 24px; height: 24px; }
+    .mjh-icon-blue   { background: #EFF6FF; color: #2563EB; }
+    .mjh-icon-green  { background: #DCFCE7; color: #16A34A; }
+    .mjh-icon-purple { background: #F3F0FF; color: #7C3AED; }
+    .mjh-icon-orange { background: #FFF7ED; color: #EA580C; }
+    .mjh-card-label {
+        font-size: 11.5px;
+        color: #6B7280;
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    .mjh-card-num {
+        font-size: 26px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.1;
+    }
+    .mjh-card-sub {
+        font-size: 11.5px;
+        color: #6B7280;
+        margin-top: 2px;
+    }
+    .mjh-trend {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #16A34A;
+        margin-top: 5px;
+    }
+
+    /* Filter bar */
+    .mjh-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        flex-wrap: nowrap;
+    }
+    .mjh-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+    .mjh-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        pointer-events: none;
+    }
+    .mjh-search-input {
+        width: 100%;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        padding: 9px 10px 9px 32px;
+        font-size: 13px;
+        color: #374151;
+        font-family: 'Poppins', sans-serif;
+        outline: none;
+        background: #F9FAFB;
+        transition: border-color 0.15s;
+    }
+    .mjh-search-input:focus { border-color: #93C5FD; background: #fff; }
+    .mjh-search-input::placeholder { color: #9CA3AF; }
+    .mjh-search-btn {
+        background: #2563EB;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 9px 22px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Poppins', sans-serif;
+        transition: background 0.15s;
+        flex-shrink: 0;
+    }
+    .mjh-search-btn:hover { background: #1d4ed8; }
+    .mjh-filter-dropdowns {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .mjh-drop-wrap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        padding: 7px 10px;
+        background: #fff;
+        color: #374151;
+        position: relative;
+        cursor: pointer;
+    }
+    .mjh-drop,
+    select.mjh-drop {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: #374151 !important;
+        font-family: 'Poppins', sans-serif !important;
+        outline: none !important;
+        cursor: pointer !important;
+        padding-right: 4px !important;
+        box-shadow: none !important;
+        width: auto !important;
+        height: auto !important;
+    }
+    /* Hide Select2 wrapper if it gets created anyway */
+    .mjh-drop-wrap .select2-container { display: none !important; }
+    .mjh-caret { color: #9CA3AF; flex-shrink: 0; pointer-events: none; }
+    .mjh-more-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #F3F4F6;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: 'Poppins', sans-serif;
+        transition: background 0.15s;
+    }
+    .mjh-more-btn:hover { background: #E5E7EB; }
+
+    /* Popular searches */
+    .mjh-popular {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 0 4px;
+        margin-bottom: 14px;
+        font-size: 12.5px;
+    }
+    .mjh-popular-label { color: #6B7280; font-weight: 500; flex-shrink: 0; }
+    .mjh-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.12s, border-color 0.12s;
+    }
+    .mjh-tag:hover { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
+    .mjh-tag.pop-added { background: #DBEAFE; border-color: #93C5FD; color: #1d4ed8; }
+    .mjh-tag-hot { color: #92400E; background: #FFFBEB; border-color: #FDE68A; }
+    .mjh-tag-hot:hover { background: #FEF3C7; }
+    .mjh-clear-all {
+        margin-left: auto;
+        color: #2563EB;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .mjh-clear-all:hover { text-decoration: underline; }
 </style>
 
 <link href="{{ asset('demo/css/find-market-jobs.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -71,184 +365,177 @@
                 
 
                     <!-- HERO -->
-                    <div class="hero-section">
-                        <div class="hero-left">
-                            <div class="hero-title">
-                            Find and Apply for Jobs
-                            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
-                            </svg>
+                    {{-- ── Market Jobs Hero Card ── --}}
+                    <div class="mjh-wrap">
+                        <div class="mjh-top">
+                            <div class="mjh-title-block">
+                                <div class="mjh-title">
+                                    Job Marketplace for Agencies
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        <path d="m9 12 2 2 4-4"/>
+                                    </svg>
+                                </div>
+                                <div class="mjh-sub">Access verified hiring opportunities from trusted clients across full-time, contract, and bench hiring.</div>
                             </div>
-                            <div class="hero-sub">Discover verified job requirements posted by clients and apply as an agency</div>
-                            <div class="stats-row">
-                                <div class="stat-card">
-                                    <div class="stat-icon blue">
+                        </div>
+
+                        <div class="mjh-stats">
+                            {{-- All Jobs --}}
+                            <div class="mjh-card">
+                                <div class="mjh-icon mjh-icon-blue">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                        <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+                                    </svg>
+                                </div>
+                                <div class="mjh-card-body">
+                                    <div class="mjh-card-label">All Jobs</div>
+                                    <div class="mjh-card-num">{{ number_format($all_jobs) }}</div>
+                                    <div class="mjh-card-sub">Live Opportunities</div>
+                                    <div class="mjh-trend">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        {{ $newly_add }} today
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Agency Jobs (Full-Time / Direct) --}}
+                            <div class="mjh-card">
+                                <div class="mjh-icon mjh-icon-green">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                        <line x1="8" y1="21" x2="16" y2="21"/>
+                                        <line x1="12" y1="17" x2="12" y2="21"/>
+                                        <line x1="6" y1="8" x2="6" y2="13"/>
+                                        <line x1="10" y1="8" x2="10" y2="13"/>
+                                        <line x1="14" y1="8" x2="14" y2="13"/>
+                                        <line x1="18" y1="8" x2="18" y2="13"/>
+                                    </svg>
+                                </div>
+                                <div class="mjh-card-body">
+                                    <div class="mjh-card-label">Agency Jobs</div>
+                                    <div class="mjh-card-num">{{ number_format($all_jobs - $market_place) }}</div>
+                                    <div class="mjh-card-sub">Direct Roles</div>
+                                    <div class="mjh-trend">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        Growing
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Bench Talent Jobs --}}
+                            <div class="mjh-card">
+                                <div class="mjh-icon mjh-icon-purple">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                    </svg>
+                                </div>
+                                <div class="mjh-card-body">
+                                    <div class="mjh-card-label">Bench Talent Jobs</div>
+                                    <div class="mjh-card-num">{{ number_format($market_place) }}</div>
+                                    <div class="mjh-card-sub">Contract Roles</div>
+                                    <div class="mjh-trend">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        Active
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Newly Added --}}
+                            <div class="mjh-card">
+                                <div class="mjh-icon mjh-icon-orange">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                                         <circle cx="9" cy="7" r="4"/>
                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                                     </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{$all_jobs}}</div>
-                                    <div class="stat-label">Total Jobs</div>
-                                    </div>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon green">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{$all_jobs-$market_place}}</div>
-                                    <div class="stat-label">Agency Jobs</div>
-                                    </div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon yellow">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                    </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{$market_place}}</div>
-                                    <div class="stat-label">Bench Talent Job</div>
-                                    </div>
-                                </div>
-                                <div class="stat-card with-badge">
-                                    <span class="new-badge">New</span>
-                                    <div class="stat-icon purple">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                                    </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{$newly_add}}</div>
-                                    <div class="stat-label">Newly Added</div>
+                                <div class="mjh-card-body">
+                                    <div class="mjh-card-label">Newly Added</div>
+                                    <div class="mjh-card-num">{{ number_format($newly_add) }}</div>
+                                    <div class="mjh-card-sub">Ready to Submit</div>
+                                    <div class="mjh-trend">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        This week
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Illustration -->
-                        <div class="illus-svg-wrap">
-                            <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" width="220" height="160">
-                            <!-- Background floating card (left) -->
-                            <rect x="0" y="30" width="90" height="60" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-                            <circle cx="16" cy="60" r="9" fill="#94A3B8" transform="translate(8,0)"/>
-                            <rect x="34" y="52" width="46" height="6" rx="3" fill="#CBD5E1"/>
-                            <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
-                            <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
-                            <!-- Stars -->
-                            <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
+                    </div>
 
-                            <!-- Female figure -->
-                            <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                            <!-- Body -->
-                            <rect x="108" y="90" width="24" height="38" rx="4" fill="#2563EB"/>
-                            <!-- Head -->
-                            <circle cx="120" cy="82" r="12" fill="#FBBF24"/>
-                            <!-- Hair -->
-                            <path d="M108 80 Q120 68 132 80" fill="#1E293B"/>
-                            <rect x="108" y="78" width="4" height="14" rx="2" fill="#1E293B"/>
-                            <!-- Collar -->
-                            <path d="M113 90 L120 98 L127 90" fill="white" opacity=".6"/>
-                            <!-- Arms -->
-                            <rect x="100" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                            <rect x="130" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                            <!-- Legs -->
-                            <rect x="112" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <rect x="121" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <!-- Shoes -->
-                            <ellipse cx="115" cy="143" rx="5" ry="3" fill="#111827"/>
-                            <ellipse cx="124" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                            <!-- Male figure -->
-                            <ellipse cx="175" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                            <!-- Body -->
-                            <rect x="163" y="90" width="24" height="38" rx="4" fill="#1E40AF"/>
-                            <!-- Head -->
-                            <circle cx="175" cy="82" r="12" fill="#D97706"/>
-                            <!-- Hair -->
-                            <path d="M163 78 Q175 68 187 78 Q185 72 175 70 Q165 72 163 78Z" fill="#1E293B"/>
-                            <!-- Beard -->
-                            <path d="M168 88 Q175 94 182 88 Q179 92 175 93 Q171 92 168 88Z" fill="#92400E" opacity=".7"/>
-                            <!-- Collar -->
-                            <path d="M168 90 L175 98 L182 90" fill="white" opacity=".6"/>
-                            <!-- Tie -->
-                            <path d="M175 94 L173 108 L175 110 L177 108 Z" fill="#EF4444"/>
-                            <!-- Arms -->
-                            <rect x="155" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                            <rect x="185" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                            <!-- Legs -->
-                            <rect x="167" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <rect x="176" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <!-- Shoes -->
-                            <ellipse cx="170" cy="143" rx="5" ry="3" fill="#111827"/>
-                            <ellipse cx="179" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                            <!-- Handshake -->
-                            <path d="M131 108 Q148 114 164 108" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none"/>
-                            <circle cx="131" cy="108" r="4" fill="#FBBF24"/>
-                            <circle cx="164" cy="108" r="4" fill="#FBBF24"/>
-
-                            <!-- Floating review card (right) -->
-                            <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-                            <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
-                            <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                            <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
-                            <!-- shield check floating -->
-                            <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
-                            <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    {{-- ── Filter Bar ── --}}
+                    <div class="mjh-filter-bar">
+                        <div class="mjh-search-wrap">
+                            <svg class="mjh-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                             </svg>
+                            <input class="mjh-search-input" name="inputJobSearch" id="kt_tagify_2" value="" type="text" placeholder="Search by job title, skills, company, or job ID..."/>
+                        </div>
+                        <button class="mjh-search-btn" onclick="filtersdataget()">Search</button>
+
+                        <div class="mjh-filter-dropdowns">
+                            <div class="mjh-drop-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <select class="mjh-drop" id="defaultCurrency" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
+                                    <option value="">Currency</option>
+                                    <option value="0">INR</option><option value="1">EUR</option>
+                                    <option value="2">JPY</option><option value="3">GBP</option>
+                                    <option value="4">USD</option><option value="5">AED</option>
+                                </select>
+                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                            </div>
+
+                            <div class="mjh-drop-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                <select class="mjh-drop" id="hiringtype" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
+                                    <option value="All">Work Mode</option>
+                                    <option value="2">Agency Jobs</option>
+                                    <option value="1">Bench Talent Jobs</option>
+                                </select>
+                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                            </div>
+
+                            <div class="mjh-drop-wrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                                <select class="mjh-drop" id="defaultMode" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
+                                    <option value="">Salary</option>
+                                    <option value="0">Annual</option>
+                                    <option value="1">Monthly</option>
+                                    <option value="2">Hourly</option>
+                                </select>
+                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                            </div>
+
+                            <button class="mjh-more-btn" onclick="fdOpen()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                                </svg>
+                                More Filters
+                            </button>
                         </div>
                     </div>
 
-                    <!-- FILTER BAR -->
-                    <div class="filter-bar">
-                        <div class="search-input-wrap">
-                            <input class="search-input" name="inputJobSearch" id="kt_tagify_2" value="" type="text" placeholder="Search by skills..."/>
-                        </div>
-                        <button class="ai-match-btn" onclick="filtersdataget()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                            </svg>
-                            Search
-                        </button>
-                        
-                        <div class="align-items-center">
-                            <select class="form-select form-select-lg sortingfilterselect" data-hide-search="true" id="hiringtype" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdata()">
-                                <option value="All">All Jobs</option>
-                                <option value="2">Agency Jobs</option>
-                                <option value="1">Bench Talent Jobs</option> 
-                            </select>
-                        </div>
-                        <div class="align-items-center">
-                            <select class="form-select form-select-lg sortingfilterselect" data-hide-search="true" id="defaultCurrency" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdata()">
-                                <option value="">Currency</option>
-                                <option value="0">INR</option>
-                                <option value="1">EUR</option>
-                                <option value="2">JPY</option>
-                                <option value="3">GBP</option>
-                                <option value="4">USD</option>
-                                <option value="5">AED</option>
-                            </select>
-                        </div>
-                        <div class="align-items-center">
-                            <select class="form-select form-select-lg sortingfilterselect" data-hide-search="true" id="defaultMode" data-dropdown-css-class="w-150px" data-placeholder="Select an option" onchange="filtersdata()">
-                                <option value="">Mode</option>
-                                <option value="0">Annual</option>
-                                <option value="1">Monthly</option>
-                                <option value="2">Hourly</option>
-                            </select>
-                        </div>
-                        <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
-                            </svg>
-                            More Filters
-                        </div>
+                    {{-- ── Popular Searches ── --}}
+                    <div class="mjh-popular">
+                        <span class="mjh-popular-label">Popular Searches:</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="React">React</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Java Developer">Java Developer</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Python">Python</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value=".NET">.NET</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="UI/UX">UI/UX</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="AWS">AWS</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="DevOps">DevOps</span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Data Analyst">Data Analyst</span>
+                        <span class="mjh-tag mjh-tag-hot" onclick="addFromPopular(this)" data-value="Immediate Joiner">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            Immediate Joiner
+                        </span>
+                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Remote">Remote</span>
+                        <span class="mjh-clear-all" onclick="clearAllTags()">Clear All</span>
                     </div>
 
                     <!-- ACTIVE FILTER TAGS -->
@@ -263,13 +550,12 @@
             <div id="pagination"></div>
         </main>
 
-        <!--Start Popup-->
-        <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
+        <!--Start Filter Drawer-->
+        <div id="fd-overlay" onclick="fdClose()"></div>
+        <div id="apptrackerfilter" tabindex="-1">
                 <div class="modal-header flex-stack">
                     <h2>Filter</h2>
-                    <div class="btn btn-sm btn-icon btn-active-color-primary close" data-dismiss="modal" id="apptrackerfilter_close">
+                    <div class="btn btn-sm btn-icon btn-active-color-primary" onclick="fdClose()" id="apptrackerfilter_close">
                         <span class="svg-icon svg-icon-1">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
@@ -492,8 +778,8 @@
                     </div>
                     <div class="modal-footer flex-center">
                         <div class="div1">
-                            <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
-                            <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate"> 
+                            <button type="button" id="" class="btn btn-secondary me-3" onclick="fdClose()">Close</button>
+                            <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate">
                             <span class="indicator-label">Submit</span></button>
                         </div>
                     </div>
@@ -501,10 +787,8 @@
                     <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716"></script>
                     <script src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716" type="text/javascript"></script>
                 </div>
-                </div>
-            </div>
-        </div>	
-        <!--End Popup--> 
+        </div>
+        <!--End Filter Drawer-->
 
     </div>
     <!--end::Container-->
@@ -969,7 +1253,24 @@
 <script>
   
   function filtersdata(){
-         fetchCandidates(); 
+         fetchCandidates();
+  }
+
+  // Prevent Metronic/Select2 from hijacking the filter bar selects
+  $(document).ready(function() {
+      ['#defaultCurrency','#defaultMode','#hiringtype'].forEach(function(sel) {
+          try {
+              if ($(sel).data('select2')) { $(sel).select2('destroy'); }
+          } catch(e) {}
+          $(sel).addClass('mjh-drop').css({ display: 'inline-block' });
+      });
+  });
+
+  function clearAllTags() {
+      if (typeof tagify !== 'undefined') { tagify.removeAllTags(); }
+      if (typeof tagify2 !== 'undefined') { tagify2.removeAllTags(); }
+      document.querySelectorAll('.mjh-tag.pop-added').forEach(el => el.classList.remove('pop-added'));
+      fetchCandidates();
   }
 
 $(document).ready(function() {	
@@ -992,18 +1293,10 @@ var table;
      
 
 $(document).on('click', '#changetextupdate', function (){
-  //  tableLoad('load');
   fetchCandidates();
   $('.changetextupdate').text('Searching....!');
-  var $this = $('#apptrackerfilter');
-  $this.modal('hide');
-  setTimeout(() => {
-    $('#apptrackerfilter_close').click();
-    $('.changetextupdate').text('Submit')
-  
-  }, 500);
-
-  
+  fdClose();
+  setTimeout(() => { $('.changetextupdate').text('Submit'); }, 500);
 });
 
 
@@ -1062,12 +1355,12 @@ $(document).on('click', '#changetextupdate', function (){
 // 	   } 
 
 $(document).on('click', '.client-show-detail', function (){
-			$('#kt_activitiesClientjob_toggle').trigger('click');	
+			$('#kt_activitiesClientjob_toggle').trigger('click');
 			var id    		=	$(this).data('row-id');
       // var url   		=	"{{ route('service_company.jobs.clientviewmore',':id') }}";
 			var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1";
 			url     		=	url.replace(':id', id);
-			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
 			$.ajax({
 							type  		: 'GET',
 							url   		: url,
@@ -1075,10 +1368,29 @@ $(document).on('click', '.client-show-detail', function (){
 										 $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
 							},
 							success 	: function (response) {
-									$('#kt_activitiesclientjob_body').html(response.view);									
+									$('#kt_activitiesclientjob_body').html(response.view);
 							}
 					});
    		});
+
+	// Market-jobs "View Requirement" — same drawer but hides hiring-manager, action-buttons and pipeline sections
+	$(document).on('click', '.market-show-detail', function (){
+			$('#kt_activitiesClientjob_toggle').trigger('click');
+			var id      = $(this).data('row-id');
+			var url     = "{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1&hideMarketSections=1";
+			url         = url.replace(':id', id);
+			var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+			$.ajax({
+				type     : 'GET',
+				url      : url,
+				beforeSend: function() {
+					$('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+				},
+				success  : function (response) {
+					$('#kt_activitiesclientjob_body').html(response.view);
+				}
+			});
+	});
 
        $(document).on('click', '.client-hm-listing', function (){
    		$('#kt_activitiesHM_toggle').trigger('click');		
@@ -1312,7 +1624,48 @@ $(document).on('click', '.client-show-detail', function (){
 
 
 
-																      
+								
+        /* ── Send Bench Request — bound once here to prevent duplicate calls when drawer reloads ── */
+        $(document).on("click", ".request-send", function () {
+            var ele   = $(this);
+            var jobId = ele.attr('data-jobId');
+            var conId = ele.attr('data-conId');
+            ele.prop('disabled', true).text('Sending…');
+            var url = "{{ route('service_company.jobs.recommandedrequestcondidate', ':id') }}";
+            url = url.replace(':id', jobId) + "?conId=" + conId;
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function (response) {
+                    if (response.status == 'success') {
+                        showToastr('success', 'Bench request sent successfully!', 'Success');
+                    } else {
+                        showToastr('error', response.message || 'Request failed.', 'Error');
+                        ele.prop('disabled', false).text('Send Bench Request');
+                    }
+                    if (typeof window.fetchCandidatesbench === 'function') {
+                        window.fetchCandidatesbench();
+                    }
+                },
+                error: function () {
+                    showToastr('error', 'Something went wrong.', 'Error');
+                    ele.prop('disabled', false).text('Send Bench Request');
+                }
+            });
+        });
+
+    /* ── Filter Drawer open/close ── */
+    function fdOpen() {
+        document.getElementById('apptrackerfilter').classList.add('fd-open');
+        document.getElementById('fd-overlay').classList.add('fd-open');
+        document.body.style.overflowY = 'hidden';
+    }
+    function fdClose() {
+        document.getElementById('apptrackerfilter').classList.remove('fd-open');
+        document.getElementById('fd-overlay').classList.remove('fd-open');
+        document.body.style.overflowY = '';
+    }
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
 </script>
 @endpush
 

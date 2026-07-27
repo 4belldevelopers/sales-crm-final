@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -36,6 +36,122 @@
         .table-custom-class tbody tr {
             height: 82px;
             position: relative;
+        }
+
+        /* â”€â”€ Right-side filter drawer â”€â”€ */
+        #fd-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+            z-index: 1045;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s ease;
+        }
+        #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
+
+        #apptrackerfilter {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 80% !important;
+            height: 100vh !important;
+            z-index: 1050 !important;
+            background: #fff !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        #apptrackerfilter.fd-open { transform: translateX(0); }
+        #apptrackerfilter .modal-header.flex-stack { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #f1f3f8; flex-shrink:0; }
+        #apptrackerfilter .apptrackerfilter_body_content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        #apptrackerfilter .modal-body { flex:1; overflow-y:auto; padding:20px !important; }
+        #apptrackerfilter .modal-footer { flex-shrink:0; padding:14px 20px; border-top:1px solid #f1f3f8; }
+        @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
+        @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
+
+        /* ── Hero section redesign ── */
+        .shield-icon {
+            width: 22px;
+            height: 22px;
+            vertical-align: middle;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+        .hero-section-wrap {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px 24px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        }
+        .hero-head-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .hero-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.3;
+        }
+        .hero-sub {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+        .hero-stats-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .h-stat-card {
+            flex: 1 1 160px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 140px;
+        }
+        .h-stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .h-stat-icon svg {
+            width: 20px !important;
+            height: 20px !important;
+        }
+        .h-icon-blue   { background: #eff6ff; color: #2563eb; }
+        .h-icon-green  { background: #f0fdf4; color: #16a34a; }
+        .h-icon-yellow { background: #fefce8; color: #ca8a04; }
+        .h-icon-purple { background: #f5f3ff; color: #7c3aed; }
+        .h-stat-num {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .h-stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+            white-space: nowrap;
         }
     </style>
     <link href="{{ asset('demo/css/find-agency.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
@@ -99,16 +215,15 @@
             <!--begin::Container-->
             <div id="kt_content_container" class="container-fluid px-3">
                 
-                <!--Start Popup-->
-                <div class="modal fade show" id="apptrackerfilter" tabindex="-1" style="">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
+                <!--Start Filter Drawer-->
+                <div id="fd-overlay" onclick="fdClose()"></div>
+                <div id="apptrackerfilter" tabindex="-1">
                             <div class="modal-header flex-stack">
                                 <div>
                                     <h1>Find Trusted Hiring Agencies</h1>
                                     <p>Discover verified recruitment partners based on your hiring requirements.</p>
                                 </div>
-                                <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="apptrackerfilter_close">
+                                <div class="btn btn-sm btn-icon btn-active-light-danger close" onclick="fdClose()" id="apptrackerfilter_close">
                                     <span class="svg-icon svg-icon-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                             <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"></rect>
@@ -145,7 +260,7 @@
                                                     id="kt_tagify_users" />
                                         </div>
 
-                                        <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;·&nbsp; Press <span>Backspace</span> to remove last</p>
+                                        <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;Â·&nbsp; Press <span>Backspace</span> to remove last</p>
 
                                         <div class="tags-row" id="popularTagsRow">
                                             <span class="label">Popular searches:</span>
@@ -199,9 +314,9 @@
                                         </select>
                                         <select aria-label="Experience" id="experience">
                                         <option value="">Experience</option>
-                                        <option>0–2 years</option>
-                                        <option>3–5 years</option>
-                                        <option>5–10 years</option>
+                                        <option>0â€“2 years</option>
+                                        <option>3â€“5 years</option>
+                                        <option>5â€“10 years</option>
                                         <option>10+ years</option>
                                         </select>
                                         <select aria-label="Location" id="country">
@@ -238,151 +353,79 @@
                                     </div>
                                     <div class="modal-footer flex-center">
                                     <div class="div1">
-                                        <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
+                                        <button type="button" id="" class="btn btn-secondary me-3" onclick="fdClose()">Close</button>
                                          <button class="btn btn-primary changetextupdate" id="changetextupdate" onclick="filtersdataget()"><i class="ti ti-search" aria-hidden="true"></i>Find Agencies</button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
                 </div>
-                <!--End Popup-->
+                <!--End Filter Drawer-->
 
                 <!-- PAGE CONTENT -->
                 <main class="page-content">
 
                     <!-- HERO -->
-                    <div class="hero-section">
-                        <div class="hero-left">
-                            <div class="hero-title">
-                            Find Trusted Hiring Agencies
-                            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
-                            </svg>
+                    <div class="hero-section-wrap">
+                        <div class="hero-head-row">
+                            <div>
+                                <div class="hero-title">
+                                    Find Trusted Hiring Agencies
+                                    <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        <path d="m9 12 2 2 4-4" stroke="#16A34A"/>
+                                    </svg>
+                                </div>
+                                <div class="hero-sub">Discover verified recruitment partners specialized in your hiring needs</div>
                             </div>
-                            <div class="hero-sub">Discover verified recruitment partners specialized in your hiring needs</div>
-                            <div class="stats-row">
-                                <div class="stat-card">
-                                    <div class="stat-icon blue">
+                        </div>
+                        <div class="hero-stats-row">
+                            <div class="h-stat-card">
+                                <div class="h-stat-icon h-icon-blue">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                                         <circle cx="9" cy="7" r="4"/>
                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                                     </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{ $allCompanies }}</div>
-                                    <div class="stat-label">Total Agencies</div>
-                                    </div>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon green">
+                                <div>
+                                    <div class="h-stat-num">{{ $allCompanies }}</div>
+                                    <div class="h-stat-label">Total Agencies</div>
+                                </div>
+                            </div>
+                            <div class="h-stat-card">
+                                <div class="h-stat-icon h-icon-green">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        <path d="m9 12 2 2 4-4"/>
                                     </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">{{ $activeCompanies }}</div>
-                                    <div class="stat-label">Verified Agencies</div>
-                                    </div>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon yellow">
+                                <div>
+                                    <div class="h-stat-num">{{ $activeCompanies }}</div>
+                                    <div class="h-stat-label">Verified Agencies</div>
+                                </div>
+                            </div>
+                            <div class="h-stat-card">
+                                <div class="h-stat-icon h-icon-yellow">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                                     </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">92</div>
-                                    <div class="stat-label">Highly Rated (4★+)</div>
-                                    </div>
                                 </div>
-                                <div class="stat-card with-badge">
-                                    <span class="new-badge">New</span>
-                                    <div class="stat-icon purple">
+                                <div>
+                                    <div class="h-stat-num">92</div>
+                                    <div class="h-stat-label">Highly Rated (4★+)</div>
+                                </div>
+                            </div>
+                            <div class="h-stat-card">
+                                <div class="h-stat-icon h-icon-purple">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                                     </svg>
-                                    </div>
-                                    <div class="stat-info">
-                                    <div class="stat-num">24</div>
-                                    <div class="stat-label">AI Matched for You</div>
-                                    </div>
+                                </div>
+                                <div>
+                                    <div class="h-stat-num">24</div>
+                                    <div class="h-stat-label">AI Matched for You</div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Illustration -->
-                        <div class="illus-svg-wrap">
-                            <svg viewBox="0 0 220 160" xmlns="http://www.w3.org/2000/svg" width="220" height="160">
-                            <!-- Background floating card (left) -->
-                            <rect x="0" y="30" width="90" height="60" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-                            <circle cx="16" cy="60" r="9" fill="#94A3B8" transform="translate(8,0)"/>
-                            <rect x="34" y="52" width="46" height="6" rx="3" fill="#CBD5E1"/>
-                            <rect x="34" y="62" width="32" height="4" rx="2" fill="#E2E8F0"/>
-                            <rect x="34" y="70" width="22" height="4" rx="2" fill="#BFDBFE"/>
-                            <!-- Stars -->
-                            <text x="64" y="76" font-size="8" fill="#F59E0B">★★★★★</text>
-
-                            <!-- Female figure -->
-                            <ellipse cx="120" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                            <!-- Body -->
-                            <rect x="108" y="90" width="24" height="38" rx="4" fill="#2563EB"/>
-                            <!-- Head -->
-                            <circle cx="120" cy="82" r="12" fill="#FBBF24"/>
-                            <!-- Hair -->
-                            <path d="M108 80 Q120 68 132 80" fill="#1E293B"/>
-                            <rect x="108" y="78" width="4" height="14" rx="2" fill="#1E293B"/>
-                            <!-- Collar -->
-                            <path d="M113 90 L120 98 L127 90" fill="white" opacity=".6"/>
-                            <!-- Arms -->
-                            <rect x="100" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                            <rect x="130" y="92" width="10" height="5" rx="2.5" fill="#2563EB"/>
-                            <!-- Legs -->
-                            <rect x="112" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <rect x="121" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <!-- Shoes -->
-                            <ellipse cx="115" cy="143" rx="5" ry="3" fill="#111827"/>
-                            <ellipse cx="124" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                            <!-- Male figure -->
-                            <ellipse cx="175" cy="148" rx="22" ry="6" fill="#E2E8F0" opacity=".5"/>
-                            <!-- Body -->
-                            <rect x="163" y="90" width="24" height="38" rx="4" fill="#1E40AF"/>
-                            <!-- Head -->
-                            <circle cx="175" cy="82" r="12" fill="#D97706"/>
-                            <!-- Hair -->
-                            <path d="M163 78 Q175 68 187 78 Q185 72 175 70 Q165 72 163 78Z" fill="#1E293B"/>
-                            <!-- Beard -->
-                            <path d="M168 88 Q175 94 182 88 Q179 92 175 93 Q171 92 168 88Z" fill="#92400E" opacity=".7"/>
-                            <!-- Collar -->
-                            <path d="M168 90 L175 98 L182 90" fill="white" opacity=".6"/>
-                            <!-- Tie -->
-                            <path d="M175 94 L173 108 L175 110 L177 108 Z" fill="#EF4444"/>
-                            <!-- Arms -->
-                            <rect x="155" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                            <rect x="185" y="92" width="10" height="5" rx="2.5" fill="#1E40AF"/>
-                            <!-- Legs -->
-                            <rect x="167" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <rect x="176" y="126" width="7" height="16" rx="3" fill="#1E293B"/>
-                            <!-- Shoes -->
-                            <ellipse cx="170" cy="143" rx="5" ry="3" fill="#111827"/>
-                            <ellipse cx="179" cy="143" rx="5" ry="3" fill="#111827"/>
-
-                            <!-- Handshake -->
-                            <path d="M131 108 Q148 114 164 108" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" fill="none"/>
-                            <circle cx="131" cy="108" r="4" fill="#FBBF24"/>
-                            <circle cx="164" cy="108" r="4" fill="#FBBF24"/>
-
-                            <!-- Floating review card (right) -->
-                            <rect x="150" y="10" width="68" height="38" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1"/>
-                            <circle cx="162" cy="22" r="5" fill="#94A3B8"/>
-                            <rect x="171" y="16" width="36" height="5" rx="2.5" fill="#CBD5E1"/>
-                            <text x="171" y="34" font-size="9" fill="#F59E0B">★★★★★</text>
-                            <!-- shield check floating -->
-                            <circle cx="205" cy="58" r="13" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1.5"/>
-                            <path d="M199 58l4 4 7-7" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                            </svg>
                         </div>
                     </div>
 
@@ -406,7 +449,7 @@
                                 <option value="1">Hiring Type : Contract Hiring</option>
                             </select>
                         </div>
-                        <div class="more-filters-btn" data-toggle="modal" data-target="#apptrackerfilter">
+                        <div class="more-filters-btn" onclick="fdOpen()" style="cursor:pointer;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
                             </svg>
@@ -539,7 +582,7 @@
                     return `
                 <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
                     <div>
-                        <span class="star ${isChecked}">🟌</span>
+                        <span class="star ${isChecked}">ðŸŸŒ</span>
                         <span class="tagify__tag-text">${value}</span>
                         <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
                     </div>
@@ -737,7 +780,7 @@
 
         });
 
-        /* ── Add from popular row ── */
+        /* â”€â”€ Add from popular row â”€â”€ */
     function addFromPopular(el) {
             let value = el.getAttribute('data-value');
             /*
@@ -865,7 +908,7 @@ function updateSelectedFilters() {
 
      let hiring_type = document.getElementById('hiring_type').value;
      
-        $('#sortingfilter').val(hiring_type).trigger('change');
+        $('#sortingfilter').val(hiring_type);
 
     // if(hiring_type==2){
     //     htmlTop += `Hiring Type  : Full-Time Hiring
@@ -1111,7 +1154,7 @@ function removeFilter(el, type, value = '') {
 
     });
 
-    /* ── Hiring type toggle ── */
+    /* â”€â”€ Hiring type toggle â”€â”€ */
     function selectHiringType(type) {
         var cardFull     = document.getElementById('card-full');
         var cardContract = document.getElementById('card-contract');
@@ -1147,7 +1190,7 @@ function removeFilter(el, type, value = '') {
         });
     });
 
-    /* ── Find button ── */
+    /* â”€â”€ Find button â”€â”€ */
     function handleFind() {
         if (!tags.length) {
         box.style.borderColor = '#E53E3E';
@@ -1163,7 +1206,7 @@ function removeFilter(el, type, value = '') {
         alert('Searching for: ' + tags.join(', '));
     }
 
-    /* ── Helpers ── */
+    /* â”€â”€ Helpers â”€â”€ */
     function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     function escJs(s)   { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
     function escRe(s)   { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
@@ -1196,21 +1239,11 @@ function removeFilter(el, type, value = '') {
 
 function filtersdataget() {
             $('.changetextupdate').text('Searching....!');
+            fdClose();
             setTimeout(() => {
-                // tableLoad('load');
                 fetchClientConpanyAgency();
-            }, 1000);
-            var $this = $('#apptrackerfilter');
-            // $this.fadeOut(2000, function() {
-            $this.modal('hide');
-            // });
-            setTimeout(() => {
-                $('#apptrackerfilter_close').click();
-                $('.changetextupdate').text('Submit')
-            }, 2000);
-
-
-
+                $('.changetextupdate').text('Find Agencies');
+            }, 500);
 
 
         }
@@ -1285,7 +1318,7 @@ function filtersdataget() {
 
         $(document).ready(function() {
             // $.noConflict();
-            
+
             setTimeout(() => {
                 fetchClientConpanyAgency();
             }, 200);
@@ -1349,5 +1382,18 @@ function filtersdataget() {
         }
         
 
+    </script>
+    <script>
+        function fdOpen() {
+            document.getElementById('apptrackerfilter').classList.add('fd-open');
+            document.getElementById('fd-overlay').classList.add('fd-open');
+            document.body.style.overflowY = 'hidden';
+        }
+        function fdClose() {
+            document.getElementById('apptrackerfilter').classList.remove('fd-open');
+            document.getElementById('fd-overlay').classList.remove('fd-open');
+            document.body.style.overflowY = '';
+        }
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
     </script>
 @endpush

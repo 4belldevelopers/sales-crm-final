@@ -1,246 +1,247 @@
-<link rel="stylesheet" href="{{ asset('assets/node_modules/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css') }}<?php echo TM_VERSION; ?>">
-<link rel="stylesheet" href="{{ asset('assets/node_modules/html5-editor/bootstrap-wysihtml5.css') }}<?php echo TM_VERSION; ?>">
-<link rel="stylesheet" href="{{ asset('assets/node_modules/multiselect/css/multi-select.css') }}<?php echo TM_VERSION; ?>">
-<link rel="stylesheet" href="{{ asset('assets/plugins/iCheck/all.css') }}<?php echo TM_VERSION; ?>">
-<style>
-.modal-footer {margin: 0 auto;border-top: 1px solid #ffffff!important;}
-.modal-body {border-bottom: 1px solid #c1c1c1;}
-.dropdown-content li.active, .dropdown-content li:hover {background-color: transparent!important;}
-.inactive {background-color: #f64e60!important;color: #fff!important;}
-.activee {background-color: #109600 !important;color: #fff!important;}
-.hold {background-color: #ffa800!important;color: #fff!important;}
-.withSet { width: unset !important;}
-</style>
-  
-    <div class="d-flex flex-column text-dark-75 pt-5" style="padding-left: 25px;">
-        <span class="fw-bold fs-5 text-muted">Job Title :: <?php echo @$job->title ?></span>
-        <!--<span class="fw-bolder fs-2">Job Status</span>-->
-    </div>
+<?php
+/*
+ * Job Status drawer body — AJAX-injected into #status_body_content (see
+ * service_company.jobs.index's #status_drawer). Same business rule as before
+ * (Hiring=active enables the career page + vendor submissions + candidate
+ * applications; Hold/Closed disable them), presented as: status cards and an
+ * Impact Preview comparison table. No hero job summary, sidebar, timeline, or
+ * stats panel by design — kept to exactly what the approved layout shows.
+ */
+$statusVal = @$job->status;
 
-<div class="modal-body" style="padding: 0em 1.75rem 2em;">
+$statusMeta = [
+    'active' => [
+        'label' => 'Hiring', 'icon' => 'fa-user-group', 'color' => '#17c653', 'bg' => '#eafcf3',
+        'desc' => 'Receiving Applications',
+        'bullets' => ['Career page visible', 'Vendors can submit profiles', 'Candidates can apply', 'All automations active'],
+        'career' => 'Visible', 'vendor' => 'Enabled', 'candidates' => 'Open', 'interviews' => 'All Active', 'offers' => 'Allowed', 'notify' => 'Active',
+    ],
+    'hold' => [
+        'label' => 'Hold', 'icon' => 'fa-pause', 'color' => '#ffa800', 'bg' => '#fff8ec',
+        'desc' => 'Pause Hiring',
+        'bullets' => ['Removed from career page', 'Vendor submission disabled', 'Applications are paused', 'Existing data is retained'],
+        'career' => 'Hidden', 'vendor' => 'Disabled', 'candidates' => 'Paused', 'interviews' => 'Existing Only', 'offers' => 'Existing Only', 'notify' => 'Paused',
+    ],
+    'inactive' => [
+        'label' => 'Closed', 'icon' => 'fa-box-archive', 'color' => '#f1416c', 'bg' => '#fdedf0',
+        'desc' => 'Finish Recruitment',
+        'bullets' => ['Stop all new applications', 'Vendor submission disabled', 'Job will be archived', 'Reports & analytics retained'],
+        'career' => 'Hidden', 'vendor' => 'Disabled', 'candidates' => 'Closed', 'interviews' => 'Existing Only', 'offers' => 'Existing Only', 'notify' => 'Stopped',
+    ],
+];
+
+// ---- Impact Preview cell icon: driven by column severity, not the text value ----
+$jsdCellIcon = function ($val, $key) {
+    if ($val === 'active') return ['fa-check', '#17c653'];
+    $color = $val === 'hold' ? '#ffa800' : '#f1416c';
+    if (in_array($key, ['interviews', 'offers'])) return ['fa-bullseye', $color];
+    if ($val === 'hold' && in_array($key, ['candidates', 'notify'])) return ['fa-pause', $color];
+    if ($val === 'hold') return ['fa-circle-exclamation', $color];
+    return ['fa-xmark', $color];
+};
+
+$footerName = @$lastStatusChange->changed_by_name;
+$footerDate = @$lastStatusChange->created_at ?: @$job->updated_at;
+$footerInitial = $footerName ? strtoupper(substr(trim($footerName), 0, 1)) : 'S';
+?>
+<style>
+  .jsd-wrap { padding: 20px 28px 24px; font-family: 'Poppins', sans-serif; color: #3f4254; }
+  .jsd-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+
+  /* ---- Section headers ---- */
+  .jsd-sec-head { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+  .jsd-sec-num { width: 24px; height: 24px; border-radius: 50%; background: #3e97ff; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .jsd-sec-title { font-size: 14px; font-weight: 700; color: #181c32; }
+  .jsd-sec-sub { font-size: 11px; color: #7e8299; font-weight: 400; margin-top: 1px; }
+
+  /* ---- Status cards ---- */
+  .jsd-status-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+  .jsd-status-card { flex: 1 1 220px; border: 1.5px solid #eef0f4; border-radius: 12px; padding: 16px; cursor: pointer; background: #fff; position: relative; transition: border-color .15s, box-shadow .15s, background .15s; }
+  .jsd-status-card:hover { border-color: #cdd4e0; }
+  .jsd-status-card.is-current { border-color: #17c653; background: #f2fdf7; }
+  .jsd-status-card.is-selected { box-shadow: 0 0 0 1px currentColor inset; }
+  .jsd-status-card .top { display: flex; align-items: center; gap: 10px; }
+  .jsd-status-card .ic { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .jsd-status-card .nm { font-size: 14px; font-weight: 700; color: #181c32; }
+  .jsd-status-card .ds { font-size: 10.5px; color: #7e8299; }
+  .jsd-status-card .chk { position: absolute; top: 14px; right: 14px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #cdd4e0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; }
+  .jsd-status-card.is-current .chk { border-color: #17c653; background: #17c653; color: #fff; }
+  .jsd-status-card.is-selected .chk { color: #fff; }
+  .jsd-status-card ul { list-style: none; margin: 12px 0 0; padding: 0; }
+  .jsd-status-card ul li { font-size: 11px; font-weight: 500; color: #3f4254; padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
+  .jsd-status-card ul li i { font-size: 10px; margin-top: 2px; flex-shrink: 0; }
+  .jsd-status-card[data-status="active"] ul li i { color: #17c653; }
+  .jsd-status-card[data-status="hold"] ul li i { color: #ffa800; }
+  .jsd-status-card[data-status="inactive"] ul li i { color: #f1416c; }
+
+  /* ---- Impact preview table ---- */
+  .jsd-impact-table { width: 100%; border: 1px solid #eef0f4; border-radius: 12px; overflow: hidden; border-collapse: collapse; }
+  .jsd-impact-table th, .jsd-impact-table td { padding: 10px 14px; font-size: 11.5px; text-align: left; border-bottom: 1px solid #f4f5f8; }
+  .jsd-impact-table thead th { background: #f8f9fb; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+  .jsd-impact-table thead th.col-active { color: #17845a; }
+  .jsd-impact-table thead th.col-hold { color: #b5720a; }
+  .jsd-impact-table thead th.col-inactive { color: #c22851; }
+  .jsd-impact-table tbody th { font-weight: 600; color: #3f4254; white-space: nowrap; }
+  .jsd-impact-table tbody tr:last-child td, .jsd-impact-table tbody tr:last-child th { border-bottom: none; }
+  /* .jsd-cell is the inner <span> inside each <td>, not the <td> itself — the selector
+     must target it directly, not "td.jsd-cell" (which never matches anything since the
+     class never actually lands on the <td>). That mismatch was why the icon and text
+     had no gap: this rule simply never applied. */
+  .jsd-impact-table .jsd-cell { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #3f4254; }
+  .jsd-impact-table .jsd-cell i { width: 13px; height: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }
+  .jsd-impact-table td.jsd-current-col { background: #f2fdf7; }
+  .jsd-impact-table td.jsd-target-col { background: #f5f9ff; }
+
+  /* ---- Footer ---- */
+  .jsd-footer { display: flex; align-items: center; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #eef0f4; }
+  .jsd-footer-avatar { width: 30px; height: 30px; border-radius: 50%; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  .jsd-footer-text { font-size: 11px; color: #7e8299; }
+  .jsd-footer-text b { color: #3f4254; font-weight: 600; }
+  .jsd-footer-text .sep { margin: 0 6px; }
+</style>
+
+<div class="jsd-wrap">
   <form id="createSchedule" class="ajax-form" method="post">
     <input type="hidden" name="_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="job_id" id="job_id" value="<?php echo @$job->id;?>" />
-    <div class="form-body">
-      <div class="row" style="">     
-<?php 
-	$statusVal		=	@$job->status;
-	$inactive =	$active	=	$hold =	$selclass = $activebgclass = $inactivebgclass = $holdbgclass =	'';
-	$activedisp = $inactivedisp = $holddisp = 'd-none';
-	if($statusVal =='inactive'){
-		$inactive		=	'selected="selected"';	  
-		$selclass		=	'closed-bg'; 
-		$inactivebgclass		=	'closed-bg'; 
-		$inactivedisp = '';
-	}else if($statusVal =='active'){
-		$active			=	'selected="selected"';	
-		$selclass		=	'active-bg';
-		$activebgclass		=	'active-bg';
-		$activedisp = '';
-	}else if($statusVal =='hold'){
-		$hold			=	'selected="selected"';
-		$selclass		=	'hold-bg';	 
-		$holdbgclass		=	'hold-bg';
-		$holddisp = '';
-	}						 
-?>
-      </div>
-      
-      <div class="row">
-        <div class="row py-5">
-           <div class="col-lg-4">
-              <div class="joined-div withSet {{ @$activebgclass }}" data-master-status-id="6">
-                 <input type="radio" class="btn-check master_status" name="status" value="active" id="joined">
-                 <label class="lbl_common_master btn-joined  btn  btn-outline btn-outline-dashed btn-outline-default d-flex align-items-center justify-content-center" for="joined" id="lbl_master_status_6" selected>
-                 <span class="d-block fw-bold text-start">
-                 <span class="text-dark-800 fw-bolder d-block fs-5">Hiring</span>
-                 </span>
-                 </label>
-              </div>
-           </div>
-           <div class="col-lg-4">
-              <div class="offer-div withSet {{@$holdbgclass }}" data-master-status-id="5">
-                 <input type="radio" class="btn-check master_status" name="status" value="hold" id="offer">
-                 <label class="lbl_common_master btn-offer  btn  btn-outline btn-outline-dashed btn-outline-default d-flex align-items-center justify-content-center" for="offer" id="lbl_master_status_5">
-                 <span class="d-block fw-bold text-start">
-                 <span class="text-dark-800 fw-bolder d-block fs-5">Hold</span>
-                 </span>
-                 </label>
-              </div>
-           </div>
-           <div class="col-lg-4">
-              <div class="rejected-div withSet {{ @$inactivebgclass }}" data-master-status-id="7">
-                 <input type="radio" class="btn-check master_status" name="status" value="inactive" id="rejected">
-                 <label class="lbl_common_master btn-rejected  btn  btn-outline btn-outline-dashed btn-outline-default d-flex align-items-center justify-content-center" for="rejected" id="lbl_master_status_7">
-                 <span class="d-block fw-bold text-start">
-                 <span class="text-dark-800 fw-bolder d-block fs-5">Closed</span>
-                 </span>
-                 </label>
-              </div>
-           </div>
+    <input type="hidden" name="job_id" id="job_id" value="{{ @$job->id }}" />
+
+    <div class="jsd-sec-head">
+      <span class="jsd-sec-num">1</span>
+      <div><div class="jsd-sec-title">Choose New Status</div><div class="jsd-sec-sub">Select the new status for this job position</div></div>
+    </div>
+    <div class="jsd-status-row">
+      @foreach($statusMeta as $val => $meta)
+      <div class="jsd-status-card {{ $val === $statusVal ? 'is-current' : '' }}" data-status="{{ $val }}" style="color:{{ $meta['color'] }};" onclick="jsdSelectStatus(this)">
+        <input type="radio" class="master_status d-none" name="status" value="{{ $val }}" id="jsd_{{ $val }}">
+        <span class="chk"><i class="fas fa-check"></i></span>
+        <div class="top">
+          <span class="ic" style="background:{{ $meta['bg'] }};color:{{ $meta['color'] }};"><i class="fas {{ $meta['icon'] }}"></i></span>
+          <div>
+            <div class="nm">{{ $meta['label'] }}</div>
+            <div class="ds">{{ $meta['desc'] }}</div>
+          </div>
         </div>
-        <ul class="joined-content {{@$activedisp}}" style="padding-left: 2rem;">
-            <li style="box-sizing: border-box;">The position is Hiring </li>
-            <li style="box-sizing: border-box;">Vendors can upload the profile.</li>
-        </ul>
-        <ul class="rejected-content {{@$inactivedisp}}" style="padding-left: 2rem;">
-            <li style="box-sizing: border-box;">The position is Close</li>
-            <li style="box-sizing: border-box;">Vendors can not be upload the profile.</li>
-        </ul>
-        <ul class="offer-content {{@$holddisp}}" style="padding-left: 2rem;">
-            <li style="box-sizing: border-box;">The position is Hold</li>
-            <li style="box-sizing: border-box;">Vendors can not be upload the profile.</li>
+        <ul>
+          @foreach($meta['bullets'] as $b)
+          <li><i class="fas {{ $val === 'active' ? 'fa-check' : ($val === 'hold' ? 'fa-circle-exclamation' : 'fa-xmark') }}"></i>{{ $b }}</li>
+          @endforeach
         </ul>
       </div>
-      
-      <!--Start::previous code-->
-      
-      <!--<div class="row">-->
-      <!--  <div class="col-xs-6 col-md-3">-->
-      <!--    <div class="form-group">-->
-      <!--      <label class="d-block"> <i class="fa fa-line-chart fa-sm"></i>&nbsp;Job Status </label>   -->
-      <!--    </div>-->
-      <!--  </div>-->
-      <!--  <div class="col-xs-6 col-md-9">-->
-      <!--    <div class="form-group">-->
-      <!--      <label class="d-block">-->
-      <!--      <select name="status" id="status" class="<?php echo $selclass; ?>"> -->
-      <!--        <option value="active" <?php echo $active; ?>  style="background-color:#FFFFFF; color:#000000" >Active </option>  -->
-      <!--        <option value="hold" <?php echo $hold; ?>  style="background-color:#FFFFFF; color:#000000" >Hold </option>-->
-      <!--        <option value="inactive" <?php echo $inactive; ?>  style="background-color:#FFFFFF; color:#000000" >Closed </option>  -->
-      <!--      </select>  -->
-      <!--      </label>    -->
-      <!--    </div> -->
-      <!--  </div>-->
-      <!--</div>-->
-      
-      <!--End::previous code-->
-      
-      <div class="row">
-          
-      </div>
-      
-      <div class="row">
-        <div class="col-xs-12 col-md-12 ">
-          <div class="form-group" id="status_msg" style="text-align: center;font-weight: 500;background-color: #fff!important;width: fit-content;color: #00a700;margin: 0 auto;"> </div>
-        </div>
-      </div>
+      @endforeach
     </div>
   </form>
-</div>
 
+  <div class="jsd-sec-head">
+    <span class="jsd-sec-num">2</span>
+    <div><div class="jsd-sec-title">Impact Preview</div><div class="jsd-sec-sub">See what will change when you update the status</div></div>
+  </div>
+  <table class="jsd-impact-table">
+    <thead>
+      <tr>
+        <th>Feature / Action</th>
+        <th class="col-active">Hiring{{ $statusVal === 'active' ? ' (Current)' : '' }}</th>
+        <th class="col-hold">Hold{{ $statusVal === 'hold' ? ' (Current)' : '' }}</th>
+        <th class="col-inactive">Closed{{ $statusVal === 'inactive' ? ' (Current)' : '' }}</th>
+      </tr>
+    </thead>
+    <tbody id="jsd_impact_body">
+      @php
+        $rows = [
+          'Career Page Visibility' => 'career',
+          'Vendor Submission' => 'vendor',
+          'Candidate Applications' => 'candidates',
+          'Interviews' => 'interviews',
+          'Offer Creation' => 'offers',
+          'Notifications / Alerts' => 'notify',
+        ];
+      @endphp
+      @foreach($rows as $label => $key)
+      <tr>
+        <th>{{ $label }}</th>
+        @foreach(['active','hold','inactive'] as $val)
+        @php [$cellIcon, $cellColor] = $jsdCellIcon($val, $key); @endphp
+        <td class="jsd-cell-{{ $val }} {{ $val === $statusVal ? 'jsd-current-col' : '' }}">
+          <span class="jsd-cell"><i class="fas {{ $cellIcon }}" style="color:{{ $cellColor }};"></i>{{ $statusMeta[$val][$key] }}</span>
+        </td>
+        @endforeach
+      </tr>
+      @endforeach
+    </tbody>
+  </table>
 
-<!--<div class="modal-footer" style="display: table;">-->
-<!--  <button type="button" class="btn btn-light-danger btn-sm p-1" data-dismiss="modal">@lang('app.close') <i class="fa fa-circle fa-sm"></i> </button>-->
-<!--  <button type="button" class="btn btn-light-success btn-sm p-1" id="" onclick="newUpdateJobstatus()">@lang('app.update') <i class="fa fa-spinner fa-sm"></i> </button>-->
-<!--</div>-->
-
-<div class="modal-footer flex-center">
-    <div class="div1">
-      <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Cancel</button>
-      <button type="button" id="changetextupdate" class="btn btn-primary" onclick="newUpdateJobstatus()"> 
-      	<span class="indicator-label changetextupdate">Update</span></button>
+  <div class="jsd-footer">
+    <div class="jsd-footer-avatar">{{ $footerInitial }}</div>
+    <div class="jsd-footer-text">
+      Last updated by <b>{{ $footerName ?: 'System' }}</b>
+      @if($footerDate)<span class="sep">|</span>{{ date('d M Y, h:i A', strtotime($footerDate)) }}@endif
     </div>
+  </div>
+
+  <div id="status_msg" style="text-align:center;font-weight:500;color:#17c653;margin-top:10px;font-size:11.5px;"></div>
 </div>
 
+<script type="text/javascript">
+var JSD_STATUS_META = {!! json_encode($statusMeta) !!};
 
+function jsdSelectStatus(el) {
+    var val = $(el).attr('data-status');
+    $('#jsd_' + val).prop('checked', true);
 
-<script src="{{ asset('assets/node_modules/moment/moment.js') }}<?php echo TM_VERSION; ?>" type="text/javascript"></script>
-<script src="{{ asset('assets/node_modules/multiselect/js/jquery.multi-select.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js') }}<?php echo TM_VERSION; ?>" type="text/javascript"></script>
-<script type="text/javascript">	
-	$( document ).ready(function(){    	
-		$( "#status" ).change(function() {
-				$('#status_msg').html("");
-				$( "#status" ).removeClass('inactive');
-				$( "#status" ).removeClass('activee');
-				$( "#status" ).removeClass('hold');
-				//  if(this.value == 'inactive'){
-				//  		$( "#status" ).addClass('inactive'); 
-				//  }else if(this.value == 'active'){
-				//  		$( "#status" ).addClass('activee');
-				//  }else{ 
-				//  		$( "#status" ).addClass('hold');
-				//  }
-		});
-		
-		$('.withSet').click(function(){
-		    var id = $(this).attr('data-master-status-id');
-		    if(id==6){
-		        $('.offer-content').addClass('d-none');
-		        $('.rejected-content').addClass('d-none');
-		        $('.joined-content').removeClass('d-none');
-		        $('.withSet').removeClass('hold-bg');
-		        $('.withSet').removeClass('closed-bg');
-		    }else if(id==5){
-		        $('.joined-content').addClass('d-none');
-		        $('.rejected-content').addClass('d-none');
-		        $('.offer-content').removeClass('d-none');
-		        $('.withSet').removeClass('active-bg');
-		        $('.withSet').removeClass('closed-bg');
-		    }else if(id==7){
-		        $('.joined-content').addClass('d-none');
-		        $('.offer-content').addClass('d-none');
-		        $('.rejected-content').removeClass('d-none');
-		        $('.withSet').removeClass('active-bg');
-		        $('.withSet').removeClass('hold-bg');
-		    }
-		    
-		    
-		});
-		
-		
-	});
-	function newUpdateJobstatus(){ 
-	    $('.changetextupdate').prop('disabled',true);
-	    $('#changetextupdate').text('Waiting...');
-      var page = $('.custom-pagination .active_disabled').data('page');
-		$.ajax({
-					url: '{{route('service_company.jobs.newUpdateJobstatus')}}',
-					container: '#createSchedule',
-					type: "POST",
-					data: $('#createSchedule').serialize(),
-					success: function (response) {
+    $('.jsd-status-card').removeClass('is-selected');
+    $(el).addClass('is-selected');
+
+    var meta = JSD_STATUS_META[val];
+
+    $('.jsd-impact-table td.jsd-target-col').removeClass('jsd-target-col');
+    $('.jsd-cell-' + val).addClass('jsd-target-col');
+
+    $('#status_confirm_btn').prop('disabled', false).css('background', meta.color);
+    $('.changetextupdate').text('Update Status to ' + meta.label);
+}
+
+function newUpdateJobstatus(){
+    $('#status_confirm_btn').prop('disabled', true);
+    $('.changetextupdate').text('Updating…');
+    var page = $('.custom-pagination .active_disabled').data('page');
+    $.ajax({
+        url: '{{ route("service_company.jobs.newUpdateJobstatus") }}',
+        container: '#createSchedule',
+        type: "POST",
+        data: $('#createSchedule').serialize(),
+        success: function (response) {
 
             if (response.status == 'coinCheck') {
-		
-            Swal.fire("Failed",` ${response.message}` , "warning").then(function(){
-              $(".btn-active-color-primary").click();
-              });		
-              
-              return false;	
-          }
-					     
-						if(response.status == 'success'){
-							$('.activeJobs').html(response.activeJobs);
-							$('.inactiveJobs').html(response.inactiveJobs);
-							$('.holdJobs').html(response.holdJobs);
-							$('#status_msg').html("Requisition status update successfully.");      
-							
-              // table._fnDraw();
-							setTimeout(() => {
-               $('#status_sub_stage_close').click();
-              
-               fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    
-                    $('.changetextupdate').prop('disabled',false);
-                    $('#changetextupdate').text('Update');
-                    $('.custom-pagination .page-link').removeClass('active_disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('.custom-pagination .page-link').removeClass('active_disabled');
+                Swal.fire("Failed", `${response.message}`, "warning").then(function(){
+                    $(".btn-active-color-primary").click();
                 });
-                // fetchCandidates();
+                $('#status_confirm_btn').prop('disabled', false);
+                $('.changetextupdate').text('Update Status');
+                return false;
+            }
+
+            if (response.status == 'success') {
+                $('.activeJobs').html(response.activeJobs);
+                $('.inactiveJobs').html(response.inactiveJobs);
+                $('.holdJobs').html(response.holdJobs);
+                $('#status_msg').html("Requisition status updated successfully.");
+
+                setTimeout(() => {
+                    $('#status_sub_stage_close').click();
+
+                    fetchCandidates(page, $('#search').val()).then(() => {
+                        $('#status_confirm_btn').prop('disabled', false);
+                        $('.changetextupdate').text('Update Status');
+                        $('.custom-pagination .page-link').removeClass('active_disabled');
+                    }).catch(() => {
+                        $('.custom-pagination .page-link').removeClass('active_disabled');
+                    });
                 }, 500);
-							
-							
-					   }
-					   else{
-					   		$('#status_msg').html("<div style='color:#FF0000'>Opps something worng. Please try again</div>"); 	
-					   }
-					}
-				})	
-	}	
-</script>   
- 
+            } else {
+                $('#status_msg').html("<div style='color:#FF0000'>Oops, something went wrong. Please try again</div>");
+                $('#status_confirm_btn').prop('disabled', false);
+                $('.changetextupdate').text('Update Status');
+            }
+        }
+    });
+}
+</script>
