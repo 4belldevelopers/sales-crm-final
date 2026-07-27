@@ -2390,7 +2390,10 @@
             var cardEl = document.getElementById('simf_card');
             var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
             var headerEl = cardEl ? cardEl.querySelector('.simf-header') : null;
+<<<<<<< HEAD
             var activebarEl = cardEl ? cardEl.querySelector('.simf-activebar') : null;
+=======
+>>>>>>> 30d9df70e135f604b74c0d798cc01437b48f399e
             var footerEl = cardEl ? cardEl.querySelector('.simf-footer') : null;
             if (drawerEl) {
                 drawerEl.style.setProperty('overflow', 'hidden', 'important');
@@ -2406,6 +2409,7 @@
                 cardEl.style.setProperty('height', '100vh', 'important');
                 cardEl.style.setProperty('max-height', '100vh', 'important');
             }
+<<<<<<< HEAD
             [headerEl, activebarEl, footerEl].forEach(function(el) {
                 if (!el) return;
                 el.style.setProperty('overflow', 'visible', 'important');
@@ -2432,6 +2436,19 @@
                 bodyEl.style.setProperty('right', '0', 'important');
                 bodyEl.style.setProperty('top', (headerEl ? headerEl.offsetHeight : 0) +
                     (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) + 'px', 'important');
+=======
+            /* Body: absolute-positioned between the header and footer.
+               The activebar is now inside the scroll container, so it is
+               NOT subtracted from the available height. */
+            if (bodyEl) {
+                var headerH = headerEl ? headerEl.offsetHeight : 0;
+                var footerH = footerEl ? footerEl.offsetHeight : 0;
+                var available = Math.max(window.innerHeight - headerH - footerH, 100);
+                bodyEl.style.setProperty('position', 'absolute', 'important');
+                bodyEl.style.setProperty('left', '0', 'important');
+                bodyEl.style.setProperty('right', '0', 'important');
+                bodyEl.style.setProperty('top', headerH + 'px', 'important');
+>>>>>>> 30d9df70e135f604b74c0d798cc01437b48f399e
                 bodyEl.style.setProperty('height', available + 'px', 'important');
                 bodyEl.style.setProperty('max-height', available + 'px', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
@@ -2447,12 +2464,6 @@
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
         $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
-        // Re-measure whenever the active-filters bar can change height/visibility
-        // (i.e. any time a filter is added/removed) — this is the exact trigger
-        // that was breaking the earlier flex-based layout.
-        $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"], #min_exp, #max_exp, #min_sal, #max_sal, .simf-edu-check', function() {
-            setTimeout(simfEnforceDrawerLayout, 0);
-        });
 
         /* ------------------------------------------------------------------
            Filter drawer glue: opening the drawer from the search-box overlay,

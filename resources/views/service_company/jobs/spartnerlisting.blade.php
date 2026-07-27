@@ -48,7 +48,157 @@
     #apptrackerfilter_close svg {
             color: red;
     }
-    
+
+    /* ============================================================
+       Assigned Agency Tab — Modern Card Rows
+       ============================================================ */
+    .aa-header-row {
+        display: flex; align-items: center;
+        padding: 5px 16px 8px;
+        font-size: 10.5px; font-weight: 600; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .aa-hcol-agency     { flex: 0 0 18%; }
+    .aa-hcol-contact    { flex: 0 0 12%; }
+    .aa-hcol-perf       { flex: 0 0 35%; text-align: center; }
+    .aa-hcol-shared     { flex: 0 0 11%; padding-left: 8px; }
+    .aa-hcol-status     { flex: 0 0 9%; text-align: center; }
+    .aa-hcol-actions    { flex: 1 1 auto; text-align: right; }
+
+    .aa-row {
+        display: flex; align-items: center;
+        background: #fff; border: 1px solid #e8ecf1;
+        border-radius: 10px; padding: 10px 14px;
+        margin-bottom: 6px;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        gap: 0; min-height: 54px;
+    }
+    .aa-row:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); border-color: #c7d2de; }
+
+    .aa-col-agency     { flex: 0 0 18%; display: flex; align-items: center; gap: 9px; min-width: 0; padding-right: 8px; }
+    .aa-col-contact    { flex: 0 0 12%; min-width: 0; padding-right: 8px; }
+    /* Fixed width; KPIs size from content so spacing feels natural */
+    .aa-col-perf       { flex: 0 0 35%; display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: nowrap; overflow: hidden; padding-right: 20px; }
+    .aa-col-shared     { flex: 0 0 11%; min-width: 0; padding-left: 8px; padding-right: 6px; }
+    .aa-col-status     { flex: 0 0 9%; text-align: center; }
+    .aa-col-actions    { flex: 1 1 auto; display: flex; align-items: center; justify-content: flex-end; gap: 6px; position: relative; min-width: 130px; }
+
+    /* Agency logo */
+    .aa-logo {
+        width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px; color: #fff;
+        overflow: hidden; border: 2px solid #f0f4f8;
+    }
+    .aa-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .aa-name    { font-weight: 600; font-size: 12px; color: #0f172a; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aa-cat     { font-size: 10.5px; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Contact */
+    .aa-cnt-name { font-size: 12px; font-weight: 500; color: #0f172a; line-height: 1.3; }
+    .aa-cnt-desg { font-size: 10.5px; color: #64748b; line-height: 1.3; }
+    .aa-cnt-dash { font-size: 12px; color: #94a3b8; }
+    .aa-cnt-btns { display: flex; gap: 4px; margin-top: 5px; }
+    .aa-cnt-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 6px;
+        background: #f1f5f9; border: none; cursor: pointer;
+        color: #64748b; font-size: 11px;
+        transition: background 0.12s, color 0.12s;
+    }
+    .aa-cnt-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+    /* KPI badges — natural-width per item so padding is consistent */
+    .aa-kpi {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        flex: 0 1 auto; padding: 0 10px;
+        border-right: 1px solid #e2e8f0;
+    }
+    .aa-kpi:last-child { border-right: none; }
+    .aa-kpi-num   { font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1; }
+    .aa-kpi-label { font-size: 9px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; }
+    .aa-kpi-sep   { display: none; }
+
+    /* Shared date */
+    .aa-shared-rel { font-size: 12px; font-weight: 500; color: #1e293b; }
+    .aa-shared-abs { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
+
+    /* Status badges */
+    .aa-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 20px;
+        font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap;
+    }
+    .aa-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .aa-badge-open    { background: #dcfce7; color: #16a34a; }
+    .aa-badge-closed  { background: #f1f5f9; color: #64748b; }
+    .aa-badge-paused  { background: #fef3c7; color: #d97706; }
+    .aa-badge-expired { background: #fee2e2; color: #dc2626; }
+
+    /* Actions */
+    .aa-terms-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 5px 11px; border-radius: 7px;
+        border: 1.5px solid #e2e8f0; background: #fff;
+        font-size: 11.5px; font-weight: 500; color: #475569;
+        cursor: pointer; white-space: nowrap;
+        transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    .aa-terms-btn:hover { border-color: #6366f1; color: #6366f1; background: #f8f7ff; }
+
+    .aa-dots-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: 7px;
+        border: 1.5px solid #e2e8f0; background: #fff;
+        cursor: pointer; color: #64748b; font-size: 13px;
+        transition: background 0.12s, border-color 0.12s;
+    }
+    .aa-dots-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+
+    .aa-ddmenu {
+        position: absolute; right: 0; top: calc(100% + 5px);
+        background: #fff; border: 1px solid #e2e8f0;
+        border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+        z-index: 200; min-width: 165px; padding: 5px 0; display: none;
+    }
+    .aa-ddmenu.open { display: block; }
+    .aa-ddi {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px; font-size: 12px; color: #374151;
+        cursor: pointer; border: none; background: none;
+        width: 100%; text-align: left; white-space: nowrap;
+        transition: background 0.1s;
+    }
+    .aa-ddi:hover { background: #f8fafc; }
+    .aa-ddi.danger { color: #ef4444; }
+    .aa-ddi.danger:hover { background: #fff5f5; }
+
+    /* Empty state */
+    .aa-empty {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 56px 24px; text-align: center;
+    }
+    .aa-empty-icon {
+        width: 68px; height: 68px; border-radius: 50%; background: #f1f5f9;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 16px; font-size: 26px; color: #94a3b8;
+    }
+    .aa-empty-title { font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+    .aa-empty-sub   { font-size: 12.5px; color: #94a3b8; max-width: 280px; line-height: 1.6; }
+
+    /* Responsive — tablet / mobile */
+    @media (max-width: 991px) {
+        .aa-header-row { display: none !important; }
+        .aa-row        { flex-wrap: wrap; gap: 10px; padding: 12px; }
+        .aa-col-agency  { flex: 1 1 100%; }
+        .aa-col-contact { flex: 1 1 100%; }
+        .aa-col-perf    { flex: 1 1 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+        .aa-kpi         { flex: 0 0 auto; border-right: none; padding: 3px 8px;
+                          background: #f8fafc; border-radius: 5px; min-width: 52px; }
+        .aa-col-shared  { flex: 1 1 45%; }
+        .aa-col-status  { flex: 1 1 45%; text-align: left; }
+        .aa-col-actions { flex: 1 1 100%; justify-content: flex-start; min-width: unset; }
+    }
 
 </style>
 
@@ -1560,26 +1710,25 @@ $current_job_id = @$job_id;
                                             <!--end::Requisitions Content-->
                                             <!--begin::Assigned Content-->
                                             <div class="tab-pane" id="assigned" role="tabpanel">
-                                                <div class="card-body px-0 py-2">
-                                                    <div class="d-flex align-items-center flex-wrap">
-                                                        <div class="col-lg-6 d-flex align-items-center px-2" style="width:100%">
-                                                            <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_5" onchange="filtersdatathree()" />
-                                                        </div>
+                                                <div class="px-1 pt-3 pb-1">
+                                                    <!-- Search -->
+                                                    <div class="mb-3 px-1">
+                                                        <input type="text" class="form-control form-control-solid form-control-sm ps-3"
+                                                               name="inputJobSearch" value="" placeholder="Search agencies..."
+                                                               id="kt_tagify_5" onchange="filtersdatathree()" />
                                                     </div>
-                                                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="recommendedAssignListNotAjax">
-                                                        <thead>
-                                                            <tr class="fw-bolder text-muted">
-                                                                <th class="">Name</th>
-                                                                <th class="">Contact Person</th>
-                                                                <th class="">Upload Profile</th>
-                                                                <th class="">Interview</th>
-                                                                <th class="">Joinings</th>
-                                                                <th class="">Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody class="text-gray-600 fw-bold" id="allAssignListagency"></tbody>
-                                                    </table>
-                                                    <div id="paginationAssignListagency"></div>
+                                                    <!-- Column headers (desktop) -->
+                                                    <div class="aa-header-row d-none d-lg-flex">
+                                                        <div class="aa-hcol-agency">Agency</div>
+                                                        <div class="aa-hcol-contact">Contact</div>
+                                                        <div class="aa-hcol-perf">Performance <i class="fa-regular fa-circle-question ms-1" style="font-size:11px;color:#cbd5e1;" title="Metrics for this job"></i></div>
+                                                        <div class="aa-hcol-shared">Job Shared</div>
+                                                        <div class="aa-hcol-status">Status</div>
+                                                        <div class="aa-hcol-actions">Actions</div>
+                                                    </div>
+                                                    <!-- Rows injected by AJAX -->
+                                                    <div id="allAssignListagency"></div>
+                                                    <div id="paginationAssignListagency" class="mt-3 px-1"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2899,8 +3048,16 @@ $current_job_id = @$job_id;
         }
     });
 
-
-    
-
+    /* ── Assigned Agency tab: three-dot dropdown ─────────────────── */
+    $(document).on('click', '.aa-dots-btn', function(e) {
+        e.stopPropagation();
+        var $menu = $(this).next('.aa-ddmenu');
+        var wasOpen = $menu.hasClass('open');
+        // Close all open menus first
+        $('.aa-ddmenu.open').removeClass('open');
+        if (!wasOpen) { $menu.addClass('open'); }
+    });
+    // Close dropdown on outside click
+    $(document).on('click', function() { $('.aa-ddmenu.open').removeClass('open'); });
 
 </script>
