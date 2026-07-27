@@ -6,7 +6,7 @@
       //  print_r($profilesCompletion->clientsprofiles->tags);
       $popup_tags = 1;//($profilesCompletion->clientsprofiles) ? $profilesCompletion->clientsprofiles->tags : '';
       $popup_address = ($profilesCompletion->clientsprofiles) ? $profilesCompletion->clientsprofiles->address : '';
-      $popup_company_name = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->company_name : '';
+      $popup_company_name =  ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->company_name : '';
       $popup_industries = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->industries : '';
       $popup_description = ($profilesCompletion->profilesCompletion) ? $profilesCompletion->profilesCompletion->description : '';
 
@@ -981,113 +981,385 @@
 
 
 <!--start profile is incomplete section-->
-<div class="modal fade" id="profile_popup_modal" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-      <div class="modal-header" style="padding: 20px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 24px; font-weight: 600; color: #1e293b; margin: 0;">Your company profile is incomplete</h2>
-        <button class="btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal" style="padding: 8px; border-radius: 50%; background: transparent; border: none; cursor: pointer; transition: background-color 0.2s;">
-          <span class="svg-icon svg-icon-1" style="display: flex; align-items: center; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-              <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-            </svg>
-          </span>
-        </button>
-      </div>
-      
-      <div class="card-body" style="padding: 40px 30px; position: relative;">
-        <div style="font-family: system-ui, -apple-system, sans-serif;">
+<style>
+/* ── Profile Popup Modal ── */
+.ppi-wrap * { font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+.ppi-wrap .modal-content { border-radius: 16px; border: none; box-shadow: 0 24px 64px rgba(0,0,0,0.15); overflow: hidden; }
 
+/* Top banner */
+.ppi-banner { display: flex; align-items: stretch; gap: 0; padding: 24px 28px 24px; background: #fff; border-bottom: 1px solid #F1F5F9; position: relative; }
+.ppi-banner-left { flex: 1; display: flex; align-items: flex-start; gap: 18px; }
+.ppi-banner-illo { flex-shrink: 0; width: 100px; }
+.ppi-banner-illo svg { width: 100%; height: auto; }
+.ppi-banner-text { flex: 1; }
+.ppi-banner-title { font-size: 17px; font-weight: 700; color: #0F172A; margin: 0 0 5px; line-height: 1.3; }
+.ppi-banner-sub { font-size: 11.5px; color: #64748B; margin: 0 0 14px; line-height: 1.5; max-width: 340px; }
+.ppi-benefits { display: flex; gap: 8px; flex-wrap: wrap; }
+.ppi-benefit-chip { display: inline-flex; align-items: center; gap: 6px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 5px 10px; font-size: 10.5px; font-weight: 600; color: #374151; }
+.ppi-benefit-chip svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-          <div style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+/* Completion card */
+.ppi-comp-card { flex-shrink: 0; width: 230px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px 18px; margin-left: 20px; }
+.ppi-comp-label { font-size: 10.5px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.ppi-comp-pct-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.ppi-comp-pct { font-size: 28px; font-weight: 700; color: #0F172A; line-height: 1; }
+.ppi-comp-badge { font-size: 11px; font-weight: 600; color: #16A34A; background: #DCFCE7; border-radius: 20px; padding: 2px 8px; }
+.ppi-comp-bar-bg { background: #E2E8F0; border-radius: 100px; height: 7px; margin-bottom: 10px; }
+.ppi-comp-bar-fill { height: 7px; border-radius: 100px; background: #2563EB; }
+.ppi-comp-meta { display: flex; align-items: center; justify-content: space-between; }
+.ppi-comp-meta span { font-size: 10px; color: #64748B; display: flex; align-items: center; gap: 4px; }
+.ppi-comp-meta svg { width: 11px; height: 11px; }
 
-            <!-- Progress Circle -->
-            <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              <!-- Outer Circle with Progress -->
-              <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; 
-                  background: conic-gradient(
-                      #f31b4d {{ $profile_completion_percentage }}%, /* Progress color */
-                      #e2e8f0 {{ $profile_completion_percentage }}% /* Remaining color */
-                  );">
-              </div>
-              <!-- Inner Circle (Hollow Center) -->
-              <div style="position: absolute; width: 80%; height: 80%; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 20px; font-weight: bold; color: #475569;">
-                  {{ round($profile_completion_percentage, 2) }}%
-                </span>
-              </div>
-            </div>
-          
-            <!-- Steps -->
-            <div style="display: flex; align-items: center; gap: 12px;">
-              @if(!$popup_company_name)
-                <!-- Step 1: Add Company Name -->
-                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                  @if($popup_company_name)
-                  <span style="color: #22c55e; font-size: 18px;">✓</span>
-                  @else
-                  <span style="color: #ef4444; font-size: 18px;">✗</span>
-                  @endif
-                  <span style="color: #475569; font-size: 14px; font-weight: 500;">
-                    <a href="{{ ($popup_company_name) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}">Add{{ $popup_company_name ? 'ed' :'' }} Company Name</a>
-                    <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-                </div>
-              @endif
-              @if(!$popup_industries)
-              <!-- Step 2: Add Industry -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_industries)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_industries) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}">Add{{ $popup_industries ? 'ed' :'' }} Company Industry</a><br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-              </div>
-              @endif
-              @if(!$popup_description)
-              <!-- Step 3: Add Description -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_description)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_description) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=1">Add{{ $popup_description ? 'ed' :'' }} Company Description</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
+/* Close btn */
+.ppi-close-btn { position: absolute; top: 12px; right: 12px; background: #F1F5F9; border: none; border-radius: 8px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748B; transition: background 0.13s; z-index: 10; }
+.ppi-close-btn:hover { background: #E2E8F0; }
 
-               
-              </div>
-           @endif
-             @if(!$popup_address)
-              <!-- Step 4: Add Address -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_address)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_address) ? 'javascript:;' :  route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=2">Add{{ $popup_address ? 'ed' :'' }} Company Address</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id))}}"> (Click Here) </a> </span></span>
-              </div>
-          @endif
-           @if(!$popup_tags)
-              <!-- Step 5: Add Services -->
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                @if($popup_tags)
-                <span style="color: #22c55e; font-size: 18px;">✓</span>
-                @else
-                <span style="color: #ef4444; font-size: 18px;">✗</span>
-                @endif
-                <span style="color: #475569; font-size: 14px; font-weight: 500;"><a href="{{ ($popup_tags) ? 'javascript:;' : route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}?switchSection=1">Add{{ $popup_tags ? 'ed' :'' }} Company Services</a> <br><span style="margin-left: 22%;"> <a href="{{route('service_company.account.edit', GeneralMethod::value_encrypt($company_id)) }}"> (Click Here) </a> </span></span>
-              </div>
-            @endif
-          
-            </div>
-          
-          </div>
-          
+/* Body 3-col */
+.ppi-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; background: #F8FAFC; }
+
+/* Left col – Profile Overview */
+.ppi-overview { padding: 20px 18px; border-right: 1px solid #E2E8F0; }
+.ppi-col-title { font-size: 12px; font-weight: 700; color: #0F172A; margin-bottom: 14px; }
+.ppi-ov-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+.ppi-ov-item:last-child { border-bottom: none; }
+.ppi-ov-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-ov-icon svg { width: 15px; height: 15px; }
+.ppi-ov-info { flex: 1; min-width: 0; }
+.ppi-ov-name { font-size: 11.5px; font-weight: 600; color: #1E293B; }
+.ppi-ov-sub  { font-size: 10px; color: #94A3B8; }
+.ppi-ov-status-ok   { color: #16A34A; flex-shrink: 0; }
+.ppi-ov-status-fail { color: #EF4444; flex-shrink: 0; }
+.ppi-ov-status-ok svg, .ppi-ov-status-fail svg { width: 16px; height: 16px; }
+
+/* Middle col – Complete These Sections */
+.ppi-sections { padding: 20px 18px; }
+.ppi-sec-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+.ppi-sec-card:last-child { margin-bottom: 0; }
+.ppi-sec-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-sec-icon svg { width: 18px; height: 18px; }
+.ppi-sec-content {}
+.ppi-sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.ppi-sec-name { font-size: 12.5px; font-weight: 700; color: #0F172A; }
+.ppi-sec-badge-req  { font-size: 9.5px; font-weight: 700; background: #FEE2E2; color: #DC2626; border-radius: 4px; padding: 1px 7px; }
+.ppi-sec-badge-rec  { font-size: 9.5px; font-weight: 700; background: #DBEAFE; color: #2563EB; border-radius: 4px; padding: 1px 7px; }
+.ppi-sec-desc { font-size: 10.5px; color: #64748B; line-height: 1.4; margin-bottom: 5px; }
+.ppi-sec-note { display: flex; align-items: flex-start; gap: 4px; font-size: 10px; color: #F59E0B; font-weight: 500; }
+.ppi-sec-note svg { width: 11px; height: 11px; flex-shrink: 0; margin-top: 1px; }
+.ppi-sec-btn { display: inline-flex; align-items: center; gap: 5px; background: #2563EB; color: #fff; font-size: 11px; font-weight: 600; padding: 8px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; flex-shrink: 0; transition: background 0.13s; }
+.ppi-sec-btn:hover { background: #1D4ED8; color: #fff; text-decoration: none; }
+
+/* Right col – Why */
+.ppi-why { padding: 20px 16px; border-left: 1px solid #E2E8F0; }
+.ppi-why-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.ppi-why-item:last-child { margin-bottom: 0; }
+.ppi-why-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ppi-why-icon svg { width: 16px; height: 16px; }
+.ppi-why-title { font-size: 11.5px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
+.ppi-why-desc  { font-size: 10px; color: #64748B; line-height: 1.4; }
+
+/* Footer */
+.ppi-footer { display: flex; align-items: center; padding: 14px 24px; background: #fff; border-top: 1px solid #E2E8F0; }
+.ppi-footer-sec { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #94A3B8; margin-right: auto; }
+.ppi-footer-sec svg { width: 13px; height: 13px; flex-shrink: 0; }
+.ppi-skip-btn { background: none; border: 1px solid #E2E8F0; border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; color: #64748B; cursor: pointer; margin-right: 10px; font-family: 'Poppins', sans-serif; transition: background 0.13s; }
+.ppi-skip-btn:hover { background: #F8FAFC; }
+.ppi-complete-btn { display: inline-flex; align-items: center; gap: 7px; background: #2563EB; color: #fff; font-size: 12px; font-weight: 600; padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; text-decoration: none; transition: background 0.13s; }
+.ppi-complete-btn:hover { background: #1D4ED8; color: #fff; text-decoration: none; }
+.ppi-complete-btn svg { width: 14px; height: 14px; }
+</style>
+
+<div class="modal fade ppi-wrap" id="profile_popup_modal" tabindex="-1" aria-hidden="true" style="z-index: 99999999999 !important;">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:860px;">
+    <div class="modal-content">
+    @php
+      $ppiCompleted = collect([$popup_company_name,$popup_industries,$popup_description,$popup_address,$popup_tags])->filter()->count();
+      $ppiTotal     = 5;
+      $ppiRemain    = $ppiTotal - $ppiCompleted;
+      $ppiMins      = max(1, $ppiRemain * 2);
+      $ppiAccEdit   = route('service_company.account.edit', GeneralMethod::value_encrypt($company_id));
+    @endphp
+
+    {{-- ── TOP BANNER ── --}}
+    <div class="ppi-banner">
+      <div class="ppi-banner-left">
+        {{-- Illustration --}}
+        <div class="ppi-banner-illo">
+          <svg viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="30" width="80" height="70" rx="6" fill="#DBEAFE"/>
+            <rect x="20" y="20" width="60" height="80" rx="5" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+            <rect x="30" y="35" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="52" y="35" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="30" y="57" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="52" y="57" width="14" height="14" rx="3" fill="#BFDBFE"/>
+            <rect x="38" y="78" width="20" height="22" rx="3" fill="#93C5FD"/>
+            <rect x="8" y="65" width="16" height="35" rx="3" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+            <rect x="11" y="72" width="5" height="5" rx="1" fill="#93C5FD"/>
+            <rect x="11" y="82" width="5" height="5" rx="1" fill="#93C5FD"/>
+            <circle cx="85" cy="38" r="18" fill="#DCFCE7"/>
+            <path d="M77 38l5 5 8-10" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="0" y="99" width="120" height="3" rx="1.5" fill="#E2E8F0"/>
+            <rect x="5" y="99" width="110" height="3" rx="1.5" fill="#CBD5E1"/>
+          </svg>
+        </div>
+        <div class="ppi-banner-text">
+          <div class="ppi-banner-title">Complete Your Company Profile ✨</div>
+          <div class="ppi-banner-sub">A complete profile builds trust, increases visibility and helps you get better results on Jero Marketplace.</div>
+          <div class="ppi-benefits">
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              Verified Company Badge
+            </span>
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Higher Marketplace Ranking
+            </span>
+            <span class="ppi-benefit-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+              Better AI Recommendations
+            </span>
           </div>
         </div>
       </div>
+
+      {{-- Completion card --}}
+      <div class="ppi-comp-card">
+        <div class="ppi-comp-label">Profile Completion</div>
+        <div class="ppi-comp-pct-row">
+          <span class="ppi-comp-pct">{{ round($profile_completion_percentage) }}%</span>
+          <span class="ppi-comp-badge">Complete</span>
+        </div>
+        <div class="ppi-comp-bar-bg">
+          <div class="ppi-comp-bar-fill" style="width:{{ $profile_completion_percentage }}%;"></div>
+        </div>
+        <div class="ppi-comp-meta">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            {{ $ppiCompleted }} of {{ $ppiTotal }} sections completed
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{ $ppiMins }} min remaining
+          </span>
+        </div>
+      </div>
+
+      <button class="ppi-close-btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    {{-- ── BODY 3-COL ── --}}
+    <div class="ppi-body">
+
+      {{-- LEFT: Profile Overview --}}
+      <div class="ppi-overview">
+        <div class="ppi-col-title">Profile Overview</div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FEF3C7;color:#D97706;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Name</div><div class="ppi-ov-sub">Your organization name</div></div>
+          @if($popup_company_name)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#EDE9FE;color:#7C3AED;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Logo</div><div class="ppi-ov-sub">Your company logo</div></div>
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#E0F2FE;color:#0284C7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Website</div><div class="ppi-ov-sub">Your company website</div></div>
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FEE2E2;color:#DC2626;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Headquarters</div><div class="ppi-ov-sub">Your company location</div></div>
+          @if($popup_address)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#DCFCE7;color:#16A34A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Industry</div><div class="ppi-ov-sub">Your company industry</div></div>
+          @if($popup_industries)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+        <div class="ppi-ov-item">
+          <div class="ppi-ov-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="ppi-ov-info"><div class="ppi-ov-name">Company Description</div><div class="ppi-ov-sub">About your organization</div></div>
+          @if($popup_description)
+          <span class="ppi-ov-status-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+          @else
+          <span class="ppi-ov-status-fail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></span>
+          @endif
+        </div>
+
+      </div>
+
+      {{-- MIDDLE: Complete These Sections --}}
+      <div class="ppi-sections">
+        <div class="ppi-col-title">Complete These Sections</div>
+
+        @if(!$popup_industries)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#EDE9FE;color:#7C3AED;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Industry</span><span class="ppi-sec-badge-req">Required</span></div>
+            <div class="ppi-sec-desc">Select the industry that best describes your organization.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Required for AI job matching and marketplace visibility
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_description)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Description</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Add a short description about your company, mission and expertise.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Helps build trust and improves your marketplace visibility
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=1" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_company_name)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FEF3C7;color:#D97706;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Name</span><span class="ppi-sec-badge-req">Required</span></div>
+            <div class="ppi-sec-desc">Add your registered company name to get verified on the platform.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Required to activate your company profile
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_address)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#FEE2E2;color:#DC2626;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Address</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Add your office location to improve local talent matching.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Improves local search visibility on the marketplace
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=2" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+        @if(!$popup_tags)
+        <div class="ppi-sec-card">
+          <div class="ppi-sec-icon" style="background:#E0F2FE;color:#0284C7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div class="ppi-sec-content">
+            <div class="ppi-sec-head"><span class="ppi-sec-name">Company Services</span><span class="ppi-sec-badge-rec">Recommended</span></div>
+            <div class="ppi-sec-desc">Tag services you offer to match the right opportunities.</div>
+            <div class="ppi-sec-note">
+              <svg viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Helps AI match you with relevant companies
+            </div>
+          </div>
+          <a href="{{ $ppiAccEdit }}?switchSection=1" class="ppi-sec-btn">Complete →</a>
+        </div>
+        @endif
+
+      </div>
+
+      {{-- RIGHT: Why --}}
+      <div class="ppi-why">
+        <div class="ppi-col-title">Why complete your profile?</div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#DCFCE7;color:#16A34A;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Get discovered by more companies</div><div class="ppi-why-desc">Complete profiles rank higher in search results.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#FCE7F3;color:#DB2777;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Increase trust &amp; credibility</div><div class="ppi-why-desc">Verified and complete profiles build stronger relationships.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#DBEAFE;color:#2563EB;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Better AI recommendations</div><div class="ppi-why-desc">AI understands your company better and recommends the right matches.</div></div>
+        </div>
+
+        <div class="ppi-why-item">
+          <div class="ppi-why-icon" style="background:#FFF7ED;color:#EA580C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <div><div class="ppi-why-title">Higher marketplace visibility</div><div class="ppi-why-desc">Stand out from other companies and attract top agencies.</div></div>
+        </div>
+
+      </div>
+    </div>{{-- end ppi-body --}}
+
+    {{-- ── FOOTER ── --}}
+    <div class="ppi-footer">
+      <span class="ppi-footer-sec">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Your information is secure and will never be shared.
+      </span>
+      <button class="ppi-skip-btn profile_popup_modal" data-bs-dismiss="modal" data-dismiss="modal">Skip for now</button>
+      <a href="{{ $ppiAccEdit }}" class="ppi-complete-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Complete Profile
+      </a>
+    </div>
+
     </div>
   </div>
 </div>
