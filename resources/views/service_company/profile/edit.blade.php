@@ -50,7 +50,7 @@
       <div class="jp-page-head__right">
         <div class="jp-completion">
           <div class="jp-completion__top">
-            <span class="jp-completion__label">Profile Completion</span>
+            <span class="jp-completion__label">Profile Completion </span>
             <a href="javascript:void(0);" class="jp-completion__link">View Suggestions <i class="bi bi-chevron-right"></i></a>
           </div>
           <div class="jp-completion__row">
