@@ -350,8 +350,10 @@ already-populated form, locks the session, inserts the candidate row.
 1. GET `/api/resume-preflight` — server reachability check (returns 200 +
    server time).
 2. Verify session status via GET `/api/resume-sessions/{uuid}`.
-3. If `status=Failed`: show modal "Parser failed; manual fields survive;
-   submit anyway?"
+3. If `status=Failed`: show modal "Upload session failed; manual fields
+   survive; submit anyway?" (REMOVED 2026-07-27: replaced "Parser failed"
+   with "Upload session failed" — there is no server parser to fail;
+   `Failed` here means the upload pipeline itself aborted.)
 4. Disable button + show loader + apply CSRF-double-submit guard.
 
 **Submit POST:** `POST /candidates` (or
