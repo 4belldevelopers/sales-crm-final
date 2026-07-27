@@ -126,9 +126,16 @@
                         $rel_formattedExperience = $rel_experience;
                     }
 
+                    $wmRaw = strtolower(trim($row->wm ?? ''));
+                    $wmLabel = match($wmRaw) {
+                        'remote'  => 'Remote',
+                        'hybrid'  => 'Hybrid',
+                        'office'  => 'Work From Office',
+                        default   => '—',
+                    };
                     echo '<div class="d-flex flex-column">
                         <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' . $formattedExperience . ' Yrs</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . ($rel_formattedExperience ? $rel_formattedExperience . ' Y' : '—') . '</span>
+                        <span class="text-muted fw-bold d-block fs-7">' . $wmLabel . '</span>
                     </div>';
                 @endphp
             </td>
@@ -199,17 +206,11 @@
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $salCur, $salMode);
                     $bill_rate_currency   = $currencySymbole[$billFormatViewSalary->currency] ?? '₹';
                     $bill_rate_mode       = $salaryMode[$billFormatViewSalary->mode] ?? '';
-                    $billRaw              = (float) ($row->ectc_yearly ?? 0);
-                    $hasBill              = $billRaw > 0;
+                    $billAmount           = (float) ($billFormatViewSalary->amount ?? 0);
+                    $hasBill              = $billAmount > 0;
 
-                    /* K / L format */
-                    $toKL = function($v) {
-                        if ($v >= 10000000) return round($v / 10000000, 1) . ' Cr';
-                        if ($v >= 100000)   return round($v / 100000, 1) . ' L';
-                        if ($v >= 1000)     return round($v / 1000, 1) . ' K';
-                        return (string) $v;
-                    };
-                    $billFormatted = $hasBill ? $toKL($billRaw) : '—';
+                    /* K format only */
+                    $billFormatted = $hasBill ? round($billAmount / 1000, 1) . 'K' : '—';
                     $modeSuffix    = mb_substr($bill_rate_mode, 0, 1);
 
                     if ($hasBill) {
@@ -217,9 +218,7 @@
                             <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">'
                                 . $bill_rate_currency . $billFormatted . '/' . $modeSuffix .
                             '</a>
-                            <span style="display:inline-flex;align-items:center;gap:3px;margin-top:3px;padding:2px 8px;border-radius:20px;background:#DCFCE7;color:#16A34A;font-size:10px;font-weight:600;">
-                                <i class="ti ti-circle-check-filled" style="font-size:10px;"></i> Paid Service
-                            </span>
+                            <span class="text-muted fw-bold d-block fs-7">Paid Service</span>
                         </div>';
                     } else {
                         echo '<span class="text-muted fs-7">—</span>';
@@ -248,14 +247,8 @@
                            class="fw-bold fs-6 stage_sub_stage ' . $row->css_style . '"
                            data-toggle="modal" data-target="#stage_sub_stage"
                            style="color:#009ef7;text-decoration:none;">' . $row->master_status_name . '</a>
-                        <span class="fw-bold text-muted d-block fs-7">' . $subS . '</span>';
-
-                    if ($daysOnBench > 0) {
-                        echo '<span style="color:#DC2626;font-size:11px;font-weight:700;margin-top:2px;">'
-                            . $daysOnBench . ' Days</span>';
-                    }
-
-                    echo '</div>';
+                        <span class="fw-bold text-muted d-block fs-7">' . $subS . '</span>
+                    </div>';
                 @endphp
             </td>
 
@@ -310,7 +303,8 @@
                 @elseif($benchRequestCheck->ac_status == 1)
                     <a href="javascript:void(0);" class="text-dark" style="{{ $btnStyle }}">Added</a>
                 @elseif($benchRequestCheck->ac_status == 2)
-                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="{{ $btnStyle }}">Expired</a>
+                    <a href="javascript:void(0);" data-jobId="{{ $currentJobId }}" data-conId="{{ $row->id }}"
+                       class="btn btn-sm btn-primary request-send" style="{{ $btnStyle }}">Send Bench Request</a>
                 @elseif($benchRequestCheck->ac_status == 3)
                     <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="{{ $btnStyle }}">Removed</a>
                 @endif
