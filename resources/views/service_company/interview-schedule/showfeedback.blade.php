@@ -1596,4 +1596,34 @@
             return true;
         } catch (error) { return false; }
     }
+    // Rescheduled button: close current modal first, then open #interview_schedule with AJAX content
+    $(document).off('click.reschedule').on('click.reschedule', '#app_interview_schedule_reschedule', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        var conId    = $(this).attr('rel');
+        var $current = $(this).closest('.modal');
+
+        function openScheduleModal() {
+            if (!conId) return;
+            var url      = "{{ route('service_company.job-applications.create-schedule', ':id') }}".replace(':id', conId);
+            var loader   = "{{ asset('assets/images/Loading2.gif') }}";
+            $('#app_interview_schedule_content').html('<img src="' + loader + '" height="35px" width="100%">');
+            // $('#interview_schedule').modal('show');
+            (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
+              window.isdShellSetStep('main');
+            $.get(url, function(resp) {
+                $('#app_interview_schedule_content').html(resp.view || resp);
+            });
+        }
+
+        if ($current.length && $current.hasClass('show')) {
+            $current.one('hidden.bs.modal', openScheduleModal);
+            $current.modal('hide');
+        } else {
+            // Feedback is shown in custom overlay, not a Bootstrap modal
+            $('#interviewersModal').removeClass('active');
+            $('#feedbackFormWrapper').hide();
+            setTimeout(openScheduleModal, 300);
+        }
+    });
 </script>
