@@ -88,7 +88,7 @@ OFF for public careers.
 ### v2.0.0d — Browser parser wiring (pdf.js) + Reverb
 
 **Changes (post-removal 2026-07-27):**
-- ~~Replace `ChatGptService` raw cURL consumer with `ResumeParserService` wrapper~~ — REMOVED: no server parser
+- ~~Replace raw cURL provider with server-side parser wrapper~~ — REMOVED: no server parser
 - ~~New `parse_resumes` queue in Horizon~~ — REMOVED: no server parser queue
 - ~~`ParseResumeJob` introduced~~ — REMOVED: no server parser job
 - Reverb channel auth (private-resume.{company_id}).
@@ -102,7 +102,6 @@ OFF for public careers.
 1. Filter: `ResumeV2ReverbEventsTest` (renamed from `ResumeV2ParserQueueTest` — REMOVED 2026-07-27).
 2. Browser smoke: tab A submits, tab B sees `ResumeUploaded` event.
 3. Cross-tenant smoke: tab A in tenant X, tab B in tenant Y → no events visible.
-4. ~~Force OpenAI 429 (mock), confirm `Retry-After` honored~~ — REMOVED 2026-07-27 (no parser 429s).
 
 **Sign-off** — Reverb event surface change.
 

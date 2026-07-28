@@ -11,7 +11,7 @@
 > `ParseResumeJob`. Parsing happens entirely in the browser via
 > `pdf.js` + `re_test()` from the user's `File` object, **parallel with
 > the R2 PUT**. The form fields are filled by the time the upload finishes.
-> There is no `parse_resumes` queue, no LLM call, no `resume_parse_results`
+> There is no `parse_resumes` queue, no `resume_parse_results`
 > table, no Retry-After semantics, no `RepairStuckSessionsJob` parser
 > sweep, and no `parser_fallback_mode`. The candidate row is the only
 > canonical record.
@@ -121,7 +121,7 @@ Ownership Engine** observes and reports (badges), it never mutates.
 | **002** | **`Idempotency-Key` header is per-request random UUID, NOT content hash** | **Content-addressed dedupe violates INV-1; orphans the v1.5 carousel** |
 | 003 | Reverb auth from session, not URL/localStorage | Cross-tenant leak prevention |
 | 004 | State machine on `status` column, not separate transitions table | Conditional UPDATE is race-safe; audit table covers who/when |
-| 005 | ~~ONE Retry-After in parser; no retry loop~~ — REMOVED | Parser is client-side only in v2; no LLM call, no Retry-After surface |
+| 005 | ~~ONE Retry-After in parser; no retry loop~~ — REMOVED | Parser is client-side only in v2; no Retry-After surface |
 | 006 | v1 `POST /uploadresume` kept as fallback | Defense in depth on JS module load failure |
 | 007 | No `chmod 0777` on `bootstrap/cache` | Octane `octane:reload` shouldn't need world-writable |
 | 008 | Health endpoint ON in v2.0.0a, even alone | Ops cannot decide partial vs total without it |
