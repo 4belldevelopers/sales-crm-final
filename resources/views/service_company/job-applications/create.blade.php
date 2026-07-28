@@ -2405,10 +2405,9 @@ async function isInternetAvailable() {
         submitButton.addEventListener('click', async function (e) {
            
             e.preventDefault();
-            // if (submitButton.disabled) {
-            //     return; // ⛔ Prevent multiple clicks
-            // }
-            // submitButton.disabled = true;
+            if (submitButton.disabled) {
+                return; // Prevent duplicate submission
+            }
 
             const connected = await isInternetAvailable();
             if (!connected) {
