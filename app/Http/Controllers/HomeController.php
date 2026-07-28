@@ -784,32 +784,34 @@ class HomeController extends Controller
     }
 
 
-    public function downloadResume($id,$encodedPath)
+    public function downloadResume($id, $encodedPath)
     {
-        // dd("hi");
-        // Decode URL in case it contains characters like %2F
-        // $s3Url = urldecode($encodedPath);
-        // dd($encodedPath);
-        // If a full S3 URL is provided, extract only the key after the bucket domain
-        // $s3Path = 'Resumes/'. $encodedPath;
-        $s3Path = str_replace('https://file.jero.works/', '', $encodedPath);
-        // dd( $s3Path);
+        // base64url decode (encoded with rtrim(strtr(base64_encode($url),'+/','-_'),'=') in blade views)
+        $pad       = strlen($encodedPath) % 4 ? 4 - strlen($encodedPath) % 4 : 0;
+        $resumeUrl = base64_decode(strtr($encodedPath . str_repeat('=', $pad), '-_', '+/'));
 
-        $job_application = DB::table('job_applications')->where('id',$id)->first();
+        $s3Path = str_replace('https://file.jero.works/', '', $resumeUrl);
 
-        $candidate_name = "JERO_".str_replace(' ','_',$job_application->full_name);
-   
-        // Define your custom filename (dynamic extension)
-        $customName = $candidate_name .'.'. pathinfo($s3Path, PATHINFO_EXTENSION);
-        // dd($customName);
-        
-        // Optional: Check if the file exists
+        // Derive candidate name from job_applications (fall back to file basename if not found)
+        $job_application = DB::table('job_applications')->where('id', $id)->first();
+        $candidateName   = $job_application
+            ? 'JERO_' . str_replace(' ', '_', $job_application->full_name)
+            : 'JERO_' . pathinfo($s3Path, PATHINFO_FILENAME);
+
+        $ext        = strtolower(pathinfo($s3Path, PATHINFO_EXTENSION));
+        $customName = $candidateName . '.' . $ext;
+
+        // If not found at stored path, try PDF fallback (covers records with corrupted .htm extension in DB)
         if (!Storage::disk('r2')->exists($s3Path)) {
-            abort(404, "File not found at path: $s3Path");
+            $fallbackPath = preg_replace('/\.[^.\/]+$/', '.pdf', $s3Path);
+            if ($fallbackPath !== $s3Path && Storage::disk('r2')->exists($fallbackPath)) {
+                $s3Path     = $fallbackPath;
+                $customName = $candidateName . '.pdf';
+            } else {
+                abort(404, 'Resume file not found. Please re-upload the resume.');
+            }
         }
-        // dd($s3Path);
-         
-        // Download the file from S3 with your custom filename
+
         return Storage::disk('r2')->download($s3Path, $customName);
     }
 
