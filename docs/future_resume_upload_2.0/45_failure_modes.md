@@ -64,7 +64,7 @@ Same UUID holds for idempotency.
 
 ## FAIL-8 — ~~Parser 429 with `Retry-After`~~ — REMOVED 2026-07-27
 
-> v2 has no LLM call, no `Retry-After` surface, no `ResumeParserService`.
+> v2 has no `Retry-After` surface, no server-side parser service.
 
 ## FAIL-9 — ~~Parser exceeds timeout~~ — REMOVED 2026-07-27
 

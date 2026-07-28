@@ -54,11 +54,10 @@ prefix; we set this on bucket creation (deployment-time concern).
 
 ## Parser security — REMOVED 2026-07-27
 
-> v2 has no `ResumeParserService` and no `ChatGptService`. There is no
-> LLM call, no extraction server-side, no `extract-only, not learn-from`
-> contract to enforce. The single parser is browser-side (`pdf.js` +
-> `re_test()`) and runs entirely from the user's `File` object —
-> nothing crosses the network.
+> v2 has no server-side parser. There is no extraction server-side,
+> no `extract-only, not learn-from` contract to enforce. The single
+> parser is browser-side (`pdf.js` + `re_test()`) and runs entirely
+> from the user's `File` object — nothing crosses the network.
 >
 > The remaining "defense in depth" controls (filename sanitizer,
 > length 1..128, MIME allowlist, file size cap, SHA-256 sanity-check,

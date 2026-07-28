@@ -180,11 +180,13 @@ Bearer token. Health endpoint from v1 Phase 6 carried forward.
     "queue_default": {"ok": true,  "depth": 12},
     "scheduler":    {"is_leader": true, "pod_id": "app-1"},
     "orphan_uploads_count": 0,
-    "stuck_sessions_count": 0,
-    "parser_backlog_count": 7
+    "stuck_sessions_count": 0
   }
 }
 ```
+(REMOVED 2026-07-27 — `parser_backlog_count` field is gone; there is no
+server-side parser queue to measure. Browser-side pdf.js parses are
+unobservable from the health endpoint.)
 
 ## Versioning
 
