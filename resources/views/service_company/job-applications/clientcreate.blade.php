@@ -2456,10 +2456,9 @@ var KTAddCandidate = function () {
         submitButton.addEventListener('click', async function (e) {
            
             e.preventDefault();
-            // if (submitButton.disabled) {
-            //     return; // ⛔ Prevent multiple clicks
-            // }
-            // submitButton.disabled = true;
+            if (submitButton.disabled) {
+                return; // Prevent duplicate submission
+            }
             
              const connected = await isInternetAvailable();
               if (!connected) {
@@ -2532,8 +2531,11 @@ var KTAddCandidate = function () {
 																				      window.location = response.url;
 																			},
 															error			: function (response) {
-																									//handleFails(response);
-																			}
+																			$("#save-form").prop("disabled", false);
+																			$("#save-form").html("Submit Candidate");
+																			submitButton.removeAttribute('data-kt-indicator');
+																			Swal.fire("Error", "Submission failed. Please try again.", "error");
+																		}
 													});
 							
                        
