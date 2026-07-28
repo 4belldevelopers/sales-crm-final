@@ -113,47 +113,62 @@ protected $elasticService;
     //**  start ajax  */
 	public function uploadresume(Request $request){
 
-        $request->validate([
-            'file' => 'required|file|max:6048', // Max size 1MB
-        ]);
-       
-		$file = $request->file('file');
+		// Raw-body upload path: browser sends xhr.send(file) with Content-Type header.
+		// PHP reads php://input as a stream — no multipart temp file is ever written to disk.
+		$originalName = urldecode($request->header('X-File-Name', 'resume.pdf'));
+		$fileSize     = (int) $request->header('X-File-Size', 0);
+		$ext          = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-		$filename = uniqid('JERO_').'.'.$file->getClientOriginalExtension();
+		if (!in_array($ext, ['pdf', 'doc', 'docx'])) {
+			return response()->json(['success' => false, 'message' => 'Only PDF, DOC, DOCX files are allowed.'], 422);
+		}
 
-		$tempPath = $file->storeAs('temp', $filename,'r2'); // STORAGE/app/temp
-		// ⭐ GET PUBLIC URL FROM R2
-		$tempUrl = Storage::disk('r2')->url($tempPath);
-		
-		$extension = pathinfo($tempPath, PATHINFO_EXTENSION);
-		$full_name = uniqid('JERO_');
-		$uniqueName = GeneralMethod::getUniqueCvName($full_name,$extension);
-		// ✅ STORE IN SESSION
-		// dd($uniqueName);
+		if ($fileSize > 6 * 1024 * 1024) {
+			return response()->json(['success' => false, 'message' => 'Maximum file size is 6 MB.'], 422);
+		}
+
+		$objectKey = 'temp/' . \Illuminate\Support\Str::uuid() . '.' . $ext;
+
+		// Stream php://input directly to R2 — no local file written
+		$stream = fopen('php://input', 'r');
+		Storage::disk('r2')->put($objectKey, $stream);
+		fclose($stream);
+
+		$full_name  = uniqid('JERO_');
+		$uniqueName = GeneralMethod::getUniqueCvName($full_name, $ext);
+
 		session([
-			'resume_temp_path' => $tempPath,
-			'resume_original_name' => $filename,
+			'resume_temp_path'     => $objectKey,
+			'resume_original_name' => $originalName,
 		]);
 
-        // Store the file
-        if ($request->hasFile('file')) {
-            
-            // $filePath = $file->store('uploads', 'public'); // Save to 'storage/app/public/uploads'
+		// Create metadata record and dispatch ParseResumeJob
+		$resumeUploadId = null;
+		try {
+			$user   = auth()->user();
+			$record = \App\Models\CandidateResumeUpload::create([
+				'candidate_id'      => $request->header('X-Candidate-Id') ?: null,
+				'company_id'        => $user?->company_id,
+				'object_key'        => $objectKey,
+				'original_filename' => $originalName,
+				'mime_type'         => $request->header('Content-Type', 'application/octet-stream'),
+				'file_size'         => $fileSize,
+				'uploaded_by'       => $user?->id,
+				'status'            => 'Queued',
+			]);
+			\App\Jobs\ParseResumeJob::dispatch($record->id)->onQueue('default');
+			$resumeUploadId = $record->id;
+		} catch (\Throwable $e) {
+			\Log::warning('uploadresume: could not queue parse job', ['error' => $e->getMessage()]);
+		}
 
-            // Return a response
-            return response()->json([
-                'success' => true,
-                'message' => 'File uploaded successfully',
-                'file_path' => $tempPath,
-                'original_name' => $file->getClientOriginalName(),
-            ]);
-        }
-        // Handle failure
-        return response()->json([
-            'success' => false,
-            'message' => 'File upload failed',
-        ], 400);
-    
+		return response()->json([
+			'success'          => true,
+			'message'          => 'File uploaded successfully',
+			'file_path'        => $objectKey,
+			'original_name'    => $originalName,
+			'resume_upload_id' => $resumeUploadId,
+		]);
 	}
 	public function unsetFile(Request $request)
     {

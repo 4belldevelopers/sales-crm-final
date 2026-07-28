@@ -377,6 +377,11 @@
                                             <div class="up-detail-val" id="upDetailPages">&mdash;</div>
                                         </div>
                                     </div>
+                                    <div class="up-detail" id="upRetryWrap" style="display:none">
+                                        <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">
+                                            Retry Parse
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1457,92 +1462,118 @@ $(document).ready(function () {
         $info.addClass('show');
     }
 
+    // ─── Zero-temp upload pipeline ───────────────────────────────────────────
+    // xhr.send(file) sends raw bytes — PHP reads php://input stream directly
+    // to R2. No multipart = no PHP upload_tmp_dir write. No CORS needed.
+    // Flow: browser → POST raw bytes → Laravel streams to R2 → ParseResumeJob
+    // ─────────────────────────────────────────────────────────────────────────
+
+    var _parseStatusInterval = null;
+    var _resumeUploadId      = null;
+
+    function _showUploadError(msg) {
+        $('#upBanner').removeClass('ok').addClass('err').html(
+            '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<circle cx="12" cy="12" r="10"/>'
+            + '<line x1="15" y1="9" x2="9" y2="15"/>'
+            + '<line x1="9" y1="9" x2="15" y2="15"/>'
+            + '</svg><span><strong>Upload failed:</strong> ' + msg + '</span>'
+        ).show();
+        upXhr = null;
+    }
+
+    function _startParsePoller(uploadId) {
+        _resumeUploadId = uploadId;
+        if (_parseStatusInterval) clearInterval(_parseStatusInterval);
+        _parseStatusInterval = setInterval(function () {
+            $.get('{{ route("service_company.resume.status", ["id" => "__ID__"]) }}'.replace('__ID__', uploadId))
+                .done(function (r) {
+                    var statusMap = {
+                        Queued:     'Queued…',
+                        Processing: 'Parsing resume…',
+                        Completed:  'Parsed ✓',
+                        Failed:     'Parse failed',
+                    };
+                    $('#upDetailParserStatus').text(statusMap[r.status] || r.status);
+                    if (r.status === 'Completed' || r.status === 'Failed') {
+                        clearInterval(_parseStatusInterval);
+                        _parseStatusInterval = null;
+                        if (r.status === 'Failed') {
+                            $('#upDetailParserStatus').css('color', '#f44336');
+                            $('#upRetryWrap').show();
+                        } else {
+                            $('#upRetryWrap').hide();
+                        }
+                    }
+                })
+                .fail(function () { /* silent */ });
+        }, 4000);
+    }
+
     function uploadWithProgress(file) {
         window.__upXhrChannelClaimed = true;
         resetProgress();
         window.__upXhrChannelClaimed = true;
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        _resumeUploadId = null;
 
         $('#upWrap').show();
-        $('#upStats').text(
-            '0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size)
-        );
-
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('_token', '{{ csrf_token() }}');
-
+        $('#upStats').text('0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size));
         window.__upLoc = { file: file };
 
+        var mimeMap = {
+            pdf:  'application/pdf',
+            doc:  'application/msword',
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        };
+        var ext         = (file.name.split('.').pop() || '').toLowerCase();
+        var contentType = mimeMap[ext] || file.type || 'application/octet-stream';
+
+        // Send raw file bytes — PHP reads php://input, no multipart, no temp file
         upXhr = new XMLHttpRequest();
         upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
+        upXhr.setRequestHeader('Content-Type', contentType);
+        upXhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+        upXhr.setRequestHeader('X-File-Size', file.size);
+        upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
 
         upXhr.upload.onprogress = function (e) {
             if (!e.lengthComputable) return;
-            const pct = Math.round(e.loaded * 100 / e.total);
+            var pct = Math.round(e.loaded * 100 / e.total);
             $('#upBar').css('width', pct + '%');
-            $('#upStats').text(
-                pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(e.total)
-            );
+            $('#upStats').text(pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(file.size));
         };
-        upXhr.onload = function () {
-            let r = null;
-            try { r = JSON.parse(upXhr.responseText); } catch (_) { r = null; }
-            if (upXhr.status >= 200 && upXhr.status < 300 && r && r.success) {
-                $('#upBar').css('width', '100%');
-                $('#upStats').text(
-                    '100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size)
-                );
-                $('#upPill').css('display', 'inline-flex');
-                const $b = $('#upBanner');
-                $b.removeClass('err').addClass('ok')
-                    .html(
-                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                        + '<circle cx="12" cy="12" r="10"/>'
-                        + '<polyline points="9 12 11 14 16 9"/>'
-                        + '</svg>'
-                        + '<span><strong>Upload complete!</strong> '
-                        + 'Your resume has been uploaded successfully.</span>'
-                    ).show();
-                // Set the hidden input the controller's `clientappstore`
-                // reads from session path. We do NOT clear #resume —
-                // `hasFile('resume')` is the trigger that fires the
-                // session-based UploadResumeToTestRTwo dispatch.
-                $('#uploaded_file_path').val(r.file_path || '');
 
-                // Swap to the Resume Information card immediately.
-                showUploadedCard(file, null);
-            } else {
-                const msg = (r && r.message) ? r.message : upXhr.statusText;
-                $('#upBanner')
-                    .removeClass('ok').addClass('err')
-                    .html(
-                        '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                        + '<circle cx="12" cy="12" r="10"/>'
-                        + '<line x1="15" y1="9" x2="9" y2="15"/>'
-                        + '<line x1="9" y1="9" x2="15" y2="15"/>'
-                        + '</svg>'
-                        + '<span><strong>Upload failed:</strong> ' + msg + '</span>'
-                    ).show();
-            }
+        upXhr.onload = function () {
+            var r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) {}
             upXhr = null;
+
+            if (this.status >= 200 && this.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
+                ).show();
+
+                $('#uploaded_file_path').val(r.file_path || '');
+                showUploadedCard(file, null);
+
+                if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
+            } else {
+                _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
+            }
         };
 
         upXhr.onerror = function () {
-            $('#upBanner')
-                .removeClass('ok').addClass('err')
-                .html(
-                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<circle cx="12" cy="12" r="10"/>'
-                    + '<line x1="15" y1="9" x2="9" y2="15"/>'
-                    + '<line x1="9" y1="9" x2="15" y2="15"/>'
-                    + '</svg>'
-                    + '<span><strong>Network error</strong> during upload. '
-                    + 'Click Remove and try again.</span>'
-                ).show();
-            upXhr = null;
+            _showUploadError('Network error during upload. Click Remove and try again.');
         };
 
-        upXhr.send(fd);
+        upXhr.send(file); // raw bytes → php://input → R2, zero local temp
     }
 
     // Replace / Remove buttons inside the post-upload Resume Information card.
@@ -1561,7 +1592,25 @@ $(document).ready(function () {
 
     $(document).on('click', '#upRemoveBtn', function (e) {
         e.preventDefault();
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         backToDropzone();
+    });
+
+    // Retry parse — re-dispatches ParseResumeJob without re-uploading
+    $(document).on('click', '#upRetryBtn', function (e) {
+        e.preventDefault();
+        if (!_resumeUploadId) return;
+        $('#upDetailParserStatus').text('Re-queuing…');
+        $('#upRetryWrap').hide();
+        $.post(
+            '{{ route("service_company.resume.retry", ["id" => "__ID__"]) }}'.replace('__ID__', _resumeUploadId),
+            { _token: '{{ csrf_token() }}' }
+        ).done(function () {
+            _startParsePoller(_resumeUploadId);
+        }).fail(function () {
+            $('#upDetailParserStatus').text('Retry failed');
+            $('#upRetryWrap').show();
+        });
     });
 
     // ==========================
