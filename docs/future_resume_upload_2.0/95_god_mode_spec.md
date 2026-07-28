@@ -29,8 +29,12 @@ down and broadcast-peer channels for same-machine tabs.
 
 ### Why this is safe
 
-- IDEMPOTENCY (`sha256(file_bytes + company_id + safe_filename)` UNIQUE)
-  eliminates double-session race.
+- IDEMPOTENCY (per-request random UUID via `crypto.randomUUID()`,
+  HTTP `Idempotency-Key` header, **INDEX** — NOT UNIQUE — on
+  `(company_id, idempotency_key)`; see ADR-002, ADR-009, INV-4)
+  handles transport-retry replay; double-session race at the
+  upload-subsystem level is handled by the canonical state-machine
+  row transitions, not by a UNIQUE constraint.
 - `finalize` no longer exists as a separate request — submit does it
   inside one transaction.
 - Session moves `Created` → `Uploaded` (HEAD-verified) → `Parsed`
@@ -87,7 +91,7 @@ are real and we can measure the saving. ADR-017 captures why.
 | Recruiter, 1 tab, healthy network | 2 | 1 |
 | Recruiter, 3 tabs, same browser | 2 | 1 |
 | Same recruiter on phone + desktop | 2 + WS | 1 + WS |
-| Public career applicant | 1 (careerStore stays v1 form, parser is HTTP polling at 1 Hz) | 1 |
+| Public career applicant | 1 (careerStore stays v1 form, status polled at 1 Hz — REMOVED 2026-07-27: parser is browser-side, no server polling needed) | 1 |
 | Mobile, anonymous | 2 (polling) | 1 |
 
 (Note: mobile / anonymous still goes through Octane v1 path with multipart
@@ -119,7 +123,7 @@ function emitLocal(data) {
 | Server load contribution | **0** for same-origin tabs |
 | Limits | Single browser process only |
 
-Used for: upload progress, parser progress, badge state, cancel/refresh events.
+Used for: upload progress, badge state, cancel/refresh events. (REMOVED 2026-07-27: "parser progress" — no server parser.)
 
 ## Cross-machine / cross-device sync — Reverb (still needed)
 

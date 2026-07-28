@@ -122,7 +122,7 @@ Route::post('/notifications/read/{id}', function($id){
 Route::post('/salary/calculate', [HomeController::class, 'salaryCalculate']) ->name('salary.calculate');
 
 Route::get('/download-resume/{id}/{path}', [HomeController::class, 'downloadResume'])
-    ->where('path', '.*')
+    ->where('path', '[A-Za-z0-9\-_]+')
     ->name('download.resume');
 
 Route::get('/captcha', [HomeController::class, 'generate'])->name('captcha.generate');

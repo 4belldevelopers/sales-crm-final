@@ -26,20 +26,58 @@ flips back via feature flag.
 
 ---
 
-## ADR-002 — SHA256(file + company_id + name) as idempotency key, NOT just file hash
+## ADR-002 — HTTP `Idempotency-Key` header is a per-request random token, NOT a content hash
 
-**Context.** Same user picking the same file twice should reuse UUID
-to dedupe R2 + S3 + Document row.
+**Context.** v1 used a server-computed hash of `(file bytes + tenant +
+filename)` as the idempotency key, with a `UNIQUE(company_id,
+idempotency_key)` constraint. That is content-addressed deduplication,
+which conflicts with the product's hard requirement that *the upload
+subsystem performs no business duplicate check*. Two recruiters picking
+the same bytes must always get two different sessions; the candidate-
+level ownership check lives in the Duplicate Ownership Engine at
+submit time, not in the upload subsystem.
 
-**Decision.** Use SHA256(file content + tenant_id + safe_filename); same
-file + same tenant + same name → reuse.
+It also caused the v1.5 orphan carousel: a user picking the same file
+twice and a user picking the same file three times produced only 1 row
++ 2 R2 orphans — the inverse of what INV-1 ("every file pick is a
+brand-new session") requires.
 
-**Why now.** The 3-pick carousel of v1 produced 3 orphans in R2.
+**Decision.** The idempotency key is now generated on the **client**, at
+the moment of presign-request construction, using `crypto.randomUUID()`.
+It travels as the HTTP `Idempotency-Key` request header (standard
+RFC: draft-ietf-httpapi-idempotency-key-header). The server stores it
+on the `resume_uploads.idempotency_key` column with an **INDEX, not a
+UNIQUE constraint**, and replays the most recent non-terminal session
+matching `(company_id, idempotency_key)` on a duplicate header.
 
-**Trade-offs.** A user renaming a file in OS reissues a new session. This
-is intended — different name implies a different intent.
+- Same header on a retried POST → server returns the previously-issued
+  session (transport retry safety).
+- Different header on a new POST → new session, always (INV-1).
+- Two pods racing on the same header → the second INSERT proceeds but
+  the first is returned to the second caller via the lookup (INV-4);
+  the `INDEX` makes the lookup O(1) for the rare race.
 
-**Reversible?** Yes — additive column, can drop.
+**Why now.** The Duplicate Ownership Engine is the owner of "is this a
+duplicate candidate?" — the upload subsystem MUST NOT compete with it
+by accident, and any UNIQUE constraint here would silently reintroduce
+content-based dedupe the moment a developer added a new caller.
+
+**Trade-offs.**
+- A browser that retries with a fresh `crypto.randomUUID()` after a
+  successful presign would create a second session on the same bytes.
+  Mitigated by client discipline: the key is held in module closure
+  for the duration of the `fetch()` retries; a *user* re-pick (different
+  file, or same file again) intentionally emits a new key.
+- Race-window "double-charge" of storage at the OBJECT level is still
+  prevented by R2's atomic PUT — see INV-2 in the storage domain.
+- A truly identical concurrent POST from the *same* JS closure (e.g.
+  user double-clicks submit twice before first response) → two
+  sessions, two R2 objects, one wins at submit time per INV-3
+  ("submit verifies state before any insert").
+
+**Reversible?** Yes — additive column, no UNIQUE to drop. Drop the
+INDEX, drop the header lookup. Forward-compat: a future "file
+fingerprint" path belongs in the Duplicate Ownership Engine, not here.
 
 ---
 
@@ -79,19 +117,21 @@ replaced by `upload_session_audits.action_at`.
 
 ---
 
-## ADR-005 — ONE Retry-After attempt in parser, NO automatic retry loop
+## ADR-005 — ~~ONE Retry-After attempt in parser, NO automatic retry loop~~ — REMOVED 2026-07-27
 
-**Context.** OpenAI / parser-side 429 has a `Retry-After`. v1 had no
+**Context (historic).** OpenAI / parser-side 429 has a `Retry-After`. v1 had no
 honor; blast retry pattern likely.
 
-**Decision.** v2 honors `Retry-After` once, then fails.
+**Original decision.** v2 honors `Retry-After` once, then fails.
 
-**Why now.** The aim is fairness across tenants. A 429 from OpenAI
-should NOT be amplified by our retry storm.
+**REMOVAL reason.** v2 has no server-side parser. There is no LLM call
+to receive a `Retry-After`, no parser queue to retry. Browser-side
+`pdf.js` is deterministic; failures degrade to "empty fields" only,
+which INV-2 handles fine. ADR-005 is kept here as a tombstone to
+preserve the ADR numbering for downstream cross-references; the
+content is no longer in force.
 
-**Trade-offs.** Failed parses require user click retry. This is honest.
-
-**Reversible?** Yes — env `RESUMES_QUEUE_PARSER_TRIES` for staging.
+**Reversible?** N/A — concept removed, not deferred.
 
 ---
 
@@ -149,21 +189,53 @@ near zero.
 
 ---
 
-## ADR-009 — Idempotency-keyed (resume, hash) UNIQUE index makes CREATE OR REUSE atomic
+## ADR-009 — INDEX (not UNIQUE) on `(company_id, idempotency_key)` for replay-lookup, INSERT-then-SELECT on miss
 
-**Context.** Two pods receiving same idem_key concurrently — must
-have a row that wins, not two.
+**Context.** Two pods receiving the same `Idempotency-Key` header
+concurrently — must produce exactly one session for that header, not
+two. ADR-002 dropped the UNIQUE constraint because it conflated
+transport-retry replay with content dedupe; but the multi-pod race
+window has not gone away.
 
-**Decision.** UNIQUE KEY `(company_id, idempotency_key)` on
-`resume_uploads`. INSERT IGNORE for reuse; SELECT for lookup.
+**Decision.** The idempotency_key column now has an `INDEX
+(company_id, idempotency_key)` only. Replay uses an explicit
+INSERT-then-SELECT pattern:
 
-**Why now.** The race window without this is small but real; v2 has
-many pods.
+```
+SELECT uuid, status FROM resume_uploads
+  WHERE company_id = ?
+    AND idempotency_key = ?
+    AND status NOT IN (terminal)
+  ORDER BY id DESC
+  LIMIT 1;
 
-**Trade-offs.** A race that LOSES the insert becomes a SELECT-lookup,
-which is also OK.
+-- if not found:
+INSERT INTO resume_uploads (… idempotency_key …)
+  VALUES (…);
+```
 
-**Reversible?** Yes.
+**Why now.** Race-window correctness still has to hold; the `INDEX`
+gives a fast replay-lookup without a uniqueness gate that would
+re-introduce the ADR-002 anti-pattern. INSERT-then-SELECT is the same
+pattern v1 used; multi-pod correctness comes from the explicit
+transaction + the `orderByDesc('id')` lookup that resolves two
+concurrent inserts to the same winner (the second caller sees the
+first caller's row via the lookup).
+
+**Trade-offs.**
+- Two concurrent inserts on a cold key produce two rows; the second
+  request's lookup returns the first row, but its own INSERT also
+  exists. **Mitigation:** the second INSERT is harmless — it has the
+  same `(company_id, idempotency_key)` value, the same terminal
+  status (Uploaded/Pending) once both writers race-ahead, and at
+  submit-time each session is independent. The user picks one tab to
+  submit with (INV-1 + INV-3); the other session is reconciled by
+  `ReconcileOrphanUploadsJob` (Phase 5) within 24 h.
+- This is intentional — race-on-cold-key is a real but bounded
+  scenario; the alternative (UNIQUE) is forbidden by ADR-002.
+
+**Reversible?** Yes — drop the INDEX, accept a slower replay-lookup,
+keep the INSERT-then-SELECT pattern.
 
 ---
 
@@ -252,19 +324,21 @@ Mitigated by leaving the legacy path during v2.
 
 ---
 
-## ADR-015 — One parser pod per "tenant hotness", Redis-locked per-pod concurrency
+## ADR-015 — ~~One parser pod per "tenant hotness", Redis-locked per-pod concurrency~~ — REMOVED 2026-07-27
 
-**Context.** One tenant spiking triggers throttling on the parser.
+**Context (historic).** One tenant spiking triggers throttling on the parser.
 
-**Decision.** Per-pod concurrency cap via Redis semaphore keyed by
+**Original decision.** Per-pod concurrency cap via Redis semaphore keyed by
 `tenant_id`; max is configurable.
 
-**Why now.** Distributes Backpressure fairly.
+**REMOVAL reason.** v2 has no parser pods. The single parser layer runs
+in the browser from the local `File` object; browser memory is bounded
+per-tab, and per-tab throttling is the browser's responsibility, not
+the server's. ADR-015 is kept here as a tombstone to preserve the ADR
+numbering for downstream cross-references; the content is no longer
+in force.
 
-**Trade-offs.** A failure in Redis is "fail open = no per-tenant cap"
-which is contained.
-
-**Reversible?** Yes.
+**Reversible?** N/A — concept removed, not deferred.
 
 ---
 

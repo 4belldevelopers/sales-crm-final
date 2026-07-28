@@ -20,19 +20,19 @@ The state of the working tree as the design was written is captured in
 | 4 | [`30_architecture.md`](30_architecture.md) | the 6-tier architecture |
 | 5 | [`30_v1_brief.md`](30_v1_brief.md) | verbatim copy of the user-supplied v1 ASCII tree + rating |
 | 6 | [`30_workflow_diagram.md`](30_workflow_diagram.md) | the v1 tree adapted into v2 contracts |
-| 7 | [`40_data_model.md`](40_data_model.md) | ResumeUpload / ParseResult / Audit / enum / counters |
+| 7 | [`40_data_model.md`](40_data_model.md) | ResumeUpload / Audit / enum / counters (REMOVED 2026-07-27: ParseResult table gone with server parser) |
 | 8 | [`45_failure_modes.md`](45_failure_modes.md) | every way 10K break + our response |
 | 9 | [`50_api_contracts.md`](50_api_contracts.md) | routes, JSON, error matrix |
 | 10 | [`55_tenancy_and_security.md`](55_tenancy_and_security.md) | tenant scope, file validation, rate limits |
 | 11 | [`60_storage_and_queue.md`](60_storage_and_queue.md) | R2 → S3, idempotency, Retry-After, queue sizing |
 | 12 | [`65_browser_sizing.md`](65_browser_sizing.md) | what the BROWSER does for 10K |
-| 13 | [`70_jobs_and_events.md`](70_jobs_and_events.md) | ParseResumeJob, Reverb payload, channels |
+| 13 | [`70_jobs_and_events.md`](70_jobs_and_events.md) | Reverb payload (status only — no parser events), channels (REMOVED 2026-07-27: ParseResumeJob is gone) |
 | 14 | [`75_capacity_plan.md`](75_capacity_plan.md) | actual pod / queue / redis / R2 numbers |
 | 15 | [`80_observability.md`](80_observability.md) | metrics, health endpoint, log context |
 | 16 | [`85_scalability_redteam.md`](85_scalability_redteam.md) | what happens when each component fails |
 | 17 | [`90_rollout_plan.md`](90_rollout_plan.md) | 14-step small-shipped-live-tested rollout |
 | 18 | [`95_god_mode_spec.md`](95_god_mode_spec.md) | tier ladder — v2.5 / v3 — minimal PHP |
-| 19 | [`96_invariants.md`](96_invariants.md) | 5 kept-true invariants + tests |
+| 19 | [`96_invariants.md`](96_invariants.md) | 4 kept-true invariants + tests (REMOVED 2026-07-27: was 5; INV-5 removed with server-side parser) |
 | 0b | [`00_STEPS_IMPLEMENTATION_PLAN.md`](00_STEPS_IMPLEMENTATION_PLAN.md) | **[START HERE]** 20-step implementation |
 | 20 | [`97_faq_enterprise.md`](97_faq_enterprise.md) | the 3 FAQ reviewer questions, expanded |
 | 21 | [`98_failure_matrix_never.md`](98_failure_matrix_never.md) | wall-poster recovery + never matrix |
@@ -49,12 +49,12 @@ test fixtures before relying on them.
 | Files per second at peak | ~1,200 | 10K / ~8 s median upload |
 | Cap per resume | **6 MB** (PDF/DOC/DOCX) | matches today's `max:6048` |
 | Direct-to-R2 PUT | yes — PHP only orchestrates | 80% bandwidth savings |
-| Parser pods | ≥4 with bounded concurrency | AI service on a single failure domain in v2 |
-| Parser timeout | 30 s | covers 99% of p95 |
-| Parser retry | **once** with `Retry-After` | memory map §"OpenAI" |
+| ~~Parser pods~~ | REMOVED 2026-07-27 — no server-side parser; no parser pods |
+| ~~Parser timeout~~ | REMOVED 2026-07-27 — browser-side pdf.js runs in 50–200 ms locally; no server timeout |
+| ~~Parser retry~~ | REMOVED 2026-07-27 — no `Retry-After` to honor |
 | Session TTL | 30 min after creation | R2 lifecycle |
 | Live progress WS | Reverb, same-tenant private channel | Pusher/100-conn/limit ok at 1:4 fan-out |
-| Idempotency key | `sha256(file_bytes + company_id + safe_filename)` | file hash dedupes S3 objects |
+| Idempotency key | per-request random UUID via `crypto.randomUUID()` | HTTP `Idempotency-Key` header; replay-lookup only, NOT content dedupe (ADR-002, INV-4, Step 20) |
 | Rate limit — create session | 30/min/user, **120/min/company** | fairness across tenants |
 | Rate limit — submit candidate | 20/min/user | user-level abuse guard |
 

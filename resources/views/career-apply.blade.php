@@ -201,7 +201,7 @@ body{overflow-x:hidden;}
       $second_phone_code = $country_code;
       $url= '';
 	
-		  $resume_url				=	'<i class="fa fa-download" aria-hidden="true" style="color:#003300"></i>';	
+		  $resume_url				=	'';
 		  $photo  					=	url('public/avatar.png');	
       $resumeCheck = '';
 		  if($page_event == 'ADD'){
@@ -215,7 +215,7 @@ body{overflow-x:hidden;}
 			 $pagetitle	=	'Edit Candidate';      
 			 if(!empty($application->resume)){
 				$url				=	 $application->resume;
-				$resume_url			=	'<a href="'.$url.'" target="_blank" download><i class="fa fa-download" aria-hidden="true" style="color:#003300"></i></a>';	
+				$resume_url			=	route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]);
         $resumeCheck = 1;
 			 }else{
 				$resume_url			=	'';	
@@ -429,14 +429,15 @@ $currencySymbole = GeneralMethod::currencySymbole();
                             </div>
 
                             <!-- Selected File -->
-                            <div class="file-info" id="fileInfo">
+                            <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
                                 <span class="file-name" id="fileName"> </span>
                                 @if(!empty($resume_url))
-                                 <button type="button"
-                                        class="download-file"
-                                        id="" style="color: #fff; margin-left: 250px;">
-                                    {!! $resume_url !!}
-                                </button>
+                                <a href="{{ $resume_url }}"
+                                   target="_blank"
+                                   class="download-file"
+                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
+                                </a>
                                 @endif
 
                                 <button type="button"
@@ -496,7 +497,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
               <div class="col-lg-8 col-xl-8">
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
                 <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
-                <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.. &nbsp; {!! @$resume_url !!}</span> </div>
+                <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
             </div>

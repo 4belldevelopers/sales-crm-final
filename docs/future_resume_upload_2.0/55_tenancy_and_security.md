@@ -1,8 +1,11 @@
 # 55 — Tenancy & security
 
-> *Intent: encode the rules that prevent tenant leak, file injection, parser*
-> *abuse, and rate-limit evasion. Most of this is from CLAUDE.md rules 3 and 5*
-> + the v1 SECURITY.md.*
+> *Intent: encode the rules that prevent tenant leak, file injection,*
+> *and rate-limit evasion. Most of this is from CLAUDE.md rules 3 and 5*
+> *+ the v1 SECURITY.md. The "parser abuse" subsection was REMOVED on*
+> *2026-07-27 — v2 has no server-side parser; the browser-side*
+> *`pdf.js` runs entirely from the user's `File` object and never*
+> *leaves the browser.*
 
 ## Tenancy (CLAUDE.md rule 3)
 
@@ -28,10 +31,10 @@ For v2:
 
 | Check | Where | Failure mode |
 |---|---|---|
-| `idempotency_key` is hex64 | server | 400 |
+| `idempotency_key` (per-request random UUID via `crypto.randomUUID()`) | server | 400 if missing/malformed |
 | `mime_type` ∈ allowed (PDF/DOC/DOCX) | server | 422 |
 | `file_size_bytes` ≤ 6 MB | server | 422 |
-| `sha256_hex` matches file (server HEAD later) | server | 422 |
+| `sha256_hex` (sanity-check field; client-stated, server re-verifies at HEAD; NOT used as idem key) | server | mismatch logged, not 422 — idem key is independent (ADR-002, INV-4) |
 | filename length 1..128 | server | 422 |
 
 ### On R2 PUT
@@ -49,18 +52,18 @@ prefix; we set this on bucket creation (deployment-time concern).
 | R2 lifecycle rule | temp files expire automatically after 30 d |
 | Conditional DELETE on Cancel | no-op if already `Cancelled` |
 
-## Parser security
+## Parser security — REMOVED 2026-07-27
 
-`ResumeParserService` (and its underlying `ChatGptService`) is invoked
-only by server. Not by browser directly, not by URL.
-
-Parser input is **sanitized before reaching the LLM**:
-- Strip all `<>{}` from `raw_text` before parse payload body
-- Strip emails beyond the FIRST match (regex-based "name@domain")
-- Strip URLs beyond the FIRST 3
-- Cap raw_text length to 25 KB (~6 MB compressed DOCX → ~150 KB raw)
-
-This is "extract-only, not learn-from". README in `ResumeParserService`.
+> v2 has no `ResumeParserService` and no `ChatGptService`. There is no
+> LLM call, no extraction server-side, no `extract-only, not learn-from`
+> contract to enforce. The single parser is browser-side (`pdf.js` +
+> `re_test()`) and runs entirely from the user's `File` object —
+> nothing crosses the network.
+>
+> The remaining "defense in depth" controls (filename sanitizer,
+> length 1..128, MIME allowlist, file size cap, SHA-256 sanity-check,
+> R2 lifecycle) are already covered by the **File validation**
+> section above.
 
 ## Reverb channel auth
 

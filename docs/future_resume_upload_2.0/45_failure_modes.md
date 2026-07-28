@@ -5,7 +5,9 @@
 
 ## FAIL-1 — Browser offline mid-upload
 
-**Surface:** badge "Network Lost"; progress bar frozen; parser paused.
+**Surface:** badge "Network Lost"; progress bar frozen; browser-side
+parser continues from `File` (no network needed) — form fields
+populated regardless.
 **Backend:** session row remains `Created`/`Uploading`. No partial finalize.
 **Recovery:** online event → validate server with HEAD/R2; resume PUT
 from offset (multipart upload ≥5 MB case) or restart (single-PUT case).
@@ -43,31 +45,30 @@ Same UUID holds for idempotency.
 **Diagnose:** metric `resume_presign_rotations_total`.
 
 ## FAIL-6 — R2 PUT 5xx (server-side)
+> Original wording referenced "parser suspended"; v2 has no
+> parser to suspend — wording updated to "browser-side parser
+> continues from `File`, form remains filled."
 
 **Surface:** retry modal, exponential backoff, max 3.
 **Backend:** same UUID holds. After 3, session row → `Failed` with
 `last_error='R2 503'`. UI shows "Upload unsuccessful" with retry CTA.
 **Diagnose:** metric `resume_upload_failed_total{reason}`.
 
-## FAIL-7 — Parser fails (network)
+## FAIL-7 — ~~Parser fails (network)~~ — REMOVED 2026-07-27
 
-**Surface:** "Parsing failed — We'll try once more in a moment" modal.
-**Backend:** parses_lines attempt=1. Once succeeded, status = `Parsed`.
-Once attempt=1 failed with no Retry-After, status = `Failed`.
-**Diagnose:** metric `resume_parse_attempts_total{outcome}`.
+> v2 has no server-side parser. There is no `ParseResumeJob`, no
+> `parser_attempts`, no `last_error='PAR_TIMEOUT'`, no
+> `resume_parser_*` metrics. Browser-side `pdf.js` is deterministic;
+> failures degrade to "empty fields" only, which INV-2 handles fine.
+> Failed failure-mode entries are renumbered below.
 
-## FAIL-8 — Parser 429 with `Retry-After`
+## FAIL-8 — ~~Parser 429 with `Retry-After`~~ — REMOVED 2026-07-27
 
-**Surface:** "Resume parse paused — server is busy; we'll continue automatically".
-**Backend:** `ResumeParserService` honors `Retry-After`
-(`sleep(min(seconds, cap=10))`); one attempt only.
-**Diagnose:** metric `resume_parser_429_total`.
+> v2 has no LLM call, no `Retry-After` surface, no `ResumeParserService`.
 
-## FAIL-9 — Parser exceeds timeout
+## FAIL-9 — ~~Parser exceeds timeout~~ — REMOVED 2026-07-27
 
-**Surface:** resubmit wait; do not auto-retry.
-**Backend:** one attempt only; status = `Failed` after timeout.
-**Diagnose:** `last_error='PAR_TIMEOUT'` on the row.
+> v2 has no server-side parser call to time-bound.
 
 ## FAIL-10 — Submit POST times out from browser; verify success
 
@@ -82,8 +83,12 @@ UI shows green "We received your submission".
 **Surface:** user double-clicks.
 **Backend:** server check on candidate uniqueness (composite idx:
 company_id, email, phone) — second insert returns 200 with the existing
-candidate_id; UI merges.
-**Diagnose:** metric `resume_submit_duplicate_merged_total`.
+candidate_id; UI surfaces "you already submitted — here is the prior
+candidate row" banner. The Duplicate Ownership Engine flags a "possible
+duplicate" badge on the candidate; **the engine NEVER merges or
+deletes candidates** (Step 20). Recruiter decides whether to archive
+one manually.
+**Diagnose:** metric `resume_submit_recovered_total`.
 
 ## FAIL-12 — Session expires (presign → upload-complete > 30 min)
 
@@ -93,7 +98,7 @@ candidate_id; UI merges.
 
 ## FAIL-13 — Reverb pod crash mid-broadcast
 
-**Surface:** "Parser progress" stuck at last-seen %.
+**Surface:** "Upload progress" stuck at last-seen %.
 **Backend:** session state still advances server-side. Recovery: refresh
 logic re-reads `/api/resume-sessions/{uuid}` and resyncs.
 **Diagnose:** Reverb pod health (separate endpoint).
@@ -124,12 +129,15 @@ else 403. URL smuggling can't bypass it.
 + length 1..128 enforced. Original persisted up to 128 chars.
 **Diagnose:** metric `resume_filename_sanitized_total`.
 
-## FAIL-18 — Stale finalize (modal open while session moved to `Parsed`)
+## FAIL-18 — Stale finalize (modal open while session moved to `Completed`)
 
-**Surface:** UI shows "Parser finished", but submit is misaligned.
-**Backend:** GET `/api/resume-sessions/{uuid}` returns `Parsed`; UI
+**Surface:** UI shows "Resume received", but submit is misaligned.
+**Backend:** GET `/api/resume-sessions/{uuid}` returns `Completed`; UI
 disables Update Candidate button (read-only inspection).
 **Diagnose:** metric `resume_stale_finalize_total`.
+
+> Original wording referenced `Parsed`; that status no longer exists in
+> v2 (2026-07-27) — the post-finalize terminal is `Completed`.
 
 ## FAIL-19 — Resume submitted, but ES index write fails
 
@@ -140,11 +148,15 @@ retries up to 5 times with exponential backoff; on terminal fail, audit
 row `ActionElasticIndexFailed` written; ops follow-up.
 **Diagnose:** metric `resume_es_index_failed_total`.
 
-## FAIL-20 — Same idempotency key, different filename (rare)
+## FAIL-20 — Browser retries presign POST with a different `Idempotency-Key` (intentional new pick)
 
-**Surface:** server returns the existing session.
-**Backend:** idem key built as `sha256(file_bytes + company_id + safe_filename)`.
-A user renaming a file in OS before upload generates a NEW session
-rather than reuse. This is intentional — same name does NOT guarantee
-same bytes.
+**Surface:** server returns a NEW session (different UUID, different
+`Idempotency-Key`) for the second request. The first session's row is
+left in its current state; the second is a brand-new session.
+**Backend:** idem key is `crypto.randomUUID()` per request, NOT a
+content hash (ADR-002, INV-4). A user re-picking the same file or
+renaming the file before upload always emits a new key → always gets
+a new session. This is INV-1: every file pick = brand-new session.
+The Duplicate Ownership Engine flags the dup at submit time (Step 20);
+it NEVER merges.
 **Diagnose:** metric `resume_idempotency_key_rotations_total`.

@@ -534,7 +534,7 @@
                                                 @endphp
                                                 <a type="button"
                                                     class="btn btn-light-primary btn-sm py-1"
-                                                    href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => urlencode($info['basename'])]) }}"
+                                                    href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}"
                                                     target="_blank" download>
                                                     Download&nbsp;&nbsp;<i class="fa fa-download"></i>
                                                 </a>
