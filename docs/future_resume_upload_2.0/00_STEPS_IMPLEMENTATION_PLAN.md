@@ -50,15 +50,15 @@
 | File upload | Browser → PHP multipart POST → Laravel → disk | Browser → presigned PUT → Cloudflare R2 |
 | PHP involvement | Receives full file bytes in memory | Receives ZERO bytes — metadata only |
 | File storage | Local disk or server-managed S3 | R2 temp bucket with 30-day lifecycle |
-| Idempotency | None — re-upload creates duplicate rows | SHA256-based idempotency key → same UUID reused |
+| Idempotency | None — re-upload creates duplicate rows | HTTP `Idempotency-Key` header (per-request random) → same UUID replay on transport retry only. New file pick → new key → new UUID. No business duplicate detection. |
 | Upload progress | Basic jQuery AJAX call | Real progress bar with ETA, speed via XHR |
 | Server round-trips | 4 per upload (uploadresume + finalize + candidate + documents) | **2 per upload** (presign + submit-with-session) |
 
 ### What stays EXACTLY the same (untouched)
 | Area | Why untouched |
 |------|---------------|
-| Client-side parser (pdf.js → re_test()) | Already runs in browser from `File` object, instant, no server needed |
-| Form fields + manual edit | Parser fills fields via `re_test()`, manual values always win |
+| Client-side parser (pdf.js → re_test()) | Already runs in browser from `File` object, instant, no server needed — REMOVED 2026-07-27: confirms there is NO server-side parser; this is the only parser |
+| Form fields + manual edit | Browser-side pdf.js fills fields via `re_test()`, manual values always win |
 | Submit button + candidate creation | Same controller, same `StoreJobApplication` — just adds optional `session_uuid` param |
 | Career-apply public pages | Same HomeController code until Step 17 extraction |
 | UI theme (Metronic, Poppins, 14px) | Not a UI redesign |
@@ -346,16 +346,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('resume_uploads', function (Blueprint $table) {
-            // Idempotency — sha256 hex of file bytes
+            // Idempotency — per-request random token from the HTTP
+            // `Idempotency-Key` header (RFC draft-ietf-httpapi-idempotency-key-header).
+            // Used for transport retry replay only. NOT a content hash.
+            // NOT business duplicate detection (see INV-1, INV-4).
             $table->char('idempotency_key', 64)->nullable()->after('uuid');
-            
-            // Parser tracking
-            $table->timestamp('parser_started_at')->nullable()->after('file_path');
-            $table->timestamp('parser_completed_at')->nullable()->after('parser_started_at');
-            $table->unsignedTinyInteger('parser_attempts')->default(0)->after('parser_completed_at');
-            $table->text('last_error')->nullable()->after('parser_attempts');
-            $table->string('last_parser_pod_id', 64)->nullable()->after('last_error');
-            
+
+            // Parser tracking — REMOVED 2026-07-27: no server-side parser
+            // (parser_started_at, parser_completed_at, parser_attempts,
+            //  last_parser_pod_id columns all removed.)
+            $table->text('last_error')->nullable();   // generic last_error, NOT parser-specific
+
             // Lifecycle
             $table->timestamp('expires_at')->nullable()->after('updated_at');
         });
@@ -366,11 +367,7 @@ return new class extends Migration
         Schema::table('resume_uploads', function (Blueprint $table) {
             $table->dropColumn([
                 'idempotency_key',
-                'parser_started_at',
-                'parser_completed_at',
-                'parser_attempts',
-                'last_error',
-                'last_parser_pod_id',
+                'last_error',   // REMOVED 2026-07-27: was 'last_parser_pod_id' before parser removal
                 'expires_at',
             ]);
         });
@@ -397,9 +394,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('resume_uploads', function (Blueprint $table) {
-            // Idempotency: one active session per file per company
-            $table->unique(['company_id', 'idempotency_key'], 'resume_uploads_company_idem_key_unique');
-            
+            // Idempotency-Key replay lookup: a non-unique index for
+            // `WHERE company_id = ? AND idempotency_key = ? AND status
+            // NOT IN (terminal)`. No UNIQUE — replay is "last-N-lookup",
+            // not a uniqueness gate (per INV-1, INV-4; ADR-002, ADR-009).
+            $table->index(['company_id', 'idempotency_key'], 'idx_company_idem');
+
             // Tenant-scoped UUID lookup (show/refresh)
             $table->unique(['uuid', 'company_id'], 'resume_uploads_uuid_company_unique');
 
@@ -413,7 +413,7 @@ return new class extends Migration
         Schema::table('resume_uploads', function (Blueprint $table) {
             $table->dropIndex('resume_uploads_status_expires_at_index');
             $table->dropIndex('resume_uploads_uuid_company_unique');
-            $table->dropIndex('resume_uploads_company_idem_key_unique');
+            $table->dropIndex('idx_company_idem');
         });
     }
 };
@@ -506,15 +506,19 @@ return new class extends Migration
 │  status, created_at, updated_at)                     │
 │                                                      │
 │  NEW v2 columns:                                     │
-│  ┌ idempotency_key (char 64, UNIQUE+company)        │
-│  ├ parser_started_at / parser_completed_at           │
-│  ├ parser_attempts (default 0)                       │
+│  ┌ idempotency_key (char 64, indexed by company)     │
+│  │       — HTTP `Idempotency-Key` header value,      │
+│  │         per-request random. Transport retry        │
+│  │         replay only — NOT business dedupe.        │
 │  ├ last_error (text, nullable)                       │
-│  ├ last_parser_pod_id (varchar 64, nullable)         │
+│  │       REMOVED 2026-07-27: parser_started_at,       │
+│  │       parser_completed_at, parser_attempts,        │
+│  │       last_parser_pod_id all dropped (no server    │
+│  │       parser to track).                            │
 │  └ expires_at (timestamp, nullable)                  │
 │                                                      │
 │  NEW indexes:                                        │
-│  ┌ UNIQUE(company_id, idempotency_key)               │
+│  ┌ INDEX(company_id, idempotency_key) — no UNIQUE   │
 │  ├ UNIQUE(uuid, company_id)                          │
 │  └ INDEX(status, expires_at)                         │
 │                                                      │
@@ -696,11 +700,7 @@ class ResumeUpload extends Model
         'mime_type',
         'status',
         'idempotency_key',
-        'parser_started_at',
-        'parser_completed_at',
-        'parser_attempts',
         'last_error',
-        'last_parser_pod_id',
         'expires_at',
         'linked_candidate_id',
         'cleanup_reason',
@@ -708,11 +708,10 @@ class ResumeUpload extends Model
 
     protected $casts = [
         'file_size' => 'integer',
-        'parser_attempts' => 'integer',
-        'parser_started_at' => 'datetime',
-        'parser_completed_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
+    // REMOVED 2026-07-27: parser_started_at, parser_completed_at,
+    // parser_attempts, last_parser_pod_id columns no longer exist.
 
     // ─── Scopes ───────────────────────────────────
 
@@ -969,15 +968,23 @@ use Illuminate\Support\Str;
 class ResumeUploadSession
 {
     /**
-     * Create a new upload session (or return existing one for same idem key).
+     * Create a new upload session, OR replay an existing one for the same
+     * `Idempotency-Key` HTTP header (transport retry safety — NOT business
+     * duplicate detection; see INV-1, INV-4 in 96_invariants.md).
+     *
+     * The browser generates a fresh `Idempotency-Key` value per presign
+     * request construction. Two file picks → two keys → two new sessions,
+     * even if the picked file bytes are identical. Retries of the same
+     * fetch() (network blip, double-click, double-tab race) carry the
+     * same key and get the same session back.
      *
      * Flow:
-     * 1. Compute idempotency_key from client-supplied value
-     * 2. Check for existing non-terminal session with same key+company
-     * 3. If found → return existing (INV-1: same UUID reused)
-     * 4. If not found → INSERT new row with status=Pending
-     * 5. Generate presigned R2 PUT URL
-     * 6. Return session metadata to client
+     * 1. Read Idempotency-Key header (controller concern; passed in).
+     * 2. Check for existing non-terminal session with same key+company.
+     * 3. If found → return existing (replayed=true). Pure transport retry.
+     * 4. If not found → INSERT new row with status=Pending.
+     * 5. Generate presigned R2 PUT URL.
+     * 6. Return session metadata to client.
      *
      * Tenancy: company_id MUST come from Auth::user(), NOT from request body.
      */
@@ -989,12 +996,16 @@ class ResumeUploadSession
         string $mimeType,
         string $clientIp,
     ): array {
-        // 1. Validate idempotency key format (64-char hex)
-        if (!preg_match('/^[a-f0-9]{64}$/', $idempotencyKey)) {
-            throw new \InvalidArgumentException('Invalid idempotency key format');
+        // 1. Validate idempotency-key format. Header value is a UUID or
+        //    16-byte random hex (RFC draft-ietf-httpapi-idempotency-key-header).
+        if (!preg_match('/^[a-f0-9-]{36,64}$/', $idempotencyKey)) {
+            throw new \InvalidArgumentException('Invalid Idempotency-Key format');
         }
 
-        // 2. Check for existing non-terminal session
+        // 2. Transport-retry replay lookup. NO uniqueness gate — replay
+        //    is "last non-terminal session for this key + company".
+        //    If found, return existing (replayed=true). Same key across
+        //    pods will both SELECT; oldest wins by id/timestamp.
         $existing = ResumeUpload::where('company_id', $companyId)
             ->where('idempotency_key', $idempotencyKey)
             ->whereNotIn('status', array_map(fn($s) => $s->value, [
@@ -1004,11 +1015,13 @@ class ResumeUploadSession
                 ResumeUploadStatus::Expired,
                 ResumeUploadStatus::Reconciled,
             ]))
+            ->orderByDesc('id')
             ->first();
 
         if ($existing) {
-            // INV-1: reuse same UUID, rotate presign URL if needed
-            UploadSessionAudit::record($existing->uuid, 'ActionSessionReused', [
+            // INV-4: HTTP retry safety — same header → same session.
+            // This is transport, NOT business dedupe.
+            UploadSessionAudit::record($existing->uuid, 'ActionSessionReplayed', [
                 'previous_created_at' => $existing->created_at->toIso8601String(),
             ]);
 
@@ -1194,7 +1207,7 @@ beforeEach(function () {
     $this->idemKey = str_repeat('a', 64);
 });
 
-test('createOrPresign with new idem key creates session', function () {
+test('new header creates new session', function () {
     $result = $this->service->createOrPresign(
         $this->companyId, $this->idemKey,
         'resume.pdf', 1000, 'application/pdf', '127.0.0.1'
@@ -1205,25 +1218,45 @@ test('createOrPresign with new idem key creates session', function () {
     expect($result['upload_url'])->toContain('http');
 });
 
-test('same idem key returns same UUID (INV-1)', function () {
+test('same header on retry returns same UUID (INV-4 transport retry)', function () {
     $first = $this->service->createOrPresign(
         $this->companyId, $this->idemKey,
         'resume.pdf', 1000, 'application/pdf', '127.0.0.1'
     );
 
+    // Simulate a transport retry of the same fetch() call:
+    // same header, same payload, same client.
     $second = $this->service->createOrPresign(
         $this->companyId, $this->idemKey,
         'resume.pdf', 1000, 'application/pdf', '127.0.0.1'
     );
 
     expect($second['uuid'])->toBe($first['uuid']);
+    expect($second['replayed'])->toBeTrue();   // call site should expose this
 });
 
-test('different companies get different UUIDs for same idem key', function () {
+test('different companies with same header get different UUIDs', function () {
     $a = $this->service->createOrPresign('company-a', $this->idemKey, 'r.pdf', 1000, 'application/pdf', '');
     $b = $this->service->createOrPresign('company-b', $this->idemKey, 'r.pdf', 1000, 'application/pdf', '');
 
     expect($a['uuid'])->not->toBe($b['uuid']);
+});
+
+test('new header creates new UUID even within same session (INV-1)', function () {
+    // File pick #1
+    $first = $this->service->createOrPresign(
+        $this->companyId, str_repeat('a', 64),
+        'resume.pdf', 1000, 'application/pdf', '127.0.0.1'
+    );
+
+    // File pick #2 (same bytes — different intent) — fresh header
+    $second = $this->service->createOrPresign(
+        $this->companyId, str_repeat('b', 64),
+        'resume.pdf', 1000, 'application/pdf', '127.0.0.1'
+    );
+
+    expect($second['uuid'])->not->toBe($first['uuid']);
+    expect($second['replayed'])->toBeFalse();
 });
 
 test('finalize transitions Pending to Uploaded', function () {
@@ -1259,10 +1292,10 @@ test('cancel transitions to Cancelled', function () {
     expect($session->status)->toBe('Cancelled');
 });
 
-test('invalid idem key format throws', function () {
+test('invalid Idempotency-Key header value throws', function () {
     $this->expectException(\InvalidArgumentException::class);
     $this->service->createOrPresign(
-        $this->companyId, 'not-hex', 'r.pdf', 1000, 'application/pdf', ''
+        $this->companyId, 'not-a-uuid-or-hex', 'r.pdf', 1000, 'application/pdf', ''
     );
 });
 
@@ -1278,7 +1311,8 @@ test('finalize on non-existent session throws 404', function () {
 **What success looks like:**
 - All 8 unit tests pass
 - `createOrPresign` returns valid response with UUID + presigned URL
-- Same idem key → same UUID (INV-1)
+- Same `Idempotency-Key` header on retry → same UUID (INV-4)
+- New header → new UUID, even within same session (INV-1)
 - Double finalize is safe no-op
 - Cancel works
 
@@ -1365,12 +1399,10 @@ class StoreResumeSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'idempotency_key'  => [
-                'required',
-                'string',
-                'size:64',
-                'regex:/^[a-f0-9]{64}$/',
-            ],
+            // Idempotency-Key is the HTTP request header
+            // (RFC draft-ietf-httpapi-idempotency-key-header) — validated
+            // in the controller via $request->header('Idempotency-Key').
+            // It is NOT a body field in v2.
             'original_filename' => [
                 'required',
                 'string',
@@ -1394,7 +1426,6 @@ class StoreResumeSessionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'idempotency_key.regex' => 'Invalid idempotency key format',
             'file_size_bytes.max'   => 'File size exceeds the maximum allowed (6 MB)',
             'original_filename.regex' => 'File must be PDF, DOC, or DOCX',
         ];
@@ -1439,10 +1470,24 @@ class ResumeUploadSessionController extends \App\Http\Controllers\Controller
     {
         $companyId = auth()->user()->company_id;
 
+        // v2 reads Idempotency-Key from the HTTP header, not the body.
+        // RFC draft-ietf-httpapi-idempotency-key-header. Per-request
+        // random generated by JS at request construction; transport
+        // retry safety only — NOT business dedupe (INV-1, INV-4).
+        $idempotencyKey = $request->header('Idempotency-Key')
+            ?? (string) \Illuminate\Support\Str::uuid();
+
+        if (!preg_match('/^[a-f0-9-]{36,64}$/', $idempotencyKey)) {
+            return response()->json([
+                'error'   => 'invalid_idempotency_key',
+                'message' => 'Missing or malformed Idempotency-Key header',
+            ], 400);
+        }
+
         try {
             $result = $this->sessionService->createOrPresign(
                 companyId:        $companyId,
-                idempotencyKey:   $request->input('idempotency_key'),
+                idempotencyKey:   $idempotencyKey,
                 originalFilename: $request->input('original_filename'),
                 fileSizeBytes:    (int) $request->input('file_size_bytes'),
                 mimeType:         $request->input('mime_type'),
@@ -1604,7 +1649,8 @@ Browser                                    PHP/Octane                    R2
 
 **What success looks like:**
 - `POST /resume-sessions` returns 201 with `uuid` and `upload_url`
-- Same idempotency key → same UUID returned
+- Same `Idempotency-Key` header on retry → same UUID returned (INV-4)
+- New `Idempotency-Key` header → new UUID, always (INV-1)
 - Invalid data → 422 with validation error
 - Rate limit exceeded → 429
 - Feature flag OFF → 404 `feature_disabled`
@@ -1629,8 +1675,8 @@ SID="your_session_cookie_value"
 curl -s -X POST "https://testing.jero.works/service_company/api/resume-sessions" \
   -H "Content-Type: application/json" \
   -H "Cookie: $SID" \
+  -H "Idempotency-Key: $(uuidgen)" \
   -d '{
-    "idempotency_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "original_filename": "resume.pdf",
     "file_size_bytes": 500000,
     "mime_type": "application/pdf"
@@ -1643,23 +1689,28 @@ curl -s "https://testing.jero.works/service_company/api/resume-sessions/$UUID" \
   -H "Cookie: $SID" | json_pp
 # Expected: 200, status = "Pending"
 
-# 6. Same idem key test
+# 6. Same Idempotency-Key test (transport retry safety — INV-4)
 curl -s -X POST "https://testing.jero.works/service_company/api/resume-sessions" \
   -H "Content-Type: application/json" \
   -H "Cookie: $SID" \
-  -d '{...same idem key...}' | jq '.uuid'
+  -H "Idempotency-Key: $KEY" \
+  -d '{...same payload...}' | jq '.uuid'
 # Expected: same UUID as first call
 
-# 7. Validation error test (invalid idem key)
-curl -s -X POST "..." -d '{"idempotency_key": "short"}' | jq '.error'
-# Expected: "validation_error"
+# 7. Validation error test (missing Idempotency-Key header)
+curl -s -X POST "..." \
+  -H "Content-Type: application/json" \
+  -H "Cookie: $SID" \
+  -d '{"original_filename":"r.pdf","file_size_bytes":1000,"mime_type":"application/pdf"}' | jq '.error'
+# Expected: "invalid_idempotency_key"
 
 # 8. Rate limit test
 for i in $(seq 1 31); do
-  KEY=$(printf 'a%.0s' $(seq 1 64))
+  KEY=$(uuidgen)
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "..." \
     -H "Content-Type: application/json" -H "Cookie: $SID" \
-    -d "{\"idempotency_key\":\"${KEY}\",\"original_filename\":\"r${i}.pdf\",\"file_size_bytes\":1000,\"mime_type\":\"application/pdf\"}")
+    -H "Idempotency-Key: $KEY" \
+    -d "{\"original_filename\":\"r${i}.pdf\",\"file_size_bytes\":1000,\"mime_type\":\"application/pdf\"}")
   echo "Request $i: $STATUS"
 done
 # Expected: 30th=201, 31st=429
@@ -1688,7 +1739,7 @@ returns 404.
 **Intent:** Replace the current `uploadWithProgress()` multipart POST
 with a direct-to-R2 flow. The browser calls `POST /resume-sessions`
 to get a presigned URL, then PUTs the file directly to Cloudflare R2.
-The client-side parser (pdf.js → re_test()) continues running unchanged.
+The client-side parser (pdf.js → re_test()) continues running unchanged. REMOVED 2026-07-27 note: there is no server-side parser; the ONLY parser is this one.
 
 **This is the core v2 change.** Every other step is supporting
 infrastructure around this.
@@ -1964,7 +2015,7 @@ const RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_up
 - PUT to R2 directly (Network tab shows direct R2 PUT, no PHP upload)
 - Progress bar fills 0% → 100%
 - Session finalized → status = Uploaded
-- Client-side parser still runs and fills fields (pdf.js/mammoth)
+- Client-side parser (pdf.js/mammoth) still runs and fills fields — REMOVED 2026-07-27: this IS the only parser (no server-side one)
 
 **Test on staging:**
 ```bash
@@ -1998,7 +2049,7 @@ try {
 #   No "Upload through PHP" messages
 #   pdf.js still extracts text → fields filled
 
-# 4. Client-side parser still works
+# 4. Client-side parser (the ONLY parser — REMOVED 2026-07-27: no server-side) still works
 # Upload a PDF with known text
 # Confirm name/email/phone fields are filled via re_test()
 
@@ -2023,7 +2074,7 @@ Delete `public/js/resume-presign.js` permanently if not needed.
 
 ## Phase C — Submit + UX (Steps 7-11)
 
-### Step 7 — Submit with session_uuid (2-RTT merged flow)
+### Step 7 — Submit with session_uuid (2-RTT race-safe flow)
 
 **Intent:** When recruiter clicks Submit, the server atomically:
 1. Verifies the session is Uploaded (file is in R2)
@@ -2054,7 +2105,10 @@ the session_uuid handling:
 $sessionUuid = $request->input('session_uuid');
 
 if ($sessionUuid && config('resumes.features.submit_with_session', false)) {
-    // Verify session belongs to this company and is Uploaded
+    // Tenant-bound lookup; byUuid+forCompany must keep
+    // (company_id, uuid) as a unique composite — see Step 2
+    // migration UNIQUE(uuid, company_id). Tenant A MUST NOT
+    // see a session UUID minted by Tenant B.
     $session = ResumeUpload::byUuid($sessionUuid)
         ->forCompany(auth()->user()->company_id)
         ->first();
@@ -2073,31 +2127,115 @@ if ($sessionUuid && config('resumes.features.submit_with_session', false)) {
             'current_status' => $session->status,
         ], 422);
     }
+}
 
-    // HEAD-check R2 object exists
+if (isset($session) && $session) {
+    // ATOMIC LINK — session status is the source of truth, not a
+    // SELECT-then-UPDATE. Two pods racing on the same valid
+    // session_uuid must produce exactly one INSERT into candidates
+    // for that session. The conditional UPDATE returns the number
+    // of rows touched; if 0, somebody else already linked it.
+    //
+    // Order matters: claim the session FIRST, then INSERT the
+    // candidate. If the claim fails (rows=0), we 200 the existing
+    // candidate — never insert a duplicate.
+    $claimed = DB::transaction(function () use ($session) {
+        $rows = ResumeUpload::where('id', $session->id)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('status', ResumeUploadStatus::Uploaded->value)
+            ->update([
+                'status' => ResumeUploadStatus::Completed->value,
+                'linked_candidate_id' => null, // set below if we own the insert
+                'updated_at'         => now(),
+            ]);
+
+        return $rows === 1;
+    });
+
+    if (!$claimed) {
+        // Concurrent submit already won. Re-read to find the
+        // existing candidate. Returning 200 with linked info is
+        // INV-3 ("may retry, server verifies state before insert").
+        //
+        // NOTE — the `duplicate_merged` note here is INV-3 retry
+        // semantics, NOT Step 20 duplicate-ownership semantics:
+        //   * INV-3 (this code path): SAME session, two concurrent
+        //     submits from the SAME recruiter. The first INSERT
+        //     wins; the second's lookup returns the existing
+        //     candidate. NO NEW candidate row was created.
+        //   * Step 20 (different): two DIFFERENT sessions / two
+        //     DIFFERENT file picks (anywhere, any time, anyone)
+        //     → TWO candidates, BOTH persist, NO merge. The
+        //     "duplicate_merged" note must NEVER appear on the
+        //     Step 20 path.
+        $existing = ResumeUpload::byUuid($sessionUuid)
+            ->forCompany(auth()->user()->company_id)
+            ->first();
+
+        if ($existing && $existing->linked_candidate_id) {
+            $existingCandidate = Candidate::find($existing->linked_candidate_id);
+            if ($existingCandidate && $existingCandidate->company_id === auth()->user()->company_id) {
+                UploadSessionAudit::record($sessionUuid, 'ActionSubmitReplayWinnerFound', [
+                    'candidate_id' => $existingCandidate->id,
+                    'company_id'   => auth()->user()->company_id,
+                ]);
+                return response()->json([
+                    'candidate'    => $existingCandidate,
+                    'note'         => 'session_replay_winner_found',
+                    'session_uuid' => $sessionUuid,
+                ], 200);
+            }
+        }
+        // Session exists but is in some unexpected state (Failed, Cancelled).
+        // Surface the same 422 as a fresh "upload_incomplete" so the
+        // client treats it the same as a not-yet-uploaded session.
+        return response()->json([
+            'error'   => 'upload_incomplete',
+            'message' => 'Resume upload session is no longer accepting submits.',
+        ], 422);
+    }
+
+    // HEAD-check R2 object exists BEFORE the candidate INSERT so we
+    // never end up with a candidate pointing at a missing R2 key.
+    // Done inside the transaction body below; if it fails we revert
+    // the claim by flipping status back to Uploaded (NOT to Failed —
+    // the user can retry, INV-3).
     try {
         $r2Exists = Storage::disk('r2')->exists('resumes/' . $sessionUuid);
         if (!$r2Exists) {
             throw new \RuntimeException('R2 object missing');
         }
     } catch (\Throwable $e) {
+        DB::transaction(function () use ($session) {
+            ResumeUpload::where('id', $session->id)
+                ->where('status', ResumeUploadStatus::Completed->value)
+                ->update([
+                    'status'      => ResumeUploadStatus::Uploaded->value,
+                    'updated_at'  => now(),
+                ]);
+        });
         return response()->json([
             'error'   => 'upload_incomplete',
             'message' => 'Uploaded file not found in storage. Please upload again.',
         ], 422);
     }
-}
 
-// ... existing candidate creation code ...
+    // ... existing candidate creation code INSIDE the same
+    // transaction, before the link UPDATE ...
 
-// If session_uuid was provided, link the session after candidate creation:
-if (isset($session) && $session) {
-    $session->update([
-        'status' => ResumeUploadStatus::Completed->value,
-        'linked_candidate_id' => $candidate->id,
-    ]);
+    // After candidate INSERT, set linked_candidate_id atomically
+    // with a second conditional UPDATE so a worker that already
+    // 'Claimed' the session (above) but somehow didn't get here
+    // (Pod crash) can be recovered by ReconcileOrphanUploadsJob.
+    $linked = DB::transaction(function () use ($session, $candidate) {
+        $rows = ResumeUpload::where('id', $session->id)
+            ->where('company_id', auth()->user()->company_id)
+            ->where('status', ResumeUploadStatus::Completed->value)
+            ->update(['linked_candidate_id' => $candidate->id]);
+        return $rows === 1;
+    });
 
-    UploadSessionAudit::record($sessionUuid, 'ActionSubmitLinked', [
+    UploadSessionAudit::record($session->uuid, $linked ? 'ActionSubmitLinked' : 'ActionSubmitLinkRaceLost', [
         'candidate_id' => $candidate->id,
         'company_id'   => auth()->user()->company_id,
     ]);
@@ -2146,6 +2284,16 @@ cron job (Step 12) expires the session.
 - Full 2-RTT flow: presign → R2 PUT → Submit creates candidate
 - Idempotent re-submit returns existing candidate_id
 - Submit without upload → 422 `upload_incomplete`
+- **Cross-request race** (2 pods, same valid `session_uuid`, both
+  POST simultaneously): exactly ONE candidate created; the loser
+  receives `200 session_replay_winner_found` with the winner's
+  `candidate_id` (INV-3, INV-4). Verified by `ResumeV2Invariant3Test::
+  test_submit_race_with_duplicate_session_creates_one_candidate`.
+- **Cross-tenant probe** (Tenant A submits Tenant B's session UUID):
+  `422 upload_incomplete`. The `(uuid, company_id)` UNIQUE on
+  `resume_uploads` plus the `forCompany()` scope guarantee that
+  the tenant-bound lookup is structurally zero-leak — verified by
+  `ResumeV2Invariant3Test::test_cross_tenant_session_uuid_returns_422`.
 
 **Test on staging:**
 ```bash
@@ -2317,53 +2465,141 @@ Add this to the JS module:
 ```javascript
 /**
  * On page load, check if there's a pending session in localStorage.
- * If found, rehydrate the UI state.
+ * If found, rehydrate the UI state from the SERVER's view of truth
+ * — never from localStorage alone. INV-4: only the server owns the
+ * status column.
+ *
+ * Important: any session that the server still reports as 'Pending'
+ * past expiry (5 min) is a server-side orphan — the PUT happened
+ * but we lost the finalize POST. Trigger an auto-finalize (HEAD-check
+ * R2 + conditional UPDATE) BEFORE rehydrating the UI so the user
+ * never sees a stuck "0% uploading" state on a fresh page load.
  */
-function checkForExistingSession() {
+async function checkForExistingSession() {
     const uuid = localStorage.getItem('resume_session_uuid');
     if (!uuid) return;
 
-    fetch(`/service_company/api/resume-sessions/${uuid}`, {
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+    let resp;
+    try {
+        resp = await fetch(`/service_company/api/resume-sessions/${uuid}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+            }
+        });
+    } catch (err) {
+        // Offline at page load: cannot rehydrate from server. Leave the
+        // UI in "Choose File" state but keep localStorage intact so
+        // the next online event can retry.
+        console.warn('Session recovery offline, will retry on online:', err);
+        window.addEventListener('online', checkForExistingSession, { once: true });
+        return;
+    }
+
+    if (resp.status === 404 || resp.status === 410) {
+        // Session expired or evicted. Tear down localStorage.
+        clearLocalSession();
+        return;
+    }
+    if (!resp.ok) {
+        console.warn('Session recovery non-OK status:', resp.status);
+        // Do NOT clear localStorage on a transient 5xx; the next
+        // refresh can re-attempt.
+        return;
+    }
+
+    const session = await resp.json();
+    currentSession = session;
+
+    // Pre-step: if server still says Pending past the auto-finalize
+    // grace window (5 min after session creation), the PUT likely
+    // landed but the finalize POST was lost. Force a finalize attempt.
+    // Otherwise the UI sits at 0% uploading forever and the user
+    // wonders why Submit stays disabled.
+    const ageMinutes = (Date.now() - Date.parse(session.created_at)) / 60_000;
+    if (session.status === 'Pending' && ageMinutes >= 5) {
+        try {
+            const finalizeResp = await fetch(
+                `/service_company/api/resume-sessions/${uuid}/finalize`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    },
+                }
+            );
+            if (finalizeResp.ok) {
+                const finalized = await finalizeResp.json();
+                session.status = finalized.status; // now 'Uploaded' or 'Failed'
+                session.upload_completed_at = finalized.upload_completed_at;
+            }
+            // 422 'upload_incomplete' is expected here if R2 PUT
+            // never landed — fall through to the Failed branch below.
+        } catch (err) {
+            console.warn('Refresh-recovery auto-finalize failed:', err);
         }
-    })
-    .then(resp => {
-        if (resp.status === 404) {
-            // Session expired — clean up
-            localStorage.removeItem('resume_session_uuid');
-            localStorage.removeItem('resume_idempotency_key');
-            return null;
-        }
-        return resp.json();
-    })
-    .then(session => {
-        if (!session) return;
-        
-        currentSession = session;
-        
-        switch (session.status) {
-            case 'Uploaded':
-            case 'Completed':
-                currentState = STATE.UPLOADED;
-                emitStateChange(STATE.UPLOADED, 100);
-                break;
-            case 'Pending':
-            case 'Uploading':
+    }
+
+    switch (session.status) {
+        case 'Uploaded':
+        case 'Completed':
+            currentState = STATE.UPLOADED;
+            emitStateChange(STATE.UPLOADED, 100);
+            break;
+        case 'Uploading':
+            // Mid-upload refresh: PUT to R2 is resumable via multipart
+            // (Step 11). Single-PUT (<5 MB) cannot resume — fall back
+            // to a clean "Choose File" state with a clear message.
+            if (session.multipart === true) {
                 currentState = STATE.UPLOADING;
-                emitStateChange(STATE.UPLOADING, 0);
-                // Attempt resume (Step 11 handles multipart resume)
-                break;
-            case 'Failed':
-                currentState = STATE.FAILED;
-                emitStateChange(STATE.FAILED, 0, session.last_error || 'Upload failed');
-                break;
-        }
-    })
-    .catch(err => {
-        console.warn('Session recovery failed:', err);
-    });
+                emitStateChange(STATE.UPLOADING, session.uploaded_bytes ? Math.round(session.uploaded_bytes / session.file_size_bytes * 100) : 0);
+                // Step 11 wires the actual resumeMultipart() call.
+                await resumeMultipart(session);
+            } else {
+                // Single PUT cannot resume mid-flight. Clear the
+                // session and surface a friendly hint; the user
+                // re-picks the file (new session per INV-1).
+                clearLocalSession();
+                emitStateChange(STATE.IDLE, 0);
+                showResumeRecoveryHint('Single-PUT upload cannot resume after refresh. Please re-select the file.');
+            }
+            break;
+        case 'Failed':
+            currentState = STATE.FAILED;
+            emitStateChange(STATE.FAILED, 0, session.last_error || 'Upload failed');
+            // Clear localStorage on terminal states (Failed, Cancelled,
+            // Expired, Reconciled) so the next page load is fresh.
+            clearLocalSession();
+            break;
+        case 'Cancelled':
+        case 'Expired':
+        case 'Reconciled':
+            // Terminal states — UI starts fresh.
+            clearLocalSession();
+            emitStateChange(STATE.IDLE, 0);
+            break;
+        default:
+            console.warn('Unknown session status, defaulting to IDLE:', session.status);
+            clearLocalSession();
+            emitStateChange(STATE.IDLE, 0);
+    }
+}
+
+function clearLocalSession() {
+    localStorage.removeItem('resume_session_uuid');
+    // Per INV-4 + ADR-002: idempotency_key MUST be per-request random
+    // and live in the closure for retries only. NEVER in localStorage.
+    // (The previous Step 5 JS stored it here — that was a violation
+    // we are fixing in this step. See ADR-002.)
+}
+
+function showResumeRecoveryHint(msg) {
+    const banner = document.getElementById('resume-recovery-hint');
+    if (banner) {
+        banner.textContent = msg;
+        banner.style.display = 'block';
+    }
 }
 
 // Call on page load
@@ -2372,10 +2608,29 @@ document.addEventListener('DOMContentLoaded', checkForExistingSession);
 
 ---
 
+**Backend support for the auto-finalize path:**
+
+`EP-3 — POST /service_company/api/resume-sessions/{uuid}/finalize` is
+extended to accept a "force re-check" path: when called on a session
+whose `status='Pending'` AND `created_at <= now - 5 minutes`, the
+endpoint HEAD-checks R2 and conditionally UPDATEs to `Uploaded` if
+the object exists. This makes refresh-recovery a server-owned
+behavior, not a client guess.
+
+Server-only — no public flag. The endpoint is the same `/finalize`
+the browser calls explicitly after a successful PUT; the refresh
+path is a re-use of the existing endpoint, no new route.
+
+---
+
 **What success looks like:**
-- Start upload → refresh page → upload progress reappears
+- Start upload → refresh page → upload progress reappears (multipart) or
+  "Please re-select the file" hint (single-PUT, <5 MB)
 - After upload complete, refresh → "Uploaded ✓" badge visible
-- Expired session → clean "Choose File" state
+- Server-side Pending > 5 min → auto-finalize fires, badge appears
+- Expired session → clean "Choose File" state, localStorage cleared
+- Idempotency-Key NEVER in localStorage (INV-4, ADR-002). Verified by
+  `ResumeV2Invariant1Test::test_localStorage_does_not_contain_idempotency_key`
 
 **Test on staging:**
 ```bash
@@ -2385,25 +2640,40 @@ export RESUMES_FEATURE_BROWSER_UPLOAD=true
 export RESUMES_FEATURE_REFRESH_RECOVERY=true
 php artisan config:clear
 
-# 2. Mid-upload refresh test
-# Start upload (small file, <50%)
-# Refresh page
-# Expected: upload progress reappears, continues from beginning
+# 2. Mid-upload refresh test (multipart, ≥5 MB)
+# Start upload → at <50% progress, refresh page
+# Expected: progress reappears, resumes from last part
 
-# 3. Post-upload refresh test
+# 3. Mid-upload refresh test (single-PUT, <5 MB)
+# Start upload → at <50% progress, refresh page
+# Expected: "Please re-select the file" hint, no error toast
+
+# 4. Post-upload refresh test
 # Upload completes → refresh page
 # Expected: "Uploaded ✓" badge, Submit enabled
 
-# 4. 404 test
-# Get a session UUID from DB
-# Wait until expired (or manually mark expired in DB)
+# 5. Stale-Pending auto-finalize test
+# Force a session to status=Pending with created_at = 6 min ago
+#   (UPDATE resume_uploads SET status='Pending',
+#    created_at = NOW() - INTERVAL 6 MINUTE WHERE uuid = ?)
 # Refresh page
-# Expected: clean "Choose File" state
+# Expected: server auto-finalizes to Uploaded, badge appears within
+#           ~200 ms of page load
 
-# 5. Log tail
+# 6. 410 expired test
+# Update expires_at to 1 min ago
+# Refresh page
+# Expected: clean "Choose File" state, localStorage cleared
+
+# 7. INV-4 invariant check
+# Open DevTools → Application → Local Storage
+# Expected: NO `resume_idempotency_key` key under any flow
+#           (presign, retry, refresh, submit)
+
+# 8. Log tail
 tail -n 5 storage/logs/laravel.log | grep "jobs.resume.session"
 
-# 6. Disable flags
+# 9. Disable flags
 unset RESUMES_FEATURE_REFRESH_RECOVERY
 php artisan config:cache
 ```
@@ -2932,10 +3202,17 @@ namespace App\Http\Middleware;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 // Intent: Company-scoped rate limiter.
 // Key format: {company_id}:{route_name}
 // Prevents one company from exhausting all pods' capacity.
+//
+// Fail-open contract: if Redis is unavailable or the limiter throws,
+// the request MUST pass through (with a structured log line). The
+// alternative — failing CLOSED on Redis outage — would cascade the
+// outage into the resume subsystem, which is exactly the opposite of
+// what a 10K-concurrent recruiter deployment needs.
 
 class CompanyThrottleMiddleware
 {
@@ -2946,21 +3223,38 @@ class CompanyThrottleMiddleware
         $companyId = auth()->user()->company_id ?? 'anonymous';
         $key = sha1("company:{$companyId}:" . $request->route()->getName());
 
-        if ($this->limiter->tooManyAttempts($key, $maxAttempts)) {
-            Log::warning('jobs.resume.throttle_hit_company', [
+        try {
+            if ($this->limiter->tooManyAttempts($key, $maxAttempts)) {
+                Log::warning('jobs.resume.throttle_hit_company', [
+                    'company_id' => $companyId,
+                    'route'      => $request->route()->getName(),
+                ]);
+
+                return response()->json([
+                    'error'   => 'rate_limit_exceeded',
+                    'message' => 'Too many requests. Please slow down.',
+                ], 429);
+            }
+
+            $this->limiter->hit($key, $decayMinutes * 60);
+
+            return $next($request);
+        } catch (Throwable $e) {
+            // FAIL-OPEN — log full structured context, let the
+            // request through. Redis is already on the critical path
+            // (cache backend for `onOneServer()`, counter store,
+            // queues); doubling-up on resume throttling is not worth
+            // a 5xx here. Health endpoint surfaces the Redis-down
+            // condition separately (Phase 6).
+            Log::warning('jobs.resume.throttle_fails_open', [
                 'company_id' => $companyId,
                 'route'      => $request->route()->getName(),
+                'exception'  => $e::class,
+                'message'    => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'error'   => 'rate_limit_exceeded',
-                'message' => 'Too many requests. Please slow down.',
-            ], 429);
+            return $next($request);
         }
-
-        $this->limiter->hit($key, $decayMinutes * 60);
-
-        return $next($request);
     }
 }
 ```
@@ -3002,12 +3296,17 @@ Route::post('resume-sessions', [...])
 php -l app/Http/Middleware/CompanyThrottleMiddleware.php
 
 # 2. Per-user rate limit test
+# Note: per INV-4 / ADR-002, the per-request token travels as the
+# Idempotency-Key HTTP header (NOT a body field). Each iteration
+# generates a fresh UUID so each request is a NEW session (INV-1).
 for i in $(seq 1 31); do
-  KEY=$(printf 'a%.0s' $(seq 1 64))
+  IDEM=$(uuidgen)
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     -X POST "https://testing.jero.works/service_company/api/resume-sessions" \
-    -H "Content-Type: application/json" -H "Cookie: $SID" \
-    -d "{\"idempotency_key\":\"${KEY}\",\"original_filename\":\"r${i}.pdf\",\"file_size_bytes\":1000,\"mime_type\":\"application/pdf\"}")
+    -H "Content-Type: application/json" \
+    -H "Cookie: $SID" \
+    -H "Idempotency-Key: ${IDEM}" \
+    -d "{\"original_filename\":\"r${i}.pdf\",\"file_size_bytes\":1000,\"mime_type\":\"application/pdf\"}")
   echo "Request $i: $STATUS"
 done
 # Expected: 30th=201, 31st=429
@@ -3050,9 +3349,24 @@ round-trip. Zero server cost.
  * Intent: Same-origin tab sync via BroadcastChannel.
  * When one tab changes upload state, all other tabs in the same
  * browser (same company) see the update instantly.
- * 
+ *
  * Zero server bytes — pure client-side IPC.
  * Fallback for Safari < 15.4: localStorage 'storage' events.
+ *
+ * Design constraints:
+ *   1. NO PING-PONG: A cross-tab incoming message MUST NOT trigger
+ *      a re-broadcast. We use a per-event `__rt` flag and the
+ *      resume:state-changed listener skips re-broadcasting when the
+ *      event was already received via channel.
+ *   2. NO localStorage LEAK: the localStorage fallback path writes
+ *      `resume_broadcast_<ts>` keys; the consumer cleans them up
+ *      immediately on receipt AND a periodic sweep (60 s) drops
+ *      anything older than 5 min.
+ *   3. IDEMPOTENCY-KEY IS NEVER SHARED HERE: per INV-4 / ADR-002,
+ *      `Idempotency-Key` is a per-request random token in the
+ *      closure; it MUST NOT travel over BroadcastChannel nor
+ *      localStorage. The BroadcastChannel payload only carries
+ *      { uuid, state, progress_percent, error_safe }.
  */
 
 window.ResumeBroadcastSync = (function () {
@@ -3060,6 +3374,9 @@ window.ResumeBroadcastSync = (function () {
 
     let channel = null;
     const COMPANY_ID = document.body.dataset.companyId || 'unknown';
+    const LS_PREFIX = 'resume_broadcast_';
+    const LS_TTL_MS = 5 * 60 * 1000;
+    let sweeperInterval = null;
 
     function init() {
         try {
@@ -3070,10 +3387,25 @@ window.ResumeBroadcastSync = (function () {
             window.addEventListener('storage', handleStorageEvent);
         }
 
-        // Listen for local state changes to broadcast
+        // Listen for LOCAL state changes (i.e. tab-generated, not
+        // tab-received). The `__rt` flag is set when the state-change
+        // is the result of an incoming cross-tab message; listeners
+        // for resume:state-changed must skip re-broadcasting in
+        // that case to break the ping-pong loop.
         window.addEventListener('resume:state-changed', (e) => {
+            if (e.detail && e.detail.__rt === true) {
+                // Re-broadcast suppressed: this state change is the
+                // echo of an incoming cross-tab message.
+                return;
+            }
             broadcast(e.detail);
         });
+
+        // Periodic cleanup of the localStorage fallback keys. Without
+        // this, a long session leaves tens of thousands of dead keys.
+        if (!sweeperInterval) {
+            sweeperInterval = setInterval(sweepLocalStorageKeys, 60_000);
+        }
     }
 
     function destroy() {
@@ -3082,14 +3414,34 @@ window.ResumeBroadcastSync = (function () {
             channel = null;
         }
         window.removeEventListener('storage', handleStorageEvent);
+        if (sweeperInterval) {
+            clearInterval(sweeperInterval);
+            sweeperInterval = null;
+        }
     }
 
     function broadcast(data) {
+        // Strip any Idempotency-Key-shaped payloads defensively.
+        // Belt-and-suspenders: even if a future contributor adds
+        // `{ idem: ... }` to a broadcast event, we drop it here.
+        const safe = {
+            uuid:             data.uuid,
+            state:            data.state,
+            progress_percent: data.progress_percent,
+            error_safe:       data.error_safe,
+            // NOTE: no `idempotency_key`, no `original_filename`,
+            // no PII. INV-4 + GDPR-by-default.
+        };
+        const payload = JSON.stringify(safe);
+
         if (channel) {
-            channel.postMessage(JSON.stringify(data));
+            channel.postMessage(payload);
         } else {
-            // localStorage fallback for Safari < 15.4
-            localStorage.setItem('resume_broadcast_' + Date.now(), JSON.stringify(data));
+            // localStorage fallback for Safari < 15.4. The value is
+            // the WHOLE payload string (not JSON.stringified again
+            // like the old code did — that double-wrapped the
+            // object and the consumer's JSON.parse failed silently).
+            localStorage.setItem(LS_PREFIX + Date.now(), payload);
         }
     }
 
@@ -3104,32 +3456,63 @@ window.ResumeBroadcastSync = (function () {
     }
 
     function handleStorageEvent(e) {
-        if (!e.key || !e.key.startsWith('resume_broadcast_')) return;
-        let data;
+        if (!e.key || !e.key.startsWith(LS_PREFIX)) return;
+
+        // Tidy up the entry we just consumed — otherwise localStorage
+        // grows unboundedly. The setTimeout yields so the parser and
+        // the consumer see the value before removal.
         try {
-            data = JSON.parse(e.newValue);
+            const data = JSON.parse(e.newValue);
+            applyIncomingState(data);
         } catch {
-            return;
+            // fall through to cleanup
         }
-        applyIncomingState(data);
+        setTimeout(() => {
+            try { localStorage.removeItem(e.key); } catch (_) {}
+        }, 0);
     }
 
     function applyIncomingState(data) {
-        // Only apply if uuid matches local session
+        // Only apply if uuid matches local session. Two tabs in the
+        // same company but holding different session_uuids (different
+        // file picks, INV-1) MUST NOT cross-pollinate.
         const localUuid = localStorage.getItem('resume_session_uuid');
-        if (!data.uuid || data.uuid !== localUuid) return;
+        if (!data || !data.uuid || data.uuid !== localUuid) return;
 
-        console.log('[BroadcastSync] Syncing from cross-tab:', data);
-        
-        // Dispatch event that other modules listen to
+        // Mark the inbound event as "received via tab sync" so the
+        // resume:state-changed listener (above) does NOT re-broadcast.
+        const detail = Object.assign({}, data, { __rt: true });
         window.dispatchEvent(new CustomEvent('resume:cross-tab-sync', {
-            detail: data
+            detail,
         }));
+    }
+
+    function sweepLocalStorageKeys() {
+        const cutoff = Date.now() - LS_TTL_MS;
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(LS_PREFIX)) {
+                const ts = Number(key.substring(LS_PREFIX.length));
+                if (Number.isFinite(ts) && ts < cutoff) {
+                    try { localStorage.removeItem(key); } catch (_) {}
+                }
+            }
+        }
     }
 
     return { init, destroy, broadcast };
 })();
 ```
+
+---
+
+**No localStorage for cross-tab session-key carry:** Note the
+explicit `localStorage.getItem('resume_session_uuid')` check in
+`applyIncomingState` — the session UUID itself is allowed in
+localStorage (it is the primary key for state rehydration; it's a
+session-marker, not a transport-retry idempotency key). What MUST
+NOT live in localStorage is the `Idempotency-Key` header value (see
+Step 9 fix; INV-4, ADR-002).
 
 ---
 
@@ -3390,7 +3773,9 @@ php -l app/Http/Controllers/Api/ResumeHealthController.php
 php -l app/Http/Middleware/InternalTokenMiddleware.php
 
 # 2. Health endpoint (valid token)
-TOKEN=$(php -r "echo config('resumes.health_token');")
+# Important: read the token from artisan, NOT from `php -r` —
+# `config()` is a Laravel helper, not a bare PHP function.
+TOKEN=$(php artisan tinker --execute="echo config('resumes.health_token');" 2>/dev/null)
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://testing.jero.works/service_company/api/internal/health/resume" | json_pp
 # Expected: status=ok, mysql.ok=true, redis.ok=true
@@ -3433,51 +3818,136 @@ into its own controller, reusing the v2 upload pipeline.
 <?php
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\CareerApplyStoreRequest;
 use App\Services\ResumeUploadSession;
+use App\Services\CareerApplyService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-// Intent: Thin controller for career/public apply flow.
-// Delegates to HomeController methods for now, with v2 resume
-// upload support layered on top.
+// Intent: OWNED controller for career/public apply flow.
+// This is a REAL extraction — the controller OWNS its logic; it does
+// NOT delegate back to HomeController. The legacy HomeController
+// path remains only while the feature flag is OFF, and is deleted
+// in the v2.5 cleanup step. CLAUDE.md rule 11: vertical slices
+// (Route + FormRequest + Action + service) — never a god controller.
 
 class CareerApplyController extends \App\Http\Controllers\Controller
 {
     public function __construct(
-        private ResumeUploadSession $sessionService
+        private ResumeUploadSession $sessionService,
+        private CareerApplyService  $applyService,
     ) {}
 
     /**
-     * Career apply — public-facing candidate application.
+     * Career apply — public-facing candidate application form.
      */
-    public function apply(Request $request): JsonResponse
+    public function apply(Request $request)
     {
-        // Delegate to HomeController's careerApply method
-        $controller = app(\App\Http\Controllers\HomeController::class);
-        return $controller->careerApply($request);
+        // Public, no auth; tenant inference is from the public job
+        // slug on the request (NOT from auth).
+        return view('public.career_apply', $this->applyService->formContext($request));
     }
 
     /**
      * Store career application with optional session_uuid.
+     *
+     * Cross-request race handling for the public path:
+     * Same conditional-UPDATE-as-source-of-truth pattern as Step 7.
+     * public sessions are tenantless in `company_id` (nullable) so
+     * we can't lean on the company_id UNIQUE; the session_uuid
+     * itself carries a UNIQUE(uuid) on the legacy table. New sessions
+     * for the same UUID → race resolves by checking `status` first.
      */
-    public function store(Request $request): JsonResponse
+    public function store(CareerApplyStoreRequest $request): JsonResponse
     {
         $sessionUuid = $request->input('session_uuid');
-        
+
         if ($sessionUuid) {
-            // Verify session (public — no auth, so we trust the session)
-            $session = $this->sessionService->get($sessionUuid, null);
-            if (!$session || $session->status !== 'Uploaded') {
-                return response()->json(['error' => 'upload_incomplete'], 422);
+            $session = $this->sessionService->getPublic($sessionUuid);
+
+            if (!$session) {
+                return response()->json([
+                    'error'   => 'upload_incomplete',
+                    'message' => 'Resume upload session not found.',
+                ], 422);
+            }
+
+            // Atomic claim via conditional UPDATE — second concurrent
+            // submit hits status=Completed and gets the merged path.
+            $claimed = $this->sessionService->claimForPublicSubmit($session->id);
+
+            if (!$claimed) {
+                $existing = $this->sessionService->getPublic($sessionUuid);
+                if ($existing && $existing->linked_candidate_id) {
+                    $existingCandidate = \App\Models\Candidate::find($existing->linked_candidate_id);
+                    if ($existingCandidate) {
+                        // INV-3 retry: same session, second submit,
+                        // winner already inserted. NOT a Step 20
+                        // duplicate-ownership case — see Step 20
+                        // for why we never merge candidates.
+                        return response()->json([
+                            'candidate'    => $existingCandidate,
+                            'note'         => 'session_replay_winner_found',
+                            'session_uuid' => $sessionUuid,
+                        ], 200);
+                    }
+                }
+                return response()->json([
+                    'error'   => 'upload_incomplete',
+                    'message' => 'Resume upload session is no longer accepting submits.',
+                ], 422);
+            }
+
+            // HEAD-check R2 — if missing, revert the claim.
+            try {
+                $r2Exists = \Illuminate\Support\Facades\Storage::disk('r2')
+                    ->exists('resumes/' . $sessionUuid);
+                if (!$r2Exists) {
+                    throw new \RuntimeException('R2 object missing');
+                }
+            } catch (\Throwable $e) {
+                $this->sessionService->releasePublicClaim($session->id);
+                return response()->json([
+                    'error'   => 'upload_incomplete',
+                    'message' => 'Uploaded file not found in storage.',
+                ], 422);
             }
         }
 
-        // Delegate to HomeController's careerStore
-        $controller = app(\App\Http\Controllers\HomeController::class);
-        return $controller->careerStore($request);
+        // Hand off to the service — controller does NOT contain
+        // business logic. CareerApplyService::store() handles
+        // validation, candidate creation, ES sync, coin deduction,
+        // audit log, and the link-back UPDATE.
+        $result = $this->applyService->store($request, $session ?? null);
+
+        return response()->json($result, 201);
     }
 }
 ```
+
+**Companion files (vertical slice, all NEW):**
+
+- `app/Http/Requests/CareerApplyStoreRequest.php` — FormRequest,
+  owns validation rules (job_id required, candidate fields,
+  session_uuid optional, captcha).
+- `app/Services/CareerApplyService.php` — owns the actual candidate
+  create + link-back logic; extracted from the body of the
+  legacy `HomeController::careerStore`.
+- `app/Services/ResumeUploadSession.php` (extended) — gains
+  `getPublic($uuid)` and `claimForPublicSubmit($id)` /
+  `releasePublicClaim($id)` for the tenantless path.
+- `routes/service.php` — registers `Route::post('career/apply',
+  [CareerApplyController::class, 'store'])` ONLY when the feature
+  flag is on; the legacy `Route::post('career/apply',
+  [HomeController::class, 'careerStore'])` stays on the side-by-side
+  shim until `RESUMES_FEATURE_CAREER_CONTROLLER` is flipped off
+  globally.
+
+**Cleanup at v2.5:** Once the flag has been ON in production for
+30 days and the legacy path has zero traffic, DELETE
+`HomeController::careerApply` and `HomeController::careerStore`.
+The god controller drops by ~600 LOC at that point — measurable
+in the next `phploc` run.
 
 ---
 
@@ -3540,15 +4010,19 @@ production GA.
 test('presign endpoint handles 100 concurrent requests', function () {
     $requests = [];
     for ($i = 0; $i < 100; $i++) {
-        $key = str_repeat(dechex($i), 64);
-        $requests[] = function () use ($key) {
+        // Each request gets a fresh per-request random UUID in the
+        // Idempotency-Key header (INV-4 / ADR-002). NOT a content
+        // hash; same key on retry → same session, different key →
+        // new session.
+        $idem = (string) \Illuminate\Support\Str::uuid();
+        $requests[] = function () use ($idem, $i) {
             $start = microtime(true);
-            $resp = $this->post('/service_company/api/resume-sessions', [
-                'idempotency_key'  => substr($key, 0, 64),
-                'original_filename' => "test-{$i}.pdf",
-                'file_size_bytes'  => 1000,
-                'mime_type'        => 'application/pdf',
-            ]);
+            $resp = $this->withHeaders(['Idempotency-Key' => $idem])
+                ->post('/service_company/api/resume-sessions', [
+                    'original_filename' => "test-{$i}.pdf",
+                    'file_size_bytes'  => 1000,
+                    'mime_type'        => 'application/pdf',
+                ]);
             $latency = (microtime(true) - $start) * 1000;
             return ['status' => $resp->status(), 'latency_ms' => $latency];
         };
@@ -3662,7 +4136,13 @@ curl -H "Authorization: Bearer $TOKEN" /api/internal/health/resume
 # Expected: status=ok
 
 # 9. Create a session
-curl -X POST /service_company/api/resume-sessions -d '{"idempotency_key":"...","original_filename":"test.pdf","file_size_bytes":1000,"mime_type":"application/pdf"}'
+# Idempotency-Key is now an HTTP HEADER (per INV-4 / ADR-002), not a
+# body field. Each invocation generates a new UUID for a brand-new
+# session.
+curl -X POST /service_company/api/resume-sessions \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"original_filename":"test.pdf","file_size_bytes":1000,"mime_type":"application/pdf"}'
 # Expected: 201
 
 # 10. Monitor error rates
@@ -3732,8 +4212,105 @@ curl -sI https://testing.jero.works/login | head -1
 bash scripts/ai-guards.sh
 ```
 
-**Rollback:** Flip any failing flag back to `false` in `.env`.
-Re-run `php artisan config:cache`. The v1 path resumes serving.
+**Rollback runbook:**
+
+The v2 rollout is gated at five independent feature flags. A
+production incident scopes down to ONE step, not the whole
+rollout. The default rollback is "flip the broken flag to false";
+the recovery time is bounded by `config:cache` propagation (~30 s).
+
+```bash
+# ── Step-by-step rollback (use ONLY the steps that apply) ──────
+
+# Symptom: presign endpoint is 5xx or producing malformed URLs.
+# Action: disable presign, fall back to legacy multipart POST.
+export RESUMES_FEATURE_PRESIGN=false
+
+# Symptom: browser direct PUT to R2 is failing (CORS, mTLS, etc.).
+# Action: disable browser upload, force the JS to fall through to
+#          the legacy `data-nojs` path.
+export RESUMES_FEATURE_BROWSER_UPLOAD=false
+
+# Symptom: 2-RTT submit (Step 7) is creating duplicate candidates.
+# Action: disable submit-with-session; controller falls through to
+#          the legacy `store()` without `session_uuid`.
+export RESUMES_FEATURE_SUBMIT_SESSION=false
+
+# Symptom: parser pipeline is stuck or failing (queue, Horizon, ES).
+# Action: disable QueuedForParsing; presign still works but
+#          uploaded sessions never parse. Submit with manual entry.
+export RESUMES_FEATURE_PARSER=false
+
+# Symptom: RateLimiter returning 429s on healthy traffic (Step 13).
+# Action: leave the limiter ON but flip its fail-open mode by
+#          temporarily setting resumes.throttle_strict=false.
+export RESUMES_THROTTLE_STRICT=false
+
+# Symptom: Health endpoint is leaking data to unauthenticated probes.
+# Action: rotate the token in env, no flag flip required.
+export RESUMES_HEALTH_TOKEN=$(php -r 'echo bin2hex(random_bytes(32));')
+
+# ALWAYS: re-cache config after ANY env change.
+php artisan config:cache
+
+# Verify rollback succeeded:
+curl -sI https://jero.works/login | head -1       # expect 200
+curl -sI https://jero.works/job-application/create | head -1  # expect 200
+tail -n 20 storage/logs/laravel.log | grep -i 'jobs.resume' | grep -i error
+# Expect: no new ERROR-level lines from the resume subsystem.
+
+# DAY 0 (post-rollback): triage which step to fix and re-enable.
+# Do NOT flip multiple flags back on in one deploy — re-enable ONE
+# at a time, observe for 30 minutes, then enable the next.
+
+# DAY 1 (recovery verification): re-run the staging tests for the
+# rolled-back step before flipping the flag back on in production.
+php artisan test --filter=ResumeV2Invariant1Test   # whichever applies
+```
+
+**Hard rollback (rollback EVERYTHING):**
+
+If multiple subsystems are simultaneously broken (a bad deploy, a
+Redis outage cascading through `Cache::lock()`, a queue worker
+explosion), flip ALL flags off in one env-rotation deploy:
+
+```bash
+# Nuclear rollback. v1 path serves everything.
+# Expected outcome: ~2x PHP load (since v1 uploads stream through
+# PHP), but upload subsystem still functional. Recruiters see
+# slower uploads; nothing is broken.
+unset RESUMES_FEATURE_PRESIGN
+unset RESUMES_FEATURE_BROWSER_UPLOAD
+unset RESUMES_FEATURE_SUBMIT_SESSION
+unset RESUMES_FEATURE_PARSER
+unset RESUMES_FEATURE_BROADCAST_CHANNEL
+unset RESUMES_FEATURE_REFRESH_RECOVERY
+unset RESUMES_FEATURE_EDIT_PAGE_V2
+php artisan config:cache
+```
+
+**What "rollback" does NOT do:** the database migrations are
+additive (`add_resume_v2_indexes`, `add_resume_v2_session_columns`,
+`create_upload_session_audits`) so the schema stays. ~~`create_resume_parse_results`~~ — REMOVED 2026-07-27 (no parser, no parse_results table).
+v1 needs the v2 tables to exist (it just doesn't
+write to them). To REVERT a migration:
+
+```bash
+php artisan migrate:rollback --step=3
+# Order matters: rollback audits, then session
+# columns, then indexes. The composer-up command in v1 era is
+# preserved in storage/app/rollback_resume_v2.sql as the
+# forward-equivalent DDL if migrate:rollback is not available.
+```
+
+**Health endpoint and observability are NEVER rolled back:** even
+in nuclear-rollback mode, the health endpoint stays on. Ops needs
+the probe to confirm the subsystem is responsive. To disable the
+health route without removing the controller:
+```bash
+# Comment out the route in routes/service.php and re-cache config.
+# This is reversible — restoring the route is a 1-line edit.
+```
 
 ---
 
@@ -4093,6 +4670,280 @@ curl -b cookies https://testing.jero.works/service_company/job-applications/<enc
 - Zero PHP bytes on the resume-replacement path
 - Cross-tenant session_uuid → 404
 - `ai-guards.sh` clean
+
+---
+
+## Phase G — Duplicate-by-design (Step 20)
+
+### Step 20 — Duplicates are created freely; the Duplicate Ownership Engine only DETECTS and REPORTS, never MERGES
+
+**Intent:** Lock in the explicit "two recruiters / same recruiter /
+cross-tenant, picking the same file at different times → EVERY upload
+succeeds, EVERY submit succeeds, EVERY row stays forever; the
+Duplicate Ownership Engine only flags the dup to the recruiter"
+behavior. **No merging happens at any level, at any cost, in any
+case.**
+
+This step is NOT a Step 20 implementation; the upload subsystem
+continues to do nothing for dedupe (INV-1, INV-4). This step's job
+is to write the contract down so that:
+
+1. A future AI / engineer does not add a UNIQUE constraint on
+   `(company_id, file_hash)` to "help" the duplicate case.
+2. A future AI / engineer does not add a "merge these candidates"
+   job anywhere in the codebase.
+3. The QA team has explicit acceptance tests for the
+   dup-create-and-keep behavior, instead of treating it as a bug.
+4. Operations has a runbook for "why do we have two candidate rows
+   for Jane Doe?" tickets — the answer is always "by design, never
+   merged".
+
+This step closes Gap 1 of the doc review.
+
+**Pre-requisites:**
+- Steps 1–19 complete (the upload subsystem is the only producer of
+  `resume_uploads` rows and `documents` rows for resumes)
+- A candidate-level detection service exists elsewhere in the
+  codebase (out of scope for this doc — its design lives in the
+  marketplace / candidate subsystem). It DETECTS and REPORTS only.
+- v2.0.0 of the upload subsystem is GA
+
+**Feature flag:** N/A — this is a documentation + test contract, not
+new code in the upload subsystem.
+
+---
+
+#### The contract (canonical statement)
+
+> The upload subsystem NEVER refuses, returns-409, or otherwise
+> blocks an upload based on file contents. Two different file picks
+> (by the same user, by different users in the same tenant, or by
+> users in different tenants) ALWAYS produce two distinct
+> `resume_uploads` rows, two distinct R2 objects, and (if both reach
+> submit) two distinct `candidates` rows and two distinct
+> `documents` rows. **All rows persist. Nothing is ever merged,
+> tombstoned, soft-deleted, or consolidated.**
+>
+> Candidate-level dup-detection — "this candidate looks like one
+> that already exists" — is the responsibility of the **Duplicate
+> Ownership Engine**, which DETECTS duplicates and REPORTS them to
+> the recruiter in the UI (a "possible duplicate" badge on the
+> candidate row). The engine **never mutates**, **never merges**,
+**never deletes** candidate rows. The recruiter decides what to
+do with the information (e.g. manually archive the dup).
+>
+> The upload subsystem does not know the engine exists, does not
+> call it, and does not act on its result.
+
+---
+
+#### Concrete acceptance scenarios (must all pass)
+
+| # | Scenario | Upload subsystem behavior | Engine behavior (read-only) | Expected user-facing result |
+|---|---|---|---|---|
+| 1 | Same recruiter picks the same file twice in a row, submits both | 2 sessions, 2 R2 objects, 2 `documents` rows, **2 candidates** | DETECTS both candidates share the same fingerprint; reports "possible duplicate" badge on each | 2 candidates visible in ATS, both flagged "possible duplicate" |
+| 2 | Recruiter A and Recruiter B (same tenant) both upload the same file independently, both submit | 2 sessions, 2 R2 objects, 2 `documents` rows, **2 candidates** | DETECTS cross-recruiter duplicate; reports badge on each | 2 candidates visible in the same tenant's ATS, both flagged |
+| 3 | Recruiter A and Recruiter B (DIFFERENT tenants) both upload the same file independently, both submit | 2 sessions in 2 different `company_id` namespaces, 2 R2 objects, **2 candidates** (one per tenant) | DETECTS cross-tenant duplicate only if the engine's policy permits it (default: NO cross-tenant detection; each tenant sees its own candidate) | 2 candidates, one per tenant — cross-tenant merging is forbidden, cross-tenant detection is opt-in per-tenant policy |
+| 4 | Same recruiter picks the file, picks it again, uploads only the first (closes tab before submitting the second) | 2 sessions, 1 R2 object, 0 `documents` rows from the second (orphan) | n/a (orphan row has no candidate) | `ReconcileOrphanUploadsJob` reaps the second `resume_uploads` row after 24 h |
+| 5 | Same recruiter picks the file, uploads both, submits only the first | 2 sessions, 2 R2 objects, 1 `documents` row, 1 candidate | Engine has nothing to compare against (only one candidate exists) | Recruiter sees the second tab's "Uploaded ✓" badge still; clicking submit produces a second candidate, both flagged |
+| 6 | Recruiter picks the same file they already uploaded last week, submits | 1 new session, 1 new R2 object, 1 new `documents` row, **1 new candidate** | DETECTS the re-upload against last week's candidate; reports badge on both | 2 candidates visible (the original and the new one), both flagged "possible duplicate". Original is **NOT** modified in any way. |
+| 7 | Same recruiter picks the same file three times (one minute apart), submits all three | 3 sessions, 3 R2 objects, 3 `documents` rows, **3 candidates** | DETECTS all three as duplicates of each other; reports badge on each | 3 candidates visible, all flagged "possible duplicate" |
+
+**The cardinal rule across all scenarios:** the candidate count in
+the ATS equals the submit count. Every successful submit creates
+exactly one new candidate that exists forever, and is never
+modified by the engine.
+
+---
+
+#### What the upload subsystem MUST NOT do
+
+- Add a UNIQUE constraint on `(company_id, file_hash)` or
+  `(company_id, sha256_hex)`. Reaffirms INV-1, ADR-002.
+- Short-circuit the `createOrPresign()` lookup on any content hash.
+- Treat a `documents` row whose `name='Resume'` already exists for
+  this `(company_id, candidate_id)` as a hard error at insert time.
+  The `documents` UNIQUE on `(company_id, documentable_id,
+  documentable_type, name)` continues to enforce "one Resume per
+  JobApplication" for the same candidate; that is NOT a
+  cross-candidate constraint and is unchanged. (Step 19's `Branch
+  A` already UPDATE-in-places to avoid that constraint; this is
+  correct because the edit flow is in-place.)
+- Block the `finalize` step on a "this looks like a duplicate"
+  check. Finalize only verifies that the R2 object exists.
+- Block the `submit` step on a "this candidate already exists"
+  check. Submit ALWAYS creates the candidate; the engine observes.
+- Modify any candidate row at any point after the upload subsystem
+  has linked it (`linked_candidate_id` set).
+
+---
+
+#### What the upload subsystem DOES do (the seam)
+
+The seam between the upload subsystem and the Duplicate Ownership
+Engine is the **`linked_candidate_id`** column on `resume_uploads`.
+Once submit succeeds and a candidate exists, the upload subsystem's
+job is done. The engine reads the `documents` rows and the
+`candidates` rows and DECIDES whether to display a "possible
+duplicate" badge. The engine NEVER WRITES to either table from the
+upload subsystem's perspective.
+
+There is no API contract between the two — they communicate via
+the database. The upload subsystem does not call the engine; the
+engine observes the database.
+
+---
+
+#### What the Duplicate Ownership Engine does and DOES NOT do
+
+**Does:**
+- Read `candidates`, `documents`, `resume_uploads` rows.
+- Compute a candidate fingerprint (e.g. normalized name + email +
+  phone; or resume-text cosine similarity; or both).
+- Display a "possible duplicate" badge in the ATS UI next to
+  candidates whose fingerprint matches another candidate in the
+  same tenant.
+- Send an in-app notification to the recruiter ("Candidate X may
+  be a duplicate of Candidate Y").
+- Expose a `GET /api/duplicates?candidate_id=N` endpoint so the UI
+  can show "see the other candidate that looks like this one".
+
+**Does NOT:**
+- DELETE any candidate row.
+- UPDATE any candidate row to merge fields into another.
+- SOFT-DELETE any `documents` row.
+- Combine two `resume_uploads` rows into one.
+- Delete or hide R2 objects that belong to a candidate.
+- Move a `linked_candidate_id` from one candidate to another.
+- Touch coin balances, audit logs, or any financial state.
+
+The engine is a **detection** service, not a **mutation** service.
+This is a hard rule, not a guideline. The "merge" concept does not
+exist in this codebase. If a future ticket asks for it, that ticket
+must be rejected at planning; the recruiter decides what to do with
+dup information (typically: archive one and keep the other).
+
+---
+
+#### Test coverage required
+
+**Upload-subsystem-side tests** (live in this repo):
+
+- `ResumeV2Invariant1Test::test_two_file_picks_with_same_bytes_produce_two_sessions` —
+  verifies INV-1; both sessions exist; both succeed.
+- `ResumeV2Invariant1Test::test_upload_succeeds_even_when_existing_resume_with_same_sha256_exists` —
+  verifies no UNIQUE / hash short-circuit at the upload layer.
+- `ResumeV2Invariant4Test::test_new_idempotency_key_with_same_bytes_creates_new_session` —
+  same scenario via the header-replay path.
+- `ResumeV2Step20AcceptanceTest::test_same_user_same_file_twice_creates_two_sessions_two_candidates` —
+  happy-path acceptance for scenario 1: 2 candidates, both flagged.
+- `ResumeV2Step20AcceptanceTest::test_two_recruiters_same_tenant_same_file_creates_two_candidates` —
+  scenario 2.
+- `ResumeV2Step20AcceptanceTest::test_two_recruiters_different_tenants_same_file_creates_two_tenant_isolated_candidates` —
+  scenario 3 (cross-tenant isolation; no shared state).
+- `ResumeV2Step20AcceptanceTest::test_pick_twice_upload_once_does_not_create_duplicate` —
+  scenario 4 (only one `documents` row from the submitted one;
+  orphan row reaped normally).
+- `ResumeV2Step20AcceptanceTest::test_two_picks_two_uploads_one_submit_creates_one_candidate` —
+  scenario 5: 1 candidate after 1 submit; the second tab's submit
+  will create the second candidate.
+- `ResumeV2Step20AcceptanceTest::test_reupload_same_file_next_week_creates_new_candidate` —
+  scenario 6: new candidate exists; original is untouched.
+- `ResumeV2Step20AcceptanceTest::test_three_picks_same_file_creates_three_candidates` —
+  scenario 7: candidate count equals submit count.
+- `ResumeV2Step20AcceptanceTest::test_engine_does_not_modify_uploaded_rows` —
+  verifies the engine observes but does not write to
+  `resume_uploads`, `candidates`, or `documents`. Read-only contract.
+
+**Engine-side tests** (live in the candidate / marketplace repo —
+out of scope for this doc, listed for completeness):
+
+- `DuplicateOwnershipEngineTest::test_two_candidates_same_fingerprint_both_get_badge` —
+  verifies the engine flags both candidates, never modifies either.
+- `DuplicateOwnershipEngineTest::test_engine_does_not_cross_tenants_by_default` —
+  verifies scenario 3 default policy.
+- `DuplicateOwnershipEngineTest::test_engine_read_only_under_load` —
+  stress test: 10K duplicates detected in a minute, zero writes to
+  candidate tables.
+- `DuplicateOwnershipEngineTest::test_engine_does_not_delete_candidates` —
+  explicit guard test against the failure mode where a future
+  contributor adds a "cleanup duplicate" code path. This test
+  asserts the count of candidates before and after running the
+  engine is equal.
+- `DuplicateOwnershipEngineTest::test_engine_does_not_touch_resume_uploads` —
+  same guard for the upload subsystem's tables.
+
+---
+
+#### Operations runbook (the "why two candidates?" ticket)
+
+When ops gets a ticket "I see two Jane Doe candidates in the ATS,
+same resume, what's going on?", the answer is:
+
+1. **This is by design. They are not merged, ever.** INV-1 + INV-4
+   + Step 20 say the upload subsystem never deduplicates AND the
+   Duplicate Ownership Engine never merges. Two uploads = two
+   candidates, full stop.
+
+2. **The "possible duplicate" badge is intentional.** The engine
+   detects that the two candidates share a fingerprint and shows
+   the badge. The recruiter clicks "see other candidate" and
+   decides what to do (typically archive one). The recruiter — not
+   the engine — owns the decision.
+
+3. **If both candidates are in DIFFERENT tenants**, that is correct
+   behavior. Cross-tenant merging is forbidden. Cross-tenant
+   detection is a per-tenant opt-in policy; by default it is OFF.
+
+4. **The R2 objects are not "wasted"** — each candidate points at
+   its own R2 object. If the recruiter archives one candidate, the
+   R2 object becomes unreferenced and is removed by the retention
+   job after 90 days.
+
+5. **Coin consumption is unchanged.** Each successful submit costs
+   the same number of coins. The engine detection is free. The
+   recruiter pays for the submission attempt; the fact that the
+   candidate turns out to be a dup does not refund the coins.
+
+6. **If the recruiter wants ONE candidate, the workflow is:**
+   open both, manually archive one. The next submission by the
+   same recruiter (if any) is still a fresh upload — no merging.
+
+---
+
+#### What this step DOES NOT change
+
+- The `upload_session_audits` table continues to log one row per
+  session action, including a `linked_candidate_id` once submit
+  completes. Two sessions → two audit rows → both link to their
+  own candidate. Ops can reconstruct the timeline from the audit
+  log; no merge event exists.
+- The `ReconcileOrphanUploadsJob` continues to reap orphan
+  sessions whose `expires_at < now() - 24h` and status ∉
+  `{Completed, Failed, Cancelled, Reconciled}`. The orphan row
+  has no `documents` row, so the engine never sees it.
+- The `documents` UNIQUE constraint on
+  `(company_id, documentable_id, documentable_type, name)`
+  continues to enforce "one Resume row per JobApplication". This
+  is a per-candidate constraint (one resume per JobApplication),
+  NOT a cross-candidate constraint. It is unchanged.
+- The `candidates` table has no UNIQUE constraint and none is
+  added by this step. Two candidates with the same fingerprint
+  coexist forever.
+
+---
+
+**What success looks like:**
+- All 7 acceptance scenarios pass
+- INV-1 / INV-4 invariants explicitly tested in the dup-create case
+- `test_engine_does_not_modify_uploaded_rows` passes
+- `test_engine_does_not_delete_candidates` passes
+- Operations runbook covers the "why two candidates?" ticket with
+  "by design, never merged, recruiter decides"
+- No new code in the upload subsystem
+- Cross-references in INV-1 + INV-4 canonical statements updated
+- `DuplicateOwnershipEngineTest` exists in the candidate subsystem
+  (out of scope but referenced; read-only contract enforced)
 
 ---
 

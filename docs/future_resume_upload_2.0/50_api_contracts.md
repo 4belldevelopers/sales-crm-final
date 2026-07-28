@@ -30,12 +30,22 @@ Rate limits (per-user primary, per-company secondary):
 
 ### EP-1 — `POST /service_company/api/resume-sessions`
 
-Create or reuse a session by idempotency key.
+Create a brand-new session for this user-initiated file pick, OR replay
+an existing one when the browser retries the same `fetch()` after a
+network blip.
 
-**Request**:
+**Request headers (required)**:
+- `Idempotency-Key: <uuid-or-token>` — **per-request random token**,
+  generated client-side via `crypto.randomUUID()` at the moment of
+  presign-request construction. Kept in JS module closure for the
+  duration of the `fetch()` retries; discarded once the response is
+  processed. **NOT a content hash.** See ADR-002, INV-4.
+  Accepted formats: UUIDv4 (`^[a-f0-9-]{36}$`) or 64-char hex.
+- All cross-cutting headers from the table above.
+
+**Request body**:
 ```json
 {
-  "idempotency_key": "sha256hex64...",
   "original_filename": "jane_doe_resume.pdf",
   "file_size_bytes": 142137,
   "mime_type": "application/pdf",
@@ -61,16 +71,18 @@ Create or reuse a session by idempotency key.
 }
 ```
 
-**Response 200 (reused existing)**:
-Same shape as above, but server log emits `jobs.resume.session_reused`.
+**Response 200 (replayed — same `Idempotency-Key` on retry)**:
+Same shape as above; body field `replayed: true` is added so the
+client can distinguish "fresh session" from "transport retry". Server
+log emits `jobs.resume.session_replayed`.
 
 **Error matrix**:
 | Code | Cause |
 |---|---|
-| `400` | missing/invalid idempotency_key |
+| `400` | missing/invalid `Idempotency-Key` header |
 | `422` | file_size_bytes > 6 MB |
 | `422` | mime_type ∉ allowed |
-| `409` | session exists, status=Failed — caller must retry with new key |
+| `409` | session exists for this key but status=Failed — caller MUST issue a new `Idempotency-Key` to start fresh |
 | `429` | rate-limit exceeded (X-RateLimit-Reason header) |
 
 ### EP-2 — `GET /service_company/api/resume-sessions/{uuid}`
@@ -113,8 +125,11 @@ Mark session as `Uploaded`. Idempotent.
 2. HEAD R2 `r2_temp_key`. If 404 → 422 `upload_incomplete`.
 3. Conditional UPDATE: status='Created' OR status='Uploading' → `Uploaded`,
    `upload_completed_at=now()`.
-4. Emit Reverb event `ResumeUploaded`.
-5. Dispatch `ParseResumeJob` to `parse_resumes` queue.
+4. Emit Reverb event `ResumeUploaded` (status only — no payload).
+5. **No server-side parser dispatch** (REMOVED 2026-07-27). The
+   browser-side `pdf.js` + `re_test()` populated the form fields
+   during Step 4's R2 PUT (parallel); by the time `finalize` lands
+   parsing is done.
 
 **Error matrix**:
 | Code | Cause |
@@ -125,7 +140,9 @@ Mark session as `Uploaded`. Idempotent.
 
 ### EP-4 — `DELETE /service_company/api/resume-sessions/{uuid}`
 
-Cancel + cleanup. RECOMMENDED before `Parsed`; safe to call any time.
+Cancel + cleanup. RECOMMENDED before `Completed` (terminal link);
+safe to call any time. (Original wording referenced `Parsed`; that
+status no longer exists in v2 — REMOVED 2026-07-27.)
 
 **Server steps**:
 1. Conditional UPDATE: status NOT IN ('Cancelled','Reconciled','Expired') → 'Cancelled'.

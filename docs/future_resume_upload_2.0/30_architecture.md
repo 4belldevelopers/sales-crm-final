@@ -18,7 +18,7 @@
                                        │
                                        │ queue
                                        ▼
-                          [ParseResumeJob / Reconcile / Repair]
+                          [Reconcile / Repair / BulkElasticIndexCandidate]
                                        │
                                        ▼ state
                                   [MySQL (state machine)]
@@ -32,7 +32,9 @@
 
 Single source of interaction. Runs:
 - `resume-upload-progress.js` — orchestrator + UI
-- `resume-populate-if-empty.js` — parser fan-out subscriber
+- `resume-populate-if-empty.js` — browser-side pdf.js + `re_test()` driver
+  (REMOVED 2026-07-27: was a parser fan-out subscriber; now just runs
+  the in-browser parser inline)
 - `resume-presign.js` — presign request + state restore
 - Input validation: file extension, size, MIME
 - localStorage: `resume_session_uuid_{company_user_id}` + idempotency key
@@ -47,7 +49,7 @@ Single source of interaction. Runs:
 |---|---|---|
 | `/service_company/api/resume-sessions` | POST | create + presign |
 | `/service_company/api/resume-sessions/{uuid}` | GET | status (404 if expired/wrong tenant) |
-| `/service_company/api/resume-sessions/{uuid}/finalize` | POST | mark uploaded; queue parse |
+| `/service_company/api/resume-sessions/{uuid}/finalize` | POST | mark uploaded; no server parse dispatch (REMOVED 2026-07-27) |
 | `/service_company/api/resume-sessions/{uuid}` | DELETE | cancel — emit + cleanups |
 | `/service_company/api/resume-preflight` | GET | submit-side reachability |
 | `/service_company/api/internal/health/resume` | GET | ops-only bearer-token |
@@ -79,10 +81,12 @@ Channel events:
 
 | Event | Payload | When |
 |---|---|---|
-| `ResumeUploaded` | `{uuid, original_filename, file_size_bytes, t_upload_ms}` | after R2 finalize |
-| `ResumeParseProgress` | `{uuid, pct, stage}` | during parse |
-| `ResumeParsed` | `{uuid, fields_summary: {n_fields, parsed_from, took_ms}}` | on parse done |
-| `ResumeParseFailed` | `{uuid, code, retry_after_s?, message_safe}` | on terminal parser fail |
+| `ResumeUploaded` | `{uuid, original_filename, file_size_bytes, t_upload_ms}` | after R2 finalize (status only — REMOVED 2026-07-27: no `fields_summary`) |
+| ~~`ResumeParseProgress`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`ResumeParsed`~~ | REMOVED 2026-07-27 | n/a |
+| ~~`ResumeParseFailed`~~ | REMOVED 2026-07-27 | n/a |
+| `ResumeCancelled` | `{uuid, at_pct}` | on DELETE |
+| `ResumeFailed` (status only, NOT parser) | `{uuid, last_error}` | on terminal state |
 
 Backpressure: each tenant at most 5 outstanding connections; per-channel
 fan-out ≤4 subscribers (tested). Reverb pod count = 4 (multiply by 10 if
@@ -94,13 +98,14 @@ Workers distribute by `tries` and `backoff`. Concurrency cap per pod:
 
 | Queue | tries | backoff | pod concurrency |
 |---|---|---|---|
-| `parse_resumes` | 1 | — | 8 per pod |
+| ~~`parse_resumes`~~ | REMOVED 2026-07-27 — no server parser queue | n/a | n/a |
 | `reconcile_orphans` | 1 | — | 1 per pod |
 | `repair_stuck` | 1 | — | 1 per pod |
+| `bulkelasticindex` | 5 | [10, 30, 60, 120, 300] | 1 (batch 1,000 / 5 s) |
 
-**Why `tries=1`** for parse: parser doesn't know better after one retry;
-human-in-the-loop surface on UI. Override-able via env `RESUMES_QUEUE_PARSER_TRIES`
-in staging only.
+> **Removed 2026-07-27 — parser concurrency reasoning.** The
+> `tries=1` rationale belonged to `parse_resumes`. There is no
+> server parser; no `RESUMES_QUEUE_PARSER_TRIES` env knob.
 
 ## Tier-6 — MySQL + Elasticsearch
 

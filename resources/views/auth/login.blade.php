@@ -100,7 +100,7 @@ else
       </a>
       <!--end::Logo-->
       <!--begin::Title-->
-      <h1 class="fw-bolder fs-2qx pb-3 pb-md-3" style="color:#986923;">Welcome to {{ __('messages.jero_small') }}</h1>
+      <h1 class="fw-bolder fs-2qx pb-3 pb-md-3" style="color:#986923;">Welcome to  {{ __('messages.jero_small') }}</h1>
       <!--end::Title-->
       <!--begin::Description-->
       <p class="fw-bold fs-2" style="color:#986923;">Discover Amazing tools for Recruitment</p>

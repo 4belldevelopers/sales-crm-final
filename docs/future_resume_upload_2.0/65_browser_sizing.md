@@ -18,7 +18,7 @@ Per-tab footprint:
 | Event listeners | ≤ 25 |
 | Memory | ≤ 8 MB sustained |
 | CPU while idle | ≤ 0.5% |
-| Memory under upload + parse | ≤ 30 MB |
+| Memory under upload + browser parse | ≤ 30 MB |
 
 ## localStorage key budget (cross-tab ok)
 
@@ -48,7 +48,7 @@ The four v2 JS modules (`resume-upload-progress.js`,
 |---|---|---|
 | `resume-presign.js`       | before "Choose File"  | ≤ 4 KB |
 | `resume-upload-progress.js` | on file drop         | ≤ 8 KB |
-| `resume-populate-if-empty.js` | on parser broadcast | ≤ 6 KB |
+| `resume-populate-if-empty.js` | on upload start (browser parse driver) | ≤ 6 KB |
 | `resume-retry-manager.js`  | on submit            | ≤ 3 KB |
 
 Total scratch ≤ 21 KB gz (excluding pdfjs/mammoth, which already
@@ -92,5 +92,6 @@ network events.
 | Time-to-Interactive (apply page) | ≤ 1.5 s | 3 s |
 | Click-to-ProgressBar (after file pick) | ≤ 250 ms | 500 ms |
 | Upload complete → UI ready | ≤ 1 s | 2 s |
-| Parser prefill completion | ≤ 10 s | 30 s |
+| ~~Parser prefill completion~~ | REMOVED 2026-07-27 — browser parse completes during upload | n/a |
+| Browser-side prefill completion | ≤ 250 ms (deterministic) | 2 s |
 | Submit click → success response | ≤ 1 s | 3 s |

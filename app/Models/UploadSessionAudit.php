@@ -1,83 +1,57 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use RuntimeException;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * Append-only audit log for resume_uploads state transitions.
- *
- * Schema-level backstop for "never DELETE, never UPDATE":
- *   - Boot hooks reject update() and delete() at runtime.
- *   - There is no migration-level constraint that hardens this; even with
- *     DB-level enforcement, the Laravel layer's boot hooks are the simpler
- *     guarantee.
- *
- * Retention:
- *   - Schema does NOT include an index on (created_at) for full-table scans;
- *     use (company_id, action, created_at) for tenant-scoped rollups and
- *     (session_uuid, created_at) for per-session lookup.
- *   - Retention window is an operational concern (separate from this model):
- *     recommend 7 years for SOC 2 baseline but make it configurable per-tenant
- *     for GDPR right-to-erasure exemptions.
- *
- * The companion {@see self::record()} factory is the only intended write path.
- */
+// Intent: Immutable audit log for every state transition in the upload
+// lifecycle. Append-only — never updated or deleted after insert.
+
 class UploadSessionAudit extends Model
 {
-    protected $table = 'upload_session_audit';
+    protected $table = 'upload_session_audits';
 
-    public $timestamps = false;
-
-    protected $guarded = ['id'];
-
-    protected $casts = [
-        'metadata_json' => 'array',
-        'latency_ms' => 'integer',
-        'created_at' => 'datetime',
+    protected $fillable = [
+        'resume_upload_id',
+        'company_id',
+        'user_id',
+        'action',
+        'payload',
+        'request_id',
+        'pod_id',
+        'error_code',
+        'message_safe',
+        'ip_hash',
     ];
 
-    /** Append-only enforcement. Lifted only by direct DB writes (the GC job doesn't touch this table). */
-    protected static function boot()
+    protected $casts = [
+        'payload' => 'array',
+    ];
+
+    public function upload(): BelongsTo
     {
-        parent::boot();
-        static::updating(function (UploadSessionAudit $row): bool {
-            throw new RuntimeException('upload_session_audit is append-only; updates are not permitted');
-        });
-        static::deleting(function (UploadSessionAudit $row): bool {
-            throw new RuntimeException('upload_session_audit is append-only; deletes are not permitted');
-        });
+        return $this->belongsTo(ResumeUpload::class, 'resume_upload_id');
     }
 
-    /**
-     * Factory for the only intended write path. Returns the persisted row so
-     * callers can reference id() in the same request if they need to.
-     *
-     * @param array $metadata Free-form per-action metadata.
-     */
+    /** Convenience factory — call from controllers/jobs after every state transition */
     public static function record(
-        string $sessionUuid,
-        int $companyId,
+        int    $resumeUploadId,
         string $action,
-        ?int $actorId = null,
-        ?string $actorIp = null,
-        ?string $userAgent = null,
-        ?string $requestId = null,
-        array $metadata = [],
-        ?int $latencyMs = null,
+        array  $payload = [],
+        ?int   $companyId = null,
+        ?int   $userId = null,
     ): self {
         return self::create([
-            'session_uuid' => $sessionUuid,
-            'company_id' => $companyId,
-            'action' => $action,
-            'actor_id' => $actorId,
-            'actor_ip' => $actorIp,
-            'user_agent' => $userAgent !== null ? substr($userAgent, 0, 255) : null,
-            'request_id' => $requestId,
-            'metadata_json' => $metadata,
-            'latency_ms' => $latencyMs,
-            'created_at' => now(),
+            'resume_upload_id' => $resumeUploadId,
+            'action'           => $action,
+            'payload'          => $payload,
+            'company_id'       => $companyId,
+            'user_id'          => $userId,
+            'pod_id'           => gethostname(),
+            'request_id'       => $payload['request_id'] ?? null,
+            'error_code'       => $payload['error_code'] ?? null,
+            'message_safe'     => $payload['message_safe'] ?? null,
+            'ip_hash'          => $payload['ip_hash'] ?? null,
         ]);
     }
 }

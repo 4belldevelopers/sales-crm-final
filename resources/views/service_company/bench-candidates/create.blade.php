@@ -72,7 +72,7 @@ body {overflow-x:hidden;}
         // dd( $url,pathinfo($application->resume, PATHINFO_EXTENSION));
         // $info = pathinfo($url);
         if (!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx'])) {
-          $resume_url			=	'<a href="'.route('download.resume', ['id' => $application->id,'path' => urlencode($url)]).'" target="_blank" download style="color: #fff;"><i class="fa fa-download" aria-hidden="true" style="color: #fff;"></i></a>';
+          $resume_url			=	route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]);
           $resumeCheck = 1;
         }
         
@@ -238,11 +238,12 @@ if($snp_mode== 1){
                                   {{ !empty($application->resume) ? basename($application->resume) : '' }}
                                 </span>
                                 @if(!empty($resume_url))
-                                 <button type="button"
-                                        class="download-file"
-                                        id="" style="color: #fff; margin-left: 250px;">
-                                    {!! $resume_url !!}
-                                </button>
+                                <a href="{{ $resume_url }}"
+                                   target="_blank"
+                                   class="download-file"
+                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
+                                </a>
                                 @endif
 
                                 <button type="button"
@@ -302,7 +303,7 @@ if($snp_mode== 1){
               <div class="col-lg-8 col-xl-8">
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
                 <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
-                <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.. &nbsp; {!! @$resume_url !!}</span> </div>
+                <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
             </div>

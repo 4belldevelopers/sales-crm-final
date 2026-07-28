@@ -562,7 +562,7 @@ if(!empty($application->posted_by_image)){
 										$info = pathinfo($url);
 										@endphp
 										<a 
-											href="{{ route('download.resume', ['id' => $application->id,'path' => urlencode($info['basename'])]) }}" 
+											href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}" 
 											class="btn btn-light-primary btn-sm py-1"
 											target="_blank"
 										>

@@ -10,7 +10,7 @@
 
 | Object | Path | LOC | Status |
 |---|---|---|---|
-| Apply blade | `resources/views/career-apply.blade.php` | ~3855 | XHR progress layer added, parser client-side |
+| Apply blade | `resources/views/career-apply.blade.php` | ~3855 | XHR progress layer added, parser client-side (REMOVED 2026-07-27: this IS the only parser; no server-side parser) |
 | Apply controller | `app/Http/Controllers/HomeController.php` | ~16K | god controller, two relevant methods: `careerApply` GET + `careerStore` POST |
 | OpenAI side-channel | `app/Services/ChatGptService.php` | 37 | raw cURL, no retry, no idempotency |
 | Upload temporary | `app/Http/Controllers/HomeController.php` — `uploadresume` route | — | 6 MB cap, field name=`file`, single endpoint |
@@ -51,14 +51,17 @@ the 1K/sec threshold but with no retry, no batch, no queue shaping.
 **v2 contract: ES write dispatch through a batched queue** with a single
 `bulkelasticindex` worker that fans out from Redis sorted set.
 
-### C3 — No parser admission control
+### C3 — REMOVED 2026-07-27 — No server-side parser to admission-control
 
-`ChatGptService::parseResume()` is raw cURL on every request. OpenAI (or
-whatever parser lands underneath) is on a single failure domain and has
-rate limits that v1 has never read. At 10K concurrent, 100% funnel to
-one provider = provider-side 429 storm.
-
-**v2 contract: parser behind Redis semaphore with bounded concurrency per pod.**
+> v2 has no `ChatGptService::parseResume()` call site. The browser-side
+> `pdf.js` parser runs locally in 50–200 ms and never crosses the
+> network. There is no provider-side 429 storm because there is no
+> provider. The C3 gap that existed in v1 (raw cURL → OpenAI with no
+> admission control) is solved by *removing the call site* rather
+> than by adding a Redis semaphore around it.
+>
+> The v1-era `ChatGptService.php` file is left untouched on disk
+> (no destructive delete) for the v1 path that still uses it.
 
 ### C4 — God controller state container
 
