@@ -2083,9 +2083,12 @@ class HomeController extends Controller
                     $jobApplication->interview_mode_five = $request->interview_mode_five;
                     $jobApplication->interview_mode_six = $request->interview_mode_six;
 
+                    DB::beginTransaction();
+                    try {
+
                     $jobApplication->save();
 
-		
+
                     if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
                         $YearskillId = $request->input('YearskillId');
                         $MonthskillId = $request->input('MonthskillId');
@@ -2259,12 +2262,20 @@ class HomeController extends Controller
 
 
                     GeneralMethod::careerStore($jobApplication->id);
+
+                    DB::commit();
+
                     if (!empty($request->job_id)) {
                         return Reply::redirect(url('job-apply/' .  $request->job_id . '/'.$request->company_id), __('menu.jobApplications') . ' ' . __($message));
                     } else {
                         return Reply::redirect(url('job-apply/' .  $request->job_id . '/'.$request->company_id), __('menu.jobApplications') . ' ' . __($message));
                     }
-        
+
+                    } catch (\Throwable $e) {
+                        DB::rollBack();
+                        \Log::error('careerStore() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+                    }
 
              }
         }
@@ -2287,52 +2298,45 @@ class HomeController extends Controller
 
     public function uploadresume(Request $request){
 
-		// Validate the file
+        // Raw-byte upload: browser sends xhr.send(file), PHP reads php://input.
+        // No multipart = no upload_tmp_dir write, no temp file on disk.
+        $originalName = urldecode($request->header('X-File-Name', 'resume.pdf'));
+        $fileSize     = (int) $request->header('X-File-Size', 0);
+        $ext          = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
-		// dd($request->all());
+        $allowedExts  = ['pdf', 'doc', 'docx'];
+        $allowedMimes = [
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
 
-        $request->validate([
-            'file' => 'required|file|max:6048', // Max size 1MB
-        ]);
-
-		
-
-        // Store the file
-        if ($request->hasFile('file')) {
-
-            $file = $request->file('file');
-
-            $filename = uniqid('JERO_').'.'.$file->getClientOriginalExtension();
-
-            $tempPath = $file->storeAs('temp', $filename,'r2'); // STORAGE/app/temp
-            // ⭐ GET PUBLIC URL FROM R2
-            $tempUrl = Storage::disk('r2')->url($tempPath);
-            
-            $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
-            $full_name = uniqid('JERO_');
-            $uniqueName = GeneralMethod::getUniqueCvName($full_name,$extension);
-            // ✅ STORE IN SESSION
-            // dd($uniqueName);
-            session([
-                'resume_temp_path' => $tempPath,
-                'resume_original_name' => $filename,
-            ]);
-
-            // Return a response
-            return response()->json([
-                'success' => true,
-                'message' => 'File uploaded successfully',
-                'file_path' => $tempPath,
-                'original_name' => $file->getClientOriginalName(),
-            ]);
+        if (!in_array($ext, $allowedExts)) {
+            return response()->json(['success' => false, 'message' => 'Only PDF, DOC, DOCX files are allowed.'], 422);
         }
 
-        // Handle failure
+        if ($fileSize > 6 * 1024 * 1024) {
+            return response()->json(['success' => false, 'message' => 'Maximum file size is 6 MB.'], 422);
+        }
+
+        $objectKey = 'temp/' . \Illuminate\Support\Str::uuid() . '.' . $ext;
+
+        $stream = fopen('php://input', 'r');
+        \Illuminate\Support\Facades\Storage::disk('r2')->put($objectKey, $stream);
+        fclose($stream);
+
+        session([
+            'resume_temp_path'     => $objectKey,
+            'resume_original_name' => $originalName,
+        ]);
+
         return response()->json([
-            'success' => false,
-            'message' => 'File upload failed',
-        ], 400);
-    
+            'success'       => true,
+            'message'       => 'File uploaded successfully',
+            'file_path'     => $objectKey,
+            'original_name' => $originalName,
+        ]);
+
 		
 
 	}

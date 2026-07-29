@@ -5900,6 +5900,9 @@ protected $elasticService;
 
 		$job->auto_date_job = Carbon::today();
 
+		DB::beginTransaction();
+		try {
+
 		$job->save();
 
 		$teamRankElastic = [
@@ -6291,7 +6294,7 @@ protected $elasticService;
 
 		
 		 // ElasticCompanyIndex::dispatch($job->company_id)->onConnection('emails');
-		
+
 		GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
 		$cachekeys = [
 			'alljobslist_version_user_'.$this->user->id
@@ -6299,12 +6302,19 @@ protected $elasticService;
 		foreach ($cachekeys as $key) {
 			GeneralMethod::cacheClean($key);
 		}
-		
+
+		DB::commit();
 
      // 	  Mail::to(auth()->user()->email)->send(new RequisitionCreatedMail((object)$data));
 
      // 	dd($jobAdditional,$strAdded,$contact_person_name);
 		return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs') . ' ' . __('messages.createdSuccessfully'));
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('jobs store() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+		}
 	}
 	public function viewMore(Request $request, $id)
 	{
@@ -14322,8 +14332,11 @@ protected $elasticService;
 
 		// dd($econvertedAmount,$convertedAmount);
 
+		DB::beginTransaction();
+		try {
+
 		$job->save();
-		
+
 
 		// UPDATE JOB LOCATION
 		
@@ -14506,9 +14519,9 @@ protected $elasticService;
 		
 		//  ElasticCompanyIndex::dispatch($this->user->company_id)->onConnection('emails');
 		// GeneralMethod::elasticJobsUpdateIndex($job->id);
-		
+
 		GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
-		
+
 		$cachekeys = [
 						'alljobslist_version_user_'.$this->user->id
 					];
@@ -14516,8 +14529,15 @@ protected $elasticService;
 						GeneralMethod::cacheClean($key);
 					}
 
+		DB::commit();
+
 		return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs') . ' ' . __('messages.updatedSuccessfully'));
 
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('jobs update() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+		}
 	}
 	public function editJobStatus($id)
 	{

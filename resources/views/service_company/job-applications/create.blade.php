@@ -1632,19 +1632,13 @@ $(document).ready(function () {
 
             const file = files[0];
 
-            // Your existing validation/display function
-            processFile(file);
-
-            // Assign file to input so form submit works
+            // Assign to input so form submit sees the file
             const dt = new DataTransfer();
             dt.items.add(file);
-
             resumeInput.files = dt.files;
 
-            // Trigger change event
-            resumeInput.dispatchEvent(
-                new Event('change', { bubbles: true })
-            );
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
         }
     });
     
@@ -1738,20 +1732,13 @@ $(document).ready(function () {
 
             const file = files[0];
 
-            // Show filename immediately
-            processFile(file);
-
-            // Assign to file input for form submit
+            // Assign to input so form submit sees the file
             const dt = new DataTransfer();
             dt.items.add(file);
-
             resumeInput.files = dt.files;
 
-            // andleFileInputChange(e);
-             resumeInput.dispatchEvent(
-            new Event('change', { bubbles: true })
-        );
-            
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
         }
     });
 
