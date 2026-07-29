@@ -14851,7 +14851,8 @@ protected $elasticService;
 		GeneralMethod::elasticJobsAddEditUpdateIndex($job->id);
 		
 		$cachekeys = [
-						'alljobslist_version_user_'.$this->user->id
+						'alljobslist_version_user_'.$this->user->id,
+						'jobDetails_version_user_'.$this->user->id
 					];
 					foreach ($cachekeys as $key) {
 						GeneralMethod::cacheClean($key);
