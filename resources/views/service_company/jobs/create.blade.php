@@ -3413,6 +3413,9 @@
                         setTimeout(function() { window.location = __indexUrl; }, 600);
                     } else {
                         $btn.prop('disabled', false).html('Publish Job');
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        }
                         showToast((data && data.message) ? data.message : 'Could not save the job. Please check the details.', 'error');
                     }
                 },
