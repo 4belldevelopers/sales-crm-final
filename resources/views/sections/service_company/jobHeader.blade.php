@@ -98,6 +98,7 @@
 </div>
 
 {{-- ── Tab row (below the hero card) ── --}}
+@if($tabactive['showTabs'] ?? true)
 <div class="jh-tabs-card">
     <a href="#" class="jh-tab jh-tab-active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
         <span class="jh-tab-icon jh-tab-icon-blue">
@@ -139,4 +140,15 @@
         Closed
         <span class="jh-badge jh-badge-red">{{ $tabactive['closedCount'] ?? 0 }}</span>
     </a>
+    <div class="jh-tab-divider"></div>
+    <a href="#" class="jh-tab" data-status="removed" onclick="filterJobsByStatus('removed'); return false;">
+        <span class="jh-tab-icon" style="background:#f1f1f4;color:#7e8299;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+        </span>
+        Removed
+        <span class="jh-badge" style="background:#f1f1f4;color:#7e8299;">{{ $tabactive['removedCount'] ?? 0 }}</span>
+    </a>
 </div>
+@endif

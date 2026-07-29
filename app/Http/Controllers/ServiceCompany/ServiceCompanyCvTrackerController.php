@@ -5072,14 +5072,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$message = $request->editor1;
 		$arr = $request->arr;
 
-		$from = json_decode($from, true);
-		$from = array_column($from, 'value');
-		$from = implode(',', $from);
-
-		$to = json_decode($to, true);
-		$to = array_column($to, 'value');
-		$to = implode(',', $to);
-
+		$decodedFrom = json_decode($from, true);
+		if (is_array($decodedFrom)) {
+			$from = implode(',', array_column($decodedFrom, 'value'));
+		} // else $from is already a plain email string
+		$decodedTo = json_decode($to, true);
+		if (is_array($decodedTo)) {
+			$to = implode(',', array_column($decodedTo, 'value'));
+		} // else $to is already a plain comma-separated string
 		if (!empty ($cc)) {
 			// $cc = json_decode($cc, true);
 			// $cc = array_column($cc, 'value');
@@ -5328,14 +5328,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$message = $request->editor1;
 		$arr = $request->arr;
 
-		$from = json_decode($from, true);
-		$from = array_column($from, 'value');
-		$from = implode(',', $from);
-
-		$to = json_decode($to, true);
-		$to = array_column($to, 'value');
-		$to = implode(',', $to);
-		
+		$decodedFrom = json_decode($from, true);
+		if (is_array($decodedFrom)) {
+			$from = implode(',', array_column($decodedFrom, 'value'));
+		} // else $from is already a plain email string
+		$decodedTo = json_decode($to, true);
+		if (is_array($decodedTo)) {
+			$to = implode(',', array_column($decodedTo, 'value'));
+		} // else $to is already a plain comma-separated string
 		 
             
            $cc = [];
