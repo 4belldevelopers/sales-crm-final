@@ -927,6 +927,11 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                  setTimeout(function () {
                                           
       
+                             if (!navigator.onLine) {
+                                 Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                 r.removeAttribute('data-kt-indicator'); r.disabled = false;
+                                 return;
+                             }
                      $.ajax({
                      				//url				: "{{route('invitation-company-store')}}",
 									url				: "{{route('invitation-company-store')}}",
@@ -954,11 +959,16 @@ const flagContainer = document.getElementById(`phoneDisplay`);
 															
 															
 													 }
-                     // ,
-                     // error: function (response) {
-                     //     swal("Error!", "Your need to fill all the form fields!", "error");
-                     // }
-                  }),
+                     ,
+                     error: function(xhr) {
+                             r.removeAttribute('data-kt-indicator'); r.disabled = false;
+                             if (xhr.status === 0 || !navigator.onLine) {
+                                 Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable. Please check your connection and try again.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                             } else {
+                                 Swal.fire('Error!', 'Something went wrong (HTTP ' + xhr.status + '). Please try again.', 'error');
+                             }
+                     }
+                   });
       
                                           
                   r.removeAttribute("data-kt-indicator"),
@@ -1025,9 +1035,16 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                             {
                                                               $('[name="website"]').val(website);
                                                             }
-                                                      }
-                                      });             		
-                                }  	
+                                                      },
+                                                 error: function(xhr) {
+                                                     $('.page-loader').css('display', 'none');
+                                                     if (xhr.status === 0 || !navigator.onLine) {
+                                                         Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                                     } else {
+                                                         Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                                                     }
+                                                 }
+                                      });
                                     
                         }),
 
@@ -1082,7 +1099,15 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                           }
                                   
                                   
-                                                    }
+                                                    },
+                                                 error: function(xhr) {
+                                                     $('.page-loader').css('display', 'none');
+                                                     if (xhr.status === 0 || !navigator.onLine) {
+                                                         Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                                     } else {
+                                                         Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                                                     }
+                                                 }
                                     });
                                                   
                                                   
@@ -1126,7 +1151,15 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                           {
                                                             $('#contact_number').val(contact_number);
                                                           }
-                                                    }
+                                                    },
+                                                 error: function(xhr) {
+                                                     $('.page-loader').css('display', 'none');
+                                                     if (xhr.status === 0 || !navigator.onLine) {
+                                                         Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                                     } else {
+                                                         Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                                                     }
+                                                 }
                                     });             		
                               }  	
                                   

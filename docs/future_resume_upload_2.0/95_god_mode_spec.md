@@ -25,7 +25,7 @@ down and broadcast-peer channels for same-machine tabs.
 | # | Endpoint | What it commits |
 |---|---|---|
 | 1 | `POST /service_company/api/resume-sessions` | presigned URL + session row |
-| 2 | `POST /service_company/api/job-applications` | candidate row + session→linked + parse dispatch (atomic) |
+| 2 | `POST /service_company/api/job-applications` | candidate row + session→linked (atomic) — REMOVED 2026-07-27: no parse dispatch; parsing happens client-side |
 
 ### Why this is safe
 
@@ -37,8 +37,9 @@ down and broadcast-peer channels for same-machine tabs.
   row transitions, not by a UNIQUE constraint.
 - `finalize` no longer exists as a separate request — submit does it
   inside one transaction.
-- Session moves `Created` → `Uploaded` (HEAD-verified) → `Parsed`
+- Session moves `Created` → `Uploaded` (HEAD-verified) → `Completed`
   (linked candidate) inside the submit transaction.
+  (REMOVED 2026-07-27: `Parsed` is gone — terminal post-link is `Completed`.)
 - Server `HEAD` R2 inside submit: replaces what was the `finalize` HEAD.
 
 ### What we cut

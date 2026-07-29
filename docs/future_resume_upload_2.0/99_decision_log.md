@@ -119,13 +119,13 @@ replaced by `upload_session_audits.action_at`.
 
 ## ADR-005 — ~~ONE Retry-After attempt in parser, NO automatic retry loop~~ — REMOVED 2026-07-27
 
-**Context (historic).** OpenAI / parser-side 429 has a `Retry-After`. v1 had no
-honor; blast retry pattern likely.
+**Context (historic).** Provider-side 429 has a `Retry-After`. v1 had
+no honor; blast retry pattern likely.
 
 **Original decision.** v2 honors `Retry-After` once, then fails.
 
-**REMOVAL reason.** v2 has no server-side parser. There is no LLM call
-to receive a `Retry-After`, no parser queue to retry. Browser-side
+**REMOVAL reason.** v2 has no server-side parser. There is no parser
+queue to retry, no `Retry-After` surface to honor. Browser-side
 `pdf.js` is deterministic; failures degrade to "empty fields" only,
 which INV-2 handles fine. ADR-005 is kept here as a tombstone to
 preserve the ADR numbering for downstream cross-references; the

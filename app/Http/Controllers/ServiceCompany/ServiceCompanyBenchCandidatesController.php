@@ -1143,6 +1143,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$benchApplication->behance = $request->behance;
 		$benchApplication->otherLink = $request->otherLink;
 
+		DB::beginTransaction();
+		try {
+
 		$benchApplication->save();
 		// if($added){
 		// 	$eventId = 5;
@@ -1586,8 +1589,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			foreach ($cachekeys as $key) {
 				GeneralMethod::cacheClean($key);
 			}
-	
+
+		DB::commit();
+
 		return Reply::redirect(url('service_company/bench-candidates'), __('menu.jobApplications') . ' ' . __('messages.createdSuccessfully'));
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('bench-candidates store() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+		}
 
 	}
 	public function edit($id)

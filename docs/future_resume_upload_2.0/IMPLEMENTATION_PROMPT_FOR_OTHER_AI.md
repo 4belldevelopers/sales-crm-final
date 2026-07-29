@@ -239,8 +239,7 @@ Phase C — Browser flow (Steps 7-9)
   recovery.
 Phase D — Cross-tab + browser parser (Steps 10-14)
   `BroadcastChannel`, browser-side `pdf.js` + `re_test()` wiring,
-  Reverb auth. (No `ParseResumeJob`, no `parse_resumes` queue, no
-  LLM call.)
+  Reverb auth. (No `ParseResumeJob`, no `parse_resumes` queue.)
 Phase E — Submit + extraction (Steps 15-16)
   `finalize` + submit merge, god-controller extraction.
 Phase F — Edit page (Step 19)

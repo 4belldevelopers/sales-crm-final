@@ -202,7 +202,7 @@ function jsdSelectStatus(el) {
 function newUpdateJobstatus(){
     $('#status_confirm_btn').prop('disabled', true);
     $('.changetextupdate').text('Updating…');
-    var page = $('.custom-pagination .active_disabled').data('page');
+    var page = parseInt(localStorage.getItem('currentPageJobs')) || 1;
     $.ajax({
         url: '{{ route("service_company.jobs.newUpdateJobstatus") }}',
         container: '#createSchedule',

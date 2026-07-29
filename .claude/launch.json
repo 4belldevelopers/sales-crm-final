@@ -12,6 +12,21 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["-S", "127.0.0.1:8900", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/C--Users-VIBHANSHU-JAISWAL-000-Documents-GitHub-JWMaincode28June2026/2531af2c-931a-44f2-8797-ca9ccf6a04ac/scratchpad/preview"],
       "port": 8900
+    },
+    {
+      "name": "jero-resume-parser-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/VIBHANSHU JAISWAL.000/Documents/GitHub/jero-resume-parser", "run", "dev"],
+      "port": 5173,
+      "url": "http://localhost:5173"
+    },
+    {
+      "name": "open-resume-parser-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/VIBHANSHU JAISWAL.000/Documents/GitHub/open-resume-parser/node_modules/vite/bin/vite.js"],
+      "port": 5174,
+      "autoPort": true,
+      "url": "http://localhost:5174"
     }
   ]
 }

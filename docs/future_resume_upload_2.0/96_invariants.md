@@ -185,9 +185,10 @@ The invariants collapse to **INV-1..4**. Every test in
 
 **Q: "What if the recruiter really did want to re-upload the same file?"**
 A: They get a brand-new UUID every time (INV-1). The file is uploaded
-again, parsed again, and at submit time the Duplicate Ownership Engine
-will tell them whether the new candidate is a duplicate of an existing
-one. The upload subsystem's job is bytes-in-R2; dedupe is downstream.
+again, browser-side pdf.js re-extracts the fields locally, and at submit
+time the Duplicate Ownership Engine will tell them whether the new
+candidate is a duplicate of an existing one. The upload subsystem's job
+is bytes-in-R2; dedupe is downstream.
 
 **Q: "What if two recruiters in the same tenant upload the exact same
 file independently?"**

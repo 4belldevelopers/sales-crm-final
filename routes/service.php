@@ -40,6 +40,16 @@ Route::group(['middleware' => 'auth'], function () {
 	//########################################################################### SERVICE COMPANY ######################################################################
 	Route::prefix('service_company')->name('service_company.')->group(function () {
 		Route::group(['middleware' => ['EnsureOneDeviceLogin']], function () {
+
+			// ─── Resume pre-signed upload pipeline (returns JSON) ──────────────────
+			Route::prefix('resume')->name('resume.')->group(function () {
+				Route::post('presign',          [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'presign'])->name('presign');
+				Route::post('store',            [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'store'])->name('store');
+				Route::get('{id}/status',       [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'status'])->name('status');
+				Route::post('{id}/retry',       [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'retry'])->name('retry');
+			});
+			// ──────────────────────────────────────────────────────────────────────
+
 			Route::group(['middleware' => ['custom-package']], function () {
 						Route::get('/dashboard', [ServiceCompanyDashboardController::class,'index'])->name('dashboard');		
 						Route::get('meetingstoreScheduleList', [ServiceCompanyDashboardController::class,'meetingScheduleList'])->name('dashboard.meeting-schedule-list');
