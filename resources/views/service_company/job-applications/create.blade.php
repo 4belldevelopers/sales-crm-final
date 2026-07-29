@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @push('head-script')
 <script>
    $( function(){
@@ -2467,10 +2467,17 @@ async function isInternetAvailable() {
                   );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
-                    setTimeout(function () {					
-					
-												var formData = new FormData($('#createForm')[0]);		
-                        // formData.append('_method', 'PUT');					
+                    setTimeout(function () {
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#update-form").prop("disabled", false).html(`Update`);
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            return;
+                        }
+
+												var formData = new FormData($('#createForm')[0]);
+                        // formData.append('_method', 'PUT');
 												$.ajax({
 url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
 														   type 			: 'POST',
@@ -2482,8 +2489,15 @@ url				: '{{route('service_company.job-applications.update', @$application->id)}
 
                                  $("#update-form").prop("disabled", false);
                                 if(response.status == 'mailcheck'){
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
                                    $("#update-form").html(`Update`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});
                                    return false;
                                 }
@@ -2520,6 +2534,10 @@ submitButton.removeAttribute('data-kt-indicator');
                                                                             $("#update-form").html(`Update`);
                                                                             submitButton.removeAttribute('data-kt-indicator');
                                                                             submitButton.disabled = false;
+                                                                            if (xhr.status === 0 || !navigator.onLine) {
+                                                                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                                                                return;
+                                                                            }
                                                                             console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
                                                                             // Try to extract a useful server-side message; fall back to the bare status.
                                                                             var serverMsg = '';
@@ -3315,6 +3333,13 @@ var KTAddCandidate = function () {
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
                     setTimeout(function () {					
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#save-form").prop("disabled", false).html("Submit");
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            return;
+                        }
 					
 												var formData = new FormData($('#createForm')[0]);						
 												$.ajax({
@@ -3333,9 +3358,17 @@ var KTAddCandidate = function () {
                                    return false;
                                 }
                                 if(response.status == 'mailcheck'){
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
                                    $("#save-form").html(`Submit`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
-																	});	
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
+																	});
                                    return false;
                                 }
 
@@ -3364,6 +3397,10 @@ var KTAddCandidate = function () {
                                 $("#save-form").html(`Submit`);
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;
+                                if (xhr.status === 0 || !navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    return;
+                                }
                                 console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
                                 var serverMsg = '';
                                 try {

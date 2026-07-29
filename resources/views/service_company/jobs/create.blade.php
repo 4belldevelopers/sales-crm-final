@@ -2278,9 +2278,13 @@
                         $('.verification_email').val(email);
                     }
                 },
-                error: function () {
+                error: function (xhr) {
                     $('.page-loader').hide();
-                    Swal.fire({ text: "Server error, please try again", icon: "error" });
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        Swal.fire({ text: "Server error, please try again", icon: "error" });
+                    }
                 }
             });
         }
@@ -3393,6 +3397,12 @@
             var $btn = $('.submit-card .btn-primary');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
 
+            if (!navigator.onLine) {
+                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                $btn.prop('disabled', false).html('Publish Job');
+                return;
+            }
+
             $.ajax({
                 url: __submitUrl,
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
@@ -3406,9 +3416,13 @@
                         showToast((data && data.message) ? data.message : 'Could not save the job. Please check the details.', 'error');
                     }
                 },
-                error: function() {
+                error: function(xhr) {
                     $btn.prop('disabled', false).html('Publish Job');
-                    showToast('Server error while saving the job. Please try again.', 'error');
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        showToast('Server error while saving the job. Please try again.', 'error');
+                    }
                 }
             });
         }
