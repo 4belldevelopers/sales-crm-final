@@ -556,108 +556,65 @@ $('#template').change(function(){
 });
 
 
-document.getElementById("btnSubmit").addEventListener("click", ()=>{
-	
-		
+document.getElementById("btnSubmit").addEventListener("click", function () {
 
-		const swalWithBootstrapButtons = Swal.mixin({
-			  customClass: {
-								confirmButton: 'btn btn-success',
-								cancelButton: 'btn btn-danger'
-							},
-		  	 buttonsStyling: false
-		})
-		swalWithBootstrapButtons.fire({
-										  title				: 'Are you sure?',
-										  text				: "You won't be able to revert this!",
-										  icon				: 'warning',
-										  showCancelButton	: true,
-										  confirmButtonText	: 'Yes,  Forward Resume!',
-										  cancelButtonText	: 'No, cancel!',
-										  reverseButtons	: true 
-									}).then((result) => {
-		  if (result.isConfirmed) {
-		      
-		                          $('.indicator-progress').show();
-		                          $('.indicator-label').hide();
-		  
-						 
-									var id        	=	1;
-									var url       	=	"{{ route('service_company.cvtracker.fwd_resume_send',':id') }}";
-									url         	=	url.replace(':id', id);
-									var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-									var token       =	"{{ csrf_token() }}";
-									
-									
-									var arr = [];
-									$('.chk_list_item:checked').each(function () {
-											arr.push($(this).val());
-									});
-									
-									var template	=	$('#template').val();
-									var from_email	=	$('#from_email').val();
-									var to_email	=	$('#to_email').val();
-									var cc_email	=	$('#cc_email_panel').val();
-									var subject		=	$('#subject').val();
-									var attached_cv	=	1;
-									var editor1		= CKEDITOR.instances.editor1.getData(); //$('#editor1').val();
+    $('.indicator-label').hide();
+    $('.indicator-progress').show();
+    document.getElementById('btnSubmit').disabled = true;
 
-									// alert(editor1);
-									
-									
-  
-						
-									$.ajax({
-													type		: 'POST',
-													url			: url,
-													data		: {'_token': token, '_method': 'POST', 'template' : template, 'from_email' : from_email, 'to_email' : to_email, 'cc_email' : cc_email, 'subject' : subject, 'attached_cv': attached_cv, 'editor1':editor1, 'arr':arr},
-													beforeSend	: function() {
-																				// $('#main_container').html('<img src="'+baseurl+'" height="35px" width="100%">');
-													},
-													success 	: function (response) {
-													    $('.indicator-progress').hide();
-		                                                 $('.indicator-label').show();
+    var id      = 1;
+    var url     = "{{ route('service_company.cvtracker.fwd_resume_send',':id') }}";
+    url         = url.replace(':id', id);
+    var token   = "{{ csrf_token() }}";
 
-														 if (response.status == 'coinCheck') {
-		
-																Swal.fire("Failed",` ${response.message}` , "warning").then(function(){
-																	$(".btn-active-color-primary").click();
-																	});		
-																	
-																	return false;	
-															}
+    var arr = [];
+    $('.chk_list_item:checked').each(function () { arr.push($(this).val()); });
 
-																	if (response.status == "success") {
-																		  
-																		//   $('#main_container').html(response.view);
-																		  swalWithBootstrapButtons.fire(
-																										  'Success!',
-																										  'Selected Applicant Forworded.',
-																										  'success'
-																										)
+    var template    = $('#template').val();
+    var from_email  = $('#from_email').val();
+    var to_email    = $('#to_email').val();
+    var cc_email    = $('#cc_email_panel').val();
+    var subject     = $('#subject').val();
+    var attached_cv = 1;
+    var editor1     = CKEDITOR.instances.editor1.getData();
 
-																										location.reload();										
-																		  
-																	}
-														}
-										});						 
-						 
-						 
-						 
-			
-		  } 
-		  else if (result.dismiss === Swal.DismissReason.cancel) {
-		                          $('.indicator-progress').hide();
-		                          $('.indicator-label').show();
-						swalWithBootstrapButtons.fire(
-														 	'Cancelled',
-															'Selected request is safe :)',
-															'error'
-														)
-		  }
-		})		
-		
-		
+    $.ajax({
+        type : 'POST',
+        url  : url,
+        data : {
+            '_token': token, '_method': 'POST',
+            'template': template, 'from_email': from_email,
+            'to_email': to_email, 'cc_email': cc_email,
+            'subject': subject, 'attached_cv': attached_cv,
+            'editor1': editor1, 'arr': arr
+        },
+        success: function (response) {
+            $('.indicator-progress').hide();
+            $('.indicator-label').show();
+            document.getElementById('btnSubmit').disabled = false;
+
+            if (response.status === 'coinCheck') {
+                Swal.fire('Failed', response.message, 'warning').then(function () {
+                    $(".btn-active-color-primary").click();
+                });
+                return;
+            }
+            if (response.status === 'success') {
+                Swal.fire('Success!', 'Selected Applicant Forwarded.', 'success').then(function () {
+                    location.reload();
+                });
+            }
+        },
+        error: function (xhr) {
+            $('.indicator-progress').hide();
+            $('.indicator-label').show();
+            document.getElementById('btnSubmit').disabled = false;
+            var msg = (xhr.status === 0 || !navigator.onLine)
+                ? 'You are offline. Please check your connection and try again.'
+                : 'Something went wrong (HTTP ' + xhr.status + '). Please try again.';
+            Swal.fire('Error', msg, 'error');
+        }
+    });
 
 });
 

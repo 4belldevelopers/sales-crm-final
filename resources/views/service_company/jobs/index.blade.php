@@ -595,9 +595,15 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
    	});
    	$(document).on('change','#status,#hiringtype,#employment_type',function(){
-      $('#myTable').DataTable().draw();
-      fetchCandidates();
-   	  //  table._fnDraw();
+        if (this.id === 'status') {
+            // Sync the tab row to match the selected status
+            var val = $(this).val();
+            var tabStatus = (val === 'inactive') ? 'inactive' : val; // closed → inactive
+            $('.jh-tab').removeClass('jh-tab-active');
+            $('.jh-tab[data-status="' + tabStatus + '"]').addClass('jh-tab-active');
+        }
+        localStorage.setItem('currentPageJobs', 1);
+        fetchCandidates(1);
    	});
 
     // Called from the tab row in jobHeader — filters table and marks tab active
