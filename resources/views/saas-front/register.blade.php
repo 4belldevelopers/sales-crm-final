@@ -898,6 +898,12 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                     );
                                   $('.indicator-label').hide();
                                   $('.indicator-progress').show();
+                              if (!navigator.onLine) {
+                                  Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                  $('.indicator-label').show(); $('.indicator-progress').hide();
+                                  r.removeAttribute('data-kt-indicator'); r.disabled = false;
+                                  return;
+                              }
                               $.ajax({
                                     url			: "{{route('company-register')}}",
                                     container	: '#kt_create_account_form',
@@ -927,11 +933,16 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                           
 
                                     },
-                                    error: function(xhr, status, error) {
-                                            $('.indicator-label').show();
-                                            $('.indicator-progress').hide();
-                                            Swal.fire("Error!", "Your need to fill all the form fields!", "error");
-                                    }
+                                     error: function(xhr) {
+                                             $('.indicator-label').show();
+                                             $('.indicator-progress').hide();
+                                             r.removeAttribute('data-kt-indicator'); r.disabled = false;
+                                             if (xhr.status === 0 || !navigator.onLine) {
+                                                 Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable. Please check your connection and try again.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                                             } else {
+                                                 Swal.fire('Error!', 'Something went wrong (HTTP ' + xhr.status + '). Please try again.', 'error');
+                                             }
+                                     }
                               }),
       
                                           
@@ -995,6 +1006,14 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                 }
 												 
 												 
+																					},
+																					error: function(xhr) {
+																						$('.page-loader').css('display', 'none');
+																						if (xhr.status === 0 || !navigator.onLine) {
+																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+																						} else {
+																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+																						}
 																					}
 													});
 																				
@@ -1039,6 +1058,14 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                 {
                                                   $('#contact_number').val(contact_number);
                                                 }
+																					},
+																					error: function(xhr) {
+																						$('.page-loader').css('display', 'none');
+																						if (xhr.status === 0 || !navigator.onLine) {
+																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+																						} else {
+																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+																						}
 																					}
 													});             		
                     }  	
@@ -1084,6 +1111,14 @@ const flagContainer = document.getElementById(`phoneDisplay`);
                                                 {
                                                   $('[name="website"]').val(website);
                                                 }
+																					},
+																					error: function(xhr) {
+																						$('.page-loader').css('display', 'none');
+																						if (xhr.status === 0 || !navigator.onLine) {
+																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+																						} else {
+																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+																						}
 																					}
 													});             		
                     }  	
