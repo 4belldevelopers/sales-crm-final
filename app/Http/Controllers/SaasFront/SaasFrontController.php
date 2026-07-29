@@ -386,6 +386,7 @@ class SaasFrontController extends SaasFrontBaseController
         }
 
            $company = new Company();
+		DB::beginTransaction();
 		try {
 			$company->company_name = $request->company_name;
 			$company->company_email = $request->email;
@@ -1526,12 +1527,17 @@ class SaasFrontController extends SaasFrontBaseController
 					
 					$view = view('saas-front.registration_success', $this->data)->render();
 
-			        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+			        DB::commit();
+		        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
 
 		} catch (\Swift_TransportException $e) {
-			DB::rollback();
+			DB::rollBack();
 			return Reply::error('Please contact administrator to set SMTP details to add company', 'smtp_error');
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('companyRegister failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Registration failed. Please try again.']);
 		}
 
 
@@ -2115,16 +2121,18 @@ class SaasFrontController extends SaasFrontBaseController
 			$this->user = $user;
 			$view = view('saas-front.invited_registration_success', $this->data)->render();
 
+			DB::commit();
 			return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
 
 
 		} catch (\Swift_TransportException $e) {
-			DB::rollback();
+			DB::rollBack();
 			return Reply::error('Please contact administrator to set SMTP details to add company', 'smtp_error');
-		} catch (\Exception $e) {
-			DB::rollback();
-			return Reply::error('Some error occurred when inserting the data. Please try again or contact support');
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('invitationCompanyStore failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Registration failed. Please try again.']);
 		}
 		return Reply::dataOnly(['status' => 'success']);
 
@@ -2136,9 +2144,9 @@ class SaasFrontController extends SaasFrontBaseController
 			// dd("jdjdjd",$request->all());
 	
         $company = new Company();
-		
+		DB::beginTransaction();
         try {
-			
+
 			if(!empty($request->direct_user)){
 
 				$decode = base64_decode($request->direct_user);
@@ -2233,7 +2241,8 @@ class SaasFrontController extends SaasFrontBaseController
 				$this->user		=	$clientRow;
 				$emailenabled 				=	false;
 				$view 				=	view('saas-front.invited_registration_success', $this->data)->render();
-				return Reply::dataOnly(['status' => 'success', 'view' => $view,'emailenabled' => $emailenabled]);	
+				DB::commit();
+				return Reply::dataOnly(['status' => 'success', 'view' => $view,'emailenabled' => $emailenabled]);
 
 									
 				}else{

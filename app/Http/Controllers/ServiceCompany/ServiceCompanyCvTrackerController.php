@@ -4879,10 +4879,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 		$attached_cv = $request->attached_cv;
 		$message = $request->editor1;
 		$arr = $request->arr;
-
-		$from = json_decode($from, true);
-		$from = array_column($from, 'value');
-		$from = implode(',', $from);
+		$decoded = json_decode($from, true);
+		if (is_array($decoded)) {
+			$from = implode(',', array_column($decoded, 'value'));
+		} // else $from is already a plain email string from the <select>
 
 		// 		$to = json_decode($to, true);
 		// 		$to = array_column($to, 'value');

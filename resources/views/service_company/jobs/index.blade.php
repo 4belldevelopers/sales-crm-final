@@ -631,12 +631,18 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                                      $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
                        	},
    						success 	: function (response) {
-									$('#kt_activitiesJob_body').html(response.view);	
+									$('#kt_activitiesJob_body').html(response.view);
+   						},
+   						error		: function (xhr) {
+   							var msg = (xhr.status === 0 || !navigator.onLine)
+   								? 'You are offline. Please check your connection.'
+   								: 'Could not load job details (HTTP ' + xhr.status + '). Please try again.';
+   							$('#kt_activitiesJob_body').html('<div style="padding:24px;text-align:center;font-family:Poppins,sans-serif;font-size:13px;color:#f64e60;">' + msg + '</div>');
    						}
    	  			});
-   	}); 
-   	
-		
+   	});
+
+
   $(document).on('click', '#status_sub_stage_close', function () { $('#status_drawer_close').trigger('click'); });
 
   $(document).on('click', '.status_stage', function () {
@@ -690,7 +696,13 @@ $(document).on('click', '.client-show-detail', function ()
                                      $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
                        	},
    						success 	: function (response) {
-									$('#kt_activitiesJob_body').html(response.view);	
+									$('#kt_activitiesJob_body').html(response.view);
+   						},
+   						error		: function (xhr) {
+   							var msg = (xhr.status === 0 || !navigator.onLine)
+   								? 'You are offline. Please check your connection.'
+   								: 'Could not load job details (HTTP ' + xhr.status + '). Please try again.';
+   							$('#kt_activitiesJob_body').html('<div style="padding:24px;text-align:center;font-family:Poppins,sans-serif;font-size:13px;color:#f64e60;">' + msg + '</div>');
    						}
    	  			});
 
@@ -899,6 +911,32 @@ $(document).on('click', '.client-hm-listing', function ()
                     $('#allJobList').html(response.html);
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
+                },
+                error: function(xhr) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
+
+                    var msg, icon;
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        msg  = 'You are currently offline or the server is unreachable. Please check your connection and try again.';
+                        icon = 'warning';
+                    } else if (xhr.status === 503 || xhr.status === 500) {
+                        msg  = 'The search service is temporarily unavailable. Please try again in a moment.';
+                        icon = 'error';
+                    } else {
+                        msg  = 'Could not load jobs (HTTP ' + xhr.status + '). Please refresh the page.';
+                        icon = 'error';
+                    }
+
+                    $('#allJobList').html(
+                        '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;">' +
+                        '<i class="fa fa-exclamation-triangle" style="font-size:32px;color:#f64e60;margin-bottom:12px;display:block;"></i>' +
+                        '<p style="font-size:13px;color:#5e6278;margin:0;">' + msg + '</p>' +
+                        '<button onclick="fetchCandidates()" class="btn btn-sm btn-primary mt-4" style="font-size:12px;">Retry</button>' +
+                        '</div>'
+                    );
+                    $('#pagination').html('');
                 }
             });
         }
