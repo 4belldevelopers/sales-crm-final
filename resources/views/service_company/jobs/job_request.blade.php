@@ -70,7 +70,7 @@
 
                <!-- HERO -->
                
-               @include('sections.service_company.jobHeader',['tabactive'=>$tabactive])
+               @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive,['showTabs'=>false])])
 
                <!-- TABLE -->
                <div class="table-card">
