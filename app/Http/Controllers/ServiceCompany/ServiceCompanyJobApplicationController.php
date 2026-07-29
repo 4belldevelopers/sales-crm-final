@@ -1890,9 +1890,12 @@ protected $elasticService;
 		$jobApplication->interview_mode_five = $request->interview_mode_five;
 		$jobApplication->interview_mode_six = $request->interview_mode_six;
 
+		DB::beginTransaction();
+		try {
+
 		$jobApplication->save();
 
-		
+
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
 			$YearskillId = $request->input('YearskillId');
 			$MonthskillId = $request->input('MonthskillId');
@@ -2316,12 +2319,20 @@ protected $elasticService;
 		$this->currencyConverter = GeneralMethod::currencyConverter();
 
 		// ElasticCandidateIndex::dispatch($lastInsertedId)->onConnection('emails');
+		DB::commit();
+
 		if (!empty($request->job_id)) {
 			return Reply::redirect(url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
 		} else {
 			return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications') . ' ' . __($message));
 		}
-		
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('store() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+		}
+
 	}
 	public function googleSheetCandidateData(Request $request)
 	{
@@ -5727,6 +5738,10 @@ protected $elasticService;
              //$jobApplication->photo = Files::upload($request->photo, 'candidate-photos');
 		}
          //  dd("dkd");
+
+		DB::beginTransaction();
+		try {
+
 		$jobApplication->save();
 
 
@@ -6125,12 +6140,20 @@ protected $elasticService;
 		 } else {
 				$redirectUrl = url('/service_company/apptracker/' . GeneralMethod::value_encrypt($request->job_id) . '/all');
 		 }
+		 DB::commit();
+
 		 return Reply::successWithData(__('messages.createdSuccessfully'), [
 			'action' => 'redirect',
 			'url' => $redirectUrl,
 			'candidate_id' => (int) $jobApplication->id,
 			'resume' => (string) ($jobApplication->resume ?? ''),
 		 ]);
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('update() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+		}
 
 	}
 	function formatInterviewDateTime($date, $time, $defaultTimeFormat) {
@@ -10127,6 +10150,8 @@ protected $elasticService;
 
 		$job_application_arr['created_at'] = date('Y-m-d');
 
+		DB::beginTransaction();
+		try {
 
 		DB::table('job_applications')->insert($job_application_arr);
 		$application_id = DB::getPdo()->lastInsertId();
@@ -10442,11 +10467,18 @@ protected $elasticService;
 
 		$this->currencyConverter = GeneralMethod::currencyConverter();
 
+		DB::commit();
 
 		if (!empty($request->job_id)) {
 			return Reply::redirect(url('/service_company/apptracker/clientapp/' .  GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
 		} else {
 			return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications') . ' ' . __($message));
+		}
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('clientappstore() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
 		}
 	}
 	public function clientshow($id)

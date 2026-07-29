@@ -219,40 +219,111 @@ if($snp_mode== 1){
                             </div>
 
                             <div class="ut">Drag & Drop Resume Here</div>
-
                             <div class="us">or</div>
 
-                            <button class="ub" type="button" id="chooseFileBtn">
-                                Choose File
-                            </button>
+                            <button class="ub" type="button" id="chooseFileBtn">Choose File</button>
 
                             <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" style="display:none;">
 
-                            <div class="uf">
-                                Supports PDF, DOC, DOCX (Max 10MB)
+                            <div class="uf">Supports PDF, DOC, DOCX (Max 6 MB)</div>
+
+                            <!-- Progress bar -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
                             </div>
 
-                            <!-- Selected File -->
+                            <!-- Selected File strip -->
+                            @php
+                                $displayResumeName = '';
+                                if (!empty($application->resume)) {
+                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
+                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
+                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                                        $displayResumeName = 'Resume (uploaded)';
+                                    }
+                                }
+                            @endphp
                             <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
-                                <span class="file-name" id="fileName">
-                                  {{ !empty($application->resume) ? basename($application->resume) : '' }}
-                                </span>
+                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
                                 @if(!empty($resume_url))
-                                <a href="{{ $resume_url }}"
-                                   target="_blank"
-                                   class="download-file"
+                                <a href="{{ $resume_url }}" target="_blank" class="download-file"
                                    style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
                                     <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
                                 </a>
                                 @endif
+                                <button type="button" class="remove-file" id="removeFile">Remove</button>
+                            </div>
 
-                                <button type="button"
-                                        class="remove-file"
-                                        id="removeFile">
+                        </div>
+
+                        <!-- After-upload Resume Information card -->
+                        <div class="up-info" id="upInfo">
+                            <div class="up-info-banner">
+                                <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/>
+                                </svg>
+                                <span><strong>Resume uploaded successfully!</strong></span>
+                            </div>
+                            <div class="up-file-card">
+                                <span class="up-file-icon">PDF</span>
+                                <div class="up-file-meta">
+                                    <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                    <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                </div>
+                                <span class="up-file-pill">
+                                    <svg class="up-file-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Uploaded
+                                </span>
+                            </div>
+                            <div class="up-actions">
+                                <button type="button" id="upReplaceBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                    </svg>
+                                    Replace Resume
+                                </button>
+                                <button type="button" id="upRemoveBtn" class="up-remove">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                                    </svg>
                                     Remove
                                 </button>
                             </div>
-
+                            <h4 class="up-details-h">Resume Details</h4>
+                            <div class="up-details-grid">
+                                <div class="up-detail">
+                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                                    <div><div class="up-detail-lbl">Uploaded On</div><div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div></div>
+                                </div>
+                                <div class="up-detail">
+                                    <span class="up-detail-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                    <div><div class="up-detail-lbl">Parser Status</div><div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div></div>
+                                </div>
+                                <div class="up-detail">
+                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                                    <div><div class="up-detail-lbl">File Type</div><div class="up-detail-val" id="upDetailFileType">&nbsp;</div></div>
+                                </div>
+                                <div class="up-detail" id="upRetryWrap" style="display:none">
+                                    <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1005,14 +1076,91 @@ if($snp_mode== 1){
 <script>
 $(document).ready(function () {
 
-    const uploadBox = document.getElementById('uploadBox');
+    const uploadBox  = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
 
-    // ==========================
-    // Common file handler
-    // ==========================
-    function processFile(file, event = null) {
+    // ─── Zero-temp upload pipeline ───────────────────────────────────────────
+    // xhr.send(file) → raw bytes → Laravel php://input → streamed to R2
+    // No PHP upload_tmp_dir write. No CORS needed.
+    // ─────────────────────────────────────────────────────────────────────────
 
+    var upXhr                = null;
+    var _parseStatusInterval = null;
+    var _resumeUploadId      = null;
+
+    function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
+    function fmtSize(b) { return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
+    function extLabel(file) { var e=(file.name.split('.').pop()||'').toUpperCase(); return ['PDF','DOC','DOCX'].includes(e)?e:'PDF'; }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        $('#upWrap').hide();
+        $('#upBar').css('width','0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        $('#upBanner').hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
+    }
+
+    function backToDropzone() {
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        resetProgress();
+        $('#upInfo').removeClass('show');
+        $('#uploadBox').show();
+        $('#fileInfo').hide();
+        $('#fileName').text('');
+        $('#resume').val('');
+        $('#resumeCheck').val('');
+        $('#uploaded_file_path').val('');
+        $('.download-file').addClass('d-none');
+    }
+
+    function showUploadedCard(file) {
+        var ext = extLabel(file);
+        $('#upInfo .up-file-icon').text(ext);
+        $('#upFileName').text(file.name);
+        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+        var now = new Date();
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        $('#upDetailUploadedOn').text(
+            String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear()+
+            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')
+        );
+        $('#upDetailParserStatus').text('Pending').css('color','');
+        $('#upDetailFileType').text(ext);
+        $('#upRetryWrap').hide();
+        $('#uploadBox').hide();
+        $('#fileInfo').hide();
+        $('#upInfo').addClass('show');
+    }
+
+    function _showUploadError(msg) {
+        $('#upBanner').removeClass('ok').addClass('err').html(
+            '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            +'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
+            +'</svg><span><strong>Upload failed:</strong> '+msg+'</span>'
+        ).show();
+        upXhr = null;
+    }
+
+    function _startParsePoller(uploadId) {
+        _resumeUploadId = uploadId;
+        if (_parseStatusInterval) clearInterval(_parseStatusInterval);
+        _parseStatusInterval = setInterval(function () {
+            $.get('{{ route("service_company.resume.status", ["id" => "__ID__"]) }}'.replace('__ID__', uploadId))
+                .done(function (r) {
+                    var map = { Queued:'Queued…', Processing:'Parsing resume…', Completed:'Parsed ✓', Failed:'Parse failed' };
+                    $('#upDetailParserStatus').text(map[r.status] || r.status);
+                    if (r.status === 'Completed' || r.status === 'Failed') {
+                        clearInterval(_parseStatusInterval); _parseStatusInterval = null;
+                        if (r.status === 'Failed') { $('#upDetailParserStatus').css('color','#f44336'); $('#upRetryWrap').show(); }
+                        else { $('#upRetryWrap').hide(); }
+                    }
+                });
+        }, 4000);
+    }
+
+    function processFile(file, event) {
         if (!file) return;
 
         const ext = file.name.split('.').pop().toLowerCase();
@@ -1024,161 +1172,145 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
-        $('#fileName').text(
-            file.name + ' (' + sizeMB.toFixed(2) + ' MB)'
-        );
-
+        const sizeStr = sizeMB >= 1 ? sizeMB.toFixed(2) + ' MB' : Math.round(file.size / 1024) + ' KB';
+        $('#fileName').text(file.name + ' (' + sizeStr + ')');
         $('#fileInfo').css('display', 'flex');
-
         $('#resumeCheck').val('1');
-
         $('.download-file').addClass('d-none');
 
-        console.log('Selected File:', file.name);
-
+        // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
+        window.__upXhrChannelClaimed = true;
+        if (typeof uploadWithProgress === 'function') {
+            uploadWithProgress(file);
+        }
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
         }
+        // Reset so the legacy channel is open for the next pick.
+        window.__upXhrChannelClaimed = false;
     }
 
-    // ==========================
-    // Choose File Button
-    // ==========================
-    $(document).on('click', '#chooseFileBtn', function (e) {
+    function uploadWithProgress(file) {
+        window.__upXhrChannelClaimed = true;
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        _resumeUploadId = null;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+
+        $('#upWrap').show();
+        $('#upStats').text('0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size));
+
+        var mimeMap = { pdf:'application/pdf', doc:'application/msword', docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+        var ext         = (file.name.split('.').pop()||'').toLowerCase();
+        var contentType = mimeMap[ext] || file.type || 'application/octet-stream';
+
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
+        upXhr.setRequestHeader('Content-Type', contentType);
+        upXhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+        upXhr.setRequestHeader('X-File-Size', file.size);
+        upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            var pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(file.size));
+        };
+
+        upXhr.onload = function () {
+            var r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) {}
+            upXhr = null;
+            if (this.status >= 200 && this.status < 300 && r && r.success) {
+                $('#upBar').css('width','100%');
+                $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
+                $('#upPill').css('display','inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    +'<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    +'<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
+                ).show();
+                $('#uploaded_file_path').val(r.file_path || '');
+                $('#resumeCheck').val('1');
+                showUploadedCard(file);
+                if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
+            } else {
+                _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
+            }
+        };
+
+        upXhr.onerror = function () { _showUploadError('Network error. Click Remove and try again.'); };
+
+        upXhr.send(file);
+    }
+
+    // Replace / Remove inside info card
+    $(document).on('click', '#upReplaceBtn', function (e) { e.preventDefault(); backToDropzone(); resumeInput.click(); });
+    $(document).on('click', '#upRemoveBtn',  function (e) { e.preventDefault(); backToDropzone(); });
+
+    // Retry parse
+    $(document).on('click', '#upRetryBtn', function (e) {
+        e.preventDefault();
+        if (!_resumeUploadId) return;
+        $('#upDetailParserStatus').text('Re-queuing…');
+        $('#upRetryWrap').hide();
+        $.post('{{ route("service_company.resume.retry", ["id" => "__ID__"]) }}'.replace('__ID__', _resumeUploadId), { _token: '{{ csrf_token() }}' })
+            .done(function () { _startParsePoller(_resumeUploadId); })
+            .fail(function () { $('#upDetailParserStatus').text('Retry failed'); $('#upRetryWrap').show(); });
+    });
+
+    // Direct binding so stopPropagation() fires BEFORE the click reaches
+    // #uploadBox — prevents resumeInput.click() from being called twice.
+    document.getElementById('chooseFileBtn').addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         resumeInput.click();
     });
 
-    document.addEventListener('paste', function (e) {
+    // Remove file strip button
+    $(document).on('click', '#removeFile', function (e) { e.preventDefault(); e.stopPropagation(); backToDropzone(); });
 
-        const files = e.clipboardData?.files;
-
-        if (files && files.length) {
-
-            const file = files[0];
-
-            // Your existing validation/display function
-            processFile(file);
-
-            // Assign file to input so form submit works
-            const dt = new DataTransfer();
-            dt.items.add(file);
-
-            resumeInput.files = dt.files;
-
-            // Trigger change event
-            resumeInput.dispatchEvent(
-                new Event('change', { bubbles: true })
-            );
-        }
-    });
-
-    // ==========================
-    // Click Upload Area
-    // ==========================
-    $('#uploadBox').on('click', function (e) {
-
-        if (
-            $(e.target).closest('#chooseFileBtn').length ||
-            $(e.target).closest('#removeFile').length ||
-            $(e.target).closest('.download-file').length
-        ) {
-            return;
-        }
-
-        resumeInput.click();
-    });
-
-    // ==========================
-    // File Input Change
-    // ==========================
+    // File input change
     $('#resume').on('change', function (e) {
-
         if (this.files.length > 0) {
-
             processFile(this.files[0], e);
-
         } else {
-
             $('#fileInfo').hide();
             $('#resumeCheck').val('');
             $('.download-file').addClass('d-none');
         }
     });
 
-    // ==========================
-    // Remove File
-    // ==========================
-    $(document).on('click', '#removeFile', function (e) {
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        $('#resume').val('');
-        $('#resumeCheck').val('');
-
-        $('#fileName').text('');
-        $('#fileInfo').hide();
-
-        $('.download-file').addClass('d-none');
+    // Click upload box
+    $('#uploadBox').on('click', function (e) {
+        if ($(e.target).closest('#chooseFileBtn, #removeFile, .download-file').length) return;
+        resumeInput.click();
     });
 
-    // ==========================
+    // Paste
+    document.addEventListener('paste', function (e) {
+        var files = e.clipboardData?.files;
+        if (files && files.length) processFile(files[0]);
+    });
+
     // Drag & Drop
-    // ==========================
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-
-        uploadBox.addEventListener(eventName, function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
+    ['dragenter','dragover','dragleave','drop'].forEach(function (ev) {
+        uploadBox.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); });
     });
-
-    uploadBox.addEventListener('dragenter', function () {
-        this.classList.add('dragging');
-    });
-
-    uploadBox.addEventListener('dragover', function () {
-        this.classList.add('dragging');
-    });
-
-    uploadBox.addEventListener('dragleave', function () {
-        this.classList.remove('dragging');
-    });
-
+    uploadBox.addEventListener('dragenter', function () { this.classList.add('dragging'); });
+    uploadBox.addEventListener('dragover',  function () { this.classList.add('dragging'); });
+    uploadBox.addEventListener('dragleave', function () { this.classList.remove('dragging'); });
     uploadBox.addEventListener('drop', function (e) {
-
         this.classList.remove('dragging');
-
-        const files = e.dataTransfer.files;
-
-        console.log('DROP FIRED', files);
-
-        if (files.length > 0) {
-
-            const file = files[0];
-
-            // Show filename immediately
-            processFile(file);
-
-            // Assign to file input for form submit
-            const dt = new DataTransfer();
-            dt.items.add(file);
-
-            resumeInput.files = dt.files;
-
-            // andleFileInputChange(e);
-             resumeInput.dispatchEvent(
-            new Event('change', { bubbles: true })
-        );
-            
-        }
+        var files = e.dataTransfer.files;
+        if (files.length > 0) processFile(files[0]);
     });
 
 });
@@ -2527,6 +2659,14 @@ function total_exp_and_rel_exp(){
       if (!file) {
           return;
       }
+
+      // uploadWithProgress() already POSTed this blob to /uploadresume
+      // with real progress feedback. Skip the redundant jQuery POST.
+      // The PDFjs / mammoth parse path below still runs so Career
+      // Summary fills in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
       let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -2565,6 +2705,7 @@ function total_exp_and_rel_exp(){
 
         }
     });
+      } // end if (!__skipUpload)
 
 
 if (file.type === 'application/pdf' || fileExtension === 'pdf') {
@@ -2664,7 +2805,8 @@ if (file.type === 'application/pdf' || fileExtension === 'pdf') {
     }
 
     // Attach event listener to file input
-    document.getElementById('resume').addEventListener('change', handleFileInputChange);
+    // handleFileInputChange replaced by uploadWithProgress zero-temp pipeline above
+    // document.getElementById('resume').addEventListener('change', handleFileInputChange);
 
 
 

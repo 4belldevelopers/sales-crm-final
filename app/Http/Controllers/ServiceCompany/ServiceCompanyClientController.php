@@ -2568,6 +2568,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			$tags = implode(',', $tags);
 			$client->tags = $tags;
 		}
+		DB::beginTransaction();
+		try {
+
 		$client->save();
 
 		$client_id = $id;
@@ -2781,7 +2784,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 		if($client_id>0){
 			GeneralMethod::clientStaffingPartner($client_id);
 		}
-		
+
 		$cachekeys = [
 			'allclients_version_user_'.$this->user->id,
 			'allcustomclient_version_user_'.$this->user->id,
@@ -2790,8 +2793,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 		foreach ($cachekeys as $key) {
 			GeneralMethod::cacheClean($key);
 		}
-	
+
+		DB::commit();
+
 		return Reply::redirect(route('service_company.clients.index'), __('menu.clients') . ' ' . __('messages.updatedSuccessfully'));
+
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('clients update() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+		}
 	}
 	public function create()
 	{
@@ -2887,6 +2898,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			$client->tags = $tags;
 		}
 
+
+		DB::beginTransaction();
+		try {
 
 		$client->save();
 		$client_id = DB::getPdo()->lastInsertId();
@@ -3098,7 +3112,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 		if($client_id>0){
 			GeneralMethod::clientStaffingPartner($client_id);
 		}
-		
+
 		$cachekeys = [
 			'allclients_version_user_'.$this->user->id,
 			'allcustomclient_version_user_'.$this->user->id,
@@ -3108,8 +3122,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			GeneralMethod::cacheClean($key);
 		}
 
+		DB::commit();
+
 		return Reply::redirect(route('service_company.clients.custom_client') . '/0', __('menu.clients') . ' ' . __('messages.createdSuccessfully'));
 
+		} catch (\Throwable $e) {
+			DB::rollBack();
+			\Log::error('clients store() transaction failed: ' . $e->getMessage(), ['exception' => $e]);
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+		}
 	}
 	public function addresslist($cid)
 	{
