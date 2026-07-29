@@ -1,6 +1,6 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
     <style>
 
        
@@ -1156,6 +1156,54 @@
         </div>
     </div>
     <!--end::Mass Mail - Drawer-->
+
+    <!-- Job Status Drawer (mirrors jobs/index.blade.php) -->
+    <style>
+      /* Status drawer opens while job-details (#kt_activitiesApplication, z-index 999999)
+         is already open — must render above it. Overlay disabled to avoid backdrop
+         collision (same pattern as #interview_schedule_drawer in the main layout). */
+      #status_drawer { z-index: 1000000 !important; }
+      #status_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
+      #status_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      #status_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+      #status_drawer .sd-topbar-title { font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #181c32; line-height: 1.3; }
+      #status_drawer .sd-topbar-sub { font-family: 'Poppins', sans-serif; font-size: 11.5px; font-weight: 400; color: #7e8299; margin-top: 1px; }
+      #status_drawer .sd-topbar-right { display: flex; align-items: center; gap: 10px; }
+      #status_drawer .sd-btn-cancel { border: 1px solid #e4e6ef; background: #fff; color: #3f4254; border-radius: 8px; padding: 9px 16px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+      #status_drawer .sd-btn-cancel:hover { background: #f8f9fb; }
+      #status_drawer .sd-btn-confirm { border: none; background: #3e97ff; color: #fff; border-radius: 8px; padding: 9px 18px; font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
+      #status_drawer .sd-btn-confirm:hover { background: #2f7fe0; }
+      #status_drawer .sd-btn-confirm:disabled { background: #c2c9d6; cursor: not-allowed; }
+      #status_drawer .sd-close { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #7e8299; cursor: pointer; flex-shrink: 0; }
+      #status_drawer .sd-close:hover { background: #f8f9fb; color: #f64e60; }
+    </style>
+    <div id="status_drawer_toggle" style="display:none;"></div>
+    <div id="status_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="job-status"
+        data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+        data-kt-drawer-width="{default:'100%', 'sm': '92%', 'lg': '80%'}" data-kt-drawer-direction="end"
+        data-kt-drawer-toggle="#status_drawer_toggle" data-kt-drawer-close="#status_drawer_close"
+        data-kt-drawer-overlay="false">
+      <div class="d-flex flex-column h-100 w-100">
+        <div class="sd-topbar">
+          <div class="sd-topbar-left">
+            <span class="sd-topbar-ico"><i class="fas fa-briefcase"></i></span>
+            <div>
+              <div class="sd-topbar-title">Job Status</div>
+              <div class="sd-topbar-sub">Update the job status and manage its visibility across the platform.</div>
+            </div>
+          </div>
+          <div class="sd-topbar-right">
+            <button type="button" class="sd-btn-cancel" id="status_sub_stage_close">Cancel</button>
+            <button type="button" class="sd-btn-confirm" id="status_confirm_btn" disabled onclick="newUpdateJobstatus()">
+              <span class="indicator-label changetextupdate">Update Status</span> <i class="fas fa-arrow-right"></i>
+            </button>
+            <span class="sd-close" id="status_drawer_close"><i class="fa fa-xmark"></i></span>
+          </div>
+        </div>
+        <div class="status_body_content flex-grow-1" id="status_body_content" style="overflow-y:auto;"></div>
+      </div>
+    </div>
+    <!-- end::Job Status Drawer -->
 @endsection
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
@@ -2055,6 +2103,40 @@
                 }
             });
         }
+
+        // ── Job Status drawer (same as jobs/index.blade.php) ──────────────────
+        $(document).on('click', '#status_sub_stage_close', function () {
+            $('#status_drawer_close').trigger('click');
+        });
+
+        $(document).on('click', '.status_stage', function () {
+            if ($(this).data('direct-client') == 1) {
+                Swal.fire({ icon: 'warning', title: 'Restricted', text: 'Direct Client Job Status cannot be changed by Agencies' });
+                return false;
+            }
+            $('#status_body_content').html('<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>');
+            $('#status_confirm_btn').prop('disabled', true).css('background', '');
+            $('.changetextupdate').text('Update Status');
+            $('#status_drawer_toggle').trigger('click');
+            var id  = $(this).data('row-id');
+            var url = "{{ route('service_company.jobs.editJobStatus',':id') }}";
+            url     = url.replace(':id', id);
+            $.ajax({
+                type: 'GET',
+                url:  url,
+                success: function (response) {
+                    if (response.status == 'success') {
+                        $('#status_body_content').html(response.view);
+                    } else {
+                        $('#status_body_content').html('<div class="text-center py-20 text-danger">Could not load the job status details. Please close and try again.</div>');
+                    }
+                },
+                error: function () {
+                    $('#status_body_content').html('<div class="text-center py-20 text-danger">Something went wrong loading this job\'s status. Please close and try again.</div>');
+                }
+            });
+        });
+        // ───────────────────────────────────────────────────────────────────────
 
         $(document).on('change', '.chk_copy_item', function () {
            const isChecked = $(this).is(':checked');
