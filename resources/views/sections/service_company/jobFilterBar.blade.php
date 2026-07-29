@@ -1,11 +1,17 @@
 <div class="jh-filter-bar">
 
-    <div class="jh-search-wrap">
+    <div class="jh-search-wrap" style="position:relative;">
         <svg class="jh-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" class="jh-search-input inputJobSearch" name="inputJobSearch"
-               placeholder="Search by job title, skills, company..." id="kt_tagify_2"/>
+               placeholder="Search by job title, skills, company..." id="kt_tagify_2"
+               style="padding-right:100px;"/>
+        <button type="button" id="jobSearchBtn" onclick="fetchCandidates(1)"
+            style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:6px 14px;border-radius:6px;border:none;background:#2563EB;color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;"
+            onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563EB'">
+            Search
+        </button>
     </div>
 
     <div class="jh-filter-group">
