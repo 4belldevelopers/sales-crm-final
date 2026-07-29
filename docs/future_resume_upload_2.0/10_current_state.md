@@ -12,7 +12,6 @@
 |---|---|---|---|
 | Apply blade | `resources/views/career-apply.blade.php` | ~3855 | XHR progress layer added, parser client-side (REMOVED 2026-07-27: this IS the only parser; no server-side parser) |
 | Apply controller | `app/Http/Controllers/HomeController.php` | ~16K | god controller, two relevant methods: `careerApply` GET + `careerStore` POST |
-| OpenAI side-channel | `app/Services/ChatGptService.php` | 37 | raw cURL, no retry, no idempotency |
 | Upload temporary | `app/Http/Controllers/HomeController.php` — `uploadresume` route | — | 6 MB cap, field name=`file`, single endpoint |
 | Upload → S3 job | `app/Jobs/UploadResumeToS3.php` | 85 | no tries/backoff, no idempotency |
 | Index → ES job | `app/Jobs/JobApplicationsNewUpload.php` | 63 | rethrow on failure, but no `$tries` |
@@ -53,15 +52,10 @@ the 1K/sec threshold but with no retry, no batch, no queue shaping.
 
 ### C3 — REMOVED 2026-07-27 — No server-side parser to admission-control
 
-> v2 has no `ChatGptService::parseResume()` call site. The browser-side
+> v2 has no server-side parser call site. The browser-side
 > `pdf.js` parser runs locally in 50–200 ms and never crosses the
-> network. There is no provider-side 429 storm because there is no
-> provider. The C3 gap that existed in v1 (raw cURL → OpenAI with no
-> admission control) is solved by *removing the call site* rather
-> than by adding a Redis semaphore around it.
->
-> The v1-era `ChatGptService.php` file is left untouched on disk
-> (no destructive delete) for the v1 path that still uses it.
+> network. The C3 gap that existed in v1 is solved by *removing the
+> call site* rather than by adding a Redis semaphore around it.
 
 ### C4 — God controller state container
 
@@ -108,7 +102,6 @@ These were NOT typed out from direct grep this session:
 | `career-apply.blade.php` has XHR progress | High | grep `XMLHttpRequest` in file |
 | `HomeController` LOC | Medium | `wc -l app/Http/Controllers/HomeController.php` |
 | ES index name for candidates | Low | grep `ElasticService::index` |
-| `ChatGptService` raw cURL | Medium | grep `curl_exec` |
 | Public route `POST /uploadresume` "6 MB" cap | High | grep `'max:6048'` |
 
 When a downstream doc cites one of these, it marks the confidence level so

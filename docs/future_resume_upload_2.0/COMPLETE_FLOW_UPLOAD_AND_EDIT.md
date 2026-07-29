@@ -41,8 +41,8 @@ are already populated (or left empty if the user types first). The user
 clicks Submit, the candidate row is inserted with the values that are
 already on the form.
 
-There is **no** server-side parser, no `parse_resumes` queue, no LLM
-call, no `resume_parse_results` row, no Retry-After semantics, no
+There is **no** server-side parser, no `parse_resumes` queue, no
+`resume_parse_results` row, no Retry-After semantics, no
 `parser_fallback_mode`, no `RepairStuckSessionsJob` parser sweep, and
 no `extractor_version`. INV-2's `data-parser-populated="false"`
 attribute still gates the auto-fill so manual values always win.
@@ -93,7 +93,7 @@ across tenants.
 
 ## CREATE flow — 11 stages
 
-> Browser → server → R2 → parser → ATS row.
+> Browser → server → R2 → (browser-side pdf.js parser runs in parallel) → ATS row.
 
 ### Stage 1 — Recruiter opens "Add Candidate" page
 
@@ -251,7 +251,7 @@ that never reach `Uploaded` are reaped).
 > `pdf.js` + `mammoth.js` + `re_test()`. It starts as soon as bytes
 > stream into the `FileReader` (typically at ≥50 KB; see v1 brief:
 > *"PARALLEL: parse starts when bytes ≥ 50 KB in stream"*). The parser
-> is the v1 brief's original UX — no LLM call, no server round-trip.
+> is the v1 brief's original UX — no server round-trip.
 
 **Browser-side, two paths running concurrently (`resume-upload-progress.js`
 + `resume-populate-if-empty.js`):**
@@ -705,8 +705,8 @@ A second, durable parser pipeline would create a side-channel of
 "ground truth" that competes with the user-visible form. Browser memory
 is bounded but transient — that's sufficient for the form-fill UX. Any
 downstream consumer (search, ES, engine fingerprint) reads the candidate
-row after submit. There is no LLM call, no queue, no pod — the server
-subsystem never sees the resume text.
+row after submit. There is no queue, no pod — the server subsystem
+never sees the resume text.
 
 ### Reverb pipeline
 
@@ -780,7 +780,6 @@ allows the request (degraded mode). Production startup fails loud if
 | Filename injection | `Illuminate\Support\Str::ascii(strip_control($orig))` + length 1..128 |
 | Path traversal in R2 keys | UUID + 7-char hash prefix, no user input in path |
 | XSS in resume auto-fill | `e()` on all Blade outputs (NEVER `{!! !!}` for user-supplied data) |
-| ~~LLM prompt injection~~ | REMOVED — no LLM call in v2 |
 | R2 bucket policy | bucket-prefix token binding (Worker presign is v3; ADR-017) |
 
 ---

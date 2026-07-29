@@ -62,7 +62,7 @@
 
 | Question | Answer |
 |---|---|
-| Upload + parse | continue; Reverb fail-out is at-most-once |
+| Upload + browser-side pdf.js parse | continue; Reverb fail-out is at-most-once |
 | Submit | unaffected |
 
 ## RED-8 — Cert / TLS expired
@@ -108,8 +108,8 @@
 
 | Question | Answer |
 |---|---|
-| Doc parsers | pdfjs/mammoth have built-in limits (1 GB extraction) |
-| Defense in depth | server parser does pre-flight file-size cap before parse |
+| Doc parsers | browser-side pdf.js + mammoth.js have built-in limits (1 GB extraction ceiling) |
+| Defense in depth | client-side cap = 6 MB hard cap; server-side `presign` validates `file_size_bytes` and rejects oversized (422) before signing |
 | Recovery time | manual patch |
 
 ## RED-14 — Hot tenant (one tenant pushes 50% of load)
@@ -117,7 +117,6 @@
 | Question | Answer |
 |---|---|
 | Per-company rate limit | 120/min caps at 2/s tenant — absorbs |
-| Parser pod trim | cap per (tenant, pod) via Redis semaphore |
 
 ## RED-15 — Rollout goes wrong
 
@@ -158,8 +157,8 @@
 
 | Question | Answer |
 |---|---|
-| Parser OOM | pod restarts; Horizon reschedules |
-| Splitting parser pods | 1 parser = 8 concurrent; spread across 3 pods |
+| `bulkelasticindex` worker OOM | pod restarts; Horizon reschedules |
+| Reconciliation worker OOM | pod restarts; idempotent re-run picks up where it left off (state machine guard) |
 
 ## Worst case scenario
 

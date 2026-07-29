@@ -116,9 +116,9 @@ Broadcast on `private-resume.{company_id}` channel.
 
 ### `ResumeParseFailed` — REMOVED 2026-07-27
 
-> v2 has no LLM call, no `Retry-After`, no `PAR_TIMEOUT` /
-> `PAR_429` / `PAR_AUTH` / `PAR_BODY` codes. Parser failures
-> degrade to "empty form fields" only, which INV-2 handles fine.
+> v2 has no `Retry-After`, no parser error codes.
+> Parser failures degrade to "empty form fields" only, which
+> INV-2 handles fine.
 
 ### `ResumeCancelled`
 

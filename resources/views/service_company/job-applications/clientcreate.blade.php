@@ -209,7 +209,67 @@ body {overflow-x:hidden; }
                                 </button>
                             </div>
 
+                            <!-- Progress bar / pill / success banner -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Done
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
+                            </div>
+
                         </div>
+
+                        <!-- After-upload Resume Information card (outside #uploadBox) -->
+                        <div class="up-info" id="upInfo">
+                            <div class="up-info-banner">
+                                <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/>
+                                </svg>
+                                <span class="up-file-icon">PDF</span>
+                                <div class="up-file-meta">
+                                    <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                    <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                </div>
+                            </div>
+                            <div class="up-actions">
+                                <button type="button" id="upReplaceBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                                    </svg>
+                                    Replace
+                                </button>
+                                <button type="button" id="upRemoveBtn" class="up-remove">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                    </svg>
+                                    Remove
+                                </button>
+                            </div>
+                            <div class="up-details">
+                                <div class="up-detail">
+                                    <span class="up-detail-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
+                                    <div><div class="up-detail-lbl">Parser Status</div><div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div></div>
+                                </div>
+                                <div class="up-detail">
+                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                                    <div><div class="up-detail-lbl">Uploaded On</div><div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div></div>
+                                </div>
+                                <div class="up-detail" id="upRetryWrap" style="display:none">
+                                    <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="fs fv-row" style="margin-bottom:0">
@@ -1154,13 +1214,158 @@ body {overflow-x:hidden; }
 <script>
 $(document).ready(function () {
 
-    const uploadBox = document.getElementById('uploadBox');
+    const uploadBox  = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
+
+    // ─── Zero-temp upload pipeline ───────────────────────────────────────────
+    // xhr.send(file) → raw bytes → Laravel php://input → streamed to R2
+    // No PHP upload_tmp_dir write. No CORS needed.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    let upXhr                = null;
+    let _parseStatusInterval = null;
+    let _resumeUploadId      = null;
+
+    function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
+    function fmtSize(b) { return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
+    function extLabel(file) { var e=(file.name.split('.').pop()||'').toUpperCase(); return ['PDF','DOC','DOCX'].includes(e)?e:'PDF'; }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
+        $('#upWrap').hide();
+        $('#upBar').css('width', '0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        const $b = $('#upBanner');
+        $b.hide().removeClass('ok err').empty();
+    }
+
+    function backToDropzone() {
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        resetProgress();
+        $('#upInfo').removeClass('show');
+        $('#uploadBox').show();
+        $('#fileInfo').hide();
+        $('#fileName').text('');
+        $('#resume').val('');
+        $('#resumeCheck').val('');
+        $('#uploaded_file_path').val('');
+        $('.download-file').addClass('d-none');
+    }
+
+    function showUploadedCard(file) {
+        var ext = extLabel(file);
+        var $info = $('#upInfo');
+        $info.find('.up-file-icon').text(ext);
+        $('#upFileName').text(file.name);
+        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+        var now = new Date();
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        $('#upDetailUploadedOn').text(
+            String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear()+
+            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')
+        );
+        $('#upDetailParserStatus').text('Pending').css('color','');
+        $('#upRetryWrap').hide();
+        $('#uploadBox').hide();
+        $('#fileInfo').hide();
+        $info.addClass('show');
+    }
+
+    function _showUploadError(msg) {
+        $('#upBanner').removeClass('ok').addClass('err').html(
+            '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            +'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
+            +'</svg><span><strong>Upload failed:</strong> '+msg+'</span>'
+        ).show();
+        upXhr = null;
+    }
+
+    function _startParsePoller(uploadId) {
+        _resumeUploadId = uploadId;
+        if (_parseStatusInterval) clearInterval(_parseStatusInterval);
+        _parseStatusInterval = setInterval(function () {
+            $.get('{{ route("service_company.resume.status", ["id" => "__ID__"]) }}'.replace('__ID__', uploadId))
+                .done(function (r) {
+                    var map = { Queued:'Queued…', Processing:'Parsing resume…', Completed:'Parsed ✓', Failed:'Parse failed' };
+                    $('#upDetailParserStatus').text(map[r.status] || r.status);
+                    if (r.status === 'Completed' || r.status === 'Failed') {
+                        clearInterval(_parseStatusInterval);
+                        _parseStatusInterval = null;
+                        if (r.status === 'Failed') {
+                            $('#upDetailParserStatus').css('color', '#f44336');
+                            $('#upRetryWrap').show();
+                        } else {
+                            $('#upRetryWrap').hide();
+                        }
+                    }
+                });
+        }, 4000);
+    }
+
+    function uploadWithProgress(file) {
+        window.__upXhrChannelClaimed = true;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        _resumeUploadId = null;
+
+        $('#upWrap').show();
+        $('#upStats').text('0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size));
+
+        var mimeMap = { pdf:'application/pdf', doc:'application/msword', docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+        var ext         = (file.name.split('.').pop()||'').toLowerCase();
+        var contentType = mimeMap[ext] || file.type || 'application/octet-stream';
+
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
+        upXhr.setRequestHeader('Content-Type', contentType);
+        upXhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+        upXhr.setRequestHeader('X-File-Size', file.size);
+        upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            var pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(file.size));
+        };
+
+        upXhr.onload = function () {
+            var r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) {}
+            upXhr = null;
+
+            if (this.status >= 200 && this.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    +'<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    +'<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
+                ).show();
+                $('#uploaded_file_path').val(r.file_path || '');
+                showUploadedCard(file);
+                if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
+            } else {
+                _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
+            }
+        };
+
+        upXhr.onerror = function () {
+            _showUploadError('Network error during upload. Click Remove and try again.');
+        };
+
+        upXhr.send(file); // raw bytes → php://input → R2, zero local temp
+    }
 
     // ==========================
     // Common file handler
     // ==========================
-    function processFile(file, event = null) {
+    function processFile(file, event) {
 
         if (!file) return;
 
@@ -1173,66 +1378,88 @@ $(document).ready(function () {
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 10) {
-            alert('Maximum file size is 10 MB.');
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
             return;
         }
 
-        $('#fileName').text(
-            file.name + ' (' + sizeMB.toFixed(2) + ' MB)'
-        );
-
+        const sizeStr = sizeMB >= 1 ? sizeMB.toFixed(2) + ' MB' : Math.round(file.size / 1024) + ' KB';
+        $('#fileName').text(file.name + ' (' + sizeStr + ')');
         $('#fileInfo').css('display', 'flex');
-
         $('#resumeCheck').val('1');
-
         $('.download-file').addClass('d-none');
 
-        console.log('Selected File:', file.name);
-
+        // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
+        window.__upXhrChannelClaimed = true;
+        if (typeof uploadWithProgress === 'function') {
+            uploadWithProgress(file);
+        }
         if (typeof handleFileInputChange === 'function' && event) {
             handleFileInputChange(event);
         }
+        // Reset so the legacy channel is open for the next pick.
+        window.__upXhrChannelClaimed = false;
     }
 
-    // ==========================
-    // Choose File Button
-    // ==========================
-    $(document).on('click', '#chooseFileBtn', function (e) {
+    // Replace / Remove inside info card
+    $(document).on('click', '#upReplaceBtn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        backToDropzone();
+        resumeInput.click();
+    });
+
+    $(document).on('click', '#upRemoveBtn', function (e) {
+        e.preventDefault();
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        backToDropzone();
+    });
+
+    // Retry parse
+    $(document).on('click', '#upRetryBtn', function (e) {
+        e.preventDefault();
+        if (!_resumeUploadId) return;
+        $('#upDetailParserStatus').text('Re-queuing…');
+        $('#upRetryWrap').hide();
+        $.post(
+            '{{ route("service_company.resume.retry", ["id" => "__ID__"]) }}'.replace('__ID__', _resumeUploadId),
+            { _token: '{{ csrf_token() }}' }
+        ).done(function () {
+            _startParsePoller(_resumeUploadId);
+        }).fail(function () {
+            $('#upDetailParserStatus').text('Retry failed');
+            $('#upRetryWrap').show();
+        });
+    });
+
+    // Direct binding so stopPropagation() fires BEFORE the click reaches
+    // #uploadBox — prevents resumeInput.click() from being called twice.
+    document.getElementById('chooseFileBtn').addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         resumeInput.click();
     });
 
-    document.addEventListener('paste', function (e) {
+    // Remove file strip button
+    $(document).on('click', '#removeFile', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        backToDropzone();
+    });
 
-        const files = e.clipboardData?.files;
-
-        if (files && files.length) {
-
-            const file = files[0];
-
-            // Your existing validation/display function
-            processFile(file);
-
-            // Assign file to input so form submit works
-            const dt = new DataTransfer();
-            dt.items.add(file);
-
-            resumeInput.files = dt.files;
-
-            // Trigger change event
-            resumeInput.dispatchEvent(
-                new Event('change', { bubbles: true })
-            );
+    // File input change
+    $('#resume').on('change', function (e) {
+        if (this.files.length > 0) {
+            processFile(this.files[0], e);
+        } else {
+            $('#fileInfo').hide();
+            $('#resumeCheck').val('');
+            $('.download-file').addClass('d-none');
         }
     });
 
-    // ==========================
-    // Click Upload Area
-    // ==========================
+    // Click upload box
     $('#uploadBox').on('click', function (e) {
-
         if (
             $(e.target).closest('#chooseFileBtn').length ||
             $(e.target).closest('#removeFile').length ||
@@ -1240,93 +1467,46 @@ $(document).ready(function () {
         ) {
             return;
         }
-
         resumeInput.click();
     });
 
-    // ==========================
-    // File Input Change
-    // ==========================
-    $('#resume').on('change', function (e) {
-
-        if (this.files.length > 0) {
-
-            processFile(this.files[0], e);
-
-        } else {
-
-            $('#fileInfo').hide();
-            $('#resumeCheck').val('');
-            $('.download-file').addClass('d-none');
+    // Paste
+    document.addEventListener('paste', function (e) {
+        const files = e.clipboardData?.files;
+        if (files && files.length) {
+            const file = files[0];
+            // Assign to input so form submit sees the file
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            resumeInput.files = dt.files;
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
         }
     });
 
-    // ==========================
-    // Remove File
-    // ==========================
-    $(document).on('click', '#removeFile', function (e) {
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        $('#resume').val('');
-        $('#resumeCheck').val('');
-
-        $('#fileName').text('');
-        $('#fileInfo').hide();
-
-        $('.download-file').addClass('d-none');
-    });
-
-    // ==========================
     // Drag & Drop
-    // ==========================
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-
         uploadBox.addEventListener(eventName, function (e) {
             e.preventDefault();
             e.stopPropagation();
         });
     });
 
-    uploadBox.addEventListener('dragenter', function () {
-        this.classList.add('dragging');
-    });
-
-    uploadBox.addEventListener('dragover', function () {
-        this.classList.add('dragging');
-    });
-
-    uploadBox.addEventListener('dragleave', function () {
-        this.classList.remove('dragging');
-    });
+    uploadBox.addEventListener('dragenter', function () { this.classList.add('dragging'); });
+    uploadBox.addEventListener('dragover',  function () { this.classList.add('dragging'); });
+    uploadBox.addEventListener('dragleave', function () { this.classList.remove('dragging'); });
 
     uploadBox.addEventListener('drop', function (e) {
-
         this.classList.remove('dragging');
-
         const files = e.dataTransfer.files;
-
-        console.log('DROP FIRED', files);
-
         if (files.length > 0) {
-
             const file = files[0];
-
-            // Show filename immediately
-            processFile(file);
-
-            // Assign to file input for form submit
+            // Assign to input so form submit sees the file
             const dt = new DataTransfer();
             dt.items.add(file);
-
             resumeInput.files = dt.files;
-
-            // andleFileInputChange(e);
-             resumeInput.dispatchEvent(
-            new Event('change', { bubbles: true })
-        );
-            
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
         }
     });
 
@@ -2456,10 +2636,9 @@ var KTAddCandidate = function () {
         submitButton.addEventListener('click', async function (e) {
            
             e.preventDefault();
-            // if (submitButton.disabled) {
-            //     return; // ⛔ Prevent multiple clicks
-            // }
-            // submitButton.disabled = true;
+            if (submitButton.disabled) {
+                return; // Prevent duplicate submission
+            }
             
              const connected = await isInternetAvailable();
               if (!connected) {
@@ -2504,6 +2683,15 @@ var KTAddCandidate = function () {
                                 }
                                 
                                 if(response.status == 'mailcheck'){
+                                  
+                                  if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
                                    $("#save-form").html(`Submit`);
    																	Swal.fire("Success", response.message , "warning").then(function(){
 																	});	
@@ -2532,8 +2720,19 @@ var KTAddCandidate = function () {
 																				      window.location = response.url;
 																			},
 															error			: function (response) {
-																									//handleFails(response);
-																			}
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
+																			$("#save-form").prop("disabled", false);
+																			$("#save-form").html("Submit Candidate");
+																			submitButton.removeAttribute('data-kt-indicator');
+																			Swal.fire("Error", "Submission failed. Please try again.", "error");
+																		}
 													});
 							
                        
@@ -2541,7 +2740,14 @@ var KTAddCandidate = function () {
                 } 
 				else 
 				{
-                   
+                 if (!navigator.onLine) {
+                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                      $("#save-form").prop("disabled", false).html("Submit");
+                      submitButton.removeAttribute('data-kt-indicator');
+                      submitButton.disabled = false;
+                      return;
+                  }
+
                     Swal.fire({
 									text				: "Sorry, looks like there are some errors detected, please try again.",
 									icon				: "error",
@@ -2891,6 +3097,13 @@ $.ajax({
           return;
       }
 
+      // uploadWithProgress() already POSTed this blob to /uploadresume
+      // with real progress feedback. Skip the redundant jQuery POST.
+      // The PDFjs / mammoth parse path below still runs so Career
+      // Summary fills in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
        let formData = new FormData();
        formData.append('file', file);
        formData.append('_token', '{{ csrf_token() }}');
@@ -2938,6 +3151,7 @@ $.ajax({
 
         }
     });
+      } // end if (!__skipUpload)
 
 
 

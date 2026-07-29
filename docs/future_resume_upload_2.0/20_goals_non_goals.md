@@ -82,11 +82,11 @@ cleanly at the boundary.
 
 ### NG-1 — REMOVED 2026-07-27 — no server parser to replace
 
-> v2 has no `ChatGptService` wrapper, no `ResumeParserService`, and
-> no LLM call. The parser is browser-side (`pdf.js` + `re_test()`)
-> and runs from the local `File` object. There is no polyglot
-> fallback to design. A future v3 may re-introduce a server-side
-> parser; this section would be the place to document the policy.
+> v2 has no server-side parser. The parser is browser-side
+> (`pdf.js` + `re_test()`) and runs from the local `File` object.
+> There is no polyglot fallback to design. A future v3 may
+> re-introduce a server-side parser; this section would be the
+> place to document the policy.
 
 ### NG-2 — Marketplace cross-tenant talent ingestion
 
