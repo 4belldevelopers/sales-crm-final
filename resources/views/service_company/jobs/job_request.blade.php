@@ -423,20 +423,43 @@ function tableLoad(type)
       });
 
       function fetchCandidates(page = 1, search = '') {
-            var clientid = '1';
             $('.loadingMessage').css({ display: 'block' });
             $.ajax({
                 url: `{!! route('service_company.jobs.recommandedrequest_ajax') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                  search : $('#inputSearch').val()
-                },
+                data: { search: $('#inputSearch').val() },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
-                  //   alert(response.total);
-                    $('#requestJobLists').html(response.html);
                     $('#span_jobRequest').html(response.total);
                     $('#pagination').html(response.pagination);
+
+                    if (!response.total || response.total == 0) {
+                        $('#requestJobLists').html(
+                            '<div style="text-align:center;padding:60px 20px;font-family:Poppins,sans-serif;">' +
+                            '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 16px;display:block;">' +
+                            '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>' +
+                            '<line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>' +
+                            '</svg>' +
+                            '<p style="font-size:14px;font-weight:600;color:#374151;margin:0 0 6px;">No Job Requests Found</p>' +
+                            '<p style="font-size:12.5px;color:#9CA3AF;margin:0;">There are no pending job requests at the moment.</p>' +
+                            '</div>'
+                        );
+                    } else {
+                        $('#requestJobLists').html(response.html);
+                    }
+                },
+                error: function(xhr) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    var msg = (xhr.status === 0 || !navigator.onLine)
+                        ? 'You are offline. Please check your connection and try again.'
+                        : 'Could not load job requests (HTTP ' + xhr.status + '). Please refresh the page.';
+                    $('#requestJobLists').html(
+                        '<div style="text-align:center;padding:60px 20px;font-family:Poppins,sans-serif;">' +
+                        '<i class="fa fa-exclamation-triangle" style="font-size:32px;color:#f64e60;margin-bottom:12px;display:block;"></i>' +
+                        '<p style="font-size:13px;color:#5e6278;margin:0;">' + msg + '</p>' +
+                        '<button onclick="fetchCandidates()" class="btn btn-sm btn-primary mt-4" style="font-size:12px;">Retry</button>' +
+                        '</div>'
+                    );
                 }
             });
         }

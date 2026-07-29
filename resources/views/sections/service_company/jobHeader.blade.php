@@ -7,7 +7,7 @@
     {{-- ── Top row: title / subtitle / action buttons ── --}}
     <div class="jh-top">
         <div>
-            <div class="jh-title">Active Jobs</div>
+            <div class="jh-title">Jobs Tracker</div>
             <div class="jh-sub">Manage, track and hire candidates faster.</div>
         </div>
         <div class="jh-actions">
@@ -38,7 +38,7 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
-                <div class="jh-lbl">Active Jobs</div>
+                <div class="jh-lbl">All Jobs</div>
                 <div class="jh-trend jh-trend-up">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     12% vs last month
@@ -56,7 +56,7 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
-                <div class="jh-lbl">Client Jobs</div>
+                <div class="jh-lbl">Direct Jobs</div>
                 <div class="jh-trend jh-trend-up">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     8% vs last month
