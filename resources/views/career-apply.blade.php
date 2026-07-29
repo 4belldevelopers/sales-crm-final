@@ -2768,6 +2768,12 @@ var KTAddCandidate = function () {
                                 }
                                 
                                 if(response.status == 'mailcheck'){
+                                  if (!navigator.onLine) {
+                                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                      $("#save-form").prop("disabled", false).html("Submit");
+                                      submitButton.disabled = false;
+                                      return;
+                                  }
                                    $("#save-form").html(`Submit`);
    																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
