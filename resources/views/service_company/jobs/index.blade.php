@@ -616,7 +616,8 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
       // alert("kkss");
    		$('#kt_activitiesJob_toggle').trigger('click');		
       
-      var currentPageJobs = $('.custom-pagination .page-link.active').data('page');
+      // localStorage is already kept current by fetchCandidates; no DOM read needed
+      var currentPageJobs = parseInt(localStorage.getItem('currentPageJobs')) || 1;
       localStorage.setItem('currentPageJobs', currentPageJobs);
 
    		var id    		=	$(this).data('row-id');
