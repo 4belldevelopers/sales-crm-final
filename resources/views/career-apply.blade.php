@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -2720,6 +2720,13 @@ var KTAddCandidate = function () {
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
                     setTimeout(function () {					
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#save-form").prop("disabled", false).html("Submit");
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            return;
+                        }
 					
 												var formData = new FormData($('#createForm')[0]);							
 												$.ajax({
@@ -2738,7 +2745,7 @@ var KTAddCandidate = function () {
                                     );
                                   Swal.fire({
                                   text				: response.message,
-                                  icon				: "success",
+                                  icon: "error",
                                   buttonsStyling		: false,
                                   confirmButtonText	: "Ok, got it!",
                                   customClass			: {
@@ -2754,7 +2761,7 @@ var KTAddCandidate = function () {
                                 }
                                
                                 if(response.status == 'coinCheck'){
-   																	Swal.fire("Success", response.message , "warning").then(function(){
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
 																		
 																	});	
                                    return false;
@@ -2762,7 +2769,7 @@ var KTAddCandidate = function () {
                                 
                                 if(response.status == 'mailcheck'){
                                    $("#save-form").html(`Submit`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
                                    return false;
                                 }
@@ -2793,10 +2800,16 @@ var KTAddCandidate = function () {
                                  
 
 																},
-															error			: function (response) {
-                                $("#save-form").prop("disabled", false);
-																									//handleFails(response);
-																			}
+																error			: function (xhr) {
+                                $("#save-form").prop("disabled", false).html("Submit");
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                if (xhr.status === 0 || !navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                } else {
+                                    Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                }
+																}
 													});
 							
                   

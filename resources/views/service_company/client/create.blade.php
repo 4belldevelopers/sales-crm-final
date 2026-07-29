@@ -1475,13 +1475,14 @@ if ($page_event == 'EDIT') {
                   }
               },
 
-              error: function () {
+              error: function (xhr) {
                   $('.page-loader').hide();
 
-                  Swal.fire({
-                      text: "Server error, please try again",
-                      icon: "error"
-                  });
+                  if (xhr.status === 0 || !navigator.onLine) {
+                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                  } else {
+                      Swal.fire({ text: "Server error, please try again", icon: "error" });
+                  }
               }
           });
       }
@@ -2017,32 +2018,38 @@ for (let i = 0; i < countAddrees; i++) {
    
    });   
    
-   $(document).on('click', '.submitfrm', function() { 
-   
+   $(document).on('click', '.submitfrm', function() {
+        var $btn = $(this);
+
    	var data 			=	new FormData();
    	var form_data 		=	$('#kt_form').serializeArray();
 
-      $(this).prop("disabled", true);
-      $(this).html(
+      $btn.prop("disabled", true);
+      $btn.html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
       );
-	
-	
+
+
    	$.each(form_data, function (key, input) {
        		data.append(input.name, input.value);
    	});
-   	
+
    	var file_data 		= $('input[name="logo"]')[0].files;
    	for (var i = 0; i < file_data.length; i++) {
        		data.append("logo", file_data[i]);
    	}
-     
-	var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();//CKEDITOR.instances.kt_docs_tinymce_hidden.getData();	
+
+	var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();//CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
     data.append("description", kt_docs_tinymce_hidden);
-   
+
    	data.append('key', 'value');
-    
-   
+
+    if (!navigator.onLine) {
+        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+        $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+        return;
+    }
+
    	$.ajax({
        			url					: '{{route('service_company.clients.store')}}',
    				headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
@@ -2050,17 +2057,24 @@ for (let i = 0; i < countAddrees; i++) {
        			processData			: false,
        			contentType			: false,
       		 	data				: data,
-   				redirect			: true,
+   				  redirect			: true,
        			success				: function (data)
                 {
                   if(data.status == 'success')
                   {
-                     window.location = '{{ route('service_company.clients.index') }}'	
-                  }   										
+                     window.location = '{{ route('service_company.clients.index') }}'
+                  }
+       			},
+       			error				: function (xhr) {
+                    $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Submit Client');
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                    }
        			}
-       			
    			});
-   
+
    });
          
 </script>
@@ -2071,33 +2085,38 @@ for (let i = 0; i < countAddrees; i++) {
 <script>
 
    $(document).on('click', '.updatefrm', function() {
+        var $btn = $(this);
 
-    // $(this).prop("disabled", true);
-    $(this).html(
+    $btn.prop("disabled", true);
+    $btn.html(
         `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
       );
-   	 
+
    	var data 			=	new FormData();
    	var form_data 		=	$('#kt_form').serializeArray();
    	$.each(form_data, function (key, input) {
        		data.append(input.name, input.value);
-   	});  	
+   	});
    	var file_data 		= $('input[name="logo"]')[0].files;
    	for (var i = 0; i < file_data.length; i++) {
        		data.append("logo", file_data[i]);
-   	}  
+   	}
 
-  
-    
-	var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();// CKEDITOR.instances.kt_docs_tinymce_hidden.getData();	
+	var kt_docs_tinymce_hidden = tinymce.get("kt_docs_tinymce_hidden").getContent();// CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
 	data.append("description", kt_docs_tinymce_hidden);
-   	
+
 	data.append('key', 'value');
   // data.append('_method', 'PUT');
 
+    if (!navigator.onLine) {
+        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+        $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
+        return;
+    }
+
    	$.ajax({
    				url					: '{{route('service_company.clients.update', @$client->id)}}',
-   				  headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+   				headers				: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
        			method				: "POST",
        			processData			: false,
        			contentType			: false,
@@ -2105,14 +2124,21 @@ for (let i = 0; i < countAddrees; i++) {
    				redirect			: true,
        			success				: function (data)
                {
-                 
                   if(data.status == 'success')
                   {
-                     window.location = '{{ route('service_company.clients.index') }}'	
-                  }						
+                     window.location = '{{ route('service_company.clients.index') }}'
+                  }
+       			},
+       			error				: function (xhr) {
+                    $btn.prop("disabled", false).html('<i class="la la-paper-plane"></i> Update Client');
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                    }
        			}
    		});
-   
+
    });
 </script>
 <?php 

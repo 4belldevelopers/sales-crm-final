@@ -2683,6 +2683,15 @@ var KTAddCandidate = function () {
                                 }
                                 
                                 if(response.status == 'mailcheck'){
+                                  
+                                  if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
                                    $("#save-form").html(`Submit`);
    																	Swal.fire("Success", response.message , "warning").then(function(){
 																	});	
@@ -2711,6 +2720,14 @@ var KTAddCandidate = function () {
 																				      window.location = response.url;
 																			},
 															error			: function (response) {
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
 																			$("#save-form").prop("disabled", false);
 																			$("#save-form").html("Submit Candidate");
 																			submitButton.removeAttribute('data-kt-indicator');
@@ -2723,7 +2740,14 @@ var KTAddCandidate = function () {
                 } 
 				else 
 				{
-                   
+                 if (!navigator.onLine) {
+                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                      $("#save-form").prop("disabled", false).html("Submit");
+                      submitButton.removeAttribute('data-kt-indicator');
+                      submitButton.disabled = false;
+                      return;
+                  }
+
                     Swal.fire({
 									text				: "Sorry, looks like there are some errors detected, please try again.",
 									icon				: "error",

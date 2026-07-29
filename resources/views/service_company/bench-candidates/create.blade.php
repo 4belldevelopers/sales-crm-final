@@ -1,4 +1,4 @@
-@extends('layouts.service_company_layout')
+﻿@extends('layouts.service_company_layout')
 @php 
 	use App\Helper\GeneralMethod;	
 	$customTitleId	=	0;
@@ -2162,6 +2162,12 @@ var KTAddCandidate = function () {
                     setTimeout(function () {
                         submitButton.removeAttribute('data-kt-indicator');
                         submitButton.disabled = true;
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#save-form").prop("disabled", false).html("Submit");
+                            submitButton.disabled = false;
+                            return;
+                        }
 
 
 													var formData 	=	new FormData($('#createForm')[0]);							
@@ -2175,14 +2181,14 @@ var KTAddCandidate = function () {
 																success			: function (response) {
                                   $("#save-form").prop("disabled", false);
                                   if(response.status == 'coinCheck'){
-   																	Swal.fire("Success",` ${response.message}` , "warning");	
+   																	Swal.fire("Warning",` ${response.message}` , "warning");	
                                     return false;
    																}
 
                                   
                                 if(response.status == 'mailcheck'){
                                    $("#save-form").html(`Submit`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
                                    return false;
                                 }
@@ -2205,8 +2211,15 @@ var KTAddCandidate = function () {
                         });
 																					window.location = response.url;
 																				},
-																error			: function (response) {
-																				}
+																error			: function (xhr) {
+                                    $("#save-form").prop("disabled", false).html("Submit");
+                                    submitButton.disabled = false;
+                                    if (xhr.status === 0 || !navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    } else {
+                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                    }
+															}
 														});
 														
                        
@@ -2286,6 +2299,12 @@ var KTEditCandidate = function () {
                     setTimeout(function () {
                         submitButton.removeAttribute('data-kt-indicator');
                         submitButton.disabled = true;
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#edit-form").prop("disabled", false).html("Update");
+                            submitButton.disabled = false;
+                            return;
+                        }
 
 
 													var formData 	=	new FormData($('#createForm')[0]);							
@@ -2300,7 +2319,7 @@ var KTEditCandidate = function () {
                                   $("#edit-form").prop("disabled", false);
                                   if(response.status == 'mailcheck'){
                                    $("#edit-form").html(`Update`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
                                    return false;
                                 }
@@ -2321,11 +2340,17 @@ var KTEditCandidate = function () {
                         });
 																					window.location = response.url;
 																				},
-																error			: function (response) {
-																				}
-														});
-														
-                       
+															error			: function (xhr) {
+                                    $("#edit-form").prop("disabled", false).html("Update");
+                                    submitButton.disabled = false;
+                                    if (xhr.status === 0 || !navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    } else {
+                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                                    }
+															}
+															});
+
                     }, 500);
                 } else {
 							Swal.fire({
