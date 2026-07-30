@@ -63,7 +63,7 @@
         </div>
         <div class="cl-hero-sub">Manage and track your clients, relationships and business performance.</div>
     </div>
-    @if(!empty($userPermissions) && in_array("add_clients", $userPermissions))
+    @if(!empty($userPermissions) && in_array("add_clients", $userPermissions) && !in_array($activeTab, ['request', 'direct']))
     <a href="{{ url('service_company/clients/create') }}" class="cl-add-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Client
@@ -100,7 +100,7 @@
             <div class="cl-stat-label">Direct Clients</div>
         </div>
     </a>
-    <div class="cl-stat">
+    <div class="cl-stat" style="cursor:pointer;" onclick="document.getElementById('tab-hiring').click()">
         <div class="cl-stat-icon orange">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         </div>
@@ -134,14 +134,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Direct Clients
     </a>
-    <a href="#" class="cl-tab">
+    <a href="#" class="cl-tab" id="tab-hiring" onclick="setHiringFilter(this); return false;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
         Hiring
     </a>
-    <a href="#" class="cl-tab">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        Inactive
-    </a>
+
     <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-tab {{ $activeTab=='request' ? 'active' : '' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Pending Job Requests

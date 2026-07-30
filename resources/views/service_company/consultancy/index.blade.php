@@ -1548,7 +1548,7 @@
                                             </svg>
                                         </div>
                                         <div class="ag-card-info">
-                                            <div class="ag-num" id="span_spartnerAll">{{ @$spartnerDataCnt['spartnerAll'] ?? 344 }}</div>
+                                            <div class="ag-num" id="span_spartnerAll">{{ $spartnerDataCnt['spartnerAll'] ?? 0 }}</div>
                                             <div class="ag-lbl">All Agencies</div>
                                             <div class="ag-sub-lbl">Registered Partners</div>
                                         </div>
@@ -1556,7 +1556,7 @@
                                     <div class="ag-card-right">
                                         <div class="ag-trend ag-trend-up">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            12 this month
+                                            {{ $spartnerDataCnt['spartnerThisMonth'] ?? 0 }} this month
                                         </div>
                                         <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <polyline points="0,24 12,20 24,22 36,14 48,16 60,10 72,8 80,6" stroke="#2563EB" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1574,7 +1574,7 @@
                                             </svg>
                                         </div>
                                         <div class="ag-card-info">
-                                            <div class="ag-num">18</div>
+                                            <div class="ag-num">{{ $spartnerDataCnt['newlyOnboarded'] ?? 0 }}</div>
                                             <div class="ag-lbl">Newly Onboarded</div>
                                             <div class="ag-sub-lbl">Last 7 Days</div>
                                         </div>
@@ -1582,7 +1582,7 @@
                                     <div class="ag-card-right">
                                         <div class="ag-trend ag-trend-up">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            5 this week
+                                            {{ $spartnerDataCnt['newlyOnboarded'] ?? 0 }} this week
                                         </div>
                                         <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <polyline points="0,26 12,22 24,24 36,18 48,14 60,12 72,8 80,6" stroke="#16A34A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1600,7 +1600,7 @@
                                             </svg>
                                         </div>
                                         <div class="ag-card-info">
-                                            <div class="ag-num">126</div>
+                                            <div class="ag-num">{{ $spartnerDataCnt['workingOnJobs'] ?? 0 }}</div>
                                             <div class="ag-lbl">Working on Jobs</div>
                                             <div class="ag-sub-lbl">Assigned Agencies</div>
                                         </div>
@@ -1608,7 +1608,7 @@
                                     <div class="ag-card-right">
                                         <div class="ag-trend ag-trend-up">
                                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M3 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                            11 this month
+                                            {{ $spartnerDataCnt['workingOnJobsThisMonth'] ?? 0 }} this month
                                         </div>
                                         <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <polyline points="0,22 12,18 24,20 36,16 48,20 60,12 72,10 80,8" stroke="#7C3AED" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1625,13 +1625,13 @@
                                             </svg>
                                         </div>
                                         <div class="ag-card-info">
-                                            <div class="ag-num">32</div>
+                                            <div class="ag-num">{{ $spartnerDataCnt['activelySubmitting'] ?? 0 }}</div>
                                             <div class="ag-lbl">Actively Submitting</div>
                                             <div class="ag-sub-lbl">Last 30 Days</div>
                                         </div>
                                     </div>
                                     <div class="ag-card-right">
-                                        <div class="ag-trend ag-trend-neutral">Today: 18</div>
+                                        <div class="ag-trend ag-trend-neutral">Today: {{ $spartnerDataCnt['activelySubmittingToday'] ?? 0 }}</div>
                                         <svg class="ag-sparkline" viewBox="0 0 80 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <polyline points="0,20 12,16 24,22 36,14 48,18 60,10 72,16 80,12" stroke="#EA580C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>

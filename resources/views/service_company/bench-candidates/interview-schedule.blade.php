@@ -53,11 +53,11 @@
 
 /* Filters */
 .it-filters-bar{background:white;border-radius:var(--it-radius-xl);padding:8px 12px;display:flex;gap:8px;align-items:center;margin-bottom:12px;box-shadow:var(--it-shadow);border:1px solid var(--it-border-light);flex-wrap:wrap}
-.it-search-box{flex:0 0 300px!important;width:300px!important;max-width:300px!important;min-width:180px;position:relative}
+.it-search-box{flex:1 1 auto!important;width:auto!important;max-width:none!important;min-width:180px;position:relative}
 .it-search-box input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--it-border);border-radius:var(--it-radius);font-size:11px;font-family:'Poppins',sans-serif;color:var(--it-text-main);outline:none;transition:var(--it-transition);background:var(--it-bg-main);height:32px}
 .it-search-box input:focus{border-color:var(--it-primary);background:white;box-shadow:0 0 0 3px var(--it-primary-light)}
 .it-search-box svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--it-text-light);pointer-events:none;width:14px;height:14px}
-.it-filter-dropdown{position:relative;min-width:100px}
+.it-filter-dropdown{position:relative;min-width:100px;flex:0 0 auto}
 .it-filter-trigger{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 10px;border:1px solid var(--it-border);border-radius:var(--it-radius);font-size:11px;font-family:'Poppins',sans-serif;color:var(--it-text-main);background:white;cursor:pointer;transition:var(--it-transition);white-space:nowrap;width:100%;height:32px}
 .it-filter-trigger:hover{border-color:var(--it-text-light)}
 .it-filter-trigger .it-label{color:var(--it-text-muted);font-size:10px;margin-right:3px}
@@ -85,12 +85,10 @@
 .it-data-table td:first-child{padding-left:14px}
 .it-data-table td:last-child{padding-right:14px}
 
-/* Checkbox */
-.it-checkbox{width:14px;height:14px;border:2px solid var(--it-border);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--it-transition);flex-shrink:0;background:white}
-.it-checkbox:hover{border-color:var(--it-primary)}
-.it-checkbox.checked{background:var(--it-primary);border-color:var(--it-primary)}
-.it-checkbox.checked svg{display:block}
-.it-checkbox svg{display:none;color:white;width:10px;height:10px}
+/* Checkbox — hidden */
+.it-checkbox{display:none!important}
+.it-data-table th:first-child,
+.it-data-table td:first-child{display:none!important}
 
 /* Candidate cell */
 .it-candidate-cell{display:flex;gap:8px}
@@ -106,6 +104,8 @@
 .it-job-company{font-size:10px;color:var(--it-text-muted);margin-bottom:4px}
 .it-job-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .it-job-type{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;background:var(--it-primary-light);color:var(--it-primary)}
+.it-job-type-internal{background:#eef2ff;color:#4f46e5}
+.it-job-type-direct{background:#f0fdf4;color:#16a34a}
 .it-job-id{font-size:10px;color:var(--it-primary);font-weight:500;text-decoration:none}
 .it-job-id:hover{text-decoration:underline}
 
@@ -126,6 +126,7 @@
 .it-badge-blue{background:#dbeafe;color:#1e40af}.it-badge-purple{background:#f3e8ff;color:#6b21a8}
 .it-badge-orange{background:#ffedd5;color:#9a3412}.it-badge-red{background:#fee2e2;color:#991b1b}
 .it-badge-green{background:#d1fae5;color:#065f46}.it-badge-yellow{background:#fef9c3;color:#854d0e}
+.it-badge-gray{background:#e2e8f0;color:#374151}.it-badge-pink{background:#fce7f3;color:#9d174d}
 .it-stage-status{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500}
 .it-stage-status.pending{color:var(--it-warning)}
 .it-stage-status svg{width:10px;height:10px}
@@ -150,6 +151,9 @@
 .it-loading{display:none;padding:30px;text-align:center;color:var(--it-text-muted);font-size:12px}
 .it-loading.show{display:block}
 #benchInterviewRows{display:contents}
+#kt_toolbar{display:none!important}
+#kt_content{margin-top:0!important}
+#kt_post{margin-top:0!important}
 
 @media(max-width:1150px){.it-stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){.it-stats-grid{grid-template-columns:1fr 1fr}.it-filters-bar{flex-direction:column;align-items:stretch}.it-search-box{max-width:none!important;width:100%!important}}
@@ -158,30 +162,29 @@
 @endpush
 
 @section('content')
+<input type="hidden" name="inputSearch" id="inputSearch" />
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid py-4" id="kt_content">
-  <!--begin::Toolbar-->
-  <div class="toolbar" id="kt_toolbar">
-    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-      <div class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-        <div class="d-flex flex-column">
-          <h5 class="d-flex align-items-center text-dark fw-bolder">Talent Interviews</h5>
-          <span class="text-gray-600" id="total_record"></span>
-        </div>
-      </div>
-      <div class="d-flex align-items-center py-1">
-        <input type="hidden" name="inputSearch" id="inputSearch" placeholder="Search..." />
-      </div>
-    </div>
-  </div>
-  <!--end::Toolbar-->
+<div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_client" id="kt_content" style="margin-top:0!important;padding-top:16px!important;">
 
   @if(in_array('view_bench', $userPermissions))
   <!--begin::Post-->
-  <div class="post d-flex flex-column-fluid" id="kt_post">
-    <div id="kt_content_container" class="container-fluid px-3">
+  <div class="post d-flex flex-column-fluid" id="kt_post" style="margin-top:0!important;">
+    <div id="kt_content_container" class="container-fluid px-3" style="margin-top: -58px;">
 
-      <div class="it-dashboard" id="talentInterviewDashboard">
+      <div class="it-dashboard" id="talentInterviewDashboard" style="width:100%;">
+
+        <!-- Page Heading -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;color:#181c32;line-height:1.2;">
+              Talent Interviews
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div style="font-size:12px;color:#7e8299;margin-top:3px;">Track, schedule and manage all talent interviews in one place.</div>
+          </div>
+        </div>
 
         <!-- Stats Grid -->
         <div class="it-stats-grid">
