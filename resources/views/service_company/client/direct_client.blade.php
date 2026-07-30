@@ -131,26 +131,32 @@
 
             fetchCandidates();
 
-            $(document).on('click', '#pagination .page-link', function(e) {
+            $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                $(this).addClass('disabled');
-
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+                fetchCandidates(page, $('#search').val());
             });
 
       });
 
 
+      var hiringFilter = 0;
+
+      function setHiringFilter(el) {
+          hiringFilter = (hiringFilter === 1) ? 0 : 1;
+          $('.cl-tab').removeClass('active');
+          if (hiringFilter === 1) {
+              $(el).addClass('active');
+          } else {
+              $(".cl-tab[href*='direct_client']").addClass('active');
+          }
+          fetchCandidates(1);
+      }
+
       function fetchCandidates(page = 1, search = '') {
-            var clientid = '1';
             if($('#kt_tagify_2').val()!=''){
                 $('.loader_search').css({ display: 'block' });
             }else{
@@ -164,7 +170,8 @@
                   search : $('#inputSearch').val(),
                   sortingfilter : $('#sortingfilter').val(),
                   cus_search : $('#kt_tagify_2').val(),
-                  country:$('#country').val()
+                  country:$('#country').val(),
+                  hiring: hiringFilter
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });

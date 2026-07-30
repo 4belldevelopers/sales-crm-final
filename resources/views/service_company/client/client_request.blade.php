@@ -1,59 +1,18 @@
 @extends('layouts.service_company_layout')
-<style>
-.border-radius-5 { border-radius: 5px!important; }
-.ml-2 { margin-left: 2em; }
-.border-radius-5 {border-radius: 5px!important;}
-.ml-2 {margin-left: 2em;}
-@media only screen and (min-width: 900px) and (max-width: 2560px){
-  .table td, .table th, .table tr {width: max-content!important;}
-  .table > :not(caption) > * > * {padding: 0.75em 0rem!important;}
-  td:nth-child(n+2),
-  th:nth-child(n+2) {width: revert!important;}
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesClient{width: 1025px;}
-}
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesDirectClient{ width: 1025px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesClient{width: 1200px;}
-}
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesDirectClient{width: 1200px;}
-}
-</style>
+@push('head-script')
+<link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/clientList.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+@endpush
 @section('content')
-@php	
-    $tabactive = [
-         'allClient_active'=>'',
-         'allClient_url'=> route('service_company.clients.index'),
-         'span_clientAll'=>'span_clientAll',
-         'clientDirect_active'=>'',
-         'clientDirect_url'=> url('service_company/clients/direct_client/0'),
-         'span_clientDirect'=>'span_clientDirect',
-         'customClient_active'=>'',
-         'customClient_url'=> url('service_company/clients/custom_client/0'),
-         'span_clientcustom'=>'span_clientCustom',
-         'clientRequest_active'=>'tabactive',
-         'clientRequest_url'=> url('service_company/clients/client_request/0'),
-         'span_clientRequest'=>'span_clientRequest',
-         'clientAll' =>@$clientDataCnt['clientAll'],
-         'clientDirect' =>@$clientDataCnt['clientDirect'],
-         'clientCustom' =>@$clientDataCnt['clientCustom'],
-         'clientRequest' =>@$clientDataCnt['clientRequest'],
-        ];
-@endphp
-
 
 <div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_client" id="kt_content">
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <div id="kt_content_container" class="container-fluid px-3">
 
-		<div id="" class="container-fluid d-flex flex-stack second_header">
-          @include('sections.service_company.clientHeader',['tabactive'=>$tabactive])
-        </div>
-        
+        <!-- HERO -->
+        @include('sections.service_company.clientHero', ['activeTab' => 'request'])
+
         <div class="d-flex align-items-center flex-wrap custm-bg mb-0 d-none">
                   <div class="col-lg-4 d-flex align-items-center px-2" style="width:55%">
                      <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch" value="" placeholder="Search..." id="kt_tagify_2" onchange="filtersdataget()" />

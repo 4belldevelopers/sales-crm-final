@@ -238,7 +238,7 @@
                     $html = '';
                     foreach ($partnersData as $pval) {
                         $pval = (object) $pval;
-                        $html .='<div class="hm-name hm-listing" data-row-id="' .$row->id .'">'.ucwords(mb_substr(@$pval->user_name, 0, 10)).'</div>';
+                        $html .='<div class="hm-name" data-row-id="' .$row->id .'">'.ucwords(mb_substr(@$pval->user_name, 0, 10)).'</div>';
                     }
                     if($partnersCount>1){
                         $partnersCount ="+".($partnersCount-1);

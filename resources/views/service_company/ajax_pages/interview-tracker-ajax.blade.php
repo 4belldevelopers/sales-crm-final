@@ -172,11 +172,12 @@
 
                     // Job type / recommendation
                     $recommendation_text = __('messages.internal_tag');
-                    $jobTypeLabel = 'Internal';
-                    $jobTypeClass = '';
+                    $jobTypeLabel = 'Internal Client';
+                    $jobTypeClass = 'it-job-type-internal';
                     if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
                         $recommendation_text = __('messages.clinet_tag');
-                        $jobTypeLabel = 'Client';
+                        $jobTypeLabel = 'Direct Client';
+                        $jobTypeClass = 'it-job-type-direct';
                     }
                 @endphp
                 <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
@@ -186,7 +187,7 @@
                     {{ ucwords(mb_substr($client_name, 0, 14)) }}
                 </div>
                 <div class="it-job-tags">
-                    <span class="it-job-type">{{ $jobTypeLabel }}</span>
+                    <span class="it-job-type {{ $jobTypeClass }}">{{ $jobTypeLabel }}</span>
                     <span class="it-dot-separator"></span>
                     <a href="javascript:void(0);" class="it-job-id">{{ @$row->job_id }}</a>
                 </div>
@@ -338,41 +339,35 @@
                         $name = @$row->child_status_name;
                     }
 
-                    // Map css_style to new badge classes
-                    $stageBadgeClass = 'it-badge-blue';
+                    // Map stage name to pipeline badge colors (INW/SOU/SCR/EVA/NEG/OFF/JOI/REJ)
                     $masterStatusName = mb_substr(@$row->master_status_name, 0, 10);
-                    $styleLower = strtolower(@$row->css_style);
-                    if (strpos($styleLower, 'success') !== false || strpos($styleLower, 'green') !== false) {
-                        $stageBadgeClass = 'it-badge-green';
-                    } elseif (strpos($styleLower, 'danger') !== false || strpos($styleLower, 'red') !== false) {
-                        $stageBadgeClass = 'it-badge-red';
-                    } elseif (strpos($styleLower, 'warning') !== false || strpos($styleLower, 'yellow') !== false || strpos($styleLower, 'orange') !== false) {
-                        $stageBadgeClass = 'it-badge-orange';
-                    } elseif (strpos($styleLower, 'purple') !== false || strpos($styleLower, 'info') !== false) {
-                        $stageBadgeClass = 'it-badge-purple';
+                    $stageNameLower = strtolower(@$row->master_status_name);
+                    if (str_contains($stageNameLower, 'review') || str_contains($stageNameLower, 'inw')) {
+                        $stageBadgeClass = 'it-badge-yellow';   // INW – In Review
+                    } elseif (str_contains($stageNameLower, 'sourc') || str_contains($stageNameLower, 'sou')) {
+                        $stageBadgeClass = 'it-badge-gray';     // SOU – Sourcing
+                    } elseif (str_contains($stageNameLower, 'screen') || str_contains($stageNameLower, 'scr')) {
+                        $stageBadgeClass = 'it-badge-purple';   // SCR – Screening
+                    } elseif (str_contains($stageNameLower, 'evaluat') || str_contains($stageNameLower, 'eva')) {
+                        $stageBadgeClass = 'it-badge-blue';     // EVA – Evaluation
+                    } elseif (str_contains($stageNameLower, 'negot') || str_contains($stageNameLower, 'neg')) {
+                        $stageBadgeClass = 'it-badge-pink';     // NEG – Negotiation
+                    } elseif (str_contains($stageNameLower, 'offer') || str_contains($stageNameLower, 'off')) {
+                        $stageBadgeClass = 'it-badge-orange';   // OFF – Offer
+                    } elseif (str_contains($stageNameLower, 'join') || str_contains($stageNameLower, 'joi')) {
+                        $stageBadgeClass = 'it-badge-green';    // JOI – Joining
+                    } elseif (str_contains($stageNameLower, 'reject') || str_contains($stageNameLower, 'rej')) {
+                        $stageBadgeClass = 'it-badge-red';      // REJ – Rejected
+                    } else {
+                        $stageBadgeClass = 'it-badge-blue';     // fallback
                     }
 
-                    // Stage status
-                    $stageStatusClass = 'pending';
-                    $stageStatusText = 'Pending';
-                    if (!empty($row->feedback) || $row->average_star_rating > 0) {
-                        $stageStatusClass = 'confirmed';
-                        $stageStatusText = 'Feedback';
-                    }
                 @endphp
                 <div class="it-stage-cell">
-                    <span class="it-badge {{ $stageBadgeClass }} {{ @$row->css_style }}">{{ $masterStatusName }}</span>
+                    <span class="it-badge {{ $stageBadgeClass }}">{{ $masterStatusName }}</span>
                     @if($name)
                         <span class="text-muted fw-bold text-muted d-block fs-7" style="font-size:10px;color:var(--it-text-muted);margin-top:2px;">{{ $name }}</span>
                     @endif
-                    <div class="it-stage-status {{ $stageStatusClass }}" style="margin-top:2px;">
-                        @if($stageStatusClass == 'confirmed')
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        @else
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        @endif
-                        {{ $stageStatusText }}
-                    </div>
                 </div>
             </td>
 

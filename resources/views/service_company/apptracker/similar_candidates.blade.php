@@ -2264,23 +2264,13 @@
             }, 200);
             
             
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
-                });
+                fetchCandidates(page, $('#search').val());
             });
 
 
