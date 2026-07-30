@@ -1583,8 +1583,11 @@ $(document).ready(function () {
         if (typeof uploadWithProgress === 'function') {
             uploadWithProgress(file);
         }
-        if (typeof handleFileInputChange === 'function' && event) {
-            handleFileInputChange(event);
+        if (typeof handleFileInputChange === 'function') {
+            // For drag-drop / paste, no native input-change event exists.
+            // resumeInput.files was already assigned above, so a synthetic
+            // event pointing to it is sufficient for handleFileInputChange.
+            handleFileInputChange(event || { target: resumeInput });
         }
         // Reset so the legacy channel is open for the next pick.
         window.__upXhrChannelClaimed = false;
