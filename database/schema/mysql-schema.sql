@@ -2011,6 +2011,7 @@ CREATE TABLE `job_applications` (
   `oh` enum('yes','no') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `visastatu` text COLLATE utf8mb4_unicode_ci,
   `referencename` text COLLATE utf8mb4_unicode_ci,
+  `recruiter_note` mediumtext COLLATE utf8mb4_unicode_ci,
   `reason_for_job_change` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
   KEY `job_applications_company_id_foreign` (`company_id`),
@@ -3510,6 +3511,20 @@ CREATE TABLE `questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- TABLE: recruiter_note_master
+-- ============================================================
+CREATE TABLE `recruiter_note_master` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` int unsigned DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_rnm_company` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- TABLE: range_display
 -- ============================================================
 CREATE TABLE `range_display` (

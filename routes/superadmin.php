@@ -25,6 +25,7 @@ use App\Http\Controllers\SuperAdmin\CustomModuleController;
 use App\Http\Controllers\SuperAdmin\LinkedInSettingController;
 use App\Http\Controllers\SuperAdmin\SuperadminController;
 use App\Http\Controllers\SuperAdmin\GlobalSettingController;
+use App\Http\Controllers\SuperAdmin\RecruiterNoteTemplateController;
 
 
 
@@ -361,7 +362,15 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('custom-modules/verify-purchase', [CustomModuleController::class,'verifyingModulePurchase'])->name('custom-modules.verify-purchase');
     Route::resource('custom-modules', CustomModuleController::class);
     Route::get('superadmins/data', [SuperadminController::class,'data'])->name('superadmins.data');
-    Route::resource('superadmins', SuperadminController::class);});
+    Route::resource('superadmins', SuperadminController::class);
+
+    // Recruiter Note Templates (global defaults, company_id = NULL)
+    Route::get('recruiter-note', [RecruiterNoteTemplateController::class,'index'])->name('recruiter-note.index');
+    Route::post('recruiter-note', [RecruiterNoteTemplateController::class,'store'])->name('recruiter-note.store');
+    Route::put('recruiter-note/{id}', [RecruiterNoteTemplateController::class,'update'])->name('recruiter-note.update');
+    Route::delete('recruiter-note/{id}', [RecruiterNoteTemplateController::class,'destroy'])->name('recruiter-note.destroy');
+    Route::get('recruiter-note/{id}/data', [RecruiterNoteTemplateController::class,'getData'])->name('recruiter-note.getData');
+});
 
    
 

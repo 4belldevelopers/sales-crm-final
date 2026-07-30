@@ -1165,6 +1165,30 @@ body {overflow-x:hidden; }
               </div>
             </div>
           </div>
+
+            <!-- Recruiter Note -->
+            <div class="fs">
+              <div class="fsh">
+                <h3>Recruiter Note</h3>
+              </div>
+              <div class="fsc">
+                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
+                  <select id="recruiter_note_template_select" style="width:100%;padding:8px 12px;border:1px solid #e4e6ef;border-radius:6px;font-family:'Poppins',sans-serif;font-size:13px;color:#3f4254;background:#fff;cursor:pointer;">
+                    <option value="">Select Note Template...</option>
+                    @foreach($recruiterNoteTemplates as $tpl)
+                      <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                @endif
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Internal Note (Optional)</label>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
+                </div>
+              </div>
+            </div>
           </form>
         </main>
 
@@ -1209,6 +1233,7 @@ body {overflow-x:hidden; }
 @endphp
 
 @push('footer-script')
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
@@ -1394,8 +1419,11 @@ $(document).ready(function () {
         if (typeof uploadWithProgress === 'function') {
             uploadWithProgress(file);
         }
-        if (typeof handleFileInputChange === 'function' && event) {
-            handleFileInputChange(event);
+        if (typeof handleFileInputChange === 'function') {
+            // For drag-drop / paste, no native input-change event exists.
+            // resumeInput.files was already assigned above, so a synthetic
+            // event pointing to it is sufficient for handleFileInputChange.
+            handleFileInputChange(event || { target: resumeInput });
         }
         // Reset so the legacy channel is open for the next pick.
         window.__upXhrChannelClaimed = false;
@@ -2413,7 +2441,8 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 @if($page_event == 'EDIT') 
 <script>
    $('#update-form').click(function () {				
-   		  var formData 					=	new FormData($('#createForm')[0]);					
+   		  if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
+   		  var formData 					=	new FormData($('#createForm')[0]);
           $.ajax({
               		  url				:	'{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',	
    					  type				:	"POST",
@@ -2664,7 +2693,8 @@ var KTAddCandidate = function () {
                     submitButton.disabled = true;
                     setTimeout(function () {					
 					
-												var formData = new FormData($('#createForm')[0]);							
+												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
+								var formData = new FormData($('#createForm')[0]);
 												$.ajax({
 														  //  url 				: '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',			
                               url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',										   
@@ -3242,7 +3272,24 @@ $.ajax({
     // Attach event listener to file input
     // document.getElementById('resume').addEventListener('change', handleFileInputChange);
 
+// Initialize CKEditor for recruiter_note
+if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.replace('recruiter_note', { height: 350 });
+}
 
-   	
+// Recruiter note templates keyed by id
+var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+// Template selector → load content into CKEditor
+$(document).on('change', '#recruiter_note_template_select', function () {
+    var id = $(this).val();
+    if (!id || !recruiterNoteTemplates[id]) return;
+    var content = recruiterNoteTemplates[id].content;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+        CKEDITOR.instances['recruiter_note'].setData(content);
+    } else {
+        $('#recruiter_note').val(content);
+    }
+});
 </script>
 @endpush

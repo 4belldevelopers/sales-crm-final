@@ -1188,8 +1188,11 @@ $(document).ready(function () {
         if (typeof uploadWithProgress === 'function') {
             uploadWithProgress(file);
         }
-        if (typeof handleFileInputChange === 'function' && event) {
-            handleFileInputChange(event);
+        if (typeof handleFileInputChange === 'function') {
+            // For drag-drop / paste, no native input-change event exists.
+            // resumeInput.files was already assigned above, so a synthetic
+            // event pointing to it is sufficient for handleFileInputChange.
+            handleFileInputChange(event || { target: resumeInput });
         }
         // Reset so the legacy channel is open for the next pick.
         window.__upXhrChannelClaimed = false;
@@ -1297,7 +1300,11 @@ $(document).ready(function () {
     // Paste
     document.addEventListener('paste', function (e) {
         var files = e.clipboardData?.files;
-        if (files && files.length) processFile(files[0]);
+        if (files && files.length) {
+            var file = files[0];
+            var dt = new DataTransfer(); dt.items.add(file); resumeInput.files = dt.files;
+            processFile(file);
+        }
     });
 
     // Drag & Drop
@@ -1310,7 +1317,11 @@ $(document).ready(function () {
     uploadBox.addEventListener('drop', function (e) {
         this.classList.remove('dragging');
         var files = e.dataTransfer.files;
-        if (files.length > 0) processFile(files[0]);
+        if (files.length > 0) {
+            var file = files[0];
+            var dt = new DataTransfer(); dt.items.add(file); resumeInput.files = dt.files;
+            processFile(file);
+        }
     });
 
 });
