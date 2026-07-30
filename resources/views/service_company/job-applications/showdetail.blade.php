@@ -2170,6 +2170,25 @@
         </div>
 
         <aside class="content-sidebar">
+
+          @if(!empty($application->recruiter_note))
+          <section class="cardshow" style="margin-bottom:16px;">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: var(--color-primary-50, #eef2ff); color: var(--color-primary-600, #4f46e5);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <h3 class="card-title">Recruiter Note</h3>
+            </div>
+            <div style="padding:12px 16px;font-size:13px;color:#3f4254;line-height:1.6;">{!! $application->recruiter_note !!}</div>
+          </section>
+          @endif
+
           <section class="cardshow">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-warning-50); color: var(--color-warning-600);">

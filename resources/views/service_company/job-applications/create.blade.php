@@ -1281,6 +1281,30 @@
                 </div>
               </div>
             </div>
+
+            <!-- Recruiter Note -->
+            <div class="fs">
+              <div class="fsh">
+                <h3>Recruiter Note</h3>
+              </div>
+              <div class="fsc">
+                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
+                  <select id="recruiter_note_template_select" style="width:100%;padding:8px 12px;border:1px solid #e4e6ef;border-radius:6px;font-family:'Poppins',sans-serif;font-size:13px;color:#3f4254;background:#fff;cursor:pointer;">
+                    <option value="">Select Note Template...</option>
+                    @foreach($recruiterNoteTemplates as $tpl)
+                      <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                @endif
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Internal Note (Optional)</label>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
+                </div>
+              </div>
+            </div>
           </div>
           </form>
         </main>
@@ -1318,6 +1342,7 @@
 @endphp
 
 @push('footer-script')
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 
@@ -1371,8 +1396,11 @@ $(document).ready(function () {
         if (typeof uploadWithProgress === 'function') {
             uploadWithProgress(file);
         }
-        if (typeof handleFileInputChange === 'function' && event) {
-            handleFileInputChange(event);
+        if (typeof handleFileInputChange === 'function') {
+            // For drag-drop / paste, no native input-change event exists.
+            // resumeInput.files was already assigned above, so a synthetic
+            // event pointing to it is sufficient for handleFileInputChange.
+            handleFileInputChange(event || { target: resumeInput });
         }
         // Reset so the legacy channel is open for the *next* pick.
         window.__upXhrChannelClaimed = false;
@@ -2476,6 +2504,9 @@ async function isInternetAvailable() {
                             return;
                         }
 
+												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                                                    CKEDITOR.instances['recruiter_note'].updateElement();
+                                                }
 												var formData = new FormData($('#createForm')[0]);
                         // formData.append('_method', 'PUT');
 												$.ajax({
@@ -3341,6 +3372,9 @@ var KTAddCandidate = function () {
                             return;
                         }
 					
+												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                                                    CKEDITOR.instances['recruiter_note'].updateElement();
+                                                }
 												var formData = new FormData($('#createForm')[0]);						
 												$.ajax({
 														   url 				: '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
@@ -3851,6 +3885,45 @@ $(document).ready(function() {
        
 
 
+// Initialize CKEditor for recruiter_note
+if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.replace('recruiter_note', { height: 350 });
+
+    // When CKEditor is ready, hook into its iframe paste events.
+    // If the user pastes a file (e.g. a resume) while the editor has focus,
+    // intercept it and route to the resume upload handler instead of letting
+    // CKEditor consume the event (CKEditor's iframe swallows document-level paste).
+    CKEDITOR.instances['recruiter_note'].on('instanceReady', function () {
+        var editorDoc = this.document.$;
+        editorDoc.addEventListener('paste', function (e) {
+            var files = e.clipboardData && e.clipboardData.files;
+            if (files && files.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                var file = files[0];
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                resumeInput.files = dt.files;
+                processFile(file);
+            }
+        }, true);
+    });
+}
+
+// Recruiter note templates keyed by id
+var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+// Template selector → load content into CKEditor
+$(document).on('change', '#recruiter_note_template_select', function () {
+    var id = $(this).val();
+    if (!id || !recruiterNoteTemplates[id]) return;
+    var content = recruiterNoteTemplates[id].content;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+        CKEDITOR.instances['recruiter_note'].setData(content);
+    } else {
+        $('#recruiter_note').val(content);
+    }
+});
 </script>
 
 @endpush
