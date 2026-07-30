@@ -130,7 +130,7 @@
                     <div class="cl-stat-label">Direct Clients</div>
                 </div>
             </a>
-            <div class="cl-stat">
+            <div class="cl-stat" style="cursor:pointer;" onclick="document.getElementById('tab-hiring').click()">
                 <div class="cl-stat-icon orange">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
                 </div>
@@ -186,14 +186,11 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Direct Clients
             </a>
-            <a href="#" class="cl-tab">
+            <a href="#" class="cl-tab" id="tab-hiring" onclick="setHiringFilter(this); return false;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                 Hiring
             </a>
-            <a href="#" class="cl-tab">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                Inactive
-            </a>
+
             <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-tab">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Pending Job Requests
@@ -357,23 +354,13 @@ $(document).ready(function() {
 
             fetchCandidates();
 
-            $(document).on('click', '#pagination .page-link', function(e) {
+            $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+                fetchCandidates(page, $('#search').val());
             });
 
       });
@@ -383,8 +370,20 @@ $(document).ready(function() {
                     page_no = 1;
                 }
 
+      var hiringFilter = 0;
+
+      function setHiringFilter(el) {
+          hiringFilter = (hiringFilter === 1) ? 0 : 1;
+          $('.cl-tab').removeClass('active');
+          if (hiringFilter === 1) {
+              $(el).addClass('active');
+          } else {
+              $('.cl-tab').first().addClass('active');
+          }
+          fetchCandidates(1);
+      }
+
       function fetchCandidates(page = page_no, search = '') {
-            var clientid = '1';
             if($('#kt_tagify_2').val()!=''){
                 $('.loader_search').css({ display: 'block' });
             }else{
@@ -398,7 +397,8 @@ $(document).ready(function() {
                   search : $('#inputSearch').val(),
                   sortingfilter : $('#sortingfilter').val(),
                   cus_search : $('#kt_tagify_2').val(),
-                  country:$('#country').val()
+                  country:$('#country').val(),
+                  hiring: hiringFilter
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });

@@ -408,7 +408,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
         <div>
-          <div class="bh-header-title">AI Recommended Bench Candidates</div>
+          <div class="bh-header-title">AI Recommended Jobs</div>
           <div class="bh-header-sub">Top bench talents matching your job requirements</div>
         </div>
       </div>
@@ -437,7 +437,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div>
-          <div class="bh-info-label">CTC</div>
+          <div class="bh-info-label">Bill Rate</div>
           <div class="bh-info-val" id="bh-cctc">—</div>
         </div>
       </div>
@@ -451,7 +451,6 @@
           <div class="bh-info-val" id="bh-cnp">—</div>
         </div>
       </div>
-      <a href="javascript:void(0);" class="bh-strip-viewbtn">View Candidate Details</a>
     </div>
 
     {{-- 5 stat cards --}}
@@ -635,7 +634,7 @@
            var jobId = parseInt($(this).data('job-id'));
            if (alreadyAddedJobIds.indexOf(jobId) !== -1) {
                $(this).addClass('btn-already-added').html(
-                   '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added'
+                   '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added On Job'
                ).prop('disabled', true);
            }
        });
@@ -691,6 +690,7 @@
        $('#bh-cexp').text(exp ? exp + ' Yrs' : '—');
        $('#bh-cctc').text(ctc || '—');
        $('#bh-cnp').text(np || '—');
+
 
        /* Count stat cards from loaded job rows */
        var rows = $('#copyJobTable .cj-job-row');
@@ -780,7 +780,7 @@
                     showToastr('success', 'Candidate added to job successfully!', 'Success');
                     alreadyAddedJobIds.push(parseInt(jobId));
                     $btn.addClass('btn-already-added').html(
-                        '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added'
+                        '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added On Job'
                     ).prop('disabled', true);
                     return;
                 } else if (response.status == 'coinCheck') {
