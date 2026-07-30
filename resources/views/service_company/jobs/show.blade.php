@@ -236,14 +236,21 @@ $end_date   =	date('d-M-Y', $date);
         }
 
         .company-logo {
-            width: 56px; height: 56px;
+            width: 72px; height: 72px;
             border-radius: 50%;
             background: #dc2626;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 15px; font-weight: 700;
             flex-shrink: 0;
             position: relative;
+            overflow: hidden;
             box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .company-logo img {
+            width: 72px; height: 72px;
+            object-fit: cover;
+            display: block;
         }
 
         .company-logo::after {
@@ -1332,9 +1339,9 @@ $end_date   =	date('d-M-Y', $date);
                         <div class="job-header-left">
                             <?php
                             if (!empty($logo_path)) {
-                                echo '<div class="company-logo '.@$bgTextDecore.'"><img src="' . str_replace('index.php', '', @$logo_path) . '" height="100px" width="100px"  /></div>';
+                                echo '<div class="company-logo ' . @$bgTextDecore . '"><img src="' . str_replace('index.php', '', @$logo_path) . '" alt="logo" /></div>';
                             } else {
-                                echo '<div class="company-logo ' .@$bgTextDecore .' border-radius-5">'.ucwords(@$strVal).'</div>';
+                                echo '<div class="company-logo ' . @$bgTextDecore . '">' . ucwords(@$strVal) . '</div>';
                             }
                             ?>
                             <div class="job-title-section">
