@@ -1577,6 +1577,10 @@ protected $elasticService;
 		$this->currentPage = 1;
 		$this->resumeAwsPath = false;
         $this->currencyConverter = GeneralMethod::currencyConverter();
+		$this->recruiterNoteTemplates = DB::table('recruiter_note_master')
+			->where('status', 1)
+			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
+			->orderBy('id')->get();
 		return view('service_company.job-applications.create', $this->data);
 	}
 	public function statelist($cid)
@@ -1722,6 +1726,7 @@ protected $elasticService;
 		$jobApplication->oh = $request->oh;
 		$jobApplication->visastatu = $request->visastatu;
 		$jobApplication->referencename = $request->referencename;
+		$jobApplication->recruiter_note = $request->recruiter_note;
 		$jobApplication->reason_for_job_change = $request->reason_for_job_change;
 
 
@@ -4260,7 +4265,10 @@ protected $elasticService;
 		}
 	    $this->default_loc = GeneralMethod::allCitiesSelected(array(@$this->application->city_id));
 		$this->currencyConverter = GeneralMethod::currencyConverter();
-		// dd($id);
+		$this->recruiterNoteTemplates = DB::table('recruiter_note_master')
+			->where('status', 1)
+			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
+			->orderBy('id')->get();
 		return view('service_company.job-applications.create', $this->data);
 	}
 	public function createOffer($id){
@@ -5628,6 +5636,7 @@ protected $elasticService;
 		$jobApplication->oh = $request->oh;
 		$jobApplication->visastatu = $request->visastatu;
 		$jobApplication->referencename = $request->referencename;
+		$jobApplication->recruiter_note = $request->recruiter_note;
 		$jobApplication->reason_for_job_change = $request->reason_for_job_change;
 
 
@@ -6077,6 +6086,7 @@ protected $elasticService;
 							'state_name' => $applications_up->state_name,
 							'city_name' => $applications_up->city_name,
 							'dob' => $applications_up->dob,
+							'recruiter_note' => $applications_up->recruiter_note,
 							'percentage_hike' => $applications_up->percentage_hike,
 							'linkedin' => $request->linkedin,
 							'github' => $request->github,
@@ -9792,7 +9802,11 @@ protected $elasticService;
 		$this->cityListArr = '';
 		$this->cities = GeneralMethod::allCities();
 		$this->default_loc = GeneralMethod::allCitiesSelected(array());
-		 $this->currentPage = 1;
+		$this->currentPage = 1;
+		$this->recruiterNoteTemplates = DB::table('recruiter_note_master')
+			->where('status', 1)
+			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
+			->orderBy('id')->get();
 
 		return view('service_company.job-applications.clientcreate', $this->data);
 
@@ -9960,6 +9974,9 @@ protected $elasticService;
 		}
 		if (!empty($request->referencename)) {
 		$job_application_arr['referencename'] = $request->referencename;
+		}
+		if (!empty($request->recruiter_note)) {
+		$job_application_arr['recruiter_note'] = $request->recruiter_note;
 		}
 		if (!empty($request->reason_for_job_change)) {
 		$job_application_arr['reason_for_job_change'] = $request->reason_for_job_change;
@@ -14308,5 +14325,15 @@ protected $elasticService;
 		return in_array(strtolower($word), array_map('strtolower', $designationKeywords));
 	}
 
+	/** Returns recruiter note templates for the current company (global + company-scoped). */
+	public function recruiterNoteTemplates(Request $request)
+	{
+		$templates = DB::table('recruiter_note_master')
+			->where('status', 1)
+			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
+			->orderBy('id')
+			->get(['id','title','content']);
+		return response()->json(['status'=>'success','data'=>$templates]);
+	}
 
 }

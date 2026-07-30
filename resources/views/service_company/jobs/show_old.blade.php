@@ -227,18 +227,15 @@ $end_date   =	date('d-M-Y', $date);
                 <!--begin::Details-->
                 <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
                     <!--begin: Pic-->
-                    <div class="me-7 mb-4">
-                        <div class="symbol symbol-100px symbol-lg-140px symbol-fixed position-relative">
+                    <div class="me-4 mb-4" style="flex-shrink:0;width:72px;height:72px;">
+                        <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid #e4e6ef;background:#f5f8fa;display:flex;align-items:center;justify-content:center;">
                             <?php
                             if (!empty($logo_path)) {
-                                echo '<img src="' . str_replace('index.php', '', @$logo_path) . '" height="100px" width="100px"  />';
+                                echo '<img src="' . str_replace('index.php', '', @$logo_path) . '" style="width:72px;height:72px;object-fit:cover;" />';
                             } else {
-                                echo '<div class="symbol-label fs-3 ' . @$bgTextDecore . ' border-radius-5"><span>' . ucwords(@$strVal) . '</span></div>';
+                                echo '<span class="fs-3 fw-bold ' . @$bgTextDecore . '">' . ucwords(@$strVal) . '</span>';
                             }
                             ?>
-                            <div
-                                class="position-absolute translate-middle bottom-0 start-100 mb-6 bg-success rounded-circle border border-4 border-white h-20px w-20px">
-                            </div>
                         </div>
                     </div>
                     <!--end::Pic-->
