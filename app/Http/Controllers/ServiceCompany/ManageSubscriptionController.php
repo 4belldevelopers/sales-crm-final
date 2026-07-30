@@ -264,18 +264,22 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 		$this->actual_count = $actual_count->coins ?? 0;
         $this->remain_coins = $remain_coins->coins ?? 0;
 
-        // Wallet summary stats for the Overview tab — derived entirely from
-        // $current_coins_operational (already fetched above), so this adds
-        // zero extra queries.
-        // Total purchased must come from company_coins.actual_coins (the amount
-        // originally credited per batch), not coin_orders.coins — the latter is
-        // the package size at purchase time and isn't guaranteed to line up
-        // batch-for-batch with $remain_coins (also read from company_coins),
-        // which made "purchased - available" go negative and get clamped to 0,
-        // silently showing "Coins Used: 0" regardless of actual usage.
-        $this->op_total_purchased = collect($this->current_coins_operational)->sum('actual_coins');
+        // Wallet summary stats — Operational
+        // Root-cause fix: op_total_purchased is derived from coin_transection_logs
+        // (total credits ever posted), the same ledger that drives $remain_coins.
+        // Previously it summed company_coins.actual_coins filtered through
+        // coin_orders.status = 1, which on live excluded the package's coin grant
+        // (different status value), making available > purchased and clamping
+        // used-coins to 0 via max(0, negative). Both sides now come from the
+        // same source so available can never exceed purchased.
+        $op_total_credited = (int) DB::table('coin_transection_logs')
+            ->where('company_id', $company_id)
+            ->where('event_type', 'operational')
+            ->where('transection_type', 'credit')
+            ->sum('coins');
+        $this->op_total_purchased = $op_total_credited;
         $this->op_total_spend     = collect($this->current_coins_operational)->sum('order_price');
-        $this->op_coins_used      = max(0, $this->op_total_purchased - $this->remain_coins);
+        $this->op_coins_used      = max(0, $this->op_total_purchased - (int) $this->remain_coins);
         $opExpiry = collect($this->current_coins_operational)->pluck('end_date')->filter()->max();
         $this->op_plan_expiry = $opExpiry ? Carbon::parse($opExpiry) : null;
         $this->op_days_left   = $this->op_plan_expiry ? max(0, (int) now()->diffInDays($this->op_plan_expiry, false)) : 0;
@@ -300,12 +304,15 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 		$this->actual_count_sales = $actual_count_sales->coins ?? 0;
         $this->remain_coins_sales = $remain_coins_sales->coins ?? 0;
 
-        // Same wallet summary stats, sales side — zero extra queries.
-        // Same fix as operational — use actual_coins (company_coins), consistent
-        // with $remain_coins_sales, not coin_orders.coins.
-        $this->sal_total_purchased = collect($this->current_coins_sales)->sum('actual_coins');
+        // Wallet summary stats — Sales (same fix as operational)
+        $sal_total_credited = (int) DB::table('coin_transection_logs')
+            ->where('company_id', $company_id)
+            ->where('event_type', 'sales')
+            ->where('transection_type', 'credit')
+            ->sum('coins');
+        $this->sal_total_purchased = $sal_total_credited;
         $this->sal_total_spend     = collect($this->current_coins_sales)->sum('order_price');
-        $this->sal_coins_used      = max(0, $this->sal_total_purchased - $this->remain_coins_sales);
+        $this->sal_coins_used      = max(0, $this->sal_total_purchased - (int) $this->remain_coins_sales);
         $salExpiry = collect($this->current_coins_sales)->pluck('end_date')->filter()->max();
         $this->sal_plan_expiry = $salExpiry ? Carbon::parse($salExpiry) : null;
         $this->sal_days_left   = $this->sal_plan_expiry ? max(0, (int) now()->diffInDays($this->sal_plan_expiry, false)) : 0;
