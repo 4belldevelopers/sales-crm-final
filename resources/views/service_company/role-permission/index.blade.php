@@ -12,11 +12,13 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 /* ── Override Metronic wrapper defaults ── */
 #kt_wrapper { background: #f1f3f8 !important; }
 #kt_content, .content { padding: 0 !important; margin: 0 !important; }
-.toolbar { display: none !important; }
+#kt_toolbar, .toolbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important; }
 .post { padding: 0 !important; }
+/* Zero the CSS variable Metronic reads for toolbar-height padding */
+:root, body { --kt-toolbar-height: 0px !important; --kt-toolbar-height-tablet-and-mobile: 0px !important; }
 
 /* ── Page wrapper ── */
-.rp-page { padding: 18px 28px 24px; background: #f1f3f8; min-height: calc(100vh - 65px); }
+.rp-page { padding: 18px 28px 24px; background: #f1f3f8; min-height: calc(100vh - 65px); margin-top: 57px; }
 
 /* ── Page header card ── */
 .rp-header-card {
@@ -792,8 +794,9 @@ if (!function_exists('rpCardIcon')) {
 }
 ?>
 
-{{-- Kept empty/hidden: Metronic's shared layout bundle expects #kt_toolbar to exist on every page and reads its offsetWidth during init --}}
-<div class="toolbar" id="kt_toolbar">
+{{-- Kept empty/hidden: Metronic's layout JS reads #kt_toolbar offsetHeight to set content top-padding.
+     height:0 + overflow:hidden ensures JS measures 0 and adds no gap above rp-page. --}}
+<div class="toolbar" id="kt_toolbar" style="height:0;overflow:hidden;padding:0;margin:0;border:none;">
     <div id="kt_toolbar_container" class="container-fluid"></div>
 </div>
 
@@ -1169,6 +1172,25 @@ if (!function_exists('rpCardIcon')) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
 
 <script>
+/* Remove toolbar-height gap: Metronic JS sets inline padding-top on #kt_wrapper
+   equal to --kt-toolbar-height (55px). Run immediately + after KTLayout fires. */
+(function removeToolbarGap() {
+    var targets = ['kt_wrapper', 'kt_content', 'kt_post'];
+    function zeroGap() {
+        targets.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) { el.style.setProperty('padding-top', '0', 'important'); el.style.setProperty('margin-top', '0', 'important'); }
+        });
+        document.body.style.setProperty('--kt-toolbar-height', '0px', 'important');
+        document.body.style.setProperty('--kt-toolbar-height-tablet-and-mobile', '0px', 'important');
+    }
+    zeroGap();
+    document.addEventListener('DOMContentLoaded', zeroGap);
+    window.addEventListener('load', zeroGap);
+    // Metronic reinitialises on resize — keep gap at 0
+    window.addEventListener('resize', zeroGap);
+})();
+
 /* ── Existing permission assignment logic (unchanged) ── */
 $(function () { $('.assign-role-permission').on('change', assignRollPermission); });
 
