@@ -2317,7 +2317,8 @@ table{
                 ctc   : $(this).data('cctc')   || '',
                 np    : $(this).data('cnp')    || '',
                 loc   : $(this).data('cloc')   || '',
-                type  : $(this).data('ctype')  || ''
+                type  : $(this).data('ctype')  || '',
+                id    : $(this).data('row-id') || ''
             };
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;

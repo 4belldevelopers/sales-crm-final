@@ -101,8 +101,8 @@
         <div class="tbl-l">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <div>
-                <div class="tbl-lc">{{ ucwords(mb_substr(@$city, 0, 20)) }}</div>
-                <div class="tbl-ls">{{ ucwords(@$stateName) }}{{ $country_name ? ' | ' . ucwords($country_name) : '' }}</div>
+                <div class="tbl-lc">{{ ucwords(mb_substr(@$city, 0, 15)) }}</div>
+                <div class="tbl-ls" title="{{ ucwords(@$stateName) }}{{ $country_name ? ' | ' . ucwords($country_name) : '' }}">{{ ucwords(mb_substr(@$stateName, 0, 15)) }}{{ $country_name ? ' | ' . ucwords(mb_substr($country_name, 0, 6)) : '' }}</div>
             </div>
         </div>
 

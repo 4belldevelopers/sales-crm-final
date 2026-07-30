@@ -8462,7 +8462,7 @@ protected $elasticService;
         							// if($chkAdminRole){
         							    
         
-        		                    //       $candidateJoineddTeam = -30;
+        		                    //     $candidateJoineddTeam = -30;
         							// 	   $candidateJoineddUser = -1500;
         		                    //        $teamRankElastic = [
         							// 		'company_id'=>2,

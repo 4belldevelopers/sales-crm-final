@@ -97,6 +97,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'valCheck' => $valCheck
 		];
 
+		$hiringFilter = (int) $request->input('hiring', 0);
+		$cachePayload['hiring'] = $hiringFilter;
+
 		$versionKey = 'allclients_version_user_'.$this->user->id;
 		$version = cache()->get($versionKey, 1);
 		$cacheKeySet = 'ats:allclients:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
@@ -205,51 +208,93 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 				]
 			];
 		}
-		$params = [
-			'index' => ELASTIC_CLIENT_LIST,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must
+		// ── Hiring filter: sort clients by active job count DESC via MySQL ──
+		if ($hiringFilter) {
+			// Get client_ids ordered by active job count (only clients with ≥1 active job)
+			$orderedClientIds = DB::table('jobs')
+				->where('company_id', $company_id)
+				->where('status', 'active')
+				->whereNotNull('client_id')
+				->select('client_id', DB::raw('COUNT(*) as active_count'))
+				->groupBy('client_id')
+				->orderByDesc('active_count')
+				->pluck('client_id')
+				->toArray();
+
+			if (empty($orderedClientIds)) {
+				$total = 0;
+				$data  = [];
+			} else {
+				// Paginate the ordered IDs in PHP
+				$total        = count($orderedClientIds);
+				$pageIds      = array_slice($orderedClientIds, $from, $size);
+
+				// Fetch those clients from ES (no sort — we reorder in PHP)
+				$hiringMust   = $must;
+				$hiringMust[] = ['terms' => ['client_id' => $pageIds]];
+
+				$hiringParams = [
+					'index' => ELASTIC_CLIENT_LIST,
+					'body'  => [
+						'size'  => $size,
+						'query' => ['bool' => ['must' => $hiringMust]],
 					],
-				],
-			]
-		];
-		if (!$this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
-			$total = 0;
-			$data = [];
-		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+				];
+
+				$hiringResp = $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)
+					? $this->elasticService->getClient()->search($hiringParams)
+					: ['hits' => ['hits' => []]];
+
+				// Re-order ES hits to match MySQL active-count order
+				$hitsByClientId = [];
+				foreach ($hiringResp['hits']['hits'] as $hit) {
+					$hitsByClientId[$hit['_source']['client_id'] ?? ''] = $hit['_source'];
+				}
+				$data = [];
+				foreach ($pageIds as $cid) {
+					if (isset($hitsByClientId[$cid])) {
+						$data[] = $hitsByClientId[$cid];
+					}
+				}
+			}
+		} else {
+			$params = [
+				'index' => ELASTIC_CLIENT_LIST,
+				'request_cache' => true,
+				'body' => [
+					'from' => $from,
+					'size' => $size,
+					'sort' => $sort,
+					'query' => ['bool' => ['must' => $must]],
+				]
+			];
+			if (!$this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+				$total = 0;
+				$data  = [];
+			} else {
+				$response = $this->elasticService->getClient()->search($params);
+				$total    = $response['hits']['total']['value'] ?? 0;
+				$data     = array_map(fn($hit) => $hit['_source'], $response['hits']['hits']);
+			}
 		}
-        // dd($total,$data);
 
 		$pagination = [
-			'total' => $total,
+			'total'        => $total,
 			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
+			'last_page'    => ceil($total / $size),
+			'listType'     => 'allcandidate',
 		];
-
 
 		$userPermissions = $this->userPermissions;
 		$responseData = [
-			'html' => view('service_company.ajax_pages.all-client-ajax', compact('data','userPermissions','company_id'))->render(),
-			'total' => $total,
+			'html'       => view('service_company.ajax_pages.all-client-ajax', compact('data','userPermissions','company_id'))->render(),
+			'total'      => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-	
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CLIENTS_TIME));
 
-	    return response()->json($responseData);
+		return response()->json($responseData);
 
 
 
@@ -289,6 +334,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'user_id' => $this->user->id,
 			'valCheck' => $valCheck
 		];
+
+		$hiringFilter = (int) $request->input('hiring', 0);
+		$cachePayload['hiring'] = $hiringFilter;
 
 		$versionKey = 'alldirectclient_version_user_'.$this->user->id;
 		$version = cache()->get($versionKey, 1);
@@ -395,49 +443,91 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 				]
 			];
 		}
-		$params = [
-			'index' => ELASTIC_CLIENT_LIST,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'query' => [
-					'bool' => [
-						'must' => $must
+		// ── Hiring filter: sort direct clients by active job count DESC ──
+		if ($hiringFilter) {
+			// Direct clients: jobs shared via recommendation_relation where to_company_id = $company_id
+			$orderedCompanyIds = DB::table('recommendation_relation')
+				->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+				->where('recommendation_relation.to_company_id', $company_id)
+				->where('recommendation_relation.final_status', 1)
+				->where('jobs.status', 'active')
+				->select('recommendation_relation.from_company_id', DB::raw('COUNT(jobs.id) as active_count'))
+				->groupBy('recommendation_relation.from_company_id')
+				->orderByDesc('active_count')
+				->pluck('from_company_id')
+				->toArray();
+
+			if (empty($orderedCompanyIds)) {
+				$total = 0;
+				$data  = [];
+			} else {
+				$total   = count($orderedCompanyIds);
+				$pageIds = array_slice($orderedCompanyIds, $from, $size);
+
+				$hiringMust   = $must;
+				$hiringMust[] = ['terms' => ['company_id' => $pageIds]];
+
+				$hiringParams = [
+					'index' => ELASTIC_CLIENT_LIST,
+					'body'  => [
+						'size'  => $size,
+						'query' => ['bool' => ['must' => $hiringMust]],
 					],
-				],
-			]
-		];
-		if (!$this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
-			$total = 0;
-			$data = [];
-		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+				];
+
+				$hiringResp = $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)
+					? $this->elasticService->getClient()->search($hiringParams)
+					: ['hits' => ['hits' => []]];
+
+				$hitsByCompanyId = [];
+				foreach ($hiringResp['hits']['hits'] as $hit) {
+					$hitsByCompanyId[$hit['_source']['company_id'] ?? ''] = $hit['_source'];
+				}
+				$data = [];
+				foreach ($pageIds as $cid) {
+					if (isset($hitsByCompanyId[$cid])) {
+						$data[] = $hitsByCompanyId[$cid];
+					}
+				}
+			}
+		} else {
+			$params = [
+				'index' => ELASTIC_CLIENT_LIST,
+				'request_cache' => true,
+				'body' => [
+					'from' => $from,
+					'size' => $size,
+					'sort' => $sort,
+					'query' => ['bool' => ['must' => $must]],
+				]
+			];
+			if (!$this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+				$total = 0;
+				$data  = [];
+			} else {
+				$response = $this->elasticService->getClient()->search($params);
+				$total    = $response['hits']['total']['value'] ?? 0;
+				$data     = array_map(fn($hit) => $hit['_source'], $response['hits']['hits']);
+			}
 		}
-        // dd($total,$data);
 
 		$pagination = [
-			'total' => $total,
+			'total'        => $total,
 			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
+			'last_page'    => ceil($total / $size),
+			'listType'     => 'allcandidate',
 		];
 
 		$userPermissions = $this->userPermissions;
 		$responseData = [
-			'html' => view('service_company.ajax_pages.direct-client-ajax', compact('data','userPermissions','company_id'))->render(),
-			'total' => $total,
+			'html'       => view('service_company.ajax_pages.direct-client-ajax', compact('data','userPermissions','company_id'))->render(),
+			'total'      => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		];	
-		
+		];
+
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_DIRECT_CLIENT_TIME));
 
-	    return response()->json($responseData);
+		return response()->json($responseData);
 
 
 	}
@@ -483,6 +573,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			'user_id' => $this->user->id,
 			'valCheck' => $valCheck
 		];
+
+		$hiringFilter = (int) $request->input('hiring', 0);
+		$cachePayload['hiring'] = $hiringFilter;
 
 		$versionKey = 'allcustomclient_version_user_'.$this->user->id;
 		$version = cache()->get($versionKey, 1);
@@ -554,6 +647,53 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 				]
 			];
 		}
+		if ($hiringFilter) {
+			// Sort internal clients by active job count DESC
+			$orderedClientIds = DB::table('jobs')
+				->where('company_id', $company_id)
+				->where('status', 'active')
+				->whereNotNull('client_id')
+				->select('client_id', DB::raw('COUNT(*) as active_count'))
+				->groupBy('client_id')
+				->orderByDesc('active_count')
+				->pluck('client_id')
+				->toArray();
+
+			if (empty($orderedClientIds)) {
+				$total = 0;
+				$data = [];
+			} else {
+				$total = count($orderedClientIds);
+				$pageIds = array_slice($orderedClientIds, $from, $size);
+				$hiringMust = $must;
+				$hiringMust[] = ['terms' => ['client_id' => $pageIds]];
+				$hiringParams = [
+					'index' => ELASTIC_CLIENT_LIST,
+					'body' => [
+						'size' => count($pageIds),
+						'query' => ['bool' => ['must' => $hiringMust]],
+					]
+				];
+				if (!$this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+					$total = 0;
+					$data = [];
+				} else {
+					$hiringResponse = $this->elasticService->getClient()->search($hiringParams);
+					$hits = $hiringResponse['hits']['hits'] ?? [];
+					$indexed = [];
+					foreach ($hits as $hit) {
+						$src = $hit['_source'];
+						$indexed[$src['client_id'] ?? $src['id'] ?? null] = $src;
+					}
+					$data = [];
+					foreach ($pageIds as $cid) {
+						if (isset($indexed[$cid])) {
+							$data[] = $indexed[$cid];
+						}
+					}
+				}
+			}
+		} else {
 		$params = [
 			'index' => ELASTIC_CLIENT_LIST,
 			'request_cache' => true,
@@ -577,6 +717,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 			$data = array_map(function ($hit) {
 				return $hit['_source'];
 			}, $response['hits']['hits']);
+		}
 		}
         // dd($total,$data);
 
