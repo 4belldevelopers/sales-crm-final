@@ -384,17 +384,9 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                     </button>
                 @endif
-                <button class="bc-btn-outline">
+                <button type="button" class="bc-btn-outline" onclick="document.getElementById('contactUsModal').style.display='flex'">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     Contact Us
-                </button>
-                <button class="bc-btn-outline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                    Share Profile
-                </button>
-                <button class="bc-btn-outline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                    Follow
                 </button>
             </div>
         </div>
@@ -821,6 +813,73 @@
 
 </div>
 </main>
+
+{{-- Contact Us Modal --}}
+<div id="contactUsModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.45);" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;padding:32px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15);font-family:'Poppins',sans-serif;">
+        <button onclick="document.getElementById('contactUsModal').style.display='none'" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;line-height:1;">✕</button>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:#dbeafe;display:flex;align-items:center;justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+                <div style="font-size:16px;font-weight:700;color:#0f172a;">Contact Us</div>
+                <div style="font-size:12px;color:#64748b;">{{ ucwords(@$account->company_name) }}</div>
+            </div>
+        </div>
+        @if(!empty(@$account->company_email))
+        <a href="mailto:{{ $account->company_email }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;margin-bottom:10px;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+            <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+                <div style="font-size:11px;color:#64748b;font-weight:500;">Email</div>
+                <div style="font-size:13px;color:#0f172a;font-weight:600;">{{ $account->company_email }}</div>
+            </div>
+        </a>
+        @endif
+        @if(!empty(@$account->company_phone))
+        <a href="tel:{{ $account->company_phone }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;margin-bottom:10px;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+            <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:11px;color:#64748b;font-weight:500;">Phone</div>
+                <div style="font-size:13px;color:#0f172a;font-weight:600;">{{ $account->company_phone }}</div>
+            </div>
+        </a>
+        @endif
+        @if(!empty(@$account->website))
+        <a href="{{ $account->website }}" target="_blank" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;margin-bottom:10px;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+            <div style="width:36px;height:36px;border-radius:8px;background:#faf5ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:11px;color:#64748b;font-weight:500;">Website</div>
+                <div style="font-size:13px;color:#0f172a;font-weight:600;">{{ $account->website }}</div>
+            </div>
+        </a>
+        @endif
+        @if(!empty(@$account->email))
+        <div style="border-top:1px solid #e2e8f0;margin-top:16px;padding-top:16px;">
+            <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:10px;">Send a Message</div>
+            <input type="text" id="contactSubject" placeholder="Subject" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;margin-bottom:8px;box-sizing:border-box;">
+            <textarea id="contactMessage" placeholder="Your message..." rows="3" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:none;margin-bottom:10px;box-sizing:border-box;"></textarea>
+            <a id="contactSendBtn" href="#" onclick="sendContactMail('{{ $account->email }}')" style="display:flex;align-items:center;justify-content:center;gap:7px;background:#2563eb;color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:8px;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Send Email
+            </a>
+        </div>
+        @endif
+    </div>
+</div>
+<script>
+function sendContactMail(email) {
+    var subject = encodeURIComponent(document.getElementById('contactSubject').value || 'Enquiry');
+    var body    = encodeURIComponent(document.getElementById('contactMessage').value || '');
+    window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
+}
+</script>
 
     
     <div id="kt_activitiesCopy_toggle"></div>

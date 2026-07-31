@@ -212,6 +212,22 @@
             <span class="ot-job-meta" style="color:{{ $clientTypeColor }};font-weight:600;">{{ $clientType }} &bull; {{ $row->jobId }}</span>
         </td>
 
+        {{-- Ownership: badge (Self / Agency / Sourced) + recruiter + company --}}
+        <td class="ot-td">
+        @php
+            $tpId = (int)($row->thirdparty_company_id ?? 0);
+            $ownerRecruiter = ucwords(mb_substr($row->posted_by ?? '', 0, 16));
+            $ownerCompany   = $row->submitted_by_company_name ?? $row->post_company_name ?? $row->company_name ?? '';
+            $ownerCompany   = ucwords(mb_substr($ownerCompany, 0, 16));
+        @endphp
+            @if($ownerRecruiter)
+                <span class="ot-offer-sub" style="font-weight:600;color:#374151;">{{ $ownerRecruiter }}</span>
+            @endif
+            @if($ownerCompany)
+                <span class="ot-offer-date">{{ $ownerCompany }}</span>
+            @endif
+        </td>
+
         {{-- Compensation: 1st = amount, 2nd = type, 3rd = Change --}}
         <td class="ot-td">
             @if($hasPendingOffer)
@@ -276,7 +292,7 @@
     @endforeach
 @else
     <tr>
-        <td colspan="7" class="ot-empty">
+        <td colspan="8" class="ot-empty">
             <div class="ot-empty-inner">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"/></svg>
                 <p>No offers found</p>
