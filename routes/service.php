@@ -43,10 +43,26 @@ Route::group(['middleware' => 'auth'], function () {
 
 			// ─── Resume pre-signed upload pipeline (returns JSON) ──────────────────
 			Route::prefix('resume')->name('resume.')->group(function () {
+				// v1 — legacy (keep for backward-compat)
 				Route::post('presign',          [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'presign'])->name('presign');
 				Route::post('store',            [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'store'])->name('store');
 				Route::get('{id}/status',       [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'status'])->name('status');
 				Route::post('{id}/retry',       [\App\Http\Controllers\ServiceCompany\ResumeUploadController::class, 'retry'])->name('retry');
+
+				// v2 — session-based upload (feature-flagged; all OFF by default)
+				Route::prefix('v2/sessions')->name('v2.sessions.')->group(function () {
+					Route::post('/',           [\App\Http\Controllers\ServiceCompany\ResumeUploadSessionController::class, 'store'])
+						->middleware('throttle:resume-presign')
+						->name('store');
+					Route::get('{uuid}',       [\App\Http\Controllers\ServiceCompany\ResumeUploadSessionController::class, 'show'])
+						->middleware('throttle:resume-status')
+						->name('show');
+					Route::post('{uuid}/finalize', [\App\Http\Controllers\ServiceCompany\ResumeUploadSessionController::class, 'finalize'])
+						->middleware('throttle:resume-finalize')
+						->name('finalize');
+					Route::delete('{uuid}',    [\App\Http\Controllers\ServiceCompany\ResumeUploadSessionController::class, 'cancel'])
+						->name('cancel');
+				});
 			});
 			// ──────────────────────────────────────────────────────────────────────
 
