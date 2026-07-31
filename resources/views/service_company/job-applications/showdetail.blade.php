@@ -232,175 +232,337 @@
       
     </div>
   </div>
-  <headershow class="page-header">
-    <div class="candidate-identity">
-      <figure class="avatar">
-        <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span class="avatar-status" aria-label="Available"></span>
-      </figure>
+  @php
+      /* -------- Header presentation-only derivations (no business logic) --------
+         Per AI_RULES.md §8 ("No business-logic changes"), every value below is a
+         purely visual derivation from already-loaded ES docs and the existing
+         GeneralMethod helpers used elsewhere in the page. No new DB writes,
+         no new route data, no scoring change. */
+      $__hdrSkillsRaw = trim((string) @$application->skills);
+      $__hdrSkillsArr = $__hdrSkillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $__hdrSkillsRaw)), 'strlen')) : [];
+      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 5);
+      $__hdrSkillsMore  = max(0, count($__hdrSkillsArr) - count($__hdrSkillsShown));
 
-      <div class="candidate-header-content">
-        <div class="candidate-name-row">
-          <h1 class="candidate-name-show">{{ ucwords(@$application->full_name) }}</h1>
-          <span class="{{ (@$application->css_style) }}" aria-label="Available" style="padding:2px 7px;">{{ ucwords(@$application->name) }}</span>
-        </div>
-        <p class="candidate-role-show">{{ ucwords(@$application->current_designation) }}</p>
-        <div class="candidate-meta-bar">
-          {{-- <span class="meta-item">
-            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span>Gender: {{ ucwords(@$application->gender) }}</span>
-          </span> --}}
-          <span class="meta-item">
-            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            @php 
-                $originalDate 	= @$application->created_at;
-                $newDate 		= date("d-M-Y h:i a", strtotime($originalDate)); 
-            @endphp
+      // Initials for avatar (up to 2 letters).
+      $__hdrFullName = trim((string) @$application->full_name);
+      $__hdrInitials = '';
+      if ($__hdrFullName !== '') {
+          $__hdrParts = preg_split('/\s+/', $__hdrFullName);
+          $__hdrInitials = strtoupper(substr($__hdrParts[0] ?? '', 0, 1) . (isset($__hdrParts[1]) ? substr($__hdrParts[1], 0, 1) : ''));
+      }
+      if ($__hdrInitials === '') { $__hdrInitials = 'NA'; }
 
-            <span>Current Company: {{ (@$application->current_company) ? ucwords(@$application->current_company) :  ucwords(@$application->cur_company_name) }} </span>
+      $__hdrIsVerified = (bool) preg_match('/verified|active|success/i', (string) @$application->css_style);
+
+      // Availability — same NP mode rules used in Profile Overview card.
+      $__hdrAvailability = '';
+      if ((@$application->serving_notice_period_mode == 0) && (int) @$application->np_id > 0) {
+          $__hdrAvailability = $application->np_id . ' Days';
+      } elseif (@$application->serving_notice_period_mode == 1 && !empty($application->np_id)) {
+          $__hdrAvailability = 'Available ' . date('d M Y', strtotime($application->np_id));
+      } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
+          $__hdrAvailability = 'Immediate Joiner';
+      } else {
+          $__hdrAvailability = trim((string) @$application->np_id);
+      }
+      if ($__hdrAvailability === '') { $__hdrAvailability = '—'; }
+      $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false || stripos($__hdrAvailability, 'Available') === 0);
+
+      // Skill match — purely a presentation count; job skill list already in $jobSkill.
+      $__hdrJobSkills = [];
+      if (!empty($jobSkill)) {
+          foreach ($jobSkill as $__js) {
+              $__js = (object) $__js;
+              $__sn = trim((string) (@$__js->skill_name ?? @$__js->skill ?? ''));
+              if ($__sn !== '') { $__hdrJobSkills[mb_strtolower($__sn)] = $__sn; }
+          }
+      }
+      $__hdrMatchedCount = 0;
+      foreach ($__hdrSkillsArr as $__cs) {
+          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) { $__hdrMatchedCount++; }
+      }
+      $__hdrJobTotal   = count($__hdrJobSkills);
+      $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
+      $__hdrOverallPct = $__hdrJobTotal > 0 ? (int) round(($__hdrMatchedCount / $__hdrJobTotal) * 100) : 0;
+
+      // Location match — uses the same formatted strings already prepared above.
+      $__hdrJobLocs = [];
+      foreach (['city_name','location','city','state'] as $__fld) {
+          $__v = trim((string) @$this->job->{$__fld});
+          if ($__v !== '') { $__hdrJobLocs[] = mb_strtolower($__v); }
+      }
+      $__hdrCandLoc = mb_strtolower(trim(($city_name ?? '').' '.($state_name ?? '')));
+      $__hdrLocMatched = false;
+      foreach ($__hdrJobLocs as $__jl) {
+          if ($__jl !== '' && $__hdrCandLoc !== '' && (mb_strpos($__hdrCandLoc, $__jl) !== false || mb_strpos($__jl, $__hdrCandLoc) !== false)) {
+              $__hdrLocMatched = true; break;
+          }
+      }
+
+      // Salary under budget — comparison of already-loaded ES numeric fields.
+      $__hdrMaxSal = (float) (@$this->job->max_salary ?? 0);
+      $__hdrEctcY  = (float) (@$application->ectc_yearly ?? 0);
+      $__hdrUnderBudget = ($__hdrMaxSal > 0) && ($__hdrEctcY > 0) && ($__hdrEctcY <= $__hdrMaxSal);
+
+      // Salary formatter (re-uses the exact helper the bottom strip already used further down).
+      $__hdrPay  = GeneralMethod::formatViewSalary(@$application->ctc_yearly,  $symbols, $jobMode);
+      $__hdrBill = GeneralMethod::formatViewSalary(@$application->ectc_yearly, $symbols, $jobMode);
+      $__hdrCur1 = html_entity_decode(strip_tags((string) @$current_ctc_cur),  ENT_QUOTES, 'UTF-8');
+      $__hdrCur2 = html_entity_decode(strip_tags((string) @$current_ectc_cur), ENT_QUOTES, 'UTF-8');
+      $__hdrCtcText  = trim($__hdrCur1 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__hdrPay->amount));
+      $__hdrEctcText = trim($__hdrCur2 . ' ' . GeneralMethod::thousandsCurrencyFormat(@$__hdrBill->amount));
+      if ($__hdrCtcText === '')  { $__hdrCtcText = '—'; }
+      if ($__hdrEctcText === '') { $__hdrEctcText = '—'; }
+
+      // Total + relevant experience — same render rule used in Profile Overview.
+      $__teRaw = trim((string) @$application->total_exp);
+      $__bdTotalExp = (strpos($__teRaw, '.') !== false && substr($__teRaw, -3) === '.00') ? substr($__teRaw, 0, -3) : $__teRaw;
+      if ($__bdTotalExp === '') $__bdTotalExp = '—';
+      $__reRaw = trim((string) @$application->rel_exp);
+      $__bdRelExp = (strpos($__reRaw, '.') !== false && substr($__reRaw, -3) === '.00') ? substr($__reRaw, 0, -3) : $__reRaw;
+      if ($__bdRelExp === '') $__bdRelExp = '—';
+
+      // "Added to pipeline" relative time — honest replacement for "JD Email Status"
+      // (no JD-mail timestamp is captured anywhere in this view).
+      $__hdrAddedTxt = '—';
+      if (!empty($application->created_at)) {
+          try {
+              $__t = \Carbon\Carbon::parse($application->created_at);
+              $__hdrAddedTxt = $__t->diffForHumans(null, true) . ' ago';
+          } catch (\Throwable $e) { $__hdrAddedTxt = date('d-M-Y', strtotime($application->created_at)); }
+      }
+
+      $__hdrRelocate = trim((string) (@$application->open_to_relocate ?: @$application->relocation ?: ''));
+      $__hdrRelocateDisp = $__hdrRelocate === '' ? '—' : ucwords($__hdrRelocate);
+  @endphp
+
+  <div class="cdr-id-row">
+    <div class="cdr-avatar" aria-hidden="true">{{ $__hdrInitials }}</div>
+
+    <div class="cdr-id-body">
+      <div class="cdr-name-row">
+        <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
+        @if($__hdrIsVerified)
+          <span class="cdr-verified" title="Verified candidate">
+            <span class="cdr-tick">✓</span> Verified
           </span>
-        </div>
-        <div class="candidate-skills">
-           
+        @endif
+      </div>
 
+      <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
 
-          <span class="skills-label">Skills:</span>
-          <ul class="skills-list">
-              @php
-                  $skills				=	'';
-                  $skills				=	@$application->skills;
-                  if(!empty($skills)){
-                    $skillsArr		=	'';
-                    $skillsArr		=	explode(',', $skills);
-                    foreach($skillsArr as $sval){
-                      echo '<span class="skill-tag">'.@$sval.'</span>';
-                    }
-                  } 
-              @endphp
-          </ul>
-        </div>
+      <div class="cdr-meta-row">
+        <span class="cdr-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          {{ $__bdTotalExp }} Yrs Experience
+        </span>
+        <span class="cdr-meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+          {{ (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: '—') }}
+        </span>
+        @if($__hdrIsImmediate)
+          <span class="cdr-availpill">
+            <span class="cdr-dot"></span>
+            {{ $__hdrAvailability }}
+          </span>
+        @endif
+      </div>
+
+      <div class="cdr-skills">
+        @if(!empty($__hdrSkillsShown))
+          <span class="cdr-skills-label">Skills</span>
+          @foreach($__hdrSkillsShown as $__s)
+            <span class="cdr-skill-pill">{{ $__s }}</span>
+          @endforeach
+          @if($__hdrSkillsMore > 0)
+            <span class="cdr-skill-pill cdr-skill-more">+{{ $__hdrSkillsMore }}</span>
+          @endif
+        @endif
       </div>
     </div>
-    <div class="header-actions">
+
+    <div class="cdr-actions">
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
-          @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other') 
-            <button type="button" class="btn btn-primary {{ $dnone }}" data-row-source_from_type="2" data-row-id="1382" data-row-jobid=""
-                style="">
-                <a href="{{route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)])}}?currentPage={{GeneralMethod::value_encrypt($currentPage)}}&currentSlug={{GeneralMethod::value_encrypt($currentSlug)}}" class="{{ $dnone }}" style="display: contents;color:#ffffff">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                  </svg>
-                  <span>Edit Profile</span>
-                </a>
-              </button>
-          @endif
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-primary {{ $dnone }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+          Edit Profile
+        </a>
       @endif
-       @if(!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx', 'htm', 'html']))
-          @php
-            $url = @$application->resume;
 
-            $info = pathinfo($url);
-            // dd($info,$url);
-          @endphp
-          @if($resumeAwsPath)
-          
-            <div style="position:relative;display:inline-block;" id="hdrDlWrapApp">
-              <button type="button" class="btn btn-secondary" id="hdrDlToggleApp" style="background:no-repeat;border:1px solid #e2e8f0;display:flex;align-items:center;gap:5px;">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#475569">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                <span style="color:#475569">Download Resume</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:#475569"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div id="hdrDlMenuApp" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:999;overflow:hidden;">
-                <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}" target="_blank" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
-                  Download Resume
-                </a>
-                <button type="button" onclick="hdrDownloadWithLogoApp()" style="display:flex;align-items:center;gap:6px;width:100%;padding:9px 13px;font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:0;border-left:3px solid #22c55e;cursor:pointer;text-align:left;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                  Resume with Company Logo
-                  <span style="font-size:10px;background:#22c55e;color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;font-weight:700;letter-spacing:.3px;">LOGO</span>
-                </button>
-              </div>
-            </div>
-            <script>
-            (function(){
-              var t=document.getElementById('hdrDlToggleApp'),m=document.getElementById('hdrDlMenuApp');
-              if(t&&m){
-                t.addEventListener('click',function(e){e.stopPropagation();m.style.display=m.style.display==='none'?'block':'none';});
-                document.addEventListener('click',function(){m.style.display='none';});
-              }
-            })();
-            function hdrDownloadWithLogoApp(){
-              document.getElementById('hdrDlMenuApp').style.display='none';
-              // the job-application viewer is always visible (no tab), so just poll for pages
-              var tries=0;
-              var poll=setInterval(function(){
-                if(document.querySelectorAll('#rcvPages .rcv-page').length){
-                  clearInterval(poll);
-                  var b=document.querySelector('[data-dl="logo"]');
-                  if(b) b.click();
-                } else if(++tries>80){
-                  clearInterval(poll);
-                  alert('Resume is taking too long to load. Please scroll down to the Resume / CV viewer and try again.');
-                }
-              },100);
-            }
-            </script>
-          @else 
-            @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
-                    @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other')  
-                    <button type="button" class="btn btn-secondary" style="background: no-repeat; border: 1px solid #e2e8f0;">                        
-                      <a target="_blank" data-id="1382" class="downloadCount"
-                        href="{{route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)])}}?currentPage={{GeneralMethod::value_encrypt($currentPage)}}&currentSlug={{GeneralMethod::value_encrypt($currentSlug)}}"
-                        style="display: contents;color:#475569">
-                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        <span>Download Resume</span>
-                      </a>
-                    </button>
-                  @endif 
-            @endif 
-          @endif
-         @else
-         <button type="button" class="btn btn-secondary" style="background: no-repeat; border: 1px solid #e2e8f0;">                       
-              <a  href="{{route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)])}}?currentPage={{GeneralMethod::value_encrypt($currentPage)}}&currentSlug={{GeneralMethod::value_encrypt($currentSlug)}}" class="btn btn-light-primary btn-sm py-1" style="display: contents;color:#475569">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                  <span>Upload Resume</span>
-              </a>
+      @if(!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx', 'htm', 'html']))
+        @if($resumeAwsPath)
+          <div style="position:relative;display:inline-block;" id="hdrDlWrapApp">
+            <button type="button" class="cdr-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Resume
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;margin-left:4px;" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-
+            <div id="hdrDlMenuApp" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:60;overflow:hidden;">
+              <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
+                Download Resume
+              </a>
+              <button type="button" onclick="hdrDownloadWithLogoApp()" style="display:flex;align-items:center;gap:6px;width:100%;padding:9px 13px;font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:0;border-left:3px solid #22c55e;cursor:pointer;text-align:left;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Resume with Company Logo
+                <span style="font-size:10px;background:#22c55e;color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;font-weight:700;letter-spacing:.3px;">LOGO</span>
+              </button>
+            </div>
+          </div>
+          <script>
+          (function(){
+            var t=document.getElementById('hdrDlToggleApp'),m=document.getElementById('hdrDlMenuApp');
+            if(t&&m){
+              t.addEventListener('click',function(e){e.stopPropagation();var open=m.style.display==='block';m.style.display=open?'none':'block';t.setAttribute('aria-expanded', open?'false':'true');});
+              document.addEventListener('click',function(){m.style.display='none';t.setAttribute('aria-expanded','false');});
+            }
+          })();
+          function hdrDownloadWithLogoApp(){
+            document.getElementById('hdrDlMenuApp').style.display='none';
+            // poll for the rcv-pages; once present, trigger the LOGO download button.
+            var tries=0;
+            var poll=setInterval(function(){
+              if(document.querySelectorAll('#rcvPages .rcv-page').length){
+                clearInterval(poll);
+                var b=document.querySelector('[data-dl="logo"]');
+                if(b) b.click();
+              } else if(++tries>80){
+                clearInterval(poll);
+                alert('Resume is taking too long to load. Please scroll down to the Resume / CV viewer and try again.');
+              }
+            },100);
+          }
+          </script>
+        @else
+          <a target="_blank" class="cdr-btn cdr-btn-secondary downloadCount"
+             href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Resume
+          </a>
         @endif
-
-
+      @else
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload Resume
+        </a>
+      @endif
     </div>
-  </headershow>
+  </div>
+
+  {{-- 6 enterprise match tiles (presentation only) --}}
+  <div class="cdr-match-grid" role="list" aria-label="Match metrics">
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-match-icon green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Skills Matched</div>
+        <div class="cdr-match-value success">{{ $__hdrMatchedCount }} <span style="color:#94a3b8;font-weight:500;">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
+      </div>
+    </div>
+
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-match-icon red" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Skills Not Matched</div>
+        <div class="cdr-match-value danger">{{ $__hdrNotMatched }} <span style="color:#94a3b8;font-weight:500;">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
+      </div>
+    </div>
+
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-match-icon green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Location Matched</div>
+        <div class="cdr-match-value {{ $__hdrLocMatched ? 'success' : '' }}">{{ $__hdrLocMatched ? 'Yes' : 'No' }}</div>
+      </div>
+    </div>
+
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-match-icon green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Salary Under Budget</div>
+        <div class="cdr-match-value {{ $__hdrUnderBudget ? 'success' : 'danger' }}">{{ $__hdrUnderBudget ? 'Yes' : 'No' }}</div>
+      </div>
+    </div>
+
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-match-icon amber" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Added to Pipeline</div>
+        <div class="cdr-match-value" style="font-size:13px;font-weight:600;">{{ $__hdrAddedTxt }}</div>
+      </div>
+    </div>
+
+    <div class="cdr-match" role="listitem">
+      <div class="cdr-ring" style="--cdr-ring-pct: {{ $__hdrOverallPct }};" aria-label="Overall match score {{ $__hdrOverallPct }} percent">
+        <span>{{ $__hdrOverallPct }}%</span>
+      </div>
+      <div class="cdr-match-body">
+        <div class="cdr-match-label">Overall Match Score</div>
+        <div class="cdr-match-value success">{{ $__hdrOverallPct }}%</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- 7-cell bottom strip with icons --}}
+  <div class="cdr-strip" aria-label="Candidate at-a-glance">
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+        Total Experience
+      </div>
+      <div class="cdr-strip-value">{{ $__bdTotalExp }} Yrs</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg></span>
+        Relevant
+      </div>
+      <div class="cdr-strip-value">{{ $__bdRelExp }} Yrs</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>
+        Current CTC
+      </div>
+      <div class="cdr-strip-value" title="{{ $__hdrCtcText }}">{{ $__hdrCtcText }}</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>
+        Expected CTC
+      </div>
+      <div class="cdr-strip-value" title="{{ $__hdrEctcText }}">{{ $__hdrEctcText }}</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        Availability
+      </div>
+      <div class="cdr-strip-value" title="{{ $__hdrAvailability }}">{{ \Illuminate\Support\Str::limit($__hdrAvailability, 18, '…') }}</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        Current Location
+      </div>
+      <div class="cdr-strip-value" title="{{ trim(($city_name ?? '').' '.($state_name ?? '')) }}">{{ trim(($city_name ?? '').' '.($state_name ?? '')) ?: '—' }}</div>
+    </div>
+    <div class="cdr-strip-item">
+      <div class="cdr-strip-label">
+        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+        Relocation
+      </div>
+      <div class="cdr-strip-value">{{ $__hdrRelocateDisp }}</div>
+    </div>
+  </div>
 
   <nav class="page-tabs tab-content nav" aria-label="Profile sections" role="tablist">
     <a type="button" class="tab tab-active" data-toggle="tab" href="#personal_details" aria-selected="true">

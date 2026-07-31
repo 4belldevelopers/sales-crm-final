@@ -1195,4 +1195,314 @@
       padding: var(--space-2);
     }
   }
- 
+
+  /* ===================================================================
+     DRAWER — Candidate identity, match metrics and bottom strip
+     Scope: prefix every selector with #kt_activitiesApplication so the
+     styles only apply inside the Job-Details drawer and never leak into
+     other pages (which also load this stylesheet for the legacy right
+     sidebars). Poppins, ≤16px, enterprise Metronic flat surfaces.
+     =================================================================== */
+
+  #kt_activitiesApplication *,
+  #kt_activitiesApplication *::before,
+  #kt_activitiesApplication *::after { box-sizing: border-box; }
+
+  #kt_activitiesApplication .cdr-id-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    width: 100%;
+  }
+
+  /* Avatar — flat 64px disc with initials (no shadows / no 3D) */
+  #kt_activitiesApplication .cdr-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    letter-spacing: .3px;
+    flex-shrink: 0;
+  }
+
+  #kt_activitiesApplication .cdr-id-body {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  #kt_activitiesApplication .cdr-name-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+
+  #kt_activitiesApplication .cdr-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -.01em; line-height: 1.25;
+    margin: 0;
+  }
+
+  #kt_activitiesApplication .cdr-verified {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 11px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-100);
+  }
+
+  #kt_activitiesApplication .cdr-verified .cdr-tick {
+    width: 12px; height: 12px;
+    background: var(--color-primary-600);
+    color: #fff; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+  }
+
+  #kt_activitiesApplication .cdr-role {
+    font-size: 14px; font-weight: 600;
+    color: var(--color-primary-600);
+    line-height: 1.3; margin: 0;
+  }
+
+  #kt_activitiesApplication .cdr-meta-row {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    color: var(--color-text-secondary);
+    font-size: 13px; font-weight: 500;
+  }
+
+  #kt_activitiesApplication .cdr-meta {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--color-text-secondary);
+    font-size: 13px; font-weight: 500;
+  }
+
+  #kt_activitiesApplication .cdr-meta svg {
+    width: 14px; height: 14px; color: var(--color-text-quaternary); flex-shrink: 0;
+  }
+
+  /* skill pills — first 5 + "+N" */
+  #kt_activitiesApplication .cdr-skills {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; margin-top: 4px;
+  }
+  #kt_activitiesApplication .cdr-skills-label {
+    font-size: 12px; font-weight: 600; color: var(--color-text-primary);
+    margin-right: 4px;
+  }
+  #kt_activitiesApplication .cdr-skill-pill {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 12px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-100);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  #kt_activitiesApplication .cdr-skill-more {
+    background: var(--color-border-light);
+    color: var(--color-text-tertiary);
+    border-color: var(--color-border);
+  }
+
+  /* Availability pill under the role (matches the green Immediate Joiner) */
+  #kt_activitiesApplication .cdr-availpill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: #ecfdf5;
+    color: #065f46;
+    font-size: 12px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid #a7f3d0;
+    align-self: flex-start;
+  }
+  #kt_activitiesApplication .cdr-availpill .cdr-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #10b981;
+  }
+
+  /* Right side action buttons (Edit + Download Resume) */
+  #kt_activitiesApplication .cdr-actions {
+    display: flex; flex-direction: column; gap: 8px;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 9px 16px;
+    border-radius: var(--radius-md);
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+    line-height: 1; text-decoration: none;
+    min-width: 160px;
+  }
+  #kt_activitiesApplication .cdr-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  #kt_activitiesApplication .cdr-btn-primary {
+    background: var(--color-primary-600);
+    color: #fff;
+    border-color: var(--color-primary-600);
+  }
+  #kt_activitiesApplication .cdr-btn-primary:hover {
+    background: var(--color-primary-700);
+    border-color: var(--color-primary-700);
+  }
+  #kt_activitiesApplication .cdr-btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+  }
+  #kt_activitiesApplication .cdr-btn-secondary:hover {
+    background: var(--color-bg-base);
+    border-color: var(--color-text-quaternary);
+  }
+
+  /* 6-tile match metrics (3 × 2 grid under the identity) */
+  #kt_activitiesApplication .cdr-match-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-bg-base);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  #kt_activitiesApplication .cdr-match {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-match-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 700;
+  }
+  #kt_activitiesApplication .cdr-match-icon svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-match-icon.green  { background: var(--color-success-50); color: #059669; }
+  #kt_activitiesApplication .cdr-match-icon.red    { background: var(--color-danger-50);  color: #dc2626; }
+  #kt_activitiesApplication .cdr-match-icon.amber  { background: var(--color-warning-50); color: #d97706; }
+  #kt_activitiesApplication .cdr-match-icon.purple { background: var(--color-purple-50);  color: #7c3aed; }
+  #kt_activitiesApplication .cdr-match-body { min-width: 0; line-height: 1.2; }
+  #kt_activitiesApplication .cdr-match-label {
+    font-size: 11px; font-weight: 500; color: var(--color-text-tertiary);
+    text-transform: uppercase; letter-spacing: .3px;
+    margin-bottom: 3px;
+  }
+  #kt_activitiesApplication .cdr-match-value {
+    font-size: 14px; font-weight: 700; color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  #kt_activitiesApplication .cdr-match-value.success { color: #059669; }
+  #kt_activitiesApplication .cdr-match-value.danger  { color: #dc2626; }
+
+  #kt_activitiesApplication .cdr-match-sub {
+    font-size: 11px; color: var(--color-text-quaternary);
+    font-weight: 500;
+  }
+
+  /* Circular match ring */
+  #kt_activitiesApplication .cdr-ring {
+    --cdr-ring-pct: 0;
+    --cdr-ring-size: 36px;
+    width: var(--cdr-ring-size); height: var(--cdr-ring-size);
+    border-radius: 50%;
+    background:
+      conic-gradient(#10b981 0deg calc(var(--cdr-ring-pct) * 3.6deg),
+                    #e2e8f0 calc(var(--cdr-ring-pct) * 3.6deg) 360deg);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-ring::before {
+    content: ''; position: absolute; inset: 4px;
+    background: #fff; border-radius: 50%;
+  }
+  #kt_activitiesApplication .cdr-ring span {
+    position: relative; z-index: 1;
+    font-size: 10px; font-weight: 700; color: var(--color-text-primary);
+  }
+
+  /* Bottom strip — 7 quick stats (the second screenshot block) */
+  #kt_activitiesApplication .cdr-strip {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    padding: 10px var(--space-4);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  #kt_activitiesApplication .cdr-strip-item {
+    padding: 4px 10px;
+    border-right: 1px solid var(--color-border-light);
+    min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  #kt_activitiesApplication .cdr-strip-item:last-child { border-right: 0; }
+  #kt_activitiesApplication .cdr-strip-label {
+    font-size: 11px; font-weight: 500; color: var(--color-text-tertiary);
+  }
+  #kt_activitiesApplication .cdr-strip-icon {
+    width: 12px; height: 12px; display: inline-block; vertical-align: -2px; margin-right: 4px;
+  }
+  #kt_activitiesApplication .cdr-strip-icon svg { width: 12px; height: 12px; }
+  #kt_activitiesApplication .cdr-strip-value {
+    font-size: 13px; font-weight: 700; color: var(--color-text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Responsive — drawer = 1366x768 is the design target, see UI_UX_STANDARDS §3 */
+  @media (max-width: 1280px) {
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(4n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+5) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+  }
+  @media (max-width: 960px) {
+    #kt_activitiesApplication .cdr-id-row { flex-wrap: wrap; padding: var(--space-2) var(--space-3); }
+    #kt_activitiesApplication .cdr-actions {
+      flex-direction: row; width: 100%;
+      margin-top: 8px;
+    }
+    #kt_activitiesApplication .cdr-btn { flex: 1; min-width: 0; }
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(3n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+4) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+  }
+  @media (max-width: 640px) {
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(2n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+3) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+    #kt_activitiesApplication .cdr-actions { flex-direction: column; }
+  }
+  /* ensure the parent drawer keeps its tabular-figures look */
+  #kt_activitiesApplication { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #kt_activitiesApplication .cdr-btn,
+  #kt_activitiesApplication .cdr-name,
+  #kt_activitiesApplication .cdr-role,
+  #kt_activitiesApplication .cdr-meta,
+  #kt_activitiesApplication .cdr-skill-pill,
+  #kt_activitiesApplication .cdr-availpill,
+  #kt_activitiesApplication .cdr-match-label,
+  #kt_activitiesApplication .cdr-match-value,
+  #kt_activitiesApplication .cdr-strip-label,
+  #kt_activitiesApplication .cdr-strip-value { font-family: 'Poppins', sans-serif; }
