@@ -1506,3 +1506,591 @@
   #kt_activitiesApplication .cdr-match-value,
   #kt_activitiesApplication .cdr-strip-label,
   #kt_activitiesApplication .cdr-strip-value { font-family: 'Poppins', sans-serif; }
+
+  /* ============================================================
+     PHASE 2 — Card / Sub-Card header.
+     - Hero is a single parent card (#kt_activitiesApplication .cdr-hero-card)
+     - Two sub-cards sit inside it (id | metrics)
+     - Top action bar runs full-width above the hero card
+     All measurements use the existing drawer font cap (14px) and
+     Poppins family already wired above.
+     ============================================================ */
+  #kt_activitiesApplication .cdr-topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px 10px 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: nowrap;
+  }
+  #kt_activitiesApplication .cdr-topbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar { height: 4px; }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  #kt_activitiesApplication .cdr-topbar-split {
+    width: 1px;
+    height: 22px;
+    background: #e2e8f0;
+    flex: 0 0 auto;
+    margin: 0 4px;
+  }
+
+  /* Action button variants for the top bar. Existing helpers .cdr-btn /
+     .cdr-btn-primary / .cdr-btn-secondary already exist (they remain for
+     the Resume dropdown trigger). New coloured variants for Interview /
+     Email / WhatsApp / Move Stage. */
+  #kt_activitiesApplication .cdr-btn.cdr-btn-interview {
+    background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-interview:hover {
+    background: linear-gradient(180deg, #fde68a 0%, #fcd34d 100%);
+    color: #78350f;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-email {
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-email:hover {
+    background: linear-gradient(180deg, #bfdbfe 0%, #93c5fd 100%);
+    color: #1e3a8a;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-whatsapp {
+    background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-whatsapp:hover {
+    background: linear-gradient(180deg, #bbf7d0 0%, #86efac 100%);
+    color: #14532d;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.28);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-stage {
+    background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+    border: 1px solid #c4b5fd;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-stage:hover {
+    background: linear-gradient(180deg, #ddd6fe 0%, #c4b5fd 100%);
+    color: #4c1d95;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+  }
+
+  /* Resume dropdown — promoted from inline styles to a proper class block. */
+  #kt_activitiesApplication .cdr-dl-wrap { position: relative; display: inline-block; }
+  #kt_activitiesApplication .cdr-dl-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    min-width: 230px;
+    z-index: 60;
+    overflow: hidden;
+    padding: 4px 0;
+  }
+  #kt_activitiesApplication .cdr-dl-menu.open { display: block; }
+  #kt_activitiesApplication .cdr-dl-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 9px 13px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    text-decoration: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  #kt_activitiesApplication .cdr-dl-item:last-child { border-bottom: 0; }
+  #kt_activitiesApplication .cdr-dl-item:hover { background: #f8fafc; }
+  #kt_activitiesApplication .cdr-dl-item-logo {
+    color: #15803d;
+    background: #f0fdf4;
+    font-weight: 600;
+  }
+  #kt_activitiesApplication .cdr-dl-item-logo:hover { background: #ecfdf5; }
+  #kt_activitiesApplication .cdr-dl-item-logo svg { width: 13px; height: 13px; flex-shrink: 0; }
+  #kt_activitiesApplication .cdr-dl-badge {
+    font-size: 10px;
+    background: #22c55e;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: auto;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  #kt_activitiesApplication .cdr-btn .cdr-caret {
+    width: 13px;
+    height: 13px;
+    margin-left: 4px;
+  }
+
+  /* Parent Card: cdr-hero-card. White background, 12px radius, single
+     soft shadow, a one-pixel border so it reads as a stacked surface. */
+  #kt_activitiesApplication .cdr-hero-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 12px 16px 4px 16px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(280px, 1.05fr) minmax(280px, 1.15fr);
+  }
+
+  /* Sub-Card shared surface */
+  #kt_activitiesApplication .cdr-subcard {
+    background: #ffffff;
+    padding: 18px 20px;
+    position: relative;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id {
+    border-right: 1px solid #f1f5f9;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Skills-compare row — emphasis on Skills Matched + Skills Not Matched
+     inside Sub-Card B. These are separate from the 4 secondary tiles. */
+  #kt_activitiesApplication .cdr-skills-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  #kt_activitiesApplication .cdr-compare-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  #kt_activitiesApplication .cdr-compare-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
+  #kt_activitiesApplication .cdr-compare-match {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #bbf7d0;
+  }
+  #kt_activitiesApplication .cdr-compare-miss {
+    background: linear-gradient(135deg, #fff7ed 0%, #fee2e2 100%);
+    border-color: #fecaca;
+  }
+  #kt_activitiesApplication .cdr-compare-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 3px currentColor;
+  }
+  #kt_activitiesApplication .cdr-compare-match .cdr-compare-icon { color: #16a34a; }
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-icon { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-compare-icon svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-compare-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  #kt_activitiesApplication .cdr-match .cdr-compare-miss .cdr-compare-icon,
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-label { color: #991b1b; }
+  #kt_activitiesApplication .cdr-compare-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-top: 2px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-compare-match .cdr-compare-value { color: #15803d; }
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-value { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-compare-of {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  /* Identity block — same look as before, slotted inside Sub-Card A */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.28);
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-id-body { flex: 1 1 auto; min-width: 0; }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 10px;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-role {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.3;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta svg {
+    width: 13px;
+    height: 13px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-availpill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18);
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #64748b;
+    font-weight: 600;
+    margin-right: 2px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skill-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.2;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skill-more {
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+    font-weight: 600;
+  }
+
+  /* Secondary match grid lives inside Sub-Card B. 4 tiles, 2x2 on wide
+     drawer, collapses to single column on very small drawers. */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.green {
+    background: #ecfdf5;
+    color: #047857;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.amber {
+    background: #fffbeb;
+    color: #b45309;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.purple {
+    background: #f5f3ff;
+    color: #5b21b6;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-top: 1px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.success { color: #047857; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.danger { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.plain {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring { padding: 10px 12px; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring {
+    --cdr-ring-size: 56px;
+    --cdr-ring-thickness: 6px;
+    width: var(--cdr-ring-size);
+    height: var(--cdr-ring-size);
+    flex-shrink: 0;
+    border-radius: 50%;
+    background:
+      conic-gradient(#10b981 0deg calc(var(--cdr-ring-pct) * 3.6deg), #e2e8f0 calc(var(--cdr-ring-pct) * 3.6deg) 360deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring::before {
+    content: "";
+    position: absolute;
+    inset: var(--cdr-ring-thickness);
+    border-radius: 50%;
+    background: #ffffff;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring span {
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #047857;
+  }
+
+  /* Page-close button now sits inside the topbar (not absolutely). */
+  #kt_activitiesApplication .page-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 70;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  #kt_activitiesApplication .page-close:hover {
+    background: #fff1f2;
+    color: #b91c1c;
+    border-color: #fecdd3;
+  }
+  #kt_activitiesApplication .page-close svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 7-cell strip — kept identical to the prior layout, plus tighter
+     gutter as it sits directly under the hero card. */
+  #kt_activitiesApplication .cdr-strip {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    padding: 0 16px 10px 16px;
+    background: transparent;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item {
+    padding: 11px 14px;
+    border-right: 1px solid #f1f5f9;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item:last-child { border-right: 0; }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-icon svg {
+    width: 12px;
+    height: 12px;
+    color: #94a3b8;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* ============================================================
+     Responsive — hero card collapses to stack on tablet/mobile,
+     skills-compare stays 2-up at 960px then stacks at 640px.
+     Top bar buttons smaller + tighter on tablet.
+     ============================================================ */
+  @media (max-width: 1280px) {
+    #kt_activitiesApplication .cdr-topbar { padding: 10px 14px 8px 14px; }
+    #kt_activitiesApplication .cdr-hero-card { margin: 10px 12px 4px 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+    #kt_activitiesApplication .cdr-subcard { padding: 14px 16px; }
+  }
+  @media (max-width: 960px) {
+    #kt_activitiesApplication .cdr-topbar { padding: 9px 12px 7px 12px; gap: 6px; }
+    #kt_activitiesApplication .cdr-topbar-group { gap: 6px; }
+    #kt_activitiesApplication .cdr-btn svg { width: 13px; height: 13px; }
+    #kt_activitiesApplication .cdr-btn { font-size: 12px; padding: 6px 10px; gap: 4px; }
+    #kt_activitiesApplication .cdr-hero-card { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-subcard-id { border-right: 0; border-bottom: 1px solid #f1f5f9; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(4n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(n+5) { border-top: 1px solid #f1f5f9; }
+  }
+  @media (max-width: 640px) {
+    #kt_activitiesApplication .cdr-hero-card { margin: 8px 8px 4px 8px; }
+    #kt_activitiesApplication .cdr-subcard { padding: 12px 12px; }
+    #kt_activitiesApplication .cdr-subcard-id .cdr-avatar { width: 54px; height: 54px; font-size: 18px; border-radius: 12px; }
+    #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 17px; }
+    #kt_activitiesApplication .cdr-skills-compare { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-grid { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 8px 8px 8px; }
+    #kt_activitiesApplication .cdr-strip .cdr-strip-item { border-right: 1px solid #f1f5f9; }
+    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(2n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(n+3) { border-top: 1px solid #f1f5f9; }
+  }
