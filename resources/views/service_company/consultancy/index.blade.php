@@ -2610,24 +2610,13 @@ $(document).ready(function() {
 
         $(document).ready(function() {
           fetchstaffingpartner();
-          $(document).on('click', '#paginationstaffingpartner .page-link', function(e) {
+          $(document).on('click', '#paginationstaffingpartner .pagi-page, #paginationstaffingpartner .pagi-arrow', function(e) {
               e.preventDefault();
 
               const page = $(this).data('page');
-              if (!page || $(this).hasClass('disabled')) return;
+              if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-              // Disable the clicked pagination link
-              $(this).addClass('disabled');
-
-              // Fetch data
-              fetchstaffingpartner(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationstaffingpartner .page-link').removeClass('disabled');
-              }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationstaffingpartner .page-link').removeClass('disabled');
-              });
-              
+              fetchstaffingpartner(page, $('#search').val());
           });
 			});
 			

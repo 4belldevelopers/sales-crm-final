@@ -500,6 +500,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
                     <th>Candidate</th>
                     <th>Job</th>
                     <th>Job Status, ID &amp; Client</th>
+                    <th>Ownership</th>
                     <th class="ot-th-sort" data-asc="14" data-desc="15">Compensation <span class="ot-sort-ico">⇵</span></th>
                     <th class="ot-th-sort" data-asc="11" data-desc="10">Offer Status <span class="ot-sort-ico">⇵</span></th>
                     <th class="ot-th-sort" data-asc="13" data-desc="12">Joining <span class="ot-sort-ico">⇵</span></th>
@@ -507,7 +508,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
                 </tr>
             </thead>
             <tbody id="offer-tracker">
-                <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;">
                     <img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...
                 </td></tr>
             </tbody>
@@ -677,12 +678,12 @@ a:hover .ot-comp-change { text-decoration: underline; }
                 pipeline_range   : state.pipelineRange,
             },
             success: function (resp) {
-                document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
+                document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
                 document.getElementById('ot_pagination').innerHTML  = resp.pagination || '';
                 if (resp.counts) updateOfferCounts(resp.counts, resp.pipelineCounts);
             },
             error: function () {
-                document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+                document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
             }
         });
     }
