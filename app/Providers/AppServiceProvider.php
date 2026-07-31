@@ -34,30 +34,19 @@ class AppServiceProvider extends ServiceProvider
      */
     private function configureRateLimiters(): void
     {
-        // Presign endpoint: 3/min per recruiter, 30/min per company.
-        // Primary control for upload initiation. Fail-open on Redis outage.
+        // Presign endpoint: 3/min per recruiter only — no company-level cap.
+        // Fail-open on Redis outage so infra issues never block recruiters.
         RateLimiter::for('resume-presign', function (Request $request) {
             try {
-                $userId    = optional($request->user())->id ?? 'anon';
-                $companyId = optional($request->user())->company_id ?? 'anon';
+                $userId = optional($request->user())->id ?? 'anon';
 
-                return [
-                    Limit::perMinute(config('resumes.rate_limits.presign_per_user', 3))
-                         ->by('resume-presign:user:' . $userId)
-                         ->response(fn () => response()->json([
-                             'error'       => 'rate_limit_exceeded',
-                             'message'     => 'You may upload up to ' . config('resumes.rate_limits.presign_per_user', 3) . ' resumes per minute. Please wait.',
-                             'retry_after' => 60,
-                         ], 429)),
-
-                    Limit::perMinute(config('resumes.rate_limits.presign_per_company', 30))
-                         ->by('resume-presign:company:' . $companyId)
-                         ->response(fn () => response()->json([
-                             'error'       => 'rate_limit_exceeded',
-                             'message'     => 'Your company has reached the upload limit. Please wait.',
-                             'retry_after' => 60,
-                         ], 429)),
-                ];
+                return Limit::perMinute(config('resumes.rate_limits.presign_per_user', 3))
+                            ->by('resume-presign:user:' . $userId)
+                            ->response(fn () => response()->json([
+                                'error'       => 'rate_limit_exceeded',
+                                'message'     => 'You may upload up to ' . config('resumes.rate_limits.presign_per_user', 3) . ' resumes per minute. Please wait.',
+                                'retry_after' => 60,
+                            ], 429));
             } catch (\Throwable $e) {
                 // Redis is down — allow through, never block recruiters for infra issues
                 Log::warning('jobs.resume.ratelimit_fails_open', [
