@@ -947,11 +947,14 @@ references them yet.
 
 ## Phase B — Upload Pipeline (Steps 4-6)
 
-> **Important:** v2 uses **2 RTT** — presign → direct R2 PUT →
-> submit-with-session. There is NO standalone `finalize` endpoint in
-> production. The finalize logic is embedded inside the submit handler
-> (Step 6). The service class below has a `finalize()` method for
-> internal use, but it is NOT exposed as a public route.
+> **CORRECTION (2026-07-31, enterprise review):** v2 uses **2 RTT** as
+> the happy path (presign → R2 PUT → submit-with-session). Additionally,
+> `POST /resume-sessions/{uuid}/finalize` IS exposed as a public route
+> (EP-3 in 50_api_contracts.md) and is required for three recovery paths:
+> refresh recovery, cross-tab sync, and stale-Pending auto-heal.
+> The submit handler independently re-verifies `status=Uploaded` — finalize
+> and submit are decoupled. EP-3 is feature-flagged by
+> `resumes.features.finalize_endpoint` (defaults to OFF).
 
 ### Step 4 — `ResumeUploadSession` service (core logic)
 
