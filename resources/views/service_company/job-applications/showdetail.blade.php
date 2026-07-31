@@ -288,7 +288,7 @@
       // Location match — uses the same formatted strings already prepared above.
       $__hdrJobLocs = [];
       foreach (['city_name','location','city','state'] as $__fld) {
-          $__v = trim((string) @$this->job->{$__fld});
+          $__v = trim((string) (@$job->{$__fld} ?? ''));
           if ($__v !== '') { $__hdrJobLocs[] = mb_strtolower($__v); }
       }
       $__hdrCandLoc = mb_strtolower(trim(($city_name ?? '').' '.($state_name ?? '')));
@@ -300,7 +300,7 @@
       }
 
       // Salary under budget — comparison of already-loaded ES numeric fields.
-      $__hdrMaxSal = (float) (@$this->job->max_salary ?? 0);
+      $__hdrMaxSal = (float) (@$job->max_salary ?? 0);
       $__hdrEctcY  = (float) (@$application->ectc_yearly ?? 0);
       $__hdrUnderBudget = ($__hdrMaxSal > 0) && ($__hdrEctcY > 0) && ($__hdrEctcY <= $__hdrMaxSal);
 
