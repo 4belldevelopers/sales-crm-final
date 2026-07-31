@@ -1,12 +1,64 @@
-# Resume Upload v2 — Complete 18-Step Implementation Plan
+# Resume Upload V2 — Complete 20-Step Implementation Plan
 
 > **Intent:** The single actionable build plan for the v2 resume upload
 > subsystem. Every step is independently implementable, has a feature
 > flag defaulting to OFF, and requires a passing staging smoke test
 > before the next step begins.
 >
-> Total estimate: ~4-6 weeks (single developer), ~2-3 weeks (pair).
+> Total estimate: ~4–6 weeks (single developer), ~2–3 weeks (pair).
 > Total new code: ~2,500 lines across ~25 files.
+
+---
+
+## ⚠️ Read This First — Critical Facts for AI Agents and New Engineers
+
+> **1 — V2 does NOT use OpenAI or any external AI/LLM for parsing.**
+>
+> The sole resume parser in V2 is **browser-side**: `pdf.js` (PDF) +
+> `mammoth.js` (DOCX) + `re_test()` in-browser. Zero server calls.
+>
+> `app/Services/ResumeParserService.php` in the codebase **still contains
+> an OpenAI method**. This is **dead v1 code** — do not call it from V2.
+> See [`CHANGELOG.md §2026-07-27`](CHANGELOG.md) for the full pivot record.
+
+> **2 — The server-side parser was removed mid-design (2026-07-27).**
+>
+> Every doc and every step in this plan that mentions a parser,
+> `parse_resumes` queue, `ParseResumeJob`, or parser-related Reverb event
+> was written before this pivot and carries a `REMOVED 2026-07-27` note.
+> See [`CHANGELOG.md`](CHANGELOG.md) for the consolidated record.
+
+---
+
+## How This Plan Relates to the Rollout Plan
+
+> [`90_rollout_plan.md`](90_rollout_plan.md) describes **14 named release
+> versions** (`v2.0.0a` → `v2.0.0n`) — each a shippable, feature-flagged
+> unit. This document describes **20 implementation steps** across
+> 7 phases (A–G) — each a concrete code + test deliverable.
+>
+> They are the same work viewed through two lenses:
+> - **Implementation steps** = "what do I write next?" (developer view)
+> - **Rollout versions** = "what do I ship next?" (ops/QA/product view)
+
+| Rollout Version | Implementation Steps | Phase | What Ships |
+|---|---|---|---|
+| `v2.0.0a` | Steps 1–3 | Phase A — Foundation | `config/resumes.php`, DB migrations, enum + models, health endpoint shell |
+| `v2.0.0b` | Steps 4–5 | Phase B (part 1) | `ResumeUploadSession` service, `POST /resume-sessions` presign endpoint |
+| `v2.0.0c` | Step 6 | Phase B (part 2) | Browser JS: `resume-presign.js` + direct R2 PUT via `resume-upload-progress.js` |
+| `v2.0.0d` | Step 6 (browser parser) | Phase B (part 2) | `pdf.js` + `re_test()` wiring in Blade — **no server parser, no queue** |
+| `v2.0.0e` | Step 7 | Phase C (part 1) | Submit with `session_uuid` — 2-RTT, race-safe, atomically finalizes + creates candidate |
+| `v2.0.0f` | Step 16 (partial) | Phase E (partial) | `careerStore` thin wrapper extracted from `HomeController` |
+| `v2.0.0g` | Step 7 (partial) | Phase C (part 1) | `store` extracted from `ServiceCompanyJobApplicationController` |
+| `v2.0.0h` | Step 14 | Phase D — Hardening | `BroadcastChannel` cross-tab sync (`resume-broadcast-sync.js`) |
+| `v2.0.0i` | Steps 8–9 | Phase C (part 2) | Cancel endpoint (`DELETE /resume-sessions/{uuid}`) + Refresh recovery (`GET /resume-sessions/{uuid}`) |
+| `v2.0.0j` | Steps 10–11 | Phase C (part 3) | Multipart upload (files ≥5 MB) + Network resilience (offline/online + preflight) |
+| `v2.0.0k` | Phase C extensions | Phase C | Bulk upload path (composes presign + session + queue primitives) |
+| `v2.0.0l` | Steps 12–13, 15, 17 | Phases D + E (partial) | Cron jobs, rate limiting (Redis), metrics + health endpoint, load test |
+| `v2.0.0m` | Step 16 | Phase E — Ship | Full `CareerApplyController` vertical slice extraction |
+| `v2.0.0n` | Step 18 | Phase E — Ship | Production GA; legacy `POST /uploadresume` rate-limited and deprecated |
+| *(post-GA)* | Step 19 | Phase F — Edit page | Edit page: replace / remove resume via 2-RTT flow |
+| *(post-GA)* | Step 20 | Phase G — Duplicates | Duplicate Ownership Engine: detects + reports, **never merges** |
 
 ---
 
@@ -4236,10 +4288,25 @@ export RESUMES_FEATURE_BROWSER_UPLOAD=false
 #          the legacy `store()` without `session_uuid`.
 export RESUMES_FEATURE_SUBMIT_SESSION=false
 
-# Symptom: parser pipeline is stuck or failing (queue, Horizon, ES).
-# Action: disable QueuedForParsing; presign still works but
-#          uploaded sessions never parse. Submit with manual entry.
-export RESUMES_FEATURE_PARSER=false
+# NOTE (2026-07-27): There is NO parser pipeline in V2.
+# V2 has no parse_resumes queue, no ParseResumeJob, no QueuedForParsing
+# state, and no RESUMES_FEATURE_PARSER flag. The sole parser is
+# browser-side (pdf.js + re_test()). It runs from the local File object
+# and cannot "get stuck" — it either succeeds or degrades to empty fields.
+# See CHANGELOG.md §2026-07-27 for the full removal record.
+
+# Symptom: ReconcileOrphanUploads cron is producing errors or running too long.
+# Action: disable the cron job via scheduler — orphan rows accumulate but
+#          no data is lost. Re-enable after the root cause is fixed.
+#          (Orphan rows are resume_uploads rows with no linked_candidate_id
+#          and expires_at < now - 24h. Safe to leave for up to 7 days.)
+export RESUMES_FEATURE_RECONCILE_ORPHANS=false
+
+# Symptom: BroadcastChannel tab sync (Step 14) is causing stale UI state
+#          (e.g. wrong badge on second tab after upload completes).
+# Action: disable BroadcastChannel; tabs fall back to Reverb WebSocket
+#          for all progress events. Zero data loss.
+export RESUMES_FEATURE_BROADCAST_CHANNEL=false
 
 # Symptom: RateLimiter returning 429s on healthy traffic (Step 13).
 # Action: leave the limiter ON but flip its fail-open mode by
@@ -4966,6 +5033,9 @@ same resume, what's going on?", the answer is:
 
 ## Cross-references
 
+- **Overview + Step-to-Rollout map:** [`00_overview.md`](00_overview.md)
+- **Design changelog (pivots, removals):** [`CHANGELOG.md`](CHANGELOG.md)
+- **Rollout plan (14 versions):** [`90_rollout_plan.md`](90_rollout_plan.md)
 - Architecture: [`30_architecture.md`](30_architecture.md)
 - Data model: [`40_data_model.md`](40_data_model.md)
 - API contracts: [`50_api_contracts.md`](50_api_contracts.md)
