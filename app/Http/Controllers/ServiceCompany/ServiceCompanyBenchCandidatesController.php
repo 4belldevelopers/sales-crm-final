@@ -37,6 +37,9 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Models\JobSkill;
 use App\Jobs\ElasticBenchCandidateIndex;
 use App\Models\NoticePeriod;
+use App\Enums\ResumeUploadStatus;
+use App\Models\ResumeUpload;
+use App\Models\UploadSessionAudit;
 use App\Services\MailService;
 use App\Jobs\ProcessCandidateRequest;
 use App\Services\ElasticService;
@@ -1143,10 +1146,62 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$benchApplication->behance = $request->behance;
 		$benchApplication->otherLink = $request->otherLink;
 
+		// ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
+		$resumeSession = null;
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)->first();
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		$benchApplication->save();
+
+		// ── v2 session: atomic claim + R2 HEAD check + link (inside transaction) ──
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+			if ($claimed === 0) {
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume session was already claimed. Please upload the resume again.']);
+			}
+			$r2Exists = false;
+			try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume file not found in storage. Please upload the resume again.']);
+			}
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $benchApplication->id,
+					'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+				'candidate_id' => $benchApplication->id,
+			], $company_id, auth()->user()->id);
+		}
+		// ─────────────────────────────────────────────────────────────────────────
+
 		// if($added){
 		// 	$eventId = 5;
 		// 	GeneralMethod::coinsDeductions((int) $company_id,$eventId,auth()->user()->id,$company_id,'','');
@@ -1259,7 +1314,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 			        $tempPath = session('resume_temp_path');
 					$full_name = session('resume_original_name');
-					
+
 					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 					DB::table('job_applications')
@@ -1270,6 +1325,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 								'resume_original_name'
 							]);
 ;
+			} elseif ($resumeSession) {
+				// v2 path (edit): file already in R2; persist the public URL.
+				$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+				DB::table('job_applications')
+					->where('id', $benchApplication->id)
+					->update(['resume' => $r2ResumeUrl]);
 			}
 		}else{
 			if ($request->hasFile('resume')) {
@@ -1285,7 +1346,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 					$tempPath = session('resume_temp_path');
 					$full_name = session('resume_original_name');
-					
+
 					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 					DB::table('job_applications')
@@ -1295,10 +1356,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 								'resume_temp_path',
 								'resume_original_name'
 							]);
+			} elseif ($resumeSession) {
+				// v2 path (add): file already in R2; persist the public URL.
+				$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+				DB::table('job_applications')
+					->where('id', $benchApplication->id)
+					->update(['resume' => $r2ResumeUrl]);
 			}
 		}
 
-		if(empty($request->resumeCheck)){
+		if(empty($request->resumeCheck) && !$resumeSession){
 					DB::table('job_applications')
 				->where('id', $benchApplication->id)
 				->update(['resume' =>'']);

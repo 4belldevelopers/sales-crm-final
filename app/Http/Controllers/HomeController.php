@@ -34,6 +34,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MeetingImport;
+use App\Enums\ResumeUploadStatus;
+use App\Models\ResumeUpload;
+use App\Models\UploadSessionAudit;
 
 
 class HomeController extends Controller
@@ -2083,11 +2086,61 @@ class HomeController extends Controller
                     $jobApplication->interview_mode_five = $request->interview_mode_five;
                     $jobApplication->interview_mode_six = $request->interview_mode_six;
 
+                    // ── v2 pre-flight: validate resume_session_uuid (career page, public) ──
+                    $resumeSession = null;
+                    if (config('resumes.features.submit_with_session') && config('resumes.features.career_controller') && $request->filled('resume_session_uuid')) {
+                        $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+                            ->forCompany($company_id)->first();
+                        if (!$resumeSession) {
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume upload session not found. Please upload the resume again.']);
+                        }
+                        if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+                        }
+                    }
+                    // ─────────────────────────────────────────────────────────────────────
+
                     DB::beginTransaction();
                     try {
 
                     $jobApplication->save();
 
+                    // ── v2 session: atomic claim + R2 HEAD check + link ───────────────────
+                    if ($resumeSession) {
+                        $claimed = ResumeUpload::where('id', $resumeSession->id)
+                            ->where('company_id', $company_id)
+                            ->where('status', ResumeUploadStatus::Uploaded->value)
+                            ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+                        if ($claimed === 0) {
+                            DB::rollBack();
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                        }
+                        $r2Exists = false;
+                        try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+                        if (!$r2Exists) {
+                            ResumeUpload::where('id', $resumeSession->id)
+                                ->where('status', ResumeUploadStatus::Completed->value)
+                                ->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+                            DB::rollBack();
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume file not found in storage. Please upload the resume again.']);
+                        }
+                        ResumeUpload::where('id', $resumeSession->id)
+                            ->where('company_id', $company_id)
+                            ->where('status', ResumeUploadStatus::Completed->value)
+                            ->update([
+                                'linked_candidate_id' => $jobApplication->id,
+                                'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+                                'updated_at'          => now(),
+                            ]);
+                        UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+                            'candidate_id' => $jobApplication->id,
+                        ], $company_id, null);
+                    }
+                    // ─────────────────────────────────────────────────────────────────────
 
                     if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
                         $YearskillId = $request->input('YearskillId');
@@ -2196,11 +2249,17 @@ class HomeController extends Controller
 							session()->forget([
 								'resume_temp_path',
 								'resume_original_name'
-							]);	
-                            
+							]);
+
+                    } elseif ($resumeSession) {
+                        // v2 path: file already landed in R2; persist the public URL.
+                        $r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+                        DB::table('job_applications')
+                            ->where('id', $jobApplication->id)
+                            ->update(['resume' => $r2ResumeUrl]);
                     }
 
-                    if(empty($request->resumeCheck)){
+                    if(empty($request->resumeCheck) && !$resumeSession){
                         DB::table('job_applications')
                             ->where('id', $jobApplication->id)
                             ->update(['resume' =>'']);

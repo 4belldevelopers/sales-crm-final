@@ -193,6 +193,8 @@
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
+            {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
+            <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
           <div class="fc">
             <!-- Upload + Career Summary -->
             <div class="g2" style="margin-bottom:16px">
@@ -1344,10 +1346,78 @@
 @push('footer-script')
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
+@if(config('resumes.features.browser_upload'))
+<script src="{{ asset('js/resume-presign.js') }}"></script>
+@endif
 
 <script>
 $(document).ready(function () {
+
+    // ── v2 upload: feature flag + route URL injected from PHP ────────────────
+    var RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_upload', false));
+    var RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
+    if (window.ResumePresign) {
+        window.RESUME_PRESIGN_URL = RESUME_PRESIGN_URL;
+        window.RESUMES_FEATURE_BROWSER_UPLOAD = RESUMES_FEATURE_BROWSER_UPLOAD;
+        // Phase 6: server-controlled retry config passed to the JS module.
+        window.RESUMES_CONFIG = {
+            maxPutAttempts: @json(config('resumes.network_resilience.max_put_attempts', 3)),
+            putBackoffMs:   @json(config('resumes.network_resilience.put_backoff_ms', 1000)),
+        };
+    }
+
+    // ── v2 state → existing progress bar UI bridge ───────────────────────────
+    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        window.ResumePresign.onStateChange(function (data) {
+            if (data.state === 'uploading') {
+                $('#upWrap').show();
+                $('#upBar').css('width', data.progress + '%');
+                $('#upStats').html(data.progress + '% &middot; Uploading to cloud&hellip;');
+            } else if (data.state === 'uploaded') {
+                $('#upBar').css('width', '100%');
+                $('#upStats').html('100% &middot; Upload complete');
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
+                ).show();
+                $('#uploaded_file_path').val('');  // v2 uses session_uuid, not file path
+            } else if (data.state === 'failed') {
+                if (typeof _showUploadError === 'function') {
+                    _showUploadError(data.error || 'Upload failed. Please remove and try again.');
+                }
+            }
+        });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── v2 Phase 6: recover a previous upload session after page refresh ──────
+    // recover() reads localStorage UUID → pings status endpoint → restores
+    // UPLOADED state if the file is still in R2, so the user can submit without
+    // re-uploading. Silent no-op when nothing is stored or the session expired.
+    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        window.ResumePresign.recover().then(function (session) {
+            if (session) {
+                // Session recovered — show the "upload complete" banner so the
+                // user knows their previous file is still attached.
+                $('#upWrap').show();
+                $('#upBar').css('width', '100%');
+                $('#upStats').html('100% &middot; Upload restored');
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Resume restored.</strong> Your previously uploaded file is still attached.</span>'
+                ).show();
+                $('#uploadBox').hide();
+                $('#fileInfo').show();
+            }
+        });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const uploadBox = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
@@ -1387,13 +1457,17 @@ $(document).ready(function () {
 
         $('.download-file').addClass('d-none');
 
-        // Drive the real-time XHR progress bar first; the legacy pipeline
-        // (hFIC) uploads the same blob in parallel. Setting this flag tells
-        // hFIC to skip its jQuery POST — keeping same-origin POSTs to one
-        // for the file, so the parser POST `/extract-resume-applications`
-        // is never queued behind an upload on the HTTP/1.1 6-conn cap.
+        // Upload the file. v2 (presign → R2 PUT) takes priority when the flag
+        // is ON; falls through to the legacy multipart POST otherwise.
         window.__upXhrChannelClaimed = true;
-        if (typeof uploadWithProgress === 'function') {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+            // v2 path: direct browser → R2, zero PHP bytes.
+            // startUpload() is async; state changes drive the UI via onStateChange.
+            window.ResumePresign.startUpload(file).catch(function () {
+                // error already surfaced via onStateChange 'failed'
+            });
+        } else if (typeof uploadWithProgress === 'function') {
+            // v1 path: PHP multipart POST (unchanged)
             uploadWithProgress(file);
         }
         if (typeof handleFileInputChange === 'function') {
@@ -1443,6 +1517,10 @@ $(document).ready(function () {
     // the #removeFile button and the card's Replace/Remove buttons.
     function backToDropzone() {
         resetProgress();
+        // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
+        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+            window.ResumePresign.cancelUpload();
+        }
         $('#upInfo').removeClass('show');
         $('#uploadBox').show();
         $('#fileInfo').hide();
