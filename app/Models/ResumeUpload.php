@@ -4,7 +4,6 @@ namespace App\Models;
 use App\Enums\ResumeUploadStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 // Intent: Eloquent model for the resume_uploads table.
 // Follows existing project patterns — no repository layer (CLAUDE.md rule 10).
@@ -20,7 +19,7 @@ class ResumeUpload extends Model
         'user_id',
         'original_filename',
         'stored_filename',
-        'file_hash',
+        'sha256_hex',           // renamed from file_hash — matches API contract
         'mime_type',
         'file_size_bytes',
         'r2_temp_key',
@@ -31,23 +30,18 @@ class ResumeUpload extends Model
         'candidate_id',
         'bench_application_id',
         'linked_candidate_id',
-        'parser_started_at',
-        'parser_completed_at',
-        'parser_attempts',
         'last_error',
-        'last_parser_pod_id',
         'upload_completed_at',
         'expires_at',
         'cleanup_reason',
+        // REMOVED 2026-07-27: parser_started_at, parser_completed_at,
+        // parser_attempts, last_parser_pod_id — no server-side parser
     ];
 
     protected $casts = [
-        'file_size_bytes'       => 'integer',
-        'parser_attempts'       => 'integer',
-        'parser_started_at'     => 'datetime',
-        'parser_completed_at'   => 'datetime',
-        'upload_completed_at'   => 'datetime',
-        'expires_at'            => 'datetime',
+        'file_size_bytes'    => 'integer',
+        'upload_completed_at' => 'datetime',
+        'expires_at'         => 'datetime',
     ];
 
     // ─── Scopes ───────────────────────────────────────────────────────────
@@ -114,10 +108,7 @@ class ResumeUpload extends Model
 
     // ─── Relations ────────────────────────────────────────────────────────
 
-    public function parseResult(): HasOne
-    {
-        return $this->hasOne(ResumeParseResult::class, 'resume_upload_id');
-    }
+    // REMOVED 2026-07-27: parseResult() — no server-side parser in v2
 
     public function audits(): HasMany
     {

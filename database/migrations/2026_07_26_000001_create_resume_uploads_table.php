@@ -22,7 +22,7 @@ return new class extends Migration
             // File metadata (no bytes stored here — bytes go to R2)
             $table->string('original_filename', 255)->nullable();
             $table->string('stored_filename', 255)->nullable();
-            $table->char('file_hash', 64)->nullable();           // SHA256 of file bytes (informational)
+            $table->char('sha256_hex', 64)->nullable();          // SHA256 of file bytes (client-stated, informational)
             $table->string('mime_type', 127)->nullable();
             $table->unsignedBigInteger('file_size_bytes')->nullable(); // cap: 6 MB
 
@@ -43,12 +43,9 @@ return new class extends Migration
             $table->unsignedInteger('bench_application_id')->nullable();
             $table->unsignedInteger('linked_candidate_id')->nullable(); // v2 conservative dedupe link
 
-            // Parser tracking
-            $table->timestamp('parser_started_at')->nullable();
-            $table->timestamp('parser_completed_at')->nullable();
-            $table->unsignedTinyInteger('parser_attempts')->default(0); // capped at 1 server-side
-            $table->text('last_error')->nullable();                     // sanitized error code only
-            $table->string('last_parser_pod_id', 64)->nullable();
+            // REMOVED 2026-07-27: parser_started_at, parser_completed_at,
+            // parser_attempts, last_parser_pod_id — no server-side parser in v2
+            $table->text('last_error')->nullable();  // generic error code for any failure
 
             // Lifecycle
             $table->timestamp('upload_completed_at')->nullable();

@@ -70,8 +70,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'rate_limits' => [
-        'presign_per_user'    => 30,  // POST /resume-sessions per minute
-        'presign_per_company' => 120, // per company across all users
+        'presign_per_user'    => 3,   // 3/min per recruiter (enterprise requirement)
+        'presign_per_company' => 30,  // secondary cap across all recruiters in a company
+        'finalize_per_user'   => 10,  // one per upload attempt; generous for retries
+        'status_per_user'     => 60,  // polling endpoint; high limit
         'submit_per_user'     => 20,  // POST /job-applications per minute
     ],
 
