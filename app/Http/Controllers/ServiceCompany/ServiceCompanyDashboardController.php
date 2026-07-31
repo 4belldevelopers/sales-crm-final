@@ -85,11 +85,12 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 					}
 					
 				}
-
+               
 				$exists_company = $this->elasticService->getClient()->exists([
 					'index' => ELASTIC_COMPANIES_INDEX,
 					'id' => $this->company_id
 				]);
+				
 
 				$company_coins = DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->first();
 				$usersCount = DB::table('users')->where('company_id', $this->company_id)->where('status','=','active')->count();
