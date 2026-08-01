@@ -313,9 +313,7 @@
        button outside the bar so it doesn't fight the primary/secondary
        button hierarchy.
        ============================================================ --}}
-  {{-- ===== CARD 1: Hero — action bar + identity/metrics sub-cards ===== --}}
-  <div class="cdr-outer-card">
-  {{-- TOP ACTION BAR --}}
+  {{-- TOP ACTION BAR (outside any card, spans full width — mirrors job drawer top-actions) --}}
   <div class="cdr-topbar" aria-label="Candidate actions">
     <div class="cdr-topbar-group">
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
@@ -432,6 +430,8 @@
     </button>
   </div>
 
+  {{-- ===== CARD 1: Hero identity + metrics ===== --}}
+  <div class="cdr-outer-card">
   {{-- HERO CARD: identity (left) + 4-row metrics list (right) --}}
   <div class="cdr-hero-card">
 
