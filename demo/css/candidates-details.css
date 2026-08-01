@@ -2079,10 +2079,10 @@
     height: 14px;
   }
 
-  /* 7-cell at-a-glance strip — pipeline-card style matching job drawer */
+  /* 6-cell at-a-glance strip — pipeline-card style matching job drawer */
   #kt_activitiesApplication .cdr-strip {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
     padding: 0 16px 12px 16px;
     background: transparent;
