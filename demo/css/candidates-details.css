@@ -2630,22 +2630,25 @@
 
   /* ============================================================
      THREE-CARD LAYOUT — matches jobs/show.blade.php card pattern
-     Card 1 = Hero (action bar + identity/metrics)
+     Topbar = full-width action bar (outside cards, like job drawer top-actions)
+     Card 1 = Hero identity + match metrics
      Card 2 = 6 pipeline stat sub-cards
      Card 3 = Tabs + Content
      ============================================================ */
 
-  /* Page wrapper: vertical flex column, uniform gap & padding */
+  /* Page wrapper: vertical flex column, gray background between cards.
+     No padding — topbar spans full width edge-to-edge (same as job drawer). */
   #kt_activitiesApplication .page-wrapper {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 16px;
     background: #f1f5f9;
     min-height: auto;
+    padding-bottom: 16px;
   }
 
-  /* Outer card — shared frame for card 1 (hero) and card 3 (tabs) */
+  /* Outer card — shared white-card frame used for Card 1 (hero) and Card 3 (tabs).
+     16px horizontal margin pulls it away from the drawer edges. */
   #kt_activitiesApplication .cdr-outer-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -2653,16 +2656,18 @@
     box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03);
     overflow: hidden;
     flex-shrink: 0;
+    margin: 0 16px;
   }
 
-  /* Hero card already flat inside outer card (border/margin/shadow overridden at line 2241) */
+  /* Hero card sits flat inside .cdr-outer-card (border/margin/shadow reset at line 2241) */
 
-  /* CARD 2: pipeline stat sub-cards — 6-col grid, same cadence as job drawer pipeline */
+  /* CARD 2: 6 pipeline stat sub-cards — 6-col grid, mirrors job drawer pipeline section */
   #kt_activitiesApplication .cdr-pipeline-section {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
     flex-shrink: 0;
+    margin: 0 16px;
   }
 
   #kt_activitiesApplication .cdr-pipeline-card {
@@ -2685,7 +2690,7 @@
     border-color: #bfdbfe;
   }
 
-  /* Icon square — colored like job drawer pipeline icons */
+  /* Icon square — color-coded like job drawer pipeline icons */
   #kt_activitiesApplication .cdr-pipeline-icon {
     width: 38px;
     height: 38px;
@@ -2734,7 +2739,7 @@
     font-family: 'Poppins', sans-serif;
   }
 
-  /* CARD 3: tabs card — page-tabs and page-content sit flat inside the outer card */
+  /* CARD 3: tabs outer card — page-tabs and page-content sit flat inside */
   #kt_activitiesApplication .cdr-tabs-card .page-tabs {
     border-radius: 0;
     background: #ffffff;
@@ -2745,11 +2750,31 @@
     border-radius: 0 0 12px 12px;
   }
 
-  /* Pipeline responsive — collapse columns on smaller drawer widths */
+  /* ============================================================
+     FONT-SIZE CORRECTIONS — cap all content text at 14px max
+     (UI_UX_STANDARDS §10: "max font 14px").
+     Avatar initials (visual decorative elements) are exempt.
+     ============================================================ */
+
+  /* Candidate name: was 18px at line 2314 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name {
+    font-size: 14px !important;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  /* Skills-compare count value (e.g. "3"): was 18px at line 1797 */
+  #kt_activitiesApplication .cdr-compare-value { font-size: 13px !important; }
+
+  /* Metric cell value (old hero design fallback): was 18px at line 2400 */
+  #kt_activitiesApplication .cdr-cell-value { font-size: 13px !important; }
+
+  /* Pipeline responsive — collapse at narrower drawer widths */
   @media (max-width: 1100px) {
     #kt_activitiesApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   }
   @media (max-width: 640px) {
     #kt_activitiesApplication .cdr-pipeline-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #kt_activitiesApplication .page-wrapper { padding: 10px; gap: 10px; }
+    /* Name cap stays 14px on narrow widths (override the 17px responsive rule at line 2625) */
+    #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 14px !important; }
   }
