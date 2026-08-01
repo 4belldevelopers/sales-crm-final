@@ -2484,8 +2484,7 @@
     flex-direction: column;
     height: 100%;
     justify-content: space-evenly;
-    /* increased left padding shifts icon+label rightward toward the value */
-    padding: 8px 20px 8px 44px;
+    padding: 8px 20px 8px 16px;
   }
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-row {
     display: flex;
