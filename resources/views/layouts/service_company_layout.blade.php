@@ -133,6 +133,17 @@
       #kt_activitiesApplication .cdr-dl-menu.open{display:block;}
       #kt_activitiesApplication .cdr-dl-item-logo svg{width:13px;height:13px;flex-shrink:0;}
       #kt_activitiesApplication .cdr-subcard-id{display:flex;gap:16px;align-items:flex-start;}
+      /* V2 hero: size all SVGs in the new classes immediately so they never render at 300×150px default */
+      #kt_activitiesApplication .cdr-action-btn svg{width:14px;height:14px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-action-btn .cdr-caret{width:12px;height:12px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-topbar-close svg{width:16px;height:16px;}
+      #kt_activitiesApplication .cdr-topbar{justify-content:space-between;}
+      #kt_activitiesApplication .cdr-id-avatar-col{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-avatar-lg{width:116px;height:116px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+      #kt_activitiesApplication .cdr-cell-icon svg{width:18px;height:18px;}
+      #kt_activitiesApplication .cdr-score-ring-svg{width:56px;height:56px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-verified-v2 svg{width:11px;height:11px;}
+      #kt_activitiesApplication .cdr-meta-item svg{width:14px;height:14px;flex-shrink:0;}
 
       /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
          set via data-kt-drawer-width on the element itself (KTDrawer computes
