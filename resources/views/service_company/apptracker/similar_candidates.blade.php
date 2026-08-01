@@ -79,65 +79,47 @@
         /* Skill / Location tag chips: square-ish rounded rect (not a full pill),
            bordered for definition, consistent padding so star+text+remove all
            sit on one visual baseline regardless of which section renders them. */
-        .tagify__tag {
-            display: flex !important;
-            align-items: center !important;
-            background: #eef2ff !important;
-            border: 1px solid #e0e7ff !important;
-            border-radius: 8px !important;
-            margin: 4px 6px 4px 0 !important;
-            padding: 0 !important;
-        }
-        .tagify__tag.simf-mandatory-tag {
-            background: #dbeafe !important;
-            border-color: #bfdbfe !important;
-        }
-        .tagify__tag > div {
-            display: flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            line-height: 1;
-            padding: 7px 4px 7px 10px !important;
-        }
-
+        /* Tagify chip styles ΓÇö visual properties are set as inline styles in the
+           JS template so they can't be overridden by plugins.bundle.css (loaded
+           mid-body after this <style> block). Only interactive states are here. */
         .tagify__tag .star {
             cursor: pointer;
-            font-size: 19.5px;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            color: #94a3b8;
-            margin-right: 5px;
-            flex-shrink: 0;
         }
-
         .tagify__tag .star.checked {
-            color: #eab308;
+            color: #eab308 !important;
         }
-
-        .tagify__tag .tagify__tag-text {
-            font-size: 12.5px;
-            font-weight: 500;
-            color: #3730a3;
-            line-height: 1;
+        /* The vendor Tagify stylesheet renders this button via a CSS
+           mask-image (an SVG X clipped out of background-color) rather than
+           real text ΓÇö combined with our own inline background of 6% black
+           opacity, the icon was nearly invisible against the light chip
+           background. We render a literal "├ù" character instead (see the
+           tag template below) and explicitly cancel the mask so it can't
+           clip our text away or double up with a mask-rendered glyph. */
+        .tagify__tag__removeBtn,
+        .tagify__tag__removeBtn::before,
+        .tagify__tag__removeBtn::after {
+            mask-image: none !important;
+            -webkit-mask-image: none !important;
+            content: none !important;
         }
-        .tagify__tag.simf-mandatory-tag .tagify__tag-text {
-            color: #1d4ed8;
+        .tagify__tag__removeBtn:hover {
+            background: rgba(37,99,235,.28) !important;
+            color: #1d4ed8 !important;
         }
-        .tagify__tag__removeBtn {
-            margin-left: 2px !important;
-            margin-right: 8px !important;
-            flex-shrink: 0;
+        /* Location autocomplete dropdown is appended to <body> (appendTarget:document.body)
+           so it needs a z-index above the filter drawer (z-index:1200) and its backdrop. */
+        body > .tagify__dropdown {
+            z-index: 1400 !important;
         }
 
         /* The original mass_mail toolbar button stays in the DOM (so its modal-trigger
-           class keeps working unchanged) but is permanently hidden now — its restyled
+           class keeps working unchanged) but is permanently hidden now ΓÇö its restyled
            equivalent lives in #aptk_selection_bar below. */
         .aptk-legacy-hide {
             display: none !important;
         }
 
-        /* Row selection action bar — same design/position as CV Tracker's
+        /* Row selection action bar ΓÇö same design/position as CV Tracker's
            #cvh_selection_bar: hidden until candidates are checked, then sits directly
            above the results table. Only Send Email is offered here (this page has no
            Forward Resume / Copy / Export functionality). */
@@ -201,7 +183,7 @@
 
         /* Similar Candidates filter drawer (replaces the old #apptrackerfilter modal) */
         /* Force the drawer itself to a fixed, viewport-bound box so only
-           .simf-body scrolls internally — without this, the drawer's height
+           .simf-body scrolls internally ΓÇö without this, the drawer's height
            was growing with its content and the whole browser page ended up
            scrolling instead of just the filter list. */
         #kt_similar_filter_drawer.simf-drawer {
@@ -284,9 +266,9 @@
             color: #334155;
         }
         .simf-activebar {
-            padding: 12px 20px;
+            /* Lives inside the scroll container ΓÇö no pinning needed */
+            padding: 12px 0;
             border-bottom: 1px solid #eef0f4;
-            flex-shrink: 0;
         }
         .simf-activebar-head {
             display: flex;
@@ -355,7 +337,6 @@
             padding: 4px 20px 16px;
         }
         #simf_card .simf-header,
-        #simf_card .simf-activebar,
         #simf_card .simf-footer {
             flex-shrink: 0 !important;
         }
@@ -457,6 +438,16 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             padding-right: 8px;
+            /* Education/qualification data is always displayed uppercase,
+               regardless of how it was entered/stored ΓÇö see the standing
+               convention note in docs/UI_UX_STANDARDS.md. Applied via CSS
+               (display-only) rather than mutating the value, so the exact
+               casing used for backend matching (qualification_master.name)
+               is untouched. */
+            text-transform: uppercase;
+        }
+        .simf-edu-name {
+            text-transform: uppercase;
         }
         .simf-select-dd-btn svg {
             flex-shrink: 0;
@@ -634,6 +625,265 @@
             .simf-footer-actions { justify-content: stretch; }
             .simf-footer-actions .btn { flex: 1 1 auto; justify-content: center; }
         }
+
+        /* ==================================================================
+           Enterprise toolbar redesign: search / sort / filter.
+           #kt_tagify_2 is a plain free-text field with one job (candidate
+           name / company / recruiter search) ΓÇö it no longer opens the
+           drawer or mirrors the drawer's Skills tagify; the Filter button
+           is the drawer's only entry point now, and the Active Filters card
+           below is the single place structured filters are summarized.
+        ================================================================== */
+        .simf-toolbar-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(16,24,40,.04);
+            font-family: 'Poppins', sans-serif;
+        }
+        /* All three controls (search / sort / filter) share the same
+           height, background, border and radius so they read as one
+           cohesive row ΓÇö only the Filter button breaks from it deliberately,
+           as the single primary/colored action in the row. */
+        .simf-search-wrap,
+        .simf-sort-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fff;
+            border: 1px solid #e4e6ef;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+        .simf-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .simf-sort-wrap {
+            flex-shrink: 0;
+            width: 220px;
+            position: relative;
+        }
+        .simf-search-icon,
+        .simf-sort-icon {
+            color: #99a1b7;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .simf-search-icon svg,
+        .simf-sort-icon svg {
+            flex-shrink: 0;
+            display: block;
+        }
+        .simf-search-input.form-control {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            font-size: 13.5px;
+            line-height: 42px;
+            height: 42px;
+        }
+        /* Custom Sort control ΓÇö the native <select> can't be styled
+           cross-browser once its dropdown is open (confirmed: Select2 never
+           actually initializes on this element, only data-hide-search was
+           present, which does nothing without data-control="select2"), so
+           the visible control is this button + an owned dropdown panel; the
+           real <select id="sortingfilter"> stays hidden underneath purely
+           so fetchCandidates()/filtersdataget() keep reading it unchanged. */
+        .simf-sort-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3f4254;
+            text-align: left;
+        }
+        .simf-sort-btn:focus { outline: none; }
+        .simf-sort-btn span {
+            flex: 1 1 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .simf-sort-btn .chevron {
+            flex-shrink: 0;
+            color: #99a1b7;
+            transition: transform .15s;
+        }
+        .simf-sort-btn.open .chevron {
+            transform: rotate(180deg);
+        }
+        .simf-sort-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            min-width: 100%;
+            width: max-content;
+            max-width: 280px;
+            background: #fff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(16,24,40,.12), 0 4px 6px -2px rgba(16,24,40,.06);
+            padding: 6px;
+            z-index: 60;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .simf-sort-item {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #3f4254;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .simf-sort-item:hover {
+            background: #f8f9fb;
+        }
+        .simf-sort-item.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        .simf-filter-btn {
+            height: 44px;
+            border-radius: 10px !important;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+            padding: 0 16px !important;
+            flex-shrink: 0;
+            background: #2563eb !important;
+            border: 1px solid #2563eb !important;
+            color: #fff !important;
+        }
+        .simf-filter-btn:hover {
+            background: #1d4ed8 !important;
+        }
+        @media (max-width: 992px) {
+            .simf-sort-wrap { width: 160px; }
+        }
+        @media (max-width: 768px) {
+            .simf-search-wrap { flex-basis: 100%; }
+            .simf-sort-wrap { width: 140px; }
+        }
+
+        /* ==================================================================
+           Applied Filters summary card ΓÇö lives on the main page above the
+           results table (NOT inside the drawer), hidden until at least one
+           filter has actually been applied via "Apply Filters".
+        ================================================================== */
+        .simf-applied-card {
+            border: 1px solid #eef0f4;
+            border-radius: 14px;
+            background: #fff;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .simf-applied-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .simf-applied-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #181c32;
+        }
+        .simf-applied-count {
+            background: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 50%;
+            min-width: 19px;
+            height: 19px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .simf-applied-clearall {
+            font-size: 12px;
+            font-weight: 500;
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+        .simf-applied-clearall:hover { color: #b91c1c; }
+        .simf-applied-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .simf-applied-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .simf-applied-chip .ic { display: inline-flex; align-items: center; flex-shrink: 0; }
+        .simf-applied-chip .star { font-size: 12px; line-height: 1; }
+        .simf-applied-chip-remove {
+            cursor: pointer;
+            opacity: .55;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 2px;
+        }
+        .simf-applied-chip-remove:hover { opacity: 1; }
+        .simf-applied-chip.cat-skill      { background: #f5f3ff; color: #7c3aed; border-color: #ede9fe; }
+        .simf-applied-chip.cat-location   { background: #ecfdf5; color: #059669; border-color: #d1fae5; }
+        .simf-applied-chip.cat-education  { background: #eff6ff; color: #2563eb; border-color: #dbeafe; text-transform: uppercase; }
+        .simf-applied-chip.cat-experience { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+        .simf-applied-chip.cat-salary     { background: #ecfeff; color: #0e7490; border-color: #cffafe; }
+        .simf-applied-chip.cat-notice     { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .simf-applied-chip.cat-status     { background: #fdf2f8; color: #be185d; border-color: #fbcfe8; }
+        .simf-applied-chip.cat-activity   { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+        .simf-applied-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+        .simf-applied-more:hover { background: #e5e7eb; }
     </style>
 @endpush
 @section('content')
@@ -703,7 +953,7 @@
                     @if (in_array('view_jobs', $userPermissions))
                         {{-- Opens the same right-side job-details drawer (#kt_activitiesJob_show,
                              defined once in the shared layout) that the job title/logo already
-                             uses elsewhere — .show-detail-open's click handler in
+                             uses elsewhere ΓÇö .show-detail-open's click handler in
                              service_company_layout.blade.php ajax-loads jobs.viewmore into it. --}}
                         <a href="javascript:void(0);" data-id="{{ $job->id }}"
                             class="btn btn-sm btn-flex btn-outline btn-outline-primary fw-bolder me-2 show-detail-open">
@@ -867,21 +1117,26 @@
 
             </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4 simf-toolbar-card">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3 custm-bg mb-0">
-                            <div class="flex-grow-1" style="position: relative; min-width: 0;">
-                                <input type="text" class="form-control form-control-solid ps-3" name="inputJobSearch"
-                                    value="{{ @$default_skill }}" placeholder="Search by candidate name, skills, recruiter, education or location..." id="kt_tagify_2" />
-                                <div class="simf-overlay-trigger"
-                                    style="position: absolute; z-index: 99; width: 100%; height: 100%; top: 0;"> </div>
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="simf-search-wrap" style="position: relative;">
+                                <span class="simf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="form-control simf-search-input" name="inputJobSearch"
+                                    placeholder="Search by candidate name, company or recruiter..." id="kt_tagify_2" autocomplete="off" />
                             </div>
-                            <div style="width: 220px; flex-shrink: 0;">
-                                <select class="form-select form-select-lg form-select-solid" data-hide-search="true"
-                                    id="sortingfilter" data-dropdown-css-class="w-150px"
-                                    data-placeholder="Select an option" style="border: 1px solid #ffffff;"
-                                    onchange="filtersdataget()">
-                                    <option value="Show All" selected="">Sort</option>
+                            <div class="simf-sort-wrap" id="simf_sort_wrap">
+                                <span class="simf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="simf-sort-btn" id="simf_sort_btn">
+                                    <span id="simf_sort_label">Best Match</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="sortingfilter" style="display:none;" onchange="filtersdataget()">
+                                    <option value="10" selected="">Best Match</option>
                                     <option value="1">Newest to Oldest (Upload Date)</option>
                                     <option value="2">Oldest to Newest (Upload Date)</option>
                                     <option value="3">Low to High (Salary)</option>
@@ -891,25 +1146,33 @@
                                     <option value="7">High to Low (Experience) </option>
                                     <option value="8">Low to High (Experience)</option>
                                 </select>
+                                <div class="simf-sort-panel d-none" id="simf_sort_panel"></div>
                             </div>
-                            <div style="width: 140px; flex-shrink: 0;">
-                                <button type="button" id="kt_similar_filter_toggle"
-                                    class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4 position-relative">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none">
-                                            <path
-                                                d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                                fill="black"></path>
-                                        </svg>
-                                    </span>
-                                    Filter
-                                    <span class="badge badge-circle badge-primary simf-count-badge" id="simf_count_badge" style="display:none;position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
-                                </button>
-                            </div>
+                            <button type="button" id="kt_similar_filter_toggle"
+                                class="btn simf-filter-btn position-relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span>Filter<span id="simf_filter_count_text"></span></span>
+                                <span class="badge badge-circle badge-primary simf-count-badge d-none" id="simf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!--begin::Applied Filters summary card ΓÇö hidden until Apply Filters is clicked-->
+                <div class="simf-applied-card d-none" id="simf_applied_card">
+                    <div class="simf-applied-head">
+                        <span class="simf-applied-title">
+                            Active Filters
+                            <span class="simf-applied-count" id="simf_applied_count">0</span>
+                        </span>
+                        <a href="javascript:void(0);" class="simf-applied-clearall" id="simf_applied_clear_all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                            Clear All
+                        </a>
+                    </div>
+                    <div class="simf-applied-chips" id="simf_applied_chips"></div>
+                </div>
+                <!--end::Applied Filters summary card-->
 
 
                 <!--Start Filter Drawer-->
@@ -938,22 +1201,22 @@
                         </div>
                         <!--end::Header-->
 
-                        <!--begin::Active filters-->
-                        <div class="simf-activebar d-none" id="simf_active_bar">
-                            <div class="simf-activebar-head">
-                                <span class="simf-activebar-label">Active Filters <span id="simf_active_count">(0)</span></span>
-                                <a href="javascript:void(0);" class="simf-clearall" id="simf_clear_all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
-                                    Clear All
-                                </a>
-                            </div>
-                            <div class="simf-chips" id="simf_active_chips"></div>
-                        </div>
-                        <!--end::Active filters-->
-
                         <!--begin::Body-->
                         <div class="simf-body">
                             <form id="createSchedule" class="ajax-form" method="post">
+
+                                <!--begin::Active filters ΓÇö inside scroll area so it flows with the sections -->
+                                <div class="simf-activebar d-none" id="simf_active_bar">
+                                    <div class="simf-activebar-head">
+                                        <span class="simf-activebar-label">Active Filters <span id="simf_active_count">(0)</span></span>
+                                        <a href="javascript:void(0);" class="simf-clearall" id="simf_clear_all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                            Clear All
+                                        </a>
+                                    </div>
+                                    <div class="simf-chips" id="simf_active_chips"></div>
+                                </div>
+                                <!--end::Active filters-->
 
                                 <!--begin::Skills-->
                                 <div class="simf-section">
@@ -963,7 +1226,7 @@
                                         </span>
                                         <div>
                                             <div class="simf-section-title">Skills <span class="simf-badge-primary">Primary</span></div>
-                                            <div class="simf-section-desc">Add skills to find relevant candidates — click ★ to make a skill mandatory</div>
+                                            <div class="simf-section-desc">Add skills to find relevant candidates ΓÇö click Γÿà to make a skill mandatory</div>
                                         </div>
                                     </div>
                                     <div class="simf-section-body">
@@ -982,14 +1245,20 @@
                                                         const value = tagData.value || '';
                                                         const isChecked = tagData.checked ? 'checked' : '';
                                                         const mandatoryClass = tagData.checked ? 'simf-mandatory-tag' : '';
-                                                        const starGlyph = tagData.checked ? '★' : '☆';
-                                                        return `
-                                                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                                                        <x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x>
-                                                        <div style="display:flex;align-items:center;">
-                                                            <span class="star ${isChecked}" style="margin-right:7px;">${starGlyph}</span>
-                                                            <span class="tagify__tag-text">${value}</span>
-                                                        </div>
+                                                        const starGlyph = tagData.checked ? 'Γÿà' : 'Γÿå';
+                                                        const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
+                                        const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
+                                        const starColor = tagData.checked ? '#eab308' : '#94a3b8';
+                                        const textColor = tagData.checked ? '#1d4ed8' : '#3730a3';
+                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
+                                                        <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
                                                     </tag>
                                                 `;
                                                     }
@@ -1000,17 +1269,30 @@
                                                 }
                                             });
 
-                                            // Add event listener for star click
+                                            // Toggle mandatory (star) on click of EITHER the star itself
+                                            // OR the keyword text next to it ΓÇö previously only the tiny
+                                            // star hit-target worked, so clicking the (much bigger, more
+                                            // obvious) keyword label appeared to do nothing.
                                             document.addEventListener('click', function(e) {
-                                                if (e.target.classList.contains('star')) {
-                                                    const tagElm = e.target.closest('.tagify__tag');
-                                                    const value = tagElm.querySelector('.tagify__tag-text').textContent;
+                                                const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+                                                if (toggleTarget) {
+                                                    const tagElm = toggleTarget.closest('.tagify__tag');
+                                                    if (!tagElm) return;
+                                                    const starEl = tagElm.querySelector('.star');
+                                                    const textEl = tagElm.querySelector('.tagify__tag-text');
+                                                    if (!starEl || !textEl) return;
+                                                    const value = textEl.textContent;
 
-                                                    e.target.classList.toggle('checked');
-                                                    const nowChecked = e.target.classList.contains('checked');
-                                                    // Tagify doesn't re-run the tag template on toggle, so keep
-                                                    // the glyph (☆/★) and chip background in sync by hand here.
-                                                    e.target.textContent = nowChecked ? '★' : '☆';
+                                                    starEl.classList.toggle('checked');
+                                                    const nowChecked = starEl.classList.contains('checked');
+
+                                                    // Update glyph, star colour, chip background/border inline
+                                                    // (template uses inline styles so CSS classes alone won't work)
+                                                    starEl.textContent = nowChecked ? 'Γÿà' : 'Γÿå';
+                                                    starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
+                                                    tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
+                                                    tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
+                                                    textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
                                                     tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
                                                     // Update the tag data
@@ -1021,59 +1303,17 @@
                                                             tagify.updateValueByDOMTags();
                                                             updateActiveFiltersUI();
                                                         }, 500);
-
                                                     }
                                                 }
                                             });
 
-                                            // Initialize Tagify for kt_tagify_2
-                                            const inputJobSearch = document.querySelector('#kt_tagify_2');
-                                            const tagify2 = new Tagify(inputJobSearch, {
-                                                maxTags: 3 // Limit the number of tags to 5
-                                            });
-
-                                            // Function to update inputJobSearch based on tagify's value
-                                            function updateInputJobSearch() {
-                                                const tags = tagify.value.map(tag => tag.value).join(',');
-                                                inputJobSearch.value = tags;
-                                                autoclickstar();
-                                            }
-
-                                            function updateTagifyUsers() {
-                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                    value: tag.trim()
-                                                }));
-                                                tagify.removeAllTags();
-                                                tagify.addTags(newTags);
-                                            }
-
-                                            // Listen for tag removal
-                                            tagify.on('add', updateInputJobSearch);
-                                            tagify.on('remove', updateInputJobSearch);
-                                            inputJobSearch.addEventListener('change', updateTagifyUsers);
-
-                                            // Initial sync
-                                            updateInputJobSearch();
-
-                                            // Sync tagify_users with inputJobSearch
-                                            inputJobSearch.addEventListener('change', function() {
-                                                const newTags = inputJobSearch.value.split(',').map(tag => ({
-                                                    value: tag.trim()
-                                                }));
-                                                tagify.loadOriginalValues(newTags);
-                                            });
-
-                                            function autoclickstar() {
-                                                setTimeout(() => {
-                                                    var starElement = document.querySelector('.star');
-                                                    if (starElement) {
-                                                        starElement.click();
-                                                        setTimeout(() => {
-                                                            starElement.click();
-                                                        }, 200);
-                                                    }
-                                                }, 500);
-                                            }
+                                            // #kt_tagify_2 (the top toolbar's search box) is a plain
+                                            // free-text field, deliberately NOT Tagify-wrapped and NOT
+                                            // synced with the drawer's Skills tagify ΓÇö it previously
+                                            // mirrored the drawer's skill chips two-way, which duplicated
+                                            // what the Active Filters card and drawer already show. Its
+                                            // one job now is free-text search (name/company/recruiter/an
+                                            // unfiltered skill), kept separate from structured filtering.
 
                                             function debounceskill(func, delay) {
                                                 let timeoutskill;
@@ -1142,11 +1382,44 @@
                                             var tagifylocation = new Tagify(inputloc, {
                                                 whitelist: [],
                                                 maxTags: 10,
+                                                // Without a custom template, Location tags fell back to
+                                                // Tagify's own default (grey) styling ΓÇö the Skills tagify
+                                                // above only looks themed because ITS colour comes from
+                                                // this same kind of custom template, not from a shared
+                                                // CSS class. Same blue/indigo chip + blue remove "├ù" as
+                                                // Skills, just without the star (Location has no
+                                                // mandatory/optional concept).
+                                                templates: {
+                                                    tag: function(tagData) {
+                                                        const value = tagData.value || '';
+                                                        return `
+                                                    <tag title="${value}" contenteditable='false' spellcheck="false"
+                                                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                                        ${this.getAttributes(tagData)}
+                                                        style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                                        <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                                        <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                                            style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                                    </tag>
+                                                `;
+                                                    }
+                                                },
                                                 dropdown: {
                                                     maxItems: 20,
                                                     classname: "",
                                                     enabled: 0,
-                                                    closeOnSelect: true
+                                                    closeOnSelect: true,
+                                                    /* appendTarget prevents the dropdown from being
+                                                       clipped by .simf-body's overflow:hidden/auto.
+                                                       The body is position:absolute (set by
+                                                       simfEnforceDrawerLayout), making it the containing
+                                                       block for any position:absolute child ΓÇö including
+                                                       Tagify's dropdown ΓÇö so the dropdown was silently
+                                                       clipped. Appending to document.body escapes that
+                                                       context entirely; Tagify repositions the dropdown
+                                                       via getBoundingClientRect so it still aligns with
+                                                       the input field. */
+                                                    appendTarget: document.body
                                                 }
                                             });
                                             // Create tags only on select
@@ -1172,7 +1445,7 @@
 
                                             // Debounced function to fetch suggestions.
                                             // The whitelist is refreshed FIRST, then the dropdown is
-                                            // shown — showing it before the whitelist arrives (as an
+                                            // shown ΓÇö showing it before the whitelist arrives (as an
                                             // earlier input handler did) rendered an empty, stuck
                                             // dropdown that never repopulated, which is why the city
                                             // autosuggest appeared broken.
@@ -1183,7 +1456,7 @@
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
                                                             // Tagify's dropdown filters against
-                                                            // settings.whitelist specifically — a
+                                                            // settings.whitelist specifically ΓÇö a
                                                             // top-level tagifylocation.whitelist isn't
                                                             // read anywhere, which is why suggestions
                                                             // stopped appearing after this was changed.
@@ -1211,18 +1484,26 @@
                                                 fetchSuggestions(query);
                                             });
 
+                                            // $default_locations is EVERY city configured on this job
+                                            // (not just the first ΓÇö that was the bug: JobcitiesTags()
+                                            // used by the old single-string $default_loc only ever
+                                            // returns one city via ->take(1), so a job posted across
+                                            // multiple locations only had the first auto-applied as a
+                                            // filter here, silently dropping the rest).
                                             setTimeout(() => {
-                                                var city = "{{@$default_loc}}";
-                                                if(city !=''){
-                                                    var cityName = city.split(" | ")[0];
-                                                    fetchSuggestions(cityName);
+                                                var defaultLocations = {!! json_encode(@$default_locations ?? []) !!};
+                                                var firstCity = defaultLocations.length ? defaultLocations[0].split(" | ")[0] : '';
+                                                if (firstCity !== '') {
+                                                    fetchSuggestions(firstCity);
                                                 }
                                             }, 100);
                                             setTimeout(() => {
-                                                var defaultLocation = {!! json_encode(@$default_loc) !!};
+                                                var defaultLocations = {!! json_encode(@$default_locations ?? []) !!};
 
-                                                if (defaultLocation) {
-                                                    tagifylocation.addTags([defaultLocation]);
+                                                if (defaultLocations.length) {
+                                                    // One addTags() call with the full array creates one
+                                                    // tag per element ΓÇö not one tag containing everything.
+                                                    tagifylocation.addTags(defaultLocations);
                                                     tagifylocation.dropdown.hide();
                                                 }
                                                 updateActiveFiltersUI();
@@ -1297,7 +1578,7 @@
                                                 @foreach ($qualificationTag as $qval)
                                                     <label class="simf-select-dd-item">
                                                         <input type="checkbox" class="simf-edu-check" value="{{ $qval }}">
-                                                        <span>{{ $qval }}</span>
+                                                        <span class="simf-edu-name">{{ $qval }}</span>
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -1305,7 +1586,7 @@
                                         <script>
                                             // Drives the same #kt_tagify_education hidden field the backend
                                             // already reads (JSON array of {value:"..."} objects, matched
-                                            // against qualification_master.name) — only the picker UI changed
+                                            // against qualification_master.name) ΓÇö only the picker UI changed
                                             // from free-typed Tagify chips to a checklist dropdown.
                                             var simfEducationSelected = (function() {
                                                 var initial = @json($qualification ? [$qualification] : []);
@@ -1398,7 +1679,7 @@
                                 <div class="simf-section">
                                     <div class="simf-section-head">
                                         <span class="simf-icon simf-icon-amber">
-                                            <span style="font-size:15px;font-weight:700;line-height:1;">₹</span>
+                                            <span style="font-size:15px;font-weight:700;line-height:1;">Γé╣</span>
                                         </span>
                                         <div>
                                             <div class="simf-section-title">Salary (CTC)</div>
@@ -1411,7 +1692,7 @@
                                                 <label class="simf-mini-label">Currency</label>
                                                 <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
                                                     <option value="">Select currency</option>
-                                                    <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (₹)</option>
+                                                    <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (Γé╣)</option>
                                                     <option value="1" {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR</option>
                                                     <option value="2" {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY</option>
                                                     <option value="3" {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP</option>
@@ -1430,7 +1711,7 @@
                                             </div>
                                             <div class="col-3">
                                                 <label class="simf-mini-label">Min Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="0">
                                                 <div class="fv-plugins-message-container"></div>
                                                 <span class="form-text text-muted minimum_salary_word"></span>
                                             </div>
@@ -1581,7 +1862,7 @@
                                 </span>
                                 <div>
                                     <div class="simf-footer-number" id="simf_footer_number">{{ @$existing_counter ?? 0 }}</div>
-                                    <div class="simf-footer-label">Candidates Match <span class="simf-footer-hint" title="Updates after Preview or Apply">ⓘ</span></div>
+                                    <div class="simf-footer-label">Candidates Match <span class="simf-footer-hint" title="Updates after Preview or Apply">Γôÿ</span></div>
                                 </div>
                             </div>
                             <div class="simf-footer-actions">
@@ -1604,7 +1885,7 @@
                 </div>
                 <!--End Filter Drawer-->
 
-                {{-- Row selection action bar — hidden until candidates are checked.
+                {{-- Row selection action bar ΓÇö hidden until candidates are checked.
                      Reuses the same mass_mail trigger class as the legacy toolbar button,
                      so the existing modal/ajax handler works unchanged; only the
                      presentation and position (directly above the results table) are
@@ -1631,8 +1912,18 @@
                 <!--begin::Card-->
                 <div class="card">
                     <!--begin::Card body-->
-                    <div class="card-body pt-3 px-5">
-                      <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
+                    <div class="card-body pt-3 px-5" style="position: relative;">
+                      <!-- Circle loader only (Bootstrap/Metronic's own spinner-border,
+                           same pattern used elsewhere in this app) ΓÇö no text label.
+                           position:fixed + viewport-centered (not absolute/inset:0
+                           relative to .card-body): the card body's height grows with
+                           the candidate list, so centering "within the card" could
+                           place the spinner well below the visible viewport on a long
+                           list or when scrolled ΓÇö this keeps it in the center of the
+                           actual screen regardless of scroll position or row count. -->
+                      <div class="loadingMessage" style="display: none; position: fixed; inset: 0; z-index: 1050; align-items: center; justify-content: center; background: rgba(255,255,255,.55);">
+                          <div class="spinner-border text-primary" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                      </div>
                         <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class" id="myTable">
                             <!--begin::Table head-->
                             <thead>
@@ -1822,7 +2113,7 @@
             updateAptkSelectionBar();
         });
 
-        /* Selection bar: live count + clear-selection controls (checkbox + close X) —
+        /* Selection bar: live count + clear-selection controls (checkbox + close X) ΓÇö
            same behavior as the Pool tab / CV Tracker's #cvh_selection_bar. */
         function updateAptkSelectionBar() {
             var n = $('.chk_list_item:checked').length;
@@ -1943,19 +2234,14 @@
 
 
 
-        var input2 = document.querySelector("#kt_tagify_2");
-        // new Tagify(input2);
-        new Tagify(input2, {
-            whitelist: [""],
-            maxTags: 15,
-            dropdown: {
-                maxItems: 20, // <- mixumum allowed rendered suggestions
-                classname: "", // <- custom classname for this dropdown, so it could be targeted
-                enabled: 0, // <- show suggestions on focus
-                closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
-            }
-        });
-
+        // A second, independent Tagify instance used to be created here on
+        // #kt_tagify_2 (in addition to the one removed alongside the sync
+        // code near its declaration) with whitelist: [""] ΓÇö a single blank
+        // entry ΓÇö and dropdown.enabled: 0, which showed a dropdown with one
+        // blank-looking suggestion the instant the field was focused. That
+        // was the actual cause of the "blank dropdown opens on search bar
+        // click" bug; #kt_tagify_2 is a plain input now, not Tagify-wrapped
+        // by anything.
 
         document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('[data-kt-modal-bidding="option"]');
@@ -1978,7 +2264,7 @@
         }, 500);
 
         function filtersdataget() {
-            // Used by the sort dropdown's onchange — the filter drawer itself
+            // Used by the sort dropdown's onchange ΓÇö the filter drawer itself
             // now has its own Preview/Apply buttons that call fetchCandidates()
             // directly, this just covers the sort-only auto-apply case.
             fetchCandidates();
@@ -2129,9 +2415,44 @@
         }
     </script>
     <script>
-        
+        // Small top-right toast, auto-dismissing, pause-on-hover ΓÇö SweetAlert2's
+        // own documented toast mode, so no new notification library is added.
+        // Replaces the old success/fail/cancel POPUP modals (which blocked the
+        // screen and needed a click to dismiss) per design feedback; the "Are
+        // you sure?" CONFIRMATION dialog below is intentionally left as a real
+        // modal ΓÇö it's the one safety check before an action the app itself
+        // describes as irreversible, and removing it would be a functionality
+        // change, not a presentation one.
+        const simfToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+            }
+        });
+
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline (see similar_existing_ajax.blade.php's $existingCandidatesQuery
+        // branch) — rather than fading/removing the row. The row only
+        // actually disappears once the list is genuinely re-fetched
+        // (pagination, filter, sort, or a real page reload), which is when
+        // the server-side exclusion naturally takes over. This avoids the
+        // "did that actually work, where did the row go?" confusion of an
+        // instant removal.
+        function simfMarkCandidateRowAdded($btn) {
+            $btn.closest('div.d-flex.flex-column').html(
+                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+            );
+        }
+
         $(document).on('click', '.add_to_inreview', function(e) {
-            e.preventDefault(); // 🚫 stop anchor default behavior
+            e.preventDefault(); // 🛑 stop anchor default behavior
 
             var $btn = $(this);
 
@@ -2139,120 +2460,90 @@
             if ($btn.hasClass('processing')) {
                 return false;
             }
-            $btn.addClass('processing')
-                .addClass('disabled')
-                .css('pointer-events', 'none');
 
-
-            var button = $(this); // Store the button element for later use
-
-            var id = $(this).data('row-id');
-            var source_from_type = $(this).data('row-source_from_type');
-            var source_jobid = $(this).data('row-jobid');
-            var source_tab = $(this).data('row-from');
-            var wiseId = $(this).data('row-wiseid');
-            // alert(wiseId);
+            var id = $btn.data('row-id');
+            var source_from_type = $btn.data('row-source_from_type');
+            var source_jobid = $btn.data('row-jobid');
+            var source_tab = $btn.data('row-from');
+            var wiseId = $btn.data('row-wiseid');
 
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: 'btn btn-success',
-                    cancelButton: 'btn btn-danger'
+            // No confirmation dialog — a single click starts the add
+            // immediately; the spinner below is the only "processing"
+            // feedback needed, and the result comes back as a toast.
+            var originalHtml = $btn.html();
+            $btn.addClass('processing')
+                .prop('disabled', true)
+                .css('pointer-events', 'none')
+                .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...');
+
+            function restoreButton() {
+                $btn.removeClass('processing')
+                    .prop('disabled', false)
+                    .css('pointer-events', '')
+                    .html(originalHtml);
+            }
+
+            var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+            var inner_token = "{{ csrf_token() }}";
+            var eventId = 9;
+
+            $.ajax({
+                type: 'POST',
+                url: inner_url,
+                beforeSend: function() {},
+                data: {
+                    '_token': inner_token,
+                    'event': 'internaldatabaseaccess',
+                    'app_id': id,
+                    'source_jobid': source_jobid,
+                    'eventId': eventId
                 },
-                buttonsStyling: false
-            })
+                success: function(response) {
+                    if (response.status == "success") {
+                        $.ajax({
+                            type: 'GET',
+                            url: url,
+                            data: {
+                                'id': id,
+                                'source_from_type': source_from_type,
+                                'source_jobid': source_jobid,
+                                'source_tab': source_tab,
+                                'wiseId': wiseId
+                            },
+                            success: function(response) {
+                                if (response.status == 'coinCheck') {
+                                    restoreButton();
+                                    simfToast.fire({ icon: 'warning', title: response.message });
+                                    return false;
+                                }
 
-            swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, Add to In-Review!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
-
-                        
-                    var inner_url = "{{ route('service_company.auth-custom-package.validatePackage') }}";
-                    var inner_token = "{{ csrf_token() }}";
-                    var inner_baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                    var eventId = 9;
-
-                    // Disable the button
-                    button.prop('disabled', true);
-
-                    $.ajax({
-                        type: 'POST',
-                        url: inner_url,
-                        beforeSend: function() {},
-                        data: {
-                            '_token': inner_token,
-                            'event': 'internaldatabaseaccess',
-                            'app_id': id,
-                            'source_jobid': source_jobid,
-                            'eventId': eventId
-                        },
-                        success: function(response) {
-                            if (response.status == "success") {
-                                $.ajax({
-                                    type: 'GET',
-                                    url: url,
-                                    data: {
-                                        'id': id,
-                                        'source_from_type': source_from_type,
-                                        'source_jobid': source_jobid,
-                                        'source_tab': source_tab,
-                                        'wiseId': wiseId
-                                    },
-                                    success: function(response) {
-
-
-                                        if (response.status == 'coinCheck') {
-                                            Swal.fire("Success",
-                                                ` ${response.message}`,
-                                                "warning");
-                                            return false;
-                                        }
-
-                                        if (response.status == 'success') {
-                                            // Enable the button again if needed
-                                            button.prop('disabled', false);
-
-                                            // tableLoad('load');
-                                            var page = $('#paginationcandidate .active_disabled').data('page');
-                                            fetchCandidates(page);
-                                            swalWithBootstrapButtons.fire(
-                                                'In-Review!',
-                                                'Selected request has been In-Review.',
-                                                'success'
-                                            )
-                                        }
-                                    }
-                                });
-                            } else if (response.status == "info") {
-                                swalWithBootstrapButtons.fire('Fail!', response.message,
-                                    'error')
+                                if (response.status == 'success') {
+                                    simfMarkCandidateRowAdded($btn);
+                                    simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
+                                } else {
+                                    restoreButton();
+                                }
+                            },
+                            error: function() {
+                                restoreButton();
+                                simfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                             }
-                        }
-                    });
-
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire(
-                        'Cancelled',
-                        'Selected request is safe',
-                        'error'
-                    );
-                    
-                     $btn.removeClass('processing disabled')
-                        .css('pointer-events', '');
+                        });
+                    } else if (response.status == "info") {
+                        restoreButton();
+                        simfToast.fire({ icon: 'error', title: response.message });
+                    } else {
+                        restoreButton();
+                    }
+                },
+                error: function() {
+                    restoreButton();
+                    simfToast.fire({ icon: 'error', title: 'Something went wrong — please try again' });
                 }
-            })
+            });
         });
 
 
@@ -2278,7 +2569,14 @@
 
         function fetchCandidates(page = 1, search = '') {
             var jobid = '{{ @$job->id }}';
-            var inputSearch = $('#inputSearch').val();
+            // #inputSearch never existed on this page ΓÇö the real search box
+            // is #kt_tagify_2. This was previously always reading undefined,
+            // silently sending an empty "search" param on every request.
+            // similar_existing_data_ajax now reads it and applies it as an
+            // additional AND-ed Elasticsearch filter clause (see the backend
+            // for field list/details), so it narrows whatever filters are
+            // already active rather than searching the full candidate pool.
+            var inputSearch = $('#kt_tagify_2').val();
             var sortingfilter = $('#sortingfilter').val();
             var country = $('#country').val();
             var cus_search = $('#kt_tagify_users').val();
@@ -2294,7 +2592,7 @@
             var app_int_activity = $('[name="app_int_activity"]:checked').val();
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
 
-            $('.loadingMessage').css({ display: 'block' });
+            $('.loadingMessage').css({ display: 'flex' });
             // Return the jqXHR so callers that chain .then()/.catch() (e.g. the
             // pagination handler) don't crash on an undefined return value.
             return $.ajax({
@@ -2333,15 +2631,73 @@
                     $('#similar_counter').html(response.total);
                     $('#simf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    // The header card's hint (see apptrackerHeader.blade.php)
+                    // says "job defaults" by default ΓÇö correct everywhere
+                    // EXCEPT here, since this specific number IS the live,
+                    // current-filter result once fetched. Swap the tooltip
+                    // so it doesn't contradict what the page just showed.
+                    $('#apth_hint_similar_counter').attr('title',
+                        'This is your current filter selection on this page ΓÇö the same card on other tabs shows this job\'s default count instead.');
                 },
                 error: function(xhr) {
                     // Never leave the loading overlay stuck or the list blank on
-                    // a failed request — surface what went wrong instead.
+                    // a failed request ΓÇö surface what went wrong instead.
                     $('.loadingMessage').css({ display: 'none' });
                     console.error('similar_existing_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });
         }
+
+        // Free-text search box: Enter re-runs the same fetchCandidates() call
+        // the sort dropdown and pagination already use ΓÇö no separate endpoint.
+        $(document).on('keydown', '#kt_tagify_2', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                fetchCandidates();
+            }
+        });
+
+        // Custom Sort dropdown. Reads options straight from the real
+        // #sortingfilter <select> (single source of truth ΓÇö nothing is
+        // duplicated/hardcoded here), keeps that select's value in sync so
+        // filtersdataget()/fetchCandidates() are completely unaffected, and
+        // only replaces how the option list is PRESENTED, since a native
+        // <select>'s open dropdown can't be styled cross-browser.
+        function simfRenderSortPanel() {
+            var $panel = $('#simf_sort_panel').empty();
+            var current = $('#sortingfilter').val();
+            $('#sortingfilter option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="simf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#sortingfilter').val(val);
+                        $('#simf_sort_label').text(label);
+                        simfCloseSortPanel();
+                        filtersdataget();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function simfOpenSortPanel() {
+            simfRenderSortPanel();
+            $('#simf_sort_panel').removeClass('d-none');
+            $('#simf_sort_btn').addClass('open');
+        }
+        function simfCloseSortPanel() {
+            $('#simf_sort_panel').addClass('d-none');
+            $('#simf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#simf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#simf_sort_panel').hasClass('d-none')) simfOpenSortPanel();
+            else simfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#simf_sort_wrap').length) simfCloseSortPanel();
+        });
     </script>
     <script>
         /* Drawer width = 80% of the actual content area (i.e. "20% less than
@@ -2349,7 +2705,7 @@
            percentage on the drawer itself would resolve against the full
            viewport (position:fixed drawers use the viewport as their
            containing block), which would include the space the sidebar
-           sits on — so instead we measure #kt_wrapper, Metronic's main
+           sits on ΓÇö so instead we measure #kt_wrapper, Metronic's main
            content flex box that already excludes #kt_aside, and size the
            drawer to 80% of that measured width in pixels. Recalculated on
            resize and right before the drawer opens, so it stays correct if
@@ -2366,11 +2722,11 @@
         }
         $(document).ready(simfSetDrawerWidth);
         $(window).on('resize', simfSetDrawerWidth);
-        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger', simfSetDrawerWidth);
+        $(document).on('click', '#kt_similar_filter_toggle', simfSetDrawerWidth);
 
         /* Metronic's base .drawer class ships its own (non-!important)
            "overflow: auto" rule, loaded via a <link> that sits after our
-           inline <style> block in source order — on ties, later-in-source
+           inline <style> block in source order ΓÇö on ties, later-in-source
            wins, so stylesheet-only overrides have proven unreliable here.
            Setting these as genuine inline !important styles via JS beats
            any stylesheet rule unconditionally, guaranteeing only .simf-body
@@ -2380,10 +2736,6 @@
             var cardEl = document.getElementById('simf_card');
             var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
             var headerEl = cardEl ? cardEl.querySelector('.simf-header') : null;
-<<<<<<< HEAD
-            var activebarEl = cardEl ? cardEl.querySelector('.simf-activebar') : null;
-=======
->>>>>>> 30d9df70e135f604b74c0d798cc01437b48f399e
             var footerEl = cardEl ? cardEl.querySelector('.simf-footer') : null;
             if (drawerEl) {
                 drawerEl.style.setProperty('overflow', 'hidden', 'important');
@@ -2399,34 +2751,6 @@
                 cardEl.style.setProperty('height', '100vh', 'important');
                 cardEl.style.setProperty('max-height', '100vh', 'important');
             }
-<<<<<<< HEAD
-            [headerEl, activebarEl, footerEl].forEach(function(el) {
-                if (!el) return;
-                el.style.setProperty('overflow', 'visible', 'important');
-            });
-            // Give .simf-body an EXPLICIT pixel height instead of trusting flexbox
-            // to distribute it: header/active-filters-bar/footer heights are
-            // measured directly with offsetHeight (0 if a section is d-none, e.g.
-            // the active-filters bar before any filter is picked), and the body
-            // gets exactly what's left of the viewport. This can't be starved by
-            // any flex/cascade conflict because it never depends on flex
-            // distribution in the first place — it's plain arithmetic. This is
-            // what was actually missing: the active-filters bar's height changes
-            // every time a filter is picked (a chip gets added), and flex-based
-            // sizing kept losing that recalculation, leaving .simf-body too tall
-            // for the remaining space and its tail content (Activity, the
-            // footer) rendering on top of / past the visible viewport.
-            if (bodyEl) {
-                var used = (headerEl ? headerEl.offsetHeight : 0) +
-                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) +
-                    (footerEl ? footerEl.offsetHeight : 0);
-                var available = Math.max(window.innerHeight - used, 100);
-                bodyEl.style.setProperty('position', 'absolute', 'important');
-                bodyEl.style.setProperty('left', '0', 'important');
-                bodyEl.style.setProperty('right', '0', 'important');
-                bodyEl.style.setProperty('top', (headerEl ? headerEl.offsetHeight : 0) +
-                    (activebarEl && !activebarEl.classList.contains('d-none') ? activebarEl.offsetHeight : 0) + 'px', 'important');
-=======
             /* Body: absolute-positioned between the header and footer.
                The activebar is now inside the scroll container, so it is
                NOT subtracted from the available height. */
@@ -2438,7 +2762,6 @@
                 bodyEl.style.setProperty('left', '0', 'important');
                 bodyEl.style.setProperty('right', '0', 'important');
                 bodyEl.style.setProperty('top', headerH + 'px', 'important');
->>>>>>> 30d9df70e135f604b74c0d798cc01437b48f399e
                 bodyEl.style.setProperty('height', available + 'px', 'important');
                 bodyEl.style.setProperty('max-height', available + 'px', 'important');
                 bodyEl.style.setProperty('overflow-y', 'auto', 'important');
@@ -2453,21 +2776,17 @@
         }
         $(document).ready(simfEnforceDrawerLayout);
         $(window).on('resize', simfEnforceDrawerLayout);
-        $(document).on('click', '#kt_similar_filter_toggle, .simf-overlay-trigger, #kt_similar_filter_close', simfEnforceDrawerLayout);
+        $(document).on('click', '#kt_similar_filter_toggle, #kt_similar_filter_close', simfEnforceDrawerLayout);
 
         /* ------------------------------------------------------------------
-           Filter drawer glue: opening the drawer from the search-box overlay,
-           popular-location quick-add chips, the Active Filters chip bar, and
-           the Preview/Reset/Apply footer buttons. None of this touches the
-           request params fetchCandidates() sends — it only reads/writes the
-           same field IDs the backend already expects.
+           Filter drawer glue: popular-location quick-add chips, the Active
+           Filters chip bar, and the Preview/Reset/Apply footer buttons. None
+           of this touches the request params fetchCandidates() sends ΓÇö it
+           only reads/writes the same field IDs the backend already expects.
         ------------------------------------------------------------------ */
-        $(document).on('click', '.simf-overlay-trigger', function() {
-            $('#kt_similar_filter_toggle').trigger('click');
-        });
 
         // Popular/other location suggestion chips just add a tag to the
-        // existing location Tagify instance — no extra request.
+        // existing location Tagify instance ΓÇö no extra request.
         $(document).on('click', '.simf-loc-chip', function() {
             var city = $(this).data('city');
             var $btn = $(this);
@@ -2475,7 +2794,7 @@
             $btn.prop('disabled', true);
             // Resolve through the exact same /city-job-suggestions lookup the
             // real search box uses, so the tag added is the full "City | State |
-            // Country" record the backend expects — not just a bare city name
+            // Country" record the backend expects ΓÇö not just a bare city name
             // that never matches a real city_list entry.
             $.ajax({
                 url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(city),
@@ -2557,11 +2876,14 @@
                 });
             }
 
-            // Education
+            // Education ΓÇö label is displayed uppercase (education data
+            // convention, see docs/UI_UX_STANDARDS.md); val itself stays
+            // exact-case since it's what the clear() lookup and the
+            // backend payload match against.
             if (typeof simfEducationSelected !== 'undefined') {
                 simfEducationSelected.slice().forEach(function(val) {
                     chips.push({
-                        label: val,
+                        label: val.toUpperCase(),
                         clear: function() {
                             $('.simf-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
                         }
@@ -2587,7 +2909,7 @@
                 });
             }
 
-            // Notice / Stage / Activity — only show when not the default "Any"/"All" pill
+            // Notice / Stage / Activity ΓÇö only show when not the default "Any"/"All" pill
             var noticeEl = $('[name="app_int_notice"]:checked');
             if (noticeEl.val() && noticeEl.val() !== '1') {
                 chips.push({
@@ -2615,7 +2937,7 @@
                 var $chip = $('<span class="simf-chip"></span>')
                     .toggleClass('mandatory', !!c.mandatory);
                 if (c.mandatory) {
-                    $chip.append($('<span style="color:#eab308;"></span>').text('★ ')).append($('<span></span>').text(c.label));
+                    $chip.append($('<span style="color:#eab308;"></span>').text('Γÿà ')).append($('<span></span>').text(c.label));
                 } else {
                     $chip.append($('<span></span>').text(c.label));
                 }
@@ -2631,13 +2953,161 @@
             $('#simf_active_bar').toggleClass('d-none', n === 0);
             $('#simf_active_count').text('(' + n + ')');
             $('#simf_header_count').text(n);
-            $('#simf_count_badge').toggle(n > 0).text(n);
+            $('#simf_count_badge').toggleClass('d-none', n === 0).text(n);
+            $('#simf_filter_count_text').text(n > 0 ? ' (' + n + ')' : '');
         }
+
+        /* ------------------------------------------------------------------
+           Applied Filters summary card (main page, above the results table).
+           Unlike the drawer's own #simf_active_bar (which previews DRAFT
+           changes live, before Apply), this card reflects only the
+           last-APPLIED state ΓÇö it's rendered on Apply/Reset and on initial
+           load, not on every keystroke inside the drawer. Reads the exact
+           same underlying sources as updateActiveFiltersUI() so the two
+           never disagree, just grouped/colored by category to match the
+           enterprise design instead of one flat list.
+        ------------------------------------------------------------------ */
+        var SIMF_APPLIED_VISIBLE_CAP = 8;
+        var simfAppliedExpanded = false;
+
+        function simfCategoryIcon(cat) {
+            var paths = {
+                skill: '<path d="m8 6-6 6 6 6M16 6l6 6-6 6"/>',
+                location: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+                education: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>',
+                experience: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+                notice: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+                status: '<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4M8 18h4a4 4 0 0 0 4-4"/>',
+                activity: '<path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>'
+            };
+            if (cat === 'salary') {
+                return '<span style="font-size:11px;font-weight:700;line-height:1;">Γé╣</span>';
+            }
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (paths[cat] || '') + '</svg>';
+        }
+
+        function simfBuildAppliedItems() {
+            var items = [];
+
+            if (typeof tagify !== 'undefined') {
+                tagify.value.forEach(function(tag) {
+                    items.push({
+                        cat: 'skill', label: tag.value, mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+            if (typeof tagifylocation !== 'undefined') {
+                tagifylocation.value.forEach(function(tag) {
+                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+            if (typeof simfEducationSelected !== 'undefined') {
+                simfEducationSelected.slice().forEach(function(val) {
+                    items.push({
+                        cat: 'education', label: val,
+                        clear: function() {
+                            $('.simf-edu-check[value="' + val.replace(/"/g, '\\"') + '"]').prop('checked', false).trigger('change');
+                        }
+                    });
+                });
+            }
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                items.push({
+                    cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                });
+            }
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                items.push({
+                    cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                });
+            }
+            var noticeEl = $('[name="app_int_notice"]:checked');
+            if (noticeEl.val() && noticeEl.val() !== '1') {
+                items.push({
+                    cat: 'notice', label: noticeEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_notice1').prop('checked', true); }
+                });
+            }
+            var statusEl = $('[name="app_int_status"]:checked');
+            if (statusEl.val() && statusEl.val() !== '0') {
+                items.push({
+                    cat: 'status', label: statusEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_status0').prop('checked', true); }
+                });
+            }
+            var activityEl = $('[name="app_int_activity"]:checked');
+            if (activityEl.val() && activityEl.val() !== '1') {
+                items.push({
+                    cat: 'activity', label: activityEl.next('.simf-pill').text(),
+                    clear: function() { $('#app_int_activity1').prop('checked', true); }
+                });
+            }
+            return items;
+        }
+
+        // Removing a chip from this card acts on already-APPLIED filters, so
+        // (unlike drawer edits) it re-fetches immediately instead of waiting
+        // for an Apply click, and refreshes the drawer's own state/snapshot
+        // so reopening the drawer shows the same, now-current picture.
+        function simfAppliedChipRemoved() {
+            fetchCandidates();
+            if (typeof updateActiveFiltersUI === 'function') updateActiveFiltersUI();
+            if (typeof simfCaptureSnapshot === 'function') simfCaptureSnapshot();
+            renderAppliedFiltersCard();
+        }
+
+        function renderAppliedFiltersCard() {
+            var items = simfBuildAppliedItems();
+            var $chips = $('#simf_applied_chips').empty();
+            var visible = simfAppliedExpanded ? items : items.slice(0, SIMF_APPLIED_VISIBLE_CAP);
+
+            visible.forEach(function(it) {
+                var $chip = $('<span class="simf-applied-chip"></span>').addClass('cat-' + it.cat);
+                $chip.append('<span class="ic">' + simfCategoryIcon(it.cat) + '</span>');
+                if (it.mandatory) {
+                    $chip.append($('<span class="star"></span>').text('Γÿà'));
+                }
+                $chip.append($('<span></span>').text(it.label));
+                $chip.append(
+                    $('<span class="simf-applied-chip-remove">&times;</span>').on('click', function() {
+                        it.clear();
+                        simfAppliedChipRemoved();
+                    })
+                );
+                $chips.append($chip);
+            });
+
+            if (!simfAppliedExpanded && items.length > SIMF_APPLIED_VISIBLE_CAP) {
+                var remaining = items.length - SIMF_APPLIED_VISIBLE_CAP;
+                $chips.append(
+                    $('<span class="simf-applied-more"></span>').text('+' + remaining + ' More').on('click', function() {
+                        simfAppliedExpanded = true;
+                        renderAppliedFiltersCard();
+                    })
+                );
+            }
+
+            $('#simf_applied_card').toggleClass('d-none', items.length === 0);
+            $('#simf_applied_count').text(items.length);
+        }
+
+        $(document).on('click', '#simf_applied_clear_all', function() {
+            $('#simf_clear_all').trigger('click');
+            fetchCandidates();
+            if (typeof simfCaptureSnapshot === 'function') simfCaptureSnapshot();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
+        });
 
         $(document).on('change', '[name="app_int_notice"], [name="app_int_status"], [name="app_int_activity"]', function() {
             updateActiveFiltersUI();
             // Selecting a Notice/Stage/Activity pill can add a chip to the Active
-            // Filters bar, changing its height — re-assert the drawer's layout so
+            // Filters bar, changing its height ΓÇö re-assert the drawer's layout so
             // the flex column recalculates and the footer/body stay correctly
             // sized instead of drifting after that reflow.
             if (typeof simfEnforceDrawerLayout === 'function') simfEnforceDrawerLayout();
@@ -2651,7 +3121,8 @@
             $('.simf-edu-check[value=""]').prop('checked', true);
             simfEducationSelected = [];
             simfSyncEducationInput();
-            $('#min_exp, #max_exp, #min_sal, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#min_exp, #max_exp, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#min_sal').val(0);
             $('#app_int_notice1, #app_int_status0, #app_int_activity1').prop('checked', true);
             updateActiveFiltersUI();
         });
@@ -2660,9 +3131,11 @@
             $('#simf_clear_all').trigger('click');
             fetchCandidates();
             // Reset is an explicit apply of the cleared state, so make the
-            // cleared filters the new baseline — otherwise closing the drawer
+            // cleared filters the new baseline ΓÇö otherwise closing the drawer
             // afterwards would "restore" the pre-reset values.
             simfCaptureSnapshot();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
         });
 
         /* ------------------------------------------------------------------
@@ -2673,7 +3146,7 @@
            edits are discarded and every field reverts to the last-applied
            state. We snapshot on open (kt.drawer.shown) and restore on close
            (kt.drawer.after.hidden) using Metronic's own drawer lifecycle
-           events, so overlay/ESC closes are covered too — not just the
+           events, so overlay/ESC closes are covered too ΓÇö not just the
            buttons we control.
         ------------------------------------------------------------------ */
         var simfSnapshot = null;
@@ -2739,7 +3212,7 @@
                 simfApplying = false;
                 simfCaptureSnapshot();
                 // Re-assert the height/scroll layout now that the drawer is
-                // actually visible and measurable — this is the reliable moment,
+                // actually visible and measurable ΓÇö this is the reliable moment,
                 // more so than the toggle-click (which fires before the open
                 // animation lays the element out).
                 simfEnforceDrawerLayout();
@@ -2761,6 +3234,8 @@
         $(document).on('click', '#simf_apply_btn', function() {
             simfApplying = true;
             fetchCandidates();
+            simfAppliedExpanded = false;
+            renderAppliedFiltersCard();
             $('#kt_similar_filter_close').trigger('click');
         });
 
@@ -2770,6 +3245,9 @@
             // very first close-without-apply reverts correctly even if the
             // shown event hasn't fired yet.
             setTimeout(simfCaptureSnapshot, 800);
+            // Reflect any filters that arrived pre-applied (e.g. carried over
+            // from the URL/session on first load) in the summary card too.
+            setTimeout(renderAppliedFiltersCard, 700);
         });
     </script>
 @endpush
