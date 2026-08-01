@@ -128,22 +128,52 @@
        #kt_activitiesIntTeam{width: 1200px;} }
       #kt_activitiesIntTeam{z-index:9999;}
 
-      /* Candidate drawer — prevent FOUC while candidates-details.css loads */
+      /* Candidate drawer — V2 hero redesign: full structural layout rules here so the
+         drawer renders correctly even when candidates-details.css is cached (old version).
+         These rules are always in the browser CSSOM and apply the moment AJAX inserts HTML. */
       #kt_activitiesApplication .cdr-dl-menu{display:none;}
       #kt_activitiesApplication .cdr-dl-menu.open{display:block;}
       #kt_activitiesApplication .cdr-dl-item-logo svg{width:13px;height:13px;flex-shrink:0;}
-      #kt_activitiesApplication .cdr-subcard-id{display:flex;gap:16px;align-items:flex-start;}
-      /* V2 hero: size all SVGs in the new classes immediately so they never render at 300×150px default */
+      /* Topbar: horizontal flex row, close button pushed to the right */
+      #kt_activitiesApplication .cdr-topbar{display:flex!important;align-items:center;flex-wrap:nowrap;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid #e2e8f0;justify-content:space-between;}
+      #kt_activitiesApplication .cdr-topbar-group{display:flex!important;align-items:center;gap:8px;flex:1 1 auto;min-width:0;overflow-x:auto;flex-wrap:nowrap;}
+      /* Action buttons: outlined inline-flex pill */
+      #kt_activitiesApplication .cdr-action-btn{display:inline-flex!important;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;line-height:1;}
+      #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa{background:#25D366;color:#fff;border-color:#25D366;}
       #kt_activitiesApplication .cdr-action-btn svg{width:14px;height:14px;flex-shrink:0;}
-      #kt_activitiesApplication .cdr-action-btn .cdr-caret{width:12px;height:12px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-action-btn .cdr-caret{width:12px;height:12px;flex-shrink:0;color:#9ca3af;}
+      /* Close button */
+      #kt_activitiesApplication .cdr-topbar-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:none;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;color:#6b7280;padding:0;margin-left:4px;}
       #kt_activitiesApplication .cdr-topbar-close svg{width:16px;height:16px;}
-      #kt_activitiesApplication .cdr-topbar{justify-content:space-between;}
-      #kt_activitiesApplication .cdr-id-avatar-col{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;}
-      #kt_activitiesApplication .cdr-avatar-lg{width:116px;height:116px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-      #kt_activitiesApplication .cdr-cell-icon svg{width:18px;height:18px;}
-      #kt_activitiesApplication .cdr-score-ring-svg{width:56px;height:56px;flex-shrink:0;}
+      /* Hero card: 2-column grid */
+      #kt_activitiesApplication .cdr-hero-card{display:grid!important;grid-template-columns:minmax(280px,1.05fr) minmax(300px,1fr);background:#fff;border-bottom:1px solid #f0f4f8;}
+      /* Identity sub-card: avatar column left + body right */
+      #kt_activitiesApplication .cdr-subcard-id{display:flex!important;gap:20px;align-items:flex-start;padding:22px 18px 20px 22px;border-right:1px solid #edf0f5;}
+      #kt_activitiesApplication .cdr-id-avatar-col{display:flex!important;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-avatar-lg{width:116px;height:116px;border-radius:50%;background:#eef2ff;color:#1e3a8a;font-family:'Poppins',sans-serif;font-weight:700;font-size:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:3px solid #e0e7ff;}
       #kt_activitiesApplication .cdr-verified-v2 svg{width:11px;height:11px;}
+      #kt_activitiesApplication .cdr-meta-list{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
+      #kt_activitiesApplication .cdr-meta-item{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:#374151;font-family:'Poppins',sans-serif;}
       #kt_activitiesApplication .cdr-meta-item svg{width:14px;height:14px;flex-shrink:0;}
+      /* Metrics sub-card: 2x3 grid */
+      #kt_activitiesApplication .cdr-subcard-metrics{padding:0;}
+      #kt_activitiesApplication .cdr-match-grid-v2{display:grid!important;grid-template-columns:1fr 1fr;height:100%;}
+      #kt_activitiesApplication .cdr-match-cell{display:flex;align-items:center;gap:12px;padding:17px 15px;border-bottom:1px solid #f0f4f8;border-right:1px solid #f0f4f8;}
+      #kt_activitiesApplication .cdr-match-cell:nth-child(2n){border-right:none;}
+      #kt_activitiesApplication .cdr-match-cell:nth-last-child(-n+2){border-bottom:none;}
+      #kt_activitiesApplication .cdr-cell-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-cell-icon svg{width:18px;height:18px;}
+      #kt_activitiesApplication .cdr-cell-icon.ci-green{background:#ecfdf5;color:#16a34a;}
+      #kt_activitiesApplication .cdr-cell-icon.ci-red{background:#fef2f2;color:#dc2626;}
+      #kt_activitiesApplication .cdr-cell-icon.ci-gray{background:#f1f5f9;color:#64748b;}
+      #kt_activitiesApplication .cdr-cell-icon.ci-amber{background:#fffbeb;color:#d97706;}
+      #kt_activitiesApplication .cdr-cell-body{min-width:0;flex:1 1 auto;}
+      #kt_activitiesApplication .cdr-cell-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#9ca3af;font-family:'Poppins',sans-serif;line-height:1.2;margin-bottom:3px;}
+      #kt_activitiesApplication .cdr-cell-value{font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;line-height:1.1;color:#0f172a;}
+      #kt_activitiesApplication .cdr-cell-value.cv-green{color:#16a34a;}
+      #kt_activitiesApplication .cdr-cell-value.cv-red{color:#dc2626;}
+      #kt_activitiesApplication .cdr-cell-sub{font-size:11px;color:#9ca3af;font-weight:400;font-family:'Poppins',sans-serif;margin-top:1px;}
+      #kt_activitiesApplication .cdr-score-ring-svg{width:56px;height:56px;flex-shrink:0;}
 
       /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
          set via data-kt-drawer-width on the element itself (KTDrawer computes
