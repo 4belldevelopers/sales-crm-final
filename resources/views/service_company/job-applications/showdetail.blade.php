@@ -189,13 +189,6 @@
 
 
 <div class="page-wrapper">
-  <button type="button" class="page-close" aria-label="Close page" id="kt_activitiesApplication_close">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  </button>
 
   {{-- Single unified header Card. Top bar holds every action button (Edit, Interview,
        Send Email, Send WhatsApp, Move Stage, Download Resume, Close). The body is a
@@ -312,17 +305,18 @@
        button outside the bar so it doesn't fight the primary/secondary
        button hierarchy.
        ============================================================ --}}
+  {{-- TOP ACTION BAR --}}
   <div class="cdr-topbar" aria-label="Candidate actions">
     <div class="cdr-topbar-group">
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
-        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           Edit Profile
         </a>
       @endif
 
       @if(in_array("add_schedule", $userPermissions))
-        <a href="javascript:void(0);" id="app_interview_schedule" class="cdr-btn cdr-btn-interview {{ $dnone }}" rel="{{@$application->wiseId}}" title="Schedule interview">
+        <a href="javascript:void(0);" id="app_interview_schedule" class="cdr-action-btn cdr-btn-interview {{ $dnone }}" rel="{{@$application->wiseId}}" title="Schedule interview">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2"/>
             <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
@@ -336,7 +330,7 @@
       @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
 
       @else
-        <a href="javascript:void(0);" class="cdr-btn cdr-btn-email sendmaimodal {{ $dnone }}" title="Send email to candidate">
+        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal {{ $dnone }}" title="Send email to candidate">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2"/>
             <polyline points="3 7 12 13 21 7"/>
@@ -345,7 +339,7 @@
         </a>
 
         @if(@$application->condidate_type=='other' && $notVisiableBench)
-          <a href="javascript:void(0);" class="cdr-btn cdr-btn-whatsapp sendwhatsappmodal {{ $dnone }}" title="Send WhatsApp message">
+          <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-wa sendwhatsappmodal {{ $dnone }}" title="Send WhatsApp message">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20.52 3.48A11.94 11.94 0 0 0 12 0C5.37 0 .05 5.32.05 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.7 1.45h.01c6.63 0 11.95-5.32 11.95-11.95 0-3.19-1.24-6.19-3.44-8.37z"/>
             </svg>
@@ -354,12 +348,13 @@
         @endif
       @endif
 
-      <a href="javascript:void(0);" class="cdr-btn cdr-btn-stage {{ $dnone }}" id="hdr_move_stage_btn" rel="{{@$application->wiseId}}" title="Move candidate to another stage">
+      <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-stage {{ $dnone }}" id="hdr_move_stage_btn" rel="{{@$application->wiseId}}" title="Move candidate to another stage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="4 7 9 12 4 17"/>
           <polyline points="12 7 17 12 12 17"/>
         </svg>
         Move Stage
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
       </a>
 
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
@@ -367,7 +362,7 @@
       @if(!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx', 'htm', 'html']))
         @if($resumeAwsPath)
           <div class="cdr-dl-wrap" id="hdrDlWrapApp">
-            <button type="button" class="cdr-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
+            <button type="button" class="cdr-action-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Download Resume
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
@@ -407,67 +402,72 @@
           }
           </script>
         @else
-          <a target="_blank" class="cdr-btn cdr-btn-secondary downloadCount {{ $dnone }}"
+          <a target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}"
              href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>
         @endif
       @else
-        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-secondary {{ $dnone }}" title="Upload resume">
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-secondary {{ $dnone }}" title="Upload resume">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Resume
         </a>
       @endif
     </div>
+    <button type="button" class="cdr-topbar-close" id="kt_activitiesApplication_close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
   </div>
 
-  {{-- ============================================================
-       HERO CARD = parent shell holding two Sub-Cards:
-         Sub-Card A = candidate identity (avatar + name + role +
-                      meta pills + skills row + availability)
-         Sub-Card B = Skills Matched + Skills Not Matched sub-card
-                      at top, then the 4 secondary match tiles,
-                      with the Overall Match ring anchored to the
-                      right edge of Sub-Card B.
-       ============================================================ --}}
+  {{-- HERO CARD: identity (left) + metrics 2×3 grid (right) --}}
   <div class="cdr-hero-card">
-    {{-- Sub-Card A: identity --}}
+    {{-- Sub-Card A: large circle avatar + availability pill + name/role/exp/company/skills --}}
     <div class="cdr-subcard cdr-subcard-id">
-      <div class="cdr-avatar" aria-hidden="true">{{ $__hdrInitials }}</div>
+      <div class="cdr-id-avatar-col">
+        <div class="cdr-avatar-lg" aria-hidden="true">{{ $__hdrInitials }}</div>
+        @if($__hdrIsImmediate)
+          <span class="cdr-avail-badge">
+            <span class="cdr-avail-dot"></span>
+            {{ $__hdrAvailability }}
+          </span>
+        @elseif($__hdrAvailability !== '—')
+          <span class="cdr-avail-badge cdr-avail-badge-neutral">{{ $__hdrAvailability }}</span>
+        @endif
+      </div>
 
       <div class="cdr-id-body">
         <div class="cdr-name-row">
           <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
           @if($__hdrIsVerified)
-            <span class="cdr-verified" title="Verified candidate">
-              <span class="cdr-tick">✓</span> Verified
+            <span class="cdr-verified-v2" title="Verified candidate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             </span>
           @endif
         </div>
 
         <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
 
-        <div class="cdr-meta-row">
-          <span class="cdr-meta">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            {{ $__bdTotalExp }} Yrs Experience
-          </span>
-          <span class="cdr-meta">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
-            {{ (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: '—') }}
-          </span>
-          @if($__hdrIsImmediate)
-            <span class="cdr-availpill">
-              <span class="cdr-dot"></span>
-              {{ $__hdrAvailability }}
+        <div class="cdr-meta-list">
+          @if($__bdTotalExp !== '—')
+            <span class="cdr-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              {{ $__bdTotalExp }} Yrs Experience
+            </span>
+          @endif
+          @php $__dispCompany = (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: ''); @endphp
+          @if($__dispCompany)
+            <span class="cdr-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+              {{ $__dispCompany }}
             </span>
           @endif
         </div>
 
         <div class="cdr-skills">
           @if(!empty($__hdrSkillsShown))
-            <span class="cdr-skills-label">Skills</span>
             @foreach($__hdrSkillsShown as $__s)
               <span class="cdr-skill-pill">{{ $__s }}</span>
             @endforeach
@@ -479,69 +479,77 @@
       </div>
     </div>
 
-    {{-- Sub-Card B: match metrics --}}
+    {{-- Sub-Card B: 2×3 metrics grid --}}
     <div class="cdr-subcard cdr-subcard-metrics">
-      <div class="cdr-skills-compare" role="list" aria-label="Skills compare">
-        <div class="cdr-compare-card cdr-compare-match" role="listitem">
-          <div class="cdr-compare-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div class="cdr-compare-body">
-            <div class="cdr-compare-label">Skills Matched</div>
-            <div class="cdr-compare-value">{{ $__hdrMatchedCount }} <span class="cdr-compare-of">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
-          </div>
-        </div>
-        <div class="cdr-compare-card cdr-compare-miss" role="listitem">
-          <div class="cdr-compare-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </div>
-          <div class="cdr-compare-body">
-            <div class="cdr-compare-label">Skills Not Matched</div>
-            <div class="cdr-compare-value">{{ $__hdrNotMatched }} <span class="cdr-compare-of">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
-          </div>
-        </div>
-      </div>
+      <div class="cdr-match-grid-v2" role="list" aria-label="Match metrics">
 
-      <div class="cdr-match-grid" role="list" aria-label="Match metrics">
-        <div class="cdr-match" role="listitem">
-          <div class="cdr-match-icon green" aria-hidden="true">
+        <div class="cdr-match-cell" role="listitem">
+          <div class="cdr-cell-icon ci-green" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Skills Matched</div>
+            <div class="cdr-cell-value cv-green">{{ $__hdrMatchedCount }} <span class="cv-frac">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
+          </div>
+        </div>
+
+        <div class="cdr-match-cell" role="listitem">
+          <div class="cdr-cell-icon ci-red" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Skills Not Matched</div>
+            <div class="cdr-cell-value cv-red">{{ $__hdrNotMatched }} <span class="cv-frac">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
+          </div>
+        </div>
+
+        <div class="cdr-match-cell" role="listitem">
+          <div class="cdr-cell-icon {{ $__hdrLocMatched ? 'ci-green' : 'ci-red' }}" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </div>
-          <div class="cdr-match-body">
-            <div class="cdr-match-label">Location Matched</div>
-            <div class="cdr-match-value {{ $__hdrLocMatched ? 'success' : 'danger' }}">{{ $__hdrLocMatched ? 'Yes' : 'No' }}</div>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Location Matched</div>
+            <div class="cdr-cell-value {{ $__hdrLocMatched ? 'cv-green' : 'cv-red' }}" style="font-size:15px;">{{ $__hdrLocMatched ? 'Yes' : 'No' }}</div>
           </div>
         </div>
 
-        <div class="cdr-match" role="listitem">
-          <div class="cdr-match-icon green" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="cdr-match-cell" role="listitem">
+          <div class="cdr-cell-icon {{ $__hdrUnderBudget ? 'ci-green' : 'ci-red' }}" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M17 6V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v1"/></svg>
           </div>
-          <div class="cdr-match-body">
-            <div class="cdr-match-label">Salary Under Budget</div>
-            <div class="cdr-match-value {{ $__hdrUnderBudget ? 'success' : 'danger' }}">{{ $__hdrUnderBudget ? 'Yes' : 'No' }}</div>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Salary Under Budget</div>
+            <div class="cdr-cell-value {{ $__hdrUnderBudget ? 'cv-green' : 'cv-red' }}" style="font-size:15px;">{{ $__hdrUnderBudget ? 'Yes' : 'No' }}</div>
           </div>
         </div>
 
-        <div class="cdr-match" role="listitem">
-          <div class="cdr-match-icon amber" aria-hidden="true">
+        <div class="cdr-match-cell" role="listitem">
+          <div class="cdr-cell-icon ci-amber" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <div class="cdr-match-body">
-            <div class="cdr-match-label">Added to Pipeline</div>
-            <div class="cdr-match-value plain">{{ $__hdrAddedTxt }}</div>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Added to Pipeline</div>
+            <div class="cdr-cell-value cv-green" style="font-size:13px;font-weight:700;">Applied</div>
+            <div class="cdr-cell-sub">{{ $__hdrAddedTxt }}</div>
           </div>
         </div>
 
-        <div class="cdr-match cdr-match-ring" role="listitem">
-          <div class="cdr-ring" style="--cdr-ring-pct: {{ $__hdrOverallPct }};" aria-label="Overall match score {{ $__hdrOverallPct }} percent">
-            <span>{{ $__hdrOverallPct }}%</span>
-          </div>
-          <div class="cdr-match-body">
-            <div class="cdr-match-label">Overall Match Score</div>
-            <div class="cdr-match-value success">Excellent</div>
+        @php $__pct = $__hdrOverallPct; $__circ = 150.796; $__dash = round($__pct / 100 * $__circ, 2); @endphp
+        <div class="cdr-match-cell" role="listitem" style="gap:10px;">
+          <svg width="56" height="56" viewBox="0 0 56 56" class="cdr-score-ring-svg" aria-label="{{ $__pct }}% overall match">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="#e2e8f0" stroke-width="5"/>
+            <circle cx="28" cy="28" r="24" fill="none" stroke="#16a34a" stroke-width="5"
+              stroke-dasharray="{{ $__dash }} {{ $__circ }}"
+              transform="rotate(-90 28 28)"
+              stroke-linecap="round"/>
+            <text x="28" y="33" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="700" font-family="Poppins,sans-serif">{{ $__pct }}%</text>
+          </svg>
+          <div class="cdr-cell-body">
+            <div class="cdr-cell-label">Overall Match</div>
+            <div class="cdr-cell-value cv-green" style="font-size:15px;">{{ $__pct }}%</div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

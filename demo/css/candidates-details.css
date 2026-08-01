@@ -2065,6 +2065,272 @@
   }
 
   /* ============================================================
+     V2 Hero Redesign — outlined topbar buttons, large circle avatar,
+     2×3 metrics grid. All rules override the Phase-2 rules above.
+     ============================================================ */
+
+  /* Topbar v2: flat white, space-between (close btn on right) */
+  #kt_activitiesApplication .cdr-topbar {
+    background: #ffffff;
+    justify-content: space-between;
+  }
+
+  /* Outlined action buttons (all buttons except WhatsApp solid) */
+  #kt_activitiesApplication .cdr-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-action-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-action-btn:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 2px 6px rgba(59,130,246,0.10);
+    text-decoration: none;
+  }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-primary svg   { color: #2563eb; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-interview svg { color: #d97706; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-email svg     { color: #2563eb; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-stage svg     { color: #7c3aed; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-secondary svg { color: #059669; }
+
+  /* WhatsApp — solid green, white text/icon */
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa {
+    background: #25D366;
+    color: #ffffff;
+    border-color: #25D366;
+  }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa svg { color: #ffffff; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa:hover {
+    background: #1ebe5d;
+    border-color: #1ebe5d;
+    box-shadow: 0 2px 8px rgba(37,211,102,0.28);
+  }
+
+  /* Chevron caret inside action buttons */
+  #kt_activitiesApplication .cdr-action-btn .cdr-caret {
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+
+  /* Close button integrated into topbar (right edge) */
+  #kt_activitiesApplication .cdr-topbar-close {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    margin-left: 4px;
+  }
+  #kt_activitiesApplication .cdr-topbar-close svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-topbar-close:hover {
+    border-color: #fca5a5;
+    color: #dc2626;
+    background: #fff5f5;
+  }
+
+  /* Hero card v2 — no outer border/shadow, flat layout */
+  #kt_activitiesApplication .cdr-hero-card {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+    grid-template-columns: minmax(280px, 1.05fr) minmax(300px, 1fr);
+    background: #ffffff;
+    border-bottom: 1px solid #f0f4f8;
+  }
+
+  /* Identity sub-card v2 */
+  #kt_activitiesApplication .cdr-subcard-id {
+    border-right: 1px solid #edf0f5;
+    background: #ffffff;
+    padding: 22px 18px 20px 22px;
+    gap: 20px;
+  }
+
+  /* Avatar column: wraps the large circle and availability badge */
+  #kt_activitiesApplication .cdr-id-avatar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Large circle avatar (replaces 64px square) */
+  #kt_activitiesApplication .cdr-avatar-lg {
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 3px solid #e0e7ff;
+  }
+
+  /* Availability pill below avatar */
+  #kt_activitiesApplication .cdr-avail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+  }
+  #kt_activitiesApplication .cdr-avail-badge-neutral {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #e2e8f0;
+  }
+  #kt_activitiesApplication .cdr-avail-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+
+  /* Name — larger/bolder in v2 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 18px; font-weight: 700; }
+
+  /* Role — blue in v2 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-role {
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 13px;
+    margin-top: 3px;
+  }
+
+  /* Verified badge v2 — solid blue circle with white checkmark */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified-v2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2563eb;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified-v2 svg {
+    width: 11px; height: 11px; color: #ffffff; stroke-width: 3;
+  }
+
+  /* Meta list: experience + company (column instead of row) */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 12px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-item svg {
+    width: 14px; height: 14px; color: #6b7280; flex-shrink: 0;
+  }
+
+  /* Metrics sub-card v2: no padding, full-height grid */
+  #kt_activitiesApplication .cdr-subcard-metrics { padding: 0; gap: 0; background: #ffffff; }
+
+  /* 2×3 grid for the 6 metric cells */
+  #kt_activitiesApplication .cdr-match-grid-v2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100%;
+  }
+  #kt_activitiesApplication .cdr-match-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 17px 15px;
+    border-bottom: 1px solid #f0f4f8;
+    border-right: 1px solid #f0f4f8;
+  }
+  #kt_activitiesApplication .cdr-match-cell:nth-child(2n) { border-right: none; }
+  #kt_activitiesApplication .cdr-match-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+  /* Icon circle inside each cell */
+  #kt_activitiesApplication .cdr-cell-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-cell-icon svg { width: 18px; height: 18px; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-green  { background: #ecfdf5; color: #16a34a; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-red    { background: #fef2f2; color: #dc2626; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-gray   { background: #f1f5f9; color: #64748b; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-amber  { background: #fffbeb; color: #d97706; }
+
+  /* Cell text */
+  #kt_activitiesApplication .cdr-cell-body { min-width: 0; flex: 1 1 auto; }
+  #kt_activitiesApplication .cdr-cell-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #9ca3af;
+    font-family: 'Poppins', sans-serif; line-height: 1.2; margin-bottom: 3px;
+  }
+  #kt_activitiesApplication .cdr-cell-value {
+    font-family: 'Poppins', sans-serif; font-size: 18px;
+    font-weight: 700; line-height: 1.1; color: #0f172a;
+  }
+  #kt_activitiesApplication .cdr-cell-value.cv-green { color: #16a34a; }
+  #kt_activitiesApplication .cdr-cell-value.cv-red   { color: #dc2626; }
+  #kt_activitiesApplication .cdr-cell-value .cv-frac {
+    color: #9ca3af; font-weight: 400; font-size: 13px;
+  }
+  #kt_activitiesApplication .cdr-cell-sub {
+    font-size: 11px; color: #9ca3af; font-weight: 400;
+    font-family: 'Poppins', sans-serif; margin-top: 1px;
+  }
+  #kt_activitiesApplication .cdr-score-ring-svg { width: 56px; height: 56px; flex-shrink: 0; }
+
+  /* ============================================================
      Responsive — hero card collapses to stack on tablet/mobile,
      skills-compare stays 2-up at 960px then stacks at 640px.
      Top bar buttons smaller + tighter on tablet.
