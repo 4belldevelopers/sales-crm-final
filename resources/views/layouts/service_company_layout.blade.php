@@ -173,20 +173,20 @@
       #kt_activitiesApplication .cdr-skill-more{background:#eef2ff;color:#4338ca;border-color:#c7d2fe;font-weight:600;}
       /* Metrics sub-card v3: 4-row vertical list */
       #kt_activitiesApplication .cdr-subcard-metrics{padding:0;}
-      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px;}
-      #kt_activitiesApplication .cdr-metric-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f0f4f8;}
+      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px 8px 44px;}
+      #kt_activitiesApplication .cdr-metric-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f4f8;}
       #kt_activitiesApplication .cdr-metric-row:last-child{border-bottom:none;}
       #kt_activitiesApplication .cdr-metric-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
       #kt_activitiesApplication .cdr-metric-icon svg{width:16px;height:16px;}
       #kt_activitiesApplication .cdr-metric-icon.ci-green{background:#ecfdf5;color:#16a34a;}
       #kt_activitiesApplication .cdr-metric-icon.ci-red{background:#fef2f2;color:#dc2626;}
       #kt_activitiesApplication .cdr-metric-icon.ci-blue{background:#eff6ff;color:#2563eb;}
-      #kt_activitiesApplication .cdr-metric-label{flex:0 1 auto;font-size:12.5px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;min-width:0;white-space:nowrap;}
-      #kt_activitiesApplication .cdr-metric-val{font-size:13px;font-weight:700;color:#0f172a;white-space:nowrap;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-metric-label{flex:1 1 auto;font-size:12.5px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      #kt_activitiesApplication .cdr-metric-val{font-size:13px;font-weight:700;color:#0f172a;text-align:right;white-space:nowrap;font-family:'Poppins',sans-serif;}
       #kt_activitiesApplication .cdr-metric-val.cv-green{color:#16a34a;}
       #kt_activitiesApplication .cdr-metric-val.cv-red{color:#dc2626;}
       #kt_activitiesApplication .cdr-metric-frac{font-size:12px;font-weight:500;color:#64748b;}
-      #kt_activitiesApplication .cdr-metric-val-block{min-width:0;}
+      #kt_activitiesApplication .cdr-metric-val-block{text-align:right;min-width:0;}
       #kt_activitiesApplication .cdr-metric-sub{font-size:11px;color:#94a3b8;font-weight:400;display:block;margin-top:1px;white-space:nowrap;font-family:'Poppins',sans-serif;}
       /* Card/subcard system: page-content background + section-card display (FOUC-safe) */
       #kt_activitiesApplication .page-content{background:#eef2f7;padding:16px 20px;display:flex;flex-direction:column;gap:16px;}
