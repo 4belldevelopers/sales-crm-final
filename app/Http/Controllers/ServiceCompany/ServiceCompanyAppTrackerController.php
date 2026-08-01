@@ -1718,21 +1718,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		
 
-		$addedCandidatesQuery = DB::table('add_job_wise_condidates')
-			->where('job_id', '=', $jobid)
-			->orderBy('id', 'desc')
-			->pluck('job_application_id')
-			->unique()
-			->values()
-			->toArray();
+		$existingCandidatesQuery = DB::table('add_job_wise_condidates')
+			->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
 
-		if (!empty($addedCandidatesQuery)) {
-			$boolQuery['bool']['must_not'][] = [
-				'terms' => [
-					'candidate_id' => $addedCandidatesQuery
-				]
-			];
-		}
+			if (!empty($existingCandidatesQuery)) {
+					$boolQuery['bool']['must_not'][] = [
+						'terms' => [
+							'candidate_id' => $existingCandidatesQuery
+						]
+					];
+			}
 
 			$existingMap = array_flip($existingCandidatesQuery);
 			
@@ -1883,11 +1878,34 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			// dd($existingCandidatesQuery);
 
 
-			$availableTotal = 0;
-			$dataAvailable = [];
+			// Build the final query
+			$params = [
+				'index' => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body' => [
+					'from' => $from,
+					'size' => $size,
+					'sort' => $sort,
+					'query' => $boolQuery,
+					'collapse' => [
+						'field' => 'email'
+					]
+				]
+			];
 
-			if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-				// Aggregation query to get real count of available candidates matching filters
+			if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+				$total = 0;
+				$data = [];
+			}else{
+				$response = $this->elasticService->getClient()->search($params);
+				// This total reflects ALL matching docs BEFORE collapse
+				$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
+
+				// Count of current page records (after pagination & collapse)
+				$records = $response['hits']['hits'] ?? [];
+				$returnedCount = count($records);
+
+				// Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
 				$aggParams = [
 					'index' => ELASTIC_CANDIDATES,
 					'body' => [
@@ -1903,145 +1921,56 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 					]
 				];
 				$aggResponse = $this->elasticService->getClient()->search($aggParams);
-				$availableTotal = $aggResponse['aggregations']['unique_candidates']['value'] ?? 0;
-			}
+				$total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
+		
+				$data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills, $exactLocationIds) {
 
-			$addedTotal = count($addedCandidatesQuery);
-			$combinedTotal = $availableTotal + $addedTotal;
-			$lastPage = max(1, (int) ceil($combinedTotal / $size));
-			$page = min($page, $lastPage);
-
-			$startIndex = ($page - 1) * $size;
-			$endIndex = ($page * $size) - 1;
-
-			// Available candidates slice parameters
-			$availableFrom = $startIndex;
-			$availableSize = 0;
-			if ($startIndex < $availableTotal) {
-				$availableSize = min($size, $availableTotal - $startIndex);
-			}
-
-			// Added candidates slice parameters
-			$addedSliceIds = [];
-			if ($endIndex >= $availableTotal && $addedTotal > 0) {
-				$addedOffset = max(0, $startIndex - $availableTotal);
-				$addedLimit = $size - $availableSize;
-				$addedSliceIds = array_slice($addedCandidatesQuery, $addedOffset, $addedLimit);
-			}
-
-			// Fetch available candidates if needed
-			if ($availableSize > 0 && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-				$params = [
-					'index' => ELASTIC_CANDIDATES,
-					'request_cache' => true,
-					'body' => [
-						'from' => $availableFrom,
-						'size' => $availableSize,
-						'sort' => $sort,
-						'query' => $boolQuery,
-						'collapse' => [
-							'field' => 'email'
-						]
-					]
-				];
-				$response = $this->elasticService->getClient()->search($params);
-				$hits = $response['hits']['hits'] ?? [];
-
-				$dataAvailable = array_map(function ($hit) use ($requiredSkills, $mandatorySkills, $exactLocationIds) {
-					$source = $hit['_source'];
-					$jobSkills = collect(data_get($source, 'job_application_skills', []))
-						->pluck('skills')
-						->filter()
-						->unique()
-						->toArray();
+				$source = $hit['_source'];
+				$jobSkills = collect(data_get($source, 'job_application_skills', []))
+				->pluck('skills')
+				->filter()
+				->unique()
+				->toArray();
 
 					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
-					$matchCount = count($matchedSkills);
+				    $matchCount = count($matchedSkills);
+					// Split out of matched_skills specifically: which matches
+					// were against a STARRED/mandatory requirement vs just an
+					// entered-but-not-starred one. A recruiter reading the
+					// row should be able to tell "this candidate has the
+					// skill I marked mandatory" apart from "this candidate
+					// happens to have one of my other entered skills too" —
+					// both currently rendered with the identical highlight.
 					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
+					// True when this candidate is only in the results because
+					// of metro-cluster expansion (e.g. a Noida candidate
+					// surfaced by a Gurgaon search) — lets the UI show a
+					// "Nearby" badge instead of silently mixing them in with
+					// the exact-location matches.
 					$candidateCityId = isset($source['city_id']) ? (int) $source['city_id'] : null;
 					$isNearbyLocation = !empty($exactLocationIds)
 						&& $candidateCityId !== null
 						&& !in_array($candidateCityId, $exactLocationIds, true);
-
 					return array_merge($source, [
 						'matched_skill_count' => $matchCount,
 						'matched_skills' => $matchedSkills,
 						'matched_mandatory_skills' => $matchedMandatorySkills,
+						// The candidate's FULL skill list (already computed above
+						// for the intersect, just not previously exposed) — lets
+						// the results row show every skill the candidate has,
+						// highlighting the ones that match the job instead of
+						// only showing the matched subset and hiding the rest.
 						'all_skills' => $jobSkills,
-						'is_nearby_location' => $isNearbyLocation,
-						'is_already_added' => false
+						'is_nearby_location' => $isNearbyLocation
 					]);
-				}, $hits);
+				}, $response['hits']['hits']);
+				
 			}
-
-			// Fetch added candidates if needed
-			$dataAdded = [];
-			if (!empty($addedSliceIds) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-				$addedParams = [
-					'index' => ELASTIC_CANDIDATES,
-					'body' => [
-						'size' => count($addedSliceIds),
-						'query' => [
-							'terms' => [
-								'candidate_id' => array_map('intval', $addedSliceIds)
-							]
-						]
-					]
-				];
-				$addedResponse = $this->elasticService->getClient()->search($addedParams);
-				$addedHits = $addedResponse['hits']['hits'] ?? [];
-
-				$addedHitsMap = [];
-				foreach ($addedHits as $hit) {
-					$candId = $hit['_source']['candidate_id'] ?? null;
-					if ($candId) {
-						$addedHitsMap[$candId] = $hit;
-					}
-				}
-
-				// Preserve $addedSliceIds order (latest added first)
-				$orderedAddedHits = [];
-				foreach ($addedSliceIds as $candId) {
-					if (isset($addedHitsMap[$candId])) {
-						$orderedAddedHits[] = $addedHitsMap[$candId];
-					}
-				}
-
-				$dataAdded = array_map(function ($hit) use ($requiredSkills, $mandatorySkills, $exactLocationIds) {
-					$source = $hit['_source'];
-					$jobSkills = collect(data_get($source, 'job_application_skills', []))
-						->pluck('skills')
-						->filter()
-						->unique()
-						->toArray();
-
-					$matchedSkills = GeneralMethod::matchedSkillsList($jobSkills, $requiredSkills);
-					$matchCount = count($matchedSkills);
-					$matchedMandatorySkills = GeneralMethod::matchedSkillsList($jobSkills, $mandatorySkills);
-					$candidateCityId = isset($source['city_id']) ? (int) $source['city_id'] : null;
-					$isNearbyLocation = !empty($exactLocationIds)
-						&& $candidateCityId !== null
-						&& !in_array($candidateCityId, $exactLocationIds, true);
-
-					return array_merge($source, [
-						'matched_skill_count' => $matchCount,
-						'matched_skills' => $matchedSkills,
-						'matched_mandatory_skills' => $matchedMandatorySkills,
-						'all_skills' => $jobSkills,
-						'is_nearby_location' => $isNearbyLocation,
-						'is_already_added' => true
-					]);
-				}, $orderedAddedHits);
-			}
-
-			$data = array_merge($dataAvailable, $dataAdded);
-			$total = $availableTotal; // Only available candidates count for header/footer
-
+			
 			$pagination = [
-				'total' => $combinedTotal,
+				'total' => $total,
 				'current_page' => $page,
-				'per_page' => $size,
-				'last_page' => $lastPage,
+				'last_page' =>ceil($total / $size),
 				'listType' => 'allcandidate',
 			];
 
