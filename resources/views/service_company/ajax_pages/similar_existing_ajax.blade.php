@@ -141,8 +141,8 @@
                     // is unsatisfied, and the badge list is missing a "Node"
                     // entry to display. Distinct required skills satisfied is
                     // the correct denominator.
-                    $skillArr = $row->matched_skills;
-                    $candidateAllSkills = $row->all_skills ?? $skillArr;
+                    $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
+                    $candidateAllSkills = is_array($row->all_skills ?? null) ? $row->all_skills : $skillArr;
                     $satisfiedRequired = [];
                     $representativeByRequired = [];
                     foreach ($requiredSkills as $req) {
@@ -164,7 +164,7 @@
                     // phrase-matched the starred/mandatory required skills.
                     // A satisfied required skill is "mandatory" if its
                     // representative candidate entry also appears there.
-                    $mandatoryCandidateKeys = array_map('strtolower', $row->matched_mandatory_skills ?? []);
+                    $mandatoryCandidateKeys = array_map('strtolower', (array) ($row->matched_mandatory_skills ?? []));
                     foreach (array_keys($satisfiedRequired) as $req) {
                         $rep = $representativeByRequired[$req] ?? null;
                         $isMandatory = $rep !== null && in_array(strtolower($rep), $mandatoryCandidateKeys, true);
