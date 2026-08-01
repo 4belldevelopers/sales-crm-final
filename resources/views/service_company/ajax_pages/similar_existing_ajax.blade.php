@@ -131,13 +131,43 @@
 
                     $skilltag = '';
                     $skilltagclass = '';
-                    $skillArr = $row->matched_skills;//explode(',', $row->skills);
-                    // $percentage =  GeneralMethod::skill_percentage($jobid,$skillArr);
+                    // $row->matched_skills returns the candidate's own skill
+                    // entries that phrase-prefix matched SOME required skill —
+                    // e.g. a candidate with [Java, AWS, Java Developer] and
+                    // required [Java, AWS, Node] returns 3 entries. Using
+                    // count($matched_skills) as $matches inflates Match%:
+                    // two required skills (Java, AWS) get reported as three
+                    // matched entries, so Match 100% renders even though Node
+                    // is unsatisfied, and the badge list is missing a "Node"
+                    // entry to display. Distinct required skills satisfied is
+                    // the correct denominator.
+                    $skillArr = $row->matched_skills;
+                    $candidateAllSkills = $row->all_skills ?? $skillArr;
+                    $satisfiedRequired = [];
+                    $representativeByRequired = [];
+                    foreach ($requiredSkills as $req) {
+                        foreach ($candidateAllSkills as $cand) {
+                            if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) {
+                                $satisfiedRequired[$req] = true;
+                                if (!isset($representativeByRequired[$req])) {
+                                    $representativeByRequired[$req] = $cand;
+                                }
+                            }
+                        }
+                    }
+                    $mandatorySatisfied = [];
+                    $optionalSatisfied = [];
+                    foreach (array_keys($satisfiedRequired) as $req) {
+                        if (in_array($req, $mandatorySkills, true)) {
+                            $mandatorySatisfied[] = $req;
+                        } else {
+                            $optionalSatisfied[] = $req;
+                        }
+                    }
 
                     $percentage=0;
-                    $matches = $row->matched_skill_count;
+                    $matches = count($satisfiedRequired);
                     $totalElements = count($requiredSkills);
-                    // dd($totalElements);
                     $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
                     $matchPercentage = min($matchPercentage, 100);
                     $percentage = round($matchPercentage, 1);
@@ -169,17 +199,19 @@
                     // differently-worded skill entry) still showed up in the
                     // tooltip as "Missing". Same phrase-prefix check
                     // matched_skills itself was computed with.
-                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
-                        foreach ($skillArr as $matched) {
-                            if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) {
-                                return false;
-                            }
-                        }
-                        return true;
+                    // missingSkills = required skills NOT in $satisfiedRequired.
+                    // Previously diffed against $skillArr (candidate entries)
+                    // which produced false negatives when two required skills
+                    // were both phrase-matched by the same candidate entry.
+                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($satisfiedRequired) {
+                        return empty($satisfiedRequired[$required]);
                     }));
                     $matchTooltipParts = [];
-                    if (!empty($skillArr)) {
-                        $matchTooltipParts[] = 'Matched: ' . implode(', ', array_map('ucfirst', $skillArr));
+                    if (!empty($satisfiedRequired)) {
+                        $matchedLabels = array_map(function ($req) use ($representativeByRequired) {
+                            return ucfirst($representativeByRequired[$req]);
+                        }, array_keys($satisfiedRequired));
+                        $matchTooltipParts[] = 'Matched: ' . implode(', ', $matchedLabels);
                     }
                     if (!empty($missingSkills)) {
                         $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
@@ -204,19 +236,30 @@
                     // stay plain green. Unmatched skills are capped so a
                     // candidate with a long skill list doesn't make the row
                     // unreadable.
-                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
-                    $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
-                    $allSkillsList = $row->all_skills ?? $skillArr;
-                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $skillArr, 'strcasecmp'));
+                    // Skill-tag list now mirrors the satisfied-required set
+                    // (one badge per matched required skill) instead of one
+                    // badge per matched candidate entry. This keeps the badge
+                    // count in lockstep with the Match% number, so the
+                    // "Matched: Java, AWS, Node" tooltip lines up with the
+                    // three green badges on screen.
+                    $mandatoryMatched = $mandatorySatisfied;
+                    $optionalMatched = $optionalSatisfied;
+                    $allSkillsList = $candidateAllSkills;
+                    $matchedRepresentativeStrings = array_map(function ($req) use ($representativeByRequired) {
+                        return strtolower($representativeByRequired[$req]);
+                    }, array_keys($satisfiedRequired));
+                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $matchedRepresentativeStrings, 'strcasecmp'));
                     $maxUnmatchedShown = 6;
                     $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
                     $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
 
-                    foreach ($mandatoryMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
+                    foreach ($mandatoryMatched as $req) {
+                        $display = ucfirst($representativeByRequired[$req] ?? $req);
+                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . $display . '</span>  ';
                     }
-                    foreach ($optionalMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    foreach ($optionalMatched as $req) {
+                        $display = ucfirst($representativeByRequired[$req] ?? $req);
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . $display . '</span>  ';
                     }
                     foreach ($unmatchedShown as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
