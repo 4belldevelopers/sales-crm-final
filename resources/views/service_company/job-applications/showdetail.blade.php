@@ -465,16 +465,16 @@
               {{ $__bdTotalExp }} Yrs Experience
             </span>
           @endif
-          @if($__dispCompany)
-            <span class="cdr-meta-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
-              {{ $__dispCompany }}
-            </span>
-          @endif
           @if($__candCityState)
             <span class="cdr-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               {{ $__candCityState }}
+            </span>
+          @endif
+          @if($__dispCompany)
+            <span class="cdr-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+              {{ $__dispCompany }}
             </span>
           @endif
           @if($__hdrAvailability !== '—')
