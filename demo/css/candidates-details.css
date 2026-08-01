@@ -344,43 +344,47 @@
   }
 
   .page-tabs {
-    background: var(--color-surface);
-    padding: 0 var(--space-4);
-    border-bottom: 1px solid var(--color-border);
+    background: #ffffff;
+    padding: 0 24px;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
-    gap: var(--space-1);
+    gap: 0;
+    font-family: 'Poppins', sans-serif;
   }
 
   .tab {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: var(--space-2) var(--space-1);
+    gap: 6px;
+    padding: 14px 16px;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
-    font-family: var(--font-family);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-tertiary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 150ms ease, border-color 150ms ease;
     margin-bottom: -1px;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
   }
 
   .tab:hover {
-    color: var(--color-text-secondary);
+    color: #334155;
   }
 
   .tab-active {
-    color: var(--color-primary-600);
-    border-bottom-color: var(--color-primary-600);
+    color: #1a73e8;
+    border-bottom-color: #1a73e8;
+    font-weight: 600;
   }
 
   .tab-icon {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     flex-shrink: 0;
   }
 
@@ -388,11 +392,12 @@
      All content sections MUST live inside a .section-card or .cardshow — never
      place text/data directly on this background. See UI_UX_STANDARDS §10. */
   .page-content {
-    padding: 16px 20px;
-    background: #eef2f7;
+    padding: 20px 24px;
+    background: #f8fafc;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    font-family: 'Poppins', sans-serif;
   }
 
   /* ---------------------------------------------------------------
@@ -407,18 +412,19 @@
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    font-family: 'Poppins', sans-serif;
   }
   .section-card-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 14px 24px;
     background: #fff;
     border-bottom: 1px solid #f0f4f8;
   }
   .section-card-body {
-    padding: 16px 20px 20px;
+    padding: 20px 24px;
     background: #fff;
   }
   /* Subcard: visually distinct inner row within a section-card or cardshow.
@@ -431,11 +437,12 @@
   .subcard:last-child { border-bottom: none; }
 
   .overview-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
     line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-grid {
@@ -449,23 +456,24 @@
     background: #ffffff;
     border-radius: 10px;
     padding: 14px 16px;
-    border: 1px solid #e8edf5;
+    border: 1px solid #e2e8f0;
     display: flex;
     align-items: flex-start;
     gap: 12px;
     transition: box-shadow 0.15s ease, border-color 0.15s ease;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border-color: #d1d9e8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-color: #c7d2e3;
   }
 
   .info-icon-wrap {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -478,8 +486,8 @@
   .info-icon-wrap.orange { background: var(--color-warning-50); color: var(--color-warning-600); }
 
   .info-icon-wrap svg {
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
   }
 
   .info-content {
@@ -487,23 +495,25 @@
   }
 
   .info-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-    margin-bottom: 4px;
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-tight);
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 3px;
+    font-weight: 500;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-value {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-tight);
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .content-split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 
@@ -514,7 +524,7 @@
     gap: 16px;
   }
   .content-main-full {
-     width: 1029px !important;
+    width: 100% !important;
   }
 
   /* cardshow = named card variant used by existing content sections.
@@ -523,10 +533,11 @@
   .cardshow {
     background: #ffffff;
     border-radius: 12px;
-    padding: var(--space-3);
+    padding: 24px;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
     overflow: hidden;
+    font-family: 'Poppins', sans-serif;
   }
 
   .card-header-sidebar {
@@ -535,8 +546,8 @@
     gap: 10px;
     /* Pull header edge-to-edge inside the cardshow padding so the
        border-bottom separator runs the full card width. */
-    margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-2);
-    padding: 13px var(--space-3);
+    margin: -24px -24px 16px;
+    padding: 14px 24px;
     border-bottom: 1px solid #f0f4f8;
     background: #fff;
   }
@@ -564,20 +575,22 @@
   }
 
   .card-title {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-tight);
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .summary-text {
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-relaxed);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-2);
+    font-size: 12px;
+    line-height: 1.7;
+    color: #475569;
+    margin-bottom: 16px;
+    font-family: 'Poppins', sans-serif;
   }
   .summary-text-width {
-        width: 486px;
+    width: 100%;
   }
 
   .word-count-badge {
@@ -638,22 +651,23 @@
   .skills-thead {
     display: grid;
     grid-template-columns: 1fr 100px 140px;
-    gap: var(--space-2);
+    gap: 16px;
     padding: 10px 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-tertiary);
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skills-row {
     display: grid;
     grid-template-columns: 1fr 100px 140px;
-    gap: var(--space-2);
-    padding: 14px 0;
-    border-bottom: 1px solid var(--color-border-light);
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
     align-items: center;
   }
 
@@ -665,9 +679,10 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skill-logo {
@@ -687,9 +702,10 @@
   }
 
   .skill-exp-cell {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-medium);
+    font-size: 12px;
+    color: #475569;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skill-rating-cell {
@@ -715,9 +731,10 @@
   }
 
   .rating-text {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slots-grid {
@@ -735,28 +752,31 @@
   }
 
   .slot-day-name {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-date {
-    font-size: var(--font-size-sm);
-    color: var(--color-danger-500);
-    font-weight: var(--font-weight-semibold);
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: 600;
     margin-top: 2px;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-time {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
+    font-size: 11px;
+    color: #475569;
     padding: 6px 0;
-    border-bottom: 1px solid var(--color-border-light);
-    line-height: var(--line-height-tight);
+    border-bottom: 1px solid #f1f5f9;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-time:last-of-type {
@@ -1152,10 +1172,6 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    .content-split {
-      grid-template-columns: 1fr;
-    }
-
     .page-header {
       flex-wrap: wrap;
       padding-right: var(--space-4);
@@ -1169,48 +1185,36 @@
   }
 
   @media (max-width: 768px) {
-    .page-header,
-    .page-tabs,
-    .page-content {
-      padding-left: var(--space-2);
-      padding-right: var(--space-2);
+    .page-tabs {
+      padding-left: 16px;
+      padding-right: 16px;
+      overflow-x: auto;
     }
-
+    .page-content {
+      padding: 16px;
+    }
     .page-header {
-      padding-right: calc(var(--space-2) + 40px);
+      padding-right: calc(16px + 40px);
     }
     .agency-grid {
-        grid-template-columns: 100px 1fr;
-      }
-
+      grid-template-columns: 100px 1fr;
+    }
     .candidate-name-show {
       font-size: var(--font-size-lg);
     }
-
     .info-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
     }
-
     .slots-grid {
       grid-template-columns: 1fr;
     }
-
     .skills-thead,
     .skills-row {
       grid-template-columns: 1fr 80px 100px;
       gap: 8px;
     }
-
-    .page-tabs {
-      gap: var(--space-1);
-      overflow-x: auto;
-      padding-bottom: 2px;
-    }
-
     .tab {
-      white-space: nowrap;
-      padding-left: var(--space-1);
-      padding-right: var(--space-1);
+      padding: 12px 12px;
     }
   }
 
@@ -2075,43 +2079,52 @@
     height: 14px;
   }
 
-  /* 7-cell strip — kept identical to the prior layout, plus tighter
-     gutter as it sits directly under the hero card. */
+  /* 7-cell at-a-glance strip — pipeline-card style matching job drawer */
   #kt_activitiesApplication .cdr-strip {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 0;
-    padding: 0 16px 10px 16px;
+    gap: 8px;
+    padding: 0 16px 12px 16px;
     background: transparent;
   }
   #kt_activitiesApplication .cdr-strip .cdr-strip-item {
-    padding: 11px 14px;
-    border-right: 1px solid #f1f5f9;
+    padding: 10px 12px;
+    border-right: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: box-shadow 0.15s ease;
   }
-  #kt_activitiesApplication .cdr-strip .cdr-strip-item:last-child { border-right: 0; }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
   #kt_activitiesApplication .cdr-strip .cdr-strip-label {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 10.5px;
+    gap: 5px;
+    font-size: 10px;
     font-weight: 600;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     line-height: 1.2;
     font-family: 'Poppins', sans-serif;
   }
   #kt_activitiesApplication .cdr-strip .cdr-strip-icon svg {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
     color: #94a3b8;
+    flex-shrink: 0;
   }
   #kt_activitiesApplication .cdr-strip .cdr-strip-value {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #0f172a;
-    margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2129,33 +2142,34 @@
     justify-content: space-between;
   }
 
-  /* Outlined action buttons (all buttons except WhatsApp solid) */
+  /* Outlined action buttons — compact style matching job drawer action-btn */
   #kt_activitiesApplication .cdr-action-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 14px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 8px;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
     background: #ffffff;
     color: #374151;
     font-family: 'Poppins', sans-serif;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     text-decoration: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
     line-height: 1;
   }
   #kt_activitiesApplication .cdr-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     flex-shrink: 0;
   }
   #kt_activitiesApplication .cdr-action-btn:hover {
-    border-color: #93c5fd;
-    box-shadow: 0 2px 6px rgba(59,130,246,0.10);
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.06);
     text-decoration: none;
   }
   #kt_activitiesApplication .cdr-action-btn.cdr-btn-primary svg   { color: #2563eb; }
@@ -2590,8 +2604,6 @@
     #kt_activitiesApplication .cdr-hero-card { grid-template-columns: 1fr; }
     #kt_activitiesApplication .cdr-subcard-id { border-right: 0; border-bottom: 1px solid #f1f5f9; }
     #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(4n) { border-right: 0; }
-    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(n+5) { border-top: 1px solid #f1f5f9; }
   }
   @media (max-width: 640px) {
     #kt_activitiesApplication .cdr-hero-card { margin: 8px 8px 4px 8px; }
@@ -2601,7 +2613,4 @@
     #kt_activitiesApplication .cdr-skills-compare { grid-template-columns: 1fr; }
     #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-grid { grid-template-columns: 1fr; }
     #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 8px 8px 8px; }
-    #kt_activitiesApplication .cdr-strip .cdr-strip-item { border-right: 1px solid #f1f5f9; }
-    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(2n) { border-right: 0; }
-    #kt_activitiesApplication .cdr-strip .cdr-strip-item:nth-child(n+3) { border-top: 1px solid #f1f5f9; }
   }
