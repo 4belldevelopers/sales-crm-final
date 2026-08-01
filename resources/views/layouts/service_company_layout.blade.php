@@ -145,35 +145,49 @@
       /* Close button */
       #kt_activitiesApplication .cdr-topbar-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:none;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;color:#6b7280;padding:0;margin-left:4px;}
       #kt_activitiesApplication .cdr-topbar-close svg{width:16px;height:16px;}
-      /* Hero card: 2-column grid */
-      #kt_activitiesApplication .cdr-hero-card{display:grid!important;grid-template-columns:minmax(280px,1.05fr) minmax(300px,1fr);background:#fff;border-bottom:1px solid #f0f4f8;}
-      /* Identity sub-card: avatar column left + body right */
-      #kt_activitiesApplication .cdr-subcard-id{display:flex!important;gap:20px;align-items:flex-start;padding:22px 18px 20px 22px;border-right:1px solid #edf0f5;}
-      #kt_activitiesApplication .cdr-id-avatar-col{display:flex!important;flex-direction:column;align-items:center;gap:10px;flex-shrink:0;}
-      #kt_activitiesApplication .cdr-avatar-lg{width:116px;height:116px;border-radius:50%;background:#eef2ff;color:#1e3a8a;font-family:'Poppins',sans-serif;font-weight:700;font-size:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:3px solid #e0e7ff;}
-      #kt_activitiesApplication .cdr-verified-v2 svg{width:11px;height:11px;}
-      #kt_activitiesApplication .cdr-meta-list{display:flex;flex-direction:column;gap:7px;margin-top:12px;}
-      #kt_activitiesApplication .cdr-meta-item{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:#374151;font-family:'Poppins',sans-serif;}
-      #kt_activitiesApplication .cdr-meta-item svg{width:14px;height:14px;flex-shrink:0;}
-      /* Metrics sub-card: 2x3 grid */
+      /* Hero card v3: 2-column grid — identity left (wider), metrics right */
+      #kt_activitiesApplication .cdr-hero-card{display:grid!important;grid-template-columns:1.4fr 1fr;background:#fff;border-bottom:1px solid #f0f4f8;}
+      /* Identity sub-card: flex row — avatar-wrap left + id-body right */
+      #kt_activitiesApplication .cdr-subcard-id{display:flex!important;gap:16px;align-items:flex-start;padding:18px 20px;border-right:1px solid #f1f5f9;}
+      /* Rounded-square avatar + availability dot */
+      #kt_activitiesApplication .cdr-avatar-wrap{position:relative;flex-shrink:0;align-self:flex-start;}
+      #kt_activitiesApplication .cdr-avatar-sq{width:88px;height:88px;border-radius:16px;background:#eef2ff;color:#1e3a8a;font-family:'Poppins',sans-serif;font-weight:700;font-size:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-avail-dot-v2{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2.5px solid #fff;}
+      /* Name / role */
+      #kt_activitiesApplication .cdr-id-body{flex:1 1 auto;min-width:0;}
+      #kt_activitiesApplication .cdr-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+      #kt_activitiesApplication .cdr-name{margin:0;font-size:18px;font-weight:700;color:#0f172a;line-height:1.2;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-verified-v2{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#2563eb;margin-left:6px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-verified-v2 svg{width:11px;height:11px;color:#fff;stroke-width:3;}
+      #kt_activitiesApplication .cdr-role{margin:3px 0 0 0;font-size:13px;font-weight:600;color:#2563eb;line-height:1.3;font-family:'Poppins',sans-serif;}
+      /* 2-col meta grid */
+      #kt_activitiesApplication .cdr-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:10px;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;white-space:nowrap;overflow:hidden;min-width:0;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item svg{width:13px;height:13px;flex-shrink:0;color:#94a3b8;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item.cmi-green{color:#16a34a;}
+      /* Skills */
+      #kt_activitiesApplication .cdr-skills-sec{margin-top:14px;}
+      #kt_activitiesApplication .cdr-skills-lbl{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-skills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+      #kt_activitiesApplication .cdr-skill-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#f1f5f9;color:#334155;font-size:11px;font-weight:500;border:1px solid #e2e8f0;font-family:'Poppins',sans-serif;line-height:1.2;}
+      #kt_activitiesApplication .cdr-skill-more{background:#eef2ff;color:#4338ca;border-color:#c7d2fe;font-weight:600;}
+      /* Metrics sub-card v3: 4-row vertical list */
       #kt_activitiesApplication .cdr-subcard-metrics{padding:0;}
-      #kt_activitiesApplication .cdr-match-grid-v2{display:grid!important;grid-template-columns:1fr 1fr;height:100%;}
-      #kt_activitiesApplication .cdr-match-cell{display:flex;align-items:center;gap:12px;padding:17px 15px;border-bottom:1px solid #f0f4f8;border-right:1px solid #f0f4f8;}
-      #kt_activitiesApplication .cdr-match-cell:nth-child(2n){border-right:none;}
-      #kt_activitiesApplication .cdr-match-cell:nth-last-child(-n+2){border-bottom:none;}
-      #kt_activitiesApplication .cdr-cell-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-      #kt_activitiesApplication .cdr-cell-icon svg{width:18px;height:18px;}
-      #kt_activitiesApplication .cdr-cell-icon.ci-green{background:#ecfdf5;color:#16a34a;}
-      #kt_activitiesApplication .cdr-cell-icon.ci-red{background:#fef2f2;color:#dc2626;}
-      #kt_activitiesApplication .cdr-cell-icon.ci-gray{background:#f1f5f9;color:#64748b;}
-      #kt_activitiesApplication .cdr-cell-icon.ci-amber{background:#fffbeb;color:#d97706;}
-      #kt_activitiesApplication .cdr-cell-body{min-width:0;flex:1 1 auto;}
-      #kt_activitiesApplication .cdr-cell-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#9ca3af;font-family:'Poppins',sans-serif;line-height:1.2;margin-bottom:3px;}
-      #kt_activitiesApplication .cdr-cell-value{font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;line-height:1.1;color:#0f172a;}
-      #kt_activitiesApplication .cdr-cell-value.cv-green{color:#16a34a;}
-      #kt_activitiesApplication .cdr-cell-value.cv-red{color:#dc2626;}
-      #kt_activitiesApplication .cdr-cell-sub{font-size:11px;color:#9ca3af;font-weight:400;font-family:'Poppins',sans-serif;margin-top:1px;}
-      #kt_activitiesApplication .cdr-score-ring-svg{width:56px;height:56px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px;}
+      #kt_activitiesApplication .cdr-metric-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f0f4f8;}
+      #kt_activitiesApplication .cdr-metric-row:last-child{border-bottom:none;}
+      #kt_activitiesApplication .cdr-metric-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-metric-icon svg{width:16px;height:16px;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-green{background:#ecfdf5;color:#16a34a;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-red{background:#fef2f2;color:#dc2626;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-blue{background:#eff6ff;color:#2563eb;}
+      #kt_activitiesApplication .cdr-metric-label{flex:1 1 auto;font-size:12.5px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;min-width:0;}
+      #kt_activitiesApplication .cdr-metric-val{font-size:13px;font-weight:700;color:#0f172a;text-align:right;white-space:nowrap;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-metric-val.cv-green{color:#16a34a;}
+      #kt_activitiesApplication .cdr-metric-val.cv-red{color:#dc2626;}
+      #kt_activitiesApplication .cdr-metric-frac{font-size:12px;font-weight:500;color:#64748b;}
+      #kt_activitiesApplication .cdr-metric-val-block{text-align:right;min-width:0;}
+      #kt_activitiesApplication .cdr-metric-sub{font-size:11px;color:#94a3b8;font-weight:400;display:block;margin-top:1px;white-space:nowrap;font-family:'Poppins',sans-serif;}
       /* Card/subcard system: page-content background + section-card display (FOUC-safe) */
       #kt_activitiesApplication .page-content{background:#eef2f7;padding:16px 20px;display:flex;flex-direction:column;gap:16px;}
       #kt_activitiesApplication .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03);}
