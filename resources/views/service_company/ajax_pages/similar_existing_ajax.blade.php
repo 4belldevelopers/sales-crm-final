@@ -131,27 +131,45 @@
 
                     $skilltag = '';
                     $skilltagclass = '';
-                    // $row->matched_skills returns the candidate's own skill
-                    // entries that phrase-prefix matched SOME required skill —
-                    // e.g. a candidate with [Java, AWS, Java Developer] and
-                    // required [Java, AWS, Node] returns 3 entries. Using
-                    // count($matched_skills) as $matches inflates Match%:
-                    // two required skills (Java, AWS) get reported as three
-                    // matched entries, so Match 100% renders even though Node
-                    // is unsatisfied, and the badge list is missing a "Node"
-                    // entry to display. Distinct required skills satisfied is
-                    // the correct denominator.
+                    // Use the SAME candidate skill source Total Candidates in
+                    // Job uses (resources/.../ajax_pages/all_apptracker.blade.php
+                    // line ~154: $skillArr = explode(',', $row->skills)). Here
+                    // the row is an Elasticsearch hit, not a MySQL
+                    // job_applications row, so the candidate's own skills live
+                    // in $row->all_skills (already plucked server-side from
+                    // job_application_skills.skills). Falling back to
+                    // $row->matched_skills keeps the row rendering if the
+                    // document lacks the all_skills field for any reason.
                     $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
                     $candidateAllSkills = is_array($row->all_skills ?? null) ? $row->all_skills : $skillArr;
+
+                    // Job's required-skills source for the match itself, same
+                    // Total Candidates uses (job_metronics_skills). Used for
+                    // both the percentage and the green-badge highlighting so
+                    // the two pages produce identical Match% and identical
+                    // matched-skill sets for the same candidate.
+                    $jobRequiredSkills = \Illuminate\Support\Facades\DB::table('job_metronics_skills')
+                        ->where('job_id', $row->job_id ?? $jobid)
+                        ->pluck('skill_name')
+                        ->map(fn($s) => strtolower(trim($s)))
+                        ->values()
+                        ->toArray();
+
+                    // Distinct required skills the candidate actually
+                    // satisfies, with the candidate skill entry that did the
+                    // matching recorded as the "representative" for that
+                    // requirement — used by both the matched-required list
+                    // and the missing-required list below.
                     $satisfiedRequired = [];
                     $representativeByRequired = [];
-                    foreach ($requiredSkills as $req) {
+                    foreach ($jobRequiredSkills as $req) {
                         foreach ($candidateAllSkills as $cand) {
                             if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) {
                                 $satisfiedRequired[$req] = true;
                                 if (!isset($representativeByRequired[$req])) {
                                     $representativeByRequired[$req] = $cand;
                                 }
+                                break;
                             }
                         }
                     }
@@ -175,22 +193,23 @@
                         }
                     }
 
-                    $percentage=0;
-                    // Count of DISTINCT required skills the candidate satisfies
-                    // (i.e. keys of $satisfiedRequired above), not the count of
-                    // candidate's own skill entries that matched. Otherwise a
-                    // candidate whose [Java, Java Developer] both phrase-match
-                    // required "java" inflates $matches to 2 for one satisfied
-                    // required skill, and a candidate missing Node.js still
-                    // scores 100% because the candidate-side count equals the
-                    // required-side count. Using count($satisfiedRequired) keeps
-                    // the percentage in lockstep with the badge list and the
-                    // "Matched/Missing" tooltip.
-                    $matches = count($satisfiedRequired);
-                    $totalElements = count($requiredSkills);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    $percentage = 0;
+                    // Match % is computed the same way Total Candidates in Job
+                    // does it (resources/.../ajax_pages/all_apptracker.blade.php
+                    // line ~156): GeneralMethod::skill_percentage($jobId,
+                    // $candidateAllSkills). That helper reads the FULL job
+                    // requirements from `job_metronics_skills` and counts
+                    // distinct required skills satisfied via
+                    // skillMatchesPhrasePrefix (the same match used
+                    // throughout ATS). Using the SAME helper on the same
+                    // (jobId, candidate skills) inputs guarantees the two
+                    // pages produce identical percentages for the same
+                    // candidate.
+                    $percentageString = GeneralMethod::skill_percentage(
+                        $row->job_id ?? $jobid,
+                        $candidateAllSkills
+                    );
+                    $percentage = (float) rtrim($percentageString ?: '0%', '%');
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used on the Pool tab / CV Tracker: >90 green,
@@ -212,18 +231,13 @@
                     // change and a Bootstrap-tooltip re-init isn't guaranteed
                     // to run against freshly-injected markup; a native title
                     // works with zero JS dependency regardless.
-                    // A plain array_diff() compared required skill KEYWORDS
-                    // ("java") against the candidate's own matched skill TEXT
-                    // ("java developer") as exact strings — never equal, so a
-                    // required skill the candidate actually has (via a
-                    // differently-worded skill entry) still showed up in the
-                    // tooltip as "Missing". Same phrase-prefix check
-                    // matched_skills itself was computed with.
-                    // missingSkills = required skills NOT in $satisfiedRequired.
-                    // Previously diffed against $skillArr (candidate entries)
-                    // which produced false negatives when two required skills
-                    // were both phrase-matched by the same candidate entry.
-                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($satisfiedRequired) {
+                    // Computed against $jobRequiredSkills (the same set the
+                    // percentage above is computed against), NOT against the
+                    // recruiter filter subset $requiredSkills — otherwise the
+                    // "Matched/Missing" list drifts from the percentage
+                    // denominator whenever the filter is a strict subset of
+                    // the job's required skills.
+                    $missingSkills = array_values(array_filter($jobRequiredSkills, function ($required) use ($satisfiedRequired) {
                         return empty($satisfiedRequired[$required]);
                     }));
                     $matchTooltipParts = [];
@@ -236,7 +250,7 @@
                     if (!empty($missingSkills)) {
                         $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
                     }
-                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No required skills configured for this job';
 
                     $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;cursor:help;">Match '.$percentage.'%</span>';
 
