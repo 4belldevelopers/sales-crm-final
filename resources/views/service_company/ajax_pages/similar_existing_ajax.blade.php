@@ -157,8 +157,18 @@
                     }
                     $mandatorySatisfied = [];
                     $optionalSatisfied = [];
+                    // Split satisfied required skills into mandatory vs
+                    // optional. The controller's $row->matched_mandatory_skills
+                    // is matchedSkillsList($jobSkills, $mandatorySkills), so
+                    // lower-casing it gives the candidate entries that
+                    // phrase-matched the starred/mandatory required skills.
+                    // A satisfied required skill is "mandatory" if its
+                    // representative candidate entry also appears there.
+                    $mandatoryCandidateKeys = array_map('strtolower', $row->matched_mandatory_skills ?? []);
                     foreach (array_keys($satisfiedRequired) as $req) {
-                        if (in_array($req, $mandatorySkills, true)) {
+                        $rep = $representativeByRequired[$req] ?? null;
+                        $isMandatory = $rep !== null && in_array(strtolower($rep), $mandatoryCandidateKeys, true);
+                        if ($isMandatory) {
                             $mandatorySatisfied[] = $req;
                         } else {
                             $optionalSatisfied[] = $req;
@@ -166,7 +176,7 @@
                     }
 
                     $percentage=0;
-                    $matches = count($satisfiedRequired);
+                    $matches = $row->matched_skill_count;
                     $totalElements = count($requiredSkills);
                     $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
                     $matchPercentage = min($matchPercentage, 100);
