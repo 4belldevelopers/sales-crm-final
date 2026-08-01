@@ -626,40 +626,6 @@
             .simf-footer-actions .btn { flex: 1 1 auto; justify-content: center; }
         }
 
-        /* ------------------------------------------------------------------
-           Added-candidates separator — visual divider between the regular
-           "Add to Job" rows and the ghost "Already Added" rows that are
-           injected client-side at the bottom of the last pagination page.
-           The green accent echoes the green "Added" button colour so the
-           two elements read as part of the same system.
-        ------------------------------------------------------------------ */
-        .simf-added-separator td {
-            background: #f0fdf4 !important;
-            border-top: 2px solid #16a34a !important;
-            border-bottom: 1px solid #dcfce7 !important;
-            padding: 10px 20px !important;
-            pointer-events: none;
-        }
-        .simf-added-sep-inner {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #15803d;
-            letter-spacing: 0.25px;
-            text-transform: uppercase;
-        }
-        /* Ghost rows in the Added section: slightly muted to signal they
-           are read-only display rows, not actionable candidates. */
-        .simf-added-row {
-            opacity: 0.78;
-        }
-        .simf-added-row:hover {
-            opacity: 1;
-            background: #f8fffe !important;
-        }
-
         /* ==================================================================
            Enterprise toolbar redesign: search / sort / filter.
            #kt_tagify_2 is a plain free-text field with one job (candidate
@@ -2469,20 +2435,21 @@
             }
         });
 
-        // ----------------------------------------------------------------
-        // simfLocallyAdded — session-level registry of candidates the user
-        // has added to the job in this browser session.
-        //
-        // Invariants:
-        //   • Index 0 = most-recently added (newest first — unshift on add)
-        //   • Each entry: { id: <row-id string>, html: <tr outerHTML> }
-        //   • The array is never read by any counter, filter, or server
-        //     request — display-only.
-        //   • Cleared implicitly on hard page refresh (in-memory only).
-        // ----------------------------------------------------------------
+        // The candidate stays visible in THIS list after a successful add —
+        // swapping the button to the same "Added" label the row partial
+        // already renders server-side for candidates already in the job's
+        // pipeline (see similar_existing_ajax.blade.php's $existingCandidatesQuery
+        // branch) — rather than fading/removing the row. The row only
+        // actually disappears once the list is genuinely re-fetched
+        // (pagination, filter, sort, or a real page reload), which is when
+        // the server-side exclusion naturally takes over. This avoids the
+        // "did that actually work, where did the row go?" confusion of an
+        // instant removal.
         function simfMarkCandidateRowAdded($btn) {
-            /* Apply the green "Added" button in-place so the user sees
-               immediate positive feedback on the current page row. */
+            /* Replace the "Add to Job" button with a green "Added" badge so the
+               user gets clear, positive feedback that the action succeeded.
+               Uses the same height/padding as the original button so the row
+               layout doesn't shift. */
             $btn.closest('div.d-flex.flex-column').html(
                 '<button type="button" class="btn btn-sm" disabled ' +
                 'style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;' +
@@ -2492,7 +2459,6 @@
                 'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
                 '<polyline points="20 6 9 17 4 12"/></svg> Added</button>'
             );
-            $btn.closest('tr').addClass('simf-added-row');
         }
 
         $(document).on('click', '.add_to_inreview', function(e) {
@@ -2681,8 +2647,16 @@
                     // current-filter result once fetched. Swap the tooltip
                     // so it doesn't contradict what the page just showed.
                     $('#apth_hint_similar_counter').attr('title',
-                        'This is your current filter selection on this page — the same card on other tabs shows this job\'s default count instead.');
+                        'This is your current filter selection on this page ΓÇö the same card on other tabs shows this job\'s default count instead.');
                 },
+                error: function(xhr) {
+                    // Never leave the loading overlay stuck or the list blank on
+                    // a failed request ΓÇö surface what went wrong instead.
+                    $('.loadingMessage').css({ display: 'none' });
+                    console.error('similar_existing_data_ajax failed:', xhr.status, xhr.responseText);
+                }
+            });
+        }
 
         // Free-text search box: Enter re-runs the same fetchCandidates() call
         // the sort dropdown and pagination already use ΓÇö no separate endpoint.
