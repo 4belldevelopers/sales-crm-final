@@ -1226,7 +1226,7 @@
                                         </span>
                                         <div>
                                             <div class="simf-section-title">Skills <span class="simf-badge-primary">Primary</span></div>
-                                            <div class="simf-section-desc">Add skills to find relevant candidates ΓÇö click Γÿà to make a skill mandatory</div>
+                                            <div class="simf-section-desc">Add skills to find relevant candidates &mdash; click &#9733; to make a skill mandatory</div>
                                         </div>
                                     </div>
                                     <div class="simf-section-body">
@@ -1245,7 +1245,7 @@
                                                         const value = tagData.value || '';
                                                         const isChecked = tagData.checked ? 'checked' : '';
                                                         const mandatoryClass = tagData.checked ? 'simf-mandatory-tag' : '';
-                                                        const starGlyph = tagData.checked ? 'Γÿà' : 'Γÿå';
+                                                        const starGlyph = tagData.checked ? '&#9733;' : '&#9734;';
                                                         const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
                                         const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
                                         const starColor = tagData.checked ? '#eab308' : '#94a3b8';
@@ -1288,7 +1288,7 @@
 
                                                     // Update glyph, star colour, chip background/border inline
                                                     // (template uses inline styles so CSS classes alone won't work)
-                                                    starEl.textContent = nowChecked ? 'Γÿà' : 'Γÿå';
+                                                    starEl.innerHTML = nowChecked ? '&#9733;' : '&#9734;';
                                                     starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
                                                     tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
                                                     tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
@@ -1679,7 +1679,7 @@
                                 <div class="simf-section">
                                     <div class="simf-section-head">
                                         <span class="simf-icon simf-icon-amber">
-                                            <span style="font-size:15px;font-weight:700;line-height:1;">Γé╣</span>
+                                            <span style="font-size:15px;font-weight:700;line-height:1;">&#8377;</span>
                                         </span>
                                         <div>
                                             <div class="simf-section-title">Salary (CTC)</div>
@@ -1692,7 +1692,7 @@
                                                 <label class="simf-mini-label">Currency</label>
                                                 <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
                                                     <option value="">Select currency</option>
-                                                    <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (Γé╣)</option>
+                                                    <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (&#8377;)</option>
                                                     <option value="1" {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR</option>
                                                     <option value="2" {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY</option>
                                                     <option value="3" {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP</option>
@@ -2446,8 +2446,18 @@
         // "did that actually work, where did the row go?" confusion of an
         // instant removal.
         function simfMarkCandidateRowAdded($btn) {
+            /* Replace the "Add to Job" button with a green "Added" badge so the
+               user gets clear, positive feedback that the action succeeded.
+               Uses the same height/padding as the original button so the row
+               layout doesn't shift. */
             $btn.closest('div.d-flex.flex-column').html(
-                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+                '<button type="button" class="btn btn-sm" disabled ' +
+                'style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;' +
+                'font-weight:600;padding:6px 14px;border-radius:6px;cursor:default;' +
+                'display:inline-flex;align-items:center;gap:5px;">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" ' +
+                'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                '<polyline points="20 6 9 17 4 12"/></svg> Added</button>'
             );
         }
 
@@ -2937,7 +2947,7 @@
                 var $chip = $('<span class="simf-chip"></span>')
                     .toggleClass('mandatory', !!c.mandatory);
                 if (c.mandatory) {
-                    $chip.append($('<span style="color:#eab308;"></span>').text('Γÿà ')).append($('<span></span>').text(c.label));
+                    $chip.append($('<span style="color:#eab308;"></span>').html('&#9733; ')).append($('<span></span>').text(c.label));
                 } else {
                     $chip.append($('<span></span>').text(c.label));
                 }
@@ -2981,7 +2991,7 @@
                 activity: '<path d="M3 3v18h18M7 14l4-4 3 3 5-6"/>'
             };
             if (cat === 'salary') {
-                return '<span style="font-size:11px;font-weight:700;line-height:1;">Γé╣</span>';
+                return '<span style="font-size:11px;font-weight:700;line-height:1;">&#8377;</span>';
             }
             return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (paths[cat] || '') + '</svg>';
         }
@@ -3070,7 +3080,7 @@
                 var $chip = $('<span class="simf-applied-chip"></span>').addClass('cat-' + it.cat);
                 $chip.append('<span class="ic">' + simfCategoryIcon(it.cat) + '</span>');
                 if (it.mandatory) {
-                    $chip.append($('<span class="star"></span>').text('Γÿà'));
+                    $chip.append($('<span class="star"></span>').html('&#9733;'));
                 }
                 $chip.append($('<span></span>').text(it.label));
                 $chip.append(
