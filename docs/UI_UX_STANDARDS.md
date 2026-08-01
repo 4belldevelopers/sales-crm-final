@@ -131,6 +131,86 @@ Before shipping any new screen, verify:
 - [ ] No N+1 queries, no full table scans
 - [ ] Large datasets paginated, heavy work queued
 - [ ] AA contrast met
+- [ ] Every content section uses `.section-card` or `.cardshow` (white bg, border, shadow)
+- [ ] No text/data rendered directly on the `#eef2f7` page background
+- [ ] Card headers have icon + title (see §10 icon colour table)
+
+---
+
+## 10. Card + SubCard layout system (mandatory from 2026-08-01)
+
+All content sections — in drawers, sidebars, modals, and full pages — **must** be placed
+inside a white-surface card container. Never render data text directly on the page/drawer
+background (which is `#eef2f7`, a slate-gray). Text on a non-white background is an
+accessibility and readability violation.
+
+### The two card classes
+
+| Class | Purpose |
+|---|---|
+| `.section-card` | Primary container for a named content block (new, preferred) |
+| `.cardshow` | Legacy equivalent — same visual spec, used in existing sections |
+
+Both share the same spec: `background:#fff`, `border:1px solid #e2e8f0`, `border-radius:12px`,
+`box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03)`.
+
+### Structure (new sections — use `.section-card`)
+
+```html
+<div class="section-card">
+  <div class="section-card-header">
+    <div class="card-icon" style="background:#eff6ff;color:#2563eb;"><!-- svg icon --></div>
+    <h3 class="card-title">Section Title</h3>
+  </div>
+  <div class="section-card-body">
+    <!-- content here -->
+  </div>
+</div>
+```
+
+### Structure (existing sections — use `.cardshow`)
+
+```html
+<section class="cardshow">
+  <div class="card-header-sidebar">
+    <div class="card-icon" style="background:…;color:…;"><!-- svg icon --></div>
+    <h3 class="card-title">Section Title</h3>
+  </div>
+  <!-- content rows follow -->
+</section>
+```
+
+### Sub-cards (`.subcard`)
+
+When items inside a card need row-level visual separation, wrap each in `.subcard`:
+
+```html
+<div class="section-card">
+  <div class="section-card-header">…</div>
+  <div class="subcard">Row 1 content</div>
+  <div class="subcard">Row 2 content</div>
+  {{-- last .subcard has no border-bottom automatically --}}
+</div>
+```
+
+### Rules
+
+- **White background (#fff) everywhere** — every card, every subcard, every section.
+- **Never skip the header** — every card must have a `.section-card-header` or `.card-header-sidebar`
+  with an icon (32×32, rounded-md, colored background) and a title.
+- **Icon colour system** for card headers:
+
+  | Accent | Icon bg | Icon colour | Use for |
+  |---|---|---|---|
+  | Blue | `#eff6ff` | `#2563eb` | Profile, Identity, Contact |
+  | Green | `#ecfdf5` | `#059669` | Skills, Compensation, Positive |
+  | Purple | `#f5f3ff` | `#7c3aed` | Ownership, Permissions |
+  | Amber | `#fffbeb` | `#d97706` | Schedule, Warnings |
+  | Red | `#fef2f2` | `#dc2626` | Errors, Mismatches |
+
+- **Page background** — set the containing area to `background:#eef2f7` so white cards stand out.
+- **Gaps** — use `16px` (`gap:16px`) between sibling cards in a flex/grid container.
+- **Never** put raw paragraph text or data rows directly inside `.page-content` outside a card.
 
 ---
 

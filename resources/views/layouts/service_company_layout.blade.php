@@ -174,6 +174,17 @@
       #kt_activitiesApplication .cdr-cell-value.cv-red{color:#dc2626;}
       #kt_activitiesApplication .cdr-cell-sub{font-size:11px;color:#9ca3af;font-weight:400;font-family:'Poppins',sans-serif;margin-top:1px;}
       #kt_activitiesApplication .cdr-score-ring-svg{width:56px;height:56px;flex-shrink:0;}
+      /* Card/subcard system: page-content background + section-card display (FOUC-safe) */
+      #kt_activitiesApplication .page-content{background:#eef2f7;padding:16px 20px;display:flex;flex-direction:column;gap:16px;}
+      #kt_activitiesApplication .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03);}
+      #kt_activitiesApplication .section-card-header{display:flex;align-items:center;gap:10px;padding:14px 20px;background:#fff;border-bottom:1px solid #f0f4f8;}
+      #kt_activitiesApplication .section-card-body{padding:16px 20px 20px;background:#fff;}
+      #kt_activitiesApplication .cardshow{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03);}
+      #kt_activitiesApplication .card-header-sidebar{display:flex;align-items:center;gap:10px;background:#fff;border-bottom:1px solid #f0f4f8;padding:13px 24px;margin:-24px -24px 16px;}
+      #kt_activitiesApplication .info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:0;}
+      #kt_activitiesApplication .info-card{background:#fff;border:1px solid #e8edf5;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+      #kt_activitiesApplication .content-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+      #kt_activitiesApplication .content-main,#kt_activitiesApplication .content-sidebar{display:flex;flex-direction:column;gap:16px;}
 
       /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
          set via data-kt-drawer-width on the element itself (KTDrawer computes
