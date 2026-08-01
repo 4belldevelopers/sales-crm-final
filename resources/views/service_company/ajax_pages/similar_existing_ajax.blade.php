@@ -26,8 +26,20 @@
     $jobMode = @$modeFilter;
     $jobCurrency = @$currencyFilter;
     $symbols = @$symbolsFilter;
+    $isAddedRow = !empty($row->is_already_added);
     @endphp
-        <tr style="height: 102px; position: relative;">
+        @if ($isAddedRow && !isset($renderedAddedSeparator))
+            @php $renderedAddedSeparator = true; @endphp
+            <tr class="simf-added-separator">
+                <td colspan="12">
+                    <span class="simf-added-sep-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Already Added to This Job
+                    </span>
+                </td>
+            </tr>
+        @endif
+        <tr class="{{ $isAddedRow ? 'simf-added-row' : '' }}" style="height: 102px; position: relative;">
             <!-- check start  -->
             <td>
                 @php
@@ -903,15 +915,13 @@
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)
                             ->where('add_job_wise_condidates.job_application_id', '=', $row->candidate_id)->count();
 
+                        $addedBtnHtml = '<div class="d-flex flex-column"><button type="button" class="btn btn-sm" disabled style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;font-weight:600;padding:6px 14px;cursor:default;display:inline-flex;align-items:center;gap:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added</button></div>';
                         if ($public_bench_conter > 0) {
-                            $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                            $html = $addedBtnHtml;
                         } elseif ($internal_bench_conter > 0) {
-                            $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
-                        }elseif($existingCandidatesQuery){
-                            $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                            $html = $addedBtnHtml;
+                        } elseif ($existingCandidatesQuery || !empty($row->is_already_added)) {
+                            $html = $addedBtnHtml;
                         } else {
                             $html =
                                 '<div class="d-flex flex-column"> 

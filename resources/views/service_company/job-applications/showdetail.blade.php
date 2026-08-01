@@ -789,7 +789,7 @@
         #resume_cv .rcv-switch.on { background:#6366f1; }
         #resume_cv .rcv-switch::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#fff; border-radius:50%; transition:.15s; }
         #resume_cv .rcv-switch.on::after { left:18px; }
-        #resume_cv .rcv-viewport { height:calc(100vh - 552px); min-height:300px; overflow:auto; background:#525659; padding:16px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+        #resume_cv .rcv-viewport { overflow:visible; background:#525659; padding:16px; display:flex; flex-direction:column; align-items:center; gap:14px; }
         #resume_cv .rcv-page { position:relative; box-shadow:0 4px 16px rgba(0,0,0,.35); background:#fff; }
         #resume_cv .rcv-page canvas { display:block; }
         #resume_cv .rcv-textlayer { position:absolute; left:0; top:0; right:0; bottom:0; overflow:hidden; line-height:1; opacity:1; }
