@@ -103,6 +103,41 @@
 
  <link href="{{ asset('demo/css/candidates-details.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
+{{-- Inline critical CSS: three-card layout + pipeline stat cards.
+     Placed after the external link so it always takes effect even if the
+     CSS file is served from browser cache. --}}
+<style>
+/* ===== THREE-CARD LAYOUT ===== */
+#kt_activitiesApplication .page-wrapper{display:flex;flex-direction:column;gap:12px;background:#f1f5f9;min-height:auto;padding-bottom:16px;}
+#kt_activitiesApplication .cdr-outer-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03);overflow:hidden;flex-shrink:0;margin:0 16px;}
+/* ===== CARD 2: pipeline stat sub-cards ===== */
+#kt_activitiesApplication .cdr-pipeline-section{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;flex-shrink:0;margin:0 16px;}
+#kt_activitiesApplication .cdr-pipeline-card{background:#fff;border-radius:12px;padding:14px 12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:box-shadow .18s ease,transform .18s ease,border-color .18s ease;cursor:default;min-width:0;}
+#kt_activitiesApplication .cdr-pipeline-card:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);transform:translateY(-2px);border-color:#bfdbfe;}
+#kt_activitiesApplication .cdr-pipeline-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#kt_activitiesApplication .cdr-pipeline-icon svg{width:16px!important;height:16px!important;flex-shrink:0;}
+#kt_activitiesApplication .cpi-blue{background:#dbeafe;color:#1d4ed8;}
+#kt_activitiesApplication .cpi-green{background:#d1fae5;color:#059669;}
+#kt_activitiesApplication .cpi-purple{background:#ede9fe;color:#7c3aed;}
+#kt_activitiesApplication .cpi-amber{background:#fef3c7;color:#d97706;}
+#kt_activitiesApplication .cpi-teal{background:#ccfbf1;color:#0d9488;}
+#kt_activitiesApplication .cpi-indigo{background:#e0e7ff;color:#4338ca;}
+#kt_activitiesApplication .cdr-pipeline-info{flex:1;min-width:0;}
+#kt_activitiesApplication .cdr-pipeline-label{font-size:10.5px;color:#94a3b8;font-weight:500;font-family:'Poppins',sans-serif;margin-bottom:4px;white-space:nowrap;}
+#kt_activitiesApplication .cdr-pipeline-value{font-size:13px;font-weight:700;color:#0f172a;font-family:'Poppins',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+#kt_activitiesApplication .cpi-unit{font-size:11px;font-weight:500;color:#64748b;font-family:'Poppins',sans-serif;}
+/* ===== CARD 3: tabs sit flat inside outer card ===== */
+#kt_activitiesApplication .cdr-tabs-card .page-tabs{border-radius:0;background:#fff;}
+#kt_activitiesApplication .cdr-tabs-card .page-content{background:#f8fafc;border-radius:0 0 12px 12px;}
+/* ===== FONT CAP: max 14px for all content text ===== */
+#kt_activitiesApplication .cdr-subcard-id .cdr-name{font-size:14px!important;font-weight:700;line-height:1.3;}
+#kt_activitiesApplication .cdr-compare-value{font-size:13px!important;}
+#kt_activitiesApplication .cdr-cell-value{font-size:13px!important;}
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}}
+@media(max-width:640px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(2,minmax(0,1fr));}}
+</style>
+
 <script>
    $("timeline-item:last-child").addClass("timeline-item:last-child");
 </script>
@@ -565,7 +600,7 @@
     {{-- Total Experience --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Total Experience</div>
@@ -576,7 +611,7 @@
     {{-- Relevant Experience --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-green">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Relevant Exp</div>
@@ -587,7 +622,7 @@
     {{-- Gender --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-purple">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Gender</div>
@@ -598,7 +633,7 @@
     {{-- Nationality --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Nationality</div>
@@ -609,7 +644,7 @@
     {{-- Work Mode --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-teal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Work Mode</div>
@@ -620,7 +655,7 @@
     {{-- Education --}}
     <div class="cdr-pipeline-card">
       <div class="cdr-pipeline-icon cpi-indigo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg>
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Education</div>
