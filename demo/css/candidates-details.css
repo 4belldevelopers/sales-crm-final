@@ -384,38 +384,82 @@
     flex-shrink: 0;
   }
 
+  /* Page content: slate-tinted gray background so white cards always pop.
+     All content sections MUST live inside a .section-card or .cardshow — never
+     place text/data directly on this background. See UI_UX_STANDARDS §10. */
   .page-content {
-    padding: var(--space-3) var(--space-4);
+    padding: 16px 20px;
+    background: #eef2f7;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
+  /* ---------------------------------------------------------------
+     CARD + SUBCARD LAYOUT SYSTEM (mandatory from 2026-08-01)
+     Every content section in any drawer/page uses this pattern:
+       .section-card > .section-card-header + .section-card-body
+     Nested items that need row-level separation use .subcard.
+     White background (#fff) on every card/subcard — no exceptions.
+     --------------------------------------------------------------- */
+  .section-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+  }
+  .section-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: #fff;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  .section-card-body {
+    padding: 16px 20px 20px;
+    background: #fff;
+  }
+  /* Subcard: visually distinct inner row within a section-card or cardshow.
+     Use for each metric cell, each row, or any item that needs a divider. */
+  .subcard {
+    background: #fff;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  .subcard:last-child { border-bottom: none; }
+
   .overview-title {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-3);
-    line-height: var(--line-height-tight);
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.25;
   }
 
   .info-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
+    gap: 12px;
+    margin-bottom: 0;
   }
 
   .info-card {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-2);
-    border: 1px solid var(--color-border);
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #e8edf5;
     display: flex;
     align-items: flex-start;
-    gap: var(--space-2);
-    transition: box-shadow var(--transition-base);
+    gap: 12px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
 
   .info-card:hover {
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-color: #d1d9e8;
   }
 
   .info-icon-wrap {
@@ -460,31 +504,41 @@
   .content-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+    gap: 16px;
   }
 
   .content-main,
   .content-sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: 16px;
   }
   .content-main-full {
      width: 1029px !important;
   }
 
+  /* cardshow = named card variant used by existing content sections.
+     Same visual system as .section-card: white bg, border, shadow.
+     overflow:hidden clips the full-width card-header-sidebar to border-radius. */
   .cardshow {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
+    background: #ffffff;
+    border-radius: 12px;
     padding: var(--space-3);
-    border: 1px solid var(--color-border);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+    overflow: hidden;
   }
 
   .card-header-sidebar {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: var(--space-3);
+    /* Pull header edge-to-edge inside the cardshow padding so the
+       border-bottom separator runs the full card width. */
+    margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-2);
+    padding: 13px var(--space-3);
+    border-bottom: 1px solid #f0f4f8;
+    background: #fff;
   }
   .card-header-top {
     display: flex;

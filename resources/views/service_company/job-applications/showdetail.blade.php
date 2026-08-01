@@ -1557,8 +1557,17 @@
 
     <div class="tab-pane fade show active" id="personal_details" role="tabpanel">
 
-      <h2 class="overview-title">Profile Overview</h2>
-
+      {{-- Quick Profile card: icon-grid of 8 at-a-glance facts (section-card + section-card-body wrap) --}}
+      <div class="section-card" aria-label="Quick profile overview">
+        <div class="section-card-header">
+          <div class="card-icon" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <h3 class="overview-title">Quick Profile</h3>
+        </div>
+        <div class="section-card-body">
       <section class="info-grid" aria-label="Candidate quick information">
         <article class="info-card">
             <div class="info-icon-wrap blue">
@@ -1717,8 +1726,8 @@
           </div>
         </article>
       </section>
-
-
+        </div>{{-- /section-card-body --}}
+      </div>{{-- /section-card (Quick Profile) --}}
 
       <div class="content-split">
         <div class="content-main">
