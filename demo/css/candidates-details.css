@@ -2524,22 +2524,22 @@
     color: #2563eb;
   }
 
-  /* Metric label — left-middle, flexible */
+  /* Metric label — content-width only; value sits 12px to its right */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-label {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     font-size: 12.5px;
     font-weight: 500;
     color: #475569;
     font-family: 'Poppins', sans-serif;
     min-width: 0;
+    white-space: nowrap;
   }
 
-  /* Metric value — right-aligned bold text */
+  /* Metric value — follows the label naturally */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val {
     font-size: 13px;
     font-weight: 700;
     color: #0f172a;
-    text-align: right;
     white-space: nowrap;
     font-family: 'Poppins', sans-serif;
   }
@@ -2555,7 +2555,6 @@
 
   /* Multi-line value block (salary: status line + sub-text) */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val-block {
-    text-align: right;
     min-width: 0;
   }
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-sub {
