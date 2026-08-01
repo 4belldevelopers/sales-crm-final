@@ -2484,13 +2484,14 @@
     flex-direction: column;
     height: 100%;
     justify-content: space-evenly;
-    padding: 8px 20px;
+    /* increased left padding shifts icon+label rightward toward the value */
+    padding: 8px 20px 8px 44px;
   }
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 11px 0;
+    padding: 9px 0;
     border-bottom: 1px solid #f0f4f8;
   }
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-row:last-child {
@@ -2524,22 +2525,26 @@
     color: #2563eb;
   }
 
-  /* Metric label — content-width only; value sits 12px to its right */
+  /* Metric label — grows to fill; left padding on the list shifts
+     the whole icon+label group rightward, reducing the gap to the value */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-label {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     font-size: 12.5px;
     font-weight: 500;
     color: #475569;
     font-family: 'Poppins', sans-serif;
     min-width: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* Metric value — follows the label naturally */
+  /* Metric value — right-aligned at the list's right edge */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val {
     font-size: 13px;
     font-weight: 700;
     color: #0f172a;
+    text-align: right;
     white-space: nowrap;
     font-family: 'Poppins', sans-serif;
   }
@@ -2555,6 +2560,7 @@
 
   /* Multi-line value block (salary: status line + sub-text) */
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val-block {
+    text-align: right;
     min-width: 0;
   }
   #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-sub {
