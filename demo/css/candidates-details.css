@@ -1672,6 +1672,9 @@
   #kt_activitiesApplication .cdr-subcard-id {
     border-right: 1px solid #f1f5f9;
     background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
   }
   #kt_activitiesApplication .cdr-subcard-metrics {
     display: flex;

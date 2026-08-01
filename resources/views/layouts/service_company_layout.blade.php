@@ -113,7 +113,6 @@
      a debug note for future readers instead of deleting it; if you delete it,
      please delete this too. --}}
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
-
 @stack('head-script')
 <style>         
       @media  only screen and (min-width: 1024px) and (max-width: 1440px)
@@ -128,6 +127,12 @@
       }
        #kt_activitiesIntTeam{width: 1200px;} }
       #kt_activitiesIntTeam{z-index:9999;}
+
+      /* Candidate drawer — prevent FOUC while candidates-details.css loads */
+      #kt_activitiesApplication .cdr-dl-menu{display:none;}
+      #kt_activitiesApplication .cdr-dl-menu.open{display:block;}
+      #kt_activitiesApplication .cdr-dl-item-logo svg{width:13px;height:13px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-subcard-id{display:flex;gap:16px;align-items:flex-start;}
 
       /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
          set via data-kt-drawer-width on the element itself (KTDrawer computes
