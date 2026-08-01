@@ -176,7 +176,17 @@
                     }
 
                     $percentage=0;
-                    $matches = $row->matched_skill_count;
+                    // Count of DISTINCT required skills the candidate satisfies
+                    // (i.e. keys of $satisfiedRequired above), not the count of
+                    // candidate's own skill entries that matched. Otherwise a
+                    // candidate whose [Java, Java Developer] both phrase-match
+                    // required "java" inflates $matches to 2 for one satisfied
+                    // required skill, and a candidate missing Node.js still
+                    // scores 100% because the candidate-side count equals the
+                    // required-side count. Using count($satisfiedRequired) keeps
+                    // the percentage in lockstep with the badge list and the
+                    // "Matched/Missing" tooltip.
+                    $matches = count($satisfiedRequired);
                     $totalElements = count($requiredSkills);
                     $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
                     $matchPercentage = min($matchPercentage, 100);
