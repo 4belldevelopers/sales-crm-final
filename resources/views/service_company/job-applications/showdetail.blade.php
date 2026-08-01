@@ -729,16 +729,16 @@
         #resume_cv { font-size:13px; }
         /* Side-by-side: keyword panel 270px | viewer fills rest — fits 1366×768 */
         #resume_cv .rcv-wrap { display:flex; flex-direction:row; gap:0; height:calc(100vh - 375px); min-height:420px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03); }
-        #resume_cv .rcv-side { order:1; width:270px; flex-shrink:0; background:#fff; border-right:1px solid #e2e8f0; border-radius:0; padding:14px; overflow-y:auto; display:flex; flex-direction:column; gap:0; scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent; }
+        #resume_cv .rcv-side { order:1; width:320px; flex-shrink:0; background:#fff; border-right:1px solid #e2e8f0; border-radius:0; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:0; scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent; }
         #resume_cv .rcv-side::-webkit-scrollbar { width:4px; }
         #resume_cv .rcv-side::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
-        #resume_cv .rcv-side-head { display:flex; flex-direction:column; gap:8px; padding-bottom:12px; margin-bottom:10px; border-bottom:1px solid #f0f4f8; }
+        #resume_cv .rcv-side-head { display:flex; flex-direction:column; gap:10px; padding-bottom:14px; margin-bottom:12px; border-bottom:1px solid #f0f4f8; }
         #resume_cv .rcv-side-head .rcv-head-txt h3 { font-size:13px; font-weight:700; color:#0f172a; margin:0; }
         #resume_cv .rcv-sub { font-size:11px; color:#94a3b8; }
-        #resume_cv .rcv-summary { display:flex; gap:5px; margin:0; }
-        #resume_cv .rcv-sumitem { flex:1; min-width:0; background:#f8fafc; border:1px solid #eef2f7; border-radius:8px; padding:6px 8px; text-align:center; }
+        #resume_cv .rcv-summary { display:flex; gap:6px; margin:0; }
+        #resume_cv .rcv-sumitem { flex:1; min-width:0; background:#f8fafc; border:1px solid #eef2f7; border-radius:8px; padding:8px 6px; text-align:center; }
         #resume_cv .rcv-sumnum { display:block; font-size:14px; font-weight:700; color:#0f172a; line-height:1; }
-        #resume_cv .rcv-sumlbl { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.3px; }
+        #resume_cv .rcv-sumlbl { font-size:9.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         #resume_cv .rcv-kw-toolbar { display:flex; align-items:center; gap:10px; margin:14px 0 4px; flex-wrap:wrap; }
         #resume_cv .rcv-kw-add { flex:1; min-width:200px; }
         #resume_cv .rcv-kw-add input { width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px; outline:none; }
@@ -746,7 +746,7 @@
         #resume_cv .rcv-kw-actions { display:flex; gap:8px; }
         #resume_cv .rcv-btn { padding:7px 14px; border:1px solid #e2e8f0; background:#fff; border-radius:7px; font-size:11px; font-weight:600; color:#475569; cursor:pointer; white-space:nowrap; }
         #resume_cv .rcv-btn:hover { background:#f1f5f9; }
-        #resume_cv .rcv-kw-cols { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+        #resume_cv .rcv-kw-cols { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
         #resume_cv .rcv-kw-group { margin-top:0; }
         #resume_cv .rcv-kw-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
         #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:6px; }
@@ -759,7 +759,7 @@
         #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
         #resume_cv .rcv-chip-x { margin-left:3px; cursor:pointer; font-weight:700; color:#92400e; opacity:.6; font-size:13px; line-height:1; }
         #resume_cv .rcv-chip-x:hover { opacity:1; }
-        #resume_cv .rcv-kw-add-row { display:flex; gap:6px; margin:10px 0 2px; }
+        #resume_cv .rcv-kw-add-row { display:flex; gap:8px; margin:14px 0 4px; }
         #resume_cv .rcv-kw-add-row input { flex:1; min-width:0; padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px; outline:none; }
         #resume_cv .rcv-kw-add-row input:focus { border-color:#6366f1; }
         #resume_cv .rcv-add-btn { padding:8px 16px; border:none; background:#6366f1; color:#fff; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
