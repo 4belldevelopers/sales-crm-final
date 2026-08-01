@@ -2480,11 +2480,9 @@
         //     request — display-only.
         //   • Cleared implicitly on hard page refresh (in-memory only).
         // ----------------------------------------------------------------
-        var simfLocallyAdded = [];
-
         function simfMarkCandidateRowAdded($btn) {
-            /* Step 1 — Apply the green "Added" button in-place so the user
-               sees immediate positive feedback on the current page row. */
+            /* Apply the green "Added" button in-place so the user sees
+               immediate positive feedback on the current page row. */
             $btn.closest('div.d-flex.flex-column').html(
                 '<button type="button" class="btn btn-sm" disabled ' +
                 'style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;' +
@@ -2494,28 +2492,7 @@
                 'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
                 '<polyline points="20 6 9 17 4 12"/></svg> Added</button>'
             );
-
-            /* Step 2 — Snapshot the full <tr> HTML *after* the button is
-               swapped so the stored HTML already contains the green button.
-               The row is stored in simfLocallyAdded so it can be re-rendered
-               at the bottom of the last pagination page after any navigation
-               or filter/sort change — without touching any server count or
-               business logic. */
-            var rowId   = $btn.data('row-id');
-            var $row    = $btn.closest('tr');
-
-            // Add the ghost-row class to the live row so it already has the
-            // muted styling if the user stays on the same page.
-            $row.addClass('simf-added-row');
-
-            var rowHtml = $row[0].outerHTML; // captures green button + ghost class
-
-            // Deduplicate: remove any stale entry for the same candidate
-            // (guards against accidental double-add path)
-            simfLocallyAdded = simfLocallyAdded.filter(function(c) { return c.id != rowId; });
-
-            // Newest first — unshift so index 0 is always the most recently added
-            simfLocallyAdded.unshift({ id: rowId, html: rowHtml });
+            $btn.closest('tr').addClass('simf-added-row');
         }
 
         $(document).on('click', '.add_to_inreview', function(e) {
@@ -2705,77 +2682,7 @@
                     // so it doesn't contradict what the page just showed.
                     $('#apth_hint_similar_counter').attr('title',
                         'This is your current filter selection on this page — the same card on other tabs shows this job\'s default count instead.');
-                    // Append locally-tracked "Added" candidates below server
-                    // results on the last page. Runs after pagination is written
-                    // so pagi-disabled detection is reliable. Counts are already
-                    // set above and are not read or modified inside this call.
-                    simfRenderAddedSection();
                 },
-                error: function(xhr) {
-                    // Never leave the loading overlay stuck or the list blank on
-                    // a failed request ΓÇö surface what went wrong instead.
-                    $('.loadingMessage').css({ display: 'none' });
-                    console.error('similar_existing_data_ajax failed:', xhr.status, xhr.responseText);
-                }
-            });
-        }
-
-        /* ------------------------------------------------------------------
-           simfRenderAddedSection — appends the locally-tracked "Added"
-           candidates to the bottom of the tbody whenever we are on the
-           last pagination page (or the only page).
-
-           Design decisions:
-           • Only runs on the LAST page so "Add to Job" candidates always
-             appear before "Added" candidates across the full pagination.
-           • "Last page" is detected via the pagi-disabled class on the
-             "next" arrow, which the existing pagination partial already
-             sets reliably, plus a fallback for when there is no pagination
-             at all (total fits on one page).
-           • Counts (similar_counter, simf_footer_number) are set by the
-             server BEFORE this function runs and are never touched here.
-           • Each stored row already carries the green "Added" button and
-             the simf-added-row ghost class from simfMarkCandidateRowAdded.
-        ------------------------------------------------------------------ */
-        function simfRenderAddedSection() {
-            if (!simfLocallyAdded.length) return;
-
-            // ---- Determine "last page" ----
-            var $pag        = $('#paginationcandidate');
-            var pagHtml     = $.trim($pag.html());
-            // No pagination HTML at all → single page → IS the last page
-            var noPagination = !pagHtml || !$pag.find('.pagi-page, .pagi-arrow').length;
-            // Pagination exists: the rightmost .pagi-arrow is the "next" button;
-            // it carries pagi-disabled when we are on the last page.
-            var nextDisabled  = $pag.find('.pagi-arrow').last().hasClass('pagi-disabled');
-            var isLastPage    = noPagination || nextDisabled;
-
-            if (!isLastPage) return;
-
-            var $tbody   = $('#candidatetList');
-            // Safety: count actual header cells so the separator spans correctly
-            var colCount = $('#myTable thead tr th').length || 10;
-
-            // ---- Separator row ----
-            $tbody.append(
-                '<tr class="simf-added-separator">' +
-                  '<td colspan="' + colCount + '">' +
-                    '<span class="simf-added-sep-inner">' +
-                      '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" ' +
-                      'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
-                      'stroke-linecap="round" stroke-linejoin="round">' +
-                      '<polyline points="20 6 9 17 4 12"/></svg>' +
-                      ' Already Added to This Job' +
-                    '</span>' +
-                  '</td>' +
-                '</tr>'
-            );
-
-            // ---- Added rows — newest first (array is newest-first by design) ----
-            simfLocallyAdded.forEach(function(c) {
-                $tbody.append(c.html);
-            });
-        }
 
         // Free-text search box: Enter re-runs the same fetchCandidates() call
         // the sort dropdown and pagination already use ΓÇö no separate endpoint.
