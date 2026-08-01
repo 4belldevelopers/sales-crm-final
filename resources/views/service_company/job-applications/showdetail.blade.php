@@ -556,7 +556,8 @@
 
   </div>
 
-  {{-- 7-cell bottom strip with icons --}}
+  {{-- 6-cell at-a-glance strip — single enterprise card --}}
+  <div class="cdr-strip-card">
   <div class="cdr-strip" aria-label="Candidate at-a-glance">
     <div class="cdr-strip-item">
       <div class="cdr-strip-label">
@@ -601,6 +602,7 @@
       <div class="cdr-strip-value" title="{{ ucwords(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->qualification_name), 14, '…') ?: '—' }}</div>
     </div>
   </div>
+  </div>{{-- /.cdr-strip-card --}}
 
   <nav class="page-tabs tab-content nav" aria-label="Profile sections" role="tablist">
     <a type="button" class="tab tab-active" data-toggle="tab" href="#personal_details" aria-selected="true">
