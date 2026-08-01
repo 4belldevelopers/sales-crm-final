@@ -313,6 +313,8 @@
        button outside the bar so it doesn't fight the primary/secondary
        button hierarchy.
        ============================================================ --}}
+  {{-- ===== CARD 1: Hero — action bar + identity/metrics sub-cards ===== --}}
+  <div class="cdr-outer-card">
   {{-- TOP ACTION BAR --}}
   <div class="cdr-topbar" aria-label="Candidate actions">
     <div class="cdr-topbar-group">
@@ -555,55 +557,81 @@
     </div>
 
   </div>
+  </div>{{-- /.cdr-outer-card (card 1: hero) --}}
 
-  {{-- 6-cell at-a-glance strip — single enterprise card --}}
-  <div class="cdr-strip-card">
-  <div class="cdr-strip" aria-label="Candidate at-a-glance">
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
-        Total Experience
-      </div>
-      <div class="cdr-strip-value">{{ $__bdTotalExp }} Yrs</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg></span>
-        Relevant
-      </div>
-      <div class="cdr-strip-value">{{ $__bdRelExp }} Yrs</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-        Gender
-      </div>
-      <div class="cdr-strip-value">{{ ucwords(@$application->gender) ?: '—' }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
-        Nationality
-      </div>
-      <div class="cdr-strip-value" title="{{ ucwords(@$application->nationality) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->nationality), 14, '…') ?: '—' }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
-        Work Mode
-      </div>
-      <div class="cdr-strip-value">{{ ucwords(@$application->wm) ?: '—' }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg></span>
-        Education
-      </div>
-      <div class="cdr-strip-value" title="{{ ucwords(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->qualification_name), 14, '…') ?: '—' }}</div>
-    </div>
-  </div>
-  </div>{{-- /.cdr-strip-card --}}
+  {{-- ===== CARD 2: 6 pipeline stat sub-cards (matches job drawer pipeline section) ===== --}}
+  <div class="cdr-pipeline-section" aria-label="Candidate at-a-glance">
 
+    {{-- Total Experience --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Total Experience</div>
+        <div class="cdr-pipeline-value">{{ $__bdTotalExp }}<span class="cpi-unit"> Yrs</span></div>
+      </div>
+    </div>
+
+    {{-- Relevant Experience --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Relevant Exp</div>
+        <div class="cdr-pipeline-value">{{ $__bdRelExp }}<span class="cpi-unit"> Yrs</span></div>
+      </div>
+    </div>
+
+    {{-- Gender --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Gender</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$application->gender) ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Nationality --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Nationality</div>
+        <div class="cdr-pipeline-value" title="{{ ucwords(@$application->nationality) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->nationality), 10, '…') ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Work Mode --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Work Mode</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$application->wm) ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Education --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-indigo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Education</div>
+        <div class="cdr-pipeline-value" title="{{ ucwords(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->qualification_name), 10, '…') ?: '—' }}</div>
+      </div>
+    </div>
+
+  </div>{{-- /.cdr-pipeline-section --}}
+
+  {{-- ===== CARD 3: Tabs + Content ===== --}}
+  <div class="cdr-outer-card cdr-tabs-card">
   <nav class="page-tabs tab-content nav" aria-label="Profile sections" role="tablist">
     <a type="button" class="tab tab-active" data-toggle="tab" href="#personal_details" aria-selected="true">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -4197,6 +4225,7 @@
       <p>All candidate information is confidential and intended for internal use only.</p>
     </div>
   </main>
+  </div>{{-- /.cdr-outer-card (card 3: tabs) --}}
 </div>
 
 
