@@ -173,7 +173,7 @@
       #kt_activitiesApplication .cdr-skill-more{background:#eef2ff;color:#4338ca;border-color:#c7d2fe;font-weight:600;}
       /* Metrics sub-card v3: 4-row vertical list */
       #kt_activitiesApplication .cdr-subcard-metrics{padding:0;}
-      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px 8px 44px;}
+      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px 8px 16px;}
       #kt_activitiesApplication .cdr-metric-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f4f8;}
       #kt_activitiesApplication .cdr-metric-row:last-child{border-bottom:none;}
       #kt_activitiesApplication .cdr-metric-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
