@@ -230,7 +230,7 @@
 =================================================================== */
 .rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
 .rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
-.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:624px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
 .rdc-drawer.rdc-open{transform:translateX(0);}
 /* Header */
 .rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
@@ -5092,8 +5092,8 @@ setTimeout(() => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">ATS Highlighted Resume <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">Keywords highlighted to match the job description for ATS scoring</span>
+          <span class="rdc-otitle">ATS Highlighted Resume</span>
+          <span class="rdc-odesc">Job keywords highlighted on the resume — requires Resume/CV tab to have loaded first</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">5 Coins</span>
@@ -5110,8 +5110,8 @@ setTimeout(() => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Branded + Highlighted <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">Company branding combined with ATS keyword highlights</span>
+          <span class="rdc-otitle">Branded + Highlighted</span>
+          <span class="rdc-odesc">Company logo header with ATS keyword highlights combined</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">7 Coins</span>
@@ -5203,12 +5203,12 @@ setTimeout(() => {
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
 
   var optMeta = {
-    1: {cost:1,  label:'Download Original Resume',       avail:true},
-    2: {cost:2,  label:'Download Branded Resume',        avail:true},
-    3: {cost:5,  label:'Download ATS Resume',            avail:false},
-    4: {cost:7,  label:'Download Branded + ATS',         avail:false},
-    5: {cost:10, label:'Download Recruiter Summary',     avail:false},
-    6: {cost:15, label:'Download Client Presentation',   avail:false}
+    1: {cost:1,  label:'Download Original Resume',       avail:true,  dlKey:null},
+    2: {cost:2,  label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
+    3: {cost:5,  label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
+    4: {cost:7,  label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
+    5: {cost:10, label:'Download Recruiter Summary',     avail:false, dlKey:null},
+    6: {cost:15, label:'Download Client Presentation',   avail:false, dlKey:null}
   };
 
   var selectedOpt = 1;
@@ -5308,6 +5308,7 @@ setTimeout(() => {
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
+        /* Original: open existing download URL directly */
         if(dlUrl){
           window.open(dlUrl, '_blank');
         } else {
@@ -5316,16 +5317,29 @@ setTimeout(() => {
         closeRdc();
         setTimeout(resetBtn, 800);
 
-      } else if(selectedOpt === 2){
+      } else if(m.dlKey){
+        /* Options 2/3/4: poll for resume viewer pages then click the matching data-dl button.
+           Same pattern as hdrDownloadWithLogoApp — requires Resume/CV tab to have loaded. */
+        var dlKey = m.dlKey;
         closeRdc();
-        setTimeout(function(){
-          if(typeof hdrDownloadWithLogoApp === 'function'){
-            hdrDownloadWithLogoApp();
-          } else {
-            showToast('Branded resume download requires the resume viewer to be open.', 'warn');
+        var tries = 0;
+        var poll = setInterval(function(){
+          var pages = document.querySelectorAll('#rcvPages .rcv-page');
+          if(pages.length){
+            clearInterval(poll);
+            var btn = document.querySelector('[data-dl="' + dlKey + '"]');
+            if(btn){
+              btn.click();
+            } else {
+              showToast('Download button not found. Please open the Resume / CV tab first.', 'warn');
+            }
+            resetBtn();
+          } else if(++tries > 80){
+            clearInterval(poll);
+            showToast('Resume viewer not loaded. Please scroll to the Resume / CV tab first, then try again.', 'warn');
+            resetBtn();
           }
-          resetBtn();
-        }, 350);
+        }, 100);
       }
     });
   }
