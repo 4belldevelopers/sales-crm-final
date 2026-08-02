@@ -6146,29 +6146,32 @@ window.__buildRS=buildRecruiterSummary;
 (function(){
 'use strict';
 
-/* pdfMake loader — tries local first, falls back to CDN.
-   After each load checks typeof pdfMake to handle CSP-blocked scripts. */
+/* pdfMake loader — tries local file first, then four CDN mirrors in order.
+   After each onload we verify typeof pdfMake to catch CSP-blocked scripts. */
 function loadPdfMake(){
   if(typeof pdfMake!=='undefined') return Promise.resolve();
+  var SOURCES=[
+    '/js/pdfmake.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js',
+    'https://unpkg.com/pdfmake@0.2.7/build/pdfmake.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'
+  ];
   return new Promise(function(res,rej){
-    function inject(src, onFail){
+    var errors=[];
+    function tryNext(i){
+      if(i>=SOURCES.length){ rej(new Error('pdfMake unavailable from all sources:\n'+errors.join('\n'))); return; }
+      var src=SOURCES[i];
       var old=document.querySelector('script[src="'+src+'"]');
       if(old) old.parentNode.removeChild(old);
       var s=document.createElement('script'); s.src=src; s.async=true;
       s.onload=function(){
         if(typeof pdfMake!=='undefined'){ res(); }
-        else { onFail('pdfMake undefined after loading '+src+' (CSP may block it)'); }
+        else { errors.push(src+': loaded but pdfMake undefined (CSP?)'); tryNext(i+1); }
       };
-      s.onerror=function(){ onFail('404/network: '+src); };
+      s.onerror=function(){ errors.push(src+': 404/network'); tryNext(i+1); };
       document.head.appendChild(s);
     }
-    var CDN='https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js';
-    inject('/js/pdfmake.min.js', function(localErr){
-      /* Local file missing or CSP-blocked — try CDN */
-      inject(CDN, function(cdnErr){
-        rej(new Error('pdfMake load failed. Local: '+localErr+' | CDN: '+cdnErr));
-      });
-    });
+    tryNext(0);
   });
 }
 
