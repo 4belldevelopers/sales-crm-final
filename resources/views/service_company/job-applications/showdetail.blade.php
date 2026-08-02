@@ -5040,22 +5040,23 @@ setTimeout(() => {
     $(document).on('click', '.editSlots', function(e) {
        e.preventDefault();
        e.stopPropagation();
-       $('.editSlotsUpdate').removeClass('d-none');
-       $('.editSlotsCancel').removeClass('d-none');
        $('.editSlots').addClass('d-none');
        $('.job_slots_edit').removeClass('d-none');
+       // Hide whichever display state is currently showing
        $('.job_slots_view').addClass('d-none');
-
+       $('.po-slots-empty').addClass('d-none');
     });
-    $(document).on('click', '.editSlotsCancel', function(e) { 
+    $(document).on('click', '.editSlotsCancel', function(e) {
        e.preventDefault();
        e.stopPropagation();
-       $('.editSlotsUpdate').addClass('d-none');
-       $('.editSlotsCancel').addClass('d-none');
        $('.editSlots').removeClass('d-none');
        $('.job_slots_edit').addClass('d-none');
-       $('.job_slots_view').removeClass('d-none');
-
+       // Restore whichever display state is appropriate
+       if ($('.job_slots_view').length) {
+           $('.job_slots_view').removeClass('d-none');
+       } else {
+           $('.po-slots-empty').removeClass('d-none');
+       }
     });
 
 
@@ -5119,22 +5120,35 @@ setTimeout(() => {
                   processData		: false,  	// tell jQuery not to process the data
                   contentType		: false,  	// tell jQuery not to set contentType
                   redirect			: true,
-                  success			: function (response) {
-                    $btn.html('Save');
-                    $btn.prop('disabled', false); // Re-enable after success
-                    $("#job-slots-update-form").html('Save');
-                    $('.editSlotsUpdate').addClass('d-none');
-                    $('.editSlotsCancel').addClass('d-none');
+                  success : function (response) {
+                    // Close drawer first
                     $('.job_slots_edit').addClass('d-none');
-                    $('.job_slots_view').removeClass('d-none');
                     $('.editSlots').removeClass('d-none');
-                          Swal.fire("Success", 'Candidate Interview Slots updated successfully !',"success");
-                          $('.job_slots_view').html(response.html)
-                        },
-                error			: function (response) {
-                  $("#job-slots-update-form").html('Save');
-                          Swal.fire("Warning", 'Something is the issue.',"warning");
-                        }
+                    // Re-enable save button
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+
+                    // Real-time DOM update — handle two states:
+                    // (A) Existing .job_slots_view → update its inner HTML
+                    // (B) Empty state (.po-slots-empty) → replace it with the slots grid
+                    if ($('.job_slots_view').length) {
+                        $('.job_slots_view').html(response.html).removeClass('d-none');
+                    } else {
+                        $('.po-slots-empty').replaceWith(
+                            '<div class="slots-grid job_slots_view">' + response.html + '</div>'
+                        );
+                    }
+
+                    if (document.activeElement) { document.activeElement.blur(); }
+                    setTimeout(function() {
+                        Swal.fire("Success", 'Candidate Interview Slots updated successfully!', "success");
+                    }, 350);
+                  },
+                  error : function () {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    Swal.fire("Warning", 'Something went wrong. Please try again.', "warning");
+                  }
             });
 
     });
