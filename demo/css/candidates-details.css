@@ -3195,7 +3195,7 @@
 =================================================================== */
 .rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
 .rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
-.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:624px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
 .rdc-drawer.rdc-open{transform:translateX(0);}
 .rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
 .rdc-header-text{flex:1;min-width:0;}
