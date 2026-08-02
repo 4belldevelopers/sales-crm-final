@@ -1389,49 +1389,64 @@
               if(!logoUri) logoFailed = true;
               try { bannerImg = await svgToImage(buildBannerSvg(wrap, logoUri)); } catch(e){ bannerImg = null; }
             }
-            var QUALITY = 2.5, MAXW = 2200;
+            /* 3.5× scale + 3200px cap: sharper text than the old 2.5×/2200 values */
+            var QUALITY = 3.5, MAXW = 3200;
+            var pagesArr = Array.prototype.slice.call(pages);
+            /* render all pages in parallel — wall-clock time ≈ slowest single page */
+            var rendered = await Promise.all(pagesArr.map(function(pageWrap, idx){
+              return (async function(){
+                var cssW = pageWrap.clientWidth || 760, cssH = pageWrap.clientHeight || 1000, hi;
+                if(pdfDoc){
+                  var page = await pdfDoc.getPage(idx + 1);
+                  var base = page.getViewport({ scale: 1 });
+                  var renderW = Math.min(cssW * QUALITY, MAXW);
+                  var vp = page.getViewport({ scale: renderW / base.width });
+                  hi = document.createElement('canvas');
+                  hi.width = Math.floor(vp.width);
+                  hi.height = Math.floor(vp.height);
+                  await page.render({ canvasContext: hi.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
+                } else {
+                  hi = pageWrap.querySelector('canvas');
+                  if(!hi) return null;
+                }
+                var w = hi.width, h = hi.height;
+                var headerH = (bannerImg && idx === 0) ? Math.round(w * 0.073) : 0;
+                var tmp = document.createElement('canvas');
+                tmp.width = w; tmp.height = h + headerH;
+                var ctx = tmp.getContext('2d', { willReadFrequently: true });
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, tmp.height);
+                if(headerH){ ctx.drawImage(bannerImg, 0, 0, w, headerH); }
+                ctx.drawImage(hi, 0, headerH, w, h);
+                var pr = pageWrap.getBoundingClientRect();
+                if(opts.highlights){
+                  ctx.fillStyle = 'rgba(255,210,0,0.4)';
+                  pageWrap.querySelectorAll('mark.rcv-hit').forEach(function(mk){
+                    var r = mk.getBoundingClientRect();
+                    ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
+                  });
+                }
+                if(hideContact){
+                  ctx.fillStyle = '#111827';
+                  pageWrap.querySelectorAll('mark.rcv-redact').forEach(function(mk){
+                    var r = mk.getBoundingClientRect();
+                    ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
+                  });
+                }
+                /* PNG is lossless — no JPEG DCT artifacts on text edges */
+                return { imgData: tmp.toDataURL('image/png'), cssW: cssW, cssH: cssH, headerH: headerH, w: w };
+              })();
+            }));
+            /* assemble PDF sequentially — pages must be added in document order */
             var pdf = null;
-            for(var idx=0; idx<pages.length; idx++){
-              var pageWrap = pages[idx];
-              // re-render the page from the PDF at high resolution for a crisp export
-              var cssW = pageWrap.clientWidth || 760, cssH = pageWrap.clientHeight || 1000, hi;
-              if(pdfDoc){
-                var page = await pdfDoc.getPage(idx+1);
-                var base = page.getViewport({ scale:1 });
-                var renderW = Math.min(cssW * QUALITY, MAXW);
-                var vp = page.getViewport({ scale: renderW / base.width });
-                hi = document.createElement('canvas'); hi.width = Math.floor(vp.width); hi.height = Math.floor(vp.height);
-                await page.render({ canvasContext: hi.getContext('2d'), viewport: vp }).promise;
-              } else { hi = pageWrap.querySelector('canvas'); if(!hi) continue; }
-              var w = hi.width, h = hi.height;
-              var headerH = (bannerImg && idx === 0) ? Math.round(w * 0.073) : 0;
-              var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h + headerH;
-              var ctx = tmp.getContext('2d');
-              ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, tmp.height);
-              if(headerH){ ctx.drawImage(bannerImg, 0, 0, w, headerH); }
-              ctx.drawImage(hi, 0, headerH, w, h);
-              var pr = pageWrap.getBoundingClientRect();
-              if(opts.highlights){
-                ctx.fillStyle = 'rgba(255, 210, 0, 0.4)';
-                pageWrap.querySelectorAll('mark.rcv-hit').forEach(function(mk){
-                  var r = mk.getBoundingClientRect();
-                  ctx.fillRect((r.left - pr.left)/pr.width*w, headerH + (r.top - pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
-                });
-              }
-              if(hideContact){
-                ctx.fillStyle = '#111827';
-                pageWrap.querySelectorAll('mark.rcv-redact').forEach(function(mk){
-                  var r = mk.getBoundingClientRect();
-                  ctx.fillRect((r.left - pr.left)/pr.width*w, headerH + (r.top - pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
-                });
-              }
-              var img = tmp.toDataURL('image/jpeg', 0.96);
-              var headerCssH = headerH * (cssW / w);
-              var pw = Math.round(cssW), ph = Math.round(cssH + headerCssH);
+            for(var i = 0; i < rendered.length; i++){
+              var r = rendered[i];
+              if(!r) continue;
+              var headerCssH = r.headerH * (r.cssW / r.w);
+              var pw = Math.round(r.cssW), ph = Math.round(r.cssH + headerCssH);
               var orient = pw > ph ? 'l' : 'p';
-              if(!pdf){ pdf = new JsPDF({ orientation: orient, unit: 'px', format: [pw, ph] }); }
+              if(!pdf){ pdf = new JsPDF({ orientation: orient, unit: 'px', format: [pw, ph], compress: true }); }
               else { pdf.addPage([pw, ph], orient); }
-              pdf.addImage(img, 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
+              pdf.addImage(r.imgData, 'PNG', 0, 0, pw, ph, undefined, 'FAST');
             }
             if(pdf){
               var fn = ((document.querySelector('#resume_cv .rcv-file span') || {}).textContent || 'resume').replace(/\.[^.]+$/, '');
@@ -5200,6 +5215,8 @@ setTimeout(() => {
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
     document.addEventListener('keydown', onEsc);
+    /* preload jsPDF in background so it's ready when the user clicks download */
+    if(!window.jspdf){ var ps=document.createElement('script'); ps.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; ps.async=true; document.head.appendChild(ps); }
   }
 
   function closeRdc(){
