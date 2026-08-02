@@ -137,7 +137,7 @@
 @media(max-width:1100px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}}
 @media(max-width:640px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(2,minmax(0,1fr));}}
 /* ===== PROFILE OVERVIEW: 2-col grid + drawers ===== */
-#kt_activitiesApplication #personal_details .content-split{display:grid!important;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;}
+#kt_activitiesApplication #personal_details .content-split{display:grid!important;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items:start;}
 @media(max-width:860px){#kt_activitiesApplication #personal_details .content-split{grid-template-columns:1fr!important;}}
 #kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
 #kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
@@ -1870,7 +1870,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper($exp->skill_key).'
+                            '.ucwords(strtolower($exp->skill_key)).'
                           </div>
                           <div class="skill-exp-cell">'.($exp->year ?? '0') .'.'. ($exp->month ?? '0').' Year</div>
                           <div class="skill-rating-cell">
@@ -1976,7 +1976,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper($skill_val->skill_name).'
+                            '.ucwords(strtolower($skill_val->skill_name)).'
                           </div>
                           <div class="skill-exp-cell">'.$skillShowView.'</div>
                           <div class="skill-rating-cell">
@@ -2065,7 +2065,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper(@$aDetailArr->job_detail_value).'
+                            '.ucwords(strtolower((string)@$aDetailArr->job_detail_value)).'
                           </div>
                           <div class="skill-exp-cell">'.@$ans_value.'</div>
                         </div>';
@@ -2164,7 +2164,6 @@
 
         <aside class="content-sidebar">
 
-          @if(!empty($application->recruiter_note))
           <section class="cardshow" style="margin-bottom:16px;">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-primary-50, #eef2ff); color: var(--color-primary-600, #4f46e5);">
@@ -2176,11 +2175,14 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h3 class="card-title">Recruiter Note</h3>
+              <h3 class="card-title">Recruiter Notes</h3>
             </div>
-            <div style="padding:12px 16px;font-size:13px;color:#3f4254;line-height:1.6;">{!! $application->recruiter_note !!}</div>
+            @if(!empty($application->recruiter_note))
+              <div class="po-recruiter-note-text">{!! $application->recruiter_note !!}</div>
+            @else
+              <p class="po-no-notes">No recruiter notes added yet.</p>
+            @endif
           </section>
-          @endif
 
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -2297,21 +2299,21 @@
                   Hiring HR
                 </span>
                 <span class="own-value">
-                  @php 
+                  @php
                       if(@$clientjobAssignListCaptain){
-                          echo @$clientjobAssignListCaptain;
+                          echo ucwords(strtolower(@$clientjobAssignListCaptain));
                       }else{
                         if(!empty($client_contuser_arr)){
-                          
+
                           foreach($client_contuser_arr as $key=> $cpn){
                             $cpn = (object) $cpn;
                             if($key==0){
-                                echo @$cpn->contact_person_name .'';
+                                echo ucwords(strtolower(@$cpn->contact_person_name)) .'';
                             }else{
-                                echo ', '.@$cpn->contact_person_name ;
+                                echo ', '.ucwords(strtolower(@$cpn->contact_person_name));
                             }
-                            
-                          }	
+
+                          }
                         }
                       }
                   @endphp
@@ -2338,7 +2340,7 @@
                 @php
                 $companies = DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first();
                 @endphp
-                <span class="own-value">{{ @$companies->company_name ?? '' }}</span>
+                <span class="own-value">{{ ucwords(strtolower(@$companies->company_name ?? '')) }}</span>
               </div>
               <div class="ownership-row">
                 <span class="own-label">
