@@ -5089,8 +5089,6 @@ setTimeout(() => {
             type    : 'POST',
             data    : { appId: appId, recruiter_note: note },
             success : function(response) {
-                $btn.html('Save Changes');
-                $btn.prop('disabled', false);
                 if (response.status) {
                     if (note && note.trim()) {
                         if ($('.po-recruiter-note-text').length) {
@@ -5106,8 +5104,21 @@ setTimeout(() => {
                         }
                         $('.po-no-notes').show();
                     }
+                    // Close drawer first; blur active element so focus-restore
+                    // cannot re-trigger the Edit button after Swal closes
                     $('.rn-drawer-body').addClass('d-none');
-                    Swal.fire('Success', 'Recruiter notes updated successfully!', 'success');
+                    if (document.activeElement) { document.activeElement.blur(); }
+                    // Wait for drawer slide-out transition (280ms) before re-enabling
+                    // button and firing Swal — prevents Swal-close click from landing
+                    // on the now-hidden Edit button and reopening the drawer
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        Swal.fire('Success', 'Recruiter notes updated successfully!', 'success');
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
                 }
             },
             error   : function() {
