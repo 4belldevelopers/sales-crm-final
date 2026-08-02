@@ -6161,85 +6161,130 @@ function buildPdfHtml(d){
   var S='';
   var h=function(x){ S+=x; };
 
+  var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'0';
+  var matchNum=parseFloat(matchRaw)||0;
+  var mc=matchNum>=70?'#15803d':matchNum>=40?'#b45309':'#b91c1c';
+  var mBg=matchNum>=70?'#dcfce7':matchNum>=40?'#fef3c7':'#fee2e2';
+  var mBdr=matchNum>=70?'#86efac':matchNum>=40?'#fde68a':'#fca5a5';
+  var cleanMatch=matchNum>0?(matchRaw+'%'):'—';
+
   h('<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;width:794px;box-sizing:border-box;color:#0f172a;">');
 
-  /* ── HEADER / EMPLOYER BRANDING ── */
-  h('<div style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:20px 28px 16px;display:flex;align-items:center;justify-content:space-between;">');
-  h('<div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:#3e97ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;">J</div>');
-  h('<div><div style="font-size:14px;font-weight:700;color:#fff;">jero.works</div><div style="font-size:9px;color:#94a3b8;margin-top:1px;">AI-Powered Hiring Platform</div></div></div>');
-  h('<div style="text-align:right;"><div style="font-size:10.5px;font-weight:700;color:#fff;letter-spacing:0.5px;text-transform:uppercase;">Candidate Profile Report</div>');
-  if(d.recruiterName) h('<div style="font-size:9px;color:#94a3b8;margin-top:3px;">By '+esc(d.recruiterName)+'</div>');
-  h('<div style="font-size:9px;color:#94a3b8;margin-top:1px;">'+esc(d.companyName)+' &bull; '+esc(d.dateStr)+'</div></div></div>');
+  /* ── PROFESSIONAL HEADER ── */
+  h('<div style="border-top:4px solid #1e3a8a;background:#fff;padding:18px 32px 16px;">');
+  h('<table style="width:100%;border-collapse:collapse;"><tr style="vertical-align:middle;">');
+  /* branding */
+  h('<td style="vertical-align:middle;border-right:2px solid #e2e8f0;padding-right:22px;width:220px;">');
+  h('<table style="border-collapse:collapse;"><tr>');
+  h('<td style="vertical-align:middle;padding-right:10px;">');
+  if(d.logoUri){
+    h('<img src="'+d.logoUri+'" style="width:44px;height:44px;object-fit:contain;border-radius:8px;" />');
+  } else {
+    h('<div style="width:44px;height:44px;background:#1e3a8a;border-radius:8px;text-align:center;line-height:44px;font-size:14px;font-weight:900;color:#fff;">'+esc((d.companyName||'J').slice(0,2).toUpperCase())+'</div>');
+  }
+  h('</td><td style="vertical-align:middle;">');
+  h('<div style="font-size:13px;font-weight:800;color:#1e3a8a;white-space:nowrap;line-height:1.3;">'+esc(d.companyName||'Company')+'</div>');
+  h('<div style="font-size:8px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Hiring Partner</div>');
+  h('</td></tr></table>');
+  h('</td>');
+  /* title */
+  h('<td style="vertical-align:middle;padding-left:22px;">');
+  h('<div style="font-size:15px;font-weight:900;color:#1e3a8a;letter-spacing:0.2px;text-transform:uppercase;line-height:1.3;">Pre-Screened Candidate Report</div>');
+  h('<div style="font-size:9.5px;color:#64748b;margin-top:5px;font-weight:500;">Prepared by Senior Technical Recruiter</div>');
+  h('</td>');
+  /* date */
+  h('<td style="vertical-align:middle;text-align:right;white-space:nowrap;width:130px;">');
+  h('<div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Report Date</div>');
+  h('<div style="font-size:11px;font-weight:700;color:#0f172a;margin-top:3px;">'+esc(d.dateStr)+'</div>');
+  if(d.recruiterName) h('<div style="font-size:8.5px;color:#64748b;margin-top:3px;">By '+esc(d.recruiterName)+'</div>');
+  h('</td>');
+  h('</tr></table></div>');
+  h('<div style="height:1px;background:#e2e8f0;"></div>');
 
-  h('<div style="padding:20px 28px 18px;">');
+  h('<div style="padding:20px 32px;">');
 
-  /* ── HERO ROW ── */
-  h('<div style="display:flex;gap:18px;margin-bottom:14px;">');
+  /* ── CANDIDATE IDENTITY CARD ── */
+  h('<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin-bottom:16px;">');
+  h('<table style="width:100%;border-collapse:collapse;"><tr style="vertical-align:top;">');
+  /* avatar */
+  h('<td style="vertical-align:top;width:72px;padding-right:14px;">');
+  h('<div style="width:58px;height:58px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:10px;text-align:center;line-height:58px;font-size:20px;font-weight:800;color:#fff;">'+esc(d.initials)+'</div>');
+  h('</td>');
+  /* name + meta */
+  h('<td style="vertical-align:top;">');
+  h('<div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:3px;">'+esc(d.name)+'</div>');
+  h('<div style="font-size:11px;font-weight:700;color:#4f46e5;margin-bottom:9px;">'+esc(d.role)+'</div>');
+  h('<div>'+d.metaHtml+'</div>');
+  h('</td>');
+  /* match badge */
+  if(d.matchText){
+    h('<td style="vertical-align:middle;text-align:center;width:90px;padding-left:14px;">');
+    h('<div style="background:'+mBg+';border:2.5px solid '+mBdr+';border-radius:12px;padding:11px 8px;text-align:center;">');
+    h('<div style="font-size:28px;font-weight:900;color:'+mc+';line-height:1;letter-spacing:-1px;">'+esc(cleanMatch)+'</div>');
+    h('<div style="font-size:7.5px;font-weight:800;color:'+mc+';letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;">MATCH</div>');
+    h('</div></td>');
+  }
+  h('</tr>');
+  if(d.skillsHtml){
+    h('<tr><td colspan="3" style="padding-top:11px;border-top:1px solid #e2e8f0;">'+d.skillsHtml+'</td></tr>');
+  }
+  h('</table></div>');
 
-  /* Left: avatar + identity */
-  h('<div style="flex:1;min-width:0;"><div style="display:flex;align-items:flex-start;gap:13px;margin-bottom:10px;">');
-  h('<div style="flex-shrink:0;text-align:center;"><div style="width:52px;height:52px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;">'+esc(d.initials)+'</div>');
-  if(d.matchText) h('<div style="margin-top:5px;background:'+esc(d.matchBg)+';color:'+esc(d.matchColor)+';font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;">'+esc(d.matchText)+'</div>');
-  h('</div>');
-  h('<div style="flex:1;min-width:0;"><div style="font-size:16px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;margin-bottom:2px;">'+esc(d.name)+'</div>');
-  h('<div style="font-size:10.5px;font-weight:600;color:#4f46e5;margin-bottom:6px;">'+esc(d.role)+'</div>');
-  h('<div style="display:flex;flex-wrap:wrap;gap:2px 12px;margin-bottom:7px;">'+d.metaHtml+'</div>');
-  if(d.skillsHtml) h('<div style="margin-top:4px;">'+d.skillsHtml+'</div>');
-  h('</div></div></div>');
-
-  /* Right: match metrics */
-  h('<div style="width:210px;flex-shrink:0;"><table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;overflow:hidden;font-size:10.5px;">');
-  h('<thead><tr><td colspan="2" style="padding:7px 11px;background:#f1f5f9;font-size:9px;font-weight:700;color:#64748b;letter-spacing:0.6px;text-transform:uppercase;">Match Analysis</td></tr></thead>');
-  h('<tbody>'+d.metricsHtml+'</tbody></table></div>');
-  h('</div>');
+  /* ── TWO COLUMNS: MATCH ANALYSIS + AT A GLANCE ── */
+  h('<table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><tr style="vertical-align:top;">');
+  /* left: match analysis */
+  h('<td style="width:50%;padding-right:8px;">');
+  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">');
+  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Match Analysis</span></div>');
+  h('<table style="width:100%;border-collapse:collapse;background:#fff;font-size:9.5px;">'+d.metricsHtml+'</table>');
+  h('</div></td>');
+  /* right: at a glance */
+  h('<td style="width:50%;padding-left:8px;">');
+  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">');
+  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">At A Glance</span></div>');
+  h('<div style="background:#fff;padding:8px;">'+d.pipelineHtml+'</div>');
+  h('</div></td>');
+  h('</tr></table>');
 
   /* ── PRESCREENED BADGES ── */
   if(d.hasRN||d.isImmediate){
-    h('<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px;">');
-    if(d.hasRN) h('<span style="display:inline-flex;align-items:center;gap:4px;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#10003; Prescreened by Senior Recruiter</span>');
-    if(d.isImmediate) h('<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#9679; Immediate Joiner</span>');
-    h('<span style="display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#10003; JERO Verified</span>');
+    h('<div style="margin-bottom:16px;">');
+    if(d.hasRN) h('<span style="display:inline-block;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #fbcfe8;margin-right:7px;margin-bottom:4px;">&#10003; Prescreened by Senior Recruiter</span>');
+    if(d.isImmediate) h('<span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #bbf7d0;margin-right:7px;margin-bottom:4px;">&#9679; Immediate Joiner</span>');
+    h('<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #bfdbfe;margin-bottom:4px;">&#10003; JERO Verified</span>');
     h('</div>');
   }
 
-  h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
-
-  /* ── AT A GLANCE TILES ── */
-  h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">At A Glance</div>');
-  h('<table style="width:100%;border-collapse:separate;border-spacing:7px 0;table-layout:fixed;"><tr>'+d.pipelineHtml+'</tr></table></div>');
-
-  h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
-
   /* ── KEY SKILLS TABLE ── */
   if(d.skillsTableHtml){
-    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Key Skills &amp; Experience</div>');
+    h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
+    h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Key Skills &amp; Experience</span></div>');
     h(d.skillsTableHtml);
-    h('</div><hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
+    h('</div>');
   }
 
   /* ── PROFESSIONAL SUMMARY ── */
-  h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Professional Summary</div>');
-  h('<div style="font-size:10px;color:#374151;line-height:1.75;padding:11px 13px;background:#f8fafc;border-radius:8px;border-left:3px solid #4f46e5;">'+esc(d.summary)+'</div></div>');
+  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
+  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Professional Summary</span></div>');
+  h('<div style="padding:14px 16px;background:#fff;font-size:10px;color:#374151;line-height:1.8;">'+esc(d.summary)+'</div>');
+  h('</div>');
 
   /* ── RECRUITER NOTES ── */
   if(d.hasRN){
-    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Recruiter Notes</div>');
-    h('<div style="font-size:10px;color:#374151;line-height:1.75;padding:11px 13px;background:#fdf4ff;border-radius:8px;border-left:3px solid #db2777;">'+esc(d.rnText)+'</div></div>');
-  }
-
-  /* ── OWNERSHIP ── */
-  if(d.ownershipHtml){
-    h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
-    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Ownership</div>');
-    h('<div style="background:#f8fafc;border-radius:8px;padding:9px 12px;">'+d.ownershipHtml+'</div></div>');
+    h('<div style="border:1px solid #f3e8ff;border-left:4px solid #db2777;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
+    h('<div style="background:#fdf4ff;border-bottom:1px solid #f3e8ff;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#db2777;letter-spacing:0.8px;text-transform:uppercase;">Recruiter Notes &amp; Comments</span></div>');
+    h('<div style="padding:14px 16px;background:#fff;font-size:10px;color:#374151;line-height:1.8;font-style:italic;">'+esc(d.rnText)+'</div>');
+    h('</div>');
   }
 
   h('</div>');
 
   /* ── FOOTER ── */
-  h('<div style="background:#f1f5f9;border-top:1px solid #e2e8f0;padding:9px 28px;display:flex;align-items:center;justify-content:space-between;">');
-  h('<div style="font-size:8.5px;color:#94a3b8;">&#128274; Confidential &mdash; For Internal Recruiter Use Only &bull; JERO Hiring Platform</div>');
-  h('<div style="font-size:8.5px;color:#94a3b8;">'+esc(d.dateStr)+'</div></div>');
+  h('<div style="border-top:2px solid #e2e8f0;padding:11px 32px;background:#f8fafc;">');
+  h('<table style="width:100%;border-collapse:collapse;"><tr>');
+  h('<td style="font-size:8px;color:#94a3b8;">&#128274; CONFIDENTIAL &mdash; For Internal Recruiter Use Only &bull; '+esc(d.companyName)+' via JERO Hiring Platform</td>');
+  h('<td style="text-align:right;font-size:8px;color:#94a3b8;">Generated: '+esc(d.dateStr)+'</td>');
+  h('</tr></table></div>');
 
   h('</div>');
   return S;
@@ -6262,17 +6307,11 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
   var mb=wrap.querySelector('.cdr-match-pct-badge');
   var matchText=mb?mb.textContent.trim():'';
-  var matchBg='#f1f5f9',matchColor='#64748b';
-  if(mb){
-    if(mb.classList.contains('cdr-mpb-green')){matchBg='#dcfce7';matchColor='#16a34a';}
-    else if(mb.classList.contains('cdr-mpb-amber')){matchBg='#fef3c7';matchColor='#d97706';}
-    else if(mb.classList.contains('cdr-mpb-red')){matchBg='#fee2e2';matchColor='#dc2626';}
-  }
 
   var metaHtml='';
   wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){
     var t=(el.textContent||'').trim().replace(/\s+/g,' ');
-    if(t) metaHtml+='<span style="font-size:9.5px;color:#475569;white-space:nowrap;">'+esc(t)+'</span>';
+    if(t) metaHtml+='<span style="display:inline-block;font-size:9.5px;color:#475569;white-space:nowrap;margin-right:14px;margin-bottom:3px;">'+esc(t)+'</span>';
   });
 
   var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
@@ -6280,7 +6319,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var skillsHtml='';
   wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
     var isM=el.classList.contains('cdr-skill-match'),isMo=el.classList.contains('cdr-skill-more');
-    skillsHtml+='<span style="display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;border-radius:10px;font-size:9px;font-weight:'+(isM?'700':'400')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
+    skillsHtml+='<span style="display:inline-block;padding:2px 9px;margin:2px 3px 2px 0;border-radius:10px;font-size:9px;font-weight:'+(isM?'700':'400')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
   });
 
   var metricsHtml='';
@@ -6290,29 +6329,39 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var fracEl=row.querySelector('.cdr-metric-frac');
     var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
     var frac=fracEl?(fracEl.textContent||'').trim():'';
-    var full=frac?val.replace(frac,'').trim()+frac:val;
+    var full=frac?val.replace(frac,'').trim()+' / '+frac:val;
     var sub=(row.querySelector('.cdr-metric-sub')||{}).textContent||'';
     var isG=valEl&&valEl.classList.contains('cv-green'),isR=valEl&&valEl.classList.contains('cv-red');
     var vc=isG?'#16a34a':isR?'#dc2626':'#0f172a';
-    metricsHtml+='<tr><td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:9.5px;">'+esc(lbl.trim())+'</td>'+
-      '<td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:10px;text-align:right;">'+esc(full.trim())+
+    metricsHtml+='<tr>'+
+      '<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:9.5px;width:55%;">'+esc(lbl.trim())+'</td>'+
+      '<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:9.5px;text-align:right;">'+esc(full.trim())+
       (sub?'<div style="font-size:8px;color:#94a3b8;font-weight:400;margin-top:1px;">'+esc(sub.trim())+'</div>':'')+
       '</td></tr>';
   });
 
-  var pipeColors=['#dbeafe','#dcfce7','#f5f3ff','#fefce8','#f0fdfa','#eef2ff'];
-  var pipeTxt=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
-  var pipelineHtml='';var pi=0;
+  /* At a Glance: collect items then arrange in 2-col table */
+  var pipeItems=[];
+  var pipeColors=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
+  var pipeTxtColors=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
   wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(card){
     var lbl=(card.querySelector('.cdr-pipeline-label')||{}).textContent||'';
     var val=(card.querySelector('.cdr-pipeline-value')||{}).textContent||'';
-    lbl=lbl.trim(); val=val.trim().replace(/\s+/g,' ');
-    var bg=pipeColors[pi]||'#f8fafc',tc=pipeTxt[pi]||'#334155';
-    pipelineHtml+='<td style="padding:0 3px;"><div style="background:'+bg+';border-radius:8px;padding:9px 6px;text-align:center;">'+
-      '<div style="font-size:8px;color:#64748b;font-weight:500;margin-bottom:4px;">'+esc(lbl)+'</div>'+
-      '<div style="font-size:13px;font-weight:700;color:'+tc+';">'+esc(val)+'</div></div></td>';
-    pi++;
+    pipeItems.push({lbl:lbl.trim(),val:val.trim().replace(/\s+/g,' ')});
   });
+  var pipelineHtml='<table style="width:100%;border-collapse:separate;border-spacing:5px;">';
+  for(var pi=0;pi<pipeItems.length;pi+=2){
+    pipelineHtml+='<tr>';
+    for(var pj=pi;pj<Math.min(pi+2,pipeItems.length);pj++){
+      var pbg=pipeColors[pj]||'#f8fafc',ptc=pipeTxtColors[pj]||'#334155';
+      pipelineHtml+='<td style="width:50%;background:'+pbg+';border-radius:8px;padding:8px 7px;text-align:center;">'+
+        '<div style="font-size:8px;color:#64748b;font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;">'+esc(pipeItems[pj].lbl)+'</div>'+
+        '<div style="font-size:12px;font-weight:700;color:'+ptc+';">'+esc(pipeItems[pj].val)+'</div></td>';
+    }
+    if(pipeItems.length%2!==0&&pi===pipeItems.length-1) pipelineHtml+='<td></td>';
+    pipelineHtml+='</tr>';
+  }
+  pipelineHtml+='</table>';
 
   var skillsTableHtml='';
   var skillRowEls=wrap.querySelectorAll('#personal_details .skills-row');
@@ -6323,7 +6372,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       skillsTableHtml+='<thead><tr style="background:#f8fafc;">';
       thEl.querySelectorAll('div').forEach(function(c){
         var t=(c.textContent||'').trim();
-        if(t) skillsTableHtml+='<td style="padding:6px 10px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:8.5px;text-transform:uppercase;letter-spacing:0.4px;">'+esc(t)+'</td>';
+        if(t) skillsTableHtml+='<td style="padding:7px 12px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:8.5px;text-transform:uppercase;letter-spacing:0.4px;">'+esc(t)+'</td>';
       });
       skillsTableHtml+='</tr></thead>';
     }
@@ -6333,7 +6382,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       var cells=row.querySelectorAll('div');
       if(!cells.length) return;
       skillsTableHtml+='<tr style="background:'+(ri%2===0?'#fff':'#f9fafb')+';">';
-      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
+      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
       skillsTableHtml+='</tr>'; ri++;
     });
     skillsTableHtml+='</tbody></table>';
@@ -6348,28 +6397,28 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var hasRN=!!rnText;
   if(!rnText) rnText='No recruiter notes added yet.';
 
-  var ownershipHtml='',companyName='JERO',recruiterName='';
+  var companyName='Company',recruiterName='';
   wrap.querySelectorAll('.ownership-row').forEach(function(row){
     var lbl=(row.querySelector('.own-label')||{}).textContent||'';
     var val=(row.querySelector('.own-value')||{}).textContent||'';
-    lbl=lbl.trim().replace(/\s+/g,' '); val=val.trim();
+    lbl=lbl.trim(); val=val.trim();
     if(!val||val==='—') return;
     if(lbl.toLowerCase().includes('company')) companyName=val;
     if(lbl.toLowerCase().includes('recruiter')&&!lbl.toLowerCase().includes('note')) recruiterName=val;
-    ownershipHtml+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f4f8;font-size:9.5px;">'+
-      '<span style="color:#64748b;">'+esc(lbl)+'</span><span style="color:#0f172a;font-weight:600;">'+esc(val)+'</span></div>';
   });
+
+  var logoUri=null;
+  if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
 
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var now=new Date();
   var dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
 
   var html=buildPdfHtml({
-    name:name,role:role,initials:initials,matchText:matchText,matchBg:matchBg,matchColor:matchColor,
+    name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
     metaHtml:metaHtml,skillsHtml:skillsHtml,metricsHtml:metricsHtml,pipelineHtml:pipelineHtml,
     skillsTableHtml:skillsTableHtml,summary:summary,hasRN:hasRN,rnText:rnText,
-    ownershipHtml:ownershipHtml,companyName:companyName,recruiterName:recruiterName,
-    dateStr:dateStr,isImmediate:isImmediate
+    companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
   });
 
   var container=document.createElement('div');
