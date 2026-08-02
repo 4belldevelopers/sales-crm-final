@@ -2786,35 +2786,79 @@
      CSS-only, no PHP / business-logic changes.
      ============================================================ */
 
+  /* ── DRAWER FOUNDATION ────────────────────────────────────────────
+     page-wrapper MUST fill the full drawer pixel width at all times.
+     Without width:100% the page-wrapper shrinks to its content in the
+     drawer's flex-row context; switching to Notes/Timeline (whose
+     content is narrower than Profile Overview) lets it shrink and
+     clips the right sub-card of the hero card. */
+  #kt_activitiesApplication .page-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Contain every tab pane and the page-content wrapper so that wide
+     elements inside Notes/Timeline never push the drawer wider. */
+  #kt_activitiesApplication .page-content { overflow-x: hidden; max-width: 100%; }
+  #kt_activitiesApplication .tab-pane     { max-width: 100%; overflow-x: hidden; }
+
+  /* The global ".table td,.table th,.table tr{width:max-content!important}"
+     rule (in the top <style> block of showdetail.blade.php) makes timeline
+     tables try to be as wide as their content.  Override it here. */
+  #kt_activitiesApplication #notes table td,
+  #kt_activitiesApplication #notes table th,
+  #kt_activitiesApplication #notes table tr,
+  #kt_activitiesApplication #timeline table td,
+  #kt_activitiesApplication #timeline table th,
+  #kt_activitiesApplication #timeline table tr { width: auto !important; }
+
+  /* ── NOTES & TIMELINE: layout containment ─────────────────────── */
+
   /* Switch from CSS Grid to block so 1fr never expands past drawer width */
   #kt_activitiesApplication #notes .content-split,
-  #kt_activitiesApplication #timeline .content-split { display: block; max-width: 100%; }
+  #kt_activitiesApplication #timeline .content-split { display: block !important; max-width: 100%; width: 100%; }
 
   #kt_activitiesApplication #notes .content-main-full,
-  #kt_activitiesApplication #timeline .content-main-full { max-width: 100%; }
+  #kt_activitiesApplication #timeline .content-main-full { max-width: 100%; width: 100%; }
 
   /* Bootstrap .row negative gutter margins bleed past the card — zero them */
   #kt_activitiesApplication #notes .row,
-  #kt_activitiesApplication #timeline .row { margin-left: 0 !important; margin-right: 0 !important; }
+  #kt_activitiesApplication #timeline .row { margin-left: 0 !important; margin-right: 0 !important; max-width: 100%; width: 100%; }
 
   /* Timeline: wide multi-column tables scroll horizontally inside their cell */
   #kt_activitiesApplication #timeline .timeline-content { overflow-x: auto; max-width: 100%; }
 
   /* Constrain overflow-auto wrappers that hold min-w-700px comment boxes */
   #kt_activitiesApplication #notes .overflow-auto,
-  #kt_activitiesApplication #timeline .overflow-auto { max-width: 100%; width: 100%; }
+  #kt_activitiesApplication #timeline .overflow-auto { max-width: 100% !important; width: 100% !important; overflow-x: auto !important; }
 
-  /* Remove the 700px floor so comment boxes fill available width instead */
-  #kt_activitiesApplication .min-w-700px { min-width: 0 !important; }
+  /* Remove the 700/750/800px floor so comment boxes fill available width */
+  #kt_activitiesApplication .min-w-700px,
+  #kt_activitiesApplication .min-w-750px,
+  #kt_activitiesApplication .min-w-800px { min-width: 0 !important; }
 
-  /* Bootstrap fs-5 = 1.25rem (20px) — cap to 13px inside the drawer */
+  /* Bootstrap fs-5=1.25rem(20px) / fs-6=1rem(16px) — cap to 13px in drawer */
   #kt_activitiesApplication .fs-5 { font-size: 13px !important; }
+  #kt_activitiesApplication #notes .fs-6,
+  #kt_activitiesApplication #timeline .fs-6 { font-size: 13px !important; }
 
   /* Timeline card-body: replace Bootstrap defaults with drawer-friendly padding */
   #kt_activitiesApplication #timeline .card-body { padding: 12px 16px !important; }
 
-  /* Notes: prevent form-group from leaking past the card boundary */
-  #kt_activitiesApplication #notes .form-group { max-width: 100%; overflow: hidden; }
+  /* Notes / Timeline: prevent form-group and cards from leaking past boundary */
+  #kt_activitiesApplication #notes .form-group,
+  #kt_activitiesApplication #notes .cardshow,
+  #kt_activitiesApplication #timeline .cardshow { max-width: 100%; overflow-x: hidden; }
+
+  /* Timeline-3 left margin+padding offset must stay inside the card boundary */
+  #kt_activitiesApplication #notes .timeline.timeline-3,
+  #kt_activitiesApplication #timeline .timeline.timeline-3 { overflow-x: hidden; max-width: 100%; }
+
+  /* Bootstrap col gutters inside notes/timeline */
+  #kt_activitiesApplication #notes [class*="col-"],
+  #kt_activitiesApplication #timeline [class*="col-"] { max-width: 100%; overflow-x: hidden; }
 
   /* ============================================================
      PROFILE OVERVIEW TAB — Enterprise Redesign
