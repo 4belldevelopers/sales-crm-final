@@ -657,9 +657,47 @@ protected $elasticService;
 				return response()->json(['status'=>true,'html'=>$html]);
 
 			}
-		
+
 
 	}
+
+	/** Updates recruiter_note in both Elasticsearch (read store) and MySQL (write store). */
+	public function recruiterNoteUpdate(Request $request){
+		$appId        = $request->appId;
+		$recruiterNote = $request->recruiter_note ?? '';
+
+		$exists = $this->elasticService->getClient()->exists([
+			'index' => ELASTIC_CANDIDATES,
+			'id'    => $appId,
+		]);
+
+		if ($exists) {
+			$this->elasticService->getClient()->update([
+				'index'  => ELASTIC_CANDIDATES,
+				'id'     => $appId,
+				'body'   => [
+					'doc'          => ['recruiter_note' => $recruiterNote],
+					'doc_as_upsert' => false,
+				],
+				'refresh' => true,
+			]);
+
+			// Keep MySQL write-store in sync (tenant-scoped via company_id)
+			JobApplication::where('id', $appId)
+				->where('company_id', auth()->user()->company_id)
+				->update(['recruiter_note' => $recruiterNote]);
+
+			$cachekeys = ['candidateDetails_version_user_' . $this->user->id];
+			foreach ($cachekeys as $key) {
+				GeneralMethod::cacheClean($key);
+			}
+
+			return response()->json(['status' => true]);
+		}
+
+		return response()->json(['status' => false], 422);
+	}
+
 	public function clientCandidateList(Request $request)
 	{
 		// $candidates = JobApplication::query();
