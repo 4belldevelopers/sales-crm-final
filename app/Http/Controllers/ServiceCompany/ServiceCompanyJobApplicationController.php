@@ -612,11 +612,10 @@ protected $elasticService;
 							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_one ?? 'N/A' ).'</div>
 
-							<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '' ).' data-mode="'. $interview_mode_one .'"
-                                data-date="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d-m-Y') : '') .'"
-                                data-time="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : '') .'"
-                                class="'. (($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff') .'"
-                                rel="'. @$wiseId .'">'.$book1.'</button>
+							'.($interviewDateOne
+                                ? '<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '').' data-mode="'.$interview_mode_one.'" data-date="'.Carbon::parse($interviewDateOne)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateOne)->format('h:i A').'" class="'.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book1.'</button>'
+                                : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                            ).'
                         </div>
 
 						<div class="slot-day">
@@ -626,11 +625,10 @@ protected $elasticService;
 							</div>
 							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_two ?? 'N/A') .'</div>
-								<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2:'').' data-mode="'. $interview_mode_two .'"
-										data-date="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : '') .'"
-										class="'. (($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book2.'</button>
+								'.($interviewDateTwo
+                                        ? '<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2 : '').' data-mode="'.$interview_mode_two.'" data-date="'.Carbon::parse($interviewDateTwo)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateTwo)->format('h:i A').'" class="'.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book2.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>
 
 						<div class="slot-day">						
@@ -640,11 +638,10 @@ protected $elasticService;
 							</div>
 							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_three ?? 'N/A' ).'</div>
-								<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3:'').' data-mode="'. $interview_mode_three .'"
-										data-date="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : '') .'"
-										class="'. (($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book3.'</button>
+								'.($interviewDateThree
+                                        ? '<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3 : '').' data-mode="'.$interview_mode_three.'" data-date="'.Carbon::parse($interviewDateThree)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateThree)->format('h:i A').'" class="'.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book3.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>';
 
                 
