@@ -539,6 +539,7 @@ protected $elasticService;
 							'interview_mode_two' => $request->interview_mode_two,
 							'interviewDateThree' => ($interviewDateThree) ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
 							'interview_mode_three' => $request->interview_mode_three,
+							'interview_timezone' => $request->interview_timezone ?? 'IST',
 						],
 						'doc_as_upsert' => false // Changed to false since we verified existence
 					],
@@ -562,6 +563,7 @@ protected $elasticService;
 					$interview_mode_two = @$data->interview_mode_two;			
 					$interviewDateThree = @$data->interviewDateThree;	
 					$interview_mode_three = @$data->interview_mode_three;
+					 $interview_timezone = @$data->interview_timezone ?? 'IST';
 					$wiseId = $addJobWiseCondidate_id;
 
 					 $scheduleDateArr = DB::table('interview_schedules')->where('interview_job_wise_con_id',$addJobWiseCondidate_id)->pluck('schedule_date')->toArray();
@@ -607,7 +609,7 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).'(IST)</div>
+							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_one ?? 'N/A' ).'</div>
 
 							<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '' ).' data-mode="'. $interview_mode_one .'"
@@ -622,7 +624,7 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_two ?? 'N/A') .'</div>
 								<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2:'').' data-mode="'. $interview_mode_two .'"
 										data-date="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d-m-Y') : '') .'"
@@ -636,7 +638,7 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_three ?? 'N/A' ).'</div>
 								<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3:'').' data-mode="'. $interview_mode_three .'"
 										data-date="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d-m-Y') : '') .'"

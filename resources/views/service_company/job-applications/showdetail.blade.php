@@ -169,6 +169,15 @@
 #jw-slots-drawer .isd-datetime-pill{display:flex;align-items:center;border:1.5px solid #e4e6ef;border-radius:8px;background:#f8f9fb;padding:0 9px;}
 #jw-slots-drawer .isd-datetime-pill input{border:none!important;background:transparent!important;padding:8px 4px!important;width:auto;flex:1 1 auto;min-width:0;color:#181c32;font-size:12px;font-family:'Poppins',sans-serif;}
 #jw-slots-drawer .isd-datetime-pill .sep{width:1px;height:18px;background:#e4e6ef;flex-shrink:0;margin:0 2px;}
+/* slots drawer — wider panel (+17%) and full-pill click */
+#jw-slots-drawer .jw-drawer-panel{width:560px;}
+#jw-slots-drawer .isd-datetime-pill{cursor:pointer;}
+#jw-slots-drawer .isd-datetime-pill input{cursor:pointer;}
+/* timezone row */
+#jw-slots-drawer .isd-tz-row{background:#f8faff;border:1px solid #e0e7ff;border-radius:10px;padding:12px 14px;margin-bottom:16px;}
+#jw-slots-drawer .isd-tz-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+#jw-slots-drawer .isd-tz-select{width:100%;border:1.5px solid #c7d2fe;border-radius:8px;padding:7px 10px;font-size:12px;color:#181c32;background:#fff;font-family:'Poppins',sans-serif;cursor:pointer;}
+#jw-slots-drawer .isd-tz-hint{font-size:10px;color:#94a3b8;margin-top:5px;display:flex;align-items:center;gap:4px;}
 #kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
 #kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
 #kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
@@ -2228,7 +2237,8 @@
                       <div class="slot-day-name">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('D') : 'N/A' }}</div>
                       <div class="slot-date">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d M') : 'N/A' }}</div>
                     </div>
-                    <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }}(IST)</div>
+                    @php $__slotTz = @$application->interview_timezone ?? 'IST'; @endphp
+                    <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
                     <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
                   </div>
@@ -2238,7 +2248,7 @@
                       <div class="slot-day-name">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('D') : 'N/A' }}</div>
                       <div class="slot-date">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d M') : 'N/A' }}</div>
                     </div>
-                    <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }}(IST)</div>
+                    <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_two ?? 'N/A' }}</div>
                     <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
                   </div>
@@ -2248,7 +2258,7 @@
                       <div class="slot-day-name">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('D') : 'N/A' }}</div>
                       <div class="slot-date">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d M') : 'N/A' }}</div>
                     </div>
-                    <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }}(IST)</div>
+                    <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
                     <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
                   </div>
@@ -2938,6 +2948,48 @@
             <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
               @csrf
               <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
+
+              {{-- Timezone (applies to all 3 slots) --}}
+              <div class="isd-tz-row">
+                <div class="isd-tz-label">
+                  <i class="ti ti-world" style="font-size:14px;color:#4f46e5;"></i>
+                  Interview Time Zone <span style="color:#94a3b8;font-weight:400;">(applies to all slots)</span>
+                </div>
+                <select name="interview_timezone" id="interview_timezone" class="isd-tz-select">
+                  @php $__tz = @$application->interview_timezone ?? 'IST'; @endphp
+                  <option value="IST"   @selected($__tz=='IST')  >IST  — India Standard Time       (UTC+5:30)</option>
+                  <option value="UTC"   @selected($__tz=='UTC')  >UTC  — Coordinated Universal Time (UTC+0:00)</option>
+                  <option value="GMT"   @selected($__tz=='GMT')  >GMT  — Greenwich Mean Time        (UTC+0:00)</option>
+                  <option value="BST"   @selected($__tz=='BST')  >BST  — British Summer Time        (UTC+1:00)</option>
+                  <option value="CET"   @selected($__tz=='CET')  >CET  — Central European Time      (UTC+1:00)</option>
+                  <option value="CEST"  @selected($__tz=='CEST') >CEST — Central European Summer    (UTC+2:00)</option>
+                  <option value="EET"   @selected($__tz=='EET')  >EET  — Eastern European Time      (UTC+2:00)</option>
+                  <option value="MSK"   @selected($__tz=='MSK')  >MSK  — Moscow Standard Time       (UTC+3:00)</option>
+                  <option value="GST"   @selected($__tz=='GST')  >GST  — Gulf Standard Time         (UTC+4:00)</option>
+                  <option value="PKT"   @selected($__tz=='PKT')  >PKT  — Pakistan Standard Time     (UTC+5:00)</option>
+                  <option value="BST530" @selected($__tz=='BST530')>BST  — Bangladesh Standard Time   (UTC+6:00)</option>
+                  <option value="MMT"   @selected($__tz=='MMT')  >MMT  — Myanmar Time               (UTC+6:30)</option>
+                  <option value="ICT"   @selected($__tz=='ICT')  >ICT  — Indochina Time             (UTC+7:00)</option>
+                  <option value="SGT"   @selected($__tz=='SGT')  >SGT  — Singapore / HKT            (UTC+8:00)</option>
+                  <option value="CST"   @selected($__tz=='CST')  >CST  — China Standard Time        (UTC+8:00)</option>
+                  <option value="JST"   @selected($__tz=='JST')  >JST  — Japan Standard Time        (UTC+9:00)</option>
+                  <option value="AEST"  @selected($__tz=='AEST') >AEST — Australian Eastern Standard (UTC+10:00)</option>
+                  <option value="NZST"  @selected($__tz=='NZST') >NZST — New Zealand Standard Time   (UTC+12:00)</option>
+                  <option value="AST"   @selected($__tz=='AST')  >AST  — Arabian Standard Time      (UTC+3:00)</option>
+                  <option value="BRT"   @selected($__tz=='BRT')  >BRT  — Brasília Time              (UTC−3:00)</option>
+                  <option value="ART"   @selected($__tz=='ART')  >ART  — Argentina Time             (UTC−3:00)</option>
+                  <option value="EST"   @selected($__tz=='EST')  >EST  — Eastern Standard Time      (UTC−5:00)</option>
+                  <option value="EDT"   @selected($__tz=='EDT')  >EDT  — Eastern Daylight Time      (UTC−4:00)</option>
+                  <option value="CST_US" @selected($__tz=='CST_US')>CST — Central Standard Time (US) (UTC−6:00)</option>
+                  <option value="MST"   @selected($__tz=='MST')  >MST  — Mountain Standard Time     (UTC−7:00)</option>
+                  <option value="PST"   @selected($__tz=='PST')  >PST  — Pacific Standard Time      (UTC−8:00)</option>
+                  <option value="PDT"   @selected($__tz=='PDT')  >PDT  — Pacific Daylight Time      (UTC−7:00)</option>
+                </select>
+                <div class="isd-tz-hint">
+                  <i class="ti ti-info-circle" style="font-size:11px;"></i>
+                  Time zone is for display reference only; dates are saved as-is
+                </div>
+              </div>
 
               {{-- Slot 1 --}}
               <div class="isd-slot-card">
@@ -4924,7 +4976,18 @@ setTimeout(() => {
 
     });
 
-    $(document).on('click', '.editSlots', function(e) { 
+    // Clicking anywhere on the date-time pill opens the appropriate native picker.
+    // Also: no min-date is enforced, so past (backdated) slots are always selectable.
+    $(document).on('click', '#jw-slots-drawer .isd-datetime-pill', function(e) {
+        if ($(e.target).is('input')) return; // direct input click — native browser handles it
+        var rect = this.getBoundingClientRect();
+        var isTimeSide = (e.clientX - rect.left) > (rect.width * 0.62); // right 38% = time column
+        var input = $(this).find(isTimeSide ? 'input[type="time"]' : 'input[type="date"]')[0];
+        if (!input) return;
+        try { input.showPicker(); } catch(err) { input.focus(); }
+    });
+
+    $(document).on('click', '.editSlots', function(e) {
        e.preventDefault();
        e.stopPropagation();
        $('.editSlotsUpdate').removeClass('d-none');
