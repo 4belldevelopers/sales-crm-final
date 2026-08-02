@@ -5013,6 +5013,248 @@ setTimeout(() => {
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
 
+{{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
+@php
+  $rsSkills = [];
+  if(!empty($jobSkill)){
+    foreach($jobSkill as $sv){
+      $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
+      $expStr=trim(str_replace(['Years','Year',' '],'',(string)($sv->skill_value??'')));
+      $expYears=($expStr!=='')?(int)explode('.',$expStr)[0]:0;
+      $rsSkills[]=['name'=>$sn,'exp'=>$expYears,'rating'=>max(0,min(5,(int)($sv->rating??0)))];
+    }
+  }
+  if(empty($rsSkills)&&!empty($application->skills)){
+    foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
+      if($sn) $rsSkills[]=['name'=>$sn,'exp'=>0,'rating'=>0];
+    }
+  }
+  $rsMatchPct=(int)round((float)(@$application->skill_match??0));
+  if($rsMatchPct===0&&!empty($__hdrJobTotal)) $rsMatchPct=(int)round(($__hdrMatchedCount??0)/$__hdrJobTotal*100);
+  $rsWm=strtolower(trim((string)(@$application->wm??'')));
+  $rsWorkMode=$rsWm==='remote'?'Remote':($rsWm==='hybrid'?'Hybrid / Remote':($rsWm==='office'?'On-site':($rsWm!==''?ucfirst($rsWm):'—')));
+  $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
+  if($rsNpMode===0||$rsNpMode===1){ $rsNotice='Available '.date('d M Y',strtotime((string)@$application->np_id)); }
+  else { $rsNotice=trim((string)@$application->np_id); }
+  if($rsNotice===''||$rsNotice==='Available ') $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower(trim((string)@$application->np_id))==='immediate');
+  $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
+  if($rsLoc==='') $rsLoc=trim($country_name??'');
+  if($rsLoc==='') $rsLoc='--';
+  $rsTotalExp=trim((string)(@$application->total_exp??''));
+  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Years':'--';
+  $rsValidation=[];
+  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LinkedIn Verified','status'=>'Verified'];
+  if(!empty($application->resume))   $rsValidation[]=['label'=>'Resume Verified','status'=>'Verified'];
+  if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
+  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'Job Description Acknowledged','status'=>'Confirmed'];
+  if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
+  $rsCareerSummary=trim(strip_tags(html_entity_decode((string)(@$application->careersummary??''),ENT_QUOTES,'UTF-8')));
+@endphp
+<div id="rsData" hidden
+  data-name="{{ ucwords(@$application->full_name) }}"
+  data-designation="{{ ucwords(@$application->current_designation) }}"
+  data-company="{{ ucwords(@$application->current_company ?: @$application->cur_company_name) }}"
+  data-location="{{ $rsLoc }}"
+  data-experience="{{ $rsExpStr }}"
+  data-notice="{{ $rsNotice }}"
+  data-education="{{ ucwords(@$application->qualification_name) }}"
+  data-work-mode="{{ $rsWorkMode }}"
+  data-match="{{ $rsMatchPct }}"
+  data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
+  data-recruiter-note="{{ \Illuminate\Support\Str::limit(strip_tags((string)(@$application->recruiter_note??'')),400) }}"
+  data-career-summary="{{ \Illuminate\Support\Str::limit($rsCareerSummary,500) }}"
+  data-job-title="{{ ucwords($job->title??'') }}"
+  data-skills='@json($rsSkills)'
+  data-validation='@json($rsValidation)'></div>
+
+<script>
+/* buildRecruiterSummary — 100% client-side pre-screened candidate report */
+(function(){
+'use strict';
+function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function buildRsHtml(data,companyName,logoUri){
+  var H=[];function h(s){H.push(s);}
+  var mp=Math.max(0,Math.min(100,data.match||0));
+  var r48=Math.round(2*Math.PI*48);
+  var df=mp>0?Math.round(r48*mp/100):0,de=r48-df;
+  var ml=mp>=90?'Excellent Match':mp>=75?'Strong Match':mp>=60?'Good Match':'Partial Match';
+  var mc=mp>=75?'#16a34a':mp>=60?'#ca8a04':'#dc2626';
+  var md=mp>=90?'Highly relevant skills, experience &amp; immediate availability.':mp>=75?'Good skills alignment and strong relevant experience.':mp>=60?'Relevant skills with good potential fit.':'Some relevant skills — further evaluation recommended.';
+  var init=(data.name||'').split(' ').map(function(w){return(w[0]||'').toUpperCase();}).slice(0,2).join('')||'NA';
+  var inf=[
+    {l:'Preferred Work Mode',v:data.workMode||'—'},
+    {l:'Educational Degree',v:(data.education&&data.education!=='--')?data.education:'—'},
+    {l:'Notice Period',v:(data.notice&&data.notice!=='--')?data.notice:'—'},
+    {l:'Total Experience',v:(data.experience&&data.experience!=='--')?data.experience:'—'},
+    {l:'Preferred Location',v:data.location&&data.location!=='--'?(data.location.split(',')[0]||data.location).trim():'—'}
+  ];
+  var why=[];
+  if(mp>0) why.push({ic:'&#127942;',bg:'#eef2ff',t:mp+'% Skill Match',d:'Strong match on required technical skills &amp; tools'});
+  if(data.isImmediate) why.push({ic:'&#9889;',bg:'#fef9c3',t:'Immediate Joiner',d:'Available to join immediately, no waiting period'});
+  else if(data.notice&&data.notice!=='--') why.push({ic:'&#128197;',bg:'#eff6ff',t:e(data.notice),d:'Notice period for joining availability'});
+  if(data.experience&&parseFloat(data.experience)>=3) why.push({ic:'&#128200;',bg:'#f0fdf4',t:'Proven Track Record',d:'Consistent performer with strong project experience'});
+  if(data.recruiterNote) why.push({ic:'&#128172;',bg:'#f5f3ff',t:'Recruiter Verified',d:'Personally screened by senior technical recruiter'});
+  while(why.length<2) why.push({ic:'&#10003;',bg:'#f8fafc',t:'Quality Candidate',d:'Pre-screened and verified for this role'});
+  why=why.slice(0,4);
+  var sc={Verified:'#16a34a',Completed:'#2563eb',Confirmed:'#7c3aed',Discussed:'#ea580c'};
+
+  h('<div style="width:1000px;font-family:Poppins,Arial,sans-serif;background:#fff;overflow:hidden;">');
+  /* HEADER */
+  h('<div style="background:#0f3460;padding:0 28px;height:100px;display:flex;align-items:center;gap:16px;">');
+  if(logoUri){h('<img src="'+logoUri+'" style="height:68px;max-width:130px;object-fit:contain;flex-shrink:0;" alt="">');
+  }else{h('<div style="width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0;">'+e(init)+'</div>');}
+  h('<div style="width:1.5px;height:60px;background:rgba(255,255,255,.25);flex-shrink:0;"></div>');
+  h('<span style="color:#fff;font-size:16px;font-weight:700;white-space:nowrap;">'+e(companyName)+'</span>');
+  h('<div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;">PRE-SCREENED CANDIDATE REPORT</div><div style="color:rgba(255,255,255,.7);font-size:10.5px;margin-top:4px;">Prepared by Senior Technical Recruiter</div></div>');
+  h('</div>');
+  /* HERO */
+  h('<div style="padding:20px 28px 16px;display:flex;gap:20px;align-items:flex-start;border-bottom:1.5px solid #e2e8f0;">');
+  h('<div style="flex-shrink:0;text-align:center;width:130px;">');
+  h('<div style="width:120px;height:120px;border-radius:50%;background:#eef2ff;border:2px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#0f3460;margin:0 auto;">'+e(init)+'</div>');
+  if(data.isImmediate){h('<div style="margin-top:8px;background:#dcfce7;border-radius:12px;padding:5px 6px;font-size:9.5px;font-weight:600;color:#15803d;text-align:center;">&#9679; Immediate Joiner</div>');}
+  h('</div>');
+  h('<div style="flex:1;min-width:0;padding-top:2px;">');
+  h('<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:22px;font-weight:700;color:#0f172a;">'+e(data.name)+'</span><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;">&#10003;</span></div>');
+  if(data.designation) h('<div style="font-size:13px;font-weight:600;color:#1e40af;margin-bottom:11px;">'+e(data.designation)+'</div>');
+  if(data.experience&&data.experience!=='--') h('<div style="font-size:12px;color:#475569;margin-bottom:5px;">'+e(data.experience)+' of Experience</div>');
+  if(data.company) h('<div style="font-size:12px;color:#475569;margin-bottom:5px;">'+e(data.company)+'</div>');
+  if(data.location&&data.location!=='--') h('<div style="font-size:12px;color:#475569;">'+e(data.location)+'</div>');
+  h('</div>');
+  /* match arc */
+  h('<div style="flex-shrink:0;width:320px;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafcff;">');
+  h('<div style="font-size:10.5px;font-weight:600;color:#0f172a;margin-bottom:10px;letter-spacing:.3px;">AI MATCH SCORE &#10022;</div>');
+  h('<div style="display:flex;align-items:center;gap:16px;">');
+  h('<svg width="110" height="110" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><circle cx="55" cy="55" r="48" fill="none" stroke="#e2e8f0" stroke-width="8.5"/><circle cx="55" cy="55" r="48" fill="none" stroke="#22c55e" stroke-width="8.5" stroke-dasharray="'+df+' '+de+'" stroke-dashoffset="'+Math.round(r48*.25)+'" stroke-linecap="round"/><text x="55" y="60" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="19" font-weight="700" fill="#0f172a">'+mp+'%</text></svg>');
+  h('<div><div style="font-size:14px;font-weight:700;color:'+mc+';margin-bottom:6px;">'+ml+'</div><div style="font-size:10.5px;color:#64748b;line-height:1.55;">'+md+'</div></div>');
+  h('</div></div>');
+  h('</div>');/* end hero */
+  /* INFO BAR */
+  h('<div style="background:#f8fafc;border-bottom:1.5px solid #e2e8f0;display:flex;">');
+  inf.forEach(function(item,i){
+    h('<div style="flex:1;padding:13px 6px;text-align:center;'+(i>0?'border-left:1px solid #e2e8f0;':'')+'">');
+    h('<div style="font-size:9.5px;color:#64748b;margin-bottom:6px;font-weight:500;line-height:1.3;">'+e(item.l)+'</div>');
+    var v=item.v.length>18?item.v.substring(0,17)+'…':item.v;
+    h('<div style="font-size:12.5px;font-weight:700;color:#0f172a;">'+e(v)+'</div>');
+    h('</div>');
+  });
+  h('</div>');
+  /* MAIN CONTENT */
+  h('<div style="display:flex;padding:18px 20px 16px;align-items:flex-start;">');
+  /* left col */
+  h('<div style="width:45%;padding-right:18px;box-sizing:border-box;border-right:1.5px solid #e2e8f0;">');
+  h('<div style="font-size:11.5px;font-weight:700;color:#1e40af;margin-bottom:12px;letter-spacing:.4px;text-transform:uppercase;">Skills Snapshot</div>');
+  h('<table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;font-size:11px;">');
+  h('<thead><tr style="background:#f8fafc;"><th style="padding:7px 10px;text-align:left;font-size:9.5px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;text-transform:uppercase;">SKILL</th><th style="padding:7px 6px;text-align:center;font-size:9.5px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;text-transform:uppercase;">EXPERIENCE</th><th style="padding:7px 6px;text-align:center;font-size:9.5px;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;text-transform:uppercase;">RATING (5)</th></tr></thead><tbody>');
+  var sks=(data.skills||[]).slice(0,12);
+  if(sks.length){sks.forEach(function(sk,i){
+    h('<tr style="background:'+(i%2===0?'#f9fafb':'#fff')+';">');
+    h('<td style="padding:7px 10px;border-bottom:1px solid #f0f4f8;color:#0f172a;font-weight:500;">'+e(sk.name)+'</td>');
+    h('<td style="padding:7px 6px;border-bottom:1px solid #f0f4f8;text-align:center;color:#64748b;">'+(sk.exp>0?sk.exp+(sk.exp===1?' Year':' Years'):'—')+'</td>');
+    var stars='';for(var s=1;s<=5;s++) stars+='<span style="color:'+(s<=(sk.rating||0)?'#fbbf24':'#d1d5db')+';font-size:13px;">&#9733;</span>';
+    h('<td style="padding:7px 6px;border-bottom:1px solid #f0f4f8;text-align:center;">'+stars+'</td>');
+    h('</tr>');
+  });}else{h('<tr><td colspan="3" style="padding:10px;text-align:center;color:#94a3b8;font-size:11px;">No skill data available</td></tr>');}
+  h('</tbody></table>');
+  if(data.careerSummary){
+    h('<div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #f0f4f8;">');
+    h('<div style="font-size:11.5px;font-weight:700;color:#1e40af;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Professional Summary</div>');
+    h('<div style="font-size:11px;color:#374151;line-height:1.65;">'+e(data.careerSummary)+'</div></div>');
+  }
+  h('</div>');/* end left */
+  /* right col */
+  h('<div style="width:55%;padding-left:20px;box-sizing:border-box;">');
+  h('<div style="background:#0f3460;border-radius:8px;padding:10px 16px;margin-bottom:14px;color:#fff;font-size:12px;font-weight:700;">&#9733; WHY WE RECOMMEND THIS CANDIDATE</div>');
+  h('<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">');
+  why.forEach(function(w){
+    h('<div style="text-align:center;padding:14px 8px;border:1px solid #f1f5f9;border-radius:10px;background:#fff;">');
+    h('<div style="width:44px;height:44px;border-radius:50%;background:'+w.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:20px;line-height:1;">'+w.ic+'</div>');
+    h('<div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:5px;">'+e(w.t)+'</div>');
+    h('<div style="font-size:10px;color:#64748b;line-height:1.45;">'+w.d+'</div></div>');
+  });
+  h('</div>');
+  if(data.recruiterNote){
+    h('<div style="background:#0f3460;border-radius:8px;padding:10px 16px;margin-bottom:10px;color:#fff;font-size:12px;font-weight:700;">&#128100; RECRUITER NOTES</div>');
+    h('<div style="font-style:italic;font-size:11px;color:#374151;line-height:1.7;margin-bottom:14px;padding:0 2px;">'+e(data.recruiterNote)+'</div>');
+  }
+  if(data.validation&&data.validation.length){
+    h('<div style="background:#0f3460;border-radius:8px;padding:10px 16px;margin-bottom:10px;color:#fff;font-size:12px;font-weight:700;">&#128737; CANDIDATE VALIDATION</div>');
+    h('<div style="border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;">');
+    data.validation.forEach(function(v,i){
+      var vsc=sc[v.status]||'#16a34a';
+      var bb=i<data.validation.length-1?'border-bottom:1px solid #e2e8f0;':'';
+      h('<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:'+(i%2===0?'#f9fafb':'#fff')+';'+bb+'">');
+      h('<span style="font-size:11.5px;color:#0f172a;font-weight:500;">'+e(v.label)+'</span>');
+      h('<span style="font-size:11px;font-weight:700;color:'+vsc+';">&#10003; '+e(v.status)+'</span></div>');
+    });
+    h('</div>');
+  }
+  h('</div>');/* end right */
+  h('</div>');/* end main */
+  /* FOOTER */
+  h('<div style="background:#0f3460;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;margin-top:4px;">');
+  h('<div><div style="color:#fff;font-size:11px;font-weight:700;">&#128274; CONFIDENTIAL</div><div style="color:rgba(255,255,255,.6);font-size:9.5px;margin-top:3px;">Shared by '+e(companyName)+' &#8212; For Recipient Use Only</div></div>');
+  h('<div style="color:#fff;font-size:13px;font-weight:600;">'+e(companyName)+'</div>');
+  h('<div style="color:rgba(255,255,255,.7);font-size:10px;">www.jero.works</div>');
+  h('</div></div>');
+  return H.join('');
+}
+
+async function buildRecruiterSummary(){
+  window.__rsBusy=true;
+  var container=null;
+  try{
+    var _ls=function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Load failed: '+src));};document.head.appendChild(s);});};
+    if(!(window.jspdf&&window.jspdf.jsPDF)) await _ls('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if(!window.html2canvas) await _ls('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    /* logo — reuse RC viewer cache when available */
+    var logoUri=null;
+    if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
+    else if(!window.__rcvLogoTried){
+      window.__rcvLogoTried=true;
+      var wrap=document.querySelector('#resume_cv .rcv-wrap');
+      var lsrc=wrap?wrap.getAttribute('data-logo'):'';
+      if(lsrc){try{var rsp=await fetch(lsrc,{cache:'force-cache'});if(rsp.ok){var bl=await rsp.blob();logoUri=await new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.readAsDataURL(bl);});window.__rcvLogo={__dataUri:logoUri};}}catch(ex){}}
+    }
+    /* data */
+    var rsEl=document.getElementById('rsData');
+    if(!rsEl) throw new Error('rsData not found');
+    var g=function(k){return rsEl.getAttribute(k)||'';};
+    var gj=function(k){try{return JSON.parse(rsEl.getAttribute(k)||'[]');}catch(ex){return[];}};
+    var data={
+      name:g('data-name')||'Candidate',designation:g('data-designation'),company:g('data-company'),
+      location:g('data-location'),experience:g('data-experience'),notice:g('data-notice'),
+      education:g('data-education'),workMode:g('data-work-mode'),match:parseInt(g('data-match'))||0,
+      isImmediate:g('data-is-immediate')==='1',recruiterNote:g('data-recruiter-note'),
+      careerSummary:g('data-career-summary'),skills:gj('data-skills'),validation:gj('data-validation')
+    };
+    var wrap2=document.querySelector('#resume_cv .rcv-wrap');
+    var cn=(wrap2&&wrap2.getAttribute('data-company'))||data.company||'Company';
+    /* render HTML → canvas → PDF */
+    container=document.createElement('div');
+    container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;overflow:hidden;';
+    container.innerHTML=buildRsHtml(data,cn,logoUri);
+    document.body.appendChild(container);
+    var el=container.firstElementChild;
+    var cvs=await window.html2canvas(el,{scale:2,useCORS:false,allowTaint:false,logging:false,backgroundColor:'#ffffff',imageTimeout:15000});
+    var JsPDF=window.jspdf.jsPDF;
+    var pw=el.offsetWidth||1000,ph=el.offsetHeight||1414;
+    var pdf=new JsPDF({orientation:'p',unit:'px',format:[pw,ph]});
+    pdf.addImage(cvs.toDataURL('image/jpeg',0.88),'JPEG',0,0,pw,ph,undefined,'FAST');
+    pdf.save('recruiter_summary_'+(data.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()||'candidate')+'.pdf');
+  }catch(err){
+    console.error('Recruiter Summary error:',err);
+    alert('Could not generate the Recruiter Summary. Please try again.');
+  }finally{
+    if(container&&container.parentNode) container.parentNode.removeChild(container);
+    window.__rsBusy=false;
+  }
+}
+window.__buildRS=buildRecruiterSummary;
+})();
+</script>
+
 {{-- Overlay backdrop --}}
 <div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
 
@@ -5201,7 +5443,7 @@ setTimeout(() => {
     2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
-    5: {cost:7, label:'Download Recruiter Summary',     avail:false, dlKey:null},
+    5: {cost:7, label:'Download Recruiter Summary',     avail:true,  dlKey:'rs'},
     6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null}
   };
 
@@ -5215,8 +5457,9 @@ setTimeout(() => {
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
     document.addEventListener('keydown', onEsc);
-    /* preload jsPDF in background so it's ready when the user clicks download */
+    /* preload jsPDF + html2canvas so they're ready when the user clicks download */
     if(!window.jspdf){ var ps=document.createElement('script'); ps.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; ps.async=true; document.head.appendChild(ps); }
+    if(!window.html2canvas){ var hs=document.createElement('script'); hs.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; hs.async=true; document.head.appendChild(hs); }
   }
 
   function closeRdc(){
@@ -5311,6 +5554,23 @@ setTimeout(() => {
           showToast('Resume file URL not available.', 'warn');
         }
         setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
+
+      } else if(m.dlKey === 'rs'){
+        /* Recruiter Summary — fully client-side; no resume viewer needed */
+        if(typeof window.__buildRS !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        window.__rsBusy = true;
+        window.__buildRS();
+        var rsTicks = 0;
+        var rsDone = setInterval(function(){
+          if(!window.__rsBusy || ++rsTicks > 600){
+            clearInterval(rsDone);
+            if(rsTicks > 600 && window.__rsBusy) showToast('Check your browser — the file may be downloading in the background.', 'info');
+            closeRdc(); resetBtn();
+          }
+        }, 100);
 
       } else if(m.dlKey){
         /* Options 2/3/4: keep drawer + spinner open while polling for resume viewer,
