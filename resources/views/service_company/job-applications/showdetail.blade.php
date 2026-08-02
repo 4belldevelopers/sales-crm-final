@@ -257,15 +257,15 @@
 .rdc-resume-meta{font-size:11px;font-weight:600;color:#334155;white-space:nowrap;}
 /* Section label */
 .rdc-sect-lbl{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:13px 14px 6px;font-family:'Poppins',sans-serif;}
-/* Options list */
+/* Options list — grid layout: num | icon | title+desc | cost+time | radio */
 .rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
-.rdc-opt{display:flex;align-items:center;gap:9px;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
+.rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
 .rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
 .rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
 .rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
-.rdc-onum{width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+.rdc-onum{grid-column:1;grid-row:1;width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
 .rdc-opt-sel .rdc-onum{background:#ede9fe;color:#7c3aed;}
-.rdc-oi{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-oi{grid-column:2;grid-row:1/3;align-self:center;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .rdc-oi svg{width:14px;height:14px;}
 .rdc-ic-blue{background:#dbeafe;color:#1d4ed8;}
 .rdc-ic-purple{background:#ede9fe;color:#7c3aed;}
@@ -273,13 +273,13 @@
 .rdc-ic-green{background:#d1fae5;color:#059669;}
 .rdc-ic-rose{background:#ffe4e6;color:#e11d48;}
 .rdc-ic-teal{background:#ccfbf1;color:#0d9488;}
-.rdc-obody{flex:1;min-width:0;}
-.rdc-otitle{font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
-.rdc-odesc{font-size:10.5px;color:#64748b;margin-top:1px;line-height:1.3;font-family:'Poppins',sans-serif;}
-.rdc-ometa{text-align:right;flex-shrink:0;min-width:52px;}
-.rdc-ocost{font-size:11px;font-weight:700;color:#7c3aed;font-family:'Poppins',sans-serif;}
-.rdc-otime{font-size:10px;color:#94a3b8;font-family:'Poppins',sans-serif;margin-top:1px;white-space:nowrap;}
-.rdc-ocirc{width:15px;height:15px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-obody{display:contents;}
+.rdc-otitle{grid-column:3;grid-row:1;font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rdc-odesc{grid-column:3;grid-row:2;font-size:10.5px;color:#64748b;line-height:1.3;font-family:'Poppins',sans-serif;}
+.rdc-ometa{display:contents;}
+.rdc-ocost{grid-column:4;grid-row:1;font-size:11px;font-weight:700;color:#7c3aed;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-otime{grid-column:4;grid-row:2;font-size:10px;color:#94a3b8;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-ocirc{grid-column:5;grid-row:1/3;align-self:center;width:15px;height:15px;border-radius:50%;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
 .rdc-opt-sel .rdc-ocirc{border-color:#7c3aed;background:#7c3aed;}
 .rdc-opt-sel .rdc-ocirc::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff;display:block;}
 .rdc-p2-badge{display:inline-block;font-size:9px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:4px;font-family:'Poppins',sans-serif;vertical-align:middle;white-space:nowrap;line-height:1.4;}
@@ -5020,27 +5020,6 @@ setTimeout(() => {
 
   {{-- Scrollable body --}}
   <div class="rdc-body" id="rdcBody">
-
-    {{-- Candidate identity card --}}
-    <div class="rdc-cand-card">
-      <div class="rdc-cand-left">
-        <div class="rdc-cand-avatar">{{ $__hdrInitials }}</div>
-        <div class="rdc-cand-info">
-          <span class="rdc-meta-lbl">Candidate</span>
-          <span class="rdc-cand-name">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
-        </div>
-      </div>
-      <div class="rdc-cand-sep"></div>
-      <div class="rdc-cand-right">
-        <div class="rdc-resume-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        </div>
-        <div class="rdc-resume-info">
-          <span class="rdc-meta-lbl">Resume File</span>
-          <span class="rdc-resume-meta">{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }} Document</span>
-        </div>
-      </div>
-    </div>
 
     {{-- Section heading --}}
     <div class="rdc-sect-lbl">Choose Download Format</div>
