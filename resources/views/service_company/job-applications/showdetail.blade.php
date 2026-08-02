@@ -2252,12 +2252,10 @@
                     <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
                     @if(empty($application->interviewDateOne))
-                      @if($skillAndQuestions)
                       <button type="button" class="book-btn-addslot editSlots">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Select Date
                       </button>
-                      @endif
                     @else
                       <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
                     @endif
@@ -2271,12 +2269,10 @@
                     <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_two ?? 'N/A' }}</div>
                     @if(empty($application->interviewDateTwo))
-                      @if($skillAndQuestions)
                       <button type="button" class="book-btn-addslot editSlots">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Select Date
                       </button>
-                      @endif
                     @else
                       <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
                     @endif
@@ -2290,12 +2286,10 @@
                     <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
                     <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
                     @if(empty($application->interviewDateThree))
-                      @if($skillAndQuestions)
                       <button type="button" class="book-btn-addslot editSlots">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         Select Date
                       </button>
-                      @endif
                     @else
                       <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
                     @endif
@@ -5137,15 +5131,24 @@ setTimeout(() => {
             let $btn = $(this);
             if ($btn.prop('disabled')) return;
 
-            // Validate: at least 1 slot must have date + time + mode
+            // Validate slots: each filled slot must have all 3 fields; at least 1 complete slot required
             var slots = [
-                {date: $('#interviewDateOne').val(), time: $('#interviewTimeOne').val(), mode: $('#interview_mode_one').val()},
-                {date: $('#interviewDateTwo').val(), time: $('#interviewTimeTwo').val(), mode: $('#interview_mode_two').val()},
-                {date: $('#interviewDateThree').val(), time: $('#interviewTimeThree').val(), mode: $('#interview_mode_three').val()}
+                {label:'Slot 1', date: $('#interviewDateOne').val(), time: $('#interviewTimeOne').val(), mode: $('#interview_mode_one').val()},
+                {label:'Slot 2', date: $('#interviewDateTwo').val(), time: $('#interviewTimeTwo').val(), mode: $('#interview_mode_two').val()},
+                {label:'Slot 3', date: $('#interviewDateThree').val(), time: $('#interviewTimeThree').val(), mode: $('#interview_mode_three').val()}
             ];
+            var partialSlot = null;
+            slots.forEach(function(s) {
+                var filled = (s.date ? 1 : 0) + (s.time ? 1 : 0) + (s.mode ? 1 : 0);
+                if (filled > 0 && filled < 3 && !partialSlot) { partialSlot = s.label; }
+            });
+            if (partialSlot) {
+                Swal.fire('Incomplete Slot', partialSlot + ' is partially filled. Please select Date, Time and Mode for that slot — or clear all its fields.', 'warning');
+                return;
+            }
             var completeSlots = slots.filter(function(s) { return s.date && s.time && s.mode; }).length;
             if (completeSlots === 0) {
-                Swal.fire('Incomplete Slots', 'Please fill at least one slot with Date, Time and Mode before saving.', 'warning');
+                Swal.fire('No Slots Added', 'Please fill at least one slot with Date, Time and Mode before saving.', 'warning');
                 return;
             }
 
