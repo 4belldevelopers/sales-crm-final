@@ -146,6 +146,14 @@
 #kt_activitiesApplication #personal_details .skills-thead{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-name-cell{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .skill-exp-cell{font-size:12px!important;}
+/* Screening Questions: override to 2-col grid — original is 1fr 100px 140px (skills layout) */
+#kt_activitiesApplication #personal_details .job_additional_view .skills-thead,
+#kt_activitiesApplication #personal_details .job_additional_view .skills-row{grid-template-columns:1fr 1.4fr!important;}
+/* Handle answers that have no word-break characters (long strings) */
+#kt_activitiesApplication #personal_details .job_additional_view .skill-exp-cell{word-break:break-word;overflow-wrap:break-word;white-space:normal;}
+/* Word counter below answer inputs in the edit drawer */
+.sq-word-count{font-size:10px;color:#94a3b8;margin-top:3px;text-align:right;font-family:'Poppins',sans-serif;}
+.sq-word-count.sq-at-limit{color:#ef4444;font-weight:600;}
 #kt_activitiesApplication #personal_details .rating-text{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .comp-label{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .comp-value{font-size:12px!important;font-weight:600!important;}
@@ -2903,11 +2911,15 @@
                             $aDetailArr = (object) $aDetailArr;
                             if(!empty($aDetailArr->job_detail_value)){
                               $ans_value = $aDetailArr->application_detail_value;
+                              $__wc = !empty($ans_value) ? count(array_filter(explode(' ', trim($ans_value)))) : 0;
                               $html .= '<tr>
                                 <td><label class="form-label">'.strtoupper($aDetailArr->job_detail_value).':</label>
                                 <input type="hidden" name="job_question[]" value="'.$aDetailArr->question_id.'">
                                 </td>
-                                <td><input type="text" class="form-control form-control-sm form-control-solid" name="additional_detail[]" placeholder="Enter answer" value="'.@$ans_value.'"></td>
+                                <td>
+                                  <input type="text" class="form-control form-control-sm form-control-solid sq-answer-input" name="additional_detail[]" placeholder="Enter answer (max 20 words)" value="'.htmlspecialchars((string)@$ans_value, ENT_QUOTES).'">
+                                  <div class="sq-word-count'.($__wc >= 20 ? ' sq-at-limit' : '').'"><span class="sq-wc-num">'.$__wc.'</span>/20 words</div>
+                                </td>
                               </tr>';
                             }
                           }
@@ -4955,7 +4967,30 @@ setTimeout(() => {
     });
 
 
-       $(document).on('click', '.editJobQuestion', function(e) { 
+       // 20-word limit on screening question answer inputs
+    function sqCountWords(str) {
+        return str.trim() === '' ? 0 : str.trim().split(/\s+/).length;
+    }
+    $(document).on('input', '.sq-answer-input', function() {
+        var $input = $(this);
+        var words = $input.val().trim() === '' ? [] : $input.val().trim().split(/\s+/);
+        if (words.length > 20) {
+            $input.val(words.slice(0, 20).join(' '));
+            words = words.slice(0, 20);
+        }
+        var count = words.length;
+        var $ctr = $input.siblings('.sq-word-count');
+        $ctr.find('.sq-wc-num').text(count);
+        $ctr.toggleClass('sq-at-limit', count >= 20);
+    });
+    // Re-sync counters whenever the screening questions drawer opens
+    $(document).on('click', '.editJobQuestion', function() {
+        setTimeout(function() {
+            $('.sq-answer-input').each(function() { $(this).trigger('input'); });
+        }, 80);
+    });
+
+    $(document).on('click', '.editJobQuestion', function(e) {
        e.preventDefault();
        e.stopPropagation();
        $('.editJobQuestionUpdate').removeClass('d-none');
