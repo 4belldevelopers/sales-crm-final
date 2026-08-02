@@ -263,7 +263,7 @@
 .rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
 .rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
 .rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
-.rdc-onum{grid-column:1;grid-row:1;width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+.rdc-onum{grid-column:1;grid-row:1/3;align-self:center;width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
 .rdc-opt-sel .rdc-onum{background:#ede9fe;color:#7c3aed;}
 .rdc-oi{grid-column:2;grid-row:1/3;align-self:center;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 .rdc-oi svg{width:14px;height:14px;}
@@ -5064,7 +5064,7 @@ setTimeout(() => {
       </label>
 
       {{-- 3: ATS Highlighted --}}
-      <label class="rdc-opt" data-opt="3" data-coins="5">
+      <label class="rdc-opt" data-opt="3" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
         <span class="rdc-onum">3</span>
         <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
@@ -5075,14 +5075,14 @@ setTimeout(() => {
           <span class="rdc-odesc">Job keywords highlighted on the resume — requires Resume/CV tab to have loaded first</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">5 Coins</span>
+          <span class="rdc-ocost">4 Coins</span>
           <span class="rdc-otime">~10 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 4: Branded + Highlighted --}}
-      <label class="rdc-opt" data-opt="4" data-coins="7">
+      <label class="rdc-opt" data-opt="4" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="4">
         <span class="rdc-onum">4</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -5093,14 +5093,14 @@ setTimeout(() => {
           <span class="rdc-odesc">Company logo header with ATS keyword highlights combined</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">7 Coins</span>
+          <span class="rdc-ocost">6 Coins</span>
           <span class="rdc-otime">~15 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 5: Recruiter Summary --}}
-      <label class="rdc-opt" data-opt="5" data-coins="10">
+      <label class="rdc-opt" data-opt="5" data-coins="7">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
         <span class="rdc-onum">5</span>
         <span class="rdc-oi rdc-ic-rose" aria-hidden="true">
@@ -5111,14 +5111,14 @@ setTimeout(() => {
           <span class="rdc-odesc">1-page AI-generated summary formatted for recruiter handoffs</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">10 Coins</span>
+          <span class="rdc-ocost">7 Coins</span>
           <span class="rdc-otime">~20 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 6: Client Presentation --}}
-      <label class="rdc-opt" data-opt="6" data-coins="15">
+      <label class="rdc-opt" data-opt="6" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
         <span class="rdc-onum">6</span>
         <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
@@ -5129,7 +5129,7 @@ setTimeout(() => {
           <span class="rdc-odesc">Polished client-ready profile deck with candidate highlights</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">15 Coins</span>
+          <span class="rdc-ocost">8 Coins</span>
           <span class="rdc-otime">~30 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -5182,12 +5182,12 @@ setTimeout(() => {
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
 
   var optMeta = {
-    1: {cost:1,  label:'Download Original Resume',       avail:true,  dlKey:null},
-    2: {cost:2,  label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
-    3: {cost:5,  label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
-    4: {cost:7,  label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
-    5: {cost:10, label:'Download Recruiter Summary',     avail:false, dlKey:null},
-    6: {cost:15, label:'Download Client Presentation',   avail:false, dlKey:null}
+    1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
+    2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
+    3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
+    4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
+    5: {cost:7, label:'Download Recruiter Summary',     avail:false, dlKey:null},
+    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null}
   };
 
   var selectedOpt = 1;
@@ -5287,32 +5287,50 @@ setTimeout(() => {
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original: open existing download URL directly */
+        /* Original: open download URL, keep spinner visible 2 sec then close */
         if(dlUrl){
           window.open(dlUrl, '_blank');
         } else {
           showToast('Resume file URL not available.', 'warn');
         }
-        closeRdc();
-        setTimeout(resetBtn, 800);
+        setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
 
       } else if(m.dlKey){
-        /* Options 2/3/4: poll for resume viewer pages then click the matching data-dl button.
-           Same pattern as hdrDownloadWithLogoApp — requires Resume/CV tab to have loaded. */
+        /* Options 2/3/4: keep drawer + spinner open while polling for resume viewer,
+           click the data-dl button, then wait for buildPdf() to finish by watching
+           rcvDlToggle.disabled (setDlBusy sets it true→false around PDF generation). */
         var dlKey = m.dlKey;
-        closeRdc();
         var tries = 0;
         var poll = setInterval(function(){
           var pages = document.querySelectorAll('#rcvPages .rcv-page');
           if(pages.length){
             clearInterval(poll);
             var btn = document.querySelector('[data-dl="' + dlKey + '"]');
-            if(btn){
-              btn.click();
-            } else {
+            if(!btn){
               showToast('Download button not found. Please open the Resume / CV tab first.', 'warn');
+              resetBtn();
+              return;
             }
-            resetBtn();
+            btn.click();
+            /* After click, setDlBusy(true) disables rcvDlToggle; when PDF is saved
+               setDlBusy(false) re-enables it. Wait ≥300ms for the flag to be set
+               then poll until it clears (max 45 sec). */
+            var waitTicks = 0;
+            var gotBusy = false;
+            var donePoll = setInterval(function(){
+              var toggle = document.getElementById('rcvDlToggle');
+              if(toggle && toggle.disabled){ gotBusy = true; }
+              var done = gotBusy && toggle && !toggle.disabled;
+              var timedOut = ++waitTicks > 450;
+              if(done || timedOut){
+                clearInterval(donePoll);
+                if(timedOut && !done){
+                  showToast('Check your browser — the file may be downloading in the background.', 'info');
+                }
+                closeRdc();
+                resetBtn();
+              }
+            }, 100);
           } else if(++tries > 80){
             clearInterval(poll);
             showToast('Resume viewer not loaded. Please scroll to the Resume / CV tab first, then try again.', 'warn');
