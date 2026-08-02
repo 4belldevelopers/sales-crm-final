@@ -170,28 +170,57 @@
 .btn-jw-cancel:hover{background:#f1f5f9;color:#0f172a;}
 .jw-drawer-body .slot-day{display:flex;gap:8px;flex-wrap:wrap;}
 .jw-drawer-body .slot-day>div{flex:1;min-width:90px;}
+/* ===== DRAWER FOUNDATION: page-wrapper must ALWAYS fill full drawer width ===== */
+/* Without width:100%, in the drawer's flex-row context the page-wrapper shrinks to
+   content width when Notes/Timeline has less content than Profile Overview — this
+   makes the hero card narrower and clips the match metrics on the right. */
+#kt_activitiesApplication .page-wrapper{width:100%!important;max-width:100%!important;min-width:0;overflow-x:hidden;}
+/* page-content and tab panes: hard-contain any horizontal overflow so tables / wide
+   elements in Notes/Timeline never push the drawer wider than its fixed pixel width. */
+#kt_activitiesApplication .page-content{overflow-x:hidden;max-width:100%;}
+#kt_activitiesApplication .tab-pane{max-width:100%;overflow-x:hidden;}
+/* The global rule ".table td,.table th,.table tr{width:max-content!important}" (defined
+   at the top of this file) blows out timeline tables.  Counteract it inside the drawer. */
+#kt_activitiesApplication #notes table td,
+#kt_activitiesApplication #notes table th,
+#kt_activitiesApplication #notes table tr,
+#kt_activitiesApplication #timeline table td,
+#kt_activitiesApplication #timeline table th,
+#kt_activitiesApplication #timeline table tr{width:auto!important;}
 /* ===== NOTES & TIMELINE: LAYOUT CONTAINMENT ===== */
 /* Switch content-split from grid to block so 1fr never expands past drawer width */
 #kt_activitiesApplication #notes .content-split,
-#kt_activitiesApplication #timeline .content-split{display:block;max-width:100%;}
+#kt_activitiesApplication #timeline .content-split{display:block!important;max-width:100%;width:100%;}
 #kt_activitiesApplication #notes .content-main-full,
-#kt_activitiesApplication #timeline .content-main-full{max-width:100%;}
+#kt_activitiesApplication #timeline .content-main-full{max-width:100%;width:100%;}
 /* Bootstrap .row has calc(var(--bs-gutter-x)*.5) negative margins — zero them out */
 #kt_activitiesApplication #notes .row,
-#kt_activitiesApplication #timeline .row{margin-left:0!important;margin-right:0!important;}
+#kt_activitiesApplication #timeline .row{margin-left:0!important;margin-right:0!important;max-width:100%;width:100%;}
 /* Timeline: make the area that wraps wide tables scroll sideways, not push the drawer */
 #kt_activitiesApplication #timeline .timeline-content{overflow-x:auto;max-width:100%;}
 /* Constrain the overflow-auto wrappers around comment boxes */
 #kt_activitiesApplication #notes .overflow-auto,
-#kt_activitiesApplication #timeline .overflow-auto{max-width:100%;width:100%;}
-/* Remove min-w-700px from comment boxes so they fit in the drawer */
-#kt_activitiesApplication .min-w-700px{min-width:0!important;}
-/* Bootstrap fs-5 = 1.25rem (20px) — cap to 13px inside the drawer */
-#kt_activitiesApplication .fs-5{font-size:13px!important;}
+#kt_activitiesApplication #timeline .overflow-auto{max-width:100%!important;width:100%!important;overflow-x:auto!important;}
+/* Remove min-w-700px / min-w-750px / min-w-800px from comment boxes */
+#kt_activitiesApplication .min-w-700px,
+#kt_activitiesApplication .min-w-750px,
+#kt_activitiesApplication .min-w-800px{min-width:0!important;}
+/* Bootstrap fs-5=1.25rem(20px) / fs-6=1rem(16px) — cap both to 13px inside drawer */
+#kt_activitiesApplication .fs-5,
+#kt_activitiesApplication #notes .fs-6,
+#kt_activitiesApplication #timeline .fs-6{font-size:13px!important;}
 /* Timeline card-body: replace default Bootstrap padding with drawer-friendly value */
 #kt_activitiesApplication #timeline .card-body{padding:12px 16px!important;}
-/* Notes: prevent .form-group from leaking past the card boundary */
-#kt_activitiesApplication #notes .form-group{max-width:100%;overflow:hidden;}
+/* Notes/Timeline: prevent any inner element from leaking past card boundary */
+#kt_activitiesApplication #notes .form-group,
+#kt_activitiesApplication #notes .cardshow,
+#kt_activitiesApplication #timeline .cardshow{max-width:100%;overflow-x:hidden;}
+/* Timeline-3 items: the left margin+padding offset (25px+50px) must stay inside card */
+#kt_activitiesApplication #notes .timeline.timeline-3,
+#kt_activitiesApplication #timeline .timeline.timeline-3{overflow-x:hidden;max-width:100%;}
+/* Columns inside Bootstrap .row inside notes/timeline — remove extra gutter padding */
+#kt_activitiesApplication #notes [class*="col-"],
+#kt_activitiesApplication #timeline [class*="col-"]{max-width:100%;overflow-x:hidden;}
 </style>
 
 <script>
