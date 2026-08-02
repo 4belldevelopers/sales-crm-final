@@ -6482,13 +6482,19 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var now=new Date(), dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
   var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
 
-  /* Load pdfMake CDN + Poppins fonts from /fonts/poppins/ in parallel */
+  /* Load pdfMake CDN + Poppins fonts in parallel.
+     Tries /fonts/poppins/ first (served from public/); falls back to
+     Google Fonts GitHub repo (CORS-open) so it works before fonts are deployed. */
   var fp='/fonts/poppins/';
+  var fpCdn='https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/';
+  function fetchFont(name){
+    return toBase64(fp+name).catch(function(){ return toBase64(fpCdn+name); });
+  }
   Promise.all([
     loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'),
-    toBase64(fp+'Poppins-Regular.ttf'),
-    toBase64(fp+'Poppins-Bold.ttf'),
-    toBase64(fp+'Poppins-SemiBold.ttf')
+    fetchFont('Poppins-Regular.ttf'),
+    fetchFont('Poppins-Bold.ttf'),
+    fetchFont('Poppins-SemiBold.ttf')
   ]).then(function(res){
     /* Register Poppins in pdfMake virtual filesystem */
     pdfMake.vfs={'Poppins-Regular.ttf':res[1],'Poppins-Bold.ttf':res[2],'Poppins-SemiBold.ttf':res[3]};
