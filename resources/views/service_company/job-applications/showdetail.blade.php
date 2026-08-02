@@ -136,6 +136,40 @@
 /* ===== RESPONSIVE ===== */
 @media(max-width:1100px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}}
 @media(max-width:640px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* ===== PROFILE OVERVIEW: 2-col grid + drawers ===== */
+#kt_activitiesApplication #personal_details .content-split{display:grid!important;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;}
+@media(max-width:860px){#kt_activitiesApplication #personal_details .content-split{grid-template-columns:1fr!important;}}
+#kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
+#kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
+#kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
+/* ===== SIDE DRAWERS (CSS :has() driven) ===== */
+.jw-side-drawer{position:fixed;inset:0;z-index:1055;pointer-events:none;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)){pointer-events:auto;}
+.jw-drawer-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;cursor:pointer;transition:opacity .28s;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop{opacity:1;}
+.jw-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:480px;max-width:96vw;background:#fff;display:flex;flex-direction:column;box-shadow:-4px 0 32px rgba(15,23,42,.14);border-left:1px solid #e2e8f0;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel{transform:translateX(0);}
+.jw-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;gap:12px;}
+.jw-drawer-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.jw-drawer-icon-wrap svg{width:15px;height:15px;}
+.jw-drawer-title{font-size:13px;font-weight:700;color:#0f172a;font-family:'Poppins',sans-serif;}
+.jw-drawer-subtitle{font-size:11px;color:#64748b;font-family:'Poppins',sans-serif;margin-top:2px;}
+.jw-drawer-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;color:#64748b;padding:0;}
+.jw-drawer-close:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.jw-drawer-close svg{width:14px;height:14px;}
+.jw-drawer-body{flex:1;overflow-y:auto;padding:20px;font-family:'Poppins',sans-serif;font-size:12px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent;}
+.jw-drawer-body table{width:100%;border-collapse:collapse;}
+.jw-drawer-body table th{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+.jw-drawer-body table td{padding:10px;border-bottom:1px solid #f1f5f9;font-size:12px;vertical-align:middle;}
+.jw-drawer-body .form-label{font-size:12px;font-weight:600;color:#374151;font-family:'Poppins',sans-serif;margin-bottom:4px;display:block;}
+.jw-drawer-body .form-control,.jw-drawer-body .form-select{font-size:12px;border-radius:7px;border-color:#e2e8f0;}
+.jw-drawer-footer{display:flex;gap:10px;padding:14px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;}
+.btn-jw-save{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;font-size:12px;font-weight:600;color:#fff;background:#4f46e5;border:none;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;}
+.btn-jw-save:hover{background:#4338ca;color:#fff;}
+.btn-jw-cancel{display:inline-flex;align-items:center;padding:7px 16px;font-size:12px;font-weight:500;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;}
+.btn-jw-cancel:hover{background:#f1f5f9;color:#0f172a;}
+.jw-drawer-body .slot-day{display:flex;gap:8px;flex-wrap:wrap;}
+.jw-drawer-body .slot-day>div{flex:1;min-width:90px;}
 /* ===== NOTES & TIMELINE: LAYOUT CONTAINMENT ===== */
 /* Switch content-split from grid to block so 1fr never expands past drawer width */
 #kt_activitiesApplication #notes .content-split,
@@ -1638,178 +1672,7 @@
 
     <div class="tab-pane fade show active" id="personal_details" role="tabpanel">
 
-      {{-- Quick Profile card: icon-grid of 8 at-a-glance facts (section-card + section-card-body wrap) --}}
-      <div class="section-card" aria-label="Quick profile overview">
-        <div class="section-card-header">
-          <div class="card-icon" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <h3 class="overview-title">Quick Profile</h3>
-        </div>
-        <div class="section-card-body">
-      <section class="info-grid" aria-label="Candidate quick information">
-        <article class="info-card">
-            <div class="info-icon-wrap blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-            </div>
-                @php
-                    $experience = trim((string) @$application->total_exp);
-                    if (strpos($experience, '.') !== false) {
-                        $parts = explode('.', $experience);
-                        if (isset($parts[1])) {
-                            if ($parts[1] === '00') {
-                                $formattedExperience = $parts[0];
-                            } else {
-                                $formattedExperience = $experience; 
-                            }
-                        } else {
-                            $formattedExperience = $experience;
-                        }
-                    } else {
-                        $formattedExperience = $experience;
-                    }
-
-                @endphp
-            <div class="info-content">
-                <div class="info-label">Total Experience</div>
-                <div class="info-value">{{ @$formattedExperience }} Years</div>
-            </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="12" y1="20" x2="12" y2="10"/>
-              <line x1="18" y1="20" x2="18" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="16"/>
-            </svg>
-          </div>
-          @php	
-              $rel_experience = trim((string) @$application->rel_exp);
-              if (strpos($rel_experience, '.') !== false) {
-                $parts = explode('.', $rel_experience);
-                if (isset($parts[1])) {
-                  // If decimals are exactly "00", remove them
-                  if ($parts[1] === '00') {
-                    $rel_formattedExperience = $parts[0];
-                  } else {
-                    $rel_formattedExperience = $rel_experience; 
-                  }
-                } else {
-                  $rel_formattedExperience = $rel_experience;
-                }
-              } else {
-                $rel_formattedExperience = $rel_experience;
-              }          
-          @endphp
-
-          <div class="info-content">
-            <div class="info-label">Relevant Experience</div>
-            <div class="info-value">{{ @$rel_formattedExperience }} Years </div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap purple">
-            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Gender</div>
-            <div class="info-value">{{ ucwords(@$application->gender) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap orange">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Nationality</div>
-            <div class="info-value">{{ ucwords(substr(@$application->nationality, 0, 30)) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Work Mode</div>
-            <div class="info-value">{{ ucwords(substr(@$application->wm, 0, 30)) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div class="info-content">
-                    @php
-                          $np	=	'';
-                          if((@$application->serving_notice_period_mode == 0) || (@$application->serving_notice_period_mode == 1) )
-                          {
-                            $np				=	@$application->np_id;
-                                              $np 			=	'Available '.date("dM Y", strtotime($np)); 
-                        
-                          }else{
-                            $np				=	@$application->np_id;
-                          }
-                          	
-                    @endphp 
-            <div class="info-label">Notice Period</div>
-            <div class="info-value">{{ @$np }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Preferred Location</div>
-            <div class="info-value">
-              {{ @$city_name }},&nbsp;{{ ucwords(@$state_name) }},&nbsp;{{ ucwords(@$country_name) }} </div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-              <path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Education</div>
-            <div class="info-value">{{ ucwords(@$application->qualification_name) }}</div>
-          </div>
-        </article>
-      </section>
-        </div>{{-- /section-card-body --}}
-      </div>{{-- /section-card (Quick Profile) --}}
-
+      {{-- Quick Profile card removed; data already shown in the hero pipeline cards above --}}
       <div class="content-split">
         <div class="content-main">
 
@@ -1929,159 +1792,17 @@
                 </svg>
               </div>
               <h3 class="card-title">Key Skills &amp; Experience</h3>
-               @if($skillAndQuestions)
-                  @if($editComman)
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="py-0 editSkill" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                    </a>
-                  </span>
-                  @endif
-
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="btn btn-light-primary btn-sm py-0 editSkillUpdate d-none" id="skill-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                  </span>
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="btn btn-light-danger btn-sm py-0 editSkillCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                  </span>
+              @if($skillAndQuestions)
+                @if($editComman)
+                <button type="button" class="jw-card-edit-btn editSkill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+                @endif
               @endif
             </div>
-             <div class="job_skill_edit d-none">
+            {{-- Edit form lives in the side drawer (jw-skill-drawer) below content-split --}}
               
-              <form class="ajax-form" method="POST" id="skillUpdateForm" name="skillUpdateForm" enctype="multipart/form-data">
-                @csrf
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th>Skill <span class="rq">*</span></th>
-                      <th>Exp.(Years)</th>
-                      <th>Exp.(Months)</th>
-                      <th>Rating</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>                        
-                        <input type="hidden" name="job_id" value="{{ @$job_id }}" id="job_id" />
-                        <input type="hidden" name="appId" value="{{ @$application->id }}" id="appId" />
-                        
-                            @foreach($jobSkill as $skill_val)
-                            @php
-                             $skill_val = (object) $skill_val;                            
-                            @endphp
-                                @if(!empty($skill_val->skill_name))
-                               
-                                  {{-- <label class="form-label">{{ strtoupper($skill_val->skill_name) }} EXPERIENCE</label> --}}
-                                  {{-- <input type="text" class="form-control form-control-solid" name="skillId[{{$skill_val->id }}]" placeholder="Enter detail" value="{{ ($skillShow) ? $skill_val->skill_value : '' }}"> --}}
-                                  
-                                 
-                                      @php
-
-                                      //  dd($skill_val->skill_value);
-                                      if($skill_val->skill_value){
-                                        $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
-                                        // dd($skillValue);
-                                        if(!is_null($skillValue) && !empty($skillValue)){
-                                         
-                                          $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
-                                          $skill_exp_years = ($total_skill_exp[0]);
-                                          $skill_exp_months = ($total_skill_exp[1]); 
-
-                                          $selected_skill_exp_year = $skill_exp_years;
-                                          $selected_skill_exp_month = $skill_exp_months;
-                                          $selected_skill_rating = $skill_val->rating ?? null;
-                                          
-                                        }else{
-                                          $selected_skill_exp_year = null;
-                                          $selected_skill_exp_month =null;
-                                          $selected_skill_rating =null;
-                                        }
-                                        //  dd($skillValue,$skill_val->skill_value);
-                                      }else{
-                                        $selected_skill_exp_year = null;
-                                        $selected_skill_exp_month =null;
-                                        $selected_skill_rating =null;
-                                      }
-                                      
-                                      // dd($skill_exp_years,$skill_exp_months);
-                
-                                    @endphp
-                                    <tr>
-                                    <td>
-                                      <label class="form-label">{{ strtoupper($skill_val->skill_name) }} EXPERIENCE</label>
-                                    </td>
-                
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val->job_skill_id }}]">
-                                          <option value="0">Select Year</option>
-                                          @php 
-                                              for ($i = 1; $i <= 60; $i++) {
-                                                  $selected = '';
-                                                    $s = 'Year';
-                                                    if($i > 1){
-                                                        $s = 'Years';
-                                                    }
-                                                    if(is_null($selected_skill_exp_year)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_exp_year){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                
-                                      </td>
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val->job_skill_id }}]">
-                                          <option value="">Select Month</option>
-                                          @php 
-                                              for ($i = 0; $i <= 11; $i++) {
-                                                $selected = '';
-                                                    $s = 'Month';
-                                                    if($i > 1){
-                                                        $s = 'Months';
-                                                    }
-                                                    if(is_null($selected_skill_exp_month)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_exp_month){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                                      </td>
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_month" id="rating" name="rating[{{ $skill_val->job_skill_id }}]">
-                                          <option value="">Select Month</option>
-                                          @php 
-                                              for ($i = 1; $i <= 5; $i++) {
-                                                $selected = '';
-                                                    $s = 'Star';
-                                                    if($i > 1){
-                                                        $s = 'Stars';
-                                                    }
-                                                    if(is_null($selected_skill_rating)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_rating){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                                      </td>
-                                    </tr>
-                                @endif
-                            @endforeach 
-                  </tbody>
-                  </table> 
-                </form> 
-             </div>
             <div class="skills-table job_skill_view">
               <div class="skills-thead">
                 <div>Skill</div>
@@ -2176,79 +1897,20 @@
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
               </div>
-              <h3 class="card-title">Job Questions</h3>
-                @if($skillAndQuestions)
+              <h3 class="card-title">Screening Questions</h3>
+              @if($skillAndQuestions)
                 @if($editComman)
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="py-0 editJobQuestion" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                      </a>
-                    </span>
-                    @endif
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="btn btn-light-primary btn-sm py-0 editJobQuestionUpdate d-none" id="job-question-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                    </span>
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="btn btn-light-danger btn-sm py-0 editJobQuestionCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                    </span>
+                <button type="button" class="jw-card-edit-btn editJobQuestion">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
                 @endif
-
+              @endif
             </div>
-              <div class="skills-table job_additional_edit d-none">
-                <form class="ajax-form" method="POST" id="jobQuestionUpdateForm" name="jobQuestionUpdateForm" enctype="multipart/form-data">
-                @csrf  
-                <input type="hidden" name="job_id" value="{{ @$job_id }}" />
-                <input type="hidden" name="appId" value="{{ @$application->id }}"/>
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th style="width: 280px;">Job Questions<span class="rq">*</span></th>
-                      <th>Answered</th>
-                    </tr>
-                  </thead>
-                  <tbody> 
-
-                    @php 
-                                if(!empty($job_additional_detail)){
-                                  
-                                  $customTitleId	=	1;
-                                  $html			=	'';
-                                  $inc_first		=	0;
-                                  $inc_last		=	1;
-                          
-                                  foreach($job_additional_detail as $aDetailArr){
-                                    $aDetailArr = (object) $aDetailArr;
-                                      if(!empty($aDetailArr->job_detail_value)){
-                                      
-                                          $ans_value	=	$aDetailArr->application_detail_value;	
-                                            $html		.=	'<tr>
-                                                       <td>
-                                                      <label class="form-label">'.strtoupper($aDetailArr->job_detail_value).':</label>
-                                                      <input type="hidden" name="job_question[]" value="'.$aDetailArr->question_id.'">
-                                                      </td>
-                                                      <td>
-                                                      <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
-                                                      <span class="text-muted form-text">Please enter your details</span>
-                                                    </td>
-                                                    </tr>';
-                                      }
-                                          $inc_first++;
-                                          $inc_last++;
-                                          $customTitleId++;				
-                                    }
-                        
-                                    echo $html;	
-                                }	                               
-                            @endphp
-
-
-                     
-                </tbody>
-                </table> 
-              </form> 
-            </div>
+            {{-- Edit form lives in the side drawer (jw-question-drawer) below content-split --}}
             <div class="skills-table job_additional_view">
               <div class="skills-thead">
-                <div>Job Questions</div>
+                <div>Screening Questions</div>
                 <div>Answered</div>
               </div>
                  @php 
@@ -2291,20 +1953,15 @@
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="card-title">Interview Slots <span style="font-weight: 500; color: var(--color-text-tertiary);">(Next 3 Days)</span></h3>
-                  @if($skillAndQuestions)
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="py-0 editSlots" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                        </a>
-                      </span>
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="btn btn-light-primary btn-sm py-0 editSlotsUpdate d-none" id="job-slots-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                      </span>
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="btn btn-light-danger btn-sm py-0 editSlotsCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                      </span>
-                  @endif
+              <h3 class="card-title">Interview Slots <span style="font-size:11px;font-weight:500;color:#94a3b8;">(Next 3 Days)</span></h3>
+              @if($skillAndQuestions)
+              <button type="button" class="jw-card-edit-btn editSlots">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
             </div>
+            {{-- Edit form lives in the side drawer (jw-slots-drawer) below content-split --}}
                 @php
                     $book1 = 'Book Now';
                     $book2 = 'Book Now';
@@ -2336,98 +1993,6 @@
                           }
                     }            
               @endphp
-            <div class="slots-grid job_slots_edit d-none">
-
-              <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
-                            @csrf
-                            <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
-                      
-                            
-                              
-                              <div class="row">
-                                <label class="form-label">Date and Time(Slot-1)</label>
-                                 <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_one" id="interview_mode_one"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                    @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                          </div>
-
-                              
-                          <div class="row mt-5">
-                                <label class="form-label">Date and Time(Slot-2)</label>
-                          <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_two" id="interview_mode_two"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                          </div>
-
-
-                              
-                          <div class="row mt-5">
-                                <label class="form-label">Date and Time(Slot-3)</label>
-                          <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_three" id="interview_mode_three"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                        </div>                        
-                      </form>
-                      
-
-            </div>
             <div class="slots-grid job_slots_view">
 
               <div class="slot-day">
@@ -2523,7 +2088,7 @@
                         @endphp
                     @endif
                   <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
-                  <span class="comp-value">{!! @$current_ctc_cur !!}  {{ $ctc }} {{ $salaryMode[$current_ctc_mode ?? 0] }}  </span>
+                  <span class="comp-value">{!! @$current_ctc_cur !!} {{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] }}</span>
                 </div>
               @endif
 
@@ -2540,7 +2105,7 @@
                             @endphp
                           @endif
                 <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
-                <span class="comp-value">{!! @$current_ectc_cur !!} {{  @$ectc }} {{ $salaryMode[$current_ectc_mode ?? 0] }} </span>
+                <span class="comp-value">{!! @$current_ectc_cur !!} {{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
               </div>
               <div class="comp-row">
                 <span class="comp-label">Compensation Type</span>
@@ -2652,11 +2217,12 @@
                   </svg>
                   Upload Date &amp; Time
                 </span>
-                  @php 
-                      $originalDate 	= @$application->created_at;
-                      $newDate 		= date("d-M-Y h:i a", strtotime($originalDate)); 
+                  @php
+                      $originalDate    = @$application->created_at;
+                      $ownerDate       = date("d-M-Y", strtotime($originalDate));
+                      $ownerTime       = date("h:i A", strtotime($originalDate));
                   @endphp
-                <span class="own-value">{{@$newDate.'(IST)'}}</span>
+                <span class="own-value">{{ @$ownerDate }} <span class="meta-sep">|</span> {{ @$ownerTime }} <span class="meta-sep">|</span> IST</span>
               </div>
             </div>
           </section>
@@ -2926,7 +2492,284 @@
           @endif
         </aside>
       </div>
-    </div>
+
+      {{-- ======================================================
+           SIDE EDIT DRAWERS (position:fixed; driven by CSS :has())
+           The existing JS toggles d-none on .jw-drawer-body which
+           triggers the CSS transition — no new route / logic added.
+           ====================================================== --}}
+
+      {{-- DRAWER 1: Key Skills & Experience --}}
+      <div class="jw-side-drawer" id="jw-skill-drawer">
+        <div class="jw-drawer-backdrop editSkillCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#ede9fe;color:#7c3aed;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Key Skills &amp; Experience</div>
+              <div class="jw-drawer-subtitle">Update skill experience and self-rating</div>
+            </div>
+            <button type="button" class="jw-drawer-close editSkillCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_skill_edit d-none">
+              <form class="ajax-form" method="POST" id="skillUpdateForm" name="skillUpdateForm" enctype="multipart/form-data">
+                @csrf
+                <table class="sk" style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th>Skill</th>
+                      <th>Exp. (Years)</th>
+                      <th>Exp. (Months)</th>
+                      <th>Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                        <input type="hidden" name="job_id" value="{{ @$job_id }}" id="job_id" />
+                        <input type="hidden" name="appId" value="{{ @$application->id }}" id="appId" />
+                            @foreach($jobSkill as $skill_val)
+                            @php
+                             $skill_val = (object) $skill_val;
+                            @endphp
+                                @if(!empty($skill_val->skill_name))
+                                      @php
+                                      if($skill_val->skill_value){
+                                        $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
+                                        if(!is_null($skillValue) && !empty($skillValue)){
+                                          $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
+                                          $skill_exp_years = ($total_skill_exp[0]);
+                                          $skill_exp_months = ($total_skill_exp[1]);
+                                          $selected_skill_exp_year = $skill_exp_years;
+                                          $selected_skill_exp_month = $skill_exp_months;
+                                          $selected_skill_rating = $skill_val->rating ?? null;
+                                        }else{
+                                          $selected_skill_exp_year = null;
+                                          $selected_skill_exp_month = null;
+                                          $selected_skill_rating = null;
+                                        }
+                                      }else{
+                                        $selected_skill_exp_year = null;
+                                        $selected_skill_exp_month = null;
+                                        $selected_skill_rating = null;
+                                      }
+                                    @endphp
+                                    <tr>
+                                    <td>
+                                      <label class="form-label">{{ strtoupper($skill_val->skill_name) }}</label>
+                                    </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="YearskillId[{{ $skill_val->job_skill_id }}]">
+                                          <option value="0">Year</option>
+                                          @php
+                                              for ($i = 1; $i <= 60; $i++) {
+                                                  $s = $i > 1 ? 'Years' : 'Year';
+                                                  $sel = (!is_null($selected_skill_exp_year) && $i == $selected_skill_exp_year) ? 'selected' : '';
+                                                  echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="MonthskillId[{{ $skill_val->job_skill_id }}]">
+                                          <option value="">Month</option>
+                                          @php
+                                              for ($i = 0; $i <= 11; $i++) {
+                                                $s = $i > 1 ? 'Months' : 'Month';
+                                                $sel = (!is_null($selected_skill_exp_month) && $i == $selected_skill_exp_month) ? 'selected' : '';
+                                                echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="rating[{{ $skill_val->job_skill_id }}]">
+                                          <option value="">Rating</option>
+                                          @php
+                                              for ($i = 1; $i <= 5; $i++) {
+                                                $s = $i > 1 ? 'Stars' : 'Star';
+                                                $sel = (!is_null($selected_skill_rating) && $i == $selected_skill_rating) ? 'selected' : '';
+                                                echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                  </tbody>
+                </table>
+              </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editSkillUpdate" id="skill-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editSkillCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-skill-drawer --}}
+
+      {{-- DRAWER 2: Screening Questions --}}
+      <div class="jw-side-drawer" id="jw-question-drawer">
+        <div class="jw-drawer-backdrop editJobQuestionCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#dcfce7;color:#16a34a;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Screening Questions</div>
+              <div class="jw-drawer-subtitle">Update candidate screening question answers</div>
+            </div>
+            <button type="button" class="jw-drawer-close editJobQuestionCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_additional_edit d-none">
+            <form class="ajax-form" method="POST" id="jobQuestionUpdateForm" name="jobQuestionUpdateForm" enctype="multipart/form-data">
+              @csrf
+              <input type="hidden" name="job_id" value="{{ @$job_id }}" />
+              <input type="hidden" name="appId" value="{{ @$application->id }}"/>
+              <table class="sk" style="width:100%;">
+                <thead>
+                  <tr>
+                    <th style="width:55%;">Screening Question</th>
+                    <th>Answered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    @php
+                        if(!empty($job_additional_detail)){
+                          $html = '';
+                          foreach($job_additional_detail as $aDetailArr){
+                            $aDetailArr = (object) $aDetailArr;
+                            if(!empty($aDetailArr->job_detail_value)){
+                              $ans_value = $aDetailArr->application_detail_value;
+                              $html .= '<tr>
+                                <td><label class="form-label">'.strtoupper($aDetailArr->job_detail_value).':</label>
+                                <input type="hidden" name="job_question[]" value="'.$aDetailArr->question_id.'">
+                                </td>
+                                <td><input type="text" class="form-control form-control-sm form-control-solid" name="additional_detail[]" placeholder="Enter answer" value="'.@$ans_value.'"></td>
+                              </tr>';
+                            }
+                          }
+                          echo $html;
+                        }
+                    @endphp
+                </tbody>
+              </table>
+            </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editJobQuestionUpdate" id="job-question-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editJobQuestionCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-question-drawer --}}
+
+      {{-- DRAWER 3: Interview Slots --}}
+      <div class="jw-side-drawer" id="jw-slots-drawer">
+        <div class="jw-drawer-backdrop editSlotsCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#dbeafe;color:#1d4ed8;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Interview Slots</div>
+              <div class="jw-drawer-subtitle">Set candidate's available interview dates &amp; times</div>
+            </div>
+            <button type="button" class="jw-drawer-close editSlotsCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_slots_edit d-none">
+            <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
+              @csrf
+              <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
+              <div class="mb-4">
+                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 1 — Date, Time &amp; Mode</label>
+                <div class="slot-day">
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <select name="interview_mode_one" id="interview_mode_one" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
+                      <option value="">Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 2 — Date, Time &amp; Mode</label>
+                <div class="slot-day">
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <select name="interview_mode_two" id="interview_mode_two" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
+                      <option value="">Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 3 — Date, Time &amp; Mode</label>
+                <div class="slot-day">
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" readonly="readonly">
+                  </div>
+                  <div>
+                    <select name="interview_mode_three" id="interview_mode_three" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
+                      <option value="">Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editSlotsUpdate" id="job-slots-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editSlotsCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-slots-drawer --}}
+
+    </div>{{-- /#personal_details tab-pane --}}
 
 
 
