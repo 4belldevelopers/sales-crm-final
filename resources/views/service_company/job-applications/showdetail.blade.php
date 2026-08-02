@@ -139,6 +139,35 @@
 /* ===== PROFILE OVERVIEW: 2-col grid + drawers ===== */
 #kt_activitiesApplication #personal_details .content-split{display:grid!important;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items:start;}
 @media(max-width:860px){#kt_activitiesApplication #personal_details .content-split{grid-template-columns:1fr!important;}}
+/* ===== PROFILE OVERVIEW: −20% font-scale + tighter card padding ===== */
+/* Inline here (not candidates-details.css) so browser cache never blocks delivery. */
+#kt_activitiesApplication #personal_details .cardshow{padding:18px!important;}
+#kt_activitiesApplication #personal_details .card-header-sidebar{margin:-18px -18px 12px!important;padding:10px 18px!important;}
+#kt_activitiesApplication #personal_details .card-title{font-size:10.5px!important;font-weight:700!important;}
+#kt_activitiesApplication #personal_details .card-icon{width:26px!important;height:26px!important;}
+#kt_activitiesApplication #personal_details .card-icon svg{width:13px!important;height:13px!important;}
+#kt_activitiesApplication #personal_details .summary-text{font-size:10px!important;line-height:1.65!important;}
+#kt_activitiesApplication #personal_details .skills-thead{font-size:9px!important;padding:7px 0!important;}
+#kt_activitiesApplication #personal_details .skills-row{padding:9px 0!important;}
+#kt_activitiesApplication #personal_details .skill-name-cell{font-size:10px!important;}
+#kt_activitiesApplication #personal_details .skill-exp-cell{font-size:10px!important;}
+#kt_activitiesApplication #personal_details .star-skill{width:11px!important;height:11px!important;}
+#kt_activitiesApplication #personal_details .rating-text{font-size:9.5px!important;}
+#kt_activitiesApplication #personal_details .comp-label{font-size:9px!important;}
+#kt_activitiesApplication #personal_details .comp-value{font-size:10px!important;font-weight:600!important;}
+#kt_activitiesApplication #personal_details .comp-badge{font-size:9px!important;padding:2px 6px!important;}
+#kt_activitiesApplication #personal_details .comp-row{padding:8px 0!important;}
+#kt_activitiesApplication #personal_details .own-label{font-size:9px!important;}
+#kt_activitiesApplication #personal_details .own-label svg{width:10px!important;height:10px!important;}
+#kt_activitiesApplication #personal_details .own-value{font-size:10px!important;padding-left:14px!important;}
+#kt_activitiesApplication #personal_details .ownership-row{padding:8px 0!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-day{padding:9px!important;border-radius:8px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-day-name{font-size:8.5px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-date{font-size:10px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-time{font-size:8.5px!important;}
+#kt_activitiesApplication #personal_details .jw-card-edit-btn{font-size:9.5px!important;padding:4px 9px!important;}
+#kt_activitiesApplication #personal_details .po-recruiter-note-text{font-size:10px!important;line-height:1.65;color:#475569;}
+#kt_activitiesApplication #personal_details .po-no-notes{font-size:9.5px!important;color:#94a3b8;font-style:italic;margin:0;}
 #kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
 #kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
 #kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
