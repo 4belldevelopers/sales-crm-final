@@ -6141,55 +6141,72 @@ window.__buildRS=buildRecruiterSummary;
 })();
 </script>
 
-{{-- ===== EXPORT CANDIDATE PROFILE PDF — pdfMake vector PDF, Poppins embedded, direct download ===== --}}
+{{-- ===== EXPORT CANDIDATE PROFILE PDF — pdfMake vector PDF, Roboto (vfs_fonts), direct download ===== --}}
 <script>
 (function(){
 'use strict';
 
-/* pdfMake loader — tries local file first, then four CDN mirrors in order.
-   After each onload we verify typeof pdfMake to catch CSP-blocked scripts. */
-function loadPdfMake(){
-  if(typeof pdfMake!=='undefined') return Promise.resolve();
-  var SOURCES=[
+/* Fetch a JS file and execute it via Blob URL.
+   Blob URL inherits the page origin, so it satisfies CSP script-src 'self'
+   even when the original CDN URL would be blocked.
+   Each URL's Promise is cached so it is only fetched once per session. */
+var _fetched={};
+function fetchAndExec(url){
+  if(_fetched[url]) return _fetched[url];
+  _fetched[url]=fetch(url,{cache:'force-cache'}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
+    return r.text();
+  }).then(function(code){
+    return new Promise(function(res,rej){
+      var blob=new Blob([code],{type:'text/javascript'});
+      var burl=URL.createObjectURL(blob);
+      var s=document.createElement('script');
+      s.src=burl;
+      s.onload=function(){ URL.revokeObjectURL(burl); res(); };
+      s.onerror=function(){ URL.revokeObjectURL(burl); rej(new Error('exec failed: '+url)); };
+      document.head.appendChild(s);
+    });
+  });
+  return _fetched[url];
+}
+
+/* Try each URL in order; move to next on fetch/exec error OR verify() returning false */
+function tryList(urls, i, verify){
+  if(i>=urls.length) return Promise.reject(new Error('All sources failed — first was: '+urls[0]));
+  return fetchAndExec(urls[i]).then(function(){
+    if(verify()) return;
+    return tryList(urls, i+1, verify);
+  }).catch(function(){ return tryList(urls, i+1, verify); });
+}
+
+/* Load pdfmake library then vfs_fonts (Roboto), sequentially. Cached after first call. */
+var _pdfReady=null;
+function ensurePdfMake(){
+  if(_pdfReady && typeof pdfMake!=='undefined' && pdfMake.vfs && pdfMake.vfs['Roboto-Regular.ttf']) return _pdfReady;
+  _pdfReady=null;
+  var CORE=[
     '/js/pdfmake.min.js',
     'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js',
     'https://unpkg.com/pdfmake@0.2.7/build/pdfmake.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'
   ];
-  return new Promise(function(res,rej){
-    var errors=[];
-    function tryNext(i){
-      if(i>=SOURCES.length){ rej(new Error('pdfMake unavailable from all sources:\n'+errors.join('\n'))); return; }
-      var src=SOURCES[i];
-      var old=document.querySelector('script[src="'+src+'"]');
-      if(old) old.parentNode.removeChild(old);
-      var s=document.createElement('script'); s.src=src; s.async=true;
-      s.onload=function(){
-        if(typeof pdfMake!=='undefined'){ res(); }
-        else { errors.push(src+': loaded but pdfMake undefined (CSP?)'); tryNext(i+1); }
-      };
-      s.onerror=function(){ errors.push(src+': 404/network'); tryNext(i+1); };
-      document.head.appendChild(s);
-    }
-    tryNext(0);
-  });
+  var VFS=[
+    '/js/vfs_fonts.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js',
+    'https://unpkg.com/pdfmake@0.2.7/build/vfs_fonts.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js'
+  ];
+  _pdfReady=tryList(CORE, 0, function(){ return typeof pdfMake!=='undefined'; })
+    .then(function(){
+      return tryList(VFS, 0, function(){ return !!(pdfMake.vfs&&pdfMake.vfs['Roboto-Regular.ttf']); });
+    })
+    .then(function(){
+      pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
+    });
+  return _pdfReady;
 }
 
-/* Fetch binary URL as base64, cached in memory across PDF exports */
-var _b64={};
-function toBase64(url){
-  if(_b64[url]) return Promise.resolve(_b64[url]);
-  return fetch(url,{cache:'force-cache'}).then(function(r){
-    if(!r.ok) throw new Error('HTTP '+r.status+' — '+url);
-    return r.arrayBuffer();
-  }).then(function(buf){
-    var b=new Uint8Array(buf), s='', chunk=8192;
-    for(var i=0;i<b.length;i+=chunk) s+=String.fromCharCode.apply(null,b.subarray(i,Math.min(i+chunk,b.length)));
-    _b64[url]=btoa(s); return _b64[url];
-  });
-}
-
-/* SVG circular progress ring — rendered natively by pdfMake as vector */
+/* SVG circular progress ring — use Helvetica (built-in pdfkit font) for safe SVG text */
 function matchRingSvg(matchNum, mc){
   var r=32, circ=+(2*Math.PI*r).toFixed(2);
   var off=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
@@ -6197,7 +6214,7 @@ function matchRingSvg(matchNum, mc){
   return '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">'+
     '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="6"/>'+
     (matchNum>0?'<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="6" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/>':'')+
-    '<text x="40" y="44" text-anchor="middle" dy="-0.1em" font-size="14" font-weight="bold" fill="'+mc+'">'+pct+'</text>'+
+    '<text x="40" y="44" text-anchor="middle" dy="-0.1em" font-size="14" font-weight="bold" font-family="Helvetica" fill="'+mc+'">'+pct+'</text>'+
     '</svg>';
 }
 
@@ -6399,7 +6416,7 @@ function buildDef(d){
     pageSize:'A4',
     pageMargins:[32,30,32,42],
     content:content,
-    defaultStyle:{font:'Poppins',fontSize:10,color:'#0f172a'},
+    defaultStyle:{font:'Roboto',fontSize:10,color:'#0f172a'},
     background:function(cp,ps){
       /* 4 px navy bar across full page top on every page */
       return {canvas:[{type:'rect',x:0,y:0,w:ps.width,h:4,color:'#1e3a8a'}]};
@@ -6501,24 +6518,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var now=new Date(), dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
   var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
 
-  /* Load pdfMake CDN + Poppins fonts in parallel.
-     Tries /fonts/poppins/ first (served from public/); falls back to
-     Google Fonts GitHub repo (CORS-open) so it works before fonts are deployed. */
-  var fp='/fonts/poppins/';
-  var fpCdn='https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/';
-  function fetchFont(name){
-    return toBase64(fp+name).catch(function(){ return toBase64(fpCdn+name); });
-  }
-  Promise.all([
-    loadPdfMake(),
-    fetchFont('Poppins-Regular.ttf'),
-    fetchFont('Poppins-Bold.ttf'),
-    fetchFont('Poppins-SemiBold.ttf')
-  ]).then(function(res){
-    /* Register Poppins in pdfMake virtual filesystem */
-    pdfMake.vfs={'Poppins-Regular.ttf':res[1],'Poppins-Bold.ttf':res[2],'Poppins-SemiBold.ttf':res[3]};
-    pdfMake.fonts={Poppins:{normal:'Poppins-Regular.ttf',bold:'Poppins-Bold.ttf',italics:'Poppins-Regular.ttf',bolditalics:'Poppins-SemiBold.ttf'}};
-
+  /* Load pdfmake + vfs_fonts (Roboto) via fetch->Blob URL, then generate PDF */
+  ensurePdfMake().then(function(){
     var def=buildDef({
       name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
       metaPlain:metaPlain,skillItems:skillItems,metrics:metrics,pipeItems:pipeItems,
@@ -6526,16 +6527,33 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
     });
 
-    /* Direct download — no Windows Print dialog */
-    try {
-      pdfMake.createPdf(def).download(filename);
-    } catch(pdfErr){
-      throw new Error('PDF render error: '+(pdfErr&&pdfErr.message||String(pdfErr)));
-    }
-
+    /* Wrap getBlob in a Promise with timeout so silent render failures surface as errors */
+    return new Promise(function(res,rej){
+      var done=false;
+      var timer=setTimeout(function(){
+        if(!done){ done=true; rej(new Error('PDF timed out after 10s — possible font or layout issue')); }
+      },10000);
+      try{
+        pdfMake.createPdf(def).getBlob(function(blob){
+          if(done) return;
+          clearTimeout(timer); done=true;
+          if(!blob||blob.size<200){ rej(new Error('PDF output was empty ('+( blob?blob.size:0)+' bytes)')); return; }
+          res(blob);
+        });
+      }catch(e){ if(!done){ clearTimeout(timer); done=true; rej(e); } }
+    });
+  }).then(function(blob){
+    /* Trigger download without any Print dialog */
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },3000);
   }).catch(function(err){
     console.error('[CDR-PDF]', err);
-    alert('PDF generation failed: '+(err&&err.message||'Unknown error'));
+    alert('PDF export failed: '+(err&&err.message||String(err)));
   }).finally(function(){
     if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
   });
