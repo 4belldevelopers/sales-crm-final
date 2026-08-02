@@ -157,6 +157,18 @@
 #kt_activitiesApplication #personal_details .slots-grid .slot-time{font-size:12px!important;}
 #kt_activitiesApplication #personal_details .po-recruiter-note-text{font-size:12px!important;line-height:1.7;color:#475569;}
 #kt_activitiesApplication #personal_details .po-no-notes{font-size:12px!important;color:#94a3b8;font-style:italic;margin:0;}
+/* ===== Edit Interview Slots drawer: isd-datetime-pill matching Interview Drawer ===== */
+#jw-slots-drawer .isd-slot-card{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+#jw-slots-drawer .isd-slot-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+#jw-slots-drawer .isd-slot-num{width:22px;height:22px;border-radius:50%;background:#3e97ff;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+#jw-slots-drawer .isd-slot-label{font-size:12.5px;font-weight:700;color:#181c32;}
+#jw-slots-drawer .isd-slot-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;}
+#jw-slots-drawer .isd-field label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#3f4254;margin-bottom:5px;}
+#jw-slots-drawer .isd-field label i{color:#a1a5b7;font-size:14px;}
+#jw-slots-drawer .isd-field select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:7px 9px;font-size:12px;color:#181c32;background:#f8f9fb;}
+#jw-slots-drawer .isd-datetime-pill{display:flex;align-items:center;border:1.5px solid #e4e6ef;border-radius:8px;background:#f8f9fb;padding:0 9px;}
+#jw-slots-drawer .isd-datetime-pill input{border:none!important;background:transparent!important;padding:8px 4px!important;width:auto;flex:1 1 auto;min-width:0;color:#181c32;font-size:12px;font-family:'Poppins',sans-serif;}
+#jw-slots-drawer .isd-datetime-pill .sep{width:1px;height:18px;background:#e4e6ef;flex-shrink:0;margin:0 2px;}
 #kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
 #kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
 #kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
@@ -166,6 +178,7 @@
 .jw-drawer-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;cursor:pointer;transition:opacity .28s;}
 .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop{opacity:1;}
 .jw-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:480px;max-width:96vw;background:#fff;display:flex;flex-direction:column;box-shadow:-4px 0 32px rgba(15,23,42,.14);border-left:1px solid #e2e8f0;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+#jw-skill-drawer .jw-drawer-panel{width:576px;}
 .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel{transform:translateX(0);}
 .jw-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;gap:12px;}
 .jw-drawer-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -328,6 +341,14 @@
   .rdc-drawer.rdc-open{transform:translateY(0);}
 }
 @media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
+/* Interview Slots empty state */
+#kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
+#kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
+#kt_activitiesApplication #personal_details .po-slots-empty-icon svg{width:22px;height:22px;}
+#kt_activitiesApplication #personal_details .po-slots-empty-title{font-size:12px;font-weight:700;color:#181c32;margin:0;}
+#kt_activitiesApplication #personal_details .po-slots-empty-sub{font-size:11.5px;color:#94a3b8;margin:0;line-height:1.5;}
+#kt_activitiesApplication #personal_details .po-slots-add-btn{margin-top:4px;padding:7px 20px;font-size:12px;font-weight:600;color:#3e97ff;background:#fff;border:1.5px solid #3e97ff;border-radius:8px;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+#kt_activitiesApplication #personal_details .po-slots-add-btn:hover{background:#3e97ff;color:#fff;}
 </style>
 
 <script>
@@ -2037,6 +2058,7 @@
             </div>
           </section>
 
+          @if(!empty($job_additional_detail))
           <section class="cardshow">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-success-50); color: var(--color-success-600);">
@@ -2093,6 +2115,7 @@
                 @endphp
             </div>
           </section>
+          @endif
 
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -2113,6 +2136,26 @@
               @endif
             </div>
             {{-- Edit form lives in the side drawer (jw-slots-drawer) below content-split --}}
+            @php
+              $hasSlots = !empty($application->interviewDateOne) || !empty($application->interviewDateTwo) || !empty($application->interviewDateThree);
+            @endphp
+            @if(!$hasSlots)
+              <div class="po-slots-empty">
+                <div class="po-slots-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <p class="po-slots-empty-title">No Interview Slots Added Yet</p>
+                <p class="po-slots-empty-sub">Add interview slots to start scheduling.</p>
+                @if($skillAndQuestions)
+                <button type="button" class="po-slots-add-btn editSlots">Add Slots</button>
+                @endif
+              </div>
+            @else
                 @php
                     $book1 = 'Book Now';
                     $book2 = 'Book Now';
@@ -2123,59 +2166,61 @@
                     $modal1 = '';
                     $modal2 = '';
                     $modal3 = '';
-                    $date1 =  \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d h:i:s');
-                      $date2 =  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d h:i:s');
-                      $date3 =  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d h:i:s');
+                    $date1 = \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d h:i:s');
+                    $date2 = \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d h:i:s');
+                    $date3 = \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d h:i:s');
                     if(count($scheduleDateArr)>0){
-                          if(in_array($date1,$scheduleDateArr)){
-                          $book1 = 'Booked';
-                          $bookbtn1 = 'book-btnoff-booked';
-                          $modal1 ='';
-                          }
-                          if(in_array($date2,$scheduleDateArr)){
-                          $book2 = 'Booked';
-                          $bookbtn2 = 'book-btnoff-booked';
-                          $modal2 ='';
-                          }
-                          if(in_array($date3,$scheduleDateArr)){
-                          $book3 = 'Booked';
-                          $bookbtn3 = 'book-btnoff-booked';
-                          $modal3 ='';
-                          }
-                    }            
-              @endphp
-            <div class="slots-grid job_slots_view">
+                        if(in_array($date1,$scheduleDateArr)){
+                            $book1 = 'Booked';
+                            $bookbtn1 = 'book-btnoff-booked';
+                            $modal1 = '';
+                        }
+                        if(in_array($date2,$scheduleDateArr)){
+                            $book2 = 'Booked';
+                            $bookbtn2 = 'book-btnoff-booked';
+                            $modal2 = '';
+                        }
+                        if(in_array($date3,$scheduleDateArr)){
+                            $book3 = 'Booked';
+                            $bookbtn3 = 'book-btnoff-booked';
+                            $modal3 = '';
+                        }
+                    }
+                @endphp
+                <div class="slots-grid job_slots_view">
 
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d M') : 'N/A' }}</div>
-                </div>
-                <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
-              </div>
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }}(IST)</div>
+                    <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
+                    <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
+                  </div>
 
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d M') : 'N/A' }}</div>
-                </div>
-                <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time"> {{ @$application->interview_mode_two ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
-              </div>
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d M ') : 'N/A' }}</div>
-                </div>
-                <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
-              </div>
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }}(IST)</div>
+                    <div class="slot-time">{{ @$application->interview_mode_two ?? 'N/A' }}</div>
+                    <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
+                  </div>
 
-            </div>
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }}(IST)</div>
+                    <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
+                    <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
+                  </div>
+
+                </div>
+            @endif
 
           </section>
         </div>
@@ -2384,57 +2429,6 @@
           @if($application->condidate_type=='other')
           <section class="cardshow">
             <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <h3 class="card-title">Others</h3>
-            </div>
-             <div class="comp-list">
-                <div class="comp-row">
-                  <span class="comp-label">Offer Amount</span>
-                   @php
-                        $offerAmont = "Confidential";
-                          $allow =  GeneralMethod::confidentialAmontShow($jobId);  
-                        @endphp
-
-                        @if($allow)
-                          @if(@$application->offer_amount > 0)
-                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
-                          @endif
-                        @else
-                          <span class="comp-value">{{ $offerAmont }}</span>
-                        @endif
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Joining Date</span>
-                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Visa Status</span>
-                  <span class="comp-value">{{@$application->visastatu}}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Reference Name</span>
-                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
-                </div>
-                 <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
-                </div>
-             </div>
-          </section>
-          @endif
-
-
-          @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-primary-50); color: var(--color-primary-600);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                   stroke-linejoin="round" aria-hidden="true">
@@ -2475,7 +2469,7 @@
                       d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                     </path>
                   </svg>
-                  Contact Number-1 
+                  Contact Number-1
                 </span>
                 <a href="javascript:;" class="contact-value" style="display: flex;">
                   <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
@@ -2535,6 +2529,57 @@
           @else
                 <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
                 <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+          @endif
+
+
+          @if($application->condidate_type=='other')
+          <section class="cardshow">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <h3 class="card-title">Others</h3>
+            </div>
+             <div class="comp-list">
+                <div class="comp-row">
+                  <span class="comp-label">Offer Amount</span>
+                   @php
+                        $offerAmont = "Confidential";
+                          $allow =  GeneralMethod::confidentialAmontShow($jobId);
+                        @endphp
+
+                        @if($allow)
+                          @if(@$application->offer_amount > 0)
+                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
+                          @endif
+                        @else
+                          <span class="comp-value">{{ $offerAmont }}</span>
+                        @endif
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Joining Date</span>
+                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Visa Status</span>
+                  <span class="comp-value">{{@$application->visastatu}}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Reference Name</span>
+                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
+                </div>
+                 <div class="comp-row">
+                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
+                </div>
+             </div>
+          </section>
           @endif
 
           @if(@$application->condidate_type=='bench_condidate')
@@ -2711,7 +2756,7 @@
                                     @endphp
                                     <tr>
                                     <td>
-                                      <label class="form-label">{{ strtoupper($skill_val->skill_name) }}</label>
+                                      <label class="form-label">{{ ucwords(strtolower($skill_val->skill_name)) }}</label>
                                     </td>
                                       <td>
                                         <select class="form-select form-select-sm" name="YearskillId[{{ $skill_val->job_skill_id }}]">
@@ -2847,18 +2892,28 @@
             <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
               @csrf
               <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
-              <div class="mb-4">
-                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 1 — Date, Time &amp; Mode</label>
-                <div class="slot-day">
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+
+              {{-- Slot 1 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">1</span>
+                  <span class="isd-slot-label">Slot 1 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateOne" id="interviewDateOne"
+                        value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeOne" id="interviewTimeOne"
+                        value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('H:i') : '' }}">
+                    </div>
                   </div>
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" readonly="readonly">
-                  </div>
-                  <div>
-                    <select name="interview_mode_one" id="interview_mode_one" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
-                      <option value="">Mode</option>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_one" id="interview_mode_one" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
                       @if(!empty(@$interview_mode))
                         @foreach(@$interview_mode as $int_mode_val)
                           <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
@@ -2868,18 +2923,28 @@
                   </div>
                 </div>
               </div>
-              <div class="mb-4">
-                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 2 — Date, Time &amp; Mode</label>
-                <div class="slot-day">
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" readonly="readonly">
+
+              {{-- Slot 2 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">2</span>
+                  <span class="isd-slot-label">Slot 2 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateTwo" id="interviewDateTwo"
+                        value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeTwo" id="interviewTimeTwo"
+                        value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('H:i') : '' }}">
+                    </div>
                   </div>
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                  </div>
-                  <div>
-                    <select name="interview_mode_two" id="interview_mode_two" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
-                      <option value="">Mode</option>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_two" id="interview_mode_two" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
                       @if(!empty(@$interview_mode))
                         @foreach(@$interview_mode as $int_mode_val)
                           <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
@@ -2889,18 +2954,28 @@
                   </div>
                 </div>
               </div>
-              <div class="mb-4">
-                <label class="form-label fw-semibold mb-2" style="font-size:12px;color:#374151;">Slot 3 — Date, Time &amp; Mode</label>
-                <div class="slot-day">
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Date (dd-mm-yyyy)" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+
+              {{-- Slot 3 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">3</span>
+                  <span class="isd-slot-label">Slot 3 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateThree" id="interviewDateThree"
+                        value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeThree" id="interviewTimeThree"
+                        value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('H:i') : '' }}">
+                    </div>
                   </div>
-                  <div>
-                    <input class="form-control form-control-sm" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                  </div>
-                  <div>
-                    <select name="interview_mode_three" id="interview_mode_three" onchange="getInterviewModeChild(this.value, {{ $job_id }});" class="form-select form-select-sm">
-                      <option value="">Mode</option>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_three" id="interview_mode_three" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
                       @if(!empty(@$interview_mode))
                         @foreach(@$interview_mode as $int_mode_val)
                           <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
@@ -2910,6 +2985,7 @@
                   </div>
                 </div>
               </div>
+
             </form>
           </div>
           <div class="jw-drawer-footer">
@@ -4329,62 +4405,8 @@ setTimeout(() => {
                 });
             }
 
-            // Example init
-          let timeOnePicker   = initTimePicker("#interviewTimeOne",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeTwoPicker   = initTimePicker("#interviewTimeTwo",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeThreePicker = initTimePicker("#interviewTimeThree",'{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          
-          function parseDMY(dmy) {
-              if (!dmy) return null;
-              let parts = dmy.split("-");
-              return new Date(parts[2], parts[1] - 1, parts[0]); // Y, M-1, D
-          }
-
-          function initInterviewDatePicker(selector, offsetDays) {
-              let existingDate = $(selector).val();
-              let savedDateObj = parseDMY(existingDate);
-
-              $(selector).flatpickr({
-                  dateFormat: "d-m-Y",
-                  altInput: true,
-                  altFormat: "d-M-Y",
-                  defaultDate: savedDateObj || getFutureDate(offsetDays),
-                  minDate: savedDateObj ? null : "today", // block past unless saved
-                  disable: savedDateObj
-                      ? [
-                          function (date) {
-                              let today = new Date();
-                              today.setHours(0,0,0,0);
-                              let sameAsSaved = date.getTime() === savedDateObj.getTime();
-                              return date < today && !sameAsSaved;
-                          }
-                        ]
-                      : [],
-                  onReady: function(selectedDates, dateStr, instance) {
-                      instance.altInput.style.width = "129px";
-                  }
-              });
-          }
-
-          function getFutureDate(days) {
-              const date = new Date();
-              date.setDate(date.getDate() + days);
-              return date;
-          }
-
-          initInterviewDatePicker("#interviewDateOne", 0);
-          initInterviewDatePicker("#interviewDateTwo", 1);
-          initInterviewDatePicker("#interviewDateThree", 2);
-
-          function clearAll() {
-            timeOnePicker.clear();
-            timeTwoPicker.clear();
-            timeThreePicker.clear();
-
-            dateOnePicker.clear();
-            dateTwoPicker.clear();
-            dateThreePicker.clear();
-        }
+          // Slot date/time inputs now use native type="date" / type="time" pickers
+          // (matching the Interview Drawer). No Flatpickr needed for those fields.
 
           
 }, 500);
