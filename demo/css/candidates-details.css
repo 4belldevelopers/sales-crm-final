@@ -2815,3 +2815,329 @@
 
   /* Notes: prevent form-group from leaking past the card boundary */
   #kt_activitiesApplication #notes .form-group { max-width: 100%; overflow: hidden; }
+
+  /* ============================================================
+     PROFILE OVERVIEW TAB — Enterprise Redesign
+     Two-column grid, edit button top-right, side drawers,
+     typography 13px cap, salary decimal strip, ownership format.
+     All scoped to #personal_details inside the drawer.
+     ============================================================ */
+
+  /* Two-column layout for Profile Overview only */
+  #kt_activitiesApplication #personal_details .content-split {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+    align-items: start;
+  }
+  /* Collapse to single column on narrow drawer widths */
+  @media (max-width: 860px) {
+    #kt_activitiesApplication #personal_details .content-split {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Card header: flex row with icon + title + right-aligned action */
+  #kt_activitiesApplication .card-header-sidebar {
+    position: relative;
+  }
+
+  /* Enterprise edit button — icon + text, right-aligned via margin-left:auto */
+  #kt_activitiesApplication .jw-card-edit-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4f46e5;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .jw-card-edit-btn:hover {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-color: #a5b4fc;
+  }
+  #kt_activitiesApplication .jw-card-edit-btn svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ===== SIDE EDIT DRAWER ===== */
+  /* Full-screen overlay; pointer-events disabled until drawer is open */
+  .jw-side-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    pointer-events: none;
+  }
+  /* :has() detects when the inner body's d-none is removed — opens the drawer */
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) {
+    pointer-events: auto;
+  }
+  /* Semi-transparent backdrop */
+  .jw-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.28s;
+  }
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop {
+    opacity: 1;
+  }
+  /* Slide-in panel */
+  .jw-drawer-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 96vw;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 32px rgba(15, 23, 42, 0.14);
+    border-left: 1px solid #e2e8f0;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel {
+    transform: translateX(0);
+  }
+  /* Drawer header */
+  .jw-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .jw-drawer-icon-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .jw-drawer-icon-wrap svg { width: 15px; height: 15px; }
+  .jw-drawer-title-group { flex: 1; min-width: 0; }
+  .jw-drawer-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.3;
+  }
+  .jw-drawer-subtitle {
+    font-size: 11px;
+    color: #64748b;
+    font-family: 'Poppins', sans-serif;
+    margin-top: 2px;
+  }
+  .jw-drawer-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .jw-drawer-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+  .jw-drawer-close svg { width: 14px; height: 14px; }
+  /* Scrollable form body */
+  .jw-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    color: #374151;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  .jw-drawer-body table { width: 100%; border-collapse: collapse; }
+  .jw-drawer-body table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jw-drawer-body table td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    vertical-align: middle;
+  }
+  .jw-drawer-body .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 4px;
+  }
+  .jw-drawer-body .form-control,
+  .jw-drawer-body .form-select {
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 7px;
+    border-color: #e2e8f0;
+    color: #0f172a;
+  }
+  .jw-drawer-body .form-control:focus,
+  .jw-drawer-body .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+  /* Sticky footer with Save / Cancel */
+  .jw-drawer-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-shrink: 0;
+  }
+  .jw-drawer-footer .btn-jw-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: #4f46e5;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.15s;
+  }
+  .jw-drawer-footer .btn-jw-save:hover { background: #4338ca; }
+  .jw-drawer-footer .btn-jw-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.15s, color 0.15s;
+  }
+  .jw-drawer-footer .btn-jw-cancel:hover { background: #f1f5f9; color: #0f172a; }
+  /* Interview slot inputs inside drawer */
+  .jw-drawer-body .slot-day { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .jw-drawer-body .slot-day > div { flex: 1; min-width: 100px; }
+
+  /* ===== PROFILE OVERVIEW: hide skill logo icons in view mode ===== */
+  #kt_activitiesApplication #personal_details .skill-logo { display: none !important; }
+  #kt_activitiesApplication #personal_details .skill-name-cell { padding-left: 0 !important; }
+
+  /* ===== FONT CAP 13px throughout Profile Overview ===== */
+  #kt_activitiesApplication #personal_details * { font-family: 'Poppins', sans-serif; }
+  #kt_activitiesApplication #personal_details .fs-6 { font-size: 12px !important; }
+  #kt_activitiesApplication #personal_details .fs-7 { font-size: 11px !important; }
+
+  /* ===== OWNERSHIP meta separator ===== */
+  #kt_activitiesApplication .meta-sep {
+    color: #94a3b8;
+    margin: 0 6px;
+    font-weight: 400;
+  }
+
+  /* ===== COMPENSATION: label/value sizing ===== */
+  #kt_activitiesApplication .comp-label { font-size: 11.5px; }
+  #kt_activitiesApplication .comp-value { font-size: 12px; font-weight: 600; }
+  #kt_activitiesApplication .comp-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ===== SIDEBAR cards ===== */
+  #kt_activitiesApplication .content-sidebar .cardshow { margin-bottom: 0; }
+  #kt_activitiesApplication .ownership-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  #kt_activitiesApplication .ownership-row:last-child { border-bottom: none; }
+  #kt_activitiesApplication .own-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  #kt_activitiesApplication .own-label svg { width: 12px; height: 12px; }
+  #kt_activitiesApplication .own-value {
+    font-size: 12px;
+    color: #0f172a;
+    font-weight: 600;
+    padding-left: 17px;
+  }
+  /* Interview Slot view in drawer-closed state */
+  #kt_activitiesApplication .slots-grid .slot-day {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    background: #fafbfc;
+  }
+  #kt_activitiesApplication .slots-grid .slot-header { margin-bottom: 6px; }
+  #kt_activitiesApplication .slots-grid .slot-day-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #kt_activitiesApplication .slots-grid .slot-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  #kt_activitiesApplication .slots-grid .slot-time {
+    font-size: 11.5px;
+    color: #475569;
+    margin-bottom: 4px;
+  }
