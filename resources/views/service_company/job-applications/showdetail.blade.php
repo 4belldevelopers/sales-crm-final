@@ -361,10 +361,10 @@
 /* ===== HERO SKILLS BAR REDESIGN ===== */
 /* Skills % match badge on avatar */
 #kt_activitiesApplication .cdr-avatar-wrap{position:relative;overflow:visible;}
-#kt_activitiesApplication .cdr-match-pct-badge{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;font-family:'Poppins',sans-serif;border:2px solid #fff;line-height:1.5;box-shadow:0 2px 6px rgba(0,0,0,.12);color:#fff;}
-#kt_activitiesApplication .cdr-mpb-green{background:#16a34a;}
-#kt_activitiesApplication .cdr-mpb-amber{background:#d97706;}
-#kt_activitiesApplication .cdr-mpb-red{background:#dc2626;}
+#kt_activitiesApplication .cdr-match-pct-badge{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;font-family:'Poppins',sans-serif;border:2px solid #fff;line-height:1.5;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+#kt_activitiesApplication .cdr-mpb-green{background:#dcfce7;color:#16a34a;}
+#kt_activitiesApplication .cdr-mpb-amber{background:#fef3c7;color:#d97706;}
+#kt_activitiesApplication .cdr-mpb-red{background:#fee2e2;color:#dc2626;}
 /* Convert cdr-subcard-id to column layout so skills bar can span full width */
 #kt_activitiesApplication .cdr-subcard-id{display:flex!important;flex-direction:column!important;gap:0!important;align-items:stretch!important;}
 #kt_activitiesApplication .cdr-id-top{display:flex;gap:14px;align-items:flex-start;}
