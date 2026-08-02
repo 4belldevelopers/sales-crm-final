@@ -342,6 +342,12 @@
 }
 @media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
 /* ===== HERO SKILLS BAR REDESIGN ===== */
+/* Skills % match badge on avatar */
+#kt_activitiesApplication .cdr-avatar-wrap{position:relative;overflow:visible;}
+#kt_activitiesApplication .cdr-match-pct-badge{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;font-family:'Poppins',sans-serif;border:2px solid #fff;line-height:1.5;box-shadow:0 2px 6px rgba(0,0,0,.12);color:#fff;}
+#kt_activitiesApplication .cdr-mpb-green{background:#16a34a;}
+#kt_activitiesApplication .cdr-mpb-amber{background:#d97706;}
+#kt_activitiesApplication .cdr-mpb-red{background:#dc2626;}
 /* Convert cdr-subcard-id to column layout so skills bar can span full width */
 #kt_activitiesApplication .cdr-subcard-id{display:flex!important;flex-direction:column!important;gap:0!important;align-items:stretch!important;}
 #kt_activitiesApplication .cdr-id-top{display:flex;gap:14px;align-items:flex-start;}
@@ -714,6 +720,10 @@
           <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
           @if($__hdrIsImmediate)
             <span class="cdr-avail-dot-v2" aria-label="Immediately available"></span>
+          @endif
+          @if($__hdrJobTotal > 0)
+            @php $__mpbClass = $__hdrOverallPct >= 70 ? 'cdr-mpb-green' : ($__hdrOverallPct >= 40 ? 'cdr-mpb-amber' : 'cdr-mpb-red'); @endphp
+            <span class="cdr-match-pct-badge {{ $__mpbClass }}">{{ $__hdrOverallPct }}% Match</span>
           @endif
         </div>
 
@@ -2575,9 +2585,15 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h3 class="card-title">Others</h3>
+              <h3 class="card-title">Other Details</h3>
             </div>
              <div class="comp-list">
+                @if(!empty(@$application->dob))
+                <div class="comp-row">
+                  <span class="comp-label">Date of Birth</span>
+                  <span class="comp-value">{{ date('d M Y', strtotime(@$application->dob)) }}</span>
+                </div>
+                @endif
                 <div class="comp-row">
                   <span class="comp-label">Offer Amount</span>
                    @php
