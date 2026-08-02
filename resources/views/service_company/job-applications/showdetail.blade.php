@@ -3014,6 +3014,7 @@
                     <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
                     <div class="isd-datetime-pill">
                       <input type="date" name="interviewDateOne" id="interviewDateOne"
+                        min="{{ date('Y-m-d') }}"
                         value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d') : '' }}">
                       <span class="sep"></span>
                       <input type="time" name="interviewTimeOne" id="interviewTimeOne"
@@ -3045,6 +3046,7 @@
                     <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
                     <div class="isd-datetime-pill">
                       <input type="date" name="interviewDateTwo" id="interviewDateTwo"
+                        min="{{ date('Y-m-d') }}"
                         value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d') : '' }}">
                       <span class="sep"></span>
                       <input type="time" name="interviewTimeTwo" id="interviewTimeTwo"
@@ -3076,6 +3078,7 @@
                     <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
                     <div class="isd-datetime-pill">
                       <input type="date" name="interviewDateThree" id="interviewDateThree"
+                        min="{{ date('Y-m-d') }}"
                         value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d') : '' }}">
                       <span class="sep"></span>
                       <input type="time" name="interviewTimeThree" id="interviewTimeThree"
@@ -5011,15 +5014,27 @@ setTimeout(() => {
 
     });
 
-    // Clicking anywhere on the date-time pill opens the appropriate native picker.
-    // Also: no min-date is enforced, so past (backdated) slots are always selectable.
+    // Clicking ANYWHERE inside the date/time pill (including the text area) opens the picker.
+    // Two layers: (1) direct input click via showPicker(), (2) pill-background click with
+    // left/right split to decide which picker to open.
+    $(document).on('click', '#jw-slots-drawer .isd-datetime-pill input', function(e) {
+        e.stopPropagation(); // stop pill handler from re-running
+        var el = this;
+        // Small timeout lets the browser focus the element first
+        setTimeout(function() {
+            try { el.showPicker(); } catch(err) { /* not supported — native focus only */ }
+        }, 0);
+    });
     $(document).on('click', '#jw-slots-drawer .isd-datetime-pill', function(e) {
-        if ($(e.target).is('input')) return; // direct input click — native browser handles it
+        if ($(e.target).is('input')) return; // handled by the input handler above
         var rect = this.getBoundingClientRect();
-        var isTimeSide = (e.clientX - rect.left) > (rect.width * 0.62); // right 38% = time column
+        var isTimeSide = (e.clientX - rect.left) > (rect.width * 0.62);
         var input = $(this).find(isTimeSide ? 'input[type="time"]' : 'input[type="date"]')[0];
         if (!input) return;
-        try { input.showPicker(); } catch(err) { input.focus(); }
+        input.focus();
+        setTimeout(function() {
+            try { input.showPicker(); } catch(err) {}
+        }, 0);
     });
 
     $(document).on('click', '.editSlots', function(e) {
