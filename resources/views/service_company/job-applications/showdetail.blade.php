@@ -221,6 +221,95 @@
 /* Columns inside Bootstrap .row inside notes/timeline — remove extra gutter padding */
 #kt_activitiesApplication #notes [class*="col-"],
 #kt_activitiesApplication #timeline [class*="col-"]{max-width:100%;overflow-x:hidden;}
+
+/* ===================================================================
+   RESUME DOWNLOAD CENTER (RDC) — Phase 1 UI Shell
+   Drawer slides in from the right; all 6 format cards shown.
+   Options 1 & 2 wired to existing download; 3-6 are Phase 2.
+   z-index above KT drawer (999999) and its stacking context.
+=================================================================== */
+.rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
+.rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:520px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer.rdc-open{transform:translateX(0);}
+/* Header */
+.rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
+.rdc-header-text{flex:1;min-width:0;}
+.rdc-title{font-size:13px;font-weight:700;color:#0f172a;margin:0 0 2px;font-family:'Poppins',sans-serif;line-height:1.3;}
+.rdc-subtitle{font-size:11px;color:#64748b;margin:0;font-family:'Poppins',sans-serif;}
+.rdc-close-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;background:#fff;border-radius:7px;cursor:pointer;color:#64748b;padding:0;flex-shrink:0;transition:all .15s ease;}
+.rdc-close-btn:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.rdc-close-btn svg{width:13px;height:13px;}
+/* Body */
+.rdc-body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;}
+/* Candidate card */
+.rdc-cand-card{display:flex;align-items:stretch;margin:12px 14px 0;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;overflow:hidden;}
+.rdc-cand-left{display:flex;align-items:center;gap:9px;padding:11px 14px;flex:1;min-width:0;}
+.rdc-cand-avatar{width:32px;height:32px;border-radius:8px;background:#eef2ff;color:#4f46e5;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;}
+.rdc-cand-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.rdc-meta-lbl{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;line-height:1;}
+.rdc-cand-name{font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-cand-sep{width:1px;background:#e2e8f0;align-self:stretch;flex-shrink:0;}
+.rdc-cand-right{display:flex;align-items:center;gap:9px;padding:11px 14px;}
+.rdc-resume-ic{width:30px;height:30px;border-radius:7px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-resume-ic svg{width:14px;height:14px;}
+.rdc-resume-info{display:flex;flex-direction:column;gap:2px;}
+.rdc-resume-meta{font-size:11px;font-weight:600;color:#334155;white-space:nowrap;}
+/* Section label */
+.rdc-sect-lbl{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:13px 14px 6px;font-family:'Poppins',sans-serif;}
+/* Options list */
+.rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
+.rdc-opt{display:flex;align-items:center;gap:9px;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
+.rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
+.rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
+.rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.rdc-onum{width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+.rdc-opt-sel .rdc-onum{background:#ede9fe;color:#7c3aed;}
+.rdc-oi{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-oi svg{width:14px;height:14px;}
+.rdc-ic-blue{background:#dbeafe;color:#1d4ed8;}
+.rdc-ic-purple{background:#ede9fe;color:#7c3aed;}
+.rdc-ic-amber{background:#fef3c7;color:#d97706;}
+.rdc-ic-green{background:#d1fae5;color:#059669;}
+.rdc-ic-rose{background:#ffe4e6;color:#e11d48;}
+.rdc-ic-teal{background:#ccfbf1;color:#0d9488;}
+.rdc-obody{flex:1;min-width:0;}
+.rdc-otitle{font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rdc-odesc{font-size:10.5px;color:#64748b;margin-top:1px;line-height:1.3;font-family:'Poppins',sans-serif;}
+.rdc-ometa{text-align:right;flex-shrink:0;min-width:52px;}
+.rdc-ocost{font-size:11px;font-weight:700;color:#7c3aed;font-family:'Poppins',sans-serif;}
+.rdc-otime{font-size:10px;color:#94a3b8;font-family:'Poppins',sans-serif;margin-top:1px;white-space:nowrap;}
+.rdc-ocirc{width:15px;height:15px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-opt-sel .rdc-ocirc{border-color:#7c3aed;background:#7c3aed;}
+.rdc-opt-sel .rdc-ocirc::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff;display:block;}
+.rdc-p2-badge{display:inline-block;font-size:9px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:4px;font-family:'Poppins',sans-serif;vertical-align:middle;white-space:nowrap;line-height:1.4;}
+/* Coin card */
+.rdc-coin-card{margin:2px 14px 12px;padding:11px 13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;}
+.rdc-coin-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;margin-bottom:5px;}
+.rdc-coin-dot{width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0;}
+.rdc-coin-row strong{color:#7c3aed;}
+.rdc-bal-row{font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;padding-left:15px;}
+/* Footer */
+.rdc-footer{padding:12px 14px 10px;border-top:1px solid #e2e8f0;flex-shrink:0;background:#fff;}
+.rdc-dl-btn{width:100%;padding:12px 16px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;}
+.rdc-dl-btn:hover:not(:disabled){background:#4338ca;}
+.rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#4338ca;cursor:not-allowed;opacity:.75;}
+.rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
+.rdc-foot-note svg{flex-shrink:0;}
+/* Spinner */
+@keyframes rdcSpin{to{transform:rotate(360deg);}}
+.rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
+/* Toast */
+.rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
+.rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
+.rdc-toast-info{background:#7c3aed;}
+.rdc-toast-warn{background:#d97706;}
+/* Responsive */
+@media(max-width:640px){
+  .rdc-drawer{width:100%;top:auto;bottom:0;height:92dvh;border-radius:14px 14px 0 0;transform:translateY(100%);}
+  .rdc-drawer.rdc-open{transform:translateY(0);}
+}
+@media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
 </style>
 
 <script>
@@ -4892,5 +4981,354 @@ setTimeout(() => {
     $(document).on('click', '#kt_send_whatsapp_showdetail_close', function() {
         hideWhatsappDrawer();
     });
+})();
+</script>
+
+{{-- ═══════════════════════════════════════════════════════════════════
+     DOWNLOAD RESUME CENTER (RDC) — Phase 1 UI Shell
+     Overlay + right-slide drawer; 6 format cards displayed.
+     Option 1 (Original) & Option 2 (Branded) wired to existing logic.
+     Options 3–6 are Phase 2 placeholders (toast notification shown).
+     No new MySQL queries. No extra server-side logic.
+═══════════════════════════════════════════════════════════════════ --}}
+
+{{-- Data bridge: PHP values injected once, read by JS — zero extra queries --}}
+<div id="rdcData" hidden
+     data-dl-url="{{ $resumeAwsPath ? route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) : '' }}"
+     data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
+     data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
+
+{{-- Overlay backdrop --}}
+<div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
+
+{{-- Drawer panel --}}
+<div id="rdcDrawer" class="rdc-drawer" role="dialog" aria-modal="true" aria-label="Download Resume Center" aria-hidden="true" tabindex="-1">
+
+  {{-- Header --}}
+  <div class="rdc-header">
+    <div class="rdc-header-text">
+      <p class="rdc-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;width:13px;height:13px;margin-right:5px;color:#4f46e5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Resume Center
+      </p>
+      <p class="rdc-subtitle">Select a format to download the candidate's resume</p>
+    </div>
+    <button class="rdc-close-btn" id="rdcCloseBtn" aria-label="Close" title="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  {{-- Scrollable body --}}
+  <div class="rdc-body" id="rdcBody">
+
+    {{-- Candidate identity card --}}
+    <div class="rdc-cand-card">
+      <div class="rdc-cand-left">
+        <div class="rdc-cand-avatar">{{ $__hdrInitials }}</div>
+        <div class="rdc-cand-info">
+          <span class="rdc-meta-lbl">Candidate</span>
+          <span class="rdc-cand-name">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
+        </div>
+      </div>
+      <div class="rdc-cand-sep"></div>
+      <div class="rdc-cand-right">
+        <div class="rdc-resume-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div class="rdc-resume-info">
+          <span class="rdc-meta-lbl">Resume File</span>
+          <span class="rdc-resume-meta">{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }} Document</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Section heading --}}
+    <div class="rdc-sect-lbl">Choose Download Format</div>
+
+    {{-- 6 Format option cards --}}
+    <div class="rdc-opts-list" id="rdcOptsList" role="radiogroup" aria-label="Download format">
+
+      {{-- 1: Original Resume --}}
+      <label class="rdc-opt rdc-opt-sel" data-opt="1" data-coins="1">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="1" checked>
+        <span class="rdc-onum">1</span>
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Original Resume</span>
+          <span class="rdc-odesc">Candidate's original uploaded file, downloaded as-is</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">1 Coin</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 2: Branded Resume --}}
+      <label class="rdc-opt" data-opt="2" data-coins="2">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="2">
+        <span class="rdc-onum">2</span>
+        <span class="rdc-oi rdc-ic-purple" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Branded Resume</span>
+          <span class="rdc-odesc">Resume with your company logo and branding overlay</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">~5 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 3: ATS Highlighted --}}
+      <label class="rdc-opt" data-opt="3" data-coins="5">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
+        <span class="rdc-onum">3</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">ATS Highlighted Resume <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Keywords highlighted to match the job description for ATS scoring</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">5 Coins</span>
+          <span class="rdc-otime">~10 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 4: Branded + Highlighted --}}
+      <label class="rdc-opt" data-opt="4" data-coins="7">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="4">
+        <span class="rdc-onum">4</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Branded + Highlighted <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Company branding combined with ATS keyword highlights</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">7 Coins</span>
+          <span class="rdc-otime">~15 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 5: Recruiter Summary --}}
+      <label class="rdc-opt" data-opt="5" data-coins="10">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
+        <span class="rdc-onum">5</span>
+        <span class="rdc-oi rdc-ic-rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Recruiter Summary <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">1-page AI-generated summary formatted for recruiter handoffs</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">10 Coins</span>
+          <span class="rdc-otime">~20 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 6: Client Presentation --}}
+      <label class="rdc-opt" data-opt="6" data-coins="15">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
+        <span class="rdc-onum">6</span>
+        <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Client Presentation <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Polished client-ready profile deck with candidate highlights</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">15 Coins</span>
+          <span class="rdc-otime">~30 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+    </div>{{-- /.rdc-opts-list --}}
+
+    {{-- Coin info summary --}}
+    <div class="rdc-coin-card">
+      <div class="rdc-coin-row">
+        <span class="rdc-coin-dot"></span>
+        You will be charged <strong id="rdcCoinCost">1 Coin</strong> for this download
+      </div>
+      <div class="rdc-bal-row" style="color:#94a3b8;font-size:11px;">Coin balance &amp; deduction visible at checkout &mdash; Phase 2</div>
+    </div>
+
+  </div>{{-- /.rdc-body --}}
+
+  {{-- Sticky footer --}}
+  <div class="rdc-footer">
+    <button id="rdcDownloadBtn" class="rdc-dl-btn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="rdcBtnLabel">Download Original Resume</span>
+    </button>
+    <p class="rdc-foot-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;color:#94a3b8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Coins deducted on successful download &bull; Phase 2 formats coming soon
+    </p>
+  </div>
+
+</div>{{-- /#rdcDrawer --}}
+
+{{-- Toast --}}
+<div id="rdcToast" class="rdc-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var overlay  = document.getElementById('rdcOverlay');
+  var drawer   = document.getElementById('rdcDrawer');
+  var closeBtn = document.getElementById('rdcCloseBtn');
+  var dlBtn    = document.getElementById('rdcDownloadBtn');
+  var btnLbl   = document.getElementById('rdcBtnLabel');
+  var coinEl   = document.getElementById('rdcCoinCost');
+  var toastEl  = document.getElementById('rdcToast');
+  var opts     = document.querySelectorAll('#rdcOptsList .rdc-opt');
+  var rdcData  = document.getElementById('rdcData');
+
+  var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
+
+  var optMeta = {
+    1: {cost:1,  label:'Download Original Resume',       avail:true},
+    2: {cost:2,  label:'Download Branded Resume',        avail:true},
+    3: {cost:5,  label:'Download ATS Resume',            avail:false},
+    4: {cost:7,  label:'Download Branded + ATS',         avail:false},
+    5: {cost:10, label:'Download Recruiter Summary',     avail:false},
+    6: {cost:15, label:'Download Client Presentation',   avail:false}
+  };
+
+  var selectedOpt = 1;
+  var isLoading   = false;
+
+  function openRdc(){
+    overlay.classList.add('rdc-open');
+    drawer.classList.add('rdc-open');
+    overlay.setAttribute('aria-hidden','false');
+    drawer.setAttribute('aria-hidden','false');
+    drawer.focus();
+    document.addEventListener('keydown', onEsc);
+  }
+
+  function closeRdc(){
+    overlay.classList.remove('rdc-open');
+    drawer.classList.remove('rdc-open');
+    overlay.setAttribute('aria-hidden','true');
+    drawer.setAttribute('aria-hidden','true');
+    document.removeEventListener('keydown', onEsc);
+  }
+
+  function onEsc(e){ if(e.key === 'Escape') closeRdc(); }
+
+  /* Intercept existing Download Resume button — clone removes old listeners */
+  var origBtn = document.getElementById('hdrDlToggleApp');
+  if(origBtn){
+    var newBtn = origBtn.cloneNode(true);
+    origBtn.parentNode.replaceChild(newBtn, origBtn);
+    newBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      openRdc();
+    });
+  }
+  /* Prevent old dropdown menu from appearing */
+  var oldMenu = document.getElementById('hdrDlMenuApp');
+  if(oldMenu){ oldMenu.style.display = 'none'; }
+
+  overlay.addEventListener('click', closeRdc);
+  if(closeBtn) closeBtn.addEventListener('click', closeRdc);
+
+  /* Option card selection */
+  opts.forEach(function(opt){
+    opt.addEventListener('click', function(){
+      selectOpt(parseInt(opt.getAttribute('data-opt'), 10));
+    });
+  });
+
+  function selectOpt(n){
+    selectedOpt = n;
+    opts.forEach(function(o){
+      var isThis = parseInt(o.getAttribute('data-opt'), 10) === n;
+      o.classList.toggle('rdc-opt-sel', isThis);
+      var inp = o.querySelector('.rdc-rinput');
+      if(inp) inp.checked = isThis;
+    });
+    var m = optMeta[n] || {cost:0, label:'Download'};
+    if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
+    if(btnLbl) btnLbl.textContent = m.label;
+  }
+
+  var toastTimer = null;
+  function showToast(msg, type){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.className = 'rdc-toast rdc-toast-' + (type || 'info') + ' rdc-tshow';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('rdc-tshow'); }, 3500);
+  }
+
+  function resetBtn(){
+    isLoading = false;
+    if(!dlBtn) return;
+    dlBtn.disabled = false;
+    dlBtn.classList.remove('rdc-loading');
+    var m = optMeta[selectedOpt] || {};
+    dlBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+      '<span id="rdcBtnLabel">' + (m.label || 'Download') + '</span>';
+    btnLbl = document.getElementById('rdcBtnLabel');
+  }
+
+  if(dlBtn){
+    dlBtn.addEventListener('click', function(){
+      if(isLoading) return;
+      var m = optMeta[selectedOpt];
+      if(!m) return;
+
+      if(!m.avail){
+        showToast('This format is coming in Phase 2 — stay tuned!', 'info');
+        return;
+      }
+
+      isLoading = true;
+      dlBtn.disabled = true;
+      dlBtn.classList.add('rdc-loading');
+      dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
+
+      if(selectedOpt === 1){
+        if(dlUrl){
+          window.open(dlUrl, '_blank');
+        } else {
+          showToast('Resume file URL not available.', 'warn');
+        }
+        closeRdc();
+        setTimeout(resetBtn, 800);
+
+      } else if(selectedOpt === 2){
+        closeRdc();
+        setTimeout(function(){
+          if(typeof hdrDownloadWithLogoApp === 'function'){
+            hdrDownloadWithLogoApp();
+          } else {
+            showToast('Branded resume download requires the resume viewer to be open.', 'warn');
+          }
+          resetBtn();
+        }, 350);
+      }
+    });
+  }
+
 })();
 </script>
