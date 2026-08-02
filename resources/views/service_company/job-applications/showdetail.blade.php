@@ -680,6 +680,11 @@
                 Resume with Company Logo
                 <span class="cdr-dl-badge">LOGO</span>
               </button>
+              <button type="button" onclick="cdrExportProfilePDF(this)" class="cdr-dl-item" id="cdrExportPdfBtnHdr">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                Export Candidate Profile
+                <span class="cdr-dl-badge" style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">PDF</span>
+              </button>
             </div>
           </div>
           <script>
@@ -1207,6 +1212,10 @@
                   <button type="button" class="rcv-dl-item" data-dl="logo">Resume with Company Logo</button>
                   <button type="button" class="rcv-dl-item" data-dl="hl">Resume with Highlighted Keywords</button>
                   <button type="button" class="rcv-dl-item" data-dl="both">Highlighted Keywords + Company Logo</button>
+                  <button type="button" class="rcv-dl-item" onclick="cdrExportProfilePDF(this)" id="cdrExportPdfBtnRcv" style="display:flex;align-items:center;gap:7px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                    Export Candidate Profile PDF
+                  </button>
                 </div>
               </div>
             </div>
@@ -5885,6 +5894,24 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 7: Export Candidate Profile PDF --}}
+      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;" onclick="setTimeout(function(){cdrExportProfilePDF(null,true);},80);">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
+        <span class="rdc-onum">7</span>
+        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Export Candidate Profile <span style="background:#fef2f2;color:#dc2626;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF</span></span>
+          <span class="rdc-odesc">Hero section, skills, summary, recruiter notes &amp; employer branding — 100% client-side, instant</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
+          <span class="rdc-otime">~2 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6110,6 +6137,281 @@ window.__buildRS=buildRecruiterSummary;
       }
     });
   }
+
+})();
+</script>
+
+{{-- ===== EXPORT CANDIDATE PROFILE PDF — 100% client-side, no server call ===== --}}
+<script>
+(function(){
+'use strict';
+
+function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadScript(src){
+  return new Promise(function(res,rej){
+    if(document.querySelector('script[src="'+src+'"]')){ res(); return; }
+    var s=document.createElement('script'); s.src=src; s.async=true;
+    s.onload=res; s.onerror=function(){ rej(new Error('Failed: '+src)); };
+    document.head.appendChild(s);
+  });
+}
+
+function buildPdfHtml(d){
+  var S='';
+  var h=function(x){ S+=x; };
+
+  h('<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;width:794px;box-sizing:border-box;color:#0f172a;">');
+
+  /* ── HEADER / EMPLOYER BRANDING ── */
+  h('<div style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:20px 28px 16px;display:flex;align-items:center;justify-content:space-between;">');
+  h('<div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:#3e97ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;">J</div>');
+  h('<div><div style="font-size:14px;font-weight:700;color:#fff;">jero.works</div><div style="font-size:9px;color:#94a3b8;margin-top:1px;">AI-Powered Hiring Platform</div></div></div>');
+  h('<div style="text-align:right;"><div style="font-size:10.5px;font-weight:700;color:#fff;letter-spacing:0.5px;text-transform:uppercase;">Candidate Profile Report</div>');
+  if(d.recruiterName) h('<div style="font-size:9px;color:#94a3b8;margin-top:3px;">By '+esc(d.recruiterName)+'</div>');
+  h('<div style="font-size:9px;color:#94a3b8;margin-top:1px;">'+esc(d.companyName)+' &bull; '+esc(d.dateStr)+'</div></div></div>');
+
+  h('<div style="padding:20px 28px 18px;">');
+
+  /* ── HERO ROW ── */
+  h('<div style="display:flex;gap:18px;margin-bottom:14px;">');
+
+  /* Left: avatar + identity */
+  h('<div style="flex:1;min-width:0;"><div style="display:flex;align-items:flex-start;gap:13px;margin-bottom:10px;">');
+  h('<div style="flex-shrink:0;text-align:center;"><div style="width:52px;height:52px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;">'+esc(d.initials)+'</div>');
+  if(d.matchText) h('<div style="margin-top:5px;background:'+esc(d.matchBg)+';color:'+esc(d.matchColor)+';font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;">'+esc(d.matchText)+'</div>');
+  h('</div>');
+  h('<div style="flex:1;min-width:0;"><div style="font-size:16px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;margin-bottom:2px;">'+esc(d.name)+'</div>');
+  h('<div style="font-size:10.5px;font-weight:600;color:#4f46e5;margin-bottom:6px;">'+esc(d.role)+'</div>');
+  h('<div style="display:flex;flex-wrap:wrap;gap:2px 12px;margin-bottom:7px;">'+d.metaHtml+'</div>');
+  if(d.skillsHtml) h('<div style="margin-top:4px;">'+d.skillsHtml+'</div>');
+  h('</div></div></div>');
+
+  /* Right: match metrics */
+  h('<div style="width:210px;flex-shrink:0;"><table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:10px;overflow:hidden;font-size:10.5px;">');
+  h('<thead><tr><td colspan="2" style="padding:7px 11px;background:#f1f5f9;font-size:9px;font-weight:700;color:#64748b;letter-spacing:0.6px;text-transform:uppercase;">Match Analysis</td></tr></thead>');
+  h('<tbody>'+d.metricsHtml+'</tbody></table></div>');
+  h('</div>');
+
+  /* ── PRESCREENED BADGES ── */
+  if(d.hasRN||d.isImmediate){
+    h('<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px;">');
+    if(d.hasRN) h('<span style="display:inline-flex;align-items:center;gap:4px;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#10003; Prescreened by Senior Recruiter</span>');
+    if(d.isImmediate) h('<span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#9679; Immediate Joiner</span>');
+    h('<span style="display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;">&#10003; JERO Verified</span>');
+    h('</div>');
+  }
+
+  h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
+
+  /* ── AT A GLANCE TILES ── */
+  h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">At A Glance</div>');
+  h('<table style="width:100%;border-collapse:separate;border-spacing:7px 0;table-layout:fixed;"><tr>'+d.pipelineHtml+'</tr></table></div>');
+
+  h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
+
+  /* ── KEY SKILLS TABLE ── */
+  if(d.skillsTableHtml){
+    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Key Skills &amp; Experience</div>');
+    h(d.skillsTableHtml);
+    h('</div><hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
+  }
+
+  /* ── PROFESSIONAL SUMMARY ── */
+  h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Professional Summary</div>');
+  h('<div style="font-size:10px;color:#374151;line-height:1.75;padding:11px 13px;background:#f8fafc;border-radius:8px;border-left:3px solid #4f46e5;">'+esc(d.summary)+'</div></div>');
+
+  /* ── RECRUITER NOTES ── */
+  if(d.hasRN){
+    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Recruiter Notes</div>');
+    h('<div style="font-size:10px;color:#374151;line-height:1.75;padding:11px 13px;background:#fdf4ff;border-radius:8px;border-left:3px solid #db2777;">'+esc(d.rnText)+'</div></div>');
+  }
+
+  /* ── OWNERSHIP ── */
+  if(d.ownershipHtml){
+    h('<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 13px;">');
+    h('<div style="margin-bottom:14px;"><div style="font-size:8.5px;font-weight:700;color:#94a3b8;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:7px;">Ownership</div>');
+    h('<div style="background:#f8fafc;border-radius:8px;padding:9px 12px;">'+d.ownershipHtml+'</div></div>');
+  }
+
+  h('</div>');
+
+  /* ── FOOTER ── */
+  h('<div style="background:#f1f5f9;border-top:1px solid #e2e8f0;padding:9px 28px;display:flex;align-items:center;justify-content:space-between;">');
+  h('<div style="font-size:8.5px;color:#94a3b8;">&#128274; Confidential &mdash; For Internal Recruiter Use Only &bull; JERO Hiring Platform</div>');
+  h('<div style="font-size:8.5px;color:#94a3b8;">'+esc(d.dateStr)+'</div></div>');
+
+  h('</div>');
+  return S;
+}
+
+window.cdrExportProfilePDF = function(triggerEl, fromRdc){
+  var wrap=document.getElementById('kt_activitiesApplication');
+  if(!wrap) return;
+  var hdrMenu=document.getElementById('hdrDlMenuApp');
+  if(hdrMenu) hdrMenu.classList.remove('open');
+
+  var origHtml=triggerEl?triggerEl.innerHTML:'';
+  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Generating…</span>'; }
+
+  var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
+
+  var name=g('.cdr-name')||'—';
+  var role=g('.cdr-role')||'—';
+  var initials=g('.cdr-avatar-sq')||'??';
+
+  var mb=wrap.querySelector('.cdr-match-pct-badge');
+  var matchText=mb?mb.textContent.trim():'';
+  var matchBg='#f1f5f9',matchColor='#64748b';
+  if(mb){
+    if(mb.classList.contains('cdr-mpb-green')){matchBg='#dcfce7';matchColor='#16a34a';}
+    else if(mb.classList.contains('cdr-mpb-amber')){matchBg='#fef3c7';matchColor='#d97706';}
+    else if(mb.classList.contains('cdr-mpb-red')){matchBg='#fee2e2';matchColor='#dc2626';}
+  }
+
+  var metaHtml='';
+  wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){
+    var t=(el.textContent||'').trim().replace(/\s+/g,' ');
+    if(t) metaHtml+='<span style="font-size:9.5px;color:#475569;white-space:nowrap;">'+esc(t)+'</span>';
+  });
+
+  var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
+
+  var skillsHtml='';
+  wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
+    var isM=el.classList.contains('cdr-skill-match'),isMo=el.classList.contains('cdr-skill-more');
+    skillsHtml+='<span style="display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;border-radius:10px;font-size:9px;font-weight:'+(isM?'700':'400')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
+  });
+
+  var metricsHtml='';
+  wrap.querySelectorAll('.cdr-metric-row').forEach(function(row){
+    var lbl=(row.querySelector('.cdr-metric-label')||{}).textContent||'';
+    var valEl=row.querySelector('.cdr-metric-val');
+    var fracEl=row.querySelector('.cdr-metric-frac');
+    var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
+    var frac=fracEl?(fracEl.textContent||'').trim():'';
+    var full=frac?val.replace(frac,'').trim()+frac:val;
+    var sub=(row.querySelector('.cdr-metric-sub')||{}).textContent||'';
+    var isG=valEl&&valEl.classList.contains('cv-green'),isR=valEl&&valEl.classList.contains('cv-red');
+    var vc=isG?'#16a34a':isR?'#dc2626':'#0f172a';
+    metricsHtml+='<tr><td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:9.5px;">'+esc(lbl.trim())+'</td>'+
+      '<td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:10px;text-align:right;">'+esc(full.trim())+
+      (sub?'<div style="font-size:8px;color:#94a3b8;font-weight:400;margin-top:1px;">'+esc(sub.trim())+'</div>':'')+
+      '</td></tr>';
+  });
+
+  var pipeColors=['#dbeafe','#dcfce7','#f5f3ff','#fefce8','#f0fdfa','#eef2ff'];
+  var pipeTxt=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
+  var pipelineHtml='';var pi=0;
+  wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(card){
+    var lbl=(card.querySelector('.cdr-pipeline-label')||{}).textContent||'';
+    var val=(card.querySelector('.cdr-pipeline-value')||{}).textContent||'';
+    lbl=lbl.trim(); val=val.trim().replace(/\s+/g,' ');
+    var bg=pipeColors[pi]||'#f8fafc',tc=pipeTxt[pi]||'#334155';
+    pipelineHtml+='<td style="padding:0 3px;"><div style="background:'+bg+';border-radius:8px;padding:9px 6px;text-align:center;">'+
+      '<div style="font-size:8px;color:#64748b;font-weight:500;margin-bottom:4px;">'+esc(lbl)+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:'+tc+';">'+esc(val)+'</div></div></td>';
+    pi++;
+  });
+
+  var skillsTableHtml='';
+  var skillRowEls=wrap.querySelectorAll('#personal_details .skills-row');
+  if(skillRowEls.length){
+    skillsTableHtml='<table style="width:100%;border-collapse:collapse;font-size:9.5px;">';
+    var thEl=wrap.querySelector('#personal_details .skills-thead');
+    if(thEl){
+      skillsTableHtml+='<thead><tr style="background:#f8fafc;">';
+      thEl.querySelectorAll('div').forEach(function(c){
+        var t=(c.textContent||'').trim();
+        if(t) skillsTableHtml+='<td style="padding:6px 10px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:8.5px;text-transform:uppercase;letter-spacing:0.4px;">'+esc(t)+'</td>';
+      });
+      skillsTableHtml+='</tr></thead>';
+    }
+    skillsTableHtml+='<tbody>';
+    var ri=0;
+    skillRowEls.forEach(function(row){
+      var cells=row.querySelectorAll('div');
+      if(!cells.length) return;
+      skillsTableHtml+='<tr style="background:'+(ri%2===0?'#fff':'#f9fafb')+';">';
+      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
+      skillsTableHtml+='</tr>'; ri++;
+    });
+    skillsTableHtml+='</tbody></table>';
+  }
+
+  var sumEl=wrap.querySelector('.summary-text');
+  var summary=sumEl?(sumEl.textContent||'').trim():'';
+  summary=summary||'No professional summary available.';
+
+  var rnEl=wrap.querySelector('.po-recruiter-note-text');
+  var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
+  var hasRN=!!rnText;
+  if(!rnText) rnText='No recruiter notes added yet.';
+
+  var ownershipHtml='',companyName='JERO',recruiterName='';
+  wrap.querySelectorAll('.ownership-row').forEach(function(row){
+    var lbl=(row.querySelector('.own-label')||{}).textContent||'';
+    var val=(row.querySelector('.own-value')||{}).textContent||'';
+    lbl=lbl.trim().replace(/\s+/g,' '); val=val.trim();
+    if(!val||val==='—') return;
+    if(lbl.toLowerCase().includes('company')) companyName=val;
+    if(lbl.toLowerCase().includes('recruiter')&&!lbl.toLowerCase().includes('note')) recruiterName=val;
+    ownershipHtml+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f4f8;font-size:9.5px;">'+
+      '<span style="color:#64748b;">'+esc(lbl)+'</span><span style="color:#0f172a;font-weight:600;">'+esc(val)+'</span></div>';
+  });
+
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now=new Date();
+  var dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
+
+  var html=buildPdfHtml({
+    name:name,role:role,initials:initials,matchText:matchText,matchBg:matchBg,matchColor:matchColor,
+    metaHtml:metaHtml,skillsHtml:skillsHtml,metricsHtml:metricsHtml,pipelineHtml:pipelineHtml,
+    skillsTableHtml:skillsTableHtml,summary:summary,hasRN:hasRN,rnText:rnText,
+    ownershipHtml:ownershipHtml,companyName:companyName,recruiterName:recruiterName,
+    dateStr:dateStr,isImmediate:isImmediate
+  });
+
+  var container=document.createElement('div');
+  container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;background:#fff;';
+  container.innerHTML=html;
+  document.body.appendChild(container);
+
+  var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
+
+  Promise.all([
+    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+    window.html2canvas?Promise.resolve():loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
+  ]).then(function(){
+    return html2canvas(container.firstElementChild,{
+      scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',width:794,windowWidth:794
+    });
+  }).then(function(canvas){
+    var imgData=canvas.toDataURL('image/jpeg',0.97);
+    var jsPDF=window.jspdf.jsPDF;
+    var pdf=new jsPDF({orientation:'portrait',unit:'px',format:[794,1123],compress:true});
+    var pageW=pdf.internal.pageSize.getWidth();
+    var pageH=pdf.internal.pageSize.getHeight();
+    var imgH=canvas.height/canvas.width*pageW;
+    pdf.addImage(imgData,'JPEG',0,0,pageW,imgH);
+    var offset=0;
+    while(imgH-Math.abs(offset)>pageH){
+      offset-=pageH; pdf.addPage();
+      pdf.addImage(imgData,'JPEG',0,offset,pageW,imgH);
+    }
+    pdf.save(filename);
+  }).catch(function(err){
+    alert('PDF generation failed. Check your connection and try again.\n'+(err&&err.message?err.message:''));
+  }).finally(function(){
+    document.body.removeChild(container);
+    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
+    if(fromRdc){
+      var rd=document.getElementById('rdcDrawer'),ov=document.getElementById('rdcOverlay');
+      if(rd) rd.classList.remove('rdc-open');
+      if(ov) ov.classList.remove('rdc-open');
+    }
+  });
+};
 
 })();
 </script>
