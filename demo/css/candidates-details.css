@@ -2778,3 +2778,40 @@
     /* Name cap stays 14px on narrow widths (override the 17px responsive rule at line 2625) */
     #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 14px !important; }
   }
+
+  /* ============================================================
+     NOTES & TIMELINE TABS — overflow containment
+     Prevents wide tables and min-w-700px comment boxes from
+     expanding the drawer horizontally and breaking the layout.
+     CSS-only, no PHP / business-logic changes.
+     ============================================================ */
+
+  /* Switch from CSS Grid to block so 1fr never expands past drawer width */
+  #kt_activitiesApplication #notes .content-split,
+  #kt_activitiesApplication #timeline .content-split { display: block; max-width: 100%; }
+
+  #kt_activitiesApplication #notes .content-main-full,
+  #kt_activitiesApplication #timeline .content-main-full { max-width: 100%; }
+
+  /* Bootstrap .row negative gutter margins bleed past the card — zero them */
+  #kt_activitiesApplication #notes .row,
+  #kt_activitiesApplication #timeline .row { margin-left: 0 !important; margin-right: 0 !important; }
+
+  /* Timeline: wide multi-column tables scroll horizontally inside their cell */
+  #kt_activitiesApplication #timeline .timeline-content { overflow-x: auto; max-width: 100%; }
+
+  /* Constrain overflow-auto wrappers that hold min-w-700px comment boxes */
+  #kt_activitiesApplication #notes .overflow-auto,
+  #kt_activitiesApplication #timeline .overflow-auto { max-width: 100%; width: 100%; }
+
+  /* Remove the 700px floor so comment boxes fill available width instead */
+  #kt_activitiesApplication .min-w-700px { min-width: 0 !important; }
+
+  /* Bootstrap fs-5 = 1.25rem (20px) — cap to 13px inside the drawer */
+  #kt_activitiesApplication .fs-5 { font-size: 13px !important; }
+
+  /* Timeline card-body: replace Bootstrap defaults with drawer-friendly padding */
+  #kt_activitiesApplication #timeline .card-body { padding: 12px 16px !important; }
+
+  /* Notes: prevent form-group from leaking past the card boundary */
+  #kt_activitiesApplication #notes .form-group { max-width: 100%; overflow: hidden; }

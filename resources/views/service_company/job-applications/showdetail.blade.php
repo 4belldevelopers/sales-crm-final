@@ -136,6 +136,28 @@
 /* ===== RESPONSIVE ===== */
 @media(max-width:1100px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}}
 @media(max-width:640px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* ===== NOTES & TIMELINE: LAYOUT CONTAINMENT ===== */
+/* Switch content-split from grid to block so 1fr never expands past drawer width */
+#kt_activitiesApplication #notes .content-split,
+#kt_activitiesApplication #timeline .content-split{display:block;max-width:100%;}
+#kt_activitiesApplication #notes .content-main-full,
+#kt_activitiesApplication #timeline .content-main-full{max-width:100%;}
+/* Bootstrap .row has calc(var(--bs-gutter-x)*.5) negative margins — zero them out */
+#kt_activitiesApplication #notes .row,
+#kt_activitiesApplication #timeline .row{margin-left:0!important;margin-right:0!important;}
+/* Timeline: make the area that wraps wide tables scroll sideways, not push the drawer */
+#kt_activitiesApplication #timeline .timeline-content{overflow-x:auto;max-width:100%;}
+/* Constrain the overflow-auto wrappers around comment boxes */
+#kt_activitiesApplication #notes .overflow-auto,
+#kt_activitiesApplication #timeline .overflow-auto{max-width:100%;width:100%;}
+/* Remove min-w-700px from comment boxes so they fit in the drawer */
+#kt_activitiesApplication .min-w-700px{min-width:0!important;}
+/* Bootstrap fs-5 = 1.25rem (20px) — cap to 13px inside the drawer */
+#kt_activitiesApplication .fs-5{font-size:13px!important;}
+/* Timeline card-body: replace default Bootstrap padding with drawer-friendly value */
+#kt_activitiesApplication #timeline .card-body{padding:12px 16px!important;}
+/* Notes: prevent .form-group from leaking past the card boundary */
+#kt_activitiesApplication #notes .form-group{max-width:100%;overflow:hidden;}
 </style>
 
 <script>
