@@ -341,6 +341,20 @@
   .rdc-drawer.rdc-open{transform:translateY(0);}
 }
 @media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
+/* ===== HERO SKILLS BAR REDESIGN ===== */
+/* Convert cdr-subcard-id to column layout so skills bar can span full width */
+#kt_activitiesApplication .cdr-subcard-id{display:flex!important;flex-direction:column!important;gap:0!important;align-items:stretch!important;}
+#kt_activitiesApplication .cdr-id-top{display:flex;gap:14px;align-items:flex-start;}
+#kt_activitiesApplication .cdr-id-top .cdr-id-body{flex:1 1 auto;min-width:0;}
+#kt_activitiesApplication .cdr-skills-bar{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;}
+/* Rectangular tags — 4px radius for enterprise-clean look */
+#kt_activitiesApplication .cdr-skill-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px;font-family:'Poppins',sans-serif;line-height:1.5;white-space:nowrap;border:1px solid;letter-spacing:.01em;}
+/* Green = matched job skill */
+#kt_activitiesApplication .cdr-skill-match{background:#f0fdf4;color:#15803d;border-color:#86efac;}
+/* Grey = not in job skill list */
+#kt_activitiesApplication .cdr-skill-plain{background:#f8fafc;color:#64748b;border-color:#e2e8f0;}
+/* "+N More" counter tag */
+#kt_activitiesApplication .cdr-skill-tag.cdr-skill-more{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;font-size:10.5px;}
 /* Recruiter Notes drawer */
 #jw-recruiter-note-drawer .rn-section{margin-bottom:16px;}
 #jw-recruiter-note-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
@@ -459,7 +473,7 @@
          no new route data, no scoring change. */
       $__hdrSkillsRaw = trim((string) @$application->skills);
       $__hdrSkillsArr = $__hdrSkillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $__hdrSkillsRaw)), 'strlen')) : [];
-      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 5);
+      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 8);
       $__hdrSkillsMore  = max(0, count($__hdrSkillsArr) - count($__hdrSkillsShown));
 
       // Initials for avatar (up to 2 letters).
@@ -691,77 +705,79 @@
   {{-- HERO CARD: identity (left) + 4-row metrics list (right) --}}
   <div class="cdr-hero-card">
 
-    {{-- Sub-Card A: rounded-square avatar · name/role · 2-col meta grid · skills --}}
+    {{-- Sub-Card A: avatar · name/role · meta · full-width skills bar --}}
     <div class="cdr-subcard cdr-subcard-id">
-      {{-- Avatar with green availability dot at bottom-right --}}
-      <div class="cdr-avatar-wrap">
-        <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
-        @if($__hdrIsImmediate)
-          <span class="cdr-avail-dot-v2" aria-label="Immediately available"></span>
-        @endif
-      </div>
 
-      <div class="cdr-id-body">
-        <div class="cdr-name-row">
-          <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
-          @if($__hdrIsVerified)
-            <span class="cdr-verified-v2" title="Verified candidate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
+      {{-- Top row: avatar + identity --}}
+      <div class="cdr-id-top">
+        <div class="cdr-avatar-wrap">
+          <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
+          @if($__hdrIsImmediate)
+            <span class="cdr-avail-dot-v2" aria-label="Immediately available"></span>
           @endif
         </div>
 
-        <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
-
-        {{-- 2-col meta grid: exp + company | location + availability --}}
-        @php $__dispCompany = (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: ''); @endphp
-        @php $__candCityState = trim(($city_name ?? '').' '.($state_name ?? '')); @endphp
-        <div class="cdr-meta-grid">
-          @if($__bdTotalExp !== '—')
-            <span class="cdr-meta-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              {{ $__bdTotalExp }} Yrs Experience
-            </span>
-          @endif
-          @if($__candCityState)
-            <span class="cdr-meta-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{ $__candCityState }}
-            </span>
-          @endif
-          @if($__dispCompany)
-            <span class="cdr-meta-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
-              {{ $__dispCompany }}
-            </span>
-          @endif
-          @if($__hdrAvailability !== '—')
-            <span class="cdr-meta-item {{ $__hdrIsImmediate ? 'cmi-green' : '' }}">
-              @if($__hdrIsImmediate)
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>
-              @else
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              @endif
-              {{ $__hdrAvailability }}
-            </span>
-          @endif
-        </div>
-
-        {{-- Skills chips --}}
-        @if(!empty($__hdrSkillsShown))
-          <div class="cdr-skills-sec">
-            <span class="cdr-skills-lbl">Skills</span>
-            <div class="cdr-skills">
-              @foreach($__hdrSkillsShown as $__s)
-                <span class="cdr-skill-pill">{{ $__s }}</span>
-              @endforeach
-              @if($__hdrSkillsMore > 0)
-                <span class="cdr-skill-pill cdr-skill-more">+{{ $__hdrSkillsMore }} More</span>
-              @endif
-            </div>
+        <div class="cdr-id-body">
+          <div class="cdr-name-row">
+            <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
+            @if($__hdrIsVerified)
+              <span class="cdr-verified-v2" title="Verified candidate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            @endif
           </div>
-        @endif
-      </div>
+
+          <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
+
+          {{-- 2-col meta grid: exp + company | location + availability --}}
+          @php $__dispCompany = (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: ''); @endphp
+          @php $__candCityState = trim(($city_name ?? '').' '.($state_name ?? '')); @endphp
+          <div class="cdr-meta-grid">
+            @if($__bdTotalExp !== '—')
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                {{ $__bdTotalExp }} Yrs Experience
+              </span>
+            @endif
+            @if($__candCityState)
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ $__candCityState }}
+              </span>
+            @endif
+            @if($__dispCompany)
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                {{ $__dispCompany }}
+              </span>
+            @endif
+            @if($__hdrAvailability !== '—')
+              <span class="cdr-meta-item {{ $__hdrIsImmediate ? 'cmi-green' : '' }}">
+                @if($__hdrIsImmediate)
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>
+                @else
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                @endif
+                {{ $__hdrAvailability }}
+              </span>
+            @endif
+          </div>
+        </div>
+      </div>{{-- /.cdr-id-top --}}
+
+      {{-- Full-width skills bar: green = matched job skill, grey = not matched --}}
+      @if(!empty($__hdrSkillsShown))
+        <div class="cdr-skills-bar">
+          @foreach($__hdrSkillsShown as $__s)
+            @php $__isMatch = isset($__hdrJobSkills[mb_strtolower($__s)]); @endphp
+            <span class="cdr-skill-tag {{ $__isMatch ? 'cdr-skill-match' : 'cdr-skill-plain' }}">{{ ucwords(strtolower($__s)) }}</span>
+          @endforeach
+          @if($__hdrSkillsMore > 0)
+            <span class="cdr-skill-tag cdr-skill-more">+{{ $__hdrSkillsMore }} More</span>
+          @endif
+        </div>
+      @endif
+
     </div>
 
     {{-- Sub-Card B: 4-row vertical metric list --}}
@@ -789,7 +805,7 @@
         {{-- Salary --}}
         <div class="cdr-metric-row" role="listitem">
           <div class="cdr-metric-icon {{ $__hdrUnderBudget ? 'ci-green' : 'ci-red' }}" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
           </div>
           <span class="cdr-metric-label">Salary</span>
           <div class="cdr-metric-val-block">
