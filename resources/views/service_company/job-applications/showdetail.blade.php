@@ -738,9 +738,6 @@
       <div class="cdr-id-top">
         <div class="cdr-avatar-wrap">
           <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
-          @if($__hdrIsImmediate)
-            <span class="cdr-avail-dot-v2" aria-label="Immediately available"></span>
-          @endif
           @if($__hdrJobTotal > 0)
             @php $__mpbClass = $__hdrOverallPct >= 70 ? 'cdr-mpb-green' : ($__hdrOverallPct >= 40 ? 'cdr-mpb-amber' : 'cdr-mpb-red'); @endphp
             <span class="cdr-match-pct-badge {{ $__mpbClass }}">{{ $__hdrOverallPct }}% Match</span>
