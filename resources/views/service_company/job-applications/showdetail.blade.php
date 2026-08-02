@@ -143,7 +143,7 @@
 #kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
 #kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
 /* ===== SIDE DRAWERS (CSS :has() driven) ===== */
-.jw-side-drawer{position:fixed;inset:0;z-index:1055;pointer-events:none;}
+.jw-side-drawer{position:fixed;inset:0;z-index:1055;pointer-events:none;overflow:hidden;}
 .jw-side-drawer:has(.jw-drawer-body:not(.d-none)){pointer-events:auto;}
 .jw-drawer-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;cursor:pointer;transition:opacity .28s;}
 .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop{opacity:1;}
