@@ -6141,163 +6141,186 @@ window.__buildRS=buildRecruiterSummary;
 })();
 </script>
 
-{{-- ===== EXPORT CANDIDATE PROFILE PDF — 100% client-side, no server call ===== --}}
+{{-- ===== EXPORT CANDIDATE PROFILE PDF — print-quality vector output via print window ===== --}}
 <script>
 (function(){
 'use strict';
 
 function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function loadScript(src){
-  return new Promise(function(res,rej){
-    if(document.querySelector('script[src="'+src+'"]')){ res(); return; }
-    var s=document.createElement('script'); s.src=src; s.async=true;
-    s.onload=res; s.onerror=function(){ rej(new Error('Failed: '+src)); };
-    document.head.appendChild(s);
-  });
+/* ── SVG circular match-score ring ── */
+function buildMatchRing(matchNum, mc){
+  var r=38, circ=+(2*Math.PI*r).toFixed(2);
+  var offset=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
+  var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'—';
+  var lbl=matchNum>=90?'Excellent':matchNum>=70?'Strong':matchNum>=40?'Moderate':'Low';
+  return '<svg width="100" height="100" viewBox="0 0 100 100">'+
+    '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="7"/>'+
+    (matchNum>0?'<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="7" stroke-dasharray="'+circ+' '+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round" transform="rotate(-90 50 50)"/>':'')+
+    '<text x="50" y="47" text-anchor="middle" dominant-baseline="middle" font-family="Poppins,sans-serif" font-size="17" font-weight="800" fill="'+(matchNum>0?mc:'#94a3b8')+'">'+pct+'</text>'+
+    '<text x="50" y="63" text-anchor="middle" font-family="Poppins,sans-serif" font-size="7" font-weight="700" letter-spacing="1.5" fill="#94a3b8">'+lbl+'</text>'+
+    '</svg>';
 }
 
+/* ── Build complete print-window HTML document ── */
 function buildPdfHtml(d){
-  var S='';
-  var h=function(x){ S+=x; };
-
   var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'0';
   var matchNum=parseFloat(matchRaw)||0;
   var mc=matchNum>=70?'#15803d':matchNum>=40?'#b45309':'#b91c1c';
-  var mBg=matchNum>=70?'#dcfce7':matchNum>=40?'#fef3c7':'#fee2e2';
-  var mBdr=matchNum>=70?'#86efac':matchNum>=40?'#fde68a':'#fca5a5';
-  var cleanMatch=matchNum>0?(matchRaw+'%'):'—';
+  var matchSvg=d.matchText?buildMatchRing(matchNum,mc):'';
 
-  h('<div style="font-family:Arial,Helvetica,sans-serif;background:#fff;width:794px;box-sizing:border-box;color:#0f172a;">');
+  var pipeColors=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
+  var pipeTxtC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
+  var glanceTiles='';
+  d.pipeItems.forEach(function(it,idx){
+    glanceTiles+='<div style="background:'+(pipeColors[idx]||'#f8fafc')+';border-radius:8px;padding:10px 8px;text-align:center;">'+
+      '<div style="font-size:8px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">'+esc(it.lbl)+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:'+(pipeTxtC[idx]||'#334155')+';">'+esc(it.val)+'</div></div>';
+  });
 
-  /* ── PROFESSIONAL HEADER ── */
-  h('<div style="border-top:4px solid #1e3a8a;background:#fff;padding:18px 32px 16px;">');
-  h('<table style="width:100%;border-collapse:collapse;"><tr style="vertical-align:middle;">');
-  /* branding */
-  h('<td style="vertical-align:middle;border-right:2px solid #e2e8f0;padding-right:22px;width:220px;">');
-  h('<table style="border-collapse:collapse;"><tr>');
-  h('<td style="vertical-align:middle;padding-right:10px;">');
-  if(d.logoUri){
-    h('<img src="'+d.logoUri+'" style="width:44px;height:44px;object-fit:contain;border-radius:8px;" />');
-  } else {
-    h('<div style="width:44px;height:44px;background:#1e3a8a;border-radius:8px;text-align:center;line-height:44px;font-size:14px;font-weight:900;color:#fff;">'+esc((d.companyName||'J').slice(0,2).toUpperCase())+'</div>');
-  }
-  h('</td><td style="vertical-align:middle;">');
-  h('<div style="font-size:13px;font-weight:800;color:#1e3a8a;white-space:nowrap;line-height:1.3;">'+esc(d.companyName||'Company')+'</div>');
-  h('<div style="font-size:8px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-top:2px;">Hiring Partner</div>');
-  h('</td></tr></table>');
-  h('</td>');
-  /* title */
-  h('<td style="vertical-align:middle;padding-left:22px;">');
-  h('<div style="font-size:15px;font-weight:900;color:#1e3a8a;letter-spacing:0.2px;text-transform:uppercase;line-height:1.3;">Pre-Screened Candidate Report</div>');
-  h('<div style="font-size:9.5px;color:#64748b;margin-top:5px;font-weight:500;">Prepared by Senior Technical Recruiter</div>');
-  h('</td>');
-  /* date */
-  h('<td style="vertical-align:middle;text-align:right;white-space:nowrap;width:130px;">');
-  h('<div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Report Date</div>');
-  h('<div style="font-size:11px;font-weight:700;color:#0f172a;margin-top:3px;">'+esc(d.dateStr)+'</div>');
-  if(d.recruiterName) h('<div style="font-size:8.5px;color:#64748b;margin-top:3px;">By '+esc(d.recruiterName)+'</div>');
-  h('</td>');
-  h('</tr></table></div>');
-  h('<div style="height:1px;background:#e2e8f0;"></div>');
+  var logoHtml=d.logoUri
+    ?'<img src="'+d.logoUri+'" style="width:46px;height:46px;object-fit:contain;border-radius:8px;display:block;flex-shrink:0;" />'
+    :'<div style="width:46px;height:46px;background:#1e3a8a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;letter-spacing:-1px;">'+esc((d.companyName||'J').slice(0,2).toUpperCase())+'</div>';
 
-  h('<div style="padding:20px 32px;">');
+  /* Print CSS — @media and @page are not Blade directives, pass through cleanly */
+  var css='*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}'+
+    'html,body{font-family:"Poppins",Arial,Helvetica,sans-serif;background:#fff;color:#0f172a;font-size:12px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.pw{width:794px;margin:0 auto;}'+
+    '.nb{page-break-inside:avoid;break-inside:avoid;}'+
+    'table{border-collapse:collapse;}'+
+    '.pbn{display:none;}'+
+    '@media print{@page{size:A4;margin:0;}.pbn{display:none!important;}}'+
+    '@media screen{.pbn{display:flex;background:#1e3a8a;color:#fff;padding:13px 32px;align-items:center;justify-content:space-between;font-size:12px;gap:16px;}'+
+    '.pbn span{flex:1;}.pbn button{background:#fff;color:#1e3a8a;border:none;padding:8px 18px;border-radius:6px;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}}';
 
-  /* ── CANDIDATE IDENTITY CARD ── */
-  h('<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin-bottom:16px;">');
-  h('<table style="width:100%;border-collapse:collapse;"><tr style="vertical-align:top;">');
-  /* avatar */
-  h('<td style="vertical-align:top;width:72px;padding-right:14px;">');
-  h('<div style="width:58px;height:58px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:10px;text-align:center;line-height:58px;font-size:20px;font-weight:800;color:#fff;">'+esc(d.initials)+'</div>');
-  h('</td>');
-  /* name + meta */
-  h('<td style="vertical-align:top;">');
-  h('<div style="font-size:20px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:3px;">'+esc(d.name)+'</div>');
-  h('<div style="font-size:11px;font-weight:700;color:#4f46e5;margin-bottom:9px;">'+esc(d.role)+'</div>');
-  h('<div>'+d.metaHtml+'</div>');
-  h('</td>');
-  /* match badge */
-  if(d.matchText){
-    h('<td style="vertical-align:middle;text-align:center;width:90px;padding-left:14px;">');
-    h('<div style="background:'+mBg+';border:2.5px solid '+mBdr+';border-radius:12px;padding:11px 8px;text-align:center;">');
-    h('<div style="font-size:28px;font-weight:900;color:'+mc+';line-height:1;letter-spacing:-1px;">'+esc(cleanMatch)+'</div>');
-    h('<div style="font-size:7.5px;font-weight:800;color:'+mc+';letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;">MATCH</div>');
-    h('</div></td>');
-  }
-  h('</tr>');
-  if(d.skillsHtml){
-    h('<tr><td colspan="3" style="padding-top:11px;border-top:1px solid #e2e8f0;">'+d.skillsHtml+'</td></tr>');
-  }
-  h('</table></div>');
+  var o='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">';
+  o+='<title>'+esc(d.name)+' — Pre-Screened Candidate Report</title>';
+  o+='<link rel="preconnect" href="https://fonts.googleapis.com">';
+  o+='<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
+  o+='<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">';
+  o+='<style>'+css+'</style></head><body>';
 
-  /* ── TWO COLUMNS: MATCH ANALYSIS + AT A GLANCE ── */
-  h('<table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><tr style="vertical-align:top;">');
-  /* left: match analysis */
-  h('<td style="width:50%;padding-right:8px;">');
-  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">');
-  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Match Analysis</span></div>');
-  h('<table style="width:100%;border-collapse:collapse;background:#fff;font-size:9.5px;">'+d.metricsHtml+'</table>');
-  h('</div></td>');
-  /* right: at a glance */
-  h('<td style="width:50%;padding-left:8px;">');
-  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">');
-  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">At A Glance</span></div>');
-  h('<div style="background:#fff;padding:8px;">'+d.pipelineHtml+'</div>');
-  h('</div></td>');
-  h('</tr></table>');
+  /* ── SCREEN-ONLY BANNER (hidden when printing) ── */
+  o+='<div class="pbn">';
+  o+='<span>Your report is ready &mdash; click <strong>Save as PDF</strong>, then choose <em>Save as PDF</em> as the destination in the print dialog.</span>';
+  o+='<button onclick="window.print()">&#128438; Save as PDF</button>';
+  o+='</div>';
 
-  /* ── PRESCREENED BADGES ── */
+  o+='<div class="pw">';
+
+  /* ── HEADER ── */
+  o+='<div style="border-top:4px solid #1e3a8a;background:#fff;padding:18px 32px 16px;" class="nb">';
+  o+='<table style="width:100%;"><tr style="vertical-align:middle;">';
+  /* brand cell */
+  o+='<td style="vertical-align:middle;padding-right:24px;border-right:2px solid #e2e8f0;width:220px;">';
+  o+='<div style="display:flex;align-items:center;gap:11px;">'+logoHtml;
+  o+='<div>';
+  o+='<div style="font-size:13px;font-weight:800;color:#1e3a8a;line-height:1.3;white-space:nowrap;">'+esc(d.companyName||'Company')+'</div>';
+  o+='<div style="font-size:7.5px;color:#94a3b8;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;">Hiring Partner</div>';
+  o+='</div></div></td>';
+  /* title cell */
+  o+='<td style="vertical-align:middle;padding-left:24px;">';
+  o+='<div style="font-size:16px;font-weight:900;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.2px;line-height:1.25;">Pre-Screened Candidate Report</div>';
+  o+='<div style="font-size:9.5px;color:#64748b;margin-top:5px;font-weight:500;">Prepared by Senior Technical Recruiter</div>';
+  o+='</td>';
+  /* date cell */
+  o+='<td style="vertical-align:middle;text-align:right;white-space:nowrap;width:135px;">';
+  o+='<div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.7px;">Report Date</div>';
+  o+='<div style="font-size:12px;font-weight:700;color:#0f172a;margin-top:3px;">'+esc(d.dateStr)+'</div>';
+  if(d.recruiterName) o+='<div style="font-size:9px;color:#64748b;margin-top:3px;">By '+esc(d.recruiterName)+'</div>';
+  o+='</td>';
+  o+='</tr></table></div>';
+  o+='<div style="height:1px;background:#e2e8f0;"></div>';
+
+  /* ── BODY ── */
+  o+='<div style="padding:22px 32px;">';
+
+  /* CANDIDATE IDENTITY CARD */
+  o+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:18px;" class="nb">';
+  o+='<div style="display:flex;align-items:center;gap:16px;">';
+  o+='<div style="width:64px;height:64px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:0.5px;">'+esc(d.initials)+'</div>';
+  o+='<div style="flex:1;min-width:0;">';
+  o+='<div style="font-size:22px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:3px;">'+esc(d.name)+'</div>';
+  o+='<div style="font-size:12px;font-weight:700;color:#4f46e5;margin-bottom:9px;">'+esc(d.role)+'</div>';
+  o+='<div style="display:flex;flex-wrap:wrap;gap:4px 18px;">'+d.metaHtml+'</div>';
+  o+='</div>';
+  if(d.matchText) o+='<div style="flex-shrink:0;text-align:center;">'+matchSvg+'</div>';
+  o+='</div>';
+  if(d.skillsHtml) o+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">'+d.skillsHtml+'</div>';
+  o+='</div>';
+
+  /* TWO COLUMNS */
+  o+='<div style="display:flex;gap:14px;margin-bottom:18px;">';
+  /* match analysis */
+  o+='<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;" class="nb">';
+  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Match Analysis</div>';
+  o+='<table style="width:100%;">'+d.metricsHtml+'</table>';
+  o+='</div>';
+  /* at a glance */
+  o+='<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;" class="nb">';
+  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">At A Glance</div>';
+  o+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:#fff;">'+glanceTiles+'</div>';
+  o+='</div>';
+  o+='</div>';
+
+  /* BADGES */
   if(d.hasRN||d.isImmediate){
-    h('<div style="margin-bottom:16px;">');
-    if(d.hasRN) h('<span style="display:inline-block;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #fbcfe8;margin-right:7px;margin-bottom:4px;">&#10003; Prescreened by Senior Recruiter</span>');
-    if(d.isImmediate) h('<span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #bbf7d0;margin-right:7px;margin-bottom:4px;">&#9679; Immediate Joiner</span>');
-    h('<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:4px 13px;border-radius:20px;border:1px solid #bfdbfe;margin-bottom:4px;">&#10003; JERO Verified</span>');
-    h('</div>');
+    o+='<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;">';
+    if(d.hasRN) o+='<span style="display:inline-block;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #fbcfe8;">&#10003; Prescreened by Senior Recruiter</span>';
+    if(d.isImmediate) o+='<span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #bbf7d0;">&#9679; Immediate Joiner</span>';
+    o+='<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #bfdbfe;">&#10003; JERO Verified</span>';
+    o+='</div>';
   }
 
-  /* ── KEY SKILLS TABLE ── */
+  /* KEY SKILLS */
   if(d.skillsTableHtml){
-    h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
-    h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Key Skills &amp; Experience</span></div>');
-    h(d.skillsTableHtml);
-    h('</div>');
+    o+='<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
+    o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Key Skills &amp; Experience</div>';
+    o+=d.skillsTableHtml;
+    o+='</div>';
   }
 
-  /* ── PROFESSIONAL SUMMARY ── */
-  h('<div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
-  h('<div style="background:#1e3a8a;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.8px;text-transform:uppercase;">Professional Summary</span></div>');
-  h('<div style="padding:14px 16px;background:#fff;font-size:10px;color:#374151;line-height:1.8;">'+esc(d.summary)+'</div>');
-  h('</div>');
+  /* PROFESSIONAL SUMMARY */
+  o+='<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
+  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Professional Summary</div>';
+  o+='<div style="padding:16px 18px;background:#fff;font-size:10.5px;color:#374151;line-height:1.9;">'+esc(d.summary)+'</div>';
+  o+='</div>';
 
-  /* ── RECRUITER NOTES ── */
+  /* RECRUITER NOTES */
   if(d.hasRN){
-    h('<div style="border:1px solid #f3e8ff;border-left:4px solid #db2777;border-radius:10px;overflow:hidden;margin-bottom:16px;">');
-    h('<div style="background:#fdf4ff;border-bottom:1px solid #f3e8ff;padding:9px 14px;"><span style="font-size:8.5px;font-weight:700;color:#db2777;letter-spacing:0.8px;text-transform:uppercase;">Recruiter Notes &amp; Comments</span></div>');
-    h('<div style="padding:14px 16px;background:#fff;font-size:10px;color:#374151;line-height:1.8;font-style:italic;">'+esc(d.rnText)+'</div>');
-    h('</div>');
+    o+='<div style="border:1px solid #f3e8ff;border-left:4px solid #db2777;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
+    o+='<div style="background:#fdf4ff;border-bottom:1px solid #f3e8ff;padding:10px 16px;font-size:8.5px;font-weight:700;color:#db2777;letter-spacing:0.9px;text-transform:uppercase;">Recruiter Notes &amp; Comments</div>';
+    o+='<div style="padding:16px 18px;background:#fff;font-size:10.5px;color:#374151;line-height:1.9;font-style:italic;white-space:pre-wrap;">'+esc(d.rnText)+'</div>';
+    o+='</div>';
   }
 
-  h('</div>');
+  o+='</div>';
 
-  /* ── FOOTER ── */
-  h('<div style="border-top:2px solid #e2e8f0;padding:11px 32px;background:#f8fafc;">');
-  h('<table style="width:100%;border-collapse:collapse;"><tr>');
-  h('<td style="font-size:8px;color:#94a3b8;">&#128274; CONFIDENTIAL &mdash; For Internal Recruiter Use Only &bull; '+esc(d.companyName)+' via JERO Hiring Platform</td>');
-  h('<td style="text-align:right;font-size:8px;color:#94a3b8;">Generated: '+esc(d.dateStr)+'</td>');
-  h('</tr></table></div>');
+  /* FOOTER */
+  o+='<div style="border-top:2px solid #e2e8f0;padding:12px 32px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">';
+  o+='<span style="font-size:8.5px;color:#94a3b8;">&#128274; CONFIDENTIAL — For Internal Recruiter Use Only • '+esc(d.companyName)+' via JERO Hiring Platform</span>';
+  o+='<span style="font-size:8.5px;color:#94a3b8;">Generated: '+esc(d.dateStr)+'</span>';
+  o+='</div>';
 
-  h('</div>');
-  return S;
+  o+='</div></body></html>';
+  return o;
 }
 
 window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var wrap=document.getElementById('kt_activitiesApplication');
   if(!wrap) return;
+
   var hdrMenu=document.getElementById('hdrDlMenuApp');
   if(hdrMenu) hdrMenu.classList.remove('open');
 
+  if(fromRdc){
+    var rd=document.getElementById('rdcDrawer'),ov=document.getElementById('rdcOverlay');
+    if(rd) rd.classList.remove('rdc-open');
+    if(ov) ov.classList.remove('rdc-open');
+  }
+
   var origHtml=triggerEl?triggerEl.innerHTML:'';
-  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Generating…</span>'; }
+  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Preparing…</span>'; }
 
   var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
 
@@ -6311,7 +6334,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var metaHtml='';
   wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){
     var t=(el.textContent||'').trim().replace(/\s+/g,' ');
-    if(t) metaHtml+='<span style="display:inline-block;font-size:9.5px;color:#475569;white-space:nowrap;margin-right:14px;margin-bottom:3px;">'+esc(t)+'</span>';
+    if(t) metaHtml+='<span style="display:inline-block;font-size:10px;color:#475569;font-weight:500;white-space:nowrap;">'+esc(t)+'</span> ';
   });
 
   var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
@@ -6319,7 +6342,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var skillsHtml='';
   wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
     var isM=el.classList.contains('cdr-skill-match'),isMo=el.classList.contains('cdr-skill-more');
-    skillsHtml+='<span style="display:inline-block;padding:2px 9px;margin:2px 3px 2px 0;border-radius:10px;font-size:9px;font-weight:'+(isM?'700':'400')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
+    skillsHtml+='<span style="display:inline-block;padding:3px 10px;margin:2px 3px 2px 0;border-radius:12px;font-size:9px;font-weight:'+(isM?'700':'500')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
   });
 
   var metricsHtml='';
@@ -6334,45 +6357,29 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var isG=valEl&&valEl.classList.contains('cv-green'),isR=valEl&&valEl.classList.contains('cv-red');
     var vc=isG?'#16a34a':isR?'#dc2626':'#0f172a';
     metricsHtml+='<tr>'+
-      '<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:9.5px;width:55%;">'+esc(lbl.trim())+'</td>'+
-      '<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:9.5px;text-align:right;">'+esc(full.trim())+
-      (sub?'<div style="font-size:8px;color:#94a3b8;font-weight:400;margin-top:1px;">'+esc(sub.trim())+'</div>':'')+
+      '<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:10px;width:54%;">'+esc(lbl.trim())+'</td>'+
+      '<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:10px;text-align:right;">'+esc(full.trim())+
+      (sub?'<div style="font-size:8.5px;color:#94a3b8;font-weight:400;margin-top:2px;">'+esc(sub.trim())+'</div>':'')+
       '</td></tr>';
   });
 
-  /* At a Glance: collect items then arrange in 2-col table */
   var pipeItems=[];
-  var pipeColors=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
-  var pipeTxtColors=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
   wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(card){
     var lbl=(card.querySelector('.cdr-pipeline-label')||{}).textContent||'';
     var val=(card.querySelector('.cdr-pipeline-value')||{}).textContent||'';
     pipeItems.push({lbl:lbl.trim(),val:val.trim().replace(/\s+/g,' ')});
   });
-  var pipelineHtml='<table style="width:100%;border-collapse:separate;border-spacing:5px;">';
-  for(var pi=0;pi<pipeItems.length;pi+=2){
-    pipelineHtml+='<tr>';
-    for(var pj=pi;pj<Math.min(pi+2,pipeItems.length);pj++){
-      var pbg=pipeColors[pj]||'#f8fafc',ptc=pipeTxtColors[pj]||'#334155';
-      pipelineHtml+='<td style="width:50%;background:'+pbg+';border-radius:8px;padding:8px 7px;text-align:center;">'+
-        '<div style="font-size:8px;color:#64748b;font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;">'+esc(pipeItems[pj].lbl)+'</div>'+
-        '<div style="font-size:12px;font-weight:700;color:'+ptc+';">'+esc(pipeItems[pj].val)+'</div></td>';
-    }
-    if(pipeItems.length%2!==0&&pi===pipeItems.length-1) pipelineHtml+='<td></td>';
-    pipelineHtml+='</tr>';
-  }
-  pipelineHtml+='</table>';
 
   var skillsTableHtml='';
   var skillRowEls=wrap.querySelectorAll('#personal_details .skills-row');
   if(skillRowEls.length){
-    skillsTableHtml='<table style="width:100%;border-collapse:collapse;font-size:9.5px;">';
+    skillsTableHtml='<table style="width:100%;border-collapse:collapse;font-size:10px;">';
     var thEl=wrap.querySelector('#personal_details .skills-thead');
     if(thEl){
       skillsTableHtml+='<thead><tr style="background:#f8fafc;">';
       thEl.querySelectorAll('div').forEach(function(c){
         var t=(c.textContent||'').trim();
-        if(t) skillsTableHtml+='<td style="padding:7px 12px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:8.5px;text-transform:uppercase;letter-spacing:0.4px;">'+esc(t)+'</td>';
+        if(t) skillsTableHtml+='<td style="padding:8px 14px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">'+esc(t)+'</td>';
       });
       skillsTableHtml+='</tr></thead>';
     }
@@ -6382,7 +6389,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       var cells=row.querySelectorAll('div');
       if(!cells.length) return;
       skillsTableHtml+='<tr style="background:'+(ri%2===0?'#fff':'#f9fafb')+';">';
-      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:7px 12px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
+      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
       skillsTableHtml+='</tr>'; ri++;
     });
     skillsTableHtml+='</tbody></table>';
@@ -6390,12 +6397,11 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
   var sumEl=wrap.querySelector('.summary-text');
   var summary=sumEl?(sumEl.textContent||'').trim():'';
-  summary=summary||'No professional summary available.';
+  if(!summary) summary='No professional summary available.';
 
   var rnEl=wrap.querySelector('.po-recruiter-note-text');
   var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
   var hasRN=!!rnText;
-  if(!rnText) rnText='No recruiter notes added yet.';
 
   var companyName='Company',recruiterName='';
   wrap.querySelectorAll('.ownership-row').forEach(function(row){
@@ -6414,52 +6420,30 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var now=new Date();
   var dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
 
+  var pw=window.open('','_blank','width=840,height=700,scrollbars=yes,resizable=yes');
+  if(!pw){
+    alert('Please allow pop-ups for this site, then click Export again.');
+    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
+    return;
+  }
+
   var html=buildPdfHtml({
     name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
-    metaHtml:metaHtml,skillsHtml:skillsHtml,metricsHtml:metricsHtml,pipelineHtml:pipelineHtml,
+    metaHtml:metaHtml,skillsHtml:skillsHtml,metricsHtml:metricsHtml,pipeItems:pipeItems,
     skillsTableHtml:skillsTableHtml,summary:summary,hasRN:hasRN,rnText:rnText,
     companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
   });
 
-  var container=document.createElement('div');
-  container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;background:#fff;';
-  container.innerHTML=html;
-  document.body.appendChild(container);
+  pw.document.open();
+  pw.document.write(html);
+  pw.document.close();
 
-  var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
-
-  Promise.all([
-    (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve():loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
-    window.html2canvas?Promise.resolve():loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
-  ]).then(function(){
-    return html2canvas(container.firstElementChild,{
-      scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',width:794,windowWidth:794
-    });
-  }).then(function(canvas){
-    var imgData=canvas.toDataURL('image/jpeg',0.97);
-    var jsPDF=window.jspdf.jsPDF;
-    var pdf=new jsPDF({orientation:'portrait',unit:'px',format:[794,1123],compress:true});
-    var pageW=pdf.internal.pageSize.getWidth();
-    var pageH=pdf.internal.pageSize.getHeight();
-    var imgH=canvas.height/canvas.width*pageW;
-    pdf.addImage(imgData,'JPEG',0,0,pageW,imgH);
-    var offset=0;
-    while(imgH-Math.abs(offset)>pageH){
-      offset-=pageH; pdf.addPage();
-      pdf.addImage(imgData,'JPEG',0,offset,pageW,imgH);
-    }
-    pdf.save(filename);
-  }).catch(function(err){
-    alert('PDF generation failed. Check your connection and try again.\n'+(err&&err.message?err.message:''));
-  }).finally(function(){
-    document.body.removeChild(container);
-    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
-    if(fromRdc){
-      var rd=document.getElementById('rdcDrawer'),ov=document.getElementById('rdcOverlay');
-      if(rd) rd.classList.remove('rdc-open');
-      if(ov) ov.classList.remove('rdc-open');
-    }
+  /* Auto-trigger print after Poppins loads */
+  pw.document.fonts.ready.then(function(){
+    setTimeout(function(){ pw.print(); },400);
   });
+
+  if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
 };
 
 })();
