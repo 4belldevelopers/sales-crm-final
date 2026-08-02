@@ -3187,6 +3187,64 @@
     margin-bottom: 4px;
   }
 
+  /* ===== PROFILE OVERVIEW v2: sidebar wider → main column ~20% narrower ===== */
+  #kt_activitiesApplication #personal_details .content-split {
+    grid-template-columns: minmax(0,1fr) 370px !important;
+  }
+  /* Card padding tightened for all PO cards */
+  #kt_activitiesApplication #personal_details .cardshow {
+    padding: 18px !important;
+  }
+  #kt_activitiesApplication #personal_details .card-header-sidebar {
+    margin: -18px -18px 12px !important;
+    padding: 10px 18px !important;
+  }
+  /* ===== Font sizes −20% scoped to Profile Overview ===== */
+  #kt_activitiesApplication #personal_details .card-title       { font-size: 10.5px !important; }
+  #kt_activitiesApplication #personal_details .card-icon        { width: 26px !important; height: 26px !important; border-radius: 7px !important; }
+  #kt_activitiesApplication #personal_details .card-icon svg    { width: 13px !important; height: 13px !important; }
+  #kt_activitiesApplication #personal_details .summary-text     { font-size: 10px !important; line-height: 1.65 !important; }
+  #kt_activitiesApplication #personal_details .skills-thead     { font-size: 9px !important; padding: 7px 0 !important; }
+  #kt_activitiesApplication #personal_details .skills-row       { padding: 9px 0 !important; }
+  #kt_activitiesApplication #personal_details .skill-name-cell  { font-size: 10px !important; }
+  #kt_activitiesApplication #personal_details .skill-exp-cell   { font-size: 10px !important; }
+  #kt_activitiesApplication #personal_details .star-skill       { width: 11px !important; height: 11px !important; }
+  #kt_activitiesApplication #personal_details .rating-text      { font-size: 9.5px !important; }
+  #kt_activitiesApplication #personal_details .comp-label       { font-size: 9px !important; }
+  #kt_activitiesApplication #personal_details .comp-value       { font-size: 10px !important; }
+  #kt_activitiesApplication #personal_details .comp-badge       { font-size: 9px !important; padding: 2px 6px !important; }
+  #kt_activitiesApplication #personal_details .comp-row         { padding: 8px 0 !important; }
+  #kt_activitiesApplication #personal_details .own-label        { font-size: 9px !important; }
+  #kt_activitiesApplication #personal_details .own-label svg    { width: 10px !important; height: 10px !important; }
+  #kt_activitiesApplication #personal_details .own-value        { font-size: 10px !important; padding-left: 14px !important; }
+  #kt_activitiesApplication #personal_details .ownership-row    { padding: 8px 0 !important; }
+  #kt_activitiesApplication #personal_details .slots-grid .slot-day      { padding: 9px !important; border-radius: 8px !important; }
+  #kt_activitiesApplication #personal_details .slots-grid .slot-day-name { font-size: 8.5px !important; }
+  #kt_activitiesApplication #personal_details .slots-grid .slot-date     { font-size: 10px !important; }
+  #kt_activitiesApplication #personal_details .slots-grid .slot-time     { font-size: 8.5px !important; }
+  #kt_activitiesApplication #personal_details .jw-card-edit-btn { font-size: 9.5px !important; padding: 4px 9px !important; }
+  /* Recruiter Notes card: always-visible, enterprise styling */
+  #kt_activitiesApplication #personal_details .po-recruiter-note-text {
+    font-size: 10px;
+    line-height: 1.65;
+    color: #475569;
+    padding: 0;
+  }
+  #kt_activitiesApplication #personal_details .po-no-notes {
+    font-size: 9.5px;
+    color: #94a3b8;
+    font-style: italic;
+    margin: 0;
+    padding: 4px 0;
+  }
+  /* Skills grid: 2-col for screening questions (question | answer) */
+  #kt_activitiesApplication #personal_details .job_additional_view .skills-thead {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  #kt_activitiesApplication #personal_details .job_additional_view .skills-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
 /* ===================================================================
    RESUME DOWNLOAD CENTER (RDC) — Phase 1 UI Shell
    Drawer slides in from the right; 6 format cards shown.
