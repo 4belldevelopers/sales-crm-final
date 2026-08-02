@@ -499,6 +499,9 @@
         z-index: 2147483647 !important
     }
 
+/* Remove online-status green dot from all avatar/image icons */
+.bg-success.rounded-circle.h-20px.w-20px{display:none!important;}
+
 </style>
 
 
