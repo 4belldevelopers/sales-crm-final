@@ -1,4 +1,4 @@
-@php 
+﻿@php 
    use App\Helper\GeneralMethod;
    $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -6141,178 +6141,266 @@ window.__buildRS=buildRecruiterSummary;
 })();
 </script>
 
-{{-- ===== EXPORT CANDIDATE PROFILE PDF — print-quality vector output via print window ===== --}}
+{{-- ===== EXPORT CANDIDATE PROFILE PDF — pdfMake vector PDF, Poppins embedded, direct download ===== --}}
 <script>
 (function(){
 'use strict';
 
-function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+/* Idempotent script loader */
+function loadScript(src){
+  return new Promise(function(res,rej){
+    if(document.querySelector('script[src="'+src+'"]')){ res(); return; }
+    var s=document.createElement('script'); s.src=src; s.async=true;
+    s.onload=res; s.onerror=function(){ rej(new Error('Cannot load: '+src)); };
+    document.head.appendChild(s);
+  });
+}
 
-/* ── SVG circular match-score ring ── */
-function buildMatchRing(matchNum, mc){
-  var r=38, circ=+(2*Math.PI*r).toFixed(2);
-  var offset=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
+/* Fetch binary URL as base64, cached in memory across PDF exports */
+var _b64={};
+function toBase64(url){
+  if(_b64[url]) return Promise.resolve(_b64[url]);
+  return fetch(url,{cache:'force-cache'}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status+' — '+url);
+    return r.arrayBuffer();
+  }).then(function(buf){
+    var b=new Uint8Array(buf), s='', chunk=8192;
+    for(var i=0;i<b.length;i+=chunk) s+=String.fromCharCode.apply(null,b.subarray(i,Math.min(i+chunk,b.length)));
+    _b64[url]=btoa(s); return _b64[url];
+  });
+}
+
+/* SVG circular progress ring — rendered natively by pdfMake as vector */
+function matchRingSvg(matchNum, mc){
+  var r=32, circ=+(2*Math.PI*r).toFixed(2);
+  var off=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
   var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'—';
-  var lbl=matchNum>=90?'Excellent':matchNum>=70?'Strong':matchNum>=40?'Moderate':'Low';
-  return '<svg width="100" height="100" viewBox="0 0 100 100">'+
-    '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="7"/>'+
-    (matchNum>0?'<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="7" stroke-dasharray="'+circ+' '+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round" transform="rotate(-90 50 50)"/>':'')+
-    '<text x="50" y="47" text-anchor="middle" dominant-baseline="middle" font-family="Poppins,sans-serif" font-size="17" font-weight="800" fill="'+(matchNum>0?mc:'#94a3b8')+'">'+pct+'</text>'+
-    '<text x="50" y="63" text-anchor="middle" font-family="Poppins,sans-serif" font-size="7" font-weight="700" letter-spacing="1.5" fill="#94a3b8">'+lbl+'</text>'+
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">'+
+    '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="6"/>'+
+    (matchNum>0?'<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="6" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/>':'')+
+    '<text x="40" y="44" text-anchor="middle" dy="-0.1em" font-size="14" font-weight="bold" fill="'+mc+'">'+pct+'</text>'+
     '</svg>';
 }
 
-/* ── Build complete print-window HTML document ── */
-function buildPdfHtml(d){
+/* Build a card block: navy header + white body */
+function card(title, body, mb){
+  return {
+    table:{widths:['*'],body:[
+      [{text:title,bold:true,fontSize:8,color:'#ffffff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]}],
+      [body]
+    ]},
+    layout:{
+      hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
+      vLineWidth:function(){return 0.5;},
+      hLineColor:function(){return '#e2e8f0';},
+      vLineColor:function(){return '#e2e8f0';},
+      paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+      paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+    },
+    margin:[0,0,0,mb!=null?mb:14]
+  };
+}
+
+/* Two-column table layout used for Match Analysis + At a Glance */
+var twoColLayout={
+  hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0.3;},
+  vLineWidth:function(){return 0.5;},
+  hLineColor:function(){return '#e2e8f0';},
+  vLineColor:function(){return '#e2e8f0';},
+  paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+  paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+};
+
+/* Build the full pdfMake document definition from scraped data */
+function buildDef(d){
   var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'0';
   var matchNum=parseFloat(matchRaw)||0;
   var mc=matchNum>=70?'#15803d':matchNum>=40?'#b45309':'#b91c1c';
-  var matchSvg=d.matchText?buildMatchRing(matchNum,mc):'';
+  var mLabel=matchNum>=90?'Excellent Match':matchNum>=70?'Strong Match':matchNum>=40?'Moderate Match':matchNum>0?'Low Match':'';
+  var coInit=(d.companyName||'J').slice(0,2).toUpperCase();
 
-  var pipeColors=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
-  var pipeTxtC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
-  var glanceTiles='';
-  d.pipeItems.forEach(function(it,idx){
-    glanceTiles+='<div style="background:'+(pipeColors[idx]||'#f8fafc')+';border-radius:8px;padding:10px 8px;text-align:center;">'+
-      '<div style="font-size:8px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">'+esc(it.lbl)+'</div>'+
-      '<div style="font-size:13px;font-weight:700;color:'+(pipeTxtC[idx]||'#334155')+';">'+esc(it.val)+'</div></div>';
+  var PIPE_BG=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
+  var PIPE_TC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
+
+  /* Company logo or navy initials box */
+  var logoEl=d.logoUri&&d.logoUri.startsWith('data:')
+    ?{image:d.logoUri,width:44,height:44}
+    :{table:{widths:[44],heights:[44],body:[[{text:coInit,bold:true,fontSize:13,color:'#fff',alignment:'center',fillColor:'#1e3a8a',margin:[0,12,0,0]}]]},layout:'noBorders'};
+
+  /* Candidate avatar square */
+  var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials,bold:true,fontSize:18,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,14,0,0]}]]},layout:'noBorders'};
+
+  /* Match ring (SVG) */
+  var matchBlock=matchNum>0?{
+    stack:[
+      {svg:matchRingSvg(matchNum,mc),width:80,height:80},
+      mLabel?{text:mLabel,fontSize:7.5,bold:true,color:mc,alignment:'center',margin:[0,3,0,0]}:{text:''}
+    ],alignment:'center',width:90
+  }:null;
+
+  /* Match Analysis rows */
+  var metBody=[[{text:'MATCH ANALYSIS',colSpan:2,bold:true,fontSize:8,color:'#fff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]},{}]];
+  d.metrics.forEach(function(m){
+    var vc=m.green?'#16a34a':m.red?'#dc2626':'#0f172a';
+    var vStack=[{text:m.val||'—',bold:true,color:vc,alignment:'right',fontSize:9.5}];
+    if(m.sub) vStack.push({text:m.sub,fontSize:8,color:'#94a3b8',alignment:'right',margin:[0,1,0,0]});
+    metBody.push([{text:m.lbl||'',fontSize:9.5,color:'#64748b',margin:[12,7,6,7]},{stack:vStack,margin:[4,7,12,7]}]);
   });
 
-  var logoHtml=d.logoUri
-    ?'<img src="'+d.logoUri+'" style="width:46px;height:46px;object-fit:contain;border-radius:8px;display:block;flex-shrink:0;" />'
-    :'<div style="width:46px;height:46px;background:#1e3a8a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;font-size:14px;font-weight:900;color:#fff;flex-shrink:0;letter-spacing:-1px;">'+esc((d.companyName||'J').slice(0,2).toUpperCase())+'</div>';
-
-  /* Print CSS — @media and @page are not Blade directives, pass through cleanly */
-  var css='*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}'+
-    'html,body{font-family:"Poppins",Arial,Helvetica,sans-serif;background:#fff;color:#0f172a;font-size:12px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
-    '.pw{width:794px;margin:0 auto;}'+
-    '.nb{page-break-inside:avoid;break-inside:avoid;}'+
-    'table{border-collapse:collapse;}'+
-    '.pbn{display:none;}'+
-    '@media print{@page{size:A4;margin:0;}.pbn{display:none!important;}}'+
-    '@media screen{.pbn{display:flex;background:#1e3a8a;color:#fff;padding:13px 32px;align-items:center;justify-content:space-between;font-size:12px;gap:16px;}'+
-    '.pbn span{flex:1;}.pbn button{background:#fff;color:#1e3a8a;border:none;padding:8px 18px;border-radius:6px;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}}';
-
-  var o='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">';
-  o+='<title>'+esc(d.name)+' — Pre-Screened Candidate Report</title>';
-  o+='<link rel="preconnect" href="https://fonts.googleapis.com">';
-  o+='<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>';
-  o+='<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">';
-  o+='<style>'+css+'</style></head><body>';
-
-  /* ── SCREEN-ONLY BANNER (hidden when printing) ── */
-  o+='<div class="pbn">';
-  o+='<span>Your report is ready &mdash; click <strong>Save as PDF</strong>, then choose <em>Save as PDF</em> as the destination in the print dialog.</span>';
-  o+='<button onclick="window.print()">&#128438; Save as PDF</button>';
-  o+='</div>';
-
-  o+='<div class="pw">';
-
-  /* ── HEADER ── */
-  o+='<div style="border-top:4px solid #1e3a8a;background:#fff;padding:18px 32px 16px;" class="nb">';
-  o+='<table style="width:100%;"><tr style="vertical-align:middle;">';
-  /* brand cell */
-  o+='<td style="vertical-align:middle;padding-right:24px;border-right:2px solid #e2e8f0;width:220px;">';
-  o+='<div style="display:flex;align-items:center;gap:11px;">'+logoHtml;
-  o+='<div>';
-  o+='<div style="font-size:13px;font-weight:800;color:#1e3a8a;line-height:1.3;white-space:nowrap;">'+esc(d.companyName||'Company')+'</div>';
-  o+='<div style="font-size:7.5px;color:#94a3b8;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;">Hiring Partner</div>';
-  o+='</div></div></td>';
-  /* title cell */
-  o+='<td style="vertical-align:middle;padding-left:24px;">';
-  o+='<div style="font-size:16px;font-weight:900;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.2px;line-height:1.25;">Pre-Screened Candidate Report</div>';
-  o+='<div style="font-size:9.5px;color:#64748b;margin-top:5px;font-weight:500;">Prepared by Senior Technical Recruiter</div>';
-  o+='</td>';
-  /* date cell */
-  o+='<td style="vertical-align:middle;text-align:right;white-space:nowrap;width:135px;">';
-  o+='<div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.7px;">Report Date</div>';
-  o+='<div style="font-size:12px;font-weight:700;color:#0f172a;margin-top:3px;">'+esc(d.dateStr)+'</div>';
-  if(d.recruiterName) o+='<div style="font-size:9px;color:#64748b;margin-top:3px;">By '+esc(d.recruiterName)+'</div>';
-  o+='</td>';
-  o+='</tr></table></div>';
-  o+='<div style="height:1px;background:#e2e8f0;"></div>';
-
-  /* ── BODY ── */
-  o+='<div style="padding:22px 32px;">';
-
-  /* CANDIDATE IDENTITY CARD */
-  o+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:18px;" class="nb">';
-  o+='<div style="display:flex;align-items:center;gap:16px;">';
-  o+='<div style="width:64px;height:64px;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:0.5px;">'+esc(d.initials)+'</div>';
-  o+='<div style="flex:1;min-width:0;">';
-  o+='<div style="font-size:22px;font-weight:800;color:#0f172a;line-height:1.2;margin-bottom:3px;">'+esc(d.name)+'</div>';
-  o+='<div style="font-size:12px;font-weight:700;color:#4f46e5;margin-bottom:9px;">'+esc(d.role)+'</div>';
-  o+='<div style="display:flex;flex-wrap:wrap;gap:4px 18px;">'+d.metaHtml+'</div>';
-  o+='</div>';
-  if(d.matchText) o+='<div style="flex-shrink:0;text-align:center;">'+matchSvg+'</div>';
-  o+='</div>';
-  if(d.skillsHtml) o+='<div style="margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;">'+d.skillsHtml+'</div>';
-  o+='</div>';
-
-  /* TWO COLUMNS */
-  o+='<div style="display:flex;gap:14px;margin-bottom:18px;">';
-  /* match analysis */
-  o+='<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;" class="nb">';
-  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Match Analysis</div>';
-  o+='<table style="width:100%;">'+d.metricsHtml+'</table>';
-  o+='</div>';
-  /* at a glance */
-  o+='<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;" class="nb">';
-  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">At A Glance</div>';
-  o+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:#fff;">'+glanceTiles+'</div>';
-  o+='</div>';
-  o+='</div>';
-
-  /* BADGES */
-  if(d.hasRN||d.isImmediate){
-    o+='<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;">';
-    if(d.hasRN) o+='<span style="display:inline-block;background:#fce7f3;color:#db2777;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #fbcfe8;">&#10003; Prescreened by Senior Recruiter</span>';
-    if(d.isImmediate) o+='<span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #bbf7d0;">&#9679; Immediate Joiner</span>';
-    o+='<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:9px;font-weight:700;padding:5px 14px;border-radius:20px;border:1px solid #bfdbfe;">&#10003; JERO Verified</span>';
-    o+='</div>';
+  /* At a Glance grid */
+  var glBody=[[{text:'AT A GLANCE',colSpan:2,bold:true,fontSize:8,color:'#fff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]},{}]];
+  if(d.pipeItems.length){
+    for(var gi=0;gi<d.pipeItems.length;gi+=2){
+      var gRow=[];
+      for(var gj=gi;gj<Math.min(gi+2,d.pipeItems.length);gj++){
+        gRow.push({stack:[
+          {text:(d.pipeItems[gj].lbl||'').toUpperCase(),fontSize:7.5,bold:true,color:'#64748b',characterSpacing:0.4,alignment:'center',margin:[0,0,0,4]},
+          {text:d.pipeItems[gj].val||'—',fontSize:12,bold:true,color:PIPE_TC[gj]||'#334155',alignment:'center'}
+        ],fillColor:PIPE_BG[gj]||'#f8fafc',margin:[6,9,6,9]});
+      }
+      if(d.pipeItems.length%2!==0&&gi===d.pipeItems.length-1) gRow.push({text:'',fillColor:'#f8fafc'});
+      glBody.push(gRow);
+    }
+  } else {
+    glBody.push([{text:'No pipeline data.',colSpan:2,fontSize:9,color:'#94a3b8',italics:true,margin:[12,10,12,10]},{}]);
   }
 
-  /* KEY SKILLS */
-  if(d.skillsTableHtml){
-    o+='<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
-    o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Key Skills &amp; Experience</div>';
-    o+=d.skillsTableHtml;
-    o+='</div>';
+  /* Key Skills table */
+  var skillsTbl=null;
+  if(d.skillsTable.headers.length&&d.skillsTable.rows.length){
+    var stRows=[d.skillsTable.headers.map(function(h){
+      return {text:(h||'').toUpperCase(),bold:true,fontSize:8,color:'#64748b',characterSpacing:0.4,fillColor:'#f8fafc',margin:[10,8,10,8]};
+    })];
+    d.skillsTable.rows.forEach(function(row,ri){
+      stRows.push(row.map(function(cell){
+        return {text:cell||'',fontSize:9.5,color:'#374151',fillColor:ri%2===0?'#ffffff':'#f9fafb',margin:[10,7,10,7]};
+      }));
+    });
+    skillsTbl=card('KEY SKILLS & EXPERIENCE',{
+      table:{widths:d.skillsTable.headers.map(function(){return '*';}),headerRows:1,body:stRows},
+      layout:{hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0:0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}}
+    });
   }
 
-  /* PROFESSIONAL SUMMARY */
-  o+='<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
-  o+='<div style="background:#1e3a8a;padding:10px 16px;font-size:8.5px;font-weight:700;color:#fff;letter-spacing:0.9px;text-transform:uppercase;">Professional Summary</div>';
-  o+='<div style="padding:16px 18px;background:#fff;font-size:10.5px;color:#374151;line-height:1.9;">'+esc(d.summary)+'</div>';
-  o+='</div>';
+  /* Badges row */
+  var badgeSpans=[];
+  if(d.hasRN) badgeSpans.push({text:' ✓ Prescreened by Senior Recruiter ',bold:true,fontSize:9,color:'#db2777',background:'#fce7f3'},{text:'  '});
+  if(d.isImmediate) badgeSpans.push({text:' ● Immediate Joiner ',bold:true,fontSize:9,color:'#16a34a',background:'#dcfce7'},{text:'  '});
+  badgeSpans.push({text:' ✓ JERO Verified ',bold:true,fontSize:9,color:'#1d4ed8',background:'#dbeafe'});
 
-  /* RECRUITER NOTES */
-  if(d.hasRN){
-    o+='<div style="border:1px solid #f3e8ff;border-left:4px solid #db2777;border-radius:12px;overflow:hidden;margin-bottom:18px;" class="nb">';
-    o+='<div style="background:#fdf4ff;border-bottom:1px solid #f3e8ff;padding:10px 16px;font-size:8.5px;font-weight:700;color:#db2777;letter-spacing:0.9px;text-transform:uppercase;">Recruiter Notes &amp; Comments</div>';
-    o+='<div style="padding:16px 18px;background:#fff;font-size:10.5px;color:#374151;line-height:1.9;font-style:italic;white-space:pre-wrap;">'+esc(d.rnText)+'</div>';
-    o+='</div>';
+  /* Recruiter Notes card */
+  var rnCard=null;
+  if(d.hasRN&&d.rnText){
+    rnCard={
+      table:{widths:['*'],body:[
+        [{text:'RECRUITER NOTES & COMMENTS',bold:true,fontSize:8,color:'#9d174d',characterSpacing:0.9,fillColor:'#fdf2f8',margin:[12,8,12,8]}],
+        [{text:d.rnText,fontSize:10,color:'#374151',italics:true,lineHeight:1.8,margin:[14,14,14,14]}]
+      ]},
+      layout:{
+        hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
+        vLineWidth:function(){return 0.5;},
+        hLineColor:function(i){return i===0?'#be185d':'#f3e8ff';},
+        vLineColor:function(){return '#f3e8ff';},
+        paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+        paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+      },margin:[0,0,0,14]
+    };
   }
 
-  o+='</div>';
+  /* Assemble page content */
+  var content=[];
 
-  /* FOOTER */
-  o+='<div style="border-top:2px solid #e2e8f0;padding:12px 32px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;">';
-  o+='<span style="font-size:8.5px;color:#94a3b8;">&#128274; CONFIDENTIAL — For Internal Recruiter Use Only • '+esc(d.companyName)+' via JERO Hiring Platform</span>';
-  o+='<span style="font-size:8.5px;color:#94a3b8;">Generated: '+esc(d.dateStr)+'</span>';
-  o+='</div>';
+  /* Header: logo | divider | title | date */
+  content.push({
+    columns:[
+      {columns:[{stack:[logoEl],width:52},{stack:[
+        {text:d.companyName||'Company',bold:true,fontSize:12,color:'#1e3a8a',lineHeight:1.2},
+        {text:'HIRING PARTNER',fontSize:7,color:'#94a3b8',characterSpacing:1.2,margin:[0,3,0,0]}
+      ],margin:[8,3,0,0],width:'*'}],width:185},
+      {canvas:[{type:'line',x1:6,y1:0,x2:6,y2:44,lineWidth:1.5,lineColor:'#e2e8f0'}],width:18},
+      {stack:[
+        {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:14,color:'#1e3a8a',characterSpacing:0.2,lineHeight:1.25},
+        {text:'Prepared by Senior Technical Recruiter',fontSize:9,color:'#64748b',margin:[0,4,0,0]}
+      ],width:'*'},
+      {stack:[
+        {text:'REPORT DATE',fontSize:7,color:'#94a3b8',characterSpacing:0.8,alignment:'right'},
+        {text:d.dateStr,bold:true,fontSize:11,color:'#0f172a',alignment:'right',margin:[0,3,0,0]},
+        d.recruiterName?{text:'By '+d.recruiterName,fontSize:8.5,color:'#64748b',alignment:'right',margin:[0,3,0,0]}:{text:''}
+      ],width:112,alignment:'right'}
+    ],columnGap:0,margin:[0,0,0,12]
+  });
+  content.push({canvas:[{type:'line',x1:0,y1:0,x2:531.28,y2:0,lineWidth:0.5,lineColor:'#e2e8f0'}],margin:[0,0,0,16]});
 
-  o+='</div></body></html>';
-  return o;
+  /* Candidate identity card */
+  var candidateCols=[
+    {stack:[avatarEl],width:62},
+    {stack:[
+      {text:d.name,bold:true,fontSize:19,color:'#0f172a',lineHeight:1.2,margin:[0,0,0,2]},
+      {text:d.role,bold:true,fontSize:11,color:'#4f46e5',margin:[0,0,0,8]},
+      {text:d.metaPlain.length?d.metaPlain.join('   '):'',fontSize:9.5,color:'#475569',lineHeight:1.5}
+    ],width:'*',margin:[12,2,10,0]}
+  ];
+  if(matchBlock) candidateCols.push(matchBlock);
+
+  content.push({
+    table:{widths:['*'],body:[[{
+      stack:[
+        {columns:candidateCols,columnGap:0},
+        d.skillItems.length?{canvas:[{type:'line',x1:0,y1:4,x2:491,y2:4,lineWidth:0.5,lineColor:'#e2e8f0'}],margin:[0,10,0,8]}:{text:''},
+        d.skillItems.length?{text:d.skillItems.map(function(sk){
+          return {text:(sk.label||'')+' ',fontSize:9,bold:sk.isMatch,color:sk.isMatch?'#1d4ed8':sk.isMore?'#94a3b8':'#475569'};
+        })}:{text:''}
+      ],margin:[14,14,14,14],fillColor:'#f8fafc'
+    }]]},
+    layout:{hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}},
+    margin:[0,0,0,16]
+  });
+
+  /* Two-column: Match Analysis + At a Glance */
+  content.push({
+    columns:[
+      {table:{widths:['*','*'],body:metBody},layout:twoColLayout,width:'*'},
+      {table:{widths:['*','*'],body:glBody},layout:twoColLayout,width:'*'}
+    ],columnGap:14,margin:[0,0,0,16]
+  });
+
+  /* Badges */
+  content.push({text:badgeSpans,margin:[0,0,0,14]});
+
+  /* Key Skills table */
+  if(skillsTbl) content.push(skillsTbl);
+
+  /* Professional Summary */
+  content.push(card('PROFESSIONAL SUMMARY',{text:d.summary||'No professional summary available.',fontSize:10,color:'#374151',lineHeight:1.8,margin:[14,14,14,14]}));
+
+  /* Recruiter Notes */
+  if(rnCard) content.push(rnCard);
+
+  return {
+    pageSize:'A4',
+    pageMargins:[32,30,32,42],
+    content:content,
+    defaultStyle:{font:'Poppins',fontSize:10,color:'#0f172a'},
+    background:function(cp,ps){
+      /* 4 px navy bar across full page top on every page */
+      return {canvas:[{type:'rect',x:0,y:0,w:ps.width,h:4,color:'#1e3a8a'}]};
+    },
+    footer:function(cp,pc){
+      return {columns:[
+        {text:'🔒 CONFIDENTIAL — For Internal Recruiter Use Only • '+(d.companyName||'Company')+' via JERO Hiring Platform',fontSize:7.5,color:'#94a3b8',margin:[32,10,0,0]},
+        {text:'Page '+cp+' of '+pc+' • Generated: '+d.dateStr,fontSize:7.5,color:'#94a3b8',alignment:'right',margin:[0,10,32,0]}
+      ]};
+    }
+  };
 }
 
 window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var wrap=document.getElementById('kt_activitiesApplication');
   if(!wrap) return;
 
+  /* Close any open menus */
   var hdrMenu=document.getElementById('hdrDlMenuApp');
   if(hdrMenu) hdrMenu.classList.remove('open');
-
   if(fromRdc){
     var rd=document.getElementById('rdcDrawer'),ov=document.getElementById('rdcOverlay');
     if(rd) rd.classList.remove('rdc-open');
@@ -6320,79 +6408,48 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   }
 
   var origHtml=triggerEl?triggerEl.innerHTML:'';
-  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Preparing…</span>'; }
+  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Generating PDF…</span>'; }
 
+  /* DOM scraping */
   var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
 
   var name=g('.cdr-name')||'—';
   var role=g('.cdr-role')||'—';
   var initials=g('.cdr-avatar-sq')||'??';
-
-  var mb=wrap.querySelector('.cdr-match-pct-badge');
-  var matchText=mb?mb.textContent.trim():'';
-
-  var metaHtml='';
-  wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){
-    var t=(el.textContent||'').trim().replace(/\s+/g,' ');
-    if(t) metaHtml+='<span style="display:inline-block;font-size:10px;color:#475569;font-weight:500;white-space:nowrap;">'+esc(t)+'</span> ';
-  });
-
+  var matchText=(wrap.querySelector('.cdr-match-pct-badge')||{textContent:''}).textContent.trim();
   var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
 
-  var skillsHtml='';
+  var metaPlain=[];
+  wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){ var t=(el.textContent||'').trim().replace(/\s+/g,' '); if(t) metaPlain.push(t); });
+
+  var skillItems=[];
   wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
-    var isM=el.classList.contains('cdr-skill-match'),isMo=el.classList.contains('cdr-skill-more');
-    skillsHtml+='<span style="display:inline-block;padding:3px 10px;margin:2px 3px 2px 0;border-radius:12px;font-size:9px;font-weight:'+(isM?'700':'500')+';background:'+(isM?'#dbeafe':isMo?'#f8fafc':'#f1f5f9')+';color:'+(isM?'#1d4ed8':isMo?'#94a3b8':'#475569')+';">'+esc(el.textContent.trim())+'</span>';
+    skillItems.push({label:el.textContent.trim(),isMatch:el.classList.contains('cdr-skill-match'),isMore:el.classList.contains('cdr-skill-more')});
   });
 
-  var metricsHtml='';
+  var metrics=[];
   wrap.querySelectorAll('.cdr-metric-row').forEach(function(row){
     var lbl=(row.querySelector('.cdr-metric-label')||{}).textContent||'';
-    var valEl=row.querySelector('.cdr-metric-val');
-    var fracEl=row.querySelector('.cdr-metric-frac');
+    var valEl=row.querySelector('.cdr-metric-val'), fracEl=row.querySelector('.cdr-metric-frac');
     var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
     var frac=fracEl?(fracEl.textContent||'').trim():'';
-    var full=frac?val.replace(frac,'').trim()+' / '+frac:val;
     var sub=(row.querySelector('.cdr-metric-sub')||{}).textContent||'';
-    var isG=valEl&&valEl.classList.contains('cv-green'),isR=valEl&&valEl.classList.contains('cv-red');
-    var vc=isG?'#16a34a':isR?'#dc2626':'#0f172a';
-    metricsHtml+='<tr>'+
-      '<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:10px;width:54%;">'+esc(lbl.trim())+'</td>'+
-      '<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;font-weight:700;color:'+vc+';font-size:10px;text-align:right;">'+esc(full.trim())+
-      (sub?'<div style="font-size:8.5px;color:#94a3b8;font-weight:400;margin-top:2px;">'+esc(sub.trim())+'</div>':'')+
-      '</td></tr>';
+    metrics.push({lbl:lbl.trim(),val:frac?val.replace(frac,'').trim()+' / '+frac:val,sub:sub.trim(),green:!!(valEl&&valEl.classList.contains('cv-green')),red:!!(valEl&&valEl.classList.contains('cv-red'))});
   });
 
   var pipeItems=[];
-  wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(card){
-    var lbl=(card.querySelector('.cdr-pipeline-label')||{}).textContent||'';
-    var val=(card.querySelector('.cdr-pipeline-value')||{}).textContent||'';
-    pipeItems.push({lbl:lbl.trim(),val:val.trim().replace(/\s+/g,' ')});
+  wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(c){
+    var l=(c.querySelector('.cdr-pipeline-label')||{}).textContent||'';
+    var v=(c.querySelector('.cdr-pipeline-value')||{}).textContent||'';
+    pipeItems.push({lbl:l.trim(),val:v.trim().replace(/\s+/g,' ')});
   });
 
-  var skillsTableHtml='';
-  var skillRowEls=wrap.querySelectorAll('#personal_details .skills-row');
-  if(skillRowEls.length){
-    skillsTableHtml='<table style="width:100%;border-collapse:collapse;font-size:10px;">';
+  var skillsTable={headers:[],rows:[]};
+  var skEls=wrap.querySelectorAll('#personal_details .skills-row');
+  if(skEls.length){
     var thEl=wrap.querySelector('#personal_details .skills-thead');
-    if(thEl){
-      skillsTableHtml+='<thead><tr style="background:#f8fafc;">';
-      thEl.querySelectorAll('div').forEach(function(c){
-        var t=(c.textContent||'').trim();
-        if(t) skillsTableHtml+='<td style="padding:8px 14px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;font-size:9px;text-transform:uppercase;letter-spacing:0.5px;">'+esc(t)+'</td>';
-      });
-      skillsTableHtml+='</tr></thead>';
-    }
-    skillsTableHtml+='<tbody>';
-    var ri=0;
-    skillRowEls.forEach(function(row){
-      var cells=row.querySelectorAll('div');
-      if(!cells.length) return;
-      skillsTableHtml+='<tr style="background:'+(ri%2===0?'#fff':'#f9fafb')+';">';
-      cells.forEach(function(c){ skillsTableHtml+='<td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;color:#374151;">'+esc((c.textContent||'').trim())+'</td>'; });
-      skillsTableHtml+='</tr>'; ri++;
-    });
-    skillsTableHtml+='</tbody></table>';
+    if(thEl) thEl.querySelectorAll('div').forEach(function(c){ var t=(c.textContent||'').trim(); if(t) skillsTable.headers.push(t); });
+    skEls.forEach(function(row){ var cells=[]; row.querySelectorAll('div').forEach(function(c){ cells.push((c.textContent||'').trim()); }); if(cells.length) skillsTable.rows.push(cells); });
   }
 
   var sumEl=wrap.querySelector('.summary-text');
@@ -6403,47 +6460,56 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
   var hasRN=!!rnText;
 
-  var companyName='Company',recruiterName='';
+  var companyName='Company', recruiterName='';
   wrap.querySelectorAll('.ownership-row').forEach(function(row){
     var lbl=(row.querySelector('.own-label')||{}).textContent||'';
     var val=(row.querySelector('.own-value')||{}).textContent||'';
     lbl=lbl.trim(); val=val.trim();
     if(!val||val==='—') return;
-    if(lbl.toLowerCase().includes('company')) companyName=val;
-    if(lbl.toLowerCase().includes('recruiter')&&!lbl.toLowerCase().includes('note')) recruiterName=val;
+    if(lbl.toLowerCase().indexOf('company')!==-1) companyName=val;
+    if(lbl.toLowerCase().indexOf('recruiter')!==-1&&lbl.toLowerCase().indexOf('note')===-1) recruiterName=val;
   });
 
+  /* Logo: try __rcvLogo cache, then data-logo attribute on any element */
   var logoUri=null;
-  if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
-
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var now=new Date();
-  var dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
-
-  var pw=window.open('','_blank','width=840,height=700,scrollbars=yes,resizable=yes');
-  if(!pw){
-    alert('Please allow pop-ups for this site, then click Export again.');
-    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
-    return;
+  if(window.__rcvLogo&&window.__rcvLogo.__dataUri) logoUri=window.__rcvLogo.__dataUri;
+  if(!logoUri){
+    var rcvW=document.querySelector('[data-logo]');
+    if(rcvW){ var dl=rcvW.getAttribute('data-logo'); if(dl&&dl.length>30) logoUri=dl; }
   }
 
-  var html=buildPdfHtml({
-    name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
-    metaHtml:metaHtml,skillsHtml:skillsHtml,metricsHtml:metricsHtml,pipeItems:pipeItems,
-    skillsTableHtml:skillsTableHtml,summary:summary,hasRN:hasRN,rnText:rnText,
-    companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now=new Date(), dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
+  var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
+
+  /* Load pdfMake CDN + Poppins fonts from /fonts/poppins/ in parallel */
+  var fp='/fonts/poppins/';
+  Promise.all([
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'),
+    toBase64(fp+'Poppins-Regular.ttf'),
+    toBase64(fp+'Poppins-Bold.ttf'),
+    toBase64(fp+'Poppins-SemiBold.ttf')
+  ]).then(function(res){
+    /* Register Poppins in pdfMake virtual filesystem */
+    pdfMake.vfs={'Poppins-Regular.ttf':res[1],'Poppins-Bold.ttf':res[2],'Poppins-SemiBold.ttf':res[3]};
+    pdfMake.fonts={Poppins:{normal:'Poppins-Regular.ttf',bold:'Poppins-Bold.ttf',italics:'Poppins-Regular.ttf',bolditalics:'Poppins-SemiBold.ttf'}};
+
+    var def=buildDef({
+      name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
+      metaPlain:metaPlain,skillItems:skillItems,metrics:metrics,pipeItems:pipeItems,
+      skillsTable:skillsTable,summary:summary,hasRN:hasRN,rnText:rnText||'',
+      companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
+    });
+
+    /* Direct download — no Windows Print dialog */
+    pdfMake.createPdf(def).download(filename);
+
+  }).catch(function(err){
+    console.error('[CDR-PDF]', err);
+    alert('PDF generation failed: '+(err&&err.message||'Unknown error'));
+  }).finally(function(){
+    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
   });
-
-  pw.document.open();
-  pw.document.write(html);
-  pw.document.close();
-
-  /* Auto-trigger print after Poppins loads */
-  pw.document.fonts.ready.then(function(){
-    setTimeout(function(){ pw.print(); },400);
-  });
-
-  if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
 };
 
 })();
