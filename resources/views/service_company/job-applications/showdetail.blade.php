@@ -341,6 +341,14 @@
   .rdc-drawer.rdc-open{transform:translateY(0);}
 }
 @media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
+/* Recruiter Notes drawer */
+#jw-recruiter-note-drawer .rn-section{margin-bottom:16px;}
+#jw-recruiter-note-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+#jw-recruiter-note-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
+#jw-recruiter-note-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
+#jw-recruiter-note-drawer .rn-editor{min-height:220px;max-height:400px;border:1.5px solid #e4e6ef;border-radius:8px;padding:12px 14px;font-size:12px;font-family:'Poppins',sans-serif;line-height:1.75;color:#181c32;background:#f8f9fb;outline:none;overflow-y:auto;word-break:break-word;}
+#jw-recruiter-note-drawer .rn-editor:focus{border-color:#3e97ff;background:#fff;}
+#jw-recruiter-note-drawer .rn-editor:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
 /* Interview Slots empty state */
 #kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
 #kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
@@ -2239,6 +2247,12 @@
                 </svg>
               </div>
               <h3 class="card-title">Recruiter Notes</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editRecruiterNote">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
             </div>
             @if(!empty($application->recruiter_note))
               <div class="po-recruiter-note-text">{!! $application->recruiter_note !!}</div>
@@ -2997,6 +3011,61 @@
           </div>
         </div>
       </div>{{-- /#jw-slots-drawer --}}
+
+      {{-- DRAWER 4: Recruiter Notes --}}
+      <div class="jw-side-drawer" id="jw-recruiter-note-drawer">
+        <div class="jw-drawer-backdrop editRecruiterNoteCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#eef2ff;color:#4f46e5;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Recruiter Notes</div>
+              <div class="jw-drawer-subtitle">Update internal notes for this candidate</div>
+            </div>
+            <button type="button" class="jw-drawer-close editRecruiterNoteCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body rn-drawer-body d-none">
+            <input type="hidden" id="rn_app_id" value="{{ @$application->id }}">
+
+            {{-- Template selector — populated via AJAX on first open --}}
+            <div class="rn-section" id="rn-template-wrap" style="display:none;">
+              <label class="rn-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Select Template <span>(Optional — loads content into the note below)</span>
+              </label>
+              <select class="rn-select" id="rn_template_select">
+                <option value="">Select Note Template...</option>
+              </select>
+            </div>
+
+            {{-- Contenteditable editor — renders existing HTML notes correctly --}}
+            <div class="rn-section">
+              <label class="rn-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Internal Note
+              </label>
+              <div class="rn-editor" id="jw_recruiter_note_editor" contenteditable="true" data-placeholder="Add internal recruiter notes about this candidate...">{!! @$application->recruiter_note !!}</div>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="rn-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editRecruiterNoteCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-recruiter-note-drawer --}}
 
     </div>{{-- /#personal_details tab-pane --}}
 
@@ -4934,6 +5003,90 @@ setTimeout(() => {
 
 
     
+
+    // ===== DRAWER 4: Recruiter Notes =====
+    var rnTemplates = {};
+    var rnTemplatesLoaded = false;
+
+    $(document).on('click', '.editRecruiterNote', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('.rn-drawer-body').removeClass('d-none');
+
+        if (!rnTemplatesLoaded) {
+            $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
+                if (res.status === 'success' && res.data && res.data.length > 0) {
+                    var opts = '<option value="">Select Note Template...</option>';
+                    $.each(res.data, function(i, tpl) {
+                        rnTemplates[tpl.id] = tpl;
+                        opts += '<option value="' + tpl.id + '">' + $('<div>').text(tpl.title).html() + '</option>';
+                    });
+                    $('#rn_template_select').html(opts);
+                    $('#rn-template-wrap').show();
+                    rnTemplatesLoaded = true;
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.editRecruiterNoteCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('.rn-drawer-body').addClass('d-none');
+    });
+
+    $(document).on('change', '#rn_template_select', function() {
+        var id = $(this).val();
+        if (id && rnTemplates[id]) {
+            $('#jw_recruiter_note_editor').html(rnTemplates[id].content);
+        }
+    });
+
+    $(document).on('click', '#rn-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var note  = $('#jw_recruiter_note_editor').html();
+        var appId = $('#rn_app_id').val();
+
+        $.ajax({
+            url     : '{{ route('service_company.job-applications.recruiterNoteUpdate') }}?_token={{ csrf_token() }}',
+            type    : 'POST',
+            data    : { appId: appId, recruiter_note: note },
+            success : function(response) {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                if (response.status) {
+                    if (note && note.trim()) {
+                        if ($('.po-recruiter-note-text').length) {
+                            $('.po-recruiter-note-text').html(note).show();
+                        } else {
+                            $('.po-no-notes').replaceWith('<div class="po-recruiter-note-text" style="font-size:12px;line-height:1.7;color:#475569;">' + note + '</div>');
+                        }
+                        $('.po-no-notes').hide();
+                    } else {
+                        $('.po-recruiter-note-text').hide();
+                        if ($('.po-no-notes').length === 0) {
+                            $('.po-recruiter-note-text').after('<p class="po-no-notes" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter notes added yet.</p>');
+                        }
+                        $('.po-no-notes').show();
+                    }
+                    $('.rn-drawer-body').addClass('d-none');
+                    Swal.fire('Success', 'Recruiter notes updated successfully!', 'success');
+                }
+            },
+            error   : function() {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                Swal.fire('Warning', 'Something went wrong. Please try again.', 'warning');
+            }
+        });
+    });
+
+
 </script> 
 <!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
 <div id="kt_send_mail_sd_toggle" style="display:none;"></div>
