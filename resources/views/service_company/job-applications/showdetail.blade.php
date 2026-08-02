@@ -6193,7 +6193,7 @@ function toBase64(url){
 function matchRingSvg(matchNum, mc){
   var r=32, circ=+(2*Math.PI*r).toFixed(2);
   var off=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
-  var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'—';
+  var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'N/A';
   return '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">'+
     '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="6"/>'+
     (matchNum>0?'<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="6" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/>':'')+
@@ -6261,7 +6261,7 @@ function buildDef(d){
   var metBody=[[{text:'MATCH ANALYSIS',colSpan:2,bold:true,fontSize:8,color:'#fff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]},{}]];
   d.metrics.forEach(function(m){
     var vc=m.green?'#16a34a':m.red?'#dc2626':'#0f172a';
-    var vStack=[{text:m.val||'—',bold:true,color:vc,alignment:'right',fontSize:9.5}];
+    var vStack=[{text:m.val||'-',bold:true,color:vc,alignment:'right',fontSize:9.5}];
     if(m.sub) vStack.push({text:m.sub,fontSize:8,color:'#94a3b8',alignment:'right',margin:[0,1,0,0]});
     metBody.push([{text:m.lbl||'',fontSize:9.5,color:'#64748b',margin:[12,7,6,7]},{stack:vStack,margin:[4,7,12,7]}]);
   });
@@ -6274,7 +6274,7 @@ function buildDef(d){
       for(var gj=gi;gj<Math.min(gi+2,d.pipeItems.length);gj++){
         gRow.push({stack:[
           {text:(d.pipeItems[gj].lbl||'').toUpperCase(),fontSize:7.5,bold:true,color:'#64748b',characterSpacing:0.4,alignment:'center',margin:[0,0,0,4]},
-          {text:d.pipeItems[gj].val||'—',fontSize:12,bold:true,color:PIPE_TC[gj]||'#334155',alignment:'center'}
+          {text:d.pipeItems[gj].val||'-',fontSize:12,bold:true,color:PIPE_TC[gj]||'#334155',alignment:'center'}
         ],fillColor:PIPE_BG[gj]||'#f8fafc',margin:[6,9,6,9]});
       }
       if(d.pipeItems.length%2!==0&&gi===d.pipeItems.length-1) gRow.push({text:'',fillColor:'#f8fafc'});
@@ -6303,9 +6303,9 @@ function buildDef(d){
 
   /* Badges row */
   var badgeSpans=[];
-  if(d.hasRN) badgeSpans.push({text:' ✓ Prescreened by Senior Recruiter ',bold:true,fontSize:9,color:'#db2777',background:'#fce7f3'},{text:'  '});
-  if(d.isImmediate) badgeSpans.push({text:' ● Immediate Joiner ',bold:true,fontSize:9,color:'#16a34a',background:'#dcfce7'},{text:'  '});
-  badgeSpans.push({text:' ✓ JERO Verified ',bold:true,fontSize:9,color:'#1d4ed8',background:'#dbeafe'});
+  if(d.hasRN) badgeSpans.push({text:' Prescreened by Senior Recruiter ',bold:true,fontSize:9,color:'#db2777',background:'#fce7f3'},{text:'  '});
+  if(d.isImmediate) badgeSpans.push({text:' Immediate Joiner ',bold:true,fontSize:9,color:'#16a34a',background:'#dcfce7'},{text:'  '});
+  badgeSpans.push({text:' JERO Verified ',bold:true,fontSize:9,color:'#1d4ed8',background:'#dbeafe'});
 
   /* Recruiter Notes card */
   var rnCard=null;
@@ -6406,8 +6406,8 @@ function buildDef(d){
     },
     footer:function(cp,pc){
       return {columns:[
-        {text:'🔒 CONFIDENTIAL — For Internal Recruiter Use Only • '+(d.companyName||'Company')+' via JERO Hiring Platform',fontSize:7.5,color:'#94a3b8',margin:[32,10,0,0]},
-        {text:'Page '+cp+' of '+pc+' • Generated: '+d.dateStr,fontSize:7.5,color:'#94a3b8',alignment:'right',margin:[0,10,32,0]}
+        {text:'CONFIDENTIAL - For Internal Recruiter Use Only | '+(d.companyName||'Company')+' via JERO Hiring Platform',fontSize:7.5,color:'#94a3b8',margin:[32,10,0,0]},
+        {text:'Page '+cp+' of '+pc+' | Generated: '+d.dateStr,fontSize:7.5,color:'#94a3b8',alignment:'right',margin:[0,10,32,0]}
       ]};
     }
   };
@@ -6432,8 +6432,8 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   /* DOM scraping */
   var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
 
-  var name=g('.cdr-name')||'—';
-  var role=g('.cdr-role')||'—';
+  var name=g('.cdr-name')||'Unknown';
+  var role=g('.cdr-role')||'Candidate';
   var initials=g('.cdr-avatar-sq')||'??';
   var matchText=(wrap.querySelector('.cdr-match-pct-badge')||{textContent:''}).textContent.trim();
   var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
@@ -6527,7 +6527,11 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     });
 
     /* Direct download — no Windows Print dialog */
-    pdfMake.createPdf(def).download(filename);
+    try {
+      pdfMake.createPdf(def).download(filename);
+    } catch(pdfErr){
+      throw new Error('PDF render error: '+(pdfErr&&pdfErr.message||String(pdfErr)));
+    }
 
   }).catch(function(err){
     console.error('[CDR-PDF]', err);
