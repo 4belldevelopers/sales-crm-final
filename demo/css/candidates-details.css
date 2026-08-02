@@ -2923,6 +2923,7 @@
     inset: 0;
     z-index: 1055;
     pointer-events: none;
+    overflow: hidden;
   }
   /* :has() detects when the inner body's d-none is removed — opens the drawer */
   .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) {
