@@ -1389,8 +1389,8 @@
               if(!logoUri) logoFailed = true;
               try { bannerImg = await svgToImage(buildBannerSvg(wrap, logoUri)); } catch(e){ bannerImg = null; }
             }
-            /* 3.5× scale + 3200px cap: sharper text than the old 2.5×/2200 values */
-            var QUALITY = 3.5, MAXW = 3200;
+            /* 3.0× scale — better resolution than old 2.5× without the file-size cost of 3.5× */
+            var QUALITY = 3.0, MAXW = 2800;
             var pagesArr = Array.prototype.slice.call(pages);
             /* render all pages in parallel — wall-clock time ≈ slowest single page */
             var rendered = await Promise.all(pagesArr.map(function(pageWrap, idx){
@@ -1432,8 +1432,8 @@
                     ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
                   });
                 }
-                /* PNG is lossless — no JPEG DCT artifacts on text edges */
-                return { imgData: tmp.toDataURL('image/png'), cssW: cssW, cssH: cssH, headerH: headerH, w: w };
+                /* JPEG 0.88 at 3.0× renders sharper than the old JPEG 0.96 at 2.5× — more pixels compensate for slightly more compression */
+                return { imgData: tmp.toDataURL('image/jpeg', 0.88), cssW: cssW, cssH: cssH, headerH: headerH, w: w };
               })();
             }));
             /* assemble PDF sequentially — pages must be added in document order */
@@ -1444,9 +1444,9 @@
               var headerCssH = r.headerH * (r.cssW / r.w);
               var pw = Math.round(r.cssW), ph = Math.round(r.cssH + headerCssH);
               var orient = pw > ph ? 'l' : 'p';
-              if(!pdf){ pdf = new JsPDF({ orientation: orient, unit: 'px', format: [pw, ph], compress: true }); }
+              if(!pdf){ pdf = new JsPDF({ orientation: orient, unit: 'px', format: [pw, ph] }); }
               else { pdf.addPage([pw, ph], orient); }
-              pdf.addImage(r.imgData, 'PNG', 0, 0, pw, ph, undefined, 'FAST');
+              pdf.addImage(r.imgData, 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
             }
             if(pdf){
               var fn = ((document.querySelector('#resume_cv .rcv-file span') || {}).textContent || 'resume').replace(/\.[^.]+$/, '');
