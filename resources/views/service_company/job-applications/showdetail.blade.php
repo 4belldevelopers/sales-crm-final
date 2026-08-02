@@ -851,7 +851,7 @@
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Education</div>
-        <div class="cdr-pipeline-value" title="{{ ucwords(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->qualification_name), 10, '…') ?: '—' }}</div>
+        <div class="cdr-pipeline-value" title="{{ strtoupper(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(strtoupper(@$application->qualification_name), 10, '…') ?: '—' }}</div>
       </div>
     </div>
 
@@ -5078,7 +5078,7 @@ setTimeout(() => {
   data-location="{{ $rsLoc }}"
   data-experience="{{ $rsExpStr }}"
   data-notice="{{ $rsNotice }}"
-  data-education="{{ ucwords(@$application->qualification_name) }}"
+  data-education="{{ strtoupper(@$application->qualification_name) }}"
   data-work-mode="{{ $rsWorkMode }}"
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
