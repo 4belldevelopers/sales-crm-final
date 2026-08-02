@@ -225,19 +225,19 @@
                             }
                         }
 
-                        // Match % badge — color reflects the numeric match score:
-                        // >90 green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
+                        // Match % badge — solid-fill style matching the avatar badge on the detail page.
+                        // Thresholds: 0=neutral, <50=red, 50-90=amber, >90=green (same as cdr-mpb-* classes).
                         $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
                         if ($matchNum == 0) {
-                            $matchBg = '#f1f5f9'; $matchColor = '#64748b';
+                            $matchBg = '#64748b';
                         } elseif ($matchNum < 50) {
-                            $matchBg = '#fee2e2'; $matchColor = '#dc2626';
+                            $matchBg = '#dc2626';
                         } elseif ($matchNum <= 90) {
-                            $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                            $matchBg = '#d97706';
                         } else {
-                            $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                            $matchBg = '#16a34a';
                         }
-                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:#fff;font-weight:700;">Match '.@$percentage.'</span>';
 
                         if (empty($limit)) {
                             foreach ($skillArr as $sval) {
