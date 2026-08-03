@@ -1,4 +1,4 @@
-﻿@php 
+@php 
    use App\Helper\GeneralMethod;
    $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -696,7 +696,8 @@
             }
           })();
           function hdrDownloadWithLogoApp(){
-            document.getElementById('hdrDlMenuApp').classList.remove('open');
+            var m=document.getElementById('hdrDlMenuApp');
+            if(m) m.classList.remove('open');
             var tries=0;
             var poll=setInterval(function(){
               if(document.querySelectorAll('#rcvPages .rcv-page').length){
@@ -6426,8 +6427,7 @@ function buildDef(d){
 }
 
 window.cdrExportProfilePDF = function(triggerEl, fromRdc){
-  var wrap=document.getElementById('kt_activitiesApplication');
-  if(!wrap) return;
+  var wrap=document.getElementById('kt_activitiesApplication') || document.querySelector('.page-wrapper') || document.body;
 
   /* Close any open menus */
   var hdrMenu=document.getElementById('hdrDlMenuApp');
@@ -6441,25 +6441,26 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var origHtml=triggerEl?triggerEl.innerHTML:'';
   if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Generating PDF…</span>'; }
 
-  /* DOM scraping */
-  var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
+  /* DOM scraping with document-level fallbacks */
+  var g=function(sel){ var el=wrap.querySelector(sel) || document.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
 
   var name=g('.cdr-name')||'Unknown';
   var role=g('.cdr-role')||'Candidate';
   var initials=g('.cdr-avatar-sq')||'??';
-  var matchText=(wrap.querySelector('.cdr-match-pct-badge')||{textContent:''}).textContent.trim();
-  var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
+  var matchEl=wrap.querySelector('.cdr-match-pct-badge') || document.querySelector('.cdr-match-pct-badge');
+  var matchText=(matchEl||{textContent:''}).textContent.trim();
+  var isImmediate=!!(wrap.querySelector('.cdr-meta-item.cmi-green') || document.querySelector('.cdr-meta-item.cmi-green'));
 
   var metaPlain=[];
-  wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){ var t=(el.textContent||'').trim().replace(/\s+/g,' '); if(t) metaPlain.push(t); });
+  (wrap.querySelectorAll('.cdr-meta-item').length ? wrap.querySelectorAll('.cdr-meta-item') : document.querySelectorAll('.cdr-meta-item')).forEach(function(el){ var t=(el.textContent||'').trim().replace(/\s+/g,' '); if(t) metaPlain.push(t); });
 
   var skillItems=[];
-  wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
+  (wrap.querySelectorAll('.cdr-skill-tag').length ? wrap.querySelectorAll('.cdr-skill-tag') : document.querySelectorAll('.cdr-skill-tag')).forEach(function(el){
     skillItems.push({label:el.textContent.trim(),isMatch:el.classList.contains('cdr-skill-match'),isMore:el.classList.contains('cdr-skill-more')});
   });
 
   var metrics=[];
-  wrap.querySelectorAll('.cdr-metric-row').forEach(function(row){
+  (wrap.querySelectorAll('.cdr-metric-row').length ? wrap.querySelectorAll('.cdr-metric-row') : document.querySelectorAll('.cdr-metric-row')).forEach(function(row){
     var lbl=(row.querySelector('.cdr-metric-label')||{}).textContent||'';
     var valEl=row.querySelector('.cdr-metric-val'), fracEl=row.querySelector('.cdr-metric-frac');
     var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
@@ -6469,35 +6470,35 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   });
 
   var pipeItems=[];
-  wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(c){
+  (wrap.querySelectorAll('.cdr-pipeline-card').length ? wrap.querySelectorAll('.cdr-pipeline-card') : document.querySelectorAll('.cdr-pipeline-card')).forEach(function(c){
     var l=(c.querySelector('.cdr-pipeline-label')||{}).textContent||'';
     var v=(c.querySelector('.cdr-pipeline-value')||{}).textContent||'';
     pipeItems.push({lbl:l.trim(),val:v.trim().replace(/\s+/g,' ')});
   });
 
   var skillsTable={headers:[],rows:[]};
-  var skEls=wrap.querySelectorAll('#personal_details .skills-row');
+  var skEls=wrap.querySelectorAll('#personal_details .skills-row').length ? wrap.querySelectorAll('#personal_details .skills-row') : document.querySelectorAll('#personal_details .skills-row');
   if(skEls.length){
-    var thEl=wrap.querySelector('#personal_details .skills-thead');
+    var thEl=wrap.querySelector('#personal_details .skills-thead') || document.querySelector('#personal_details .skills-thead');
     if(thEl) thEl.querySelectorAll('div').forEach(function(c){ var t=(c.textContent||'').trim(); if(t) skillsTable.headers.push(t); });
     skEls.forEach(function(row){ var cells=[]; row.querySelectorAll('div').forEach(function(c){ cells.push((c.textContent||'').trim()); }); if(cells.length) skillsTable.rows.push(cells); });
   }
 
-  var sumEl=wrap.querySelector('.summary-text');
+  var sumEl=wrap.querySelector('.summary-text') || document.querySelector('.summary-text');
   var summary=sumEl?(sumEl.textContent||'').trim():'';
   if(!summary) summary='No professional summary available.';
   /* Cap summary to 2000 chars — pdfkit text layout is O(n^2) on a single giant
      paragraph and stalls getBlob() well past 45s on bloated content. */
   if(summary.length>2000) summary=summary.substring(0,2000).replace(/\s+\S*$/,'') + '…';
 
-  var rnEl=wrap.querySelector('.po-recruiter-note-text');
+  var rnEl=wrap.querySelector('.po-recruiter-note-text') || document.querySelector('.po-recruiter-note-text');
   var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
   var hasRN=!!rnText;
   /* Same cap for recruiter notes — same O(n^2) failure mode. */
   if(rnText.length>1500) rnText=rnText.substring(0,1500).replace(/\s+\S*$/,'') + '…';
 
   var companyName='Company', recruiterName='';
-  wrap.querySelectorAll('.ownership-row').forEach(function(row){
+  (wrap.querySelectorAll('.ownership-row').length ? wrap.querySelectorAll('.ownership-row') : document.querySelectorAll('.ownership-row')).forEach(function(row){
     var lbl=(row.querySelector('.own-label')||{}).textContent||'';
     var val=(row.querySelector('.own-value')||{}).textContent||'';
     lbl=lbl.trim(); val=val.trim();
