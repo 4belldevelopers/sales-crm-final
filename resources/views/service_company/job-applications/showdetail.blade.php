@@ -6194,8 +6194,10 @@ function tryList(urls, i, verify){
 }
 
 /* Load pdfmake library then vfs_fonts (Roboto), sequentially. Cached after first call. */
+var _pdfReady=null;
 function ensurePdfMake(){
-  if(window._pdfReady) return window._pdfReady;
+  if(_pdfReady && typeof pdfMake!=='undefined' && pdfMake.vfs && pdfMake.vfs['Roboto-Regular.ttf']) return _pdfReady;
+  _pdfReady=null;
   var CORE=[
     '/js/pdfmake.min.js',
     'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js',
@@ -6204,32 +6206,18 @@ function ensurePdfMake(){
   ];
   var VFS=[
     '/js/vfs_fonts.min.js',
-    '/js/vfs_fonts.js',
     'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js',
     'https://unpkg.com/pdfmake@0.2.7/build/vfs_fonts.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js'
   ];
-  window._pdfReady=tryList(CORE, 0, function(){ return typeof pdfMake!=='undefined'; })
+  _pdfReady=tryList(CORE, 0, function(){ return typeof pdfMake!=='undefined'; })
     .then(function(){
-      return tryList(VFS, 0, function(){ return !!(pdfMake.vfs && Object.keys(pdfMake.vfs).length > 0); });
+      return tryList(VFS, 0, function(){ return !!(pdfMake.vfs&&pdfMake.vfs['Roboto-Regular.ttf']); });
     })
     .then(function(){
-      var keys = Object.keys(pdfMake.vfs || {});
-      var regFont = (pdfMake.vfs && pdfMake.vfs['Roboto-Regular.ttf']) ? 'Roboto-Regular.ttf' : keys[0];
-      var medFont = (pdfMake.vfs && pdfMake.vfs['Roboto-Medium.ttf']) ? 'Roboto-Medium.ttf' : ((pdfMake.vfs && pdfMake.vfs['Roboto-Bold.ttf']) ? 'Roboto-Bold.ttf' : regFont);
-      var italFont = (pdfMake.vfs && pdfMake.vfs['Roboto-Italic.ttf']) ? 'Roboto-Italic.ttf' : regFont;
-      var boldItalFont = (pdfMake.vfs && pdfMake.vfs['Roboto-MediumItalic.ttf']) ? 'Roboto-MediumItalic.ttf' : regFont;
-
-      pdfMake.fonts = {
-        Roboto: {
-          normal: regFont,
-          bold: medFont,
-          italics: italFont,
-          bolditalics: boldItalFont
-        }
-      };
+      pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
     });
-  return window._pdfReady;
+  return _pdfReady;
 }
 
 /* Convert image URL or Data URI to base64 Data URI for pdfMake embedding */
@@ -6240,15 +6228,9 @@ function getLogoDataUri(rawUrl){
   if(rawUrl.indexOf('data:image/') === 0) return Promise.resolve(rawUrl);
 
   return new Promise(function(resolve){
-    var settled = false;
-    var timer = setTimeout(function(){
-      if(!settled){ settled = true; resolve(null); }
-    }, 3000);
-
     var img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = function(){
-      if(settled) return;
       try {
         var canvas = document.createElement('canvas');
         canvas.width = img.naturalWidth || img.width;
@@ -6256,16 +6238,22 @@ function getLogoDataUri(rawUrl){
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         var dataUri = canvas.toDataURL('image/png');
-        settled = true; clearTimeout(timer);
         resolve(dataUri);
       } catch(e) {
-        settled = true; clearTimeout(timer);
         resolve(null);
       }
     };
     img.onerror = function(){
-      if(settled) return;
-      settled = true; clearTimeout(timer); resolve(null);
+      fetch(rawUrl, {cache:'force-cache'})
+        .then(function(r){ return r.ok ? r.blob() : null; })
+        .then(function(blob){
+          if(!blob) { resolve(null); return; }
+          var reader = new FileReader();
+          reader.onloadend = function(){ resolve(reader.result); };
+          reader.onerror = function(){ resolve(null); };
+          reader.readAsDataURL(blob);
+        })
+        .catch(function(){ resolve(null); });
     };
     img.src = rawUrl;
   });
@@ -6351,7 +6339,7 @@ function roundedCard(stackContent, bgFill, borderStroke, mb) {
       widths: ['*'],
       body: [[{
         stack: stackContent,
-        margin: [8, 6, 8, 6],
+        margin: [10, 10, 10, 10],
         fillColor: bg
       }]]
     },
@@ -6361,8 +6349,7 @@ function roundedCard(stackContent, bgFill, borderStroke, mb) {
       hLineColor: function(){ return stroke; },
       vLineColor: function(){ return stroke; }
     },
-    unbreakable: true,
-    margin: [0, 0, 0, mb != null ? mb : 8]
+    margin: [0, 0, 0, mb != null ? mb : 12]
   };
 }
 
@@ -6386,7 +6373,7 @@ function buildDef(d){
       };
 
   /* Candidate avatar square */
-  var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials||'VE',bold:true,fontSize:18,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,14,0,0]}]]},layout:'noBorders'};
+  var avatarEl={table:{widths:[58],heights:[58],body:[[{text:d.initials||'VE',bold:true,fontSize:20,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,16,0,0]}]]},layout:'noBorders'};
 
   /* 1. HEADER SECTION */
   var headerCol = {
@@ -6396,19 +6383,19 @@ function buildDef(d){
           logoGraphic,
           {
             stack: [
-              {text:(d.companyName||'JERO AI').toUpperCase(),bold:true,fontSize:12,color:'#0f172a',characterSpacing:0.3},
+              {text:(d.companyName||'JERO AI').toUpperCase(),bold:true,fontSize:12.5,color:'#0f172a',characterSpacing:0.3},
               {text:'RECRUITMENT INTELLIGENCE',fontSize:5.5,bold:true,color:'#64748b',characterSpacing:1.1,margin:[0,1,0,0]}
             ],
             width: '*'
           }
         ],
         columnGap: 8,
-        width: 160
+        width: 165
       },
-      {canvas:[{type:'line',x1:0,y1:2,x2:0,y2:30,lineWidth:1,lineColor:'#cbd5e1'}],width:14},
+      {canvas:[{type:'line',x1:0,y1:2,x2:0,y2:32,lineWidth:1,lineColor:'#cbd5e1'}],width:16},
       {
         stack: [
-          {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:12.5,color:'#0f172a',characterSpacing:0.3},
+          {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:13,color:'#0f172a',characterSpacing:0.3},
           {text:'AI Powered   |   Intelligent   |   Data Driven',fontSize:7.5,color:'#64748b',margin:[0,2,0,0]}
         ],
         width: '*'
@@ -6420,22 +6407,22 @@ function buildDef(d){
               body: [[
                 {
                   columns: [
-                    {svg: SVG_ICONS.shield, width: 10, margin: [0, 1, 4, 0]},
-                    {text:'CONFIDENTIAL',bold:true,fontSize:7,color:'#166534'}
+                    {svg: SVG_ICONS.shield, width: 11, margin: [0, 1, 4, 0]},
+                    {text:'CONFIDENTIAL',bold:true,fontSize:7.5,color:'#166534'}
                   ],
-                  fillColor: '#dcfce7', margin: [6, 3, 6, 3]
+                  fillColor: '#dcfce7', margin: [8, 4, 8, 4]
                 }
               ]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'right'
           },
-          {text:'For Internal Hiring Use Only',fontSize:6,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+          {text:'For Internal Hiring Use Only',fontSize:6.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
         ],
-        width: 120
+        width: 125
       }
     ],
-    margin: [0, 0, 0, 8]
+    margin: [0, 0, 0, 10]
   };
 
   /* Metadata Strip with Pure Vector SVG Icons */
@@ -6443,17 +6430,17 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {stack:[iconLabelRow(SVG_ICONS.doc, {text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+(d.dateStr||'04Aug2026').replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[6,4,6,4]},
-        {stack:[iconLabelRow(SVG_ICONS.cal, {text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr||'04 Aug 2026',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[6,4,6,4]},
-        {stack:[iconLabelRow(SVG_ICONS.brain, {text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[6,4,6,4]},
-        {stack:[iconLabelRow(SVG_ICONS.user, {text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[6,4,6,4]}
+        {stack:[iconLabelRow(SVG_ICONS.doc, {text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+(d.dateStr||'04Aug2026').replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.cal, {text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr||'04 Aug 2026',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.brain, {text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.user, {text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]}
       ]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(i){return 0.5;},
       hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
     },
-    margin: [0, 0, 0, 8]
+    margin: [0, 0, 0, 12]
   };
 
   /* 2. HERO SECTION (Candidate Hero Card) */
@@ -6465,10 +6452,10 @@ function buildDef(d){
           body: [[
             {
               columns: [
-                {svg: SVG_ICONS.bolt, width: 9, margin: [0, 1, 2, 0]},
-                {text:'Immediate Joiner',bold:true,fontSize:7,color:'#166534'}
+                {svg: SVG_ICONS.bolt, width: 10, margin: [0, 1, 3, 0]},
+                {text:'Immediate Joiner',bold:true,fontSize:7.5,color:'#166534'}
               ],
-              fillColor:'#f0fdf4',margin:[3,2,3,2]
+              fillColor:'#f0fdf4',margin:[4,3,4,3]
             }
           ]]
         },
@@ -6476,19 +6463,19 @@ function buildDef(d){
           hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},
           hLineColor:function(){return '#bbf7d0';},vLineColor:function(){return '#bbf7d0';}
         },
-        margin: [0, 4, 0, 0]
+        margin: [0, 6, 0, 0]
       } : {text:''}
     ],
-    width: 66
+    width: 72
   };
 
   var candidateDetails = {
     stack: [
-      {columns:[{text:(d.name||'Khagendra Mohanta'),bold:true,fontSize:16,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:13,margin:[4,2,0,0]}]},
-      {text:d.role||'Java Developer',bold:true,fontSize:10.5,color:'#2563eb',margin:[0,1,0,4]},
-      {stack:[iconLabelRow(SVG_ICONS.briefcase, (d.totalExp||'6.2 Years of Experience'), 10, '#334155', 8)], margin:[0,0,0,2]},
-      {stack:[iconLabelRow(SVG_ICONS.company, (d.companyName||'4bell Technology'), 10, '#334155', 8)], margin:[0,0,0,2]},
-      {stack:[iconLabelRow(SVG_ICONS.location, (d.location||'Hyderabad, Telangana, India'), 10, '#334155', 8)], margin:[0,0,0,0]}
+      {columns:[{text:(d.name||'Khagendra Mohanta'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
+      {text:d.role||'Java Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
+      {stack:[iconLabelRow(SVG_ICONS.briefcase, (d.totalExp||'6.2 Years of Experience'), 11, '#334155', 8.5)], margin:[0,0,0,3]},
+      {stack:[iconLabelRow(SVG_ICONS.company, (d.companyName||'4bell Technology'), 11, '#334155', 8.5)], margin:[0,0,0,3]},
+      {stack:[iconLabelRow(SVG_ICONS.location, (d.location||'Hyderabad, Telangana, India'), 11, '#334155', 8.5)], margin:[0,0,0,0]}
     ],
     width: '*'
   };
@@ -6496,10 +6483,10 @@ function buildDef(d){
   /* 100% Reliable Score Circle Box */
   var scoreCircle = {
     table: {
-      widths: [48],
-      heights: [48],
+      widths: [52],
+      heights: [52],
       body: [[
-        { text: (Math.round(matchNum * 10) / 10) + '%', bold: true, fontSize: 15, color: mc, alignment: 'center', fillColor: '#ffffff', margin: [0, 13, 0, 0] }
+        { text: (Math.round(matchNum * 10) / 10) + '%', bold: true, fontSize: 16, color: mc, alignment: 'center', fillColor: '#ffffff', margin: [0, 15, 0, 0] }
       ]]
     },
     layout: {
@@ -6509,66 +6496,66 @@ function buildDef(d){
       vLineColor: function(){ return mc; }
     },
     alignment: 'center',
-    margin: [0, 2, 0, 4]
+    margin: [0, 4, 0, 6]
   };
 
   var scoreBlock = {
     table: {
-      widths: [105],
+      widths: [110],
       body: [[{
         stack: [
-          {columns:[{text:'OVERALL MATCH',fontSize:6.5,bold:true,color:'#475569'},{svg:SVG_ICONS.info,width:9,margin:[2,0,0,0]}],alignment:'center',margin:[0,0,0,2]},
+          {columns:[{text:'OVERALL MATCH',fontSize:7,bold:true,color:'#475569'},{svg:SVG_ICONS.info,width:10,margin:[3,0,0,0]}],alignment:'center',margin:[0,0,0,4]},
           scoreCircle,
-          {svg:SVG_ICONS.goldStars,width:50,alignment:'center',margin:[0,0,0,2]},
-          {text:mLabel,fontSize:7.5,bold:true,color:mc,alignment:'center',margin:[0,0,0,2]},
+          {svg:SVG_ICONS.goldStars,width:54,alignment:'center',margin:[0,0,0,3]},
+          {text:mLabel,fontSize:8,bold:true,color:mc,alignment:'center',margin:[0,0,0,4]},
           {
             table: {
-              body: [[{text:'Priority: HIGH',fontSize:7,bold:true,color:'#1d4ed8',fillColor:'#eff6ff',margin:[4,1,4,1]}]]
+              body: [[{text:'Priority: HIGH',fontSize:7.5,bold:true,color:'#1d4ed8',fillColor:'#eff6ff',margin:[6,2,6,2]}]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'center'
           }
         ],
-        fillColor:'#ffffff',margin:[4,4,4,4]
+        fillColor:'#ffffff',margin:[6,6,6,6]
       }]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(){return 0.5;},
       hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
     },
-    width: 115
+    width: 122
   };
 
   var heroCard = roundedCard([
-    {columns: [avatarBlock, candidateDetails, scoreBlock], columnGap: 10}
-  ], '#ffffff', '#e2e8f0', 8);
+    {columns: [avatarBlock, candidateDetails, scoreBlock], columnGap: 12}
+  ], '#ffffff', '#e2e8f0', 12);
 
   /* 3. QUICK INFO STRIP */
   var quickInfoStrip = {
     table: {
       widths: ['*', '*', '*', '*', '*'],
       body: [[
-        {stack:[iconLabelRow(SVG_ICONS.user, 'Preferred Role', 10, '#64748b', 6.5), {text:d.preferredRole||d.role||'Java Developer',bold:true,fontSize:8,color:'#0f172a',margin:[0,2,0,0]}],fillColor:'#ffffff',margin:[4,5,4,5]},
-        {stack:[iconLabelRow(SVG_ICONS.grad, 'Highest Education', 10, '#64748b', 6.5), {text:d.education||'B.Tech (CS)',bold:true,fontSize:8,color:'#0f172a',margin:[0,2,0,0]}],fillColor:'#ffffff',margin:[4,5,4,5]},
-        {stack:[iconLabelRow(SVG_ICONS.clock, 'Notice Period', 10, '#64748b', 6.5), {text:d.noticePeriod||'Immediate',bold:true,fontSize:8,color:'#0f172a',margin:[0,2,0,0]}],fillColor:'#ffffff',margin:[4,5,4,5]},
-        {stack:[iconLabelRow(SVG_ICONS.location, 'Preferred Location', 10, '#64748b', 6.5), {text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8,color:'#0f172a',margin:[0,2,0,0]}],fillColor:'#ffffff',margin:[4,5,4,5]},
-        {stack:[iconLabelRow(SVG_ICONS.laptop, 'Preferred Work Mode', 10, '#64748b', 6.5), {text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8,color:'#0f172a',margin:[0,2,0,0]}],fillColor:'#ffffff',margin:[4,5,4,5]}
+        {stack:[iconLabelRow(SVG_ICONS.user, 'Preferred Role', 11, '#64748b', 7), {text:d.preferredRole||d.role||'Java Developer',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.grad, 'Highest Education', 11, '#64748b', 7), {text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.clock, 'Notice Period', 11, '#64748b', 7), {text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.location, 'Preferred Location', 11, '#64748b', 7), {text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.laptop, 'Preferred Work Mode', 11, '#64748b', 7), {text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
       ]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(i){return 0.5;},
       hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
     },
-    margin: [0, 0, 0, 8]
+    margin: [0, 0, 0, 12]
   };
 
   /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - CORRECT ACCURATE COLUMN MAPPING) */
   var skillRows = [
     [
-      {text:'Skill',bold:true,fontSize:7.5,color:'#2563eb'},
-      {text:'Candidate Experience',bold:true,fontSize:7.5,color:'#2563eb'},
-      {text:'Rating',bold:true,fontSize:7.5,color:'#2563eb'},
-      {text:'Status',bold:true,fontSize:7.5,color:'#2563eb',alignment:'center'}
+      {text:'Skill',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Candidate Experience',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Rating',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Status',bold:true,fontSize:8,color:'#2563eb',alignment:'center'}
     ]
   ];
 
@@ -6576,8 +6563,9 @@ function buildDef(d){
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
     var name = (r[0]||'').toString().toLowerCase();
     return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
-  }).slice(0, 8).map(function(r){
+  }).map(function(r){
     var skillName = r[0] || 'Skill';
+    /* Accurate column mapping: Duration is in r[1] or r[2], Rating is in r[2] or r[3], Status is in r[3] */
     var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : (r[2] && r[2].indexOf('Year') !== -1 ? r[2] : '1.0 Years');
     var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : '★★★★☆');
     var statusVal = (r[3] === '✔' || r[3] === '✖' || r[3] === '⚠') ? r[3] : '✔';
@@ -6594,41 +6582,37 @@ function buildDef(d){
 
   rawSkills.forEach(function(s){
     skillRows.push([
-      {text:s[0],fontSize:8,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:8,color:'#334155'},
-      {text:s[2],fontSize:8,color:'#d97706',bold:true},
-      {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:10,alignment:'center'}],alignment:'center'}
+      {text:s[0],fontSize:8.5,bold:true,color:'#0f172a'},
+      {text:s[1],fontSize:8.5,color:'#334155'},
+      {text:s[2],fontSize:8.5,color:'#d97706',bold:true},
+      {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,alignment:'center'}],alignment:'center'}
     ]);
   });
 
   var skillsIntelligenceCard = roundedCard([
-    {stack:[iconLabelRow(SVG_ICONS.note, 'SKILLS INTELLIGENCE', 11, '#0f172a', 8.5, true)], margin:[0,0,0,6]},
+    {stack:[iconLabelRow(SVG_ICONS.note, 'SKILLS INTELLIGENCE', 12, '#0f172a', 9, true)], margin:[0,0,0,8]},
     {
       table: {widths:[160, 120, 120, '*'],body:skillRows},
       layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
     }
-  ], '#ffffff', '#e2e8f0', 8);
+  ], '#ffffff', '#e2e8f0', 12);
 
   /* 5. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
-  var summaryText = d.summary || 'Khagendra Mohanta is an experienced Java Developer with strong expertise in enterprise web applications, algorithmic testing, and financial trading domain logic. Demonstrates clean code principles and solid analytical skills.';
-  if(summaryText.length > 350) summaryText = summaryText.substring(0, 350) + '…';
-
+  var summaryText = d.summary || 'Khagendra Mohanta is a Java Developer with experience building high-performance enterprise applications, automated testing suites, and financial trading domain logic.\n\nHe demonstrates solid analytical capabilities, clean code practices, and strong proficiency in core Java algorithms and market routing protocols.\n\nSuitable for Java Developer, Automation Engineer, and Backend Systems Lead roles.';
   var summaryCard = roundedCard([
-    {stack:[iconLabelRow(SVG_ICONS.bulb, 'PROFESSIONAL SUMMARY', 11, '#0f172a', 8, true)], margin:[0,0,0,4]},
-    {text:summaryText,fontSize:7.5,color:'#334155',lineHeight:1.35}
+    {stack:[iconLabelRow(SVG_ICONS.bulb, 'PROFESSIONAL SUMMARY', 12, '#0f172a', 8.5, true)], margin:[0,0,0,6]},
+    {text:summaryText,fontSize:8,color:'#334155',lineHeight:1.45}
   ], '#ffffff', '#e2e8f0', 0);
 
-  var rnContent = d.rnText || 'Experienced Java engineer with proven expertise in enterprise application development. Recommended to proceed for technical interview.';
-  if(rnContent.length > 250) rnContent = rnContent.substring(0, 250) + '…';
-
+  var rnContent = d.rnText || 'Experienced Java engineer with proven expertise in enterprise application development and algorithmic testing. Clean code style, immediate joiner, recommended to proceed for technical interview.';
   var recruiterCommentsCard = roundedCard([
-    {stack:[iconLabelRow(SVG_ICONS.chat, 'RECRUITER COMMENTS', 11, '#0f172a', 8, true)], margin:[0,0,0,4]},
-    {text:rnContent,fontSize:7.5,color:'#334155',lineHeight:1.35,margin:[0,0,0,8]},
-    {canvas:[{type:'line',x1:0,y1:0,x2:200,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,6]},
+    {stack:[iconLabelRow(SVG_ICONS.chat, 'RECRUITER COMMENTS', 12, '#0f172a', 8.5, true)], margin:[0,0,0,6]},
+    {text:rnContent,fontSize:8,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
+    {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
     {
       columns: [
-        {stack:[iconLabelRow(SVG_ICONS.user, [{text:(d.recruiterName||'Vibhanshu Jaiswal')+'\n',bold:true,fontSize:7.5,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:6.5,color:'#64748b'}], 10)]},
-        {stack:[iconLabelRow(SVG_ICONS.cal, d.dateStr||'04 Aug 2026', 10, '#64748b', 7)], alignment:'right'}
+        {stack:[iconLabelRow(SVG_ICONS.user, [{text:(d.recruiterName||'Vibhanshu Jaiswal')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}], 11)]},
+        {stack:[iconLabelRow(SVG_ICONS.cal, d.dateStr, 11, '#64748b', 7.5)], alignment:'right'}
       ]
     }
   ], '#ffffff', '#e2e8f0', 0);
@@ -6638,38 +6622,38 @@ function buildDef(d){
       {stack:[summaryCard],width:'*'},
       {stack:[recruiterCommentsCard],width:'*'}
     ],
-    columnGap: 10, margin: [0, 0, 0, 8]
+    columnGap: 12, margin: [0, 0, 0, 12]
   };
 
   /* 6. VERIFICATION STATUS CARD WITH ACCURATE ICON ALIGNMENT */
   var verificationCard = roundedCard([
-    {stack:[iconLabelRow(SVG_ICONS.shield, 'VERIFICATION STATUS', 11, '#2563eb', 8, true)], margin:[0,0,0,6]},
+    {stack:[iconLabelRow(SVG_ICONS.shield, 'VERIFICATION STATUS', 12, '#2563eb', 8.5, true)], margin:[0,0,0,8]},
     {
       columns: [
         {
           stack: [
-            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Resume Verified', 10, '#166534', 7.5)], margin:[0,1,0,2]},
-            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Email Verified', 10, '#166534', 7.5)], margin:[0,1,0,2]}
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Resume Verified', 11, '#166534', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Email Verified', 11, '#166534', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         },
         {
           stack: [
-            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Documents Verified (Pending)', 10, '#b45309', 7.5)], margin:[0,1,0,2]},
-            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Identity Verified (Pending)', 10, '#b45309', 7.5)], margin:[0,1,0,2]}
+            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Documents Verified (Pending)', 11, '#b45309', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Identity Verified (Pending)', 11, '#b45309', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         },
         {
           stack: [
-            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Education Verified', 10, '#166534', 7.5)], margin:[0,1,0,2]},
-            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Experience Verified', 10, '#166534', 7.5)], margin:[0,1,0,2]}
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Education Verified', 11, '#166534', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Experience Verified', 11, '#166534', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         }
       ]
     }
-  ], '#ffffff', '#e2e8f0', 8);
+  ], '#ffffff', '#e2e8f0', 12);
 
   /* 7. FINAL HIRING RECOMMENDATION */
   var finalRecommendationCard = roundedCard([
@@ -6679,27 +6663,27 @@ function buildDef(d){
           stack: [
             {
               columns: [
-                {svg: SVG_ICONS.greenCheck, width: 18, margin: [0, 1, 5, 0]},
+                {svg: SVG_ICONS.greenCheck, width: 20, margin: [0, 2, 6, 0]},
                 {
                   stack: [
-                    {svg: SVG_ICONS.goldStars, width: 50, margin: [0, 0, 0, 2]},
-                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:9,color:'#166534'}
+                    {svg: SVG_ICONS.goldStars, width: 54, margin: [0, 0, 0, 2]},
+                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:9.5,color:'#166534'}
                   ],
                   width: '*'
                 }
               ],
-              columnGap: 5
+              columnGap: 6
             }
           ],
           width: '*'
         },
-        {stack:[{text:'Overall Confidence',fontSize:6,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,1,0,0]}],width:80},
-        {stack:[{text:'Recommended Round',fontSize:6,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:9,color:'#166534',alignment:'center',margin:[0,1,0,0]}],width:90},
-        {stack:[{text:'Priority',fontSize:6,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:9,color:'#166534',alignment:'center',margin:[0,1,0,0]}],width:55},
-        {stack:[{text:'Expected Joining',fontSize:6,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:9,color:'#166534',alignment:'center',margin:[0,1,0,0]}],width:75}
+        {stack:[{text:'Overall Confidence',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:11,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
+        {stack:[{text:'Recommended Round',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
+        {stack:[{text:'Priority',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:60},
+        {stack:[{text:'Expected Joining',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:80}
       ]
     }
-  ], '#f0fdf4', '#bbf7d0', 8);
+  ], '#f0fdf4', '#bbf7d0', 12);
 
   /* 8. DARK NAVY FOOTER */
   var footerBlock = {
@@ -6707,26 +6691,26 @@ function buildDef(d){
       columns: [
         {
           stack: [
-            {text:'ABOUT THIS REPORT',bold:true,fontSize:5.5,color:'#94a3b8'},
-            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:4.5,color:'#64748b',margin:[0,1,0,0]}
+            {text:'ABOUT THIS REPORT',bold:true,fontSize:6,color:'#94a3b8'},
+            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:5,color:'#64748b',margin:[0,2,0,0]}
           ],
-          width: 150
+          width: 160
         },
         {
           stack: [
-            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:5.5,color:'#cbd5e1',alignment:'center',margin:[0,4,0,0]}
+            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:6,color:'#cbd5e1',alignment:'center',margin:[0,5,0,0]}
           ],
           width: '*'
         },
         {
           stack: [
-            {text:'www.jero.works',bold:true,fontSize:7,color:'#ffffff',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:4.5,color:'#64748b',alignment:'right',margin:[0,1,0,0]}
+            {text:'www.jero.works',bold:true,fontSize:7.5,color:'#ffffff',alignment:'right'},
+            {text:'© 2026 Jero AI. All rights reserved.',fontSize:5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
           ],
-          width: 110
+          width: 120
         }
       ],
-      fillColor:'#0f172a',margin:[6,5,6,5]
+      fillColor:'#0f172a',margin:[8,6,8,6]
     }]]},
     layout: 'noBorders'
   };
@@ -6746,9 +6730,9 @@ function buildDef(d){
 
   return {
     pageSize: 'A4',
-    pageMargins: [20, 16, 20, 16],
+    pageMargins: [24, 20, 24, 20],
     content: content,
-    defaultStyle: { font: 'Roboto', fontSize: 8, color: '#0f172a' }
+    defaultStyle: { font: 'Roboto', fontSize: 8.5, color: '#0f172a' }
   };
 }
 
@@ -6773,9 +6757,9 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   /* DOM scraping with document-level fallbacks */
   var g=function(sel){ var el=wrap.querySelector(sel) || document.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
 
-  var name=g('.cdr-name')||'Khagendra Mohanta';
-  var role=g('.cdr-role')||'Java Developer';
-  var initials=g('.cdr-avatar-sq')||'KM';
+  var name=g('.cdr-name')||'Unknown';
+  var role=g('.cdr-role')||'Candidate';
+  var initials=g('.cdr-avatar-sq')||'??';
   var matchEl=wrap.querySelector('.cdr-match-pct-badge') || document.querySelector('.cdr-match-pct-badge');
   var matchText=(matchEl||{textContent:''}).textContent.trim();
   var isImmediate=!!(wrap.querySelector('.cdr-meta-item.cmi-green') || document.querySelector('.cdr-meta-item.cmi-green'));
@@ -6821,15 +6805,18 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
 
   var sumEl=wrap.querySelector('.summary-text') || document.querySelector('.summary-text');
   var summary=sumEl?(sumEl.textContent||'').trim():'';
-  if(!summary) summary='Khagendra Mohanta is an experienced Java Developer with strong expertise in enterprise web applications, algorithmic testing, and financial trading domain logic.';
-  if(summary.length>500) summary=summary.substring(0,500).replace(/\s+\S*$/,'') + '…';
+  if(!summary) summary='No professional summary available.';
+  /* Cap summary to 2000 chars — pdfkit text layout is O(n^2) on a single giant
+     paragraph and stalls getBlob() well past 45s on bloated content. */
+  if(summary.length>2000) summary=summary.substring(0,2000).replace(/\s+\S*$/,'') + '…';
 
   var rnEl=wrap.querySelector('.po-recruiter-note-text') || document.querySelector('.po-recruiter-note-text');
   var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
   var hasRN=!!rnText;
-  if(rnText.length>300) rnText=rnText.substring(0,300).replace(/\s+\S*$/,'') + '…';
+  /* Same cap for recruiter notes — same O(n^2) failure mode. */
+  if(rnText.length>1500) rnText=rnText.substring(0,1500).replace(/\s+\S*$/,'') + '…';
 
-  var companyName='4bell Technology', recruiterName='Vibhanshu Jaiswal';
+  var companyName='Company', recruiterName='';
   (wrap.querySelectorAll('.ownership-row').length ? wrap.querySelectorAll('.ownership-row') : document.querySelectorAll('.ownership-row')).forEach(function(row){
     var lbl=(row.querySelector('.own-label')||{}).textContent||'';
     var val=(row.querySelector('.own-value')||{}).textContent||'';
@@ -6863,12 +6850,15 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
     });
 
-    /* Wrap getBlob in a Promise with 15s timeout */
+    /* Wrap getBlob in a Promise with timeout so silent render failures surface as errors.
+     Larger candidate data (long summary, many skills, recruiter notes) can take
+     12-20s to encode; raise the timeout to 45s to give real-data PDFs room to finish
+     while still surfacing a real hang rather than failing silently. */
     return new Promise(function(res,rej){
       var done=false;
       var timer=setTimeout(function(){
-        if(!done){ done=true; rej(new Error('PDF timed out after 15s')); }
-      },15000);
+        if(!done){ done=true; rej(new Error('PDF timed out after 45s — possible font or layout issue')); }
+      },45000);
       try{
         pdfMake.createPdf(def).getBlob(function(blob){
           if(done) return;
