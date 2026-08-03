@@ -6295,7 +6295,7 @@ var SVG_ICONS = {
   cal: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>',
   brain: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1a2 2 0 0 0 2 2v1.93zm6.9-2.54A1.993 1.993 0 0 0 18 15v-1a2 2 0 0 0-2-2h-3v-2h2a2 2 0 0 0 2-2V7.1a8.007 8.007 0 0 1 4.9 9.29z"/></svg>',
   user: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-  blueCheck: '<svg width="14" height="14" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
+  blueCheck: '<svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2563eb"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
   bolt: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#166534" d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>',
   briefcase: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>',
   company: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>',
@@ -6308,8 +6308,8 @@ var SVG_ICONS = {
   chat: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>',
   info: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#475569" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
   goldStars: '<svg width="54" height="10" viewBox="0 0 120 24"><path fill="#f59e0b" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z M36 17.27L42.18 21l-1.64-7.03L46 9.24l-7.19-.61L36 2 33.19 8.63 26 9.24l5.46 4.73L29.82 21z M60 17.27L66.18 21l-1.64-7.03L70 9.24l-6.19-.61L60 2 57.19 8.63 50 9.24l5.46 4.73L53.82 21z M84 17.27L90.18 21l-1.64-7.03L94 9.24l-8.19-.61L84 2 81.19 8.63 74 9.24l5.46 4.73L77.82 21z M108 17.27L114.18 21l-1.64-7.03L118 9.24l-10.19-.61L108 2 105.19 8.63 98 9.24l5.46 4.73L101.82 21z"/></svg>',
-  greenCheck: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#166534" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
-  amberClock: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#b45309" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path fill="#ffffff" d="M12 7v5l3.5 2.1.8-1.3-2.8-1.7V7z"/></svg>'
+  greenCheck: '<svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#166534"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
+  amberClock: '<svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#b45309"/><path fill="#ffffff" d="M12 7v5l3.5 2.1.8-1.3-2.8-1.7V7z"/></svg>'
 };
 
 /* Helper for perfectly aligned icon + text row */
@@ -6430,8 +6430,8 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {stack:[iconLabelRow(SVG_ICONS.doc, {text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+(d.dateStr||'04Aug2026').replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
-        {stack:[iconLabelRow(SVG_ICONS.cal, {text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr||'04 Aug 2026',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.doc, {text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.cal, {text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
         {stack:[iconLabelRow(SVG_ICONS.brain, {text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
         {stack:[iconLabelRow(SVG_ICONS.user, {text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]}
       ]]
@@ -6480,23 +6480,28 @@ function buildDef(d){
     width: '*'
   };
 
-  /* 100% Reliable Score Circle Box */
+  /* Perfect Circular Score Ring Box */
   var scoreCircle = {
-    table: {
-      widths: [52],
-      heights: [52],
-      body: [[
-        { text: (Math.round(matchNum * 10) / 10) + '%', bold: true, fontSize: 16, color: mc, alignment: 'center', fillColor: '#ffffff', margin: [0, 15, 0, 0] }
-      ]]
-    },
-    layout: {
-      hLineWidth: function(){ return 2.5; },
-      vLineWidth: function(){ return 2.5; },
-      hLineColor: function(){ return mc; },
-      vLineColor: function(){ return mc; }
-    },
+    stack: [
+      {
+        canvas: [
+          { type: 'circle', x: 28, y: 28, r: 24, color: '#ffffff', lineColor: mc, lineWidth: 3 }
+        ],
+        width: 56,
+        height: 56,
+        alignment: 'center'
+      },
+      {
+        text: (Math.round(matchNum * 10) / 10) + '%',
+        bold: true,
+        fontSize: 14,
+        color: mc,
+        alignment: 'center',
+        margin: [0, -36, 0, 12]
+      }
+    ],
     alignment: 'center',
-    margin: [0, 4, 0, 6]
+    margin: [0, 2, 0, 4]
   };
 
   var scoreBlock = {
