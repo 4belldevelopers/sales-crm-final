@@ -1073,19 +1073,18 @@ if($snp_mode== 1){
 @endphp
 
 @push('footer-script')
-@if(config('resumes.features.browser_upload'))
 <script src="{{ asset('js/resume-presign.js') }}"></script>
-@endif
 
 <script>
 $(document).ready(function () {
 
-    // ── v2 upload: feature flag + route URL injected from PHP ────────────────
-    var RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_upload', false));
-    var RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
-    if (window.ResumePresign) {
-        window.RESUME_PRESIGN_URL = RESUME_PRESIGN_URL;
-        window.RESUMES_FEATURE_BROWSER_UPLOAD = RESUMES_FEATURE_BROWSER_UPLOAD;
+    // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
+    @if(config('resumes.features.browser_upload'))
+    window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
+    @endif
+    var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+        window.RESUMES_FEATURE_BROWSER_UPLOAD = true;
         window.RESUMES_CONFIG = {
             maxPutAttempts: @json(config('resumes.network_resilience.max_put_attempts', 3)),
             putBackoffMs:   @json(config('resumes.network_resilience.put_backoff_ms', 1000)),
@@ -1093,7 +1092,7 @@ $(document).ready(function () {
     }
 
     // ── v2 state → existing progress bar UI bridge ───────────────────────────
-    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.onStateChange(function (data) {
             if (data.state === 'uploading') {
                 $('#upWrap').show();
@@ -1119,7 +1118,7 @@ $(document).ready(function () {
     }
 
     // ── v2 Phase 6: recover a previous upload session after page refresh ──────
-    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.recover().then(function (session) {
             if (session) {
                 $('#upWrap').show();
@@ -1168,7 +1167,7 @@ $(document).ready(function () {
     function backToDropzone() {
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
-        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload();
         }
         resetProgress();
@@ -1252,7 +1251,7 @@ $(document).ready(function () {
 
         // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
         window.__upXhrChannelClaimed = true;
-        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
             window.ResumePresign.startUpload(file).catch(function () {
                 // error already surfaced via onStateChange 'failed'

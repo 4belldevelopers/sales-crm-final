@@ -1621,7 +1621,9 @@ protected $elasticService;
 			->where('status', 1)
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
-		return view('service_company.job-applications.create', $this->data);
+		return response()->view('service_company.job-applications.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function statelist($cid)
 	{
@@ -1940,6 +1942,7 @@ protected $elasticService;
 		// avoid a wasted BEGIN + ROLLBACK on the common path. Tenancy: session must
 		// belong to this company (byUuid + forCompany composite — CLAUDE.md rule 3).
 		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
 		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
 			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
 				->forCompany($company_id)
@@ -2001,6 +2004,8 @@ protected $elasticService;
 				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
 					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
 			}
+			// File confirmed; move to company-structured CDN path (mirrors v1 convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
 		}
 		// ── end v2 atomic claim ───────────────────────────────────────────────────
 
@@ -2109,7 +2114,7 @@ protected $elasticService;
 				->where('status', ResumeUploadStatus::Completed->value)
 				->update([
 					'linked_candidate_id' => $jobApplication->id,
-					'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+					'r2_url'              => $finalResumeUrl,
 					'updated_at'          => now(),
 				]);
 			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
@@ -2319,9 +2324,8 @@ protected $elasticService;
 							]);
 
 		} elseif ($resumeSession) {
-			// v2 path: file already landed in R2 via presigned PUT; persist the public URL.
-			// Skip UploadResumeToTestRTwo — the file is already at its final R2 location.
-			$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
 			DB::table('job_applications')
 				->where('id', $jobApplication->id)
 				->update(['resume' => $r2ResumeUrl]);
@@ -4397,7 +4401,9 @@ protected $elasticService;
 			->where('status', 1)
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
-		return view('service_company.job-applications.create', $this->data);
+		return response()->view('service_company.job-applications.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function createOffer($id){
 
@@ -9936,7 +9942,9 @@ protected $elasticService;
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
 
-		return view('service_company.job-applications.clientcreate', $this->data);
+		return response()->view('service_company.job-applications.clientcreate', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 
 	}
 	public function clientappstore(Request $request)
@@ -10297,6 +10305,7 @@ protected $elasticService;
 
 		// ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
 		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
 		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
 			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
 				->forCompany($company_id)->first();
@@ -10338,6 +10347,8 @@ protected $elasticService;
 				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
 					'message' => 'Resume file not found in storage. Please upload the resume again.']);
 			}
+			// File confirmed; move to company-structured CDN path (mirrors v1 convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
 		}
 		// ─────────────────────────────────────────────────────────────────────────────
 
@@ -10362,7 +10373,7 @@ protected $elasticService;
 				->where('status', ResumeUploadStatus::Completed->value)
 				->update([
 					'linked_candidate_id' => $application_id,
-					'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+					'r2_url'              => $finalResumeUrl,
 					'updated_at'          => now(),
 				]);
 			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
@@ -10507,8 +10518,8 @@ protected $elasticService;
 							]);
 
 		} elseif ($resumeSession) {
-			// v2 path: file already landed in R2 via presigned PUT; persist the public URL.
-			$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
 			DB::table('job_applications')
 				->where('id', $jobApplicationGet->id)
 				->update(['resume' => $r2ResumeUrl]);
