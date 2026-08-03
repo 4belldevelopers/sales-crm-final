@@ -6429,7 +6429,6 @@ function buildDef(d){
     }
   };
 }
-})();
 
 window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var wrap=document.getElementById('kt_activitiesApplication');
