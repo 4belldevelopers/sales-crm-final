@@ -73,6 +73,10 @@ window.ResumePresign = (function () {
 
             await _putToR2(file, session.upload_url);
 
+            // Notify PHP that R2 PUT completed → transitions session Pending→Uploaded in DB.
+            // Required before the submit handler's atomic claim (Injection 1 status check).
+            await _finalize(session.uuid);
+
             _setState(STATE.UPLOADED, 100);
             return session;
         } catch (err) {
@@ -216,6 +220,30 @@ window.ResumePresign = (function () {
         }
 
         throw lastErr || new Error('Presign request failed after retries');
+    }
+
+    /**
+     * POST /finalize to mark the session Uploaded in the DB.
+     * Fail-soft: a finalize failure rolls the JS state back to FAILED so the
+     * user sees an error rather than silently submitting a Pending session.
+     */
+    async function _finalize(uuid) {
+        const baseUrl = window.RESUME_PRESIGN_URL;
+        if (!baseUrl) throw new Error('RESUME_PRESIGN_URL not set');
+        const csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+        const url = baseUrl.replace(/\/+$/, '') + '/' + uuid + '/finalize';
+        const resp = await fetch(url, {
+            method:  'POST',
+            headers: {
+                'X-CSRF-TOKEN':     csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        if (!resp.ok) {
+            let body = {};
+            try { body = await resp.json(); } catch (_) {}
+            throw new Error(body.message || ('Finalize failed (' + resp.status + '). Please try again.'));
+        }
     }
 
     /**
