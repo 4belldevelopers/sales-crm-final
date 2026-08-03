@@ -6527,12 +6527,15 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
       companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
     });
 
-    /* Wrap getBlob in a Promise with timeout so silent render failures surface as errors */
+    /* Wrap getBlob in a Promise with timeout so silent render failures surface as errors.
+     Larger candidate data (long summary, many skills, recruiter notes) can take
+     12-20s to encode; raise the timeout to 45s to give real-data PDFs room to finish
+     while still surfacing a real hang rather than failing silently. */
     return new Promise(function(res,rej){
       var done=false;
       var timer=setTimeout(function(){
-        if(!done){ done=true; rej(new Error('PDF timed out after 10s — possible font or layout issue')); }
-      },10000);
+        if(!done){ done=true; rej(new Error('PDF timed out after 45s — possible font or layout issue')); }
+      },45000);
       try{
         pdfMake.createPdf(def).getBlob(function(blob){
           if(done) return;
