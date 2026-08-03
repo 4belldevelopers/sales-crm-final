@@ -6207,19 +6207,7 @@ function ensurePdfMake(){
   return _pdfReady;
 }
 
-/* SVG circular progress ring — use Helvetica (built-in pdfkit font) for safe SVG text */
-function matchRingSvg(matchNum, mc){
-  var r=32, circ=+(2*Math.PI*r).toFixed(2);
-  var off=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
-  var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'N/A';
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">'+
-    '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="6"/>'+
-    (matchNum>0?'<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="6" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/>':'')+
-    '<text x="40" y="44" text-anchor="middle" dy="-0.1em" font-size="14" font-weight="bold" font-family="Helvetica" fill="'+mc+'">'+pct+'</text>'+
-    '</svg>';
-}
-
-/* Build a card block: navy header + white body */
+/* Safe card block: navy header + white body */
 function card(title, body, mb){
   return {
     table:{widths:['*'],body:[
@@ -6227,7 +6215,7 @@ function card(title, body, mb){
       [body]
     ]},
     layout:{
-      hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
+      hLineWidth:function(i,n){ var len=(n&&n.table&&n.table.body)?n.table.body.length:0; return(i===0||i===len)?0.5:0; },
       vLineWidth:function(){return 0.5;},
       hLineColor:function(){return '#e2e8f0';},
       vLineColor:function(){return '#e2e8f0';},
@@ -6238,9 +6226,9 @@ function card(title, body, mb){
   };
 }
 
-/* Two-column table layout used for Match Analysis + At a Glance */
+/* Safe Two-column table layout used for Match Analysis + At a Glance */
 var twoColLayout={
-  hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0.3;},
+  hLineWidth:function(i,n){ var len=(n&&n.table&&n.table.body)?n.table.body.length:0; return(i===0||i===len)?0.5:0.3; },
   vLineWidth:function(){return 0.5;},
   hLineColor:function(){return '#e2e8f0';},
   vLineColor:function(){return '#e2e8f0';},
@@ -6259,20 +6247,31 @@ function buildDef(d){
   var PIPE_BG=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
   var PIPE_TC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
 
-  /* Company logo or navy initials box */
-  var logoEl=d.logoUri&&d.logoUri.startsWith('data:')
+  /* Company logo or navy initials box — strictly accept PNG or JPEG data URIs only to prevent pdfMake decoder crashes */
+  var isValidDataImg = d.logoUri && typeof d.logoUri === 'string' && (d.logoUri.indexOf('data:image/png') === 0 || d.logoUri.indexOf('data:image/jpeg') === 0 || d.logoUri.indexOf('data:image/jpg') === 0);
+  var logoEl=isValidDataImg
     ?{image:d.logoUri,width:44,height:44}
     :{table:{widths:[44],heights:[44],body:[[{text:coInit,bold:true,fontSize:13,color:'#fff',alignment:'center',fillColor:'#1e3a8a',margin:[0,12,0,0]}]]},layout:'noBorders'};
 
   /* Candidate avatar square */
   var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials,bold:true,fontSize:18,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,14,0,0]}]]},layout:'noBorders'};
 
-  /* Match ring (SVG) */
+  /* Match block — Native pdfMake block (bulletproof across all pdfMake builds, zero SVG parser crashes) */
   var matchBlock=matchNum>0?{
-    stack:[
-      {svg:matchRingSvg(matchNum,mc),width:80,height:80},
-      mLabel?{text:mLabel,fontSize:7.5,bold:true,color:mc,alignment:'center',margin:[0,3,0,0]}:{text:''}
-    ],alignment:'center',width:90
+    table:{widths:[70],body:[[{
+      stack:[
+        {text:(Math.round(matchNum*10)/10)+'%',bold:true,fontSize:15,color:mc,alignment:'center',margin:[0,6,0,2]},
+        mLabel?{text:mLabel,fontSize:7,bold:true,color:mc,alignment:'center',margin:[0,0,0,4]}:{text:'',margin:[0,0,0,4]}
+      ],
+      fillColor:matchNum>=70?'#f0fdf4':matchNum>=40?'#fefce8':'#fef2f2'
+    }]]},
+    layout:{
+      hLineWidth:function(){return 1;},vLineWidth:function(){return 1;},
+      hLineColor:function(){return mc;},vLineColor:function(){return mc;},
+      paddingTop:function(){return 2;},paddingBottom:function(){return 2;},
+      paddingLeft:function(){return 2;},paddingRight:function(){return 2;}
+    },
+    alignment:'center',width:78
   }:null;
 
   /* Match Analysis rows */
@@ -6302,20 +6301,23 @@ function buildDef(d){
     glBody.push([{text:'No pipeline data.',colSpan:2,fontSize:9,color:'#94a3b8',italics:true,margin:[12,10,12,10]},{}]);
   }
 
-  /* Key Skills table */
+  /* Key Skills table — guarantee exact cell count matching headers count */
   var skillsTbl=null;
   if(d.skillsTable.headers.length&&d.skillsTable.rows.length){
+    var colCount=d.skillsTable.headers.length;
     var stRows=[d.skillsTable.headers.map(function(h){
       return {text:(h||'').toUpperCase(),bold:true,fontSize:8,color:'#64748b',characterSpacing:0.4,fillColor:'#f8fafc',margin:[10,8,10,8]};
     })];
     d.skillsTable.rows.forEach(function(row,ri){
-      stRows.push(row.map(function(cell){
-        return {text:cell||'',fontSize:9.5,color:'#374151',fillColor:ri%2===0?'#ffffff':'#f9fafb',margin:[10,7,10,7]};
-      }));
+      var cells=[];
+      for(var ci=0;ci<colCount;ci++){
+        cells.push({text:row[ci]||'',fontSize:9.5,color:'#374151',fillColor:ri%2===0?'#ffffff':'#f9fafb',margin:[10,7,10,7]});
+      }
+      stRows.push(cells);
     });
     skillsTbl=card('KEY SKILLS & EXPERIENCE',{
       table:{widths:d.skillsTable.headers.map(function(){return '*';}),headerRows:1,body:stRows},
-      layout:{hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0:0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}}
+      layout:{hLineWidth:function(i,n){ var len=(n&&n.table&&n.table.body)?n.table.body.length:0; return(i===0||i===len)?0:0.3; },vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}}
     });
   }
 
