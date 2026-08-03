@@ -6288,6 +6288,52 @@ var twoColLayout={
   paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
 };
 
+/* Pure Vector SVG Icon Dictionary (Zero Unicode codepoint dependence — no broken tofu boxes!) */
+var SVG_ICONS = {
+  shield: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#166534" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>',
+  doc: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
+  cal: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>',
+  brain: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1a2 2 0 0 0 2 2v1.93zm6.9-2.54A1.993 1.993 0 0 0 18 15v-1a2 2 0 0 0-2-2h-3v-2h2a2 2 0 0 0 2-2V7.1a8.007 8.007 0 0 1 4.9 9.29z"/></svg>',
+  user: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+  blueCheck: '<svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2563eb"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
+  bolt: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#166534" d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>',
+  briefcase: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>',
+  company: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>',
+  location: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
+  grad: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>',
+  clock: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>',
+  laptop: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>',
+  chart: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zM16.2 13H19v6h-2.8z"/></svg>',
+  note: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',
+  bulb: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>',
+  chat: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>',
+  trophy: '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="#ffffff" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H8v2h8v-2h-3v-2.1c2.25-.45 4-2.45 4-4.9v-1c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>',
+  info: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#475569" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+};
+
+/* Helper for rounded card containers */
+function roundedCard(stackContent, bgFill, borderStroke, mb) {
+  var bg = bgFill || '#ffffff';
+  var stroke = borderStroke || '#e2e8f0';
+  return {
+    table: {
+      widths: ['*'],
+      body: [[{
+        stack: stackContent,
+        margin: [10, 10, 10, 10],
+        fillColor: bg
+      }]]
+    },
+    layout: {
+      hLineWidth: function(){ return 0.5; },
+      vLineWidth: function(){ return 0.5; },
+      hLineColor: function(){ return stroke; },
+      vLineColor: function(){ return stroke; }
+    },
+    margin: [0, 0, 0, mb != null ? mb : 12]
+  };
+}
+
 /* Build the 100% exact replica of the Pre-Screened Candidate Report PDF definition */
 function buildDef(d){
   var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'92';
@@ -6310,7 +6356,7 @@ function buildDef(d){
   /* Candidate avatar square */
   var avatarEl={table:{widths:[58],heights:[58],body:[[{text:d.initials||'VE',bold:true,fontSize:20,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,16,0,0]}]]},layout:'noBorders'};
 
-  /* 1. HEADER SECTION: Company Logo + Company Name side-by-side (In front of logo) */
+  /* 1. HEADER SECTION */
   var headerCol = {
     columns: [
       {
@@ -6340,13 +6386,19 @@ function buildDef(d){
           {
             table: {
               body: [[
-                {text:'🛡️  CONFIDENTIAL',bold:true,fontSize:7.5,color:'#166534',fillColor:'#dcfce7',margin:[6,3,6,3]}
+                {
+                  columns: [
+                    {svg: SVG_ICONS.shield, width: 12, margin: [0, 1, 4, 0]},
+                    {text:'CONFIDENTIAL',bold:true,fontSize:7.5,color:'#166534'}
+                  ],
+                  fillColor: '#dcfce7', margin: [6, 3, 6, 3]
+                }
               ]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'right'
           },
-          {text:'For Internal Hiring Use Only',fontSize:6,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+          {text:'For Internal Hiring Use Only',fontSize:6.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
         ],
         width: 120
       }
@@ -6354,15 +6406,15 @@ function buildDef(d){
     margin: [0, 0, 0, 10]
   };
 
-  /* Metadata Strip with Icons */
+  /* Metadata Strip with Pure Vector SVG Icons */
   var metaRow = {
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {text:[{text:'📄  Report ID:  ',color:'#64748b',fontSize:7},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {text:[{text:'📅  Report Date:  ',color:'#64748b',fontSize:7},{text:d.dateStr,bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {text:[{text:'🧠  AI Version:  ',color:'#64748b',fontSize:7},{text:'Jero AI v4.5',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {text:[{text:'👤  Recruiter:  ',color:'#64748b',fontSize:7},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#ffffff',margin:[8,5,8,5]}
+        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,1,3,0]},{text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,3,0]},{text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,1,3,0]},{text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]}
       ]]
     },
     layout: {
@@ -6379,7 +6431,13 @@ function buildDef(d){
       d.isImmediate!==false ? {
         table: {
           body: [[
-            {text:'⚡ Immediate Joiner',bold:true,fontSize:7,color:'#166534',fillColor:'#f0fdf4',margin:[4,3,4,3]}
+            {
+              columns: [
+                {svg: SVG_ICONS.bolt, width: 10, margin: [0, 1, 3, 0]},
+                {text:'Immediate Joiner',bold:true,fontSize:7.5,color:'#166534'}
+              ],
+              fillColor:'#f0fdf4',margin:[4,3,4,3]
+            }
           ]]
         },
         layout: {
@@ -6394,11 +6452,11 @@ function buildDef(d){
 
   var candidateDetails = {
     stack: [
-      {text:[{text:(d.name||'V Eena')+' ',bold:true,fontSize:18,color:'#0f172a'},{text:'🔵✔',color:'#2563eb',fontSize:12}]},
+      {columns:[{text:(d.name||'V Eena'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
       {text:d.role||'Senior Frontend Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
-      {text:'💼  '+(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155',margin:[0,0,0,3]},
-      {text:'🏢  '+(d.companyName||'ABC Technologies'),fontSize:8.5,color:'#334155',margin:[0,0,0,3]},
-      {text:'📍  '+(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155',margin:[0,0,0,0]}
+      {columns:[{svg:SVG_ICONS.briefcase,width:11,margin:[0,1,5,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
+      {columns:[{svg:SVG_ICONS.company,width:11,margin:[0,1,5,0]},{text:(d.companyName||'ABC Technologies'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
+      {columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,5,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,0]}
     ],
     width: '*'
   };
@@ -6408,7 +6466,7 @@ function buildDef(d){
       widths: [110],
       body: [[{
         stack: [
-          {text:'OVERALL MATCH ℹ️',fontSize:6.5,bold:true,color:'#475569',alignment:'center',margin:[0,0,0,4]},
+          {columns:[{text:'OVERALL MATCH',fontSize:7,bold:true,color:'#475569'},{svg:SVG_ICONS.info,width:10,margin:[3,0,0,0]}],alignment:'center',margin:[0,0,0,4]},
           {
             table: {
               widths: [56], heights: [56],
@@ -6426,7 +6484,7 @@ function buildDef(d){
           {text:mLabel,fontSize:8,bold:true,color:mc,alignment:'center',margin:[0,0,0,4]},
           {
             table: {
-              body: [[{text:'Priority: HIGH',fontSize:7,bold:true,color:'#1d4ed8',fillColor:'#eff6ff',margin:[6,2,6,2]}]]
+              body: [[{text:'Priority: HIGH',fontSize:7.5,bold:true,color:'#1d4ed8',fillColor:'#eff6ff',margin:[6,2,6,2]}]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'center'
@@ -6442,31 +6500,20 @@ function buildDef(d){
     width: 122
   };
 
-  var heroCard = {
-    table: {
-      widths: ['*'],
-      body: [[{
-        columns: [avatarBlock, candidateDetails, scoreBlock],
-        columnGap: 12, fillColor: '#ffffff', margin: [12, 12, 12, 12]
-      }]]
-    },
-    layout: {
-      hLineWidth: function(){return 0.5;}, vLineWidth: function(){return 0.5;},
-      hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
-    },
-    margin: [0, 0, 0, 12]
-  };
+  var heroCard = roundedCard([
+    {columns: [avatarBlock, candidateDetails, scoreBlock], columnGap: 12}
+  ], '#ffffff', '#e2e8f0', 12);
 
   /* 3. QUICK INFO STRIP */
   var quickInfoStrip = {
     table: {
       widths: ['*', '*', '*', '*', '*'],
       body: [[
-        {stack:[{text:'👤 Preferred Role',fontSize:6.5,color:'#64748b'},{text:d.preferredRole||d.role||'Senior Frontend',bold:true,fontSize:8,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{text:'🎓 Highest Education',fontSize:6.5,color:'#64748b'},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{text:'⏱ Notice Period',fontSize:6.5,color:'#64748b'},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{text:'📍 Preferred Location',fontSize:6.5,color:'#64748b'},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{text:'💻 Preferred Work Mode',fontSize:6.5,color:'#64748b'},{text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
+        {stack:[{columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:7,color:'#64748b'}]},{text:d.preferredRole||d.role||'Senior Frontend',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[{columns:[{svg:SVG_ICONS.grad,width:11,margin:[0,1,3,0]},{text:'Highest Education',fontSize:7,color:'#64748b'}]},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[{columns:[{svg:SVG_ICONS.clock,width:11,margin:[0,1,3,0]},{text:'Notice Period',fontSize:7,color:'#64748b'}]},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[{columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,3,0]},{text:'Preferred Location',fontSize:7,color:'#64748b'}]},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[{columns:[{svg:SVG_ICONS.laptop,width:11,margin:[0,1,3,0]},{text:'Preferred Work Mode',fontSize:7,color:'#64748b'}]},{text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
       ]]
     },
     layout: {
@@ -6494,7 +6541,7 @@ function buildDef(d){
     ];
   }
 
-  var matchStack = [{text:'📊  MATCH BREAKDOWN',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,0,0,10]}];
+  var matchStack = [{columns:[{svg:SVG_ICONS.chart,width:12,margin:[0,1,5,0]},{text:'MATCH BREAKDOWN',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,10]}];
   matchBars.forEach(function(b){
     matchStack.push({
       columns: [
@@ -6512,14 +6559,11 @@ function buildDef(d){
     });
   });
 
-  var matchBreakdownCard = {
-    table: {widths:['*'],body:[[{stack:matchStack,fillColor:'#ffffff',margin:[10,10,10,10]}]]},
-    layout: {hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';}}
-  };
+  var matchBreakdownCard = roundedCard(matchStack, '#ffffff', '#e2e8f0', 0);
 
   /* 5. SKILLS INTELLIGENCE (Right Column) */
   var skillRows = [
-    [{text:'Skill',bold:true,fontSize:7,color:'#2563eb'},{text:'Candidate Experience',bold:true,fontSize:7,color:'#2563eb'},{text:'Rating',bold:true,fontSize:7,color:'#2563eb'},{text:'Status',bold:true,fontSize:7,color:'#2563eb',alignment:'center'}]
+    [{text:'Skill',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Candidate Experience',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Rating',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Status',bold:true,fontSize:7.5,color:'#2563eb',alignment:'center'}]
   ];
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.map(function(r){
     return [r[0]||'Skill', r[1]||'Exp', r[2]||'★★★★★', r[3]||'✔'];
@@ -6537,26 +6581,20 @@ function buildDef(d){
   rawSkills.forEach(function(s){
     var stCol = s[3]==='✖'?'#dc2626':s[3]==='⚠'?'#d97706':'#16a34a';
     skillRows.push([
-      {text:s[0],fontSize:7.5,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:7.5,color:'#475569'},
-      {text:s[2],fontSize:7,color:'#f59e0b'},
+      {text:s[0],fontSize:8,bold:true,color:'#0f172a'},
+      {text:s[1],fontSize:8,color:'#475569'},
+      {text:s[2],fontSize:7.5,color:'#f59e0b'},
       {text:s[3],bold:true,fontSize:8.5,color:stCol,alignment:'center'}
     ]);
   });
 
-  var skillsIntelligenceCard = {
-    table: {widths:['*'],body:[[{
-      stack: [
-        {text:'📝  SKILLS INTELLIGENCE',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,0,0,8]},
-        {
-          table: {widths:['*', '*', '*', 32],body:skillRows},
-          layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
-        }
-      ],
-      fillColor:'#ffffff',margin:[10,10,10,10]
-    }]]},
-    layout: {hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';}}
-  };
+  var skillsIntelligenceCard = roundedCard([
+    {columns:[{svg:SVG_ICONS.note,width:12,margin:[0,1,5,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,8]},
+    {
+      table: {widths:['*', '*', '*', 32],body:skillRows},
+      layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
+    }
+  ], '#ffffff', '#e2e8f0', 0);
 
   var section2Col = {
     columns: [
@@ -6568,35 +6606,23 @@ function buildDef(d){
 
   /* 6. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
   var summaryText = d.summary || 'V Eena is a Frontend Developer with more than six years of experience building enterprise web applications using React, JavaScript, TypeScript and Redux.\n\nShe has worked extensively on responsive UI development, REST API integration and agile delivery.\n\nShe demonstrates strong problem-solving abilities, clean code practices and a solid understanding of modern frontend tools and frameworks.\n\nSuitable for Frontend Engineer, UI Developer and React Lead roles.';
-  var summaryCard = {
-    table: {widths:['*'],body:[[{
-      stack: [
-        {text:'💡  PROFESSIONAL SUMMARY',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,0,0,6]},
-        {text:summaryText,fontSize:7.5,color:'#334155',lineHeight:1.45}
-      ],
-      fillColor:'#ffffff',margin:[10,10,10,10]
-    }]]},
-    layout: {hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';}}
-  };
+  var summaryCard = roundedCard([
+    {columns:[{svg:SVG_ICONS.bulb,width:12,margin:[0,1,5,0]},{text:'PROFESSIONAL SUMMARY',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
+    {text:summaryText,fontSize:8,color:'#334155',lineHeight:1.45}
+  ], '#ffffff', '#e2e8f0', 0);
 
   var rnContent = d.rnText || 'Strong frontend developer with solid hands-on experience in React and modern JavaScript. Has delivered multiple enterprise projects with clean and maintainable code. Immediate joiner and a good team player. Recommended to proceed for technical interview.';
-  var recruiterCommentsCard = {
-    table: {widths:['*'],body:[[{
-      stack: [
-        {text:'💬  RECRUITER COMMENTS',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,0,0,6]},
-        {text:rnContent,fontSize:7.5,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
-        {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
-        {
-          columns: [
-            {text:[{text:'👤  '+(d.recruiterName||'Priya Sharma')+'\n',bold:true,fontSize:7.5,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:6.5,color:'#64748b'}]},
-            {text:'📅  '+d.dateStr,fontSize:7,color:'#64748b',alignment:'right'}
-          ]
-        }
-      ],
-      fillColor:'#ffffff',margin:[10,10,10,10]
-    }]]},
-    layout: {hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';}}
-  };
+  var recruiterCommentsCard = roundedCard([
+    {columns:[{svg:SVG_ICONS.chat,width:12,margin:[0,1,5,0]},{text:'RECRUITER COMMENTS',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
+    {text:rnContent,fontSize:8,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
+    {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
+    {
+      columns: [
+        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,4,0]},{text:[{text:(d.recruiterName||'Priya Sharma')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}]}]},
+        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,4,0]},{text:d.dateStr,fontSize:7.5,color:'#64748b'}],alignment:'right'}
+      ]
+    }
+  ], '#ffffff', '#e2e8f0', 0);
 
   var sectionSummaryComments = {
     columns: [
@@ -6607,40 +6633,33 @@ function buildDef(d){
   };
 
   /* 7. VERIFICATION STATUS */
-  var verificationCard = {
-    table: {widths:['*'],body:[[{
-      stack: [
-        {text:'🛡️  VERIFICATION STATUS',bold:true,fontSize:8.5,color:'#2563eb',margin:[0,0,0,8]},
-        {
-          columns: [
-            {stack:[
-              {text:'Resume Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]},
-              {text:'Email Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]},
-              {text:'Phone Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]},
-              {text:'LinkedIn Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]}
-            ],width:'*'},
-            {stack:[
-              {text:'Documents Verified  🕒 Pending',fontSize:7.5,color:'#b45309',margin:[0,2,0,2]},
-              {text:'Identity Verified  🕒 Pending',fontSize:7.5,color:'#b45309',margin:[0,2,0,2]},
-              {text:'Education Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]}
-            ],width:'*'},
-            {stack:[
-              {text:'Education Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]},
-              {text:'Experience Verified  ✔',fontSize:7.5,color:'#166534',margin:[0,2,0,2]},
-              {text:'References Verified  🕒 Pending',fontSize:7.5,color:'#b45309',margin:[0,2,0,2]}
-            ],width:'*'}
-          ]
-        }
-      ],
-      fillColor:'#ffffff',margin:[10,10,10,10]
-    }]]},
-    layout: {hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';}},
-    margin: [0, 0, 0, 12]
-  };
+  var verificationCard = roundedCard([
+    {columns:[{svg:SVG_ICONS.shield,width:12,margin:[0,1,5,0]},{text:'VERIFICATION STATUS',bold:true,fontSize:8.5,color:'#2563eb'}],margin:[0,0,0,8]},
+    {
+      columns: [
+        {stack:[
+          {text:'Resume Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
+          {text:'Email Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
+          {text:'Phone Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
+          {text:'LinkedIn Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]}
+        ],width:'*'},
+        {stack:[
+          {text:'Documents Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]},
+          {text:'Identity Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]},
+          {text:'Education Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]}
+        ],width:'*'},
+        {stack:[
+          {text:'Education Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
+          {text:'Experience Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
+          {text:'References Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]}
+        ],width:'*'}
+      ]
+    }
+  ], '#ffffff', '#e2e8f0', 12);
 
   /* 8. FINAL HIRING RECOMMENDATION */
-  var finalRecommendationCard = {
-    table: {widths:['*'],body:[[{
+  var finalRecommendationCard = roundedCard([
+    {
       columns: [
         {
           stack: [
@@ -6654,8 +6673,8 @@ function buildDef(d){
                 },
                 {
                   stack: [
-                    {text:'★ ★ ★ ★ ★',color:'#f59e0b',fontSize:9,margin:[0,0,0,2]},
-                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:11,color:'#166534'}
+                    {text:'★ ★ ★ ★ ★',color:'#f59e0b',fontSize:9.5,margin:[0,0,0,2]},
+                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:11.5,color:'#166534'}
                   ],
                   width: '*'
                 }
@@ -6665,16 +6684,13 @@ function buildDef(d){
           ],
           width: '*'
         },
-        {stack:[{text:'Overall Confidence',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:12,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
-        {stack:[{text:'Recommended Round',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
-        {stack:[{text:'Priority',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:65},
-        {stack:[{text:'Expected Joining',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85}
-      ],
-      fillColor:'#f0fdf4',margin:[12,10,12,10]
-    }]]},
-    layout: {hLineWidth:function(){return 1;},vLineWidth:function(){return 1;},hLineColor:function(){return '#bbf7d0';},vLineColor:function(){return '#bbf7d0';}},
-    margin: [0, 0, 0, 12]
-  };
+        {stack:[{text:'Overall Confidence',fontSize:7,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:12,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
+        {stack:[{text:'Recommended Round',fontSize:7,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
+        {stack:[{text:'Priority',fontSize:7,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:65},
+        {stack:[{text:'Expected Joining',fontSize:7,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85}
+      ]
+    }
+  ], '#f0fdf4', '#bbf7d0', 12);
 
   /* 9. DARK NAVY FOOTER */
   var footerBlock = {
@@ -6682,21 +6698,21 @@ function buildDef(d){
       columns: [
         {
           stack: [
-            {text:'ABOUT THIS REPORT',bold:true,fontSize:6.5,color:'#94a3b8'},
-            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:5.5,color:'#64748b',margin:[0,2,0,0]}
+            {text:'ABOUT THIS REPORT',bold:true,fontSize:7,color:'#94a3b8'},
+            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:6,color:'#64748b',margin:[0,2,0,0]}
           ],
           width: 170
         },
         {
           stack: [
-            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:6.5,color:'#cbd5e1',alignment:'center',margin:[0,6,0,0]}
+            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:7,color:'#cbd5e1',alignment:'center',margin:[0,6,0,0]}
           ],
           width: '*'
         },
         {
           stack: [
-            {text:'www.jero.works',bold:true,fontSize:8,color:'#ffffff',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:5.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+            {text:'www.jero.works',bold:true,fontSize:8.5,color:'#ffffff',alignment:'right'},
+            {text:'© 2026 Jero AI. All rights reserved.',fontSize:6,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
           ],
           width: 130
         }
@@ -6723,7 +6739,7 @@ function buildDef(d){
     pageSize: 'A4',
     pageMargins: [24, 20, 24, 20],
     content: content,
-    defaultStyle: { font: 'Roboto', fontSize: 8, color: '#0f172a' }
+    defaultStyle: { font: 'Roboto', fontSize: 8.5, color: '#0f172a' }
   };
 }
 
