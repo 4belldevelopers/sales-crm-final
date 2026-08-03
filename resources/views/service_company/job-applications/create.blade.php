@@ -3503,6 +3503,8 @@ var KTAddCandidate = function () {
                                       }
                                   });
                                   
+                                  // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
+                                  if (RESUMES_FEATURE_BROWSER_UPLOAD) { window.ResumePresign.cancelUpload(); }
                                    window.location = response.url;
 
 																			},

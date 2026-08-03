@@ -155,15 +155,15 @@ window.ResumePresign = (function () {
 
             var body = await resp.json();
 
-            if (body.status === 'Uploaded' || body.status === 'Completed') {
-                // File is in R2 — restore state so the submit handler can claim it.
+            if (body.status === 'Uploaded') {
+                // File is in R2 and not yet claimed — restore state so the submit handler can claim it.
                 _sessionUuid = storedUuid;
                 _setSessionUuidGlobal(storedUuid);
                 _setState(STATE.UPLOADED, 100);
                 return body;
             }
 
-            // Terminal or unknown state — clear stale localStorage entry.
+            // 'Completed' (already linked to a profile), 'Failed', or unknown — clear stale entry.
             _clearPersistedSession();
             return null;
         } catch (_e) {
