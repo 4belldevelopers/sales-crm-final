@@ -76,6 +76,52 @@
 - **Fix:** `npm install` then `npm run dev` (local) / `npm run build` (prod); confirm
   Metronic assets are referenced; check `vite.config`/manifest.
 
+### Client-side PDF export button does nothing — no PDF, no alert, no console error visible
+- **Cause:** the `<script>` wrapping the helpers IIFE-never-closed, so `window.X = fn`
+  lives **outside** the closed IIFE or the IIFE never resolves to a global. The
+  inline `onclick="X(this)"` then fires against an undefined `X` and Chrome swallows
+  the ReferenceError silently. No "Generating PDF…" appears, no download starts, no
+  `alert()` from the catch handler runs.
+- **Where it bit us:** `resources/views/service_company/job-applications/showdetail.blade.php`
+  PDF block (~line 6144–6563) — the (function(){…})() never closed before
+  `window.cdrExportProfilePDF = …` was declared, so `cdrExportProfilePDF` was never
+  assigned. Symptom: clicking "Export PDF" silently does nothing.
+- **Fix:** put the `})();` **after** the closing `};` of `cdrExportProfilePDF`, so the
+  IIFE wraps both helpers and the global assignment. Then the function has closure
+  access to `ensurePdfMake` / `buildDef`.
+
+### Other PDF blob never comes back, even when the loader is fine
+- **Cause:** `pdfMake.createPdf(heavyDef).getBlob(cb)` may silently never fire `cb`
+  for malformed `def` entries (e.g. bad margin arrays, undefined in `widths:['*','*']`)
+  or an `svg:` element with unsupported text. The 10s timer in the catch wrapper will
+  eventually surface it as `PDF timed out after 10s` — that is the **first** signal
+  the `def` (i.e. `buildDef`) is wrong, not the loader.
+- **Fix:** on failure, `console.log(JSON.stringify(def))` from inside `cdrExportProfilePDF`
+  before the `createPdf` call, paste into a 6-line test page with the same libs, and
+  isolate which `content` block fails.
+
+### Fonts: Roboto > Poppins for pdfkit-based exports
+- **Cause:** pdfkit's vfs_fonts ships Roboto (Latin coverage of standard text); loading
+  Poppins TTF and registering it via `pdfMake.fonts` silently aborts the `getBlob`
+  callback if Poppins lacks a glyph for a unicode codepoint present in the doc
+  (e.g. `•`, `✓`, the small left-single-quote thing Metronic uses, em-dashes copied
+  from rich-text). The error doesn't reach `console.error` — `getBlob(cb)` just never
+  fires.
+- **Fix:** use **Roboto via vfs_fonts** (already shipped at `public/js/vfs_fonts.min.js`,
+  ~780 KB, commit `0d6415c5`). Strip non-Latin glyphs (`•`, `✓`, emoji) from text content
+  before they reach pdfMake. Do **not** commit a parallel `public/fonts/poppins/*.ttf`
+  bundle — it bloats the repo and was the original root cause of the saga.
+
+### Loader: CSP blocks CDN pdfmake but serve-from-self works
+- **Cause:** `script-src 'self'` (per app CSP) blocks `<script src=https://cdn.jsdelivr.net/...>`,
+  even when pdfmake would otherwise load. Symptom: `tryList` hangs on the first CDN URL,
+  then jobs through fallbacks that all fail with CSP, eventually throwing "All sources
+  failed" after ~8s.
+- **Fix:** `fetch -> Blob URL -> <script src=blob:...>` trick. The blob URL inherits
+  page origin so CSP `script-src 'self'` allows it. Ship `pdfmake.min.js` and
+  `vfs_fonts.min.js` same-origin in `public/js/`, fetch them first, fall through to
+  CDN if the local file 404s.
+
 ---
 > Pattern: when something "doesn't show," suspect **ES drift** or **env/cache** before
 > assuming a logic bug. When data "leaks," suspect a **raw query without `company_id`**.
