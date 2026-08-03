@@ -6217,6 +6217,45 @@ function ensurePdfMake(){
   return _pdfReady;
 }
 
+/* Convert image URL or Data URI to base64 Data URI for pdfMake embedding */
+function getLogoDataUri(rawUrl){
+  if(!rawUrl || typeof rawUrl !== 'string') return Promise.resolve(null);
+  rawUrl = rawUrl.trim();
+  if(!rawUrl) return Promise.resolve(null);
+  if(rawUrl.indexOf('data:image/') === 0) return Promise.resolve(rawUrl);
+
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function(){
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var dataUri = canvas.toDataURL('image/png');
+        resolve(dataUri);
+      } catch(e) {
+        resolve(null);
+      }
+    };
+    img.onerror = function(){
+      fetch(rawUrl, {cache:'force-cache'})
+        .then(function(r){ return r.ok ? r.blob() : null; })
+        .then(function(blob){
+          if(!blob) { resolve(null); return; }
+          var reader = new FileReader();
+          reader.onloadend = function(){ resolve(reader.result); };
+          reader.onerror = function(){ resolve(null); };
+          reader.readAsDataURL(blob);
+        })
+        .catch(function(){ resolve(null); });
+    };
+    img.src = rawUrl;
+  });
+}
+
 /* Safe card block: navy header + white body */
 function card(title, body, mb){
   return {
@@ -6257,10 +6296,10 @@ function buildDef(d){
   var PIPE_BG=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
   var PIPE_TC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
 
-  /* Company logo or navy initials box — strictly accept PNG or JPEG data URIs only to prevent pdfMake decoder crashes */
+  /* Company logo or navy initials box — supports base64 PNG/JPEG and proportionate scaling */
   var isValidDataImg = d.logoUri && typeof d.logoUri === 'string' && (d.logoUri.indexOf('data:image/png') === 0 || d.logoUri.indexOf('data:image/jpeg') === 0 || d.logoUri.indexOf('data:image/jpg') === 0);
   var logoEl=isValidDataImg
-    ?{image:d.logoUri,width:44,height:44}
+    ?{image:d.logoUri,fit:[140,44]}
     :{table:{widths:[44],heights:[44],body:[[{text:coInit,bold:true,fontSize:13,color:'#fff',alignment:'center',fillColor:'#1e3a8a',margin:[0,12,0,0]}]]},layout:'noBorders'};
 
   /* Candidate avatar square */
@@ -6522,20 +6561,23 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     if(lbl.toLowerCase().indexOf('recruiter')!==-1&&lbl.toLowerCase().indexOf('note')===-1) recruiterName=val;
   });
 
-  /* Logo: try __rcvLogo cache, then data-logo attribute on any element */
-  var logoUri=null;
-  if(window.__rcvLogo&&window.__rcvLogo.__dataUri) logoUri=window.__rcvLogo.__dataUri;
-  if(!logoUri){
-    var rcvW=document.querySelector('[data-logo]');
-    if(rcvW){ var dl=rcvW.getAttribute('data-logo'); if(dl&&dl.length>30) logoUri=dl; }
+  /* Logo resolution: check cache, data-logo, or image elements */
+  var rawLogoUrl = null;
+  if(window.__rcvLogo && window.__rcvLogo.__dataUri) rawLogoUrl = window.__rcvLogo.__dataUri;
+  if(!rawLogoUrl){
+    var logoNode = document.querySelector('[data-logo]') || document.querySelector('.rcv-wrap') || document.querySelector('.company-logo img') || document.querySelector('img[src*="logo"]');
+    if(logoNode){
+      rawLogoUrl = logoNode.getAttribute('data-logo') || logoNode.getAttribute('src');
+    }
   }
 
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var now=new Date(), dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
   var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
 
-  /* Load pdfmake + vfs_fonts (Roboto) via fetch->Blob URL, then generate PDF */
-  ensurePdfMake().then(function(){
+  /* Load pdfmake + convert company logo to base64 Data URI concurrently */
+  Promise.all([ensurePdfMake(), getLogoDataUri(rawLogoUrl)]).then(function(results){
+    var logoUri = results[1];
     var def=buildDef({
       name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
       metaPlain:metaPlain,skillItems:skillItems,metrics:metrics,pipeItems:pipeItems,
