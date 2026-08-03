@@ -6520,7 +6520,13 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
     var frac=fracEl?(fracEl.textContent||'').trim():'';
     var sub=(row.querySelector('.cdr-metric-sub')||{}).textContent||'';
-    metrics.push({lbl:lbl.trim(),val:frac?val.replace(frac,'').trim()+' / '+frac:val,sub:sub.trim(),green:!!(valEl&&valEl.classList.contains('cv-green')),red:!!(valEl&&valEl.classList.contains('cv-red'))});
+    var displayVal = val;
+    if(frac && val.indexOf('/') === -1){
+      displayVal = val + ' / ' + frac;
+    } else if(val.indexOf('//') !== -1 || val.indexOf('/ /') !== -1){
+      displayVal = val.replace(/\s*\/\s*\/\s*/g, ' / ');
+    }
+    metrics.push({lbl:lbl.trim(),val:displayVal,sub:sub.trim(),green:!!(valEl&&valEl.classList.contains('cv-green')),red:!!(valEl&&valEl.classList.contains('cv-red'))});
   });
 
   var pipeItems=[];
