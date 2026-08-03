@@ -216,6 +216,47 @@ class ResumeUploadSession
         }
     }
 
+    /**
+     * Move a v2 resume from the temp presign path (resumes/{uuid}) to the
+     * company-structured CDN path that v1 uses:
+     *   Companies/{slug}_{id}/Resumes/{YYYY}/{MM}/{original_filename}
+     *
+     * Returns the public file.jero.works CDN URL on success.
+     * Fail-open: on any R2 error, logs and returns a CDN URL for the temp path
+     * so the form submission still records a usable URL.
+     *
+     * Call this AFTER the R2 HEAD check confirms the file exists at the temp path.
+     */
+    public function moveToCompanyPath(ResumeUpload $session): string
+    {
+        $companyName = DB::table('companies')
+            ->where('id', $session->company_id)
+            ->value('company_name');
+        $slug = strtolower(trim($companyName ?? 'unknown'));
+        $slug = preg_replace('/[^a-z0-9_-]/i', '_', $slug);
+        $companyFolder = $slug . '_' . $session->company_id;
+
+        $year     = now()->format('Y');
+        $month    = now()->format('m');
+        $filename = $session->original_filename ?? ($session->uuid . '.pdf');
+        $srcPath  = 'resumes/' . $session->uuid;
+        $destPath = "Companies/{$companyFolder}/Resumes/{$year}/{$month}/{$filename}";
+
+        try {
+            Storage::disk('r2')->copy($srcPath, $destPath);
+            Storage::disk('r2')->delete($srcPath);   // best-effort; lifecycle rule handles orphans
+        } catch (\Throwable $e) {
+            Log::warning('resume.move_company_path_failed', [
+                'uuid'  => $session->uuid,
+                'dest'  => $destPath,
+                'error' => $e->getMessage(),
+            ]);
+            return 'https://file.jero.works/' . $srcPath;
+        }
+
+        return 'https://file.jero.works/' . $destPath;
+    }
+
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     /**
@@ -224,11 +265,13 @@ class ResumeUploadSession
      */
     private function generatePresignedUrl(string $uuid): string
     {
-        $disk = Storage::disk('r2');
-        $path = 'resumes/' . $uuid;
-        $ttl  = config('resumes.r2.presign_ttl', 900);
+        $disk   = Storage::disk('r2');
+        $path   = 'resumes/' . $uuid;
+        $ttl    = config('resumes.r2.presign_ttl', 900);
+        // temporaryUploadUrl returns ['url' => ..., 'headers' => ...] in Flysystem 3.x
+        $result = $disk->temporaryUploadUrl($path, now()->addSeconds($ttl));
 
-        return $disk->temporaryUploadUrl($path, now()->addSeconds($ttl));
+        return is_array($result) ? $result['url'] : $result;
     }
 
     /** HEAD check against R2 — returns false on any error (fail-open). */
