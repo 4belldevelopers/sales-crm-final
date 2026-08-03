@@ -6297,7 +6297,7 @@ function buildDef(d){
   var isValidDataImg = d.logoUri && typeof d.logoUri === 'string' && (d.logoUri.indexOf('data:image/png') === 0 || d.logoUri.indexOf('data:image/jpeg') === 0 || d.logoUri.indexOf('data:image/jpg') === 0);
   var logoEl=isValidDataImg
     ?{image:d.logoUri,fit:[120,36]}
-    :{text:'JERO AI',bold:true,fontSize:14,color:'#1d4ed8'};
+    :{text:coInit,bold:true,fontSize:14,color:'#1d4ed8'};
 
   /* Candidate avatar square */
   var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials||'VE',bold:true,fontSize:18,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,14,0,0]}]]},layout:'noBorders'};
@@ -6308,11 +6308,12 @@ function buildDef(d){
       {
         stack: [
           logoEl,
+          {text:(d.companyName||'4bell Technology').toUpperCase(),bold:true,fontSize:8.5,color:'#1e3a8a',margin:[0,2,0,0]},
           {text:'RECRUITMENT INTELLIGENCE',fontSize:6,bold:true,color:'#64748b',characterSpacing:1.1,margin:[0,2,0,0]}
         ],
-        width: 140
+        width: 145
       },
-      {canvas:[{type:'line',x1:0,y1:0,x2:0,y2:30,lineWidth:1,lineColor:'#cbd5e1'}],width:15},
+      {canvas:[{type:'line',x1:0,y1:0,x2:0,y2:32,lineWidth:1,lineColor:'#cbd5e1'}],width:15},
       {
         stack: [
           {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:12,color:'#0f172a',characterSpacing:0.3},
@@ -6322,7 +6323,7 @@ function buildDef(d){
       },
       {
         stack: [
-          {text:'✔  CONFIDENTIAL',bold:true,fontSize:8,color:'#166534',alignment:'right'},
+          {text:'🛡️  CONFIDENTIAL',bold:true,fontSize:8,color:'#166534',alignment:'right'},
           {text:'For Internal Hiring Use Only',fontSize:6.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
         ],
         width: 110
@@ -6331,15 +6332,15 @@ function buildDef(d){
     margin: [0, 0, 0, 8]
   };
 
-  /* Metadata Strip */
+  /* Metadata Strip with Icons */
   var metaRow = {
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {text:[{text:'Report ID: ',color:'#64748b',fontSize:7},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
-        {text:[{text:'Report Date: ',color:'#64748b',fontSize:7},{text:d.dateStr,bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
-        {text:[{text:'AI Version: ',color:'#64748b',fontSize:7},{text:'Jero AI v4.5',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
-        {text:[{text:'Recruiter: ',color:'#64748b',fontSize:7},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]}
+        {text:[{text:'📄 Report ID: ',color:'#64748b',fontSize:7},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
+        {text:[{text:'📅 Report Date: ',color:'#64748b',fontSize:7},{text:d.dateStr,bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
+        {text:[{text:'🧠 AI Version: ',color:'#64748b',fontSize:7},{text:'Jero AI v4.5',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]},
+        {text:[{text:'👤 Recruiter: ',color:'#64748b',fontSize:7},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7,color:'#0f172a'}],fillColor:'#f8fafc',margin:[6,4,6,4]}
       ]]
     },
     layout: {
