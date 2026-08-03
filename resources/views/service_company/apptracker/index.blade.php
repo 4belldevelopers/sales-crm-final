@@ -970,6 +970,8 @@
 
     <!--begin::Stage sub stage drawer-->
     <style>
+      /* Must render above #kt_activitiesApplication (z-index: 999999) when opened from showdetail */
+      #csd_drawer { z-index: 1000000 !important; }
       #csd_drawer .sd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-bottom: 1px solid #eef0f4; flex-wrap: wrap; }
       #csd_drawer .sd-topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
       #csd_drawer .sd-topbar-ico { width: 42px; height: 42px; border-radius: 10px; background: #eef4ff; color: #3e97ff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
@@ -1503,6 +1505,39 @@
         // Stage-pill click handling now lives in stage_body_content.blade.php
         // itself (csdSelectStage) — the single shared partial used by all 5
         // pages — so it no longer needs its own copy of this handler here.
+
+        $(document).on('click', '#hdr_move_stage_btn', async function(e) {
+            e.preventDefault();
+            const connected = await isInternetAvailable();
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: { confirmButton: "btn btn-warning" }
+                });
+                return;
+            }
+            var id = $(this).attr('rel');
+            $('#stage_body_content').html(
+                '<div class="text-center py-20 text-muted"><i class="fa fa-spinner fa-spin"></i> Loading…</div>'
+            ).show();
+            $('#custom_stage_submit').show();
+            $('#csd_drawer_toggle').trigger('click');
+            var url = "{{ route('service_company.job-applications.stage_body_content', ':id') }}";
+            url = url.replace(':id', id);
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    if (response.status == "success") {
+                        $('#stage_body_content').html(response.view);
+                        $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
+                    }
+                }
+            });
+        });
 
         $(document).ready(function() {
 
