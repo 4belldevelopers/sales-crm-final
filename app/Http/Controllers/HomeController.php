@@ -37,6 +37,7 @@ use App\Imports\MeetingImport;
 use App\Enums\ResumeUploadStatus;
 use App\Models\ResumeUpload;
 use App\Models\UploadSessionAudit;
+use App\Services\ResumeUploadSession as ResumeUploadSessionService;
 
 
 class HomeController extends Controller
@@ -2226,37 +2227,38 @@ class HomeController extends Controller
                         DB::table('job_assign')->insert($values);
                     }
                     
-                    if ($request->hasFile('resume')) {
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id',$company_id)
-                        ->value('company_name');   // change column if needed
+                    $finalResumeUrl = null;
+                    if ($resumeSession) {
+                        // v2 path: move from temp R2 path to company-structured CDN path.
+                        $finalResumeUrl = app(ResumeUploadSessionService::class)->moveToCompanyPath($resumeSession);
+                        DB::table('job_applications')
+                            ->where('id', $jobApplication->id)
+                            ->update(['resume' => $finalResumeUrl]);
+                    } elseif ($request->hasFile('resume')) {
+                        $companyNameR2 = DB::table('companies')
+                            ->where('id',$company_id)
+                            ->value('company_name');
                         $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
                         $companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
                         $companyNameRTwo = $companyNameR2 . '_' . $company_id;
                         $year  = date('Y');
                         $month = date('m');
 
-
-                        $tempPath = session('resume_temp_path');
-                        $full_name = session('resume_original_name');
-                        // dd($tempPath, $full_name,$jobApplication->id);
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-                        $fileUrl = "https://file.jero.works/".$full_name;
-                        DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-
-                    } elseif ($resumeSession) {
-                        // v2 path: file already landed in R2; persist the public URL.
-                        $r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
-                        DB::table('job_applications')
-                            ->where('id', $jobApplication->id)
-                            ->update(['resume' => $r2ResumeUrl]);
+                        $tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+                        $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                        if ($tempPath && $full_name) {
+                            UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
+                            $fileUrl = "https://file.jero.works/" . $full_name;
+                            DB::table('job_applications')
+                                ->where('id', $jobApplication->id)
+                                ->update(['resume' => $fileUrl]);
+                            session()->forget(['resume_temp_path', 'resume_original_name']);
+                        } else {
+                            \Log::warning('v1 upload: missing tempPath or filename on career form submit', [
+                                'company_id'         => $company_id,
+                                'job_application_id' => $jobApplication->id,
+                            ]);
+                        }
                     }
 
                     if(empty($request->resumeCheck) && !$resumeSession){

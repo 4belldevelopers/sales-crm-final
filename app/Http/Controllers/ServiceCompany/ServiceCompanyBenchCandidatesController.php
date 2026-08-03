@@ -1306,7 +1306,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		}
 		
 		if($request->edit_token !=''){
-			if ($request->hasFile('resume')) {
+			if ($resumeSession) {
+				// v2 path (edit): file moved to company CDN path in the claim block above.
+				$r2ResumeUrl = $finalResumeUrl;
+				DB::table('job_applications')
+					->where('id', $benchApplication->id)
+					->update(['resume' => $r2ResumeUrl]);
+			} elseif ($request->hasFile('resume')) {
 
 					$companyNameR2 = DB::table('companies')
 					->where('id',auth()->user()->company_id)
@@ -1317,28 +1323,27 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 					$year  = date('Y');
 					$month = date('m');
 
-			        $tempPath = session('resume_temp_path');
-					$full_name = session('resume_original_name');
-
-					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-					DB::table('job_applications')
-							->where('id', $benchApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-;
-			} elseif ($resumeSession) {
-				// v2 path (edit): file moved to company CDN path in the claim block above.
+			        $tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+					$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+					if ($tempPath && $full_name) {
+						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+						DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update(['resume' =>$fileUrl]);
+						session()->forget(['resume_temp_path', 'resume_original_name']);
+					} else {
+						\Log::warning('v1 upload (edit): missing tempPath or filename', ['id' => $benchApplication->id]);
+					}
+			}
+		}else{
+			if ($resumeSession) {
+				// v2 path (add): file moved to company CDN path in the claim block above.
 				$r2ResumeUrl = $finalResumeUrl;
 				DB::table('job_applications')
 					->where('id', $benchApplication->id)
 					->update(['resume' => $r2ResumeUrl]);
-			}
-		}else{
-			if ($request->hasFile('resume')) {
+			} elseif ($request->hasFile('resume')) {
 
 				    $companyNameR2 = DB::table('companies')
 					->where('id',auth()->user()->company_id)
@@ -1349,24 +1354,18 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 					$year  = date('Y');
 					$month = date('m');
 
-					$tempPath = session('resume_temp_path');
-					$full_name = session('resume_original_name');
-
-					UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-					$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-					DB::table('job_applications')
-							->where('id', $benchApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-			} elseif ($resumeSession) {
-				// v2 path (add): file moved to company CDN path in the claim block above.
-				$r2ResumeUrl = $finalResumeUrl;
-				DB::table('job_applications')
-					->where('id', $benchApplication->id)
-					->update(['resume' => $r2ResumeUrl]);
+					$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+					$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+					if ($tempPath && $full_name) {
+						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+						DB::table('job_applications')
+								->where('id', $benchApplication->id)
+								->update(['resume' =>$fileUrl]);
+						session()->forget(['resume_temp_path', 'resume_original_name']);
+					} else {
+						\Log::warning('v1 upload (add): missing tempPath or filename', ['id' => $benchApplication->id]);
+					}
 			}
 		}
 
