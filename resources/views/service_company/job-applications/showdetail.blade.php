@@ -6292,35 +6292,37 @@ function buildDef(d){
   var mc=matchNum>=70?'#059669':matchNum>=40?'#d97706':'#dc2626';
   var mLabel=matchNum>=90?'Excellent Match':matchNum>=70?'Strong Match':matchNum>=40?'Moderate Match':'Low Match';
 
+  /* Company Logo image or vector icon element */
+  var isValidDataImg = d.logoUri && typeof d.logoUri === 'string' && (d.logoUri.indexOf('data:image/png') === 0 || d.logoUri.indexOf('data:image/jpeg') === 0 || d.logoUri.indexOf('data:image/jpg') === 0);
+  var logoGraphic = isValidDataImg
+    ? { image: d.logoUri, fit: [42, 32], width: 42 }
+    : {
+        canvas: [
+          {type:'path',path:'M 4 2 L 18 2 L 10 26 L 4 26 Z',color:'#2563eb'},
+          {type:'path',path:'M 14 2 L 28 2 L 20 26 L 14 26 Z',color:'#3b82f6'}
+        ],
+        width: 30
+      };
+
   /* Candidate avatar square */
   var avatarEl={table:{widths:[58],heights:[58],body:[[{text:d.initials||'VE',bold:true,fontSize:20,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,16,0,0]}]]},layout:'noBorders'};
 
-  /* 1. HEADER SECTION */
+  /* 1. HEADER SECTION: Company Logo + Company Name side-by-side (In front of logo) */
   var headerCol = {
     columns: [
       {
-        stack: [
+        columns: [
+          logoGraphic,
           {
-            columns: [
-              {
-                canvas: [
-                  {type:'path',path:'M 4 2 L 18 2 L 10 26 L 4 26 Z',color:'#2563eb'},
-                  {type:'path',path:'M 14 2 L 28 2 L 20 26 L 14 26 Z',color:'#3b82f6'}
-                ],
-                width: 30
-              },
-              {
-                stack: [
-                  {text:'JERO AI',bold:true,fontSize:17,color:'#0f172a',characterSpacing:0.5},
-                  {text:'RECRUITMENT INTELLIGENCE',fontSize:5.5,bold:true,color:'#64748b',characterSpacing:1.2,margin:[0,1,0,0]}
-                ],
-                width: '*'
-              }
+            stack: [
+              {text:(d.companyName||'JERO AI').toUpperCase(),bold:true,fontSize:12.5,color:'#0f172a',characterSpacing:0.3},
+              {text:'RECRUITMENT INTELLIGENCE',fontSize:5.5,bold:true,color:'#64748b',characterSpacing:1.1,margin:[0,1,0,0]}
             ],
-            columnGap: 6
+            width: '*'
           }
         ],
-        width: 160
+        columnGap: 8,
+        width: 165
       },
       {canvas:[{type:'line',x1:0,y1:2,x2:0,y2:32,lineWidth:1,lineColor:'#cbd5e1'}],width:16},
       {
