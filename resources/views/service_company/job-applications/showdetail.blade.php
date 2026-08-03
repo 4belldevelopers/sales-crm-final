@@ -5896,7 +5896,7 @@ window.__buildRS=buildRecruiterSummary;
       </label>
 
       {{-- 7: Export Candidate Profile PDF --}}
-      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;" onclick="setTimeout(function(){cdrExportProfilePDF(null,true);},80);">
+      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
         <span class="rdc-onum">7</span>
         <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
@@ -5965,7 +5965,8 @@ window.__buildRS=buildRecruiterSummary;
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Recruiter Summary',     avail:true,  dlKey:'rs'},
-    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null}
+    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null},
+    7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'}
   };
 
   var selectedOpt = 1;
@@ -6092,6 +6093,15 @@ window.__buildRS=buildRecruiterSummary;
             closeRdc(); resetBtn();
           }
         }, 100);
+
+      } else if(m.dlKey === 'pdf'){
+        /* Option 7: Export Candidate Profile PDF — triggered only when user clicks Download button */
+        if(typeof window.cdrExportProfilePDF === 'function'){
+          window.cdrExportProfilePDF(null, true);
+        } else {
+          showToast('PDF Export feature unavailable.', 'warn');
+        }
+        setTimeout(function(){ closeRdc(); resetBtn(); }, 1500);
 
       } else if(m.dlKey){
         /* Options 2/3/4: keep drawer + spinner open while polling for resume viewer,
@@ -6429,6 +6439,9 @@ function buildDef(d){
 }
 
 window.cdrExportProfilePDF = function(triggerEl, fromRdc){
+  if(window.__isExportingPdf) return;
+  window.__isExportingPdf = true;
+
   var wrap=document.getElementById('kt_activitiesApplication') || document.querySelector('.page-wrapper') || document.body;
 
   /* Close any open menus */
@@ -6561,6 +6574,7 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     console.error('[CDR-PDF]', err);
     alert('PDF export failed: '+(err&&err.message||String(err)));
   }).finally(function(){
+    window.__isExportingPdf = false;
     if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
   });
 };
