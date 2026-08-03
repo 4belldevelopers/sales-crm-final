@@ -107,12 +107,15 @@
      Placed after the external link so it always takes effect even if the
      CSS file is served from browser cache. --}}
 <style>
-/* ===== THREE-CARD LAYOUT ===== */
+/* ===== THREE-CARD LAYOUT & CURVED CARD CORNERS ===== */
 #kt_activitiesApplication .page-wrapper{display:flex;flex-direction:column;gap:12px;background:#f1f5f9;min-height:auto;padding-bottom:16px;}
-#kt_activitiesApplication .cdr-outer-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03);overflow:hidden;flex-shrink:0;margin:0 16px;}
+#kt_activitiesApplication .cdr-outer-card,
+#kt_activitiesApplication .card,
+#kt_activitiesApplication .content-card,
+#kt_activitiesApplication .rdc-drawer-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px!important;box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03);overflow:hidden;flex-shrink:0;margin:0 16px;}
 /* ===== CARD 2: pipeline stat sub-cards ===== */
 #kt_activitiesApplication .cdr-pipeline-section{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;flex-shrink:0;margin:0 16px;}
-#kt_activitiesApplication .cdr-pipeline-card{background:#fff;border-radius:12px;padding:14px 12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:box-shadow .18s ease,transform .18s ease,border-color .18s ease;cursor:default;min-width:0;}
+#kt_activitiesApplication .cdr-pipeline-card{background:#fff;border-radius:8px!important;padding:14px 12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:box-shadow .18s ease,transform .18s ease,border-color .18s ease;cursor:default;min-width:0;}
 #kt_activitiesApplication .cdr-pipeline-card:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);transform:translateY(-2px);border-color:#bfdbfe;}
 #kt_activitiesApplication .cdr-pipeline-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #kt_activitiesApplication .cdr-pipeline-icon svg{width:16px!important;height:16px!important;flex-shrink:0;}
@@ -6692,7 +6695,7 @@ function buildDef(d){
         },
         {
           stack: [
-            {text:'www.jero.ai',bold:true,fontSize:8,color:'#ffffff',alignment:'right'},
+            {text:'www.jero.works',bold:true,fontSize:8,color:'#ffffff',alignment:'right'},
             {text:'© 2026 Jero AI. All rights reserved.',fontSize:5.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
           ],
           width: 130
